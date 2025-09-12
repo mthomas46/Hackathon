@@ -41,6 +41,7 @@ from .modules.shared_utils import (
     extract_endpoint_from_text
 )
 from .modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
+from .modules.event_processor import event_processor
 
 # ============================================================================
 # GLOBAL STATE MANAGEMENT - Centralized memory state
@@ -55,8 +56,7 @@ Stores short-lived operational context and summaries from events and services.
 Provides simple put/list endpoints and subscribes to Redis pub/sub topics.
 """
 
-# Global memory state imported from dedicated module
-_endpoint_index: dict[str, int] = {}
+# Global event task
 _event_task = None
 
 
@@ -65,7 +65,10 @@ async def _lifespan(app: FastAPI):
     """Lifespan context manager for memory agent startup/shutdown."""
     global _event_task
     try:
-        _event_task = asyncio.create_task(subscribe_events())
+        # Initialize Redis and start event processing
+        if await event_processor.initialize_redis():
+            await event_processor.subscribe_to_channels()
+            _event_task = asyncio.create_task(event_processor.process_events())
         yield
     finally:
         if _event_task:
@@ -148,102 +151,6 @@ async def list_memory(type: Optional[str] = None, key: Optional[str] = None, lim
         return handle_memory_agent_error("list memory items", e, **context)
 
 
-async def subscribe_events():
-    """Subscribe to Redis pub/sub channels for memory context collection."""
-    if not aioredis:
-        return
-
-    redis_url = get_redis_url()
-    client = aioredis.from_url(redis_url)
-    pubsub = client.pubsub()
-
-    # Subscribe to key ecosystem topics for memory context
-    await pubsub.subscribe(
-        "ingestion.requested",
-        "docs.ingested.github",
-        "docs.ingested.jira",
-        "docs.ingested.confluence",
-        "apis.ingested.swagger",
-        "findings.created",
-    )
-
-    try:
-        async for message in pubsub.listen():
-            if message.get("type") != "message":
-                continue
-
-            channel = message.get("channel", b"").decode()
-            data = message.get("data")
-
-            try:
-                payload = json.loads(data) if isinstance(data, (bytes, str)) else {"raw": str(data)}
-            except Exception:
-                payload = {"raw": str(data)}
-
-            # Create memory item from event
-            memory_item = await _create_memory_item_from_event(channel, payload)
-            _memory.append(memory_item)
-
-            # Maintain memory size limits
-            max_items = get_memory_max_items()
-            if len(_memory) > max_items:
-                del _memory[: len(_memory) - max_items]
-
-            # Update endpoint index from document events
-            if channel.startswith("docs.ingested"):
-                _update_endpoint_index_from_payload(payload)
-
-    finally:
-        await pubsub.close()
-        await client.aclose()
-
-
-async def _create_memory_item_from_event(channel: str, payload: Dict[str, Any]) -> MemoryItem:
-    """Create a memory item from a Redis event."""
-    # Determine memory item type and summary
-    if channel == "ingestion.requested":
-        kind = "operation"
-        summary = f"{channel} event received"
-    elif channel.startswith("docs.ingested"):
-        kind = "doc_summary"
-        summary = f"Document ingested from {channel.split('.')[-1]}"
-    elif channel == "apis.ingested.swagger":
-        kind = "api_summary"
-        summary = "API specification ingested"
-    elif channel == "findings.created":
-        kind = "finding"
-        cnt = payload.get("count", 0)
-        sev = payload.get("severity_counts", {})
-        summary = f"findings.created: {cnt} findings (severity: {sev})"
-    else:
-        kind = "event"
-        summary = f"{channel} event received"
-
-    # Create memory item
-    return create_memory_item(
-        key=payload.get("correlation_id") or f"{channel}:{len(_memory) + 1}",
-        value={"channel": channel, "payload": payload},
-        item_type=kind,
-        ttl_seconds=get_memory_ttl_seconds(),
-        metadata={
-            "source": "redis_event",
-            "channel": channel,
-            "summary": summary
-        }
-    )
-
-
-def _update_endpoint_index_from_payload(payload: Dict[str, Any]) -> None:
-    """Update endpoint index from document payload."""
-    if not isinstance(payload, dict):
-        return
-
-    doc_payload = payload.get("document") or {}
-    text = doc_payload.get("content") or doc_payload.get("title") or ""
-
-    endpoints = extract_endpoint_from_text(text)
-    for endpoint in endpoints:
-        _endpoint_index[endpoint] = _endpoint_index.get(endpoint, 0) + 1
 
 
 ## Lifespan handles startup

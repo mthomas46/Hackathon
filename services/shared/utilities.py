@@ -347,6 +347,41 @@ async def cached_get(url: str, etag: Optional[str] = None, last_modified: Option
 
 
 # ============================================================================
+# RATE LIMITING UTILITIES
+# ============================================================================
+
+class TokenBucket:
+    """Token bucket for rate limiting.
+
+    Refills tokens at a constant rate up to a maximum capacity.
+    Requests consume one token each.
+    """
+
+    def __init__(self, rate_per_sec: float, burst: int):
+        """Initialize token bucket.
+
+        Args:
+            rate_per_sec: Tokens added per second
+            burst: Maximum token capacity
+        """
+        self.rate = rate_per_sec
+        self.capacity = burst
+        self.tokens = burst
+        self.last = time.monotonic()
+
+    def allow(self) -> bool:
+        """Check if request should be allowed and consume a token."""
+        now = time.monotonic()
+        elapsed = now - self.last
+        self.last = now
+        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+        if self.tokens >= 1:
+            self.tokens -= 1
+            return True
+        return False
+
+
+# ============================================================================
 # CONFIGURATION UTILITIES
 # ============================================================================
 

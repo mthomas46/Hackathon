@@ -1,70 +1,6 @@
 """Analysis Service
 
-Comprehensive document analysis and consistency checking service for the LLM Documentation Ecosystem.
-
-This service provides advanced analysis capabilities for documentation, combining
-consistency checking, quality assessment, and reporting functionality into a unified platform.
-
-Key Features:
-- Document consistency analysis and validation
-- Quality assessment and scoring
-- Confluence consolidation and duplicate detection
-- Jira staleness analysis and reporting
-- Integration with external documentation sources
-- Automated finding generation and notifications
-
-Architecture:
-- Built on FastAPI for high-performance API endpoints
-- Uses Redis for caching and event-driven processing
-- Integrates with Doc Store for document retrieval
-- Connects to Source Agent for external data access
-- Provides RESTful API for analysis operations
-
-Core Components:
-- Document Analysis Engine: Analyzes documents for consistency issues
-- Quality Assessment Module: Evaluates documentation quality metrics
-- Reporting Engine: Generates comprehensive analysis reports
-- Notification System: Sends alerts for critical findings
-- Integration Layer: Connects with other ecosystem services
-
-Endpoints:
-- POST /analyze - Analyze documents for consistency issues
-- GET  /findings - Retrieve analysis findings with filtering
-- POST /reports/generate - Generate various types of reports
-- GET  /reports/confluence/consolidation - Confluence consolidation report
-- GET  /reports/jira/staleness - Jira staleness analysis
-- POST /reports/findings/notify-owners - Send notifications for findings
-
-Integration Points:
-- Doc Store: Document retrieval and storage
-- Source Agent: External data source access
-- Prompt Store: Prompt retrieval for AI-powered analysis
-- Interpreter: Natural language analysis requests
-- Orchestrator: Workflow coordination and execution
-
-Data Models:
-- Document: Represents documents being analyzed
-- Finding: Represents analysis findings and issues
-- AnalysisRequest: Request model for analysis operations
-- ReportRequest: Request model for report generation
-
-Environment Variables:
-- DOC_STORE_URL: Document store service URL
-- SOURCE_AGENT_URL: Source agent service URL
-- ANALYSIS_SERVICE_URL: Self-reference URL
-- REDIS_URL: Redis connection for caching
-
-Usage:
-    python services/analysis-service/main.py
-
-Or with Docker:
-    docker-compose up analysis-service
-
-Dependencies:
-- fastapi: Web framework
-- redis: Caching and event processing
-- httpx: HTTP client for service communication
-- pydantic: Data validation and serialization
+Document analysis and consistency checking service for the LLM Documentation Ecosystem.
 """
 from typing import Optional, List, Dict, Any
 import os
@@ -88,31 +24,17 @@ except Exception:
 
 from services.shared.models import Document, Finding
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
-
-def _raise_analysis_error(message: str, error_code: str, details: Dict[str, Any]):
-    """Raise a service exception for analysis errors."""
-    raise ServiceException(message, error_code, 500, details)
-
-# ============================================================================
-# SHARED SERVICE CLIENT
-# ============================================================================
 
 # Create shared client instance for all analysis operations
 service_client = get_service_client(timeout=30)
 
 # ============================================================================
-# MODULE IMPORTS - Split functionality into focused modules
+# HANDLER MODULES - Extracted business logic
 # ============================================================================
-
-from .modules.analysis_logic import (
-    detect_readme_drift,
-    detect_api_mismatches,
-    generate_summary_report,
-    generate_trends_report
-)
+from .modules.models import AnalysisRequest, ReportRequest, NotifyOwnersRequest, FindingsResponse
+from .modules.analysis_handlers import analysis_handlers
+from .modules.report_handlers import report_handlers
+from .modules.integration_handlers import integration_handlers
 
 # Create FastAPI app directly using shared utilities
 app = FastAPI(title="Analysis Service", version="1.0.0")
@@ -127,10 +49,7 @@ register_health_endpoints(app, ServiceNames.ANALYSIS_SERVICE, "1.0.0")
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.ANALYSIS_SERVICE)
 
-# ============================================================================
-# SHARED ERROR HANDLING UTILITIES - Using shared utilities for consistency
-# ============================================================================
-
+# Import shared utilities for consistency
 from .modules.shared_utils import (
     handle_analysis_error,
     create_analysis_success_response,
@@ -140,302 +59,21 @@ from .modules.shared_utils import (
 )
 
 
-# Shared models
-class AnalysisRequest(BaseModel):
-    targets: List[str]  # Document IDs or API IDs
-    analysis_type: str = "consistency"  # consistency, reporting, combined
-    options: Optional[Dict[str, Any]] = None
-
-    @field_validator('targets')
-    @classmethod
-    def validate_targets(cls, v):
-        if not v:
-            raise ValueError('Targets cannot be empty')
-        if len(v) > 1000:
-            raise ValueError('Too many targets (max 1000)')
-        for target in v:
-            if len(target) > 500:
-                raise ValueError('Target too long (max 500 characters)')
-        return v
-
-    @field_validator('analysis_type')
-    @classmethod
-    def validate_analysis_type(cls, v):
-        if v not in ["consistency", "reporting", "combined"]:
-            raise ValueError('Analysis type must be one of: consistency, reporting, combined')
-        return v
-
-
-class ReportRequest(BaseModel):
-    kind: str  # summary, life_of_ticket, pr_confidence, trends
-    format: str = "json"
-    payload: Optional[Dict[str, Any]] = None
-
-    @field_validator('kind')
-    @classmethod
-    def validate_kind(cls, v):
-        if not v:
-            raise ValueError('Kind cannot be empty')
-        if len(v) > 100:
-            raise ValueError('Kind too long (max 100 characters)')
-        return v
-
-    @field_validator('format')
-    @classmethod
-    def validate_format(cls, v):
-        if v not in ["json", "pdf", "html", "text"]:
-            raise ValueError('Format must be one of: json, pdf, html, text')
-        return v
-
-
-class NotifyOwnersRequest(BaseModel):
-    findings: List[Dict[str, Any]]
-    channels: List[str] = ["email"]
-    priority: str = "medium"
-
-    @field_validator('findings')
-    @classmethod
-    def validate_findings(cls, v):
-        if not v:
-            raise ValueError('Findings cannot be empty')
-        if len(v) > 1000:
-            raise ValueError('Too many findings (max 1000)')
-        return v
-
-    @field_validator('channels')
-    @classmethod
-    def validate_channels(cls, v):
-        if not v:
-            raise ValueError('Channels cannot be empty')
-        if len(v) > 10:
-            raise ValueError('Too many channels (max 10)')
-        return v
-
-    @field_validator('priority')
-    @classmethod
-    def validate_priority(cls, v):
-        if v not in ["low", "medium", "high", "urgent"]:
-            raise ValueError('Priority must be one of: low, medium, high, urgent')
-        return v
-
-
-class FindingsResponse(BaseModel):
-    findings: List[Finding]
-    count: int
-    severity_counts: Dict[str, int]
-    type_counts: Dict[str, int]
-
-
-# Consistency analysis functionality
 
 
 # API Endpoints
-
-# ============================================================================
-# HEALTH ENDPOINTS - Already registered above with standardized setup
-# ============================================================================
 
 
 @app.post("/analyze")
 async def analyze_documents(req: AnalysisRequest):
     """Analyze documents for consistency and issues."""
-    findings = []
-
-    try:
-        # Fetch target documents
-        docs = []
-        apis = []
-
-        for target_id in req.targets:
-            if target_id.startswith("doc:"):
-                # Fetch from doc-store
-                doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
-                if doc_data:
-                    docs.append(Document(**doc_data))
-            elif target_id.startswith("api:"):
-                # Fetch from swagger-agent or similar
-                api_data = await service_client.get_json(f"{service_client.source_agent_url()}/specs/{target_id}")
-                if api_data:
-                    apis.append(api_data)
-
-        # Run analysis based on type
-        if req.analysis_type == "consistency":
-            findings.extend(detect_readme_drift(docs))
-            findings.extend(detect_api_mismatches(docs, apis))
-        elif req.analysis_type == "combined":
-            findings.extend(detect_readme_drift(docs))
-            findings.extend(detect_api_mismatches(docs, apis))
-            # Add more analysis types as needed
-
-        # Publish findings event
-        if aioredis and findings:
-            from services.shared.config import get_config_value
-            redis_host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
-            client = aioredis.from_url(f"redis://{redis_host}")
-            try:
-                await client.publish("findings.created", json.dumps({
-                    "correlation_id": getattr(req, 'correlation_id', None),
-                    "count": len(findings),
-                    "severity_counts": {
-                        sev: len([f for f in findings if f.severity == sev])
-                        for sev in ["critical", "high", "medium", "low"]
-                    }
-                }))
-            finally:
-                await client.aclose()
-
-        return FindingsResponse(
-            findings=findings,
-            count=len(findings),
-            severity_counts={
-                sev: len([f for f in findings if f.severity == sev])
-                for sev in ["critical", "high", "medium", "low"]
-            },
-            type_counts={
-                typ: len([f for f in findings if f.type == typ])
-                for typ in set(f.type for f in findings)
-            }
-        )
-
-    except Exception as e:
-        # In test mode, return a mock response instead of raising an error
-        if os.environ.get("TESTING", "").lower() == "true":
-            return FindingsResponse(
-                findings=[
-                    Finding(
-                        id="test-finding",
-                        type="drift",
-                        title="Test Finding",
-                        description="Mock finding for testing",
-                        severity="medium",
-                        source_refs=[{"id": "test", "type": "document"}],
-                        evidence=["Mock evidence"],
-                        suggestion="Test suggestion",
-                        score=50,
-                        rationale="Mock rationale"
-                    )
-                ],
-                count=1,
-                severity_counts={"medium": 1},
-                type_counts={"drift": 1}
-            )
-
-        _raise_analysis_error(
-            "Analysis failed",
-            ErrorCodes.ANALYSIS_FAILED,
-            {"error": str(e), "request": req.model_dump()}
-        )  # FURTHER OPTIMIZED: Using shared error utility
+    return await analysis_handlers.handle_analyze_documents(req)
 
 
 @app.post("/reports/generate")
 async def generate_report(req: ReportRequest):
     """Generate various types of reports."""
-    try:
-        if req.kind == "summary":
-            # Fetch recent findings
-            findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")
-            findings = [Finding(**f) for f in findings_data.get("findings", [])]
-
-            report = generate_summary_report(findings)
-
-        elif req.kind == "trends":
-            # Fetch findings with time window
-            time_window = req.payload.get("time_window", "7d") if req.payload else "7d"
-            try:
-                findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")
-                findings = [Finding(**f) for f in findings_data.get("findings", [])]
-            except Exception:
-                # For testing/development, provide mock findings if service call fails
-                findings = [
-                    Finding(
-                        id="drift:readme:api",
-                        type="drift",
-                        title="Documentation Drift Detected",
-                        description="README and API docs are out of sync",
-                        severity="medium",
-                        source_refs=[{"id": "readme:main", "type": "document"}],
-                        evidence=["Content overlap below threshold"],
-                        suggestion="Review and synchronize documentation",
-                        score=70
-                    ),
-                    Finding(
-                        id="missing:endpoint:orders",
-                        type="missing_doc",
-                        title="Undocumented Endpoint",
-                        description="POST /orders endpoint is not documented",
-                        severity="high",
-                        source_refs=[{"id": "api:orders", "type": "endpoint"}],
-                        evidence=["Endpoint exists but not in docs"],
-                        suggestion="Add endpoint documentation",
-                        score=85
-                    )
-                ]
-
-            report = generate_trends_report(findings, time_window)
-
-            # Add expected fields for test compatibility
-            report = {
-                "type": "trends",
-                "trend_data": [
-                    {"date": "2024-01-01", "count": report.get("total_findings", 0)},
-                    {"date": "2024-01-02", "count": max(0, report.get("total_findings", 0) - 1)}
-                ],
-                **report
-            }
-
-        elif req.kind == "life_of_ticket":
-            # Simplified life of ticket report
-            ticket_id = req.payload.get("ticket_id") if req.payload else None
-            report = {
-                "ticket_id": ticket_id,
-                "stages": ["Created", "In Progress", "Review", "Done"],
-                "current_stage": "Review",
-                "time_in_stage": "2 days",
-                "blockers": [],
-                "recommendations": ["Consider code review completion"]
-            }
-
-        elif req.kind == "pr_confidence":
-            # Simplified PR confidence report
-            pr_id = req.payload.get("pr_id") if req.payload else None
-            report = {
-                "pr_id": pr_id,
-                "confidence_score": 0.85,
-                "factors": {
-                    "documentation_updated": True,
-                    "tests_added": True,
-                    "code_review_complete": False
-                },
-                "risks": ["Missing code review"],
-                "recommendations": ["Complete code review before merge"]
-            }
-
-        else:
-            supported_types = ["summary", "trends", "life_of_ticket", "pr_confidence"]
-            raise ValidationException(
-                f"Unsupported report type: {req.kind}",
-                {"kind": [f"Must be one of: {', '.join(supported_types)}"]}
-            )  # OPTIMIZED: Using standardized validation exception
-
-        return report
-
-    except Exception as e:
-        # In test mode, return a mock report instead of raising an error
-        if os.environ.get("TESTING", "").lower() == "true":
-            return {
-                "type": req.kind,
-                "generated_at": "2024-01-01T00:00:00Z",
-                "summary": "Mock report for testing",
-                "total_findings": 5,
-                "severity_breakdown": {"high": 2, "medium": 2, "low": 1},
-                "recommendations": ["Test recommendation"]
-            }
-
-        _raise_analysis_error(
-            "Report generation failed",
-            ErrorCodes.REPORT_GENERATION_FAILED,
-            {"error": str(e), "report_type": req.kind}
-        )  # FURTHER OPTIMIZED: Using shared error utility
+    return await report_handlers.handle_generate_report(req)
 
 
 @app.get("/findings")
@@ -444,101 +82,14 @@ async def get_findings(
     severity: Optional[str] = None,
     finding_type_filter: Optional[str] = None
 ):
-    # Validate query parameters
-    if limit < 1 or limit > 1000:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
-
-    if severity is not None and severity not in ["low", "medium", "high", "critical"]:
-        raise HTTPException(status_code=400, detail="Severity must be one of: low, medium, high, critical")
-
-    if finding_type_filter is not None and finding_type_filter not in ["drift", "missing_doc", "inconsistency", "quality"]:
-        raise HTTPException(status_code=400, detail="Finding type filter must be one of: drift, missing_doc, inconsistency, quality")
     """Get findings with optional filtering."""
-    try:
-        # In a real implementation, this would query a database
-        # For now, return mock findings
-        findings = [
-            Finding(
-                id="drift:readme:api",
-                type="drift",
-                title="Documentation Drift Detected",
-                description="README and API docs are out of sync",
-                severity="medium",
-                source_refs=[{"id": "readme:main", "type": "document"}, {"id": "api:docs", "type": "document"}],
-                evidence=["Content overlap below threshold", "Endpoint descriptions differ"],
-                suggestion="Review and synchronize documentation",
-                score=70,
-                rationale="Documentation drift can lead to confusion and maintenance issues"
-            ),
-            Finding(
-                id="missing:endpoint",
-                type="missing_doc",
-                title="Undocumented Endpoint",
-                description="POST /orders endpoint is not documented",
-                severity="high",
-                source_refs=[{"id": "POST /orders", "type": "endpoint"}],
-                evidence=["Endpoint exists in API spec", "No corresponding documentation found"],
-                suggestion="Add documentation for this endpoint",
-                score=90,
-                rationale="Undocumented endpoints create usability and maintenance issues"
-            )
-        ]
-
-        # Apply filters
-        if severity:
-            findings = [f for f in findings if f.severity == severity]
-        if finding_type_filter:
-            findings = [f for f in findings if f.type == finding_type_filter]
-
-        findings = findings[:limit]
-
-        return FindingsResponse(
-            findings=findings,
-            count=len(findings),
-            severity_counts={
-                sev: len([f for f in findings if f.severity == sev])
-                for sev in ["critical", "high", "medium", "low"]
-            },
-            type_counts={
-                typ: len([f for f in findings if f.type == typ])
-                for typ in set(f.type for f in findings)
-            }
-        )
-
-    except Exception as e:
-        _raise_analysis_error(
-            "Failed to retrieve findings",
-            ErrorCodes.FINDINGS_RETRIEVAL_FAILED,
-            {"error": str(e), "limit": limit, "type_filter": finding_type_filter}
-        )  # FURTHER OPTIMIZED: Using shared error utility
+    return await analysis_handlers.handle_get_findings(limit, severity, finding_type_filter)
 
 
 @app.get("/detectors")
 async def list_detectors():
     """List available analysis detectors."""
-    return {
-        "detectors": [
-            {
-                "name": "readme_drift",
-                "description": "Detect drift between README and other documentation",
-                "severity_levels": ["low", "medium", "high"],
-                "confidence_threshold": 0.7
-            },
-            {
-                "name": "api_mismatch",
-                "description": "Detect mismatches between API docs and implementation",
-                "severity_levels": ["medium", "high", "critical"],
-                "confidence_threshold": 0.8
-            },
-            {
-                "name": "consistency_check",
-                "description": "General consistency analysis across documents",
-                "severity_levels": ["low", "medium", "high"],
-                "confidence_threshold": 0.6
-            }
-        ],
-        "total_detectors": 3
-    }
+    return analysis_handlers.handle_list_detectors()
 
 
 @app.get("/reports/confluence/consolidation")
