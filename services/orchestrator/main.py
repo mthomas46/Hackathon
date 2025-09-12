@@ -24,50 +24,6 @@ from services.shared.utilities import utc_now, generate_id, attach_self_register
 """Orchestrator Service
 
 Central control plane and coordination service for the LLM Documentation Ecosystem.
-
-This service acts as the primary orchestrator for all LLM documentation operations,
-providing centralized coordination, workflow management, and service discovery.
-
-Key Responsibilities:
-- Health monitoring and service discovery
-- Workflow orchestration and execution
-- Natural language query processing
-- Cross-service communication coordination
-- Event-driven architecture management
-- Service registry and peer coordination
-
-Architecture:
-- Uses Redis for event-driven communication
-- Implements saga patterns for complex workflows
-- Provides RESTful API for external interactions
-- Integrates with all ecosystem services
-
-Endpoints:
-- GET  /health - Basic health check
-- GET  /health/system - System-wide health monitoring
-- POST /query - Natural language query processing
-- POST /query/execute - Execute interpreted workflows
-- GET  /services - Service discovery and information
-- GET  /workflows - Available workflow templates
-- GET  /registry - Service registry management
-
-Integration Points:
-- Prompt Store: For prompt retrieval and management
-- Interpreter: For natural language processing
-- Analysis Service: For document analysis workflows
-- Doc Store: For document storage operations
-- Source Agent: For data ingestion coordination
-
-Environment Variables:
-- REDIS_URL: Redis connection URL for pub/sub
-- ORCHESTRATOR_PEERS: Comma-separated list of peer orchestrators
-- Various service URLs for integration
-
-Usage:
-    python services/orchestrator/main.py
-
-Or with Docker:
-    docker-compose up orchestrator
 """
 
 try:
@@ -164,6 +120,10 @@ from .modules.prompts import (
 from .modules.services import (
     list_services
 )
+from .modules.health_handlers import health_handlers
+from .modules.infrastructure_handlers import infrastructure_handlers
+from .modules.workflow_handlers import workflow_handlers
+from .modules.demo_handlers import demo_handlers
 
 app = FastAPI(title="Orchestrator", version="0.1.0")
 
@@ -203,33 +163,8 @@ app.post("/summarization/suggest")(summarization_suggest)
 
 @app.get("/health/system")
 async def system_health():
-    """
-    Comprehensive system health check including all services.
-    
-    This endpoint provides a holistic view of the entire ecosystem health,
-    checking all connected services and their operational status.
-    
-    Returns:
-        Dict containing overall health status, individual service statuses,
-        and detailed health metrics for monitoring and alerting.
-    """
-    try:
-        system_health_data = await service_client.get_system_health()
-        return create_success_response(
-            "System health retrieved successfully",
-            system_health_data
-        )  # OPTIMIZED: Using standardized success response
-    except Exception as e:
-        return create_error_response(
-            "System health check failed",
-            error_code=ErrorCodes.HEALTH_CHECK_FAILED,
-            details={
-                "overall_healthy": False,
-                "error": str(e),
-                "services": {},
-                "timestamp": utc_now().isoformat()  # OPTIMIZED: Using shared utc_now()
-            }
-        )  # OPTIMIZED: Using standardized error response
+    """Comprehensive system health check including all services."""
+    return await health_handlers.handle_system_health()
 
 # ============================================================================
 # ENDPOINT REGISTRATION - Register module endpoints with the app
@@ -255,85 +190,29 @@ app.get("/services")(list_services)
 @app.get("/workflows")
 async def list_workflows():
     """Get available workflows from all services."""
-    try:
-        # This would aggregate workflows from different services
-        # For now, return known workflows
-        workflows = {
-            "document_analysis": {
-                "name": "Document Analysis",
-                "description": "Analyze documents for consistency and issues",
-                "services": ["analysis-service"],
-                "parameters": ["doc_id", "analysis_type"]
-            },
-            "data_ingestion": {
-                "name": "Data Ingestion",
-                "description": "Ingest data from external sources",
-                "services": ["source-agent"],
-                "parameters": ["source_type", "source_url"]
-            },
-            "prompt_optimization": {
-                "name": "Prompt Optimization",
-                "description": "A/B test and optimize prompts",
-                "services": ["prompt-store"],
-                "parameters": ["prompt_category", "test_duration"]
-            },
-            "system_health_check": {
-                "name": "System Health Check",
-                "description": "Comprehensive system health monitoring",
-                "services": ["all"],
-                "parameters": []
-            }
-        }
-
-        return create_success_response(
-            "Workflows retrieved successfully",
-            {"workflows": workflows, "count": len(workflows)}
-        )  # OPTIMIZED: Using standardized success response
-    except Exception as e:
-        return create_error_response(
-            "Failed to retrieve workflows",
-            error_code=ErrorCodes.WORKFLOW_RETRIEVAL_FAILED,
-            details={"error": str(e), "workflows": {}}
-        )  # OPTIMIZED: Using standardized error response
+    return await health_handlers.handle_workflows_list()
 
 
 @app.get("/info")
 async def info():
-    """
-    Service information endpoint.
-    
-    Provides basic service metadata including name, version, and capabilities.
-    Used for service discovery and health monitoring.
-    """
-    return create_success_response(
-        "Service information retrieved",
-        {
-            "service": ServiceNames.ORCHESTRATOR,
-            "version": app.version,
-            "capabilities": [
-                "workflow_orchestration",
-                "service_discovery", 
-                "natural_language_processing",
-                "cross_service_coordination"
-            ]
-        }
-    )  # OPTIMIZED: Using standardized success response with enhanced metadata
+    """Service information endpoint."""
+    return await health_handlers.handle_info()
 
 
 @app.get("/config/effective")
 async def config_effective():
-    # Redacted minimal stub
-    return {}
-
+    """Get effective configuration."""
+    return await health_handlers.handle_config_effective()
 
 @app.get("/metrics")
 async def metrics():
-    return {"service": "orchestrator", "routes": len(app.routes)}
-
+    """Get service metrics."""
+    return await health_handlers.handle_metrics()
 
 @app.get("/ready")
 async def ready():
-    return {"ready": True, "service": "orchestrator"}
+    """Readiness check endpoint."""
+    return await health_handlers.handle_ready()
 
 
 class IngestionRequest(BaseModel):

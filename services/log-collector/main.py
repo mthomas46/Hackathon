@@ -10,9 +10,11 @@ Dependencies: shared middlewares.
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
 
 from services.shared.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+
+from .modules.log_storage import log_storage
+from .modules.log_stats import calculate_log_statistics
 
 app = FastAPI(title="Log Collector", version="0.1.0")
 app.add_middleware(RequestIdMiddleware)
@@ -20,6 +22,7 @@ app.add_middleware(RequestMetricsMiddleware, service_name="log-collector")
 
 
 class LogItem(BaseModel):
+    """Log entry data model."""
     service: str
     level: str
     message: str
@@ -27,65 +30,44 @@ class LogItem(BaseModel):
     context: Optional[Dict[str, Any]] = None
 
 
-_logs: List[Dict[str, Any]] = []
-_max_logs = 5000
-
-
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "log-collector", "count": len(_logs)}
+    """Health check endpoint."""
+    return {"status": "healthy", "service": "log-collector", "count": log_storage.get_count()}
 
 
 @app.post("/logs")
 async def put_log(item: LogItem):
-    entry = item.model_dump()
-    entry["timestamp"] = entry.get("timestamp") or _now_iso()
-    _logs.append(entry)
-    if len(_logs) > _max_logs:
-        del _logs[: len(_logs) - _max_logs]
-    return {"status": "ok", "count": len(_logs)}
+    """Store a single log entry."""
+    count = log_storage.add_log(item.model_dump())
+    return {"status": "ok", "count": count}
 
 
 class LogBatch(BaseModel):
+    """Batch of log entries."""
     items: List[LogItem]
 
 
 @app.post("/logs/batch")
 async def put_logs(batch: LogBatch):
-    for it in batch.items:
-        await put_log(it)
-    return {"status": "ok", "count": len(_logs), "added": len(batch.items)}
+    """Store multiple log entries."""
+    entries = [item.model_dump() for item in batch.items]
+    count = log_storage.add_logs_batch(entries)
+    return {"status": "ok", "count": count, "added": len(batch.items)}
 
 
 @app.get("/logs")
 async def list_logs(service: Optional[str] = None, level: Optional[str] = None, limit: int = 100):
-    out = [l for l in _logs if (service is None or l.get("service") == service) and (level is None or l.get("level") == level)]
-    return {"items": out[-limit:]}
+    """Retrieve logs with optional filtering."""
+    logs = log_storage.get_logs(service=service, level=level, limit=limit)
+    return {"items": logs}
 
 
 @app.get("/stats")
 async def stats():
-    by_level: Dict[str, int] = {}
-    by_service: Dict[str, int] = {}
-    errors_by_service: Dict[str, int] = {}
-    for l in _logs:
-        lvl = str(l.get("level", "")).lower()
-        svc = l.get("service", "")
-        by_level[lvl] = by_level.get(lvl, 0) + 1
-        by_service[svc] = by_service.get(svc, 0) + 1
-        if lvl in ("error", "fatal"): errors_by_service[svc] = errors_by_service.get(svc, 0) + 1
-    top_services = sorted(by_service.items(), key=lambda x: x[1], reverse=True)[:5]
-    return {
-        "count": len(_logs),
-        "by_level": by_level,
-        "by_service": by_service,
-        "errors_by_service": errors_by_service,
-        "top_services": top_services,
-    }
+    """Get log statistics and aggregations."""
+    all_logs = log_storage.get_all_logs()
+    return calculate_log_statistics(all_logs)
 
 
 if __name__ == "__main__":

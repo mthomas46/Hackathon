@@ -9,6 +9,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from .utilities import TokenBucket
+
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Middleware for request correlation ID propagation."""
@@ -58,26 +60,6 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
                 )
             except ImportError:
                 pass
-
-
-class TokenBucket:
-    """Token bucket for rate limiting."""
-
-    def __init__(self, rate_per_sec: float, burst: int):
-        self.rate = rate_per_sec
-        self.capacity = burst
-        self.tokens = burst
-        self.last = time.monotonic()
-
-    def allow(self) -> bool:
-        now = time.monotonic()
-        elapsed = now - self.last
-        self.last = now
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
-        if self.tokens >= 1:
-            self.tokens -= 1
-            return True
-        return False
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):

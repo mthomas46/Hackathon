@@ -42,6 +42,12 @@ from .modules.shared_utils import (
 )
 
 # ============================================================================
+# HANDLER MODULES - Extracted business logic
+# ============================================================================
+from .modules.models import DiscoverRequest
+from .modules.discovery_handler import discovery_handler
+
+# ============================================================================
 # APP INITIALIZATION - Using shared patterns for consistency
 # ============================================================================
 
@@ -58,83 +64,10 @@ attach_self_register(app, ServiceNames.DISCOVERY_AGENT)
 register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT, "1.0.0")
 
 
-class DiscoverRequest(BaseModel):
-    """Input for discovery.
-
-    - `spec`: Optional inline OpenAPI for offline/testing flows
-    - `openapi_url`: Fetch spec from URL when provided
-    - `orchestrator_url`: Override orchestrator base for tests
-    """
-    name: str
-    base_url: str
-    openapi_url: Optional[str] = None  # e.g., http://service:port/openapi.json
-    spec: Optional[dict] = None  # inline OpenAPI for testing/offline
-    dry_run: bool = False
-    orchestrator_url: Optional[str] = None
-
-
 @app.post("/discover")
 async def discover(req: DiscoverRequest):
-    """Discover and register OpenAPI endpoints with validation and error handling."""
-    try:
-        # Validate discovery request
-        validate_discovery_request(req)
-
-        # Extract endpoints from spec
-        endpoints = []
-        schema_hash = None
-        spec = None
-
-        if req.spec is not None:
-            spec = req.spec
-            endpoints = extract_endpoints_from_spec(spec)
-        elif req.openapi_url:
-            spec = await fetch_openapi_spec(req.openapi_url)
-            endpoints = extract_endpoints_from_spec(spec)
-
-        # Compute schema hash for change detection
-        schema_hash = compute_schema_hash(spec)
-
-        # Build registration payload
-        payload = build_registration_payload(
-            name=req.name,
-            base_url=req.base_url,
-            openapi_url=req.openapi_url,
-            endpoints=endpoints,
-            schema_hash=schema_hash
-        )
-
-        # Handle dry run mode
-        if req.dry_run:
-            response_data = create_discovery_response(endpoints, {"dry_run": True})
-            return create_discovery_success_response(
-                "completed (dry run)",
-                response_data,
-                **build_discovery_context("discover", service_name=req.name, dry_run=True)
-            )
-
-        # Register with orchestrator
-        orchestrator_url = req.orchestrator_url or get_orchestrator_url()
-        reg_resp = await register_with_orchestrator(payload, orchestrator_url)
-
-        # Return success response
-        response_data = create_discovery_response(endpoints, {"registered": reg_resp})
-        return create_discovery_success_response(
-            "and registration completed",
-            response_data,
-            **build_discovery_context("discover", service_name=req.name, endpoint_count=len(endpoints))
-        )
-
-    except Exception as e:
-        from services.shared.error_handling import ValidationException
-        from fastapi import HTTPException
-
-        # Handle validation errors with proper HTTP status codes
-        if isinstance(e, ValidationException):
-            raise HTTPException(status_code=400, detail=str(e))
-
-        context = build_discovery_context("discover", service_name=getattr(req, 'name', None))
-        return handle_discovery_error("discover endpoints", e, **context)
+    """Discover and register OpenAPI endpoints using handler module."""
+    return await discovery_handler.discover_endpoints(req)
 
 
 if __name__ == "__main__":
