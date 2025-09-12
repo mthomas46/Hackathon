@@ -1,0 +1,6 @@
+# Frontend-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for frontend
+server:
+  port: 3000

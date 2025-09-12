@@ -1,0 +1,10 @@
+# Memory-agent-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for memory-agent
+server:
+  port: 5040
+
+# Override limits for memory-agent
+limits:
+  max_items: ${MEMORY_MAX_ITEMS:-1000}

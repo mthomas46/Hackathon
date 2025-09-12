@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  orchestrator:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - REDIS_HOST=redis
+      - DOC_STORE_URL=http://doc-store:5087
+      - ANALYSIS_SERVICE_URL=http://analysis-service:5020
+      - SOURCE_AGENT_URL=http://source-agent:5000
+      - REPORTING_URL=http://reporting:5030
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis && python services/orchestrator/main.py"
+    ports:
+      - "5099:5099"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  doc-store:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - REDIS_HOST=redis
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc-store/main.py"
+    ports:
+      - "5087:5087"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  analysis-service:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - REDIS_HOST=redis
+      - DOC_STORE_URL=http://doc-store:5087
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/analysis-service/main.py"
+    ports:
+      - "5020:5020"
+    depends_on:
+      redis:
+        condition: service_healthy
+      doc-store:
+        condition: service_started
+
+  source-agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - REDIS_HOST=redis
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/source-agent/main.py"
+    ports:
+      - "5000:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  frontend:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - REPORTING_URL=http://analysis-service:5020
+      - CONSISTENCY_ENGINE_URL=http://orchestrator:5099
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/frontend/main.py"
+    ports:
+      - "3000:3000"
+    depends_on:
+      orchestrator:
+        condition: service_started
+      analysis-service:
+        condition: service_started
+
+  summarizer-hub:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic boto3 botocore && python services/summarizer-hub/main.py"
+    ports:
+      - "5060:5060"
+
+networks:
+  default:
+    name: doc-ecosystem-dev
+    driver: bridge
+
+

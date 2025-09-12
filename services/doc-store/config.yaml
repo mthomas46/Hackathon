@@ -1,0 +1,7 @@
+# Doc-store-specific configuration
+# Inherits from shared base_config.yaml
+
+# Doc-store specific database settings
+database:
+  path: ${DOCSTORE_DB:-services/doc-store/db.sqlite3}
+

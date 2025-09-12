@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # NEW SERVICES
+  # ============================================================================
+  
+  prompt-store:
+    build:
+      context: .
+      dockerfile: services/prompt-store/Dockerfile
+    ports:
+      - "5110:5110"
+    environment:
+      - PROMPT_STORE_DB=/app/data/prompt_store.db
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - prompt_store_data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - llm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5110/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  cli:
+    build:
+      context: .
+      dockerfile: services/cli/Dockerfile
+    environment:
+      - PROMPT_STORE_URL=http://prompt-store:5110
+      - ORCHESTRATOR_URL=http://orchestrator:5000
+      - ANALYSIS_SERVICE_URL=http://analysis-service:5020
+    depends_on:
+      - prompt-store
+      - orchestrator
+      - analysis-service
+    networks:
+      - llm-network
+    command: ["sleep", "infinity"]  # Keep container running for interactive use
+
+  interpreter:
+    build:
+      context: .
+      dockerfile: services/interpreter/Dockerfile
+    ports:
+      - "5120:5120"
+    environment:
+      - PROMPT_STORE_URL=http://prompt-store:5110
+      - ORCHESTRATOR_URL=http://orchestrator:5000
+      - ANALYSIS_SERVICE_URL=http://analysis-service:5020
+    depends_on:
+      - prompt-store
+      - orchestrator
+      - analysis-service
+    networks:
+      - llm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5120/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # EXISTING SERVICES (for reference)
+  # ============================================================================
+  
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - llm-network
+    volumes:
+      - redis_data:/data
+
+  orchestrator:
+    # ... existing configuration
+    networks:
+      - llm-network
+
+  analysis-service:
+    # ... existing configuration  
+    networks:
+      - llm-network
+
+  doc-store:
+    # ... existing configuration
+    networks:
+      - llm-network
+
+  source-agent:
+    # ... existing configuration
+    networks:
+      - llm-network
+
+volumes:
+  prompt_store_data:
+  redis_data:
+
+networks:
+  llm-network:
+    driver: bridge

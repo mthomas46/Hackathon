@@ -1,0 +1,20 @@
+# Orchestrator-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for orchestrator
+server:
+  port: 5099
+
+# Orchestrator-specific service URLs (legacy services)
+services:
+  github_agent_url: ${GITHUB_AGENT_URL:-http://github-agent:5000}
+  jira_agent_url: ${JIRA_AGENT_URL:-http://jira-agent:5001}
+  confluence_agent_url: ${CONFLUENCE_AGENT_URL:-http://confluence-agent:5050}
+  swagger_agent_url: ${SWAGGER_AGENT_URL:-http://swagger-agent:5010}
+  consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://consistency-engine:5020}
+  reporting_url: ${REPORTING_URL:-http://reporting:5030}
+  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+
+# Orchestrator-specific settings
+registry:
+  enabled: true

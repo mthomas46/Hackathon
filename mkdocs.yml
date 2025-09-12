@@ -1,0 +1,108 @@
+site_name: LLM Documentation Ecosystem
+site_description: Developer and operator documentation for the ecosystem
+repo_url: https://example.com/repo
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.expand
+    - navigation.path
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - search.highlight
+    - search.share
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+nav:
+  - Start Here: docs/README.md
+  - Getting Started:
+    - Quick Start: docs/guides/GETTING_STARTED.md
+    - Infrastructure Setup: docs/guides/INFRASTRUCTURE_SETUP.md
+    - E2E Demo: docs/guides/E2E_Secure_Summarization_Demo.md
+  - For Developers:
+    - Development Guides:
+      - Overview: docs/development/README.md
+      - Code Style: docs/development/CODESTYLE.md
+      - Refactoring Patterns: docs/development/REFACTORING_PATTERNS.md
+      - Optimization: docs/development/OPTIMIZATION_GUIDE.md
+      - Prompt Configuration: docs/development/PROMPT_CONFIGURATION_GUIDE.md
+    - Testing:
+      - Testing Guide: docs/guides/TESTING_GUIDE.md
+      - Testing Recipes: docs/guides/TESTING_RECIPES.md
+      - Test Suite Overview: docs/guides/TEST_SUITE.md
+      - Test Datasets and Fixtures: docs/guides/TEST_DATASETS_FIXTURES.md
+    - API Reference:
+      - Errors & Envelopes: docs/reference/ERRORS_AND_ENVELOPES.md
+      - Environment Config: docs/reference/env.example
+  - For Operators:
+    - Operations:
+      - Overview: docs/operations/README.md
+      - Main Runbook: docs/operations/RUNBOOK.md
+      - Operational Runbook: docs/operations/Operational_Runbook.md
+      - Logging: docs/operations/LOGGING.md
+    - Infrastructure:
+      - Infrastructure Guide: docs/architecture/INFRASTRUCTURE.md
+      - Infrastructure Setup: docs/guides/INFRASTRUCTURE_SETUP.md
+  - Architecture:
+    - Overview: docs/architecture/README.md
+    - System Architecture: docs/architecture/ARCHITECTURE.md
+    - Features & Interactions: docs/architecture/FEATURES_AND_INTERACTIONS.md
+    - Architecture Decision Records:
+      - Overview: docs/architecture/adr/README.md
+      - Envelopes: docs/architecture/adr/0001-envelopes.md
+      - Policy Enforcement: docs/architecture/adr/0002-policy-enforcement.md
+      - Service Registry: docs/architecture/adr/0003-service-registry.md
+    - System Diagrams:
+      - Analyze Query: docs/architecture/diagrams/ANALYZE_QUERY.md
+      - Register Service: docs/architecture/diagrams/REGISTER_SERVICE.md
+      - Summarize with Policy: docs/architecture/diagrams/SUMMARIZE_WITH_POLICY.md
+  - Services:
+    - Services Overview: services/README_SERVICES.md
+    - Core Services:
+      - Source Agent: services/source-agent/README.md
+      - Orchestrator: services/orchestrator/README.md
+      - Doc Store: services/doc-store/README.md
+      - Analysis Service: services/analysis-service/README.md
+    - AI Services:
+      - Summarizer Hub: services/summarizer-hub/README.md
+      - Interpreter: services/interpreter/README.md
+      - Secure Analyzer: services/secure-analyzer/README.md
+      - Code Analyzer: services/code-analyzer/README.md
+    - Infrastructure Services:
+      - Log Collector: services/log-collector/README.md
+      - Notification Service: services/notification-service/README.md
+      - Memory Agent: services/memory-agent/README.md
+      - Prompt Store: services/prompt-store/README.md
+    - Integration Services:
+      - GitHub MCP: services/github-mcp/README.md
+      - Bedrock Proxy: services/bedrock-proxy/README.md
+      - Frontend: services/frontend/README.md
+      - CLI: services/cli/README.md
+  - Reference:
+    - Overview: docs/reference/README.md
+    - Glossary: docs/reference/Glossary.md
+    - Documentation Matrix: docs/reference/DOCS_PARITY_MATRIX.md
+    - Reports: docs/reference/REPORTS_README.md
+  - Living Docs: docs/living-docs/README.md
+  - Business: docs/business/README.md
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
