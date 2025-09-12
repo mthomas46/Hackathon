@@ -1,0 +1,14 @@
+# Secure-analyzer-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for secure-analyzer
+server:
+  port: 5070
+
+# Secure-analyzer specific policy settings
+policy:
+  secure_only_models: ${SECURE_ONLY_MODELS:-bedrock,ollama}
+  all_providers: ${ALL_PROVIDERS:-bedrock,ollama,openai,anthropic,grok}
+  default_prompt: |
+    Summarize focusing on risks, PII, secrets, and client information.
+

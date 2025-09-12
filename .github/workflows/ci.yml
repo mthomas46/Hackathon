@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -U pip
+          pip install pytest httpx pydantic fastapi uvicorn boto3 botocore bandit safety
+      - name: Lint (basic)
+        run: |
+          . .venv/bin/activate
+          python -m py_compile $(git ls-files '*.py')
+      - name: Security scan (Bandit)
+        run: |
+          . .venv/bin/activate
+          bandit -q -r services || true
+      - name: Security scan (Safety)
+        run: |
+          . .venv/bin/activate
+          safety check -q || true
+      - name: Run tests
+        run: |
+          . .venv/bin/activate
+          pytest -q

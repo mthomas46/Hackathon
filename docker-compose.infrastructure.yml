@@ -1,0 +1,493 @@
+# Enhanced Docker Compose with infrastructure components
+# Includes load balancer, service mesh, monitoring, and persistence
+
+version: '3.8'
+
+services:
+  # Load Balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - orchestrator
+      - reporting
+      - consistency-engine
+      - doc-store
+      - frontend
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis with persistence
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+      - ./infrastructure/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6379:6379"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for production Doc Store
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: doc_consistency
+      POSTGRES_USER: doc_user
+      POSTGRES_PASSWORD: doc_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U doc_user -d doc_consistency"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+      COLLECTOR_ZIPKIN_HOST_PORT: 9411
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector
+      - "9411:9411"    # Zipkin collector
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./infrastructure/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.1.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch for log aggregation
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Logstash for log processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.8.0
+    volumes:
+      - ./infrastructure/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5044:5044"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600/_node/stats || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Core Services (enhanced with infrastructure)
+  orchestrator:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5099"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/orchestrator:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5099:5099"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5099/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  reporting:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5030"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/reporting:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5030:5030"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5030/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  consistency-engine:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5020"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/consistency-engine:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5020:5020"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  doc-store:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis psycopg2-binary && uvicorn main:app --host 0.0.0.0 --port 5040"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/doc-store:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5040:5040"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5050"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/frontend:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5050:5050"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Additional services (agents, etc.)
+  github-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5000"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/github-agent:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5000:5000"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  jira-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5001"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/jira-agent:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5001:5001"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  confluence-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis && uvicorn main:app --host 0.0.0.0 --port 5050"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=doc_consistency
+      - POSTGRES_USER=doc_user
+      - POSTGRES_PASSWORD=doc_password
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=14268
+      - PROMETHEUS_GATEWAY=prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/confluence-agent:/svc
+      - ./services/shared:/svc/shared
+    ports:
+      - "5050:5050"
+    networks:
+      - doc-consistency
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama for local LLM inference
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - doc-consistency
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  doc-consistency:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

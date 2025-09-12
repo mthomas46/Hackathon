@@ -1,0 +1,39 @@
+# Shared base configuration for all services
+# Individual services can override these defaults
+
+server:
+  host: ${SERVER_HOST:-0.0.0.0}
+  port: ${SERVER_PORT:-8080}  # Default port, services should override
+
+redis:
+  host: ${REDIS_HOST:-redis}
+  port: ${REDIS_PORT:-6379}
+
+services:
+  # Common service URLs used across multiple services
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
+  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
+  frontend_url: ${FRONTEND_URL:-http://frontend:3000}
+  memory_agent_url: ${MEMORY_AGENT_URL:-http://memory-agent:5040}
+  discovery_agent_url: ${DISCOVERY_AGENT_URL:-http://discovery-agent:5010}
+  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
+  interpreter_url: ${INTERPRETER_URL:-http://interpreter:5120}
+  cli_service_url: ${CLI_SERVICE_URL:-http://cli:5130}
+
+# Service-specific defaults that can be overridden
+limits:
+  max_items: ${MAX_ITEMS:-1000}
+  timeout: ${TIMEOUT:-30}
+  max_connections: ${MAX_CONNECTIONS:-10}
+
+# Logging configuration
+logging:
+  level: ${LOG_LEVEL:-INFO}
+  format: ${LOG_FORMAT:-json}
+
+# Health check configuration
+health:
+  check_interval: ${HEALTH_CHECK_INTERVAL:-30}
+  timeout: ${HEALTH_TIMEOUT:-10}

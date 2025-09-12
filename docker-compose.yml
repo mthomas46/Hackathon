@@ -1,0 +1,402 @@
+## DEPRECATION NOTICE
+## This file is retained for historical reference. Prefer:
+## - docker-compose.dev.yml (local dev, live code)
+## - docker-compose.infrastructure.yml (full infra: LB, metrics, tracing)
+## See docs/INFRASTRUCTURE.md for details.
+version: "3.9"
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  orchestrator:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.orchestrator.main:app --host 0.0.0.0 --port 5099"
+    environment:
+      - REDIS_HOST=redis
+      - REPORTING_URL=http://reporting:5030
+      - SECURE_ANALYZER_URL=http://secure-analyzer:5070
+      - DOC_STORE_URL=http://doc-store:5087
+    ports: ["5099:5099"]
+    depends_on: [redis, reporting]
+
+  github-agent:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.github_agent.main:app --host 0.0.0.0 --port 5000"
+    environment:
+      - REDIS_HOST=redis
+      - CODE_ANALYZER_URL=http://code-analyzer:5085
+      - DOC_STORE_URL=http://doc-store:5087
+    ports: ["5000:5000"]
+    depends_on: [redis, code-analyzer, doc-store]
+
+  jira-agent:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.jira_agent.main:app --host 0.0.0.0 --port 5001"
+    environment:
+      - REDIS_HOST=redis
+      - DOC_STORE_URL=http://doc-store:5087
+    ports: ["5001:5001"]
+    depends_on: [redis, doc-store]
+
+  confluence-agent:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.confluence_agent.main:app --host 0.0.0.0 --port 5050"
+    environment:
+      - REDIS_HOST=redis
+      - DOC_STORE_URL=http://doc-store:5087
+    ports: ["5050:5050"]
+    depends_on: [redis, doc-store]
+
+  swagger-agent:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.swagger_agent.main:app --host 0.0.0.0 --port 5010"
+    environment:
+      - REDIS_HOST=redis
+      - DOC_STORE_URL=http://doc-store:5087
+    ports: ["5010:5010"]
+    depends_on: [redis, doc-store]
+
+  consistency-engine:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic redis && uvicorn services.consistency_engine.main:app --host 0.0.0.0 --port 5020"
+    environment:
+      - REDIS_HOST=redis
+      - GITHUB_AGENT_URL=http://github-agent:5000
+      - CODE_ANALYZER_URL=http://code-analyzer:5085
+    ports: ["5020:5020"]
+    depends_on: [redis, github-agent, code-analyzer]
+
+  reporting:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.reporting.main:app --host 0.0.0.0 --port 5030"
+    environment:
+      - CONSISTENCY_ENGINE_URL=http://consistency-engine:5020
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      - DOC_STORE_URL=http://doc-store:5087
+    ports: ["5030:5030"]
+    depends_on: [consistency-engine, log-collector, doc-store]
+
+  frontend:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.frontend.main:app --host 0.0.0.0 --port 3000"
+    environment:
+      - REPORTING_URL=http://reporting:5030
+      - CONSISTENCY_ENGINE_URL=http://consistency-engine:5020
+    ports: ["3000:3000"]
+    depends_on: [reporting]
+
+  log-collector:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn pydantic && uvicorn services.log_collector.main:app --host 0.0.0.0 --port 5080"
+    ports: ["5080:5080"]
+
+  summarizer-hub:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic boto3 botocore && uvicorn services.summarizer_hub.main:app --host 0.0.0.0 --port 5060"
+    ports: ["5060:5060"]
+
+  secure-analyzer:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.secure_analyzer.main:app --host 0.0.0.0 --port 5070"
+    ports: ["5070:5070"]
+
+  code-analyzer:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn pydantic redis httpx && uvicorn services.code_analyzer.main:app --host 0.0.0.0 --port 5085"
+    ports: ["5085:5085"]
+    depends_on: [redis]
+
+  doc-store:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes: [".:/app"]
+    command: sh -c "pip install -q fastapi uvicorn pydantic redis && uvicorn services.doc_store.main:app --host 0.0.0.0 --port 5087"
+    ports: ["5087:5087"]
+    depends_on: [redis]
+
+version: '3.8'
+
+services:
+  # Core infra
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  # Per-service Ollama sidecars (no published ports)
+  ollama-github:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - github_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 60s
+      timeout: 20s
+      retries: 6
+      start_period: 120s
+
+  ollama-jira:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - jira_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 60s
+      timeout: 20s
+      retries: 6
+      start_period: 120s
+
+  ollama-confluence:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - confluence_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 60s
+      timeout: 20s
+      retries: 6
+      start_period: 120s
+
+  ollama-consistency:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - consistency_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 60s
+      timeout: 20s
+      retries: 6
+      start_period: 120s
+
+  # Orchestrator (local skeleton)
+  orchestrator:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && uvicorn main:app --host 0.0.0.0 --port 5099"
+    environment:
+      - REDIS_HOST=redis
+      - GITHUB_AGENT_URL=http://github-agent:5000
+      - JIRA_AGENT_URL=http://jira-agent:5001
+      - CONFLUENCE_AGENT_URL=http://confluence-agent:5050
+      - SWAGGER_AGENT_URL=http://swagger-agent:5010
+      - CONSISTENCY_ENGINE_URL=http://consistency-engine:5020
+      - REPORTING_URL=http://reporting:5030
+    volumes:
+      - ./services/orchestrator:/svc
+    ports:
+      - "5099:5099"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  swagger-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && uvicorn main:app --host 0.0.0.0 --port 5010"
+    volumes:
+      - ./services/swagger-agent:/svc
+    ports:
+      - "5010:5010"
+
+  consistency-engine:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx && uvicorn main:app --host 0.0.0.0 --port 5020"
+    environment:
+      - REDIS_HOST=redis
+      - OLLAMA_HOST=http://ollama-consistency:11434
+    volumes:
+      - ./services/consistency-engine:/svc
+    ports:
+      - "5020:5020"
+    depends_on:
+      redis:
+        condition: service_healthy
+      ollama-consistency:
+        condition: service_healthy
+
+  reporting:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && uvicorn main:app --host 0.0.0.0 --port 5030"
+    environment:
+      - CONSISTENCY_ENGINE_URL=http://consistency-engine:5020
+    volumes:
+      - ./services/reporting:/svc
+    ports:
+      - "5030:5030"
+    depends_on:
+      consistency-engine:
+        condition: service_started
+
+  frontend:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx && uvicorn main:app --host 0.0.0.0 --port 3000"
+    environment:
+      - REPORTING_URL=http://reporting:5030
+      - CONSISTENCY_ENGINE_URL=http://consistency-engine:5020
+    volumes:
+      - ./services/frontend:/svc
+    ports:
+      - "3000:3000"
+    depends_on:
+      reporting:
+        condition: service_started
+
+  memory-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && uvicorn main:app --host 0.0.0.0 --port 5040"
+    environment:
+      - REDIS_HOST=redis
+    volumes:
+      - ./services/memory-agent:/svc
+    ports:
+      - "5040:5040"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  discovery-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && uvicorn main:app --host 0.0.0.0 --port 5045"
+    environment:
+      - ORCHESTRATOR_URL=http://orchestrator:5099
+    volumes:
+      - ./services/discovery-agent:/svc
+    ports:
+      - "5045:5045"
+    depends_on:
+      orchestrator:
+        condition: service_started
+
+  summarizer-hub:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && uvicorn main:app --host 0.0.0.0 --port 5060"
+    volumes:
+      - ./services/summarizer-hub:/svc
+    ports:
+      - "5060:5060"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # GitHub Agent (local skeleton)
+  github-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && uvicorn main:app --host 0.0.0.0 --port 5000"
+    environment:
+      - OLLAMA_HOST=http://ollama-github:11434
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - REDIS_HOST=redis
+    volumes:
+      - ./services/github-agent:/svc
+    ports:
+      - "5000:5000"
+    depends_on:
+      ollama-github:
+        condition: service_healthy
+    networks:
+      - default
+      - github_net
+
+  # Jira Agent (local skeleton)
+  jira-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && uvicorn main:app --host 0.0.0.0 --port 5001"
+    environment:
+      - OLLAMA_HOST=http://ollama-jira:11434
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY:-changeme}
+      - REDIS_HOST=redis
+    volumes:
+      - ./services/jira-agent:/svc
+    ports:
+      - "5001:5001"
+    depends_on:
+      ollama-jira:
+        condition: service_healthy
+    networks:
+      - default
+      - jira_net
+
+  # Confluence Agent (local skeleton)
+  confluence-agent:
+    image: python:3.12-slim
+    working_dir: /svc
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && uvicorn main:app --host 0.0.0.0 --port 5050"
+    environment:
+      - OLLAMA_HOST=http://ollama-confluence:11434
+      - REDIS_HOST=redis
+    volumes:
+      - ./services/confluence-agent:/svc
+    ports:
+      - "5050:5050"
+    depends_on:
+      ollama-confluence:
+        condition: service_healthy
+    networks:
+      - default
+      - confluence_net
+
+networks:
+  default:
+    name: doc-ecosystem
+    driver: bridge
+
+  github_net:
+    driver: bridge
+
+  jira_net:
+    driver: bridge
+
+  confluence_net:
+    driver: bridge
+
+  consistency_net:
+    driver: bridge
+
+

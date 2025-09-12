@@ -1,0 +1,342 @@
+# Istio Gateway configuration for the documentation consistency ecosystem
+# This provides service mesh capabilities including traffic management, security, and observability
+
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: doc-consistency-gateway
+  namespace: doc-consistency
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "doc-consistency.local"
+    - "*.doc-consistency.local"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: doc-consistency-tls
+    hosts:
+    - "doc-consistency.local"
+    - "*.doc-consistency.local"
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: doc-consistency-vs
+  namespace: doc-consistency
+spec:
+  hosts:
+  - "doc-consistency.local"
+  - "*.doc-consistency.local"
+  gateways:
+  - doc-consistency-gateway
+  http:
+  # Health check endpoint
+  - match:
+    - uri:
+        exact: /health
+    route:
+    - destination:
+        host: orchestrator
+        port:
+          number: 5099
+    timeout: 5s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+  
+  # Orchestrator API
+  - match:
+    - uri:
+        prefix: /orchestrator/
+    route:
+    - destination:
+        host: orchestrator
+        port:
+          number: 5099
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+  
+  # Reporting API
+  - match:
+    - uri:
+        prefix: /reporting/
+    route:
+    - destination:
+        host: reporting
+        port:
+          number: 5030
+    timeout: 60s
+    retries:
+      attempts: 3
+      perTryTimeout: 15s
+  
+  # Consistency Engine API
+  - match:
+    - uri:
+        prefix: /consistency-engine/
+    route:
+    - destination:
+        host: consistency-engine
+        port:
+          number: 5020
+    timeout: 45s
+    retries:
+      attempts: 3
+      perTryTimeout: 12s
+  
+  # Doc Store API
+  - match:
+    - uri:
+        prefix: /doc-store/
+    route:
+    - destination:
+        host: doc-store
+        port:
+          number: 5040
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+  
+  # Frontend
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: frontend
+        port:
+          number: 5050
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: doc-consistency-dr
+  namespace: doc-consistency
+spec:
+  host: orchestrator
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_CONN
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: reporting-dr
+  namespace: doc-consistency
+spec:
+  host: reporting
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 50
+      http:
+        http1MaxPendingRequests: 25
+        maxRequestsPerConnection: 5
+        maxRetries: 3
+        consecutiveGatewayErrors: 3
+        interval: 30s
+        baseEjectionTime: 30s
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 30
+    loadBalancer:
+      simple: ROUND_ROBIN
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: consistency-engine-dr
+  namespace: doc-consistency
+spec:
+  host: consistency-engine
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 75
+      http:
+        http1MaxPendingRequests: 40
+        maxRequestsPerConnection: 8
+        maxRetries: 3
+        consecutiveGatewayErrors: 4
+        interval: 30s
+        baseEjectionTime: 30s
+    outlierDetection:
+      consecutive5xxErrors: 4
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 40
+    loadBalancer:
+      simple: LEAST_CONN
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: doc-store-dr
+  namespace: doc-consistency
+spec:
+  host: doc-store
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_CONN
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: frontend-dr
+  namespace: doc-consistency
+spec:
+  host: frontend
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 200
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 20
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    loadBalancer:
+      simple: ROUND_ROBIN
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: doc-consistency-peer-auth
+  namespace: doc-consistency
+spec:
+  mtls:
+    mode: STRICT
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: doc-consistency-authz
+  namespace: doc-consistency
+spec:
+  rules:
+  - from:
+    - source:
+        namespaces: ["doc-consistency"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        paths: ["/health", "/ready", "/metrics"]
+  - from:
+    - source:
+        namespaces: ["doc-consistency"]
+    to:
+    - operation:
+        methods: ["POST"]
+        paths: ["/ingest/*", "/webhooks/*"]
+  - from:
+    - source:
+        namespaces: ["doc-consistency"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/reports/*", "/documents/*"]
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: doc-consistency-tracing
+  namespace: doc-consistency
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.jaeger
+        typed_config:
+          "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: type.googleapis.com/envoy.config.filter.http.jaeger.v2.Jaeger
+          value:
+            config:
+              collector_cluster: jaeger
+              collector_endpoint: "/api/traces"
+              trace_id_128bit: true
+              shared_span_context: false

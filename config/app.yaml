@@ -1,0 +1,28 @@
+# Global application configuration
+
+redis:
+  host: redis
+
+doc_store:
+  db_path: services/doc-store/db.sqlite3
+  connection_pool_size: 5
+
+services:
+  ORCHESTRATOR_URL: http://orchestrator:5000
+  DOC_STORE_URL: http://doc-store:5010
+  ANALYSIS_SERVICE_URL: http://analysis-service:5020
+  REPORTING_URL: http://reporting:5030
+  SOURCE_AGENT_URL: http://source-agent:5000
+  NOTIFICATION_URL: http://notification-service:5095
+  SUMMARIZER_HUB_URL: http://summarizer-hub:5060
+
+orchestrator:
+  ORCHESTRATOR_PEERS: ""
+
+http_client:
+  timeout: 8
+  retry_attempts: 3
+  retry_base_ms: 150
+  circuit_enabled: false
+
+

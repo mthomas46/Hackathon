@@ -1,0 +1,10 @@
+# Discovery-agent-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for discovery-agent
+server:
+  port: 5045
+
+# Discovery-agent specific settings
+orchestrator:
+  url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}

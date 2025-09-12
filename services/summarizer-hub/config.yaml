@@ -1,0 +1,30 @@
+# Summarizer-hub-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for summarizer-hub
+server:
+  port: 5060
+
+# Summarizer-hub specific provider configurations
+providers:
+  # Example provider config; real clients will use these
+  - name: ollama
+    model: ${OLLAMA_MODEL:-llama3}
+    endpoint: ${OLLAMA_ENDPOINT:-http://ollama-consistency:11434}
+  - name: openai
+    model: ${OPENAI_MODEL:-gpt-4o}
+    api_key: ${OPENAI_API_KEY:-}
+  - name: anthropic
+    model: ${ANTHROPIC_MODEL:-claude-3.5-sonnet}
+    api_key: ${ANTHROPIC_API_KEY:-}
+  - name: bedrock
+    model: ${BEDROCK_MODEL:-anthropic.claude-3-sonnet-20240229-v1:0}
+    endpoint: ${BEDROCK_ENDPOINT:-}
+    region: ${BEDROCK_REGION:-us-east-1}
+    api_key: ${BEDROCK_API_KEY:-}
+aws:
+  # Optional shared AWS credentials for bedrock
+  access_key_id: ${AWS_ACCESS_KEY_ID:-}
+  secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
+  session_token: ${AWS_SESSION_TOKEN:-}
+  region: ${AWS_REGION:-us-east-1}
