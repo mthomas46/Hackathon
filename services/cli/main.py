@@ -81,8 +81,9 @@ Dependencies: All ecosystem services via HTTP clients, Rich library for UI.
 """
 
 import os
-from typing import Dict, Any, List, Optional
+import signal
 import asyncio
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import click
 from rich.console import Console
@@ -154,7 +155,24 @@ def cli(ctx, verbose):
 @click.pass_context
 def interactive(ctx):
     """Start interactive CLI mode with menu-driven interface for ecosystem operations"""
-    asyncio.run(cli_service.run())
+    # Setup interrupt handling for graceful shutdown
+    def signal_handler(signum, frame):
+        console = Console()
+        console.print("\n[yellow]⚠️  Interrupt received. Shutting down gracefully...[/yellow]")
+        # Force exit for immediate termination
+        os._exit(1)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    try:
+        asyncio.run(cli_service.run())
+    except KeyboardInterrupt:
+        console = Console()
+        console.print("\n[yellow]⚠️  CLI interrupted by user[/yellow]")
+    except Exception as e:
+        console = Console()
+        console.print(f"\n[red]❌ Fatal CLI error: {e}[/red]")
 
 @cli.command()
 @click.argument('category')

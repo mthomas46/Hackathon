@@ -22,9 +22,10 @@ from .shared_utils import (
 class AnalysisManager:
     """Manager for analysis service power-user operations."""
 
-    def __init__(self, console: Console, clients):
+    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
         self.console = console
         self.clients = clients
+        self.cache = cache or {}
 
     async def analysis_reports_menu(self):
         """Main analysis and reports menu."""
