@@ -125,7 +125,8 @@ Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collec
 """
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from typing import Optional
 import os
 
@@ -222,6 +223,10 @@ install_error_handlers(app)
 # Register standardized health endpoints
 register_health_endpoints(app, ServiceNames.FRONTEND, SERVICE_VERSION)
 
+# Mount static files for Elm application
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/info")
 async def info():
@@ -296,6 +301,15 @@ async def metrics():
         )
     except Exception as e:
         return handle_frontend_error("get metrics", e, **build_frontend_context("get_metrics"))
+
+
+@app.get("/elm")
+async def elm_app():
+    """Serve the Elm Hello World application.
+
+    Returns the HTML page with the compiled Elm application.
+    """
+    return FileResponse("static/index.html")
 
 
 @app.get("/")
