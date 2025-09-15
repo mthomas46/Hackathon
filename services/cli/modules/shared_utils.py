@@ -18,6 +18,11 @@ from services.shared.responses import create_success_response, create_error_resp
 from services.shared.logging import fire_and_forget
 from services.shared.utilities import utc_now
 
+# Import new base classes and utilities
+from .base import BaseManager, BaseFormatter, BaseHandler
+from .utils import CacheManager, APIClient, handle_cli_error, log_cli_operation, log_cli_command
+from .formatters import DisplayManager, TableFormatter, StatusFormatter
+
 # Global configuration for CLI service
 _DEFAULT_TIMEOUT = 30
 _DEFAULT_USER = os.environ.get("USER", "cli_user")
