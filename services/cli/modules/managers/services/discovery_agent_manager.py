@@ -13,7 +13,7 @@ from rich.text import Text
 import json
 import os
 
-from .shared_utils import (
+from ...shared_utils import (
     get_cli_clients,
     create_menu_table,
     add_menu_rows,

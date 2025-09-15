@@ -13,12 +13,12 @@ from rich.prompt import Prompt
 from services.shared.clients import ServiceClients
 from services.shared.constants_new import ServiceNames
 
-from .shared_utils import (
+from ..shared_utils import (
     create_menu_table,
     add_menu_rows,
     print_panel,
 )
-from .helpers import print_kv as _print_kv, print_list as _print_list, save_data as _save_data
+from ..utils.display_helpers import print_kv as _print_kv, print_list as _print_list, save_data as _save_data
 
 
 class ServiceActions:

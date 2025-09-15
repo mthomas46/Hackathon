@@ -31,27 +31,29 @@ from .shared_utils import (
     create_health_status_display,
     log_cli_metrics
 )
-from .service_actions import ServiceActions
-from .managers.orchestrator_manager import OrchestratorManager
-from .managers.analysis_manager import AnalysisManager
-from .managers.docstore_manager import DocStoreManager
-from .managers.source_agent_manager import SourceAgentManager
-from .managers.infrastructure_manager import InfrastructureManager
-from .managers.bulk_operations_manager import BulkOperationsManager
-from .managers.interpreter_manager import InterpreterManager
-from .managers.discovery_agent_manager import DiscoveryAgentManager
-from .managers.memory_agent_manager import MemoryAgentManager
-from .managers.secure_analyzer_manager import SecureAnalyzerManager
-from .managers.summarizer_hub_manager import SummarizerHubManager
-from .managers.code_analyzer_manager import CodeAnalyzerManager
-from .managers.notification_service_manager import NotificationServiceManager
-from .managers.log_collector_manager import LogCollectorManager
-from .managers.bedrock_proxy_manager import BedrockProxyManager
-from .managers.analysis_service_manager import AnalysisServiceManager
+from .handlers.service_actions import ServiceActions
 from .managers.config.config_manager import ConfigManager
-from .managers.deployment_manager import DeploymentManager
+from .managers.analysis.analysis_service_manager import AnalysisServiceManager
 from .managers.monitoring.advanced_monitoring_manager import AdvancedMonitoringManager
-from .managers.architecture_digitizer_manager import ArchitectureDigitizerManager
+from .managers.services import (
+    OrchestratorManager,
+    AnalysisManager,
+    DocStoreManager,
+    SourceAgentManager,
+    InfrastructureManager,
+    BulkOperationsManager,
+    InterpreterManager,
+    DiscoveryAgentManager,
+    MemoryAgentManager,
+    SecureAnalyzerManager,
+    SummarizerHubManager,
+    CodeAnalyzerManager,
+    NotificationServiceManager,
+    LogCollectorManager,
+    BedrockProxyManager,
+    DeploymentManager,
+    ArchitectureDigitizerManager
+)
 
 
 class CLICommands:

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Tuple, Callable
 
 from services.shared.clients import ServiceClients
-from ..helpers import print_kv
+from ...utils.display_helpers import print_kv
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:

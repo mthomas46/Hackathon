@@ -3,7 +3,7 @@ from rich.prompt import Prompt
 import socket
 
 from services.shared.clients import ServiceClients
-from ..helpers import print_kv, print_list
+from ...utils.display_helpers import print_kv, print_list
 from services.shared.config import get_config_value
 
 
