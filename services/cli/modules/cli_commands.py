@@ -50,7 +50,7 @@ from .managers.bedrock_proxy_manager import BedrockProxyManager
 from .managers.analysis_service_manager import AnalysisServiceManager
 from .managers.config.config_manager import ConfigManager
 from .managers.deployment_manager import DeploymentManager
-from .managers.advanced_monitoring_manager import AdvancedMonitoringManager
+from .managers.monitoring.advanced_monitoring_manager import AdvancedMonitoringManager
 from .managers.architecture_digitizer_manager import ArchitectureDigitizerManager
 
 
