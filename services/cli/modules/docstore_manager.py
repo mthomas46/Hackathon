@@ -22,9 +22,10 @@ from .shared_utils import (
 class DocStoreManager:
     """Manager for document store power-user operations."""
 
-    def __init__(self, console: Console, clients):
+    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
         self.console = console
         self.clients = clients
+        self.cache = cache or {}
 
     async def docstore_management_menu(self):
         """Main document store management menu."""

@@ -22,9 +22,10 @@ from .shared_utils import (
 class OrchestratorManager:
     """Manager for orchestrator power-user operations."""
 
-    def __init__(self, console: Console, clients):
+    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
         self.console = console
         self.clients = clients
+        self.cache = cache or {}
 
     async def orchestrator_management_menu(self):
         """Main orchestrator management menu."""
