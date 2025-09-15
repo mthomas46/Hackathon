@@ -50,6 +50,28 @@ class NormalizeRequest(BaseModel):
         return v
 
 
+class FileNormalizeRequest(BaseModel):
+    """Request model for normalizing uploaded diagram files."""
+    system: str  # miro, figjam, lucid, confluence
+    file_format: str  # json, pdf, png, jpg, svg, xml, html
+
+    @field_validator('system')
+    @classmethod
+    def validate_system(cls, v):
+        valid_systems = ['miro', 'figjam', 'lucid', 'confluence']
+        if v not in valid_systems:
+            raise ValueError(f'System must be one of: {", ".join(valid_systems)}')
+        return v
+
+    @field_validator('file_format')
+    @classmethod
+    def validate_file_format(cls, v):
+        valid_formats = ['json', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'xml', 'html']
+        if v.lower() not in valid_formats:
+            raise ValueError(f'File format must be one of: {", ".join(valid_formats)}')
+        return v.lower()
+
+
 class NormalizeResponse(BaseResponse):
     """Response model for normalized architecture data."""
     system: str
@@ -63,6 +85,21 @@ class SupportedSystemInfo(BaseModel):
     description: str
     auth_type: str  # Bearer token, API key, etc.
     supported: bool
+
+
+class FileNormalizeResponse(BaseResponse):
+    """Response model for file-based normalization."""
+    system: str
+    file_format: str
+    filename: str
+    data: NormalizedArchitectureData
+
+
+class SupportedFileFormatsResponse(BaseResponse):
+    """Response model for supported file formats by system."""
+    system: str
+    supported_formats: List[Dict[str, Any]]
+    count: int
 
 
 class SupportedSystemsResponse(BaseResponse):

@@ -148,6 +148,30 @@ class ServiceMetrics:
             registry=self.registry
         )
 
+        # Architecture Digitizer file upload metrics
+        self.architecture_digitizer_file_uploads_total = Counter(
+            'architecture_digitizer_file_uploads_total',
+            'Total number of architecture digitizer file uploads',
+            ['system', 'file_format', 'status'],
+            registry=self.registry
+        )
+
+        self.architecture_digitizer_file_upload_duration_seconds = Histogram(
+            'architecture_digitizer_file_upload_duration_seconds',
+            'Architecture digitizer file upload duration in seconds',
+            ['system', 'file_format'],
+            buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0),
+            registry=self.registry
+        )
+
+        self.architecture_digitizer_file_size_bytes = Histogram(
+            'architecture_digitizer_file_size_bytes',
+            'Size of uploaded files in bytes',
+            ['system', 'file_format'],
+            buckets=(1024, 10240, 102400, 1048576, 10485760),  # 1KB, 10KB, 100KB, 1MB, 10MB
+            registry=self.registry
+        )
+
     def update_resource_metrics(self):
         """Update system resource metrics."""
         try:
@@ -297,3 +321,24 @@ def record_architecture_digitizer_cache(metrics: ServiceMetrics, hit: bool):
         metrics.architecture_digitizer_cache_hits_total.inc()
     else:
         metrics.architecture_digitizer_cache_misses_total.inc()
+
+
+def record_architecture_digitizer_file_upload(metrics: ServiceMetrics, system: str, file_format: str, file_size: int, status: str = 'success', duration: float = None):
+    """Record architecture digitizer file upload metrics."""
+    metrics.architecture_digitizer_file_uploads_total.labels(
+        system=system,
+        file_format=file_format,
+        status=status
+    ).inc()
+
+    if duration is not None:
+        metrics.architecture_digitizer_file_upload_duration_seconds.labels(
+            system=system,
+            file_format=file_format
+        ).observe(duration)
+
+    # Record file size regardless of status
+    metrics.architecture_digitizer_file_size_bytes.labels(
+        system=system,
+        file_format=file_format
+    ).observe(file_size)
