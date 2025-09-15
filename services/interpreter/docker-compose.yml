@@ -9,9 +9,8 @@ services:
       context: ../../
       dockerfile: services/interpreter/Dockerfile
     volumes:
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/interpreter/config.yaml:ro
+      - ../../:/app:ro
+      - ./:/app/services/interpreter:rw
     environment:
       - ENVIRONMENT=development
     ports:

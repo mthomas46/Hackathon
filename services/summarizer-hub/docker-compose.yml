@@ -9,9 +9,8 @@ services:
     working_dir: /app
     volumes:
       - ../../:/app:ro
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/summarizer-hub/config.yaml:ro
+      - ./:/app/services/summarizer-hub:rw
+      - ../../:/app:ro
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
       - ENVIRONMENT=development
