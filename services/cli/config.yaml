@@ -1,0 +1,28 @@
+# CLI-specific configuration
+# Inherits from shared base_config.yaml
+
+# CLI doesn't expose a port but connects to other services
+# server section omitted as CLI is not a web service
+
+# CLI-specific settings
+cli:
+  default_user: ${USER:-cli_user}
+  current_user: ${USER:-cli_user}
+
+# Service URLs that CLI connects to
+services:
+  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
+
+# External service configurations
+external:
+  github:
+    api_base: ${GITHUB_API_BASE:-https://api.github.com}
+    owner: ${GITHUB_OWNER:-}
+  jira:
+    base_url: ${JIRA_BASE_URL:-https://example.atlassian.net}
+    email: ${JIRA_EMAIL:-}
+  confluence:
+    base_url: ${CONFLUENCE_BASE_URL:-https://example.atlassian.net/wiki}
+    email: ${CONFLUENCE_EMAIL:-}

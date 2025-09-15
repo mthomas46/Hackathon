@@ -21,13 +21,24 @@ def load_yaml_config(default_path: str) -> Dict[str, Any]:
 
 
 def _load_app_config() -> Dict[str, Any]:
-    """Load a global app config once (config/app.yaml) if present."""
+    """Load a global app config once (config.yml or config/app.yaml) if present."""
     global _CONFIG_CACHE
     if _CONFIG_CACHE:
         return _CONFIG_CACHE
-    # Allow override via env
-    cfg_path = os.environ.get("APP_CONFIG_PATH", "config/app.yaml")
-    _CONFIG_CACHE = load_yaml_config(cfg_path) or {}
+
+    # Check for unified config.yml first, then fall back to config/app.yaml
+    config_paths = [
+        os.environ.get("APP_CONFIG_PATH"),  # Explicit override
+        "config.yml",                       # Unified config at project root
+        "config/app.yaml"                   # Legacy config location
+    ]
+
+    for cfg_path in config_paths:
+        if cfg_path and os.path.exists(cfg_path):
+            _CONFIG_CACHE = load_yaml_config(cfg_path) or {}
+            if _CONFIG_CACHE:  # Only use if we successfully loaded something
+                break
+
     return _CONFIG_CACHE
 
 

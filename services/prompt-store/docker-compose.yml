@@ -1,0 +1,28 @@
+# Individual Docker Compose for Prompt Store Service
+# This allows the prompt-store to run independently with its own SQLite database
+
+version: "3.9"
+
+services:
+  prompt-store:
+    build:
+      context: ../../
+      dockerfile: services/prompt-store/Dockerfile
+    volumes:
+      - prompt_store_data:/app/data
+      - ../../config.yml:/app/config.yml:ro
+      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
+      - ./config.yaml:/app/services/prompt-store/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    ports:
+      - "5110:5110"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5110/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  prompt_store_data:
+    driver: local

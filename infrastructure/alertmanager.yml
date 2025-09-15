@@ -1,0 +1,102 @@
+# Alertmanager Configuration for LLM Documentation Ecosystem
+
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@llm-docs.com'
+  smtp_auth_username: 'alerts@llm-docs.com'
+  smtp_auth_password: 'your_smtp_password'
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'team-email'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-email'
+      group_wait: 5s
+      group_interval: 5s
+      repeat_interval: 30m
+
+    - match:
+        severity: warning
+      receiver: 'warning-email'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 2h
+
+receivers:
+  - name: 'team-email'
+    email_configs:
+      - to: 'team@llm-docs.com'
+        subject: '[{{ .GroupLabels.alertname }}] {{ len .Alerts }} alert(s) firing'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Instance: {{ .Labels.instance }}
+          {{ end }}
+
+  - name: 'critical-email'
+    email_configs:
+      - to: 'oncall@llm-docs.com'
+        subject: 'CRITICAL: [{{ .GroupLabels.alertname }}] {{ len .Alerts }} alert(s) firing'
+        body: |
+          {{ range .Alerts }}
+          🚨 CRITICAL ALERT 🚨
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Instance: {{ .Labels.instance }}
+          Runbook: https://docs.llm-docs.com/runbooks/{{ .GroupLabels.alertname }}
+          {{ end }}
+
+  - name: 'warning-email'
+    email_configs:
+      - to: 'dev-team@llm-docs.com'
+        subject: 'WARNING: [{{ .GroupLabels.alertname }}] {{ len .Alerts }} alert(s) firing'
+
+  # Slack notifications (optional)
+  - name: 'slack-critical'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#alerts-critical'
+        title: '🚨 {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          {{ end }}
+
+  - name: 'slack-general'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#alerts-general'
+        title: '{{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          {{ end }}
+
+# Inhibition rules to suppress less critical alerts when critical ones are firing
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'instance']

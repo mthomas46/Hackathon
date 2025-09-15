@@ -1,0 +1,17 @@
+# Individual Docker Compose for CLI Service
+# This allows the cli to run independently as a standalone service
+
+version: "3.9"
+
+services:
+  cli:
+    build:
+      context: ../../
+      dockerfile: services/cli/Dockerfile
+    volumes:
+      - ../../config.yml:/app/config.yml:ro
+      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
+      - ./config.yaml:/app/services/cli/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: ["sleep", "infinity"]  # Keep container running for interactive use

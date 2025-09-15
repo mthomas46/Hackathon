@@ -1,0 +1,12 @@
+# Interpreter-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for interpreter
+server:
+  port: ${INTERPRETER_PORT:-5120}
+
+# Service URLs that interpreter connects to
+services:
+  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+  analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}

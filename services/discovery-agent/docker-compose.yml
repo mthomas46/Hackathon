@@ -1,0 +1,24 @@
+# Individual Docker Compose for Discovery Agent Service
+# This allows the discovery-agent to run independently as a standalone service
+
+version: "3.9"
+
+services:
+  discovery-agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ../../:/app:ro
+      - ../../config.yml:/app/config.yml:ro
+      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
+      - ./config.yaml:/app/services/discovery-agent/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/discovery-agent/main.py"
+    ports:
+      - "5045:5045"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5045/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

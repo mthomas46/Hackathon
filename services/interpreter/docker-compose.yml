@@ -1,0 +1,23 @@
+# Individual Docker Compose for Interpreter Service
+# This allows the interpreter to run independently as a standalone service
+
+version: "3.9"
+
+services:
+  interpreter:
+    build:
+      context: ../../
+      dockerfile: services/interpreter/Dockerfile
+    volumes:
+      - ../../config.yml:/app/config.yml:ro
+      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
+      - ./config.yaml:/app/services/interpreter/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    ports:
+      - "5120:5120"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5120/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

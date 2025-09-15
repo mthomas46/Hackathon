@@ -1,0 +1,45 @@
+# Individual Docker Compose for Code Analyzer Service
+# This allows the code-analyzer to run independently with its own Redis instance
+
+version: "3.9"
+
+services:
+  code-analyzer:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ../../:/app:ro
+      - ../../config.yml:/app/config.yml:ro
+      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
+      - ./config.yaml:/app/services/code-analyzer/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx && python services/code-analyzer/main.py"
+    ports:
+      - "5085:5085"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+    driver: local

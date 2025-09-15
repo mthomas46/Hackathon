@@ -5,6 +5,9 @@
 server:
   port: 5040
 
-# Override limits for memory-agent
-limits:
+# Memory-agent specific settings
+memory:
   max_items: ${MEMORY_MAX_ITEMS:-1000}
+  ttl_seconds: ${MEMORY_TTL_SECONDS:-3600}
+  environment: ${ENVIRONMENT:-development}
+  redis_url: ${REDIS_URL:-redis://redis:6379}

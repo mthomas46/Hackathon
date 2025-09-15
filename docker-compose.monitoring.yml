@@ -1,0 +1,220 @@
+# =============================================================================
+# DOCKER COMPOSE - MONITORING STACK
+# =============================================================================
+# Comprehensive monitoring, observability, and alerting stack for the
+# LLM Documentation Ecosystem
+#
+# Components:
+# - Prometheus: Metrics collection and storage
+# - Grafana: Visualization and dashboards
+# - Jaeger: Distributed tracing
+# - Alertmanager: Alert handling and notifications
+# - Node Exporter: System metrics
+# - Pushgateway: Batch job metrics
+#
+# Usage:
+#   docker-compose -f docker-compose.monitoring.yml up -d
+#   # Access Grafana at http://localhost:3001 (admin/admin)
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ============================================================================
+  # METRICS COLLECTION
+  # ============================================================================
+
+  # Prometheus - Metrics collection and storage
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Alertmanager - Alert handling and notifications
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infrastructure/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Pushgateway - For batch job metrics
+  pushgateway:
+    image: prom/pushgateway:v1.5.1
+    ports:
+      - "9091:9091"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Node Exporter - System metrics
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # ============================================================================
+  # VISUALIZATION
+  # ============================================================================
+
+  # Grafana - Visualization and dashboards
+  grafana:
+    image: grafana/grafana:10.1.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"  # Avoid conflict with frontend on port 3000
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - jaeger
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================================
+  # DISTRIBUTED TRACING
+  # ============================================================================
+
+  # Jaeger - Distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+      COLLECTOR_ZIPKIN_HOST_PORT: 9411
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector (accept jaeger.thrift over HTTP)
+      - "9411:9411"    # Zipkin collector
+    volumes:
+      - jaeger_data:/tmp
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================================
+  # LOGGING (Optional - ELK Stack)
+  # ============================================================================
+
+  # Elasticsearch for log storage (optional)
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+  #   volumes:
+  #     - elasticsearch_data:/usr/share/elasticsearch/data
+  #   ports:
+  #     - "9200:9200"
+  #   networks:
+  #     - monitoring
+  #   restart: unless-stopped
+
+  # Logstash for log processing (optional)
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:8.8.0
+  #   volumes:
+  #     - ./infrastructure/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+  #   ports:
+  #     - "5044:5044"
+  #     - "9600:9600"
+  #   networks:
+  #     - monitoring
+  #   depends_on:
+  #     - elasticsearch
+  #   restart: unless-stopped
+
+  # Kibana for log visualization (optional)
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:8.8.0
+  #   environment:
+  #     ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+  #     ELASTICSEARCH_USERNAME: elastic
+  #     ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD:-changeme}
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     - monitoring
+  #   depends_on:
+  #     - elasticsearch
+  #   restart: unless-stopped
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  jaeger_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  # elasticsearch_data:
+  #   driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+
+networks:
+  monitoring:
+    driver: bridge
+    name: monitoring-network

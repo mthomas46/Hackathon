@@ -1,0 +1,14 @@
+# Code-analyzer-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for code-analyzer
+server:
+  port: 5085
+
+# Code-analyzer specific settings
+code_analyzer:
+  rate_limit_enabled: ${RATE_LIMIT_ENABLED:-false}
+
+# Service URLs
+services:
+  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
