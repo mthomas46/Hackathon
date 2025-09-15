@@ -1,0 +1,48 @@
+# Architecture-digitizer-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for architecture-digitizer
+server:
+  port: 5105
+
+# Architecture-digitizer specific settings
+architecture_digitizer:
+  # Supported diagram systems
+  supported_systems:
+    - miro
+    - figjam
+    - lucid
+    - confluence
+
+  # API timeouts and retry settings
+  api_timeout_seconds: 30
+  max_retries: 3
+  retry_backoff_seconds: 1
+
+  # Rate limiting
+  rate_limit_requests_per_minute: 60
+
+  # Default component type mappings
+  default_component_type: service
+
+  # Cache settings for API responses (to avoid repeated calls)
+  cache_enabled: true
+  cache_ttl_seconds: 300  # 5 minutes
+
+# External API configurations (tokens provided at runtime)
+external_apis:
+  miro:
+    base_url: https://api.miro.com/v2
+    token_env_var: MIRO_TOKEN
+
+  figjam:
+    base_url: https://api.figma.com/v1
+    token_env_var: FIGMA_TOKEN
+
+  lucid:
+    base_url: https://lucid.app/api
+    token_env_var: LUCID_TOKEN
+
+  confluence:
+    base_url_template: https://{domain}.atlassian.net/wiki/rest/api
+    token_env_var: CONFLUENCE_TOKEN

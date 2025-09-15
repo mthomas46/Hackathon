@@ -113,6 +113,41 @@ class ServiceMetrics:
             registry=self.registry
         )
 
+        # Architecture Digitizer specific metrics
+        self.architecture_digitizer_requests_total = Counter(
+            'architecture_digitizer_requests_total',
+            'Total number of architecture digitizer requests',
+            ['system', 'status'],
+            registry=self.registry
+        )
+
+        self.architecture_digitizer_request_duration_seconds = Histogram(
+            'architecture_digitizer_request_duration_seconds',
+            'Architecture digitizer request duration in seconds',
+            ['system'],
+            buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0),
+            registry=self.registry
+        )
+
+        self.architecture_digitizer_api_failures_total = Counter(
+            'architecture_digitizer_api_failures_total',
+            'Total number of architecture digitizer API failures',
+            ['system', 'error_type'],
+            registry=self.registry
+        )
+
+        self.architecture_digitizer_cache_hits_total = Counter(
+            'architecture_digitizer_cache_hits_total',
+            'Total number of architecture digitizer cache hits',
+            registry=self.registry
+        )
+
+        self.architecture_digitizer_cache_misses_total = Counter(
+            'architecture_digitizer_cache_misses_total',
+            'Total number of architecture digitizer cache misses',
+            registry=self.registry
+        )
+
     def update_resource_metrics(self):
         """Update system resource metrics."""
         try:
@@ -232,3 +267,33 @@ def record_cache_operation(metrics: ServiceMetrics, cache_name: str, hit: bool):
 def update_queue_length(metrics: ServiceMetrics, queue_name: str, length: int):
     """Update queue length metrics."""
     metrics.queue_length.labels(queue_name=queue_name).set(length)
+
+
+# Architecture Digitizer specific metric functions
+def record_architecture_digitizer_request(metrics: ServiceMetrics, system: str, status: str = 'success', duration: float = None):
+    """Record architecture digitizer request metrics."""
+    metrics.architecture_digitizer_requests_total.labels(
+        system=system,
+        status=status
+    ).inc()
+
+    if duration is not None:
+        metrics.architecture_digitizer_request_duration_seconds.labels(
+            system=system
+        ).observe(duration)
+
+
+def record_architecture_digitizer_api_failure(metrics: ServiceMetrics, system: str, error_type: str):
+    """Record architecture digitizer API failure metrics."""
+    metrics.architecture_digitizer_api_failures_total.labels(
+        system=system,
+        error_type=error_type
+    ).inc()
+
+
+def record_architecture_digitizer_cache(metrics: ServiceMetrics, hit: bool):
+    """Record architecture digitizer cache metrics."""
+    if hit:
+        metrics.architecture_digitizer_cache_hits_total.inc()
+    else:
+        metrics.architecture_digitizer_cache_misses_total.inc()

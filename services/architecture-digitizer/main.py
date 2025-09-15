@@ -1,0 +1,169 @@
+"""Service: Architecture Digitizer
+
+Endpoints:
+- POST /normalize: Normalize architectural diagrams from various sources (Miro, FigJam, Lucid, Confluence)
+- GET /supported-systems: Get list of supported diagram systems
+- GET /health: Service health check
+
+Responsibilities:
+- Fetch architectural diagrams from various whiteboard/diagram tools
+- Normalize data into standardized Software Architecture JSON schema
+- Provide structured component and connection data for analysis
+- Support authentication and error handling for external APIs
+
+Dependencies: None (standalone service with external API calls)
+"""
+
+from typing import Dict, Any, Optional, List
+import httpx
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, field_validator
+
+# ============================================================================
+# SHARED MODULES - Following ecosystem patterns
+# ============================================================================
+from services.shared.health import register_health_endpoints
+from services.shared.responses import create_success_response, create_error_response
+from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.utilities import setup_common_middleware, attach_self_register
+from services.shared.logging import fire_and_forget
+from services.shared.metrics import (
+    get_service_metrics,
+    metrics_endpoint,
+    record_architecture_digitizer_request,
+    record_architecture_digitizer_api_failure
+)
+
+# ============================================================================
+# LOCAL MODULES - Service-specific functionality
+# ============================================================================
+from .modules.normalizers import get_normalizer
+from .modules.models import NormalizeRequest, NormalizeResponse, SupportedSystemsResponse
+
+# Service configuration constants
+SERVICE_NAME = "architecture-digitizer"
+SERVICE_TITLE = "Architecture Digitizer"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5105
+
+# Initialize metrics
+metrics = get_service_metrics(SERVICE_NAME)
+
+# Create FastAPI app following ecosystem patterns
+app = FastAPI(
+    title=SERVICE_TITLE,
+    description="Architecture diagram digitizer and normalizer service for the LLM Documentation Ecosystem",
+    version=SERVICE_VERSION
+)
+
+# Use common middleware setup and error handlers
+setup_common_middleware(app, ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME)
+
+# Register health endpoints and auto-register with orchestrator
+register_health_endpoints(app, ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME, SERVICE_VERSION)
+attach_self_register(app, ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME)
+
+# Add metrics endpoint
+app.add_route("/metrics", metrics_endpoint(SERVICE_NAME))
+
+# ============================================================================
+# API ENDPOINTS
+# ============================================================================
+
+@app.post("/normalize", response_model=NormalizeResponse)
+async def normalize_architecture(request: NormalizeRequest):
+    """Normalize architectural diagrams from various sources into standardized format.
+
+    Fetches diagram data from supported systems (Miro, FigJam, Lucid, Confluence)
+    and normalizes it into the common Software Architecture JSON schema with
+    components and connections for downstream analysis and documentation.
+    """
+    import time
+    start_time = time.time()
+
+    try:
+        # Get the appropriate normalizer for the system
+        normalizer = get_normalizer(request.system)
+        if not normalizer:
+            record_architecture_digitizer_request(metrics, request.system, "error")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported system: {request.system}"
+            )
+
+        # Fetch and normalize the data
+        result = await normalizer.normalize(request.board_id, request.token)
+
+        # Record successful metrics
+        duration = time.time() - start_time
+        record_architecture_digitizer_request(metrics, request.system, "success", duration)
+
+        # Log successful normalization
+        fire_and_forget(
+            "info",
+            f"Successfully normalized {request.system} diagram {request.board_id}",
+            SERVICE_NAME,
+            {"system": request.system, "board_id": request.board_id, "duration": duration}
+        )
+
+        return NormalizeResponse(
+            success=True,
+            system=request.system,
+            board_id=request.board_id,
+            data=result,
+            message="Architecture diagram normalized successfully"
+        )
+
+    except Exception as e:
+        # Record failure metrics
+        duration = time.time() - start_time
+        record_architecture_digitizer_request(metrics, request.system, "error", duration)
+        record_architecture_digitizer_api_failure(metrics, request.system, type(e).__name__)
+
+        error_msg = f"Failed to normalize {request.system} diagram {request.board_id}: {str(e)}"
+
+        # Log the error
+        fire_and_forget(
+            "error",
+            error_msg,
+            SERVICE_NAME,
+            {"system": request.system, "board_id": request.board_id, "error": str(e), "duration": duration}
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=error_msg
+        )
+
+@app.get("/supported-systems", response_model=SupportedSystemsResponse)
+async def get_supported_systems():
+    """Get list of supported diagram systems and their capabilities."""
+    from .modules.normalizers import SUPPORTED_SYSTEMS
+
+    systems_info = []
+    for system_name, normalizer_class in SUPPORTED_SYSTEMS.items():
+        systems_info.append({
+            "name": system_name,
+            "description": normalizer_class.get_description(),
+            "auth_type": normalizer_class.get_auth_type(),
+            "supported": True
+        })
+
+    return SupportedSystemsResponse(
+        systems=systems_info,
+        count=len(systems_info)
+    )
+
+# ============================================================================
+# LIFECYCLE MANAGEMENT
+# ============================================================================
+
+if __name__ == "__main__":
+    """Run the Architecture Digitizer service directly."""
+    import uvicorn
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )

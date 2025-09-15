@@ -96,6 +96,7 @@ ports:
   interpreter: 5120
   cli: 5130
   bedrock_proxy: 7090
+  architecture_digitizer: 5105
 
   # Analysis & Processing
   code_analyzer: 5085
@@ -136,6 +137,7 @@ services:
   interpreter_url: ${INTERPRETER_URL:-http://interpreter:5120}
   cli_service_url: ${CLI_SERVICE_URL:-http://cli:5130}
   bedrock_proxy_url: ${BEDROCK_PROXY_URL:-http://bedrock-proxy:7090}
+  architecture_digitizer_url: ${ARCHITECTURE_DIGITIZER_URL:-http://architecture-digitizer:5105}
 
   # Analysis & Processing Service URLs
   code_analyzer_url: ${CODE_ANALYZER_URL:-http://code-analyzer:5085}
