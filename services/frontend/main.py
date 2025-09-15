@@ -17,6 +17,15 @@ Endpoints (HTML):
 - GET /doc-store/browser: Doc-store data browser for document exploration
 - GET /prompt-store/browser: Prompt-store data browser for prompt exploration
 - GET /code-analyzer/dashboard: Code analyzer service dashboard
+- GET /bedrock-proxy/dashboard: Bedrock proxy service dashboard
+- GET /discovery-agent/dashboard: Discovery agent service dashboard
+- GET /github-mcp/dashboard: GitHub MCP service dashboard
+- GET /interpreter/dashboard: Interpreter service dashboard
+- GET /memory-agent/dashboard: Memory agent service dashboard
+- GET /notification-service/dashboard: Notification service dashboard
+- GET /secure-analyzer/dashboard: Secure analyzer service dashboard
+- GET /source-agent/dashboard: Source agent service dashboard
+- GET /services/overview: Services overview dashboard
 
 Endpoints (API):
 - GET /api/workflows/jobs/status: Active workflows and jobs status for visualization
@@ -27,10 +36,52 @@ Endpoints (API):
 - POST /api/code-analyzer/style-check: Check code style compliance
 - GET /api/code-analyzer/style-examples: Get code style examples
 - GET /api/code-analyzer/history: Get code analyzer analysis history
+- GET /api/bedrock-proxy/status: Get comprehensive bedrock proxy service status
+- POST /api/bedrock-proxy/invoke: Invoke AI through bedrock proxy and cache results
+- GET /api/bedrock-proxy/history: Get bedrock proxy invocation history
+- GET /api/discovery-agent/status: Get comprehensive discovery agent service status
+- POST /api/discovery-agent/discover: Trigger endpoint discovery for services
+- GET /api/discovery-agent/history: Get discovery agent operation history
+- GET /api/github-mcp/status: Get comprehensive GitHub MCP service status
+- GET /api/github-mcp/tools: Get available GitHub MCP tools
+- POST /api/github-mcp/invoke: Invoke GitHub MCP tools and cache results
+- GET /api/github-mcp/history: Get GitHub MCP tool invocation history
+- GET /api/interpreter/status: Get comprehensive interpreter service status
+- GET /api/interpreter/intents: Get supported intents and examples
+- POST /api/interpreter/interpret: Interpret natural language queries
+- POST /api/interpreter/execute: Interpret and execute workflows
+- GET /api/interpreter/interpretations: Get interpretation history
+- GET /api/interpreter/executions: Get workflow execution history
+- GET /api/memory-agent/status: Get comprehensive memory agent service status
+- GET /api/memory-agent/items: Get memory items with filtering
+- POST /api/memory-agent/store: Store memory items
+- GET /api/memory-agent/history: Get memory item history
+- GET /api/notification-service/status: Get comprehensive notification service status
+- GET /api/notification-service/dlq: Get dead letter queue entries
+- POST /api/notification-service/resolve-owners: Resolve owners to notification targets
+- POST /api/notification-service/send: Send test notifications
+- GET /api/notification-service/notifications: Get notification delivery history
+- GET /api/notification-service/resolutions: Get owner resolution history
+- GET /api/secure-analyzer/status: Get comprehensive secure analyzer service status
+- POST /api/secure-analyzer/detect: Detect sensitive content in text
+- POST /api/secure-analyzer/suggest: Get model suggestions based on content sensitivity
+- POST /api/secure-analyzer/summarize: Generate secure summaries with policy enforcement
+- GET /api/secure-analyzer/detections: Get content detection history
+- GET /api/secure-analyzer/suggestions: Get model suggestion history
+- GET /api/secure-analyzer/summaries: Get secure summary history
+- GET /api/source-agent/status: Get comprehensive source agent service status
+- POST /api/source-agent/fetch: Fetch documents from sources
+- POST /api/source-agent/normalize: Normalize data from sources
+- POST /api/source-agent/analyze: Analyze code for endpoints and patterns
+- GET /api/source-agent/fetches: Get document fetch history
+- GET /api/source-agent/normalizations: Get data normalization history
+- GET /api/source-agent/analyses: Get code analysis history
+- GET /api/services/overview: Get comprehensive services overview
+- GET /api/services/overview/{service_name}: Get detailed service health information
 
 Responsibilities:
 - Provide HTML UI for viewing documentation consistency findings and reports
-- Aggregate data from multiple backend services (Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer)
+- Aggregate data from multiple backend services (Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent)
 - Render interactive dashboards for document quality metrics and analysis
 - Support filtering and searching across documentation collections
 - Display owner coverage and staleness reports for Jira tickets
@@ -40,8 +91,26 @@ Responsibilities:
 - Support data discovery through search, filtering, and pagination interfaces
 - Enable code analysis, security scanning, and style checking capabilities
 - Provide interactive code quality assessment and vulnerability detection
+- Monitor AI invocations and template usage through bedrock proxy service
+- Support interactive testing and caching of AI responses for development
+- Monitor OpenAPI endpoint discovery and service registration operations
+- Support interactive endpoint discovery and orchestrator registration
+- Monitor GitHub MCP tool invocations and GitHub data operations
+- Support interactive tool testing and MCP service configuration
+- Monitor natural language query interpretation and workflow generation
+- Support interactive query testing and intent recognition validation
+- Monitor operational context and event summary storage
+- Support memory item browsing and interactive storage testing
+- Monitor owner resolution and notification delivery operations
+- Support notification testing and DLQ monitoring
+- Monitor content security analysis and policy enforcement
+- Support secure content detection and model recommendation testing
+- Monitor document fetching, normalization, and code analysis operations
+- Support source integration testing across GitHub, Jira, and Confluence
+- Provide comprehensive system-wide monitoring and health dashboard
+- Aggregate service status across all ecosystem components
 
-Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer; shared render helpers.
+Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent; shared render helpers.
 """
 
 from fastapi import FastAPI
@@ -398,6 +467,96 @@ async def ui_code_analyzer_dashboard():
     with interactive forms and result visualization.
     """
     return ui_handlers.handle_code_analyzer_dashboard()
+
+
+@app.get("/bedrock-proxy/dashboard")
+async def ui_bedrock_proxy_dashboard():
+    """Render bedrock proxy service dashboard.
+
+    Provides AI invocation monitoring, template usage tracking, and
+    interactive testing capabilities for the bedrock proxy service.
+    """
+    return ui_handlers.handle_bedrock_proxy_dashboard()
+
+
+@app.get("/discovery-agent/dashboard")
+async def ui_discovery_agent_dashboard():
+    """Render discovery agent service dashboard.
+
+    Provides endpoint discovery monitoring, OpenAPI parsing operations,
+    and service registration capabilities for the discovery agent service.
+    """
+    return ui_handlers.handle_discovery_agent_dashboard()
+
+
+@app.get("/github-mcp/dashboard")
+async def ui_github_mcp_dashboard():
+    """Render github-mcp service dashboard.
+
+    Provides GitHub MCP tool monitoring, tool invocation testing,
+    and GitHub operations tracking for the GitHub MCP service.
+    """
+    return ui_handlers.handle_github_mcp_dashboard()
+
+
+@app.get("/interpreter/dashboard")
+async def ui_interpreter_dashboard():
+    """Render interpreter service dashboard.
+
+    Provides natural language query interpretation monitoring,
+    intent recognition testing, and workflow execution tracking.
+    """
+    return ui_handlers.handle_interpreter_dashboard()
+
+
+@app.get("/memory-agent/dashboard")
+async def ui_memory_agent_dashboard():
+    """Render memory agent service dashboard.
+
+    Provides operational context monitoring, event summary storage,
+    and memory item management for the memory agent service.
+    """
+    return ui_handlers.handle_memory_agent_dashboard()
+
+
+@app.get("/notification-service/dashboard")
+async def ui_notification_service_dashboard():
+    """Render notification service dashboard.
+
+    Provides owner resolution monitoring, notification delivery tracking,
+    and dead letter queue management for the notification service.
+    """
+    return ui_handlers.handle_notification_service_dashboard()
+
+
+@app.get("/secure-analyzer/dashboard")
+async def ui_secure_analyzer_dashboard():
+    """Render secure analyzer service dashboard.
+
+    Provides content security analysis, policy enforcement monitoring,
+    and secure summarization testing for the secure analyzer service.
+    """
+    return ui_handlers.handle_secure_analyzer_dashboard()
+
+
+@app.get("/source-agent/dashboard")
+async def ui_source_agent_dashboard():
+    """Render source agent service dashboard.
+
+    Provides document fetching, data normalization, and code analysis
+    monitoring across GitHub, Jira, and Confluence sources.
+    """
+    return ui_handlers.handle_source_agent_dashboard()
+
+
+@app.get("/services/overview")
+async def ui_services_overview():
+    """Render comprehensive services overview dashboard.
+
+    Provides system-wide monitoring and health status for all services
+    in the LLM Documentation Ecosystem with categorized views.
+    """
+    return ui_handlers.handle_services_overview()
 
 
 @app.get("/api/workflows/jobs/status")
@@ -1297,6 +1456,1132 @@ async def get_code_analyzer_history():
         )
     except Exception as e:
         return handle_frontend_error("get code analyzer history", e, **build_frontend_context("get_code_analyzer_history"))
+
+
+# ============================================================================
+# BEDROCK PROXY API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/bedrock-proxy/status")
+async def get_bedrock_proxy_status():
+    """Get comprehensive bedrock proxy service status.
+
+    Returns health information, invocation statistics, and recent activity
+    for monitoring the bedrock proxy service.
+    """
+    try:
+        status_data = await bedrock_proxy_monitor.get_proxy_status()
+        return create_frontend_success_response(
+            "bedrock proxy status retrieved",
+            status_data,
+            **build_frontend_context("get_bedrock_proxy_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get bedrock proxy status", e, **build_frontend_context("get_bedrock_proxy_status"))
+
+
+@app.post("/api/bedrock-proxy/invoke")
+async def invoke_bedrock_proxy(req: dict):
+    """Invoke AI through the bedrock proxy and cache the result.
+
+    Accepts a prompt and optional template/format parameters to generate
+    structured AI responses. Results are cached for monitoring and analysis.
+    """
+    try:
+        prompt = req.get("prompt")
+        if not prompt:
+            return handle_frontend_error("invoke bedrock proxy", ValueError("Prompt is required"), **build_frontend_context("invoke_bedrock_proxy"))
+
+        result = await bedrock_proxy_monitor.invoke_ai(
+            prompt=prompt,
+            template=req.get("template"),
+            format=req.get("format"),
+            title=req.get("title"),
+            model=req.get("model"),
+            region=req.get("region"),
+            **req.get("params", {})
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "bedrock proxy invocation completed",
+                {
+                    "invocation_id": result.get("invocation_id"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("invoke_bedrock_proxy")
+            )
+        else:
+            return handle_frontend_error("invoke bedrock proxy", Exception(result.get("error", "Unknown error")), **build_frontend_context("invoke_bedrock_proxy"))
+
+    except Exception as e:
+        return handle_frontend_error("invoke bedrock proxy", e, **build_frontend_context("invoke_bedrock_proxy"))
+
+
+@app.get("/api/bedrock-proxy/history")
+async def get_bedrock_proxy_history(limit: int = 20):
+    """Get bedrock proxy invocation history.
+
+    Returns cached invocation history with optional limit parameter.
+    Useful for analyzing usage patterns and troubleshooting.
+    """
+    try:
+        history = bedrock_proxy_monitor.get_invocation_history(limit=limit)
+        return create_frontend_success_response(
+            "bedrock proxy history retrieved",
+            history,
+            **build_frontend_context("get_bedrock_proxy_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get bedrock proxy history", e, **build_frontend_context("get_bedrock_proxy_history"))
+
+
+# ============================================================================
+# DISCOVERY AGENT API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/discovery-agent/status")
+async def get_discovery_agent_status():
+    """Get comprehensive discovery agent service status.
+
+    Returns health information, discovery statistics, and recent activity
+    for monitoring the discovery agent service operations.
+    """
+    try:
+        from .modules.discovery_agent_monitor import discovery_agent_monitor
+        status_data = await discovery_agent_monitor.get_discovery_status()
+        return create_frontend_success_response(
+            "discovery agent status retrieved",
+            status_data,
+            **build_frontend_context("get_discovery_agent_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get discovery agent status", e, **build_frontend_context("get_discovery_agent_status"))
+
+
+@app.post("/api/discovery-agent/discover")
+async def discover_service_endpoints(req: dict):
+    """Trigger endpoint discovery for a service and cache the result.
+
+    Accepts a service URL and optional parameters to discover OpenAPI endpoints
+    and optionally register them with the orchestrator. Supports dry-run mode.
+    """
+    try:
+        from .modules.discovery_agent_monitor import discovery_agent_monitor
+
+        service_url = req.get("service_url")
+        if not service_url:
+            return handle_frontend_error("discover service endpoints", ValueError("service_url is required"), **build_frontend_context("discover_service_endpoints"))
+
+        result = await discovery_agent_monitor.discover_endpoints(
+            service_url=service_url,
+            service_name=req.get("service_name"),
+            dry_run=req.get("dry_run", False),
+            spec_url=req.get("spec_url")
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "service endpoint discovery completed",
+                {
+                    "discovery_id": result.get("discovery_id"),
+                    "endpoints_discovered": result.get("endpoints_discovered"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("discover_service_endpoints")
+            )
+        else:
+            return handle_frontend_error("discover service endpoints", Exception(result.get("error", "Unknown error")), **build_frontend_context("discover_service_endpoints"))
+
+    except Exception as e:
+        return handle_frontend_error("discover service endpoints", e, **build_frontend_context("discover_service_endpoints"))
+
+
+@app.get("/api/discovery-agent/history")
+async def get_discovery_agent_history(limit: int = 20):
+    """Get discovery agent operation history.
+
+    Returns cached discovery history with optional limit parameter.
+    Useful for analyzing discovery patterns and troubleshooting.
+    """
+    try:
+        from .modules.discovery_agent_monitor import discovery_agent_monitor
+        history = discovery_agent_monitor.get_discovery_history(limit=limit)
+        return create_frontend_success_response(
+            "discovery agent history retrieved",
+            history,
+            **build_frontend_context("get_discovery_agent_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get discovery agent history", e, **build_frontend_context("get_discovery_agent_history"))
+
+
+# ============================================================================
+# GITHUB MCP API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/github-mcp/status")
+async def get_github_mcp_status():
+    """Get comprehensive github-mcp service status.
+
+    Returns health information, configuration details, tool statistics,
+    and recent activity for monitoring the GitHub MCP service.
+    """
+    try:
+        from .modules.github_mcp_monitor import github_mcp_monitor
+        status_data = await github_mcp_monitor.get_mcp_status()
+        return create_frontend_success_response(
+            "github-mcp status retrieved",
+            status_data,
+            **build_frontend_context("get_github_mcp_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get github-mcp status", e, **build_frontend_context("get_github_mcp_status"))
+
+
+@app.get("/api/github-mcp/tools")
+async def get_github_mcp_tools(toolsets: Optional[str] = None):
+    """Get available GitHub MCP tools.
+
+    Returns list of available tools filtered by toolsets when specified.
+    Useful for discovering what GitHub operations are available.
+    """
+    try:
+        from .modules.github_mcp_monitor import github_mcp_monitor
+        tools = await github_mcp_monitor.get_available_tools(toolsets=toolsets)
+        return create_frontend_success_response(
+            "github-mcp tools retrieved",
+            tools,
+            **build_frontend_context("get_github_mcp_tools")
+        )
+    except Exception as e:
+        return handle_frontend_error("get github-mcp tools", e, **build_frontend_context("get_github_mcp_tools"))
+
+
+@app.post("/api/github-mcp/invoke")
+async def invoke_github_mcp_tool(req: dict):
+    """Invoke a GitHub MCP tool and cache the result.
+
+    Accepts a tool name and arguments to execute GitHub operations
+    through the MCP service. Results are cached for monitoring and analysis.
+    """
+    try:
+        from .modules.github_mcp_monitor import github_mcp_monitor
+
+        tool_name = req.get("tool_name")
+        if not tool_name:
+            return handle_frontend_error("invoke github-mcp tool", ValueError("tool_name is required"), **build_frontend_context("invoke_github_mcp_tool"))
+
+        result = await github_mcp_monitor.invoke_tool(
+            tool_name=tool_name,
+            arguments=req.get("arguments", {}),
+            mock=req.get("mock"),
+            correlation_id=req.get("correlation_id")
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "github-mcp tool invoked successfully",
+                {
+                    "invocation_id": result.get("invocation_id"),
+                    "tool": result.get("tool"),
+                    "result": result.get("result")
+                },
+                **build_frontend_context("invoke_github_mcp_tool")
+            )
+        else:
+            return handle_frontend_error("invoke github-mcp tool", Exception(result.get("error", "Unknown error")), **build_frontend_context("invoke_github_mcp_tool"))
+
+    except Exception as e:
+        return handle_frontend_error("invoke github-mcp tool", e, **build_frontend_context("invoke_github_mcp_tool"))
+
+
+@app.get("/api/github-mcp/history")
+async def get_github_mcp_history(limit: int = 20):
+    """Get GitHub MCP tool invocation history.
+
+    Returns cached tool invocation history with optional limit parameter.
+    Useful for analyzing tool usage patterns and troubleshooting.
+    """
+    try:
+        from .modules.github_mcp_monitor import github_mcp_monitor
+        history = github_mcp_monitor.get_invocation_history(limit=limit)
+        return create_frontend_success_response(
+            "github-mcp history retrieved",
+            history,
+            **build_frontend_context("get_github_mcp_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get github-mcp history", e, **build_frontend_context("get_github_mcp_history"))
+
+
+# ============================================================================
+# INTERPRETER API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/interpreter/status")
+async def get_interpreter_status():
+    """Get comprehensive interpreter service status.
+
+    Returns health information, supported intents, interpretation statistics,
+    and recent activity for monitoring the interpreter service.
+    """
+    try:
+        from .modules.interpreter_monitor import interpreter_monitor
+        status_data = await interpreter_monitor.get_interpreter_status()
+        return create_frontend_success_response(
+            "interpreter status retrieved",
+            status_data,
+            **build_frontend_context("get_interpreter_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get interpreter status", e, **build_frontend_context("get_interpreter_status"))
+
+
+@app.get("/api/interpreter/intents")
+async def get_interpreter_intents():
+    """Get supported intents and their examples.
+
+    Returns comprehensive information about all supported query intents,
+    including example queries, entity extraction patterns, and descriptions.
+    """
+    try:
+        from .modules.interpreter_monitor import interpreter_monitor
+        intents = await interpreter_monitor.get_supported_intents()
+        return create_frontend_success_response(
+            "interpreter intents retrieved",
+            intents,
+            **build_frontend_context("get_interpreter_intents")
+        )
+    except Exception as e:
+        return handle_frontend_error("get interpreter intents", e, **build_frontend_context("get_interpreter_intents"))
+
+
+@app.post("/api/interpreter/interpret")
+async def interpret_query(req: dict):
+    """Interpret a natural language query.
+
+    Accepts a query string and returns intent recognition, entity extraction,
+    confidence scoring, and generated workflow without execution.
+    """
+    try:
+        from .modules.interpreter_monitor import interpreter_monitor
+
+        query = req.get("query")
+        if not query:
+            return handle_frontend_error("interpret query", ValueError("query is required"), **build_frontend_context("interpret_query"))
+
+        result = await interpreter_monitor.interpret_query(
+            query=query,
+            session_id=req.get("session_id"),
+            user_id=req.get("user_id")
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "query interpreted successfully",
+                {
+                    "interpretation_id": result.get("interpretation_id"),
+                    "intent": result.get("intent"),
+                    "confidence": result.get("confidence"),
+                    "workflow": result.get("workflow"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("interpret_query")
+            )
+        else:
+            return handle_frontend_error("interpret query", Exception(result.get("error", "Unknown error")), **build_frontend_context("interpret_query"))
+
+    except Exception as e:
+        return handle_frontend_error("interpret query", e, **build_frontend_context("interpret_query"))
+
+
+@app.post("/api/interpreter/execute")
+async def execute_interpreted_workflow(req: dict):
+    """Interpret query and execute the resulting workflow.
+
+    Interprets the user query and immediately executes the generated workflow
+    across multiple services, providing end-to-end processing results.
+    """
+    try:
+        from .modules.interpreter_monitor import interpreter_monitor
+
+        query = req.get("query")
+        if not query:
+            return handle_frontend_error("execute interpreted workflow", ValueError("query is required"), **build_frontend_context("execute_interpreted_workflow"))
+
+        result = await interpreter_monitor.execute_workflow(
+            query=query,
+            session_id=req.get("session_id"),
+            user_id=req.get("user_id")
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "workflow executed successfully",
+                {
+                    "execution_id": result.get("execution_id"),
+                    "results": result.get("results"),
+                    "execution_time": result.get("execution_time"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("execute_interpreted_workflow")
+            )
+        else:
+            return handle_frontend_error("execute interpreted workflow", Exception(result.get("error", "Unknown error")), **build_frontend_context("execute_interpreted_workflow"))
+
+    except Exception as e:
+        return handle_frontend_error("execute interpreted workflow", e, **build_frontend_context("execute_interpreted_workflow"))
+
+
+@app.get("/api/interpreter/interpretations")
+async def get_interpreter_history(limit: int = 20):
+    """Get interpretation history.
+
+    Returns cached query interpretation history with optional limit parameter.
+    Useful for analyzing interpretation patterns and confidence trends.
+    """
+    try:
+        from .modules.interpreter_monitor import interpreter_monitor
+        history = interpreter_monitor.get_interpretation_history(limit=limit)
+        return create_frontend_success_response(
+            "interpreter interpretation history retrieved",
+            history,
+            **build_frontend_context("get_interpreter_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get interpreter history", e, **build_frontend_context("get_interpreter_history"))
+
+
+@app.get("/api/interpreter/executions")
+async def get_execution_history(limit: int = 20):
+    """Get workflow execution history.
+
+    Returns cached workflow execution history with optional limit parameter.
+    Useful for analyzing execution success rates and performance metrics.
+    """
+    try:
+        from .modules.interpreter_monitor import interpreter_monitor
+        history = interpreter_monitor.get_execution_history(limit=limit)
+        return create_frontend_success_response(
+            "interpreter execution history retrieved",
+            history,
+            **build_frontend_context("get_execution_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get execution history", e, **build_frontend_context("get_execution_history"))
+
+
+# ============================================================================
+# MEMORY AGENT API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/memory-agent/status")
+async def get_memory_agent_status():
+    """Get comprehensive memory agent service status.
+
+    Returns health information, memory statistics, and recent activity
+    for monitoring the memory agent service operations.
+    """
+    try:
+        from .modules.memory_agent_monitor import memory_agent_monitor
+        status_data = await memory_agent_monitor.get_memory_status()
+        return create_frontend_success_response(
+            "memory agent status retrieved",
+            status_data,
+            **build_frontend_context("get_memory_agent_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get memory agent status", e, **build_frontend_context("get_memory_agent_status"))
+
+
+@app.get("/api/memory-agent/items")
+async def get_memory_agent_items(type: Optional[str] = None, key: Optional[str] = None, limit: int = 25):
+    """Get memory items with filtering.
+
+    Returns stored memory items with optional filtering by type and key,
+    useful for browsing operational context and event summaries.
+    """
+    try:
+        from .modules.memory_agent_monitor import memory_agent_monitor
+        items = await memory_agent_monitor.list_memory_items(type=type, key=key, limit=limit)
+        return create_frontend_success_response(
+            "memory agent items retrieved",
+            items,
+            **build_frontend_context("get_memory_agent_items")
+        )
+    except Exception as e:
+        return handle_frontend_error("get memory agent items", e, **build_frontend_context("get_memory_agent_items"))
+
+
+@app.post("/api/memory-agent/store")
+async def store_memory_agent_item(req: dict):
+    """Store a memory item.
+
+    Accepts memory item data and stores it in the memory agent's
+    operational context storage with TTL-based expiration.
+    """
+    try:
+        from .modules.memory_agent_monitor import memory_agent_monitor
+
+        item_type = req.get("type")
+        key = req.get("key")
+        value = req.get("value")
+
+        if not item_type or not key or value is None:
+            return handle_frontend_error("store memory item", ValueError("type, key, and value are required"), **build_frontend_context("store_memory_agent_item"))
+
+        result = await memory_agent_monitor.store_memory_item(
+            item_type=item_type,
+            key=key,
+            value=value,
+            metadata=req.get("metadata")
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "memory item stored successfully",
+                {
+                    "item_id": result.get("item_id"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("store_memory_agent_item")
+            )
+        else:
+            return handle_frontend_error("store memory item", Exception(result.get("error", "Unknown error")), **build_frontend_context("store_memory_agent_item"))
+
+    except Exception as e:
+        return handle_frontend_error("store memory item", e, **build_frontend_context("store_memory_agent_item"))
+
+
+@app.get("/api/memory-agent/history")
+async def get_memory_agent_history(limit: int = 20):
+    """Get memory agent item history.
+
+    Returns cached memory item history with optional limit parameter.
+    Useful for analyzing memory storage patterns and content.
+    """
+    try:
+        from .modules.memory_agent_monitor import memory_agent_monitor
+        history = memory_agent_monitor.get_memory_history(limit=limit)
+        return create_frontend_success_response(
+            "memory agent history retrieved",
+            history,
+            **build_frontend_context("get_memory_agent_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get memory agent history", e, **build_frontend_context("get_memory_agent_history"))
+
+
+# ============================================================================
+# NOTIFICATION SERVICE API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/notification-service/status")
+async def get_notification_service_status():
+    """Get comprehensive notification service status.
+
+    Returns health information, notification statistics, DLQ status,
+    and recent activity for monitoring the notification service.
+    """
+    try:
+        from .modules.notification_service_monitor import notification_service_monitor
+        status_data = await notification_service_monitor.get_notification_status()
+        return create_frontend_success_response(
+            "notification service status retrieved",
+            status_data,
+            **build_frontend_context("get_notification_service_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get notification service status", e, **build_frontend_context("get_notification_service_status"))
+
+
+@app.get("/api/notification-service/dlq")
+async def get_notification_dlq(limit: int = 50):
+    """Get dead letter queue entries.
+
+    Returns failed notification attempts for debugging and monitoring
+    delivery issues in the notification service.
+    """
+    try:
+        from .modules.notification_service_monitor import notification_service_monitor
+        dlq_entries = await notification_service_monitor.get_dlq_entries(limit=limit)
+        return create_frontend_success_response(
+            "notification DLQ retrieved",
+            dlq_entries,
+            **build_frontend_context("get_notification_dlq")
+        )
+    except Exception as e:
+        return handle_frontend_error("get notification DLQ", e, **build_frontend_context("get_notification_dlq"))
+
+
+@app.post("/api/notification-service/resolve-owners")
+async def resolve_notification_owners(req: dict):
+    """Resolve owners to notification targets.
+
+    Accepts a list of owner names and returns their resolved notification
+    targets (email addresses, webhook URLs, etc.) for bulk operations.
+    """
+    try:
+        from .modules.notification_service_monitor import notification_service_monitor
+
+        owners = req.get("owners", [])
+        if not owners or not isinstance(owners, list):
+            return handle_frontend_error("resolve owners", ValueError("owners must be a non-empty list"), **build_frontend_context("resolve_notification_owners"))
+
+        result = await notification_service_monitor.resolve_owners(owners)
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "owners resolved successfully",
+                {
+                    "resolution_id": result.get("resolution_id"),
+                    "resolved_targets": result.get("resolved_targets"),
+                    "resolution_count": result.get("resolution_count"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("resolve_notification_owners")
+            )
+        else:
+            return handle_frontend_error("resolve owners", Exception(result.get("error", "Unknown error")), **build_frontend_context("resolve_notification_owners"))
+
+    except Exception as e:
+        return handle_frontend_error("resolve owners", e, **build_frontend_context("resolve_notification_owners"))
+
+
+@app.post("/api/notification-service/send")
+async def send_test_notification(req: dict):
+    """Send a test notification.
+
+    Accepts notification parameters and sends a test notification through
+    the specified channel for testing delivery capabilities.
+    """
+    try:
+        from .modules.notification_service_monitor import notification_service_monitor
+
+        channel = req.get("channel")
+        target = req.get("target")
+        title = req.get("title")
+        message = req.get("message")
+
+        if not all([channel, target, title, message]):
+            return handle_frontend_error("send notification", ValueError("channel, target, title, and message are required"), **build_frontend_context("send_test_notification"))
+
+        result = await notification_service_monitor.send_notification(
+            channel=channel,
+            target=target,
+            title=title,
+            message=message,
+            metadata=req.get("metadata"),
+            labels=req.get("labels", [])
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "notification sent successfully",
+                {
+                    "notification_id": result.get("notification_id"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("send_test_notification")
+            )
+        else:
+            return handle_frontend_error("send notification", Exception(result.get("error", "Unknown error")), **build_frontend_context("send_test_notification"))
+
+    except Exception as e:
+        return handle_frontend_error("send notification", e, **build_frontend_context("send_test_notification"))
+
+
+@app.get("/api/notification-service/notifications")
+async def get_notification_history(limit: int = 20):
+    """Get notification delivery history.
+
+    Returns cached notification delivery history with optional limit parameter.
+    Useful for analyzing delivery success rates and troubleshooting.
+    """
+    try:
+        from .modules.notification_service_monitor import notification_service_monitor
+        history = notification_service_monitor.get_notification_history(limit=limit)
+        return create_frontend_success_response(
+            "notification history retrieved",
+            history,
+            **build_frontend_context("get_notification_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get notification history", e, **build_frontend_context("get_notification_history"))
+
+
+@app.get("/api/notification-service/resolutions")
+async def get_owner_resolution_history(limit: int = 20):
+    """Get owner resolution history.
+
+    Returns cached owner resolution history with optional limit parameter.
+    Useful for analyzing resolution patterns and caching effectiveness.
+    """
+    try:
+        from .modules.notification_service_monitor import notification_service_monitor
+        history = notification_service_monitor.get_owner_resolution_history(limit=limit)
+        return create_frontend_success_response(
+            "owner resolution history retrieved",
+            history,
+            **build_frontend_context("get_owner_resolution_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get owner resolution history", e, **build_frontend_context("get_owner_resolution_history"))
+
+
+# ============================================================================
+# SECURE ANALYZER API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/secure-analyzer/status")
+async def get_secure_analyzer_status():
+    """Get comprehensive secure analyzer service status.
+
+    Returns health information, analysis statistics, and recent activity
+    for monitoring the secure analyzer service operations.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+        status_data = await secure_analyzer_monitor.get_secure_status()
+        return create_frontend_success_response(
+            "secure analyzer status retrieved",
+            status_data,
+            **build_frontend_context("get_secure_analyzer_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get secure analyzer status", e, **build_frontend_context("get_secure_analyzer_status"))
+
+
+@app.post("/api/secure-analyzer/detect")
+async def detect_secure_content(req: dict):
+    """Detect sensitive content in provided text.
+
+    Accepts content and optional keywords, returns security analysis
+    including detected sensitive information and security topics.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
+        content = req.get("content")
+        keywords = req.get("keywords", [])
+        keyword_document = req.get("keyword_document")
+
+        if not content:
+            return handle_frontend_error("detect content", ValueError("content is required"), **build_frontend_context("detect_secure_content"))
+
+        result = await secure_analyzer_monitor.detect_content(
+            content=content,
+            keywords=keywords,
+            keyword_document=keyword_document
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "content detection completed",
+                {
+                    "detection_id": result.get("detection_id"),
+                    "sensitive": result.get("sensitive"),
+                    "matches": result.get("matches"),
+                    "topics": result.get("topics"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("detect_secure_content")
+            )
+        else:
+            return handle_frontend_error("detect content", Exception(result.get("error", "Unknown error")), **build_frontend_context("detect_secure_content"))
+
+    except Exception as e:
+        return handle_frontend_error("detect content", e, **build_frontend_context("detect_secure_content"))
+
+
+@app.post("/api/secure-analyzer/suggest")
+async def suggest_secure_models(req: dict):
+    """Get model suggestions based on content sensitivity.
+
+    Accepts content and returns AI model recommendations based on
+    security analysis and policy enforcement.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
+        content = req.get("content")
+        keywords = req.get("keywords", [])
+        keyword_document = req.get("keyword_document")
+
+        if not content:
+            return handle_frontend_error("suggest models", ValueError("content is required"), **build_frontend_context("suggest_secure_models"))
+
+        result = await secure_analyzer_monitor.suggest_models(
+            content=content,
+            keywords=keywords,
+            keyword_document=keyword_document
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "model suggestions generated",
+                {
+                    "suggestion_id": result.get("suggestion_id"),
+                    "sensitive": result.get("sensitive"),
+                    "allowed_models": result.get("allowed_models"),
+                    "suggestion": result.get("suggestion"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("suggest_secure_models")
+            )
+        else:
+            return handle_frontend_error("suggest models", Exception(result.get("error", "Unknown error")), **build_frontend_context("suggest_secure_models"))
+
+    except Exception as e:
+        return handle_frontend_error("suggest models", e, **build_frontend_context("suggest_secure_models"))
+
+
+@app.post("/api/secure-analyzer/summarize")
+async def generate_secure_summary(req: dict):
+    """Generate secure summary with policy enforcement.
+
+    Accepts content and generates summaries using appropriate AI models
+    based on security analysis and policy constraints.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
+        content = req.get("content")
+        providers = req.get("providers", [])
+        override_policy = req.get("override_policy", False)
+        keywords = req.get("keywords", [])
+        keyword_document = req.get("keyword_document")
+        prompt = req.get("prompt")
+
+        if not content:
+            return handle_frontend_error("generate secure summary", ValueError("content is required"), **build_frontend_context("generate_secure_summary"))
+
+        result = await secure_analyzer_monitor.secure_summarize(
+            content=content,
+            providers=providers,
+            override_policy=override_policy,
+            keywords=keywords,
+            keyword_document=keyword_document,
+            prompt=prompt
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "secure summary generated",
+                {
+                    "summary_id": result.get("summary_id"),
+                    "summary": result.get("summary"),
+                    "provider_used": result.get("provider_used"),
+                    "confidence": result.get("confidence"),
+                    "policy_enforced": result.get("policy_enforced"),
+                    "topics_detected": result.get("topics_detected"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("generate_secure_summary")
+            )
+        else:
+            return handle_frontend_error("generate secure summary", Exception(result.get("error", "Unknown error")), **build_frontend_context("generate_secure_summary"))
+
+    except Exception as e:
+        return handle_frontend_error("generate secure summary", e, **build_frontend_context("generate_secure_summary"))
+
+
+@app.get("/api/secure-analyzer/detections")
+async def get_detection_history(limit: int = 20):
+    """Get content detection history.
+
+    Returns cached detection history with optional limit parameter.
+    Useful for analyzing security patterns and detection effectiveness.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+        history = secure_analyzer_monitor.get_detection_history(limit=limit)
+        return create_frontend_success_response(
+            "detection history retrieved",
+            history,
+            **build_frontend_context("get_detection_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get detection history", e, **build_frontend_context("get_detection_history"))
+
+
+@app.get("/api/secure-analyzer/suggestions")
+async def get_suggestion_history(limit: int = 20):
+    """Get model suggestion history.
+
+    Returns cached suggestion history with optional limit parameter.
+    Useful for analyzing policy enforcement and model selection patterns.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+        history = secure_analyzer_monitor.get_suggestion_history(limit=limit)
+        return create_frontend_success_response(
+            "suggestion history retrieved",
+            history,
+            **build_frontend_context("get_suggestion_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get suggestion history", e, **build_frontend_context("get_suggestion_history"))
+
+
+@app.get("/api/secure-analyzer/summaries")
+async def get_summary_history(limit: int = 20):
+    """Get secure summary history.
+
+    Returns cached summary history with optional limit parameter.
+    Useful for analyzing summarization effectiveness and policy compliance.
+    """
+    try:
+        from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+        history = secure_analyzer_monitor.get_summary_history(limit=limit)
+        return create_frontend_success_response(
+            "summary history retrieved",
+            history,
+            **build_frontend_context("get_summary_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get summary history", e, **build_frontend_context("get_summary_history"))
+
+
+# ============================================================================
+# SOURCE AGENT API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/source-agent/status")
+async def get_source_agent_status():
+    """Get comprehensive source agent service status.
+
+    Returns health information, operation statistics, source capabilities,
+    and recent activity for monitoring the source agent service.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+        status_data = await source_agent_monitor.get_source_status()
+        return create_frontend_success_response(
+            "source agent status retrieved",
+            status_data,
+            **build_frontend_context("get_source_agent_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get source agent status", e, **build_frontend_context("get_source_agent_status"))
+
+
+@app.post("/api/source-agent/fetch")
+async def fetch_source_document(req: dict):
+    """Fetch document from specified source.
+
+    Accepts source type, identifier, and optional scope parameters
+    to fetch documents from GitHub, Jira, or Confluence.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+
+        source = req.get("source")
+        identifier = req.get("identifier")
+        scope = req.get("scope", {})
+
+        if not source or not identifier:
+            return handle_frontend_error("fetch document", ValueError("source and identifier are required"), **build_frontend_context("fetch_source_document"))
+
+        result = await source_agent_monitor.fetch_document(
+            source=source,
+            identifier=identifier,
+            scope=scope
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "document fetched successfully",
+                {
+                    "fetch_id": result.get("fetch_id"),
+                    "source": result.get("source"),
+                    "document": result.get("document"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("fetch_source_document")
+            )
+        else:
+            return handle_frontend_error("fetch document", Exception(result.get("error", "Unknown error")), **build_frontend_context("fetch_source_document"))
+
+    except Exception as e:
+        return handle_frontend_error("fetch document", e, **build_frontend_context("fetch_source_document"))
+
+
+@app.post("/api/source-agent/normalize")
+async def normalize_source_data(req: dict):
+    """Normalize data from specified source.
+
+    Accepts source type, raw data, and optional correlation ID
+    to normalize data from GitHub, Jira, or Confluence into standard format.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+
+        source = req.get("source")
+        data = req.get("data")
+        correlation_id = req.get("correlation_id")
+
+        if not source or not data:
+            return handle_frontend_error("normalize data", ValueError("source and data are required"), **build_frontend_context("normalize_source_data"))
+
+        result = await source_agent_monitor.normalize_data(
+            source=source,
+            data=data,
+            correlation_id=correlation_id
+        )
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "data normalized successfully",
+                {
+                    "normalization_id": result.get("normalization_id"),
+                    "source": result.get("source"),
+                    "envelope": result.get("envelope"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("normalize_source_data")
+            )
+        else:
+            return handle_frontend_error("normalize data", Exception(result.get("error", "Unknown error")), **build_frontend_context("normalize_source_data"))
+
+    except Exception as e:
+        return handle_frontend_error("normalize data", e, **build_frontend_context("normalize_source_data"))
+
+
+@app.post("/api/source-agent/analyze")
+async def analyze_source_code(req: dict):
+    """Analyze code for API endpoints and patterns.
+
+    Accepts code text and performs static analysis to identify
+    API endpoints, architectural patterns, and integration points.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+
+        text = req.get("text")
+
+        if not text:
+            return handle_frontend_error("analyze code", ValueError("text is required"), **build_frontend_context("analyze_source_code"))
+
+        result = await source_agent_monitor.analyze_code(text=text)
+
+        if result.get("success"):
+            return create_frontend_success_response(
+                "code analyzed successfully",
+                {
+                    "analysis_id": result.get("analysis_id"),
+                    "analysis": result.get("analysis"),
+                    "endpoint_count": result.get("endpoint_count"),
+                    "patterns_found": result.get("patterns_found"),
+                    "response": result.get("response")
+                },
+                **build_frontend_context("analyze_source_code")
+            )
+        else:
+            return handle_frontend_error("analyze code", Exception(result.get("error", "Unknown error")), **build_frontend_context("analyze_source_code"))
+
+    except Exception as e:
+        return handle_frontend_error("analyze code", e, **build_frontend_context("analyze_source_code"))
+
+
+@app.get("/api/source-agent/fetches")
+async def get_fetch_history(limit: int = 20):
+    """Get document fetch history.
+
+    Returns cached fetch history with optional limit parameter.
+    Useful for analyzing fetch success rates and source performance.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+        history = source_agent_monitor.get_fetch_history(limit=limit)
+        return create_frontend_success_response(
+            "fetch history retrieved",
+            history,
+            **build_frontend_context("get_fetch_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get fetch history", e, **build_frontend_context("get_fetch_history"))
+
+
+@app.get("/api/source-agent/normalizations")
+async def get_normalization_history(limit: int = 20):
+    """Get data normalization history.
+
+    Returns cached normalization history with optional limit parameter.
+    Useful for analyzing normalization success rates and data quality.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+        history = source_agent_monitor.get_normalization_history(limit=limit)
+        return create_frontend_success_response(
+            "normalization history retrieved",
+            history,
+            **build_frontend_context("get_normalization_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get normalization history", e, **build_frontend_context("get_normalization_history"))
+
+
+@app.get("/api/source-agent/analyses")
+async def get_analysis_history(limit: int = 20):
+    """Get code analysis history.
+
+    Returns cached analysis history with optional limit parameter.
+    Useful for analyzing code patterns and endpoint detection accuracy.
+    """
+    try:
+        from .modules.source_agent_monitor import source_agent_monitor
+        history = source_agent_monitor.get_analysis_history(limit=limit)
+        return create_frontend_success_response(
+            "analysis history retrieved",
+            history,
+            **build_frontend_context("get_analysis_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get analysis history", e, **build_frontend_context("get_analysis_history"))
+
+
+# ============================================================================
+# SERVICES OVERVIEW API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/services/overview")
+async def get_services_overview():
+    """Get comprehensive overview of all services in the ecosystem.
+
+    Returns system-wide health metrics, service status, and categorized
+    service information for monitoring the entire LLM Documentation Ecosystem.
+    """
+    try:
+        from .modules.services_overview_monitor import services_overview_monitor
+        overview_data = await services_overview_monitor.get_services_overview()
+        return create_frontend_success_response(
+            "services overview retrieved",
+            overview_data,
+            **build_frontend_context("get_services_overview")
+        )
+    except Exception as e:
+        return handle_frontend_error("get services overview", e, **build_frontend_context("get_services_overview"))
+
+
+@app.get("/api/services/overview/{service_name}")
+async def get_service_health_details(service_name: str):
+    """Get detailed health information for a specific service.
+
+    Returns comprehensive health data and status information for the
+    specified service, useful for detailed troubleshooting and monitoring.
+    """
+    try:
+        from .modules.services_overview_monitor import services_overview_monitor
+        health_data = await services_overview_monitor.get_service_health_details(service_name)
+        return create_frontend_success_response(
+            f"service {service_name} health details retrieved",
+            health_data,
+            **build_frontend_context("get_service_health_details")
+        )
+    except Exception as e:
+        return handle_frontend_error("get service health details", e, **build_frontend_context("get_service_health_details"))
 
 
 if __name__ == "__main__":
