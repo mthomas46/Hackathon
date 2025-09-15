@@ -36,6 +36,7 @@ _MEMORY_AGENT_URL_ENV = "MEMORY_AGENT_URL"
 _NOTIFICATION_SERVICE_URL_ENV = "NOTIFICATION_SERVICE_URL"
 _SECURE_ANALYZER_URL_ENV = EnvVars.SECURE_ANALYZER_URL_ENV
 _SOURCE_AGENT_URL_ENV = EnvVars.SOURCE_AGENT_URL
+_CLI_URL_ENV = "CLI_URL"
 
 def get_default_timeout() -> int:
     """Get default service client timeout."""
@@ -108,6 +109,10 @@ def get_secure_analyzer_url() -> str:
 def get_source_agent_url() -> str:
     """Get source agent service URL from config/env with fallback."""
     return get_config_value("SOURCE_AGENT_URL", "http://source-agent:5150", section="services", env_key=_SOURCE_AGENT_URL_ENV)
+
+def get_cli_url() -> str:
+    """Get CLI service URL from config/env with fallback."""
+    return get_config_value("CLI_URL", "http://localhost:8000", section="services", env_key=_CLI_URL_ENV)
 
 def get_frontend_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
     """Create and return a ServiceClients instance with proper timeout."""

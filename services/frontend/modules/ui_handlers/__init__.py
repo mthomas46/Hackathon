@@ -16,6 +16,7 @@ from .notification_service_handlers import NotificationServiceUIHandlers
 from .secure_analyzer_handlers import SecureAnalyzerUIHandlers
 from .source_agent_handlers import SourceAgentUIHandlers
 from .services_overview_handlers import ServicesOverviewUIHandlers
+from .cli_handlers import CLIUIHandlers
 
 # Create singleton instances for each handler type
 main_handlers = MainUIHandlers()
@@ -32,6 +33,7 @@ notification_service_handlers = NotificationServiceUIHandlers()
 secure_analyzer_handlers = SecureAnalyzerUIHandlers()
 source_agent_handlers = SourceAgentUIHandlers()
 services_overview_handlers = ServicesOverviewUIHandlers()
+cli_handlers = CLIUIHandlers()
 
 # Legacy compatibility - create a combined UIHandlers class
 class UIHandlers:
@@ -113,6 +115,9 @@ class UIHandlers:
 
     def handle_services_overview(self) -> 'HTMLResponse':
         return services_overview_handlers.handle_services_overview()
+
+    def handle_cli_terminal(self) -> 'HTMLResponse':
+        return cli_handlers.handle_cli_terminal()
 
 # Create singleton instance for backward compatibility
 ui_handlers = UIHandlers()

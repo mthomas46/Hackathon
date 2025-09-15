@@ -26,6 +26,7 @@ Endpoints (HTML):
 - GET /secure-analyzer/dashboard: Secure analyzer service dashboard
 - GET /source-agent/dashboard: Source agent service dashboard
 - GET /services/overview: Services overview dashboard
+- GET /cli/terminal: CLI terminal interface
 
 Endpoints (API):
 - GET /api/workflows/jobs/status: Active workflows and jobs status for visualization
@@ -78,10 +79,18 @@ Endpoints (API):
 - GET /api/source-agent/analyses: Get code analysis history
 - GET /api/services/overview: Get comprehensive services overview
 - GET /api/services/overview/{service_name}: Get detailed service health information
+- GET /api/cli/status: Get CLI service health status
+- POST /api/cli/execute: Execute CLI commands
+- GET /api/cli/commands: Get available CLI commands
+- GET /api/cli/history: Get CLI command execution history
+- POST /api/cli/history/clear: Clear CLI command history
+- GET /api/cli/prompts: Get prompts via CLI interface
+- GET /api/cli/prompts/{category}/{name}: Get specific prompt details via CLI
+- POST /api/cli/test-integration: Run CLI integration tests
 
 Responsibilities:
 - Provide HTML UI for viewing documentation consistency findings and reports
-- Aggregate data from multiple backend services (Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent)
+- Aggregate data from multiple backend services (Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent, CLI Service)
 - Render interactive dashboards for document quality metrics and analysis
 - Support filtering and searching across documentation collections
 - Display owner coverage and staleness reports for Jira tickets
@@ -109,8 +118,10 @@ Responsibilities:
 - Support source integration testing across GitHub, Jira, and Confluence
 - Provide comprehensive system-wide monitoring and health dashboard
 - Aggregate service status across all ecosystem components
+- Provide web-based terminal interface for full CLI service functionality
+- Enable command execution, history tracking, and interactive CLI operations
 
-Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent; shared render helpers.
+Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent, CLI Service; shared render helpers.
 """
 
 from fastapi import FastAPI
@@ -557,6 +568,16 @@ async def ui_services_overview():
     in the LLM Documentation Ecosystem with categorized views.
     """
     return ui_handlers.handle_services_overview()
+
+
+@app.get("/cli/terminal")
+async def ui_cli_terminal():
+    """Render CLI terminal interface.
+
+    Provides a web-based terminal for full CLI service functionality,
+    allowing users to execute commands and interact with the ecosystem.
+    """
+    return ui_handlers.handle_cli_terminal()
 
 
 @app.get("/api/workflows/jobs/status")
@@ -2582,6 +2603,181 @@ async def get_service_health_details(service_name: str):
         )
     except Exception as e:
         return handle_frontend_error("get service health details", e, **build_frontend_context("get_service_health_details"))
+
+
+# ============================================================================
+# CLI SERVICE API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/cli/status")
+async def get_cli_status():
+    """Get CLI service health status.
+
+    Returns health information and availability status for the CLI service,
+    including whether the CLI executable is accessible and functional.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        health_data = await cli_monitor.get_cli_health()
+        return create_frontend_success_response(
+            "CLI status retrieved",
+            health_data,
+            **build_frontend_context("get_cli_status")
+        )
+    except Exception as e:
+        return handle_frontend_error("get CLI status", e, **build_frontend_context("get_cli_status"))
+
+
+@app.post("/api/cli/execute")
+async def execute_cli_command(req: dict):
+    """Execute a CLI command.
+
+    Accepts a command string and optional arguments, executes the CLI command,
+    and returns the stdout, stderr, and exit code from the execution.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+
+        command = req.get("command", "").strip()
+        raw_args = req.get("args", [])
+        session_id = req.get("session_id")
+
+        if not command:
+            return handle_frontend_error("execute CLI command", ValueError("command is required"), **build_frontend_context("execute_cli_command"))
+
+        # Parse command string into command and args
+        parts = command.split()
+        if len(parts) > 1:
+            cmd = parts[0]
+            args = parts[1:] + raw_args
+        else:
+            cmd = parts[0]
+            args = raw_args
+
+        result = await cli_monitor.execute_cli_command(cmd, args, session_id)
+
+        return create_frontend_success_response(
+            "CLI command executed",
+            {"result": result},
+            **build_frontend_context("execute_cli_command")
+        )
+
+    except Exception as e:
+        return handle_frontend_error("execute CLI command", e, **build_frontend_context("execute_cli_command"))
+
+
+@app.get("/api/cli/commands")
+async def get_cli_commands():
+    """Get available CLI commands and help information.
+
+    Returns a list of all available CLI commands with descriptions
+    and usage examples for the web interface.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        commands_data = await cli_monitor.get_available_commands()
+        return create_frontend_success_response(
+            "CLI commands retrieved",
+            commands_data,
+            **build_frontend_context("get_cli_commands")
+        )
+    except Exception as e:
+        return handle_frontend_error("get CLI commands", e, **build_frontend_context("get_cli_commands"))
+
+
+@app.get("/api/cli/history")
+async def get_cli_command_history(limit: int = 20):
+    """Get CLI command execution history.
+
+    Returns recent command executions with their results, useful for
+    auditing CLI usage and troubleshooting command issues.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        history = cli_monitor.get_command_history(limit=limit)
+        return create_frontend_success_response(
+            "CLI command history retrieved",
+            {"history": history},
+            **build_frontend_context("get_cli_command_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("get CLI command history", e, **build_frontend_context("get_cli_command_history"))
+
+
+@app.post("/api/cli/history/clear")
+async def clear_cli_command_history():
+    """Clear the CLI command execution history.
+
+    Removes all stored command execution history from memory.
+    Useful for privacy and performance management.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        success = cli_monitor.clear_command_history()
+        return create_frontend_success_response(
+            "CLI command history cleared",
+            {"cleared": success},
+            **build_frontend_context("clear_cli_command_history")
+        )
+    except Exception as e:
+        return handle_frontend_error("clear CLI command history", e, **build_frontend_context("clear_cli_command_history"))
+
+
+@app.get("/api/cli/prompts")
+async def get_cli_prompts(category: Optional[str] = None):
+    """Get prompts via CLI interface.
+
+    Uses the CLI service to retrieve prompt listings, providing
+    an alternative interface to the prompt store.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        result = await cli_monitor.get_prompt_list(category=category)
+        return create_frontend_success_response(
+            "prompts retrieved via CLI",
+            result,
+            **build_frontend_context("get_cli_prompts")
+        )
+    except Exception as e:
+        return handle_frontend_error("get prompts via CLI", e, **build_frontend_context("get_cli_prompts"))
+
+
+@app.get("/api/cli/prompts/{category}/{name}")
+async def get_cli_prompt_details(category: str, name: str, content: Optional[str] = None):
+    """Get specific prompt details via CLI interface.
+
+    Uses the CLI service to retrieve individual prompt details,
+    including optional content variable substitution.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        result = await cli_monitor.get_prompt_details(category=category, name=name, content=content)
+        return create_frontend_success_response(
+            "prompt details retrieved via CLI",
+            result,
+            **build_frontend_context("get_cli_prompt_details")
+        )
+    except Exception as e:
+        return handle_frontend_error("get prompt details via CLI", e, **build_frontend_context("get_cli_prompt_details"))
+
+
+@app.post("/api/cli/test-integration")
+async def run_cli_integration_tests():
+    """Run integration tests via CLI interface.
+
+    Executes the CLI service's integration testing functionality,
+    providing comprehensive cross-service validation.
+    """
+    try:
+        from .modules.cli_monitor import cli_monitor
+        result = await cli_monitor.run_integration_tests()
+        return create_frontend_success_response(
+            "CLI integration tests completed",
+            result,
+            **build_frontend_context("run_cli_integration_tests")
+        )
+    except Exception as e:
+        return handle_frontend_error("run CLI integration tests", e, **build_frontend_context("run_cli_integration_tests"))
 
 
 if __name__ == "__main__":

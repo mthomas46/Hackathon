@@ -26,6 +26,25 @@ from .shared_utils import (
     log_cli_metrics
 )
 from .service_actions import ServiceActions
+from .orchestrator_manager import OrchestratorManager
+from .analysis_manager import AnalysisManager
+from .docstore_manager import DocStoreManager
+from .source_agent_manager import SourceAgentManager
+from .infrastructure_manager import InfrastructureManager
+from .bulk_operations_manager import BulkOperationsManager
+from .interpreter_manager import InterpreterManager
+from .discovery_agent_manager import DiscoveryAgentManager
+from .memory_agent_manager import MemoryAgentManager
+from .secure_analyzer_manager import SecureAnalyzerManager
+from .summarizer_hub_manager import SummarizerHubManager
+from .code_analyzer_manager import CodeAnalyzerManager
+from .notification_service_manager import NotificationServiceManager
+from .log_collector_manager import LogCollectorManager
+from .bedrock_proxy_manager import BedrockProxyManager
+from .analysis_service_manager import AnalysisServiceManager
+from .config_manager import ConfigManager
+from .deployment_manager import DeploymentManager
+from .advanced_monitoring_manager import AdvancedMonitoringManager
 
 
 class CLICommands:
@@ -37,6 +56,27 @@ class CLICommands:
         self.current_user = os.environ.get("USER", "cli_user")
         self.session_id = f"cli_session_{int(time.time() * 1000)}"
 
+        # Initialize power-user managers
+        self.orchestrator_manager = OrchestratorManager(self.console, self.clients)
+        self.analysis_manager = AnalysisManager(self.console, self.clients)
+        self.docstore_manager = DocStoreManager(self.console, self.clients)
+        self.source_agent_manager = SourceAgentManager(self.console, self.clients)
+        self.infrastructure_manager = InfrastructureManager(self.console, self.clients)
+        self.bulk_operations_manager = BulkOperationsManager(self.console, self.clients)
+        self.interpreter_manager = InterpreterManager(self.console, self.clients)
+        self.discovery_agent_manager = DiscoveryAgentManager(self.console, self.clients)
+        self.memory_agent_manager = MemoryAgentManager(self.console, self.clients)
+        self.secure_analyzer_manager = SecureAnalyzerManager(self.console, self.clients)
+        self.summarizer_hub_manager = SummarizerHubManager(self.console, self.clients)
+        self.code_analyzer_manager = CodeAnalyzerManager(self.console, self.clients)
+        self.notification_service_manager = NotificationServiceManager(self.console, self.clients)
+        self.log_collector_manager = LogCollectorManager(self.console, self.clients)
+        self.bedrock_proxy_manager = BedrockProxyManager(self.console, self.clients)
+        self.analysis_service_manager = AnalysisServiceManager(self.console, self.clients)
+        self.config_manager = ConfigManager(self.console, self.clients)
+        self.deployment_manager = DeploymentManager(self.console, self.clients)
+        self.advanced_monitoring_manager = AdvancedMonitoringManager(self.console, self.clients)
+
     def print_header(self):
         """Print CLI header."""
         print_panel(
@@ -47,16 +87,32 @@ class CLICommands:
 
     def print_menu(self):
         """Print main menu."""
-        menu = create_menu_table("Main Menu", ["Option", "Description"])
+        menu = create_menu_table("Power User CLI - Main Menu", ["Option", "Description"])
         add_menu_rows(menu, [
             ("1", "Prompt Management"),
-            ("2", "A/B Testing"),
-            ("3", "Workflow Orchestration"),
-            ("4", "Analytics & Monitoring"),
-            ("5", "Service Health Check"),
-            ("6", "Service Actions (API-driven) & Bulk Ops"),
-            ("7", "Test Service Integration"),
-            ("q", "Quit")
+            ("2", "Workflow Orchestration"),
+            ("3", "Orchestrator Management (Registry, Jobs, Infrastructure)"),
+            ("4", "Analysis & Reports (Findings, Detectors, Quality)"),
+            ("5", "Document Store (Documents, Analyses, Search)"),
+            ("6", "Source Agent (Fetch, Normalize, Code Analysis)"),
+            ("7", "Service Health & Monitoring"),
+            ("8", "Infrastructure (Redis, DLQ, Sagas, Tracing)"),
+                ("9", "Bulk Operations (Mass Analysis, Notifications)"),
+                ("10", "Analytics & Testing"),
+                ("11", "Interpreter Service (Query Analysis, Workflows)"),
+                ("12", "Discovery Agent (API Discovery, Service Registration)"),
+                ("13", "Memory Agent (Operational Context, Event Summaries)"),
+                ("14", "Secure Analyzer (Content Security, Policy Enforcement)"),
+                ("15", "Summarizer Hub (Ensemble AI, Multi-Provider Operations)"),
+                ("16", "Code Analyzer (Endpoint Extraction, Security Scanning)"),
+                ("17", "Notification Service (Owner Resolution, Delivery, DLQ)"),
+                ("18", "Log Collector (Aggregation, Streaming, Pattern Analysis)"),
+                ("19", "Bedrock Proxy (AI Model Invocations, Templates, History)"),
+                ("20", "Analysis Service (Document Analysis, Findings, Reports)"),
+                ("21", "Configuration Management (Configs, Environment, Validation)"),
+                ("22", "Deployment Controls (Scaling, Updates, Traffic Management)"),
+                ("23", "Advanced Monitoring (Dashboards, Alerts, SLO/SLA)"),
+                ("q", "Quit")
         ])
         self.console.print(menu)
 
@@ -119,6 +175,34 @@ class CLICommands:
             print_panel(self.console, content, border_style="cyan")
         except Exception as e:
             self.console.print(f"[red]Error fetching analytics: {e}[/red]")
+
+    async def analytics_testing_menu(self):
+        """Combined analytics and testing submenu."""
+        while True:
+            menu = create_menu_table("Analytics & Testing", ["Option", "Description"])
+            add_menu_rows(menu, [
+                ("1", "Prompt Store Analytics"),
+                ("2", "Run Integration Tests"),
+                ("3", "A/B Testing (Coming Soon)"),
+                ("b", "Back to Main Menu")
+            ])
+            self.console.print(menu)
+
+            choice = self.get_choice()
+
+            if choice == "1":
+                await self.analytics_menu()
+                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+            elif choice == "2":
+                await self.test_integration()
+                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+            elif choice == "3":
+                self.ab_testing_menu()
+                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+            elif choice.lower() in ["b", "back"]:
+                break
+            else:
+                self.console.print("[red]Invalid option. Please try again.[/red]")
 
     def ab_testing_menu(self):
         """Placeholder for A/B testing menu."""
@@ -223,19 +307,56 @@ class CLICommands:
                 prompt_manager = PromptManager(self.console, self.clients)
                 await prompt_manager.prompt_management_menu()
             elif choice == "2":
-                self.ab_testing_menu()
-            elif choice == "3":
                 workflow_manager = WorkflowManager(self.console, self.clients)
                 await workflow_manager.workflow_orchestration_menu()
+            elif choice == "3":
+                orchestrator_manager = OrchestratorManager(self.console, self.clients)
+                await orchestrator_manager.orchestrator_management_menu()
             elif choice == "4":
-                await self.analytics_menu()
+                analysis_manager = AnalysisManager(self.console, self.clients)
+                await analysis_manager.analysis_reports_menu()
             elif choice == "5":
-                await self.display_health_status()
+                docstore_manager = DocStoreManager(self.console, self.clients)
+                await docstore_manager.docstore_management_menu()
             elif choice == "6":
-                actions = ServiceActions(self.console, self.clients)
-                await actions.run()
+                source_agent_manager = SourceAgentManager(self.console, self.clients)
+                await source_agent_manager.source_agent_menu()
             elif choice == "7":
-                await self.test_integration()
+                await self.display_health_status()
+            elif choice == "8":
+                infrastructure_manager = InfrastructureManager(self.console, self.clients)
+                await infrastructure_manager.infrastructure_menu()
+            elif choice == "9":
+                bulk_ops_manager = BulkOperationsManager(self.console, self.clients)
+                await bulk_ops_manager.bulk_operations_menu()
+            elif choice == "10":
+                await self.analytics_testing_menu()
+            elif choice == "11":
+                await self.interpreter_manager.interpreter_management_menu()
+            elif choice == "12":
+                await self.discovery_agent_manager.discovery_agent_menu()
+            elif choice == "13":
+                await self.memory_agent_manager.memory_agent_menu()
+            elif choice == "14":
+                await self.secure_analyzer_manager.secure_analyzer_menu()
+            elif choice == "15":
+                await self.summarizer_hub_manager.summarizer_hub_menu()
+            elif choice == "16":
+                await self.code_analyzer_manager.code_analyzer_menu()
+            elif choice == "17":
+                await self.notification_service_manager.notification_service_menu()
+            elif choice == "18":
+                await self.log_collector_manager.log_collector_menu()
+            elif choice == "19":
+                await self.bedrock_proxy_manager.bedrock_proxy_menu()
+            elif choice == "20":
+                await self.analysis_service_manager.analysis_service_menu()
+            elif choice == "21":
+                await self.config_manager.config_management_menu()
+            elif choice == "22":
+                await self.deployment_manager.deployment_controls_menu()
+            elif choice == "23":
+                await self.advanced_monitoring_manager.advanced_monitoring_menu()
             elif choice.lower() in ["q", "quit", "exit"]:
                 self.console.print("[bold blue]Goodbye! 👋[/bold blue]")
                 break
