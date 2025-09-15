@@ -1,0 +1,17 @@
+# Notification-service-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for notification-service
+server:
+  port: 5095
+
+# Notification service specific settings
+notification:
+  # Owner mapping configuration
+  owner_map_json: ${NOTIFY_OWNER_MAP_JSON:-}
+  owner_map_file: ${NOTIFY_OWNER_MAP_FILE:-}
+
+  # Notification settings
+  deduplication_window_seconds: ${NOTIFICATION_DEDUPE_WINDOW:-300}
+  max_retries: ${NOTIFICATION_MAX_RETRIES:-3}
+  cache_ttl_seconds: ${NOTIFICATION_CACHE_TTL:-3600}

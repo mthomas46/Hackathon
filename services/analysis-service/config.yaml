@@ -1,0 +1,22 @@
+# Analysis-service-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for analysis-service
+server:
+  port: 5020
+
+# Analysis-service specific settings
+analysis:
+  drift_overlap_threshold: ${DRIFT_OVERLAP_THRESHOLD:-0.1}
+  critical_score: ${CRITICAL_SCORE:-90}
+  high_priority_score: ${HIGH_PRIORITY_SCORE:-80}
+  medium_priority_score: ${MEDIUM_PRIORITY_SCORE:-50}
+  testing: ${TESTING:-false}
+
+# Service URLs for analysis integrations
+services:
+  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
+  prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
+  interpreter_url: ${INTERPRETER_URL:-http://interpreter:5120}
+  orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}

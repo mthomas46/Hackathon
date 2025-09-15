@@ -1,0 +1,26 @@
+# Bedrock-proxy-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for bedrock-proxy
+server:
+  port: 7090
+
+# Bedrock-proxy specific settings (stub service)
+bedrock:
+  # Default model and region settings
+  default_model: ${BEDROCK_DEFAULT_MODEL:-claude-3-sonnet-20240229-v1:0}
+  default_region: ${BEDROCK_DEFAULT_REGION:-us-east-1}
+
+  # Supported output formats
+  supported_formats:
+    - md
+    - txt
+    - json
+
+  # Supported templates
+  supported_templates:
+    - summary
+    - risks
+    - decisions
+    - pr_confidence
+    - life_of_ticket

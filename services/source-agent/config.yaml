@@ -1,0 +1,18 @@
+# Source-agent-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for source-agent
+server:
+  port: 5000
+
+# Source-agent specific settings
+source_agent:
+  use_github_mcp: ${USE_GITHUB_MCP:-false}
+
+# Supported source types
+supported_sources:
+  - github
+  - jira
+  - confluence
+  - swagger
+  - filesystem

@@ -1,56 +1,148 @@
+# =============================================================================
+# DOCKER COMPOSE - DEVELOPMENT ENVIRONMENT
+# =============================================================================
+# Comprehensive development setup for the LLM Documentation Ecosystem
+#
+# Services included:
+# - Core Infrastructure: Redis, PostgreSQL (optional)
+# - Core Services: orchestrator, doc-store, analysis-service, source-agent, frontend
+# - AI Services: summarizer-hub, bedrock-proxy, github-mcp
+# - Agent Services: memory-agent, discovery-agent, notification-service
+# - Utility Services: prompt-store, interpreter, cli
+# - Analysis Services: code-analyzer, secure-analyzer, log-collector
+#
+# Use profiles to control which services start:
+#   docker-compose --profile core up              # Core services only
+#   docker-compose --profile development up       # Development services
+#   docker-compose --profile ai_services up       # AI/ML services
+#   docker-compose --profile tooling up           # CLI and tooling
+#
+# Individual Services:
+# Each service can run independently with its own dependencies:
+#   cd services/{service-name} && docker-compose up
+#
+# Configuration:
+# - Unified config.yml at project root
+# - Service-specific configs in services/*/config.yaml
+# - Environment variables override defaults
+# =============================================================================
+
 version: "3.9"
 
 services:
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+
+  # Redis - In-memory data store and cache
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles:
+      - core
+      - development
+      - ai_services
+      - production
 
+  # PostgreSQL - Production database (optional, uncomment to enable)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: doc_consistency
+  #     POSTGRES_USER: doc_user
+  #     POSTGRES_PASSWORD: doc_password
+  #     POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #     - ./infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U doc_user -d doc_consistency"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   profiles:
+  #     - production
+
+  # ============================================================================
+  # CORE SERVICES
+  # ============================================================================
+
+  # Orchestrator - Central coordination service
   orchestrator:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/orchestrator/config.yaml:/app/services/orchestrator/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - REDIS_HOST=redis
-      - DOC_STORE_URL=http://doc-store:5087
-      - ANALYSIS_SERVICE_URL=http://analysis-service:5020
-      - SOURCE_AGENT_URL=http://source-agent:5000
-      - REPORTING_URL=http://reporting:5030
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis && python services/orchestrator/main.py"
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis aioredis && python services/orchestrator/main.py"
     ports:
       - "5099:5099"
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5099/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - core
 
+  # Document Store - Document storage and retrieval
   doc-store:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/doc-store/config.yaml:/app/services/doc-store/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+      - doc_store_data:/app/services/doc-store
     environment:
       - REDIS_HOST=redis
+      - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc-store/main.py"
     ports:
       - "5087:5087"
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5087/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - core
 
+  # Analysis Service - Document analysis and consistency checking
   analysis-service:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/analysis-service/config.yaml:/app/services/analysis-service/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - REDIS_HOST=redis
-      - DOC_STORE_URL=http://doc-store:5087
+      - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/analysis-service/main.py"
     ports:
       - "5020:5020"
@@ -59,29 +151,51 @@ services:
         condition: service_healthy
       doc-store:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - core
 
+  # Source Agent - Data ingestion from various sources
   source-agent:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/source-agent/config.yaml:/app/services/source-agent/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - REDIS_HOST=redis
+      - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/source-agent/main.py"
     ports:
       - "5000:5000"
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - core
 
+  # Frontend - Web interface
   frontend:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/frontend/config.yaml:/app/services/frontend/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
-      - REPORTING_URL=http://analysis-service:5020
-      - CONSISTENCY_ENGINE_URL=http://orchestrator:5099
+      - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/frontend/main.py"
     ports:
       - "3000:3000"
@@ -90,19 +204,337 @@ services:
         condition: service_started
       analysis-service:
         condition: service_started
+    profiles:
+      - core
 
+  # ============================================================================
+  # AI/ML SERVICES
+  # ============================================================================
+
+  # Summarizer Hub - AI-powered summarization service
   summarizer-hub:
     image: python:3.12-slim
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/summarizer-hub/config.yaml:/app/services/summarizer-hub/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
+      - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic boto3 botocore && python services/summarizer-hub/main.py"
     ports:
       - "5060:5060"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5060/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # Bedrock Proxy - AWS Bedrock API proxy
+  bedrock-proxy:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/bedrock-proxy/config.yaml:/app/services/bedrock-proxy/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/bedrock-proxy/main.py"
+    ports:
+      - "7090:7090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # GitHub MCP - GitHub Model Context Protocol service
+  github-mcp:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/github-mcp/config.yaml:/app/services/github-mcp/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/github-mcp/main.py"
+    ports:
+      - "5072:5072"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5072/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # ============================================================================
+  # AGENT SERVICES
+  # ============================================================================
+
+  # Memory Agent - Conversation memory and context management
+  memory-agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/memory-agent/config.yaml:/app/services/memory-agent/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/memory-agent/main.py"
+    ports:
+      - "5040:5040"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - development
+
+  # Discovery Agent - Service discovery and registration
+  discovery-agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/discovery-agent/config.yaml:/app/services/discovery-agent/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/discovery-agent/main.py"
+    ports:
+      - "5045:5045"
+    depends_on:
+      orchestrator:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5045/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - development
+
+  # Notification Service - Notification delivery and management
+  notification-service:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/notification-service/config.yaml:/app/services/notification-service/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/notification-service/main.py"
+    ports:
+      - "5095:5095"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5095/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+  # ============================================================================
+  # UTILITY SERVICES
+  # ============================================================================
+
+  # Prompt Store - Centralized prompt management
+  prompt-store:
+    build:
+      context: .
+      dockerfile: services/prompt-store/Dockerfile
+    volumes:
+      - prompt_store_data:/app/data
+      - ./config.yml:/app/config.yml:ro
+      - ./services/prompt-store/config.yaml:/app/services/prompt-store/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+    ports:
+      - "5110:5110"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5110/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # Interpreter - Natural language processing and interpretation
+  interpreter:
+    build:
+      context: .
+      dockerfile: services/interpreter/Dockerfile
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+      - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    ports:
+      - "5120:5120"
+    depends_on:
+      prompt-store:
+        condition: service_started
+      orchestrator:
+        condition: service_started
+      analysis-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5120/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # CLI - Command line interface
+  cli:
+    build:
+      context: .
+      dockerfile: services/cli/Dockerfile
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+      - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    depends_on:
+      prompt-store:
+        condition: service_started
+      orchestrator:
+        condition: service_started
+      analysis-service:
+        condition: service_started
+    command: ["sleep", "infinity"]  # Keep container running for interactive use
+    profiles:
+      - tooling
+
+  # ============================================================================
+  # ANALYSIS SERVICES
+  # ============================================================================
+
+  # Code Analyzer - Code analysis and security scanning
+  code-analyzer:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/code-analyzer/config.yaml:/app/services/code-analyzer/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx && python services/code-analyzer/main.py"
+    ports:
+      - "5085:5085"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+  # Secure Analyzer - Content security and policy enforcement
+  secure-analyzer:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/secure-analyzer/config.yaml:/app/services/secure-analyzer/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/secure-analyzer/main.py"
+    ports:
+      - "5070:5070"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+  # Log Collector - Centralized logging service
+  log-collector:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/log-collector/config.yaml:/app/services/log-collector/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/log-collector/main.py"
+    ports:
+      - "5080:5080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+
+volumes:
+  # Redis persistence volume
+  redis_data:
+    driver: local
+
+  # PostgreSQL data volume (uncomment if using PostgreSQL)
+  # postgres_data:
+  #   driver: local
+
+  # Document store SQLite database volume
+  doc_store_data:
+    driver: local
+
+  # Prompt store data volume
+  prompt_store_data:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
 
 networks:
+  # Main development network
   default:
     name: doc-ecosystem-dev
     driver: bridge

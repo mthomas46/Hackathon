@@ -1,0 +1,24 @@
+# Individual Docker Compose for GitHub MCP Service
+# This allows the github-mcp to run independently as a standalone service
+
+version: "3.9"
+
+services:
+  github-mcp:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ../../:/app:ro
+      - ../../config.yml:/app/config.yml:ro
+      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
+      - ./config.yaml:/app/services/github-mcp/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/github-mcp/main.py"
+    ports:
+      - "5072:5072"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5072/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

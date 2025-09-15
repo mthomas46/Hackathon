@@ -1,0 +1,12 @@
+# Log-collector-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for log-collector
+server:
+  port: 5080
+
+# Log collector specific settings (minimal service)
+log_collector:
+  # Default log retention settings
+  retention_days: ${LOG_RETENTION_DAYS:-30}
+  max_log_size_mb: ${MAX_LOG_SIZE_MB:-100}

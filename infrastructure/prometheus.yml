@@ -1,0 +1,143 @@
+# Prometheus Configuration for LLM Documentation Ecosystem
+# This configuration defines scraping targets and alerting rules
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'
+rule_files:
+  - "alert_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # LLM Documentation Ecosystem Services
+  - job_name: 'orchestrator'
+    static_configs:
+      - targets: ['orchestrator:5099']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'doc-store'
+    static_configs:
+      - targets: ['doc-store:5087']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'analysis-service'
+    static_configs:
+      - targets: ['analysis-service:5020']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'source-agent'
+    static_configs:
+      - targets: ['source-agent:5000']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'frontend'
+    static_configs:
+      - targets: ['frontend:3000']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
+  - job_name: 'memory-agent'
+    static_configs:
+      - targets: ['memory-agent:5040']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'discovery-agent'
+    static_configs:
+      - targets: ['discovery-agent:5045']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:5095']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'prompt-store'
+    static_configs:
+      - targets: ['prompt-store:5110']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'interpreter'
+    static_configs:
+      - targets: ['interpreter:5120']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'code-analyzer'
+    static_configs:
+      - targets: ['code-analyzer:5085']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'secure-analyzer'
+    static_configs:
+      - targets: ['secure-analyzer:5070']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'log-collector'
+    static_configs:
+      - targets: ['log-collector:5080']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'summarizer-hub'
+    static_configs:
+      - targets: ['summarizer-hub:5060']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'bedrock-proxy'
+    static_configs:
+      - targets: ['bedrock-proxy:7090']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  - job_name: 'github-mcp'
+    static_configs:
+      - targets: ['github-mcp:5072']
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  # Infrastructure monitoring
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # Node Exporter for system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Pushgateway for batch jobs
+  - job_name: 'pushgateway'
+    static_configs:
+      - targets: ['pushgateway:9091']
+    honor_labels: true

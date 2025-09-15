@@ -1,0 +1,410 @@
+# =============================================================================
+# DOCKER COMPOSE - PRODUCTION ENVIRONMENT
+# =============================================================================
+# Production deployment for the LLM Documentation Ecosystem
+#
+# Key differences from development:
+# - PostgreSQL instead of SQLite for production data persistence
+# - All monitoring and observability services enabled
+# - SSL/TLS termination via load balancer
+# - Optimized resource allocation
+# - Security hardening
+#
+# Services included:
+# - Full infrastructure stack (LB, monitoring, tracing)
+# - All core and production services
+# - High availability configurations
+#
+# Configuration:
+# - Unified config.yml at project root (with production overrides)
+# - Service-specific configs in services/*/config.yaml
+# - Environment variables from .env.prod file
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ============================================================================
+  # LOAD BALANCER & REVERSE PROXY
+  # ============================================================================
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - orchestrator
+      - frontend
+      - analysis-service
+      - doc-store
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - doc-ecosystem-prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-doc_consistency}
+      POSTGRES_USER: ${POSTGRES_USER:-doc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - doc-ecosystem-prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-doc_user} -d ${POSTGRES_DB:-doc_consistency}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # ============================================================================
+  # MONITORING & OBSERVABILITY
+  # ============================================================================
+  # Note: Advanced monitoring infrastructure (Jaeger, Prometheus, Grafana, etc.)
+  # is defined in docker-compose.infrastructure.yml but requires additional
+  # configuration files that are not currently present in the infrastructure/
+  # directory. For now, services include basic health checks.
+  #
+  # To enable full monitoring:
+  # 1. Create infrastructure/prometheus.yml
+  # 2. Create infrastructure/grafana/ directories and configs
+  # 3. Add infrastructure/logstash.conf
+  # 4. Uncomment monitoring services in this file
+
+  # ============================================================================
+  # CORE SERVICES
+  # ============================================================================
+
+  orchestrator:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/orchestrator/config.yaml:/app/services/orchestrator/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=production
+      - USE_POSTGRESQL=true
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis aioredis psycopg2-binary && python services/orchestrator/main.py"
+    networks:
+      - doc-ecosystem-prod
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5099/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  doc-store:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/doc-store/config.yaml:/app/services/doc-store/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=production
+      - USE_POSTGRESQL=true
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis psycopg2-binary && python services/doc-store/main.py"
+    networks:
+      - doc-ecosystem-prod
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5087/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  analysis-service:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/analysis-service/config.yaml:/app/services/analysis-service/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/analysis-service/main.py"
+    networks:
+      - doc-ecosystem-prod
+    depends_on:
+      redis:
+        condition: service_healthy
+      doc-store:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  source-agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/source-agent/config.yaml:/app/services/source-agent/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/source-agent/main.py"
+    networks:
+      - doc-ecosystem-prod
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  frontend:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/frontend/config.yaml:/app/services/frontend/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/frontend/main.py"
+    networks:
+      - doc-ecosystem-prod
+    depends_on:
+      orchestrator:
+        condition: service_started
+      analysis-service:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ============================================================================
+  # PRODUCTION SERVICES
+  # ============================================================================
+
+  notification-service:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/notification-service/config.yaml:/app/services/notification-service/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/notification-service/main.py"
+    networks:
+      - doc-ecosystem-prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5095/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  secure-analyzer:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/secure-analyzer/config.yaml:/app/services/secure-analyzer/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/secure-analyzer/main.py"
+    networks:
+      - doc-ecosystem-prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  code-analyzer:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/code-analyzer/config.yaml:/app/services/code-analyzer/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx && python services/code-analyzer/main.py"
+    networks:
+      - doc-ecosystem-prod
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  log-collector:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/log-collector/config.yaml:/app/services/log-collector/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/log-collector/main.py"
+    networks:
+      - doc-ecosystem-prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+
+networks:
+  doc-ecosystem-prod:
+    driver: bridge

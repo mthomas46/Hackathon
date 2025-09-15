@@ -4,3 +4,8 @@
 # Override server port for frontend
 server:
   port: 3000
+
+# Service URLs that frontend connects to
+services:
+  reporting_url: ${REPORTING_URL:-http://analysis-service:5020}
+  consistency_engine_url: ${CONSISTENCY_ENGINE_URL:-http://orchestrator:5099}

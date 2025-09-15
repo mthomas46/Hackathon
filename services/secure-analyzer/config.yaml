@@ -12,3 +12,14 @@ policy:
   default_prompt: |
     Summarize focusing on risks, PII, secrets, and client information.
 
+# Circuit breaker settings
+circuit_breaker:
+  max_failures: ${SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES:-5}
+  timeout_seconds: ${SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT:-60}
+
+# Service URLs
+services:
+  summarizer_hub_url: ${SUMMARIZER_HUB_URL:-http://summarizer-hub:5060}
+
+# Testing configuration
+testing: ${TESTING:-false}

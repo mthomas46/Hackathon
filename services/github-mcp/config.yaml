@@ -1,0 +1,25 @@
+# GitHub-MCP-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for github-mcp
+server:
+  port: 5072
+
+# GitHub MCP specific settings
+github:
+  # Toolset configuration
+  toolsets: ${GITHUB_TOOLSETS:-repos}
+  dynamic_toolsets: ${GITHUB_DYNAMIC_TOOLSETS:-false}
+  read_only: ${GITHUB_READ_ONLY:-false}
+  mock: ${GITHUB_MOCK:-true}
+
+  # GitHub API configuration
+  host: ${GITHUB_HOST:-}
+  personal_access_token: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
+
+  # Official MCP server configuration
+  use_official_gh_mcp: ${USE_OFFICIAL_GH_MCP:-false}
+  official_gh_mcp_base_url: ${OFFICIAL_GH_MCP_BASE_URL:-http://github-mcp-server:8060}
+
+# Upstream timeout configuration
+upstream_timeout_seconds: ${UPSTREAM_TIMEOUT_SECONDS:-60}

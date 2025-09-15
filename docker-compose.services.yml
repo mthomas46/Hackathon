@@ -11,11 +11,10 @@ services:
       dockerfile: services/prompt-store/Dockerfile
     ports:
       - "5110:5110"
-    environment:
-      - PROMPT_STORE_DB=/app/data/prompt_store.db
-      - REDIS_URL=redis://redis:6379
     volumes:
       - prompt_store_data:/app/data
+      - ./services/prompt-store/config.yaml:/app/services/prompt-store/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     depends_on:
       - redis
     networks:
@@ -30,10 +29,9 @@ services:
     build:
       context: .
       dockerfile: services/cli/Dockerfile
-    environment:
-      - PROMPT_STORE_URL=http://prompt-store:5110
-      - ORCHESTRATOR_URL=http://orchestrator:5000
-      - ANALYSIS_SERVICE_URL=http://analysis-service:5020
+    volumes:
+      - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     depends_on:
       - prompt-store
       - orchestrator
@@ -48,10 +46,9 @@ services:
       dockerfile: services/interpreter/Dockerfile
     ports:
       - "5120:5120"
-    environment:
-      - PROMPT_STORE_URL=http://prompt-store:5110
-      - ORCHESTRATOR_URL=http://orchestrator:5000
-      - ANALYSIS_SERVICE_URL=http://analysis-service:5020
+    volumes:
+      - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     depends_on:
       - prompt-store
       - orchestrator
