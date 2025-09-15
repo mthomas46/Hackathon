@@ -9,9 +9,8 @@ services:
       context: ../../
       dockerfile: services/cli/Dockerfile
     volumes:
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/cli/config.yaml:ro
+      - ../../:/app:ro
+      - ./:/app/services/cli:rw
     environment:
       - ENVIRONMENT=development
     command: ["sleep", "infinity"]  # Keep container running for interactive use

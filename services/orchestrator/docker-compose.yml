@@ -9,9 +9,7 @@ services:
     working_dir: /app
     volumes:
       - ../../:/app:ro
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/orchestrator/config.yaml:ro
+      - ./:/app/services/orchestrator:rw
     environment:
       - REDIS_HOST=redis
       - ENVIRONMENT=development

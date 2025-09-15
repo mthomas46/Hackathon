@@ -1,103 +1,18 @@
+# =============================================================================
+# DOCKER COMPOSE - SERVICES EXTENSION (DEPRECATED)
+# =============================================================================
+# This file is kept for backward compatibility but is no longer needed.
+# All services are now included in docker-compose.dev.yml
+#
+# If you need to extend the main docker-compose.dev.yml, you can add
+# additional services here and use:
+# docker-compose -f docker-compose.dev.yml -f docker-compose.services.yml up
+# =============================================================================
+
 version: '3.8'
 
-services:
-  # ============================================================================
-  # NEW SERVICES
-  # ============================================================================
-  
-  prompt-store:
-    build:
-      context: .
-      dockerfile: services/prompt-store/Dockerfile
-    ports:
-      - "5110:5110"
-    volumes:
-      - prompt_store_data:/app/data
-      - ./services/prompt-store/config.yaml:/app/services/prompt-store/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
-    depends_on:
-      - redis
-    networks:
-      - llm-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5110/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+services: {}
 
-  cli:
-    build:
-      context: .
-      dockerfile: services/cli/Dockerfile
-    volumes:
-      - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
-    depends_on:
-      - prompt-store
-      - orchestrator
-      - analysis-service
-    networks:
-      - llm-network
-    command: ["sleep", "infinity"]  # Keep container running for interactive use
+volumes: {}
 
-  interpreter:
-    build:
-      context: .
-      dockerfile: services/interpreter/Dockerfile
-    ports:
-      - "5120:5120"
-    volumes:
-      - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
-    depends_on:
-      - prompt-store
-      - orchestrator
-      - analysis-service
-    networks:
-      - llm-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5120/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ============================================================================
-  # EXISTING SERVICES (for reference)
-  # ============================================================================
-  
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    networks:
-      - llm-network
-    volumes:
-      - redis_data:/data
-
-  orchestrator:
-    # ... existing configuration
-    networks:
-      - llm-network
-
-  analysis-service:
-    # ... existing configuration  
-    networks:
-      - llm-network
-
-  doc-store:
-    # ... existing configuration
-    networks:
-      - llm-network
-
-  source-agent:
-    # ... existing configuration
-    networks:
-      - llm-network
-
-volumes:
-  prompt_store_data:
-  redis_data:
-
-networks:
-  llm-network:
-    driver: bridge
+networks: {}

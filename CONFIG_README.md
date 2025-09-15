@@ -331,31 +331,31 @@ docker-compose --profile core up
 
 ### Individual Service Development
 
-Each service can run independently with its own dependencies:
+Each service can run independently with its own dependencies. Every service has its own `docker-compose.yml` file:
 
 ```bash
-# Run a specific service individually
-cd services/orchestrator && docker-compose up
+# Run any service individually with its dependencies
+cd services/{service-name} && docker-compose up
 
-# Run doc-store with its own SQLite database
-cd services/doc-store && docker-compose up
-
-# Run analysis-service with its own Redis instance
-cd services/analysis-service && docker-compose up
-
-# Run frontend (no dependencies needed)
-cd services/frontend && docker-compose up
+# Examples:
+cd services/orchestrator && docker-compose up      # + Redis
+cd services/doc-store && docker-compose up         # + Redis + SQLite
+cd services/frontend && docker-compose up          # Standalone
+cd services/prompt-store && docker-compose up      # + SQLite
 ```
 
 **Service Categories by Dependencies:**
 
-**Redis-dependent services:**
-- `orchestrator`, `analysis-service`, `doc-store`, `source-agent`, `memory-agent`, `code-analyzer`
+**Redis + SQLite services:**
+- `doc-store` - Redis for caching, SQLite for document storage
 
-**SQLite-dependent services:**
-- `doc-store` (document database), `prompt-store` (prompt database)
+**Redis-only services:**
+- `orchestrator`, `analysis-service`, `source-agent`, `memory-agent`, `code-analyzer`
 
-**Standalone services:**
+**SQLite-only services:**
+- `prompt-store` - SQLite for prompt storage
+
+**Standalone services (no external dependencies):**
 - `frontend`, `bedrock-proxy`, `github-mcp`, `notification-service`, `log-collector`, `discovery-agent`, `interpreter`, `cli`, `secure-analyzer`, `summarizer-hub`
 
 ### Production Setup

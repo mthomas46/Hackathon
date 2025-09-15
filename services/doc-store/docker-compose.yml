@@ -9,9 +9,8 @@ services:
     working_dir: /app
     volumes:
       - ../../:/app:ro
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/doc-store/config.yaml:ro
+      - ./:/app/services/doc-store:rw
+      - ../../:/app:ro
       - doc_store_data:/app/services/doc-store
     environment:
       - REDIS_HOST=redis
@@ -33,6 +32,8 @@ services:
     ports:
       - "6379:6379"
     volumes:
+      - ../../:/app:ro
+      - ./:/app/services/doc-store:rw
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:

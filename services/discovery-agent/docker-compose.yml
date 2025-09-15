@@ -9,9 +9,8 @@ services:
     working_dir: /app
     volumes:
       - ../../:/app:ro
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/discovery-agent/config.yaml:ro
+      - ./:/app/services/discovery-agent:rw
+      - ../../:/app:ro
     environment:
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/discovery-agent/main.py"

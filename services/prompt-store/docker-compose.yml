@@ -9,10 +9,9 @@ services:
       context: ../../
       dockerfile: services/prompt-store/Dockerfile
     volumes:
+      - ../../:/app:ro
+      - ./:/app/services/prompt-store:rw
       - prompt_store_data:/app/data
-      - ../../config.yml:/app/config.yml:ro
-      - ../shared/config.yaml:/app/services/shared/config.yaml:ro
-      - ./config.yaml:/app/services/prompt-store/config.yaml:ro
     environment:
       - ENVIRONMENT=development
     ports:
