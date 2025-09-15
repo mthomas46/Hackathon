@@ -1,27 +1,17 @@
 """GitHub MCP Service core tests."""
 
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_mcp():
-    spec = importlib.util.spec_from_file_location(
-        "services.github-mcp.main",
-        os.path.join(os.getcwd(), "services", "github-mcp", "main.py")
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.app
+from .test_utils import load_github_mcp_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def app():
-    return _load_mcp()
-
-
-@pytest.fixture
-def client(app):
+def client():
+    """Test client fixture for github mcp service."""
+    app = load_github_mcp_service()
+    from fastapi.testclient import TestClient
     return TestClient(app)
 
 

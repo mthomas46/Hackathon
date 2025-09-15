@@ -4,12 +4,17 @@ Uses dynamic import to load hyphenated service path without requiring package co
 """
 
 import pytest
-import importlib.util, os
+import importlib.util, os, sys
 
 # Dynamically load shared_utils from hyphenated service path
+# Add services directory to path for proper relative imports
+services_path = os.path.join(os.getcwd(), 'services')
+if services_path not in sys.path:
+    sys.path.insert(0, services_path)
+
 _spec = importlib.util.spec_from_file_location(
-    "services.source-agent.modules.shared_utils",
-    os.path.join(os.getcwd(), 'services', 'source-agent', 'modules', 'shared_utils.py')
+    "source-agent.modules.shared_utils",
+    os.path.join(services_path, 'source-agent', 'modules', 'shared_utils.py')
 )
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)  # type: ignore

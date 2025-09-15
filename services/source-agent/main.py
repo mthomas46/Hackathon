@@ -1,6 +1,20 @@
-"""Consolidated Source Agent Service.
+"""Service: Source Agent
 
-Combines GitHub, Jira, and Confluence agent functionality into a single service.
+Endpoints:
+- POST /docs/fetch: Fetch documents from GitHub, Jira, or Confluence sources
+- POST /normalize: Normalize data from specified source with proper formatting
+- POST /code/analyze: Analyze code for API endpoints and patterns
+- GET /sources: List supported sources and their capabilities
+- GET /health: Service health check
+
+Responsibilities:
+- Consolidate GitHub, Jira, and Confluence agent functionality into a single service
+- Fetch and normalize documents from various enterprise sources
+- Analyze code for API endpoints and architectural patterns
+- Provide secure data handling with validation and sanitization
+- Support correlation tracking for distributed operations
+
+Dependencies: shared utilities, httpx for HTTP requests, Atlassian SDK, GitHub API.
 """
 from typing import Optional, List
 import os
@@ -18,24 +32,6 @@ from services.shared.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import utc_now, generate_id, clean_string
 
 
-def sanitize_for_response(text: str) -> str:
-    """Sanitize text to prevent XSS attacks in JSON responses."""
-    if not text:
-        return ""
-
-    # Remove HTML tags
-    import re
-    text = re.sub(r'<[^>]+>', '', text)
-
-    # Remove dangerous JavaScript event handlers and attributes
-    text = re.sub(r'on\w+\s*=', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'vbscript:', '', text, flags=re.IGNORECASE)
-
-    # Remove quotes that could be used to break out of attributes
-    text = text.replace('"', '').replace("'", '')
-
-    return clean_string(text)
 from services.shared.error_handling import safe_execute_async
 
 try:
@@ -48,6 +44,20 @@ from services.shared.utilities import stable_hash, cached_get
 from services.shared.envelopes import DocumentEnvelope
 from services.shared.owners import derive_github_owners
 from services.shared.clients import ServiceClients  # type: ignore
+
+# Service configuration constants
+SERVICE_NAME = "source-agent"
+SERVICE_TITLE = "Source Agent"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5000
+
+# Supported sources and their capabilities
+SUPPORTED_SOURCES = ["github", "jira", "confluence"]
+SOURCE_CAPABILITIES = {
+    "github": ["readme_fetch", "pr_normalization", "code_analysis"],
+    "jira": ["issue_normalization"],
+    "confluence": ["page_normalization"]
+}
 from .modules.document_builders import (
     build_readme_doc,
     extract_endpoints_from_patch,
@@ -77,7 +87,11 @@ from .modules.normalize_handler import normalize_handler
 from .modules.code_analyzer import code_analyzer
 
 # Create FastAPI app directly using shared utilities
-app = FastAPI(title="Source Agent", version="1.0.0")
+app = FastAPI(
+    title=SERVICE_TITLE,
+    version=SERVICE_VERSION,
+    description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence"
+)
 
 # Use common middleware setup to reduce duplication across services
 from services.shared.utilities import setup_common_middleware, attach_self_register
@@ -96,7 +110,12 @@ attach_self_register(app, ServiceNames.SOURCE_AGENT)
 
 @app.post("/docs/fetch")
 async def fetch_document(req: DocumentRequest):
-    """Fetch document from specified source using handler modules."""
+    """Fetch document from specified source using handler modules.
+
+    Supports fetching documents from GitHub (READMEs, PRs), Jira (issues),
+    and Confluence (pages). Uses appropriate authentication and data
+    transformation for each source type.
+    """
     if req.source == "github":
         # Extract owner and repo for GitHub
         owner, repo = req.identifier.split(":", 1)
@@ -111,13 +130,21 @@ async def fetch_document(req: DocumentRequest):
 
 @app.post("/normalize")
 async def normalize_data(req: NormalizationRequest):
-    """Normalize data from specified source using handler modules."""
+    """Normalize data from specified source using handler modules.
+
+    Applies source-specific normalization rules to standardize data format,
+    clean content, and extract structured information from raw source data.
+    """
     return normalize_handler.normalize_data(req.source, req.data, req.correlation_id)
 
 
 @app.post("/code/analyze")
 async def analyze_code(req: CodeAnalysisRequest):
-    """Analyze code for API endpoints and patterns using handler modules."""
+    """Analyze code for API endpoints and patterns using handler modules.
+
+    Performs static analysis on code to identify API endpoints, architectural
+    patterns, and potential integration points across different frameworks.
+    """
     return code_analyzer.analyze_code(req.text)
 
 
@@ -130,15 +157,15 @@ register_health_endpoints(app, ServiceNames.SOURCE_AGENT, "1.0.0")
 
 @app.get("/sources")
 async def list_sources():
-    """List supported sources using shared utilities."""
+    """List supported sources and their capabilities.
+
+    Returns information about all supported source types (GitHub, Jira, Confluence)
+    and their specific capabilities for fetching, normalization, and analysis.
+    """
     try:
         sources_data = {
-            "sources": ["github", "jira", "confluence"],
-            "capabilities": {
-                "github": ["readme_fetch", "pr_normalization", "code_analysis"],
-                "jira": ["issue_normalization"],
-                "confluence": ["page_normalization"]
-            }
+            "sources": SUPPORTED_SOURCES,
+            "capabilities": SOURCE_CAPABILITIES
         }
 
         context = build_source_agent_context("list_sources")
@@ -152,5 +179,11 @@ async def list_sources():
 
 
 if __name__ == "__main__":
+    """Run the Source Agent service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )

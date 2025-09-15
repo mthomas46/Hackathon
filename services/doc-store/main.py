@@ -1,6 +1,25 @@
-"""Doc Store Service
+"""Service: Doc Store
 
-Document storage and analysis service for the LLM Documentation Ecosystem.
+Endpoints:
+- POST /documents: Store documents with metadata and content hashing
+- GET /documents/{doc_id}: Retrieve documents by ID with full metadata
+- GET /documents/_list: List recent documents with pagination for reporting
+- PATCH /documents/{doc_id}/metadata: Update document metadata without changing content
+- POST /analyses: Store analysis results linked to documents
+- GET /analyses: List analyses with optional document filtering
+- GET /search: Full-text search over document content (FTS)
+- GET /documents/quality: Analyze document quality metrics and stale content
+- GET /style/examples: List style examples by programming language
+
+Responsibilities:
+- Provide persistent storage for documents with deduplication via content hashing
+- Maintain document metadata for correlation and reporting purposes
+- Store analysis results from various analyzers with scoring and model tracking
+- Support full-text search across document collections
+- Enable document quality assessment and staleness detection
+- Provide style examples for code documentation patterns
+
+Dependencies: SQLite database with FTS support, shared utilities for document handling.
 """
 
 from fastapi import FastAPI
@@ -130,13 +149,23 @@ def _init_db() -> None:
     finally:
         conn.close()
 
+# Service configuration constants
+SERVICE_NAME = "doc-store"
+SERVICE_TITLE = "Doc Store"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5087
+
 # Initialize FastAPI app with shared middleware
-app = FastAPI(title="Doc Store", version="1.0.0")
+app = FastAPI(
+    title=SERVICE_TITLE,
+    description="Document storage and analysis service for the LLM Documentation Ecosystem",
+    version=SERVICE_VERSION
+)
 
 # Use common middleware setup and error handlers to reduce duplication across services
 setup_common_middleware(app, ServiceNames.DOC_STORE)
 install_error_handlers(app)
-register_health_endpoints(app, ServiceNames.DOC_STORE, "1.0.0")
+register_health_endpoints(app, ServiceNames.DOC_STORE, SERVICE_VERSION)
 attach_self_register(app, ServiceNames.DOC_STORE)
 
 # Initialize database
@@ -198,7 +227,12 @@ async def metrics():
 
 @app.post("/documents")
 async def put_document(req: PutDocumentRequest):
-    """Store a document."""
+    """Store a document with automatic content hashing and deduplication.
+
+    Creates or updates a document with content hashing for deduplication,
+    stores comprehensive metadata, and enables correlation tracking via
+    correlation IDs for distributed operations.
+    """
     return await document_handlers.handle_put_document(req)
 
 
@@ -215,7 +249,11 @@ class GetDocumentResponse(BaseModel):
 
 @app.get("/documents/{doc_id}")
 async def get_document(doc_id: str):
-    """Get document by ID."""
+    """Get document by ID with full content and metadata.
+
+    Retrieves a complete document including content, metadata, and
+    creation timestamp for analysis and processing workflows.
+    """
     return await document_handlers.handle_get_document(doc_id)
 
 
@@ -232,7 +270,11 @@ class PutAnalysisRequest(BaseModel):
 
 @app.post("/analyses")
 async def put_analysis(req: PutAnalysisRequest):
-    """Store analysis results."""
+    """Store analysis results linked to documents with scoring.
+
+    Stores analysis results with model tracking, prompt hash verification,
+    and scoring for quality assessment and performance monitoring.
+    """
     return await analysis_handlers.handle_put_analysis(req)
 
 
@@ -242,7 +284,11 @@ class ListAnalysesResponse(BaseModel):
 
 @app.get("/analyses")
 async def list_analyses(document_id: Optional[str] = None):
-    """List analyses with optional document filtering."""
+    """List analyses with optional document filtering and pagination.
+
+    Retrieves analysis results filtered by document ID if specified,
+    with support for pagination and chronological ordering.
+    """
     return await analysis_handlers.handle_list_analyses(document_id)
 
 
@@ -292,12 +338,21 @@ class SearchResponse(BaseModel):
 
 @app.get("/search")
 async def search(q: str, limit: int = 20):
-    """Full-text search over documents (best-effort FTS)."""
+    """Full-text search over documents with FTS ranking.
+
+    Performs full-text search across document content, titles, and tags
+    using SQLite FTS5 for efficient and relevant result ranking.
+    """
     return await search_handlers.handle_search(q, limit)
 
 @app.get("/documents/quality", response_model=QualityResponse)
 async def documents_quality(stale_threshold_days: int = 180, min_views: int = 3):
-    """Flag potentially stale, redundant, or low-signal documents."""
+    """Analyze document quality and flag issues.
+
+    Identifies potentially stale documents based on age thresholds,
+    detects low-signal content based on view metrics, and provides
+    quality assessment recommendations.
+    """
     return await search_handlers.handle_documents_quality(stale_threshold_days, min_views)
 
 @app.patch("/documents/{doc_id}/metadata")
@@ -307,7 +362,13 @@ async def patch_document_metadata(doc_id: str, req: MetadataPatch):
 
 
 if __name__ == "__main__":
+    """Run the Doc Store service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5087)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )
 
 

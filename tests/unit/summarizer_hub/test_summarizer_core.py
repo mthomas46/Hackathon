@@ -3,38 +3,18 @@
 Tests ensemble summarization and multi-provider functionality.
 Focused on core summarization capabilities following TDD principles.
 """
-
-import importlib.util, os
 import pytest
 from fastapi.testclient import TestClient
 
-
-def _load_summarizer_hub():
-    """Load summarizer-hub service dynamically."""
-    spec = importlib.util.spec_from_file_location(
-        "services.summarizer-hub.main",
-        os.path.join(os.getcwd(), 'services', 'summarizer-hub', 'main.py')
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.app
+from .test_utils import load_summarizer_hub_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def summarizer_app():
-    """Load summarizer-hub service."""
-    return _load_summarizer_hub()
-
-
-@pytest.fixture
-def client(summarizer_app):
-    """Create test client."""
-    return TestClient(summarizer_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for summarizer hub service."""
+    app = load_summarizer_hub_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestSummarizerCore:

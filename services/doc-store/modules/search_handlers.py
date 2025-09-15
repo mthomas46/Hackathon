@@ -4,7 +4,10 @@ Handles the complex logic for search and quality endpoints.
 """
 from typing import Optional, List, Dict, Any
 
-from .logic import compute_quality_flags
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from logic import compute_quality_flags
 from .shared_utils import (
     execute_db_query,
     get_document_by_id,

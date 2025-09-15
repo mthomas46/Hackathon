@@ -437,7 +437,7 @@ class TestBedrockProxyCore:
             ("summary", "Summary"),
             ("pr_confidence", "PR Confidence Report"),
             ("life_of_ticket", "Life of the Ticket"),
-            ("risks", "Bedrock Proxy Output")
+            ("risks", "Risk Assessment")
         ]
 
         for template, expected_title in test_cases:

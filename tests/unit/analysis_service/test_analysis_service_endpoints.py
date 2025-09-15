@@ -1,13 +1,18 @@
 """Analysis Service endpoint coverage tests within realistic scope."""
 
-import importlib.util, os
+import importlib.util, os, sys
 from fastapi.testclient import TestClient
 
 
 # Load analysis-service app via dynamic import
+# Add services directory to path for proper relative imports
+services_path = os.path.join(os.getcwd(), 'services')
+if services_path not in sys.path:
+    sys.path.insert(0, services_path)
+
 _spec = importlib.util.spec_from_file_location(
-    "services.analysis-service.main",
-    os.path.join(os.getcwd(), 'services', 'analysis-service', 'main.py')
+    "analysis-service.main",
+    os.path.join(services_path, 'analysis-service', 'main.py')
 )
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)

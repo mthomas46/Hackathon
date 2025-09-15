@@ -3,38 +3,19 @@
 Tests version control and history tracking for prompts.
 Focused on version management and rollback capabilities.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_prompt_store():
-    """Load prompt-store service dynamically."""
-    spec = importlib.util.spec_from_file_location(
-        "services.prompt-store.main",
-        os.path.join(os.getcwd(), 'services', 'prompt-store', 'main.py')
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.app
+from .test_utils import load_prompt_store_service, _assert_http_ok, sample_prompt, sample_prompt_update
 
 
 @pytest.fixture(scope="module")
-def prompt_store_app():
-    """Load prompt-store service."""
-    return _load_prompt_store()
-
-
-@pytest.fixture
-def client(prompt_store_app):
-    """Create test client."""
-    return TestClient(prompt_store_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for prompt store service."""
+    app = load_prompt_store_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestPromptVersioning:

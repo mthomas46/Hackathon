@@ -1,3 +1,19 @@
+"""HTTP Client Utilities for Inter-Service Communication
+
+Robust HTTP client implementation with resilience patterns for service communication.
+
+This module provides:
+- Configurable HTTP clients with timeout and retry settings
+- Circuit breaker pattern implementation for fault tolerance
+- Automatic retry with exponential backoff and jitter
+- JSON request/response handling with proper error handling
+- Service URL resolution and configuration management
+- Correlation ID propagation for distributed tracing
+- Metrics collection for service communication monitoring
+
+Used by all services to communicate with each other reliably and consistently.
+"""
+
 import os
 import httpx
 from typing import Any, Dict, Optional
@@ -7,10 +23,20 @@ from services.shared.config import get_config_value
 
 
 class ServiceClients:
-    """Minimal JSON-focused HTTP client wrapper.
+    """Robust HTTP client wrapper for inter-service communication.
 
-    Centralizes timeouts, retries with jitter, and circuit-breaker behavior
-    to keep inter-service calls consistent and testable.
+    Provides a unified interface for all HTTP communication between services,
+    with built-in resilience patterns including retries, circuit breakers,
+    and proper error handling. All service communication should use this
+    client to ensure consistency and reliability.
+
+    Features:
+    - Configurable timeouts and retry policies
+    - Circuit breaker pattern for fault tolerance
+    - Automatic correlation ID propagation
+    - JSON request/response handling
+    - Comprehensive error handling and logging
+    - Service URL resolution from configuration
     """
     def __init__(self, timeout: int = 30):
         # Read defaults from shared config with env override

@@ -16,7 +16,9 @@ async def persist_analysis_result(result: Dict[str, Any]) -> None:
                 client = await aioredis.from_url(f"redis://{host}")
                 await client.publish("docs.ingested.code", str(result))
                 await client.aclose()
-        except Exception:
+        except (Exception, TypeError) as e:
+            # Handle Redis compatibility issues gracefully
+            print(f"Redis publishing failed (optional): {e}")
             pass  # Redis publishing is optional
 
     # Store in doc-store if configured
@@ -36,5 +38,8 @@ def _try_import_redis():
         import aioredis
         globals()["aioredis"] = aioredis
         return True
-    except ImportError:
+    except (ImportError, TypeError) as e:
+        # Handle Python 3.13 compatibility issue with aioredis
+        # TypeError occurs when aioredis has duplicate base classes
+        print(f"Redis import failed (optional dependency): {e}")
         return False

@@ -4,203 +4,22 @@ Tests service integration, data flow, and end-to-end workflows.
 Focused on integration scenarios following TDD principles.
 """
 
-import importlib.util, os
 import pytest
 from fastapi.testclient import TestClient
 
-
-def _load_secure_analyzer_service():
-    """Load secure-analyzer service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.secure-analyzer.main",
-            os.path.join(os.getcwd(), 'services', 'secure-analyzer', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Secure Analyzer", version="0.1.0")
-
-        # Mock storage for integration testing
-        mock_storage = {
-            "detections": [],
-            "suggestions": [],
-            "summaries": [],
-            "workflows": []
-        }
-
-        @app.post("/detect")
-        async def detect(request_data: dict):
-            content = request_data.get("content", "")
-            keywords = request_data.get("keywords", [])
-
-            # Mock security detection
-            matches = []
-            topics = []
-
-            # Check for various sensitive patterns with more comprehensive matching
-            sensitive_patterns = {
-                "password": "password",
-                "api_key": "api_key",
-                "secret": "secret",
-                "token": "token",
-                "ssn": "ssn",
-                "credit card": "credit card",
-                "credit": "credit card",  # Also match just "credit"
-                "card": "credit card"     # Also match just "card"
-            }
-
-            content_lower = content.lower()
-            for pattern, topic in sensitive_patterns.items():
-                if pattern.lower() in content_lower:
-                    matches.append(f"Found: {pattern}")
-                    topics.append(topic)
-
-            # Additional specific pattern matching for common formats
-            if "4111-1111-1111-1111" in content or "credit card" in content_lower:
-                if "credit card" not in topics:
-                    topics.append("credit card")
-                    matches.append("Found: credit card pattern")
-
-            if any(ssn_pattern in content for ssn_pattern in ["123-45-6789", "987-65-4321"]):
-                if "ssn" not in topics:
-                    topics.append("ssn")
-                    matches.append("Found: SSN pattern")
-
-            # Add custom keyword matches
-            for keyword in keywords:
-                if keyword.lower() in content_lower:
-                    matches.append(f"Custom: {keyword}")
-                    topics.append("custom")
-
-            # Filter out false positives - only keep matches that are actually security-related
-            security_topics = {"password", "api_key", "secret", "token", "ssn", "credit card", "pii"}
-            filtered_matches = []
-            filtered_topics = []
-
-            for i, (match, topic) in enumerate(zip(matches, topics)):
-                if topic in security_topics or "custom" in match.lower():
-                    filtered_matches.append(match)
-                    filtered_topics.append(topic)
-
-            # Remove duplicates while preserving order
-            seen_topics = set()
-            unique_topics = []
-            for topic in filtered_topics:
-                if topic not in seen_topics:
-                    seen_topics.add(topic)
-                    unique_topics.append(topic)
-
-            topics = unique_topics
-            matches = filtered_matches
-
-            detection_result = {
-                "sensitive": len(matches) > 0,
-                "matches": matches[:100],
-                "topics": list(set(topics)),
-                "content_length": len(content),
-                "keywords_checked": len(keywords)
-            }
-
-            mock_storage["detections"].append(detection_result)
-            return detection_result
-
-        @app.post("/suggest")
-        async def suggest(request_data: dict):
-            # Use detect function to get sensitivity analysis
-            detection = await detect(request_data)
-
-            # Policy: sensitive content -> restrict to secure models
-            secure_only = ["bedrock", "ollama"]
-            all_providers = ["bedrock", "ollama", "openai", "anthropic", "grok"]
-
-            allowed_models = secure_only if detection["sensitive"] else all_providers
-
-            suggestion_text = (
-                f"Sensitive content detected ({len(detection['matches'])} matches). "
-                f"Recommend secure models: {', '.join(secure_only)}"
-                if detection["sensitive"]
-                else f"No sensitive content detected. All {len(all_providers)} models allowed."
-            )
-
-            suggestion_result = {
-                "sensitive": detection["sensitive"],
-                "allowed_models": allowed_models,
-                "suggestion": suggestion_text,
-                "match_count": len(detection["matches"]),
-                "topic_count": len(detection["topics"])
-            }
-
-            mock_storage["suggestions"].append(suggestion_result)
-            return suggestion_result
-
-        @app.post("/summarize")
-        async def summarize(request_data: dict):
-            content = request_data.get("content", "")
-            override_policy = request_data.get("override_policy", False)
-            providers = request_data.get("providers", [{"name": "ollama"}])
-
-            # Use detection for policy enforcement
-            detection = await detect(request_data)
-
-            # Policy enforcement (unless overridden)
-            if detection["sensitive"] and not override_policy:
-                # Filter to secure providers only
-                secure_names = {"bedrock", "ollama"}
-                filtered_providers = [
-                    p for p in providers
-                    if str(p.get("name", "")).lower() in secure_names
-                ]
-                if not filtered_providers:
-                    filtered_providers = [{"name": "bedrock"}, {"name": "ollama"}]
-                providers = filtered_providers
-
-            # Determine which provider was actually used
-            provider_used = providers[0]["name"] if providers else "ollama"
-
-            # Mock summarization with content-aware response
-            word_count = len(content.split())
-            summary_text = f"Summary of {word_count} words"
-            if detection["sensitive"]:
-                summary_text += f" (contains {len(detection['matches'])} sensitive items)"
-            if len(providers) > 1:
-                summary_text += f" using {len(providers)} providers"
-            else:
-                summary_text += f" using {provider_used}"
-
-            summary_result = {
-                "summary": summary_text,
-                "provider_used": provider_used,
-                "confidence": 0.85 if not detection["sensitive"] else 0.95,
-                "word_count": word_count,
-                "topics_detected": detection["topics"],
-                "policy_enforced": detection["sensitive"] and not override_policy,
-                "providers_used": len(providers)
-            }
-
-            mock_storage["summaries"].append(summary_result)
-            return summary_result
-
-        return app
+from .test_utils import load_secure_analyzer_service
 
 
 @pytest.fixture(scope="module")
-def secure_analyzer_app():
-    """Load secure-analyzer service."""
-    return _load_secure_analyzer_service()
-
-
-@pytest.fixture
-def client(secure_analyzer_app):
-    """Create test client."""
-    return TestClient(secure_analyzer_app)
+def client():
+    """Test client fixture for secure analyzer service."""
+    app = load_secure_analyzer_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
+    """Assert that HTTP response is successful."""
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
 

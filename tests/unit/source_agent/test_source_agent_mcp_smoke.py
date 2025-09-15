@@ -1,15 +1,20 @@
 """Smoke test for source-agent delegation to github-mcp when USE_GITHUB_MCP=1."""
 
-import importlib.util, os
+import importlib.util, os, sys
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
 
 def _load_service(path):
+    # Add services directory to path for proper relative imports
+    services_path = os.path.join(os.getcwd(), 'services')
+    if services_path not in sys.path:
+        sys.path.insert(0, services_path)
+
     spec = importlib.util.spec_from_file_location(
-        path.replace("/", "."),
-        os.path.join(os.getcwd(), *path.split("/"))
+        path.split("/")[-1] + ".main",
+        os.path.join(services_path, *path.split("/"), "main.py")
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -36,7 +41,7 @@ def source_app():
 
 @pytest.fixture(scope="module")
 def mcp_app():
-    return _load_service("services/github-mcp/main.py")
+    return _load_service("github-mcp")
 
 
 @pytest.fixture

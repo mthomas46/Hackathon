@@ -3,82 +3,19 @@
 Tests input validation, error scenarios, and edge cases.
 Focused on validation logic following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_frontend():
-    """Load frontend service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.frontend.main",
-            os.path.join(os.getcwd(), 'services', 'frontend', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        from fastapi.responses import HTMLResponse
-        app = FastAPI(title="Frontend", version="1.0.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "frontend"}
-
-        @app.get("/search")
-        async def search(q: str = "test"):
-            if not q or q.strip() == "":
-                return {"detail": "Query parameter 'q' cannot be empty"}, 400
-            import html
-            import re
-
-            # Escape HTML characters first
-            safe_q = html.escape(q)
-
-            # Remove potentially dangerous patterns
-            dangerous_patterns = [
-                r'javascript:',      # JavaScript URLs
-                r'vbscript:',        # VBScript URLs
-                r'data:',           # Data URLs
-                r'../../../',       # Path traversal
-                r'..\\..\\',        # Windows path traversal
-            ]
-
-            for pattern in dangerous_patterns:
-                safe_q = re.sub(pattern, '', safe_q, flags=re.IGNORECASE)
-
-            return HTMLResponse(f"<html><body>Search results for: {safe_q}</body></html>")
-
-        @app.get("/reports/jira/staleness")
-        async def jira_staleness(min_confidence: float = 0.0, limit: int = 50):
-            if min_confidence < 0 or min_confidence > 1:
-                return {"detail": "min_confidence must be between 0 and 1"}, 400
-            if limit < 0 or limit > 1000:
-                return {"detail": "limit must be between 0 and 1000"}, 400
-            return HTMLResponse("<html><body>Jira Staleness Report</body></html>")
-
-        return app
+from .test_utils import load_frontend_service, _assert_http_ok, _assert_html_response
 
 
 @pytest.fixture(scope="module")
-def frontend_app():
-    """Load frontend service."""
-    return _load_frontend()
-
-
-@pytest.fixture
-def client(frontend_app):
-    """Create test client."""
-    return TestClient(frontend_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for frontend service."""
+    app = load_frontend_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestFrontendValidation:

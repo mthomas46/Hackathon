@@ -15,7 +15,7 @@ from services.shared.utilities import get_service_client
 
 from .analysis_logic import detect_readme_drift, detect_api_mismatches
 from .models import FindingsResponse
-from .shared_utils import build_analysis_context, handle_analysis_error, service_client
+from .shared_utils import build_analysis_context, handle_analysis_error, get_analysis_service_client
 
 
 class AnalysisHandlers:
@@ -30,6 +30,8 @@ class AnalysisHandlers:
             # Fetch target documents
             docs = []
             apis = []
+
+            service_client = get_analysis_service_client()
 
             for target_id in req.targets:
                 if target_id.startswith("doc:"):
@@ -187,31 +189,32 @@ class AnalysisHandlers:
                 details={"error": str(e), "limit": limit, "type_filter": finding_type_filter}
             )
 
-        def handle_list_detectors(self) -> Dict[str, Any]:
-            """List available analysis detectors."""
-            return {
-                "detectors": [
-                    {
-                        "name": "readme_drift",
-                        "description": "Detect drift between README and other documentation",
-                        "severity_levels": ["low", "medium", "high"],
-                        "confidence_threshold": 0.7
-                    },
-                    {
-                        "name": "api_mismatch",
-                        "description": "Detect mismatches between API docs and implementation",
-                        "severity_levels": ["medium", "high", "critical"],
-                        "confidence_threshold": 0.8
-                    },
-                    {
-                        "name": "consistency_check",
-                        "description": "General consistency analysis across documents",
-                        "severity_levels": ["low", "medium", "high"],
-                        "confidence_threshold": 0.6
-                    }
-                ],
-                "total_detectors": 3
-            }
+    @staticmethod
+    def handle_list_detectors() -> Dict[str, Any]:
+        """List available analysis detectors."""
+        return {
+            "detectors": [
+                {
+                    "name": "readme_drift",
+                    "description": "Detect drift between README and other documentation",
+                    "severity_levels": ["low", "medium", "high"],
+                    "confidence_threshold": 0.7
+                },
+                {
+                    "name": "api_mismatch",
+                    "description": "Detect mismatches between API docs and implementation",
+                    "severity_levels": ["medium", "high", "critical"],
+                    "confidence_threshold": 0.8
+                },
+                {
+                    "name": "consistency_check",
+                    "description": "General consistency analysis across documents",
+                    "severity_levels": ["low", "medium", "high"],
+                    "confidence_threshold": 0.6
+                }
+            ],
+            "total_detectors": 3
+        }
 
 
 # Create singleton instance

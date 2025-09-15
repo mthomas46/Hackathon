@@ -271,9 +271,11 @@ Retrieve payment history.
         if analysis_client:
             compliance_resp = analysis_client.post("/analyze", json={
                 "targets": stored_compliance_docs,
-                "analysis_type": "compliance",
-                "standards": ["GDPR", "PCI_DSS", "SOX"],
-                "scope": "documentation_audit"
+                "analysis_type": "consistency",
+                "options": {
+                    "standards": ["GDPR", "PCI_DSS", "SOX"],
+                    "scope": "documentation_audit"
+                }
             })
 
             # Verify compliance analysis request

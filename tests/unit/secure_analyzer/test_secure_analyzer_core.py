@@ -3,165 +3,18 @@
 Tests content security analysis, model suggestions, and secure summarization.
 Focused on essential secure analyzer operations following TDD principles.
 """
-
-import importlib.util, os, sys
 import pytest
 from fastapi.testclient import TestClient
 
-
-def _load_secure_analyzer_service():
-    """Load secure-analyzer service dynamically."""
-    print(f"[TEST_SETUP] Starting to load secure-analyzer service")
-    print(f"[TEST_SETUP] Current working directory: {os.getcwd()}")
-    print(f"[TEST_SETUP] Python path: {sys.path[:3]}...")  # Show first 3 paths
-
-    try:
-        module_path = os.path.join(os.getcwd(), 'services', 'secure-analyzer', 'main.py')
-        print(f"[TEST_SETUP] Attempting to load from: {module_path}")
-        print(f"[TEST_SETUP] File exists: {os.path.exists(module_path)}")
-
-        spec = importlib.util.spec_from_file_location(
-            "services.secure-analyzer.main",
-            module_path
-        )
-        print(f"[TEST_SETUP] Spec created: {spec is not None}")
-        if spec is None:
-            print("[TEST_SETUP] Spec creation failed - file not found or invalid")
-            raise ImportError("Could not create module spec")
-
-        print(f"[TEST_SETUP] Spec loader: {spec.loader}")
-        mod = importlib.util.module_from_spec(spec)
-        print(f"[TEST_SETUP] Module created from spec")
-
-        print("[TEST_SETUP] Executing module...")
-        spec.loader.exec_module(mod)
-        print(f"[TEST_SETUP] Module executed successfully")
-        print(f"[TEST_SETUP] App attribute exists: {hasattr(mod, 'app')}")
-
-        return mod.app
-    except Exception as e:
-        print(f"[TEST_SETUP] Loading failed with exception: {type(e).__name__}: {e}")
-        import traceback
-        print(f"[TEST_SETUP] Traceback:\n{traceback.format_exc()}")
-
-        # If loading fails, create a minimal mock app for testing
-        print("[TEST_SETUP] Creating minimal mock app as fallback")
-        from fastapi import FastAPI
-        app = FastAPI(title="Secure Analyzer", version="0.1.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "secure-analyzer"}
-
-        @app.post("/detect")
-        async def detect(request_data: dict):
-            content = request_data.get("content", "")
-            keywords = request_data.get("keywords", [])
-
-            # Mock security detection
-            matches = []
-            topics = []
-
-            # Check for sensitive patterns
-            sensitive_patterns = [
-                "password", "secret", "api_key", "token", "ssn",
-                "social security", "credit card", "confidential"
-            ]
-
-            for pattern in sensitive_patterns:
-                if pattern.lower() in content.lower():
-                    matches.append(f"Found: {pattern}")
-
-            for topic in ["pii", "secrets", "auth", "credentials"]:
-                if topic in content.lower():
-                    topics.append(topic)
-
-            # Add custom keyword matches
-            for keyword in keywords:
-                if keyword.lower() in content.lower():
-                    matches.append(f"Custom: {keyword}")
-                    topics.append("custom")
-
-            return {
-                "sensitive": len(matches) > 0,
-                "matches": matches[:100],  # Limit matches
-                "topics": list(set(topics))  # Remove duplicates
-            }
-
-        @app.post("/suggest")
-        async def suggest(request_data: dict):
-            content = request_data.get("content", "")
-            keywords = request_data.get("keywords", [])
-
-            # Use detection logic to determine sensitivity
-            detection = await detect(request_data)
-
-            # Policy: sensitive content -> restrict to secure models
-            secure_only = ["bedrock", "ollama"]
-            all_providers = ["bedrock", "ollama", "openai", "anthropic", "grok"]
-
-            allowed_models = secure_only if detection["sensitive"] else all_providers
-
-            suggestion = (
-                f"Sensitive content detected. Recommend secure models: {', '.join(secure_only)}"
-                if detection["sensitive"]
-                else "No sensitive content detected. All models allowed."
-            )
-
-            return {
-                "sensitive": detection["sensitive"],
-                "allowed_models": allowed_models,
-                "suggestion": suggestion
-            }
-
-        @app.post("/summarize")
-        async def summarize(request_data: dict):
-            content = request_data.get("content", "")
-            override_policy = request_data.get("override_policy", False)
-            providers = request_data.get("providers", [{"name": "ollama"}])
-
-            # Use detection logic
-            detection = await detect(request_data)
-
-            # Policy enforcement (unless overridden)
-            if detection["sensitive"] and not override_policy:
-                # Filter to secure providers only
-                secure_names = {"bedrock", "ollama"}
-                filtered_providers = [
-                    p for p in providers
-                    if str(p.get("name", "")).lower() in secure_names
-                ]
-                if not filtered_providers:
-                    filtered_providers = [{"name": "bedrock"}, {"name": "ollama"}]
-                providers = filtered_providers
-
-            # Mock summarization response
-            return {
-                "summary": f"Mock summary of content (length: {len(content)}). Sensitive: {detection['sensitive']}",
-                "provider_used": providers[0]["name"] if providers else "ollama",
-                "confidence": 0.85,
-                "word_count": len(content.split()),
-                "topics_detected": detection["topics"]
-            }
-
-        return app
+from .test_utils import load_secure_analyzer_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def secure_analyzer_app():
-    """Load secure-analyzer service."""
-    return _load_secure_analyzer_service()
-
-
-@pytest.fixture
-def client(secure_analyzer_app):
-    """Create test client."""
-    return TestClient(secure_analyzer_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for secure analyzer service."""
+    app = load_secure_analyzer_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestSecureAnalyzerCore:

@@ -3,61 +3,19 @@
 Tests orchestrator registration, service discovery integration, and workflow.
 Focused on registration operations following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_discovery_agent():
-    """Load discovery-agent service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.discovery-agent.main",
-            os.path.join(os.getcwd(), 'services', 'discovery-agent', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Discovery Agent", version="1.0.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "discovery-agent"}
-
-        @app.post("/discover")
-        async def discover(request_data: dict):
-            return {
-                "message": "discovery and registration completed",
-                "data": {
-                    "endpoints": ["GET /health", "POST /register"],
-                    "service_name": request_data.get("name", "test-service"),
-                    "registered": True,
-                    "registration_response": {"status": "success", "service_id": "123"}
-                }
-            }
-
-        return app
+from .test_utils import load_discovery_agent_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def discovery_app():
-    """Load discovery-agent service."""
-    return _load_discovery_agent()
-
-
-@pytest.fixture
-def client(discovery_app):
-    """Create test client."""
-    return TestClient(discovery_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for discovery agent service."""
+    app = load_discovery_agent_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestDiscoveryRegistration:

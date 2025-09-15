@@ -66,9 +66,5 @@ class CodeAnalysisRequest(BaseModel):
     @classmethod
     def validate_text(cls, v):
         if not v or not v.strip():
-            from pydantic_core import PydanticCustomError
-            raise PydanticCustomError(
-                'text_required',
-                'Text field is required and cannot be empty'
-            )
+            raise ValueError('Text field is required and cannot be empty')
         return v

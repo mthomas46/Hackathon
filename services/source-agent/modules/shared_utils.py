@@ -18,6 +18,26 @@ from services.shared.credentials import get_secret as get_secret
 from services.shared.config import get_config_value
 
 
+def sanitize_for_response(text: str) -> str:
+    """Sanitize text to prevent XSS attacks in JSON responses."""
+    if not text:
+        return ""
+
+    # Remove HTML tags
+    import re
+    text = re.sub(r'<[^>]+>', '', text)
+
+    # Remove dangerous JavaScript event handlers and attributes
+    text = re.sub(r'on\w+\s*=', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'vbscript:', '', text, flags=re.IGNORECASE)
+
+    # Remove quotes that could be used to break out of attributes
+    text = text.replace('"', '').replace("'", '')
+
+    return clean_string(text)
+
+
 # Global configuration with secure URL validation
 def _validate_atlassian_url(url: str, service_name: str) -> str:
     """Validate Atlassian URLs to prevent SSRF attacks."""

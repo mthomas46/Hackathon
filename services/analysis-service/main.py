@@ -1,6 +1,29 @@
-"""Analysis Service
+"""Service: Analysis Service
 
-Document analysis and consistency checking service for the LLM Documentation Ecosystem.
+Endpoints:
+- POST /analyze: Analyze documents for consistency and issues with configurable detectors
+- GET /findings: Retrieve analysis findings with filtering by severity and type
+- GET /detectors: List available analysis detectors and their capabilities
+- POST /reports/generate: Generate various types of reports (summary, trends, etc.)
+- GET /reports/confluence/consolidation: Analyze Confluence pages for duplicates and consolidation opportunities
+- GET /reports/jira/staleness: Identify stale Jira tickets requiring review or closure
+- POST /reports/findings/notify-owners: Send notifications for findings to document owners
+- GET /integration/health: Check integration health with other services
+- POST /integration/analyze-with-prompt: Analyze using prompts from Prompt Store
+- POST /integration/natural-language-analysis: Analyze using natural language queries
+- GET /integration/prompts/categories: Get available prompt categories
+- POST /integration/log-analysis: Log analysis usage for analytics
+
+Responsibilities:
+- Perform document consistency analysis and issue detection
+- Generate reports on documentation quality and trends
+- Identify duplicate content and consolidation opportunities
+- Monitor Jira ticket staleness and maintenance needs
+- Provide natural language analysis capabilities
+- Integrate with Prompt Store for customizable analysis
+- Support cross-service coordination and health monitoring
+
+Dependencies: Document Store, Prompt Store, Interpreter, Source Agent, Orchestrator.
 """
 from typing import Optional, List, Dict, Any
 import os
@@ -28,6 +51,12 @@ from services.shared.models import Document, Finding
 # Create shared client instance for all analysis operations
 service_client = get_service_client(timeout=30)
 
+# Service configuration constants
+SERVICE_NAME = "analysis-service"
+SERVICE_TITLE = "Analysis Service"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5020
+
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
@@ -37,14 +66,18 @@ from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
 
 # Create FastAPI app directly using shared utilities
-app = FastAPI(title="Analysis Service", version="1.0.0")
+app = FastAPI(
+    title=SERVICE_TITLE,
+    description="Document analysis and consistency checking service for the LLM Documentation Ecosystem",
+    version=SERVICE_VERSION
+)
 
 # Use common middleware setup and error handlers to reduce duplication across services
 setup_common_middleware(app, ServiceNames.ANALYSIS_SERVICE)
 
 # Install error handlers and health endpoints
 install_error_handlers(app)
-register_health_endpoints(app, ServiceNames.ANALYSIS_SERVICE, "1.0.0")
+register_health_endpoints(app, ServiceNames.ANALYSIS_SERVICE, SERVICE_VERSION)
 
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.ANALYSIS_SERVICE)
@@ -66,7 +99,12 @@ from .modules.shared_utils import (
 
 @app.post("/analyze")
 async def analyze_documents(req: AnalysisRequest):
-    """Analyze documents for consistency and issues."""
+    """Analyze documents for consistency and issues with configurable detectors.
+
+    Performs comprehensive document analysis using various detectors to identify
+    consistency issues, quality problems, and maintenance concerns across
+    multiple document sources and types.
+    """
     return await analysis_handlers.handle_analyze_documents(req)
 
 
@@ -82,22 +120,37 @@ async def get_findings(
     severity: Optional[str] = None,
     finding_type_filter: Optional[str] = None
 ):
-    """Get findings with optional filtering."""
+    """Get analysis findings with optional filtering by severity and type.
+
+    Retrieves findings from document analysis operations with support for
+    pagination and filtering by severity levels and finding types for
+    targeted issue management and reporting.
+    """
     return await analysis_handlers.handle_get_findings(limit, severity, finding_type_filter)
 
 
 @app.get("/detectors")
 async def list_detectors():
-    """List available analysis detectors."""
+    """List available analysis detectors and their capabilities.
+
+    Provides information about all configured detectors including their
+    analysis capabilities, supported document types, and configuration
+    options for analysis customization.
+    """
     return analysis_handlers.handle_list_detectors()
 
 
 @app.get("/reports/confluence/consolidation")
 async def get_confluence_consolidation_report(min_confidence: float = 0.0):
+    """Get Confluence consolidation report for duplicate detection and content optimization.
+
+    Analyzes Confluence pages to identify duplicate content, consolidation opportunities,
+    and provides recommendations for merging similar pages to reduce maintenance overhead
+    and improve content organization.
+    """
     # Validate query parameters
     if min_confidence < 0.0 or min_confidence > 1.0:
         raise HTTPException(status_code=400, detail="Min confidence must be between 0.0 and 1.0")
-    """Get Confluence consolidation report (duplicate detection)."""
     try:
         # Get all confluence documents
         docs_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/_list")
@@ -159,10 +212,14 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
 
 @app.get("/reports/jira/staleness")
 async def get_jira_staleness_report(min_confidence: float = 0.0):
+    """Get Jira staleness report for ticket lifecycle management.
+
+    Analyzes Jira tickets to identify stale items that may require attention,
+    closure, or reassignment based on activity patterns and metadata flags.
+    """
     # Validate query parameters
     if min_confidence < 0.0 or min_confidence > 1.0:
         raise HTTPException(status_code=400, detail="Min confidence must be between 0.0 and 1.0")
-    """Get Jira staleness report."""
     try:
         # Get all Jira documents
         docs_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/_list")
@@ -210,7 +267,12 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
 
 @app.post("/reports/findings/notify-owners")
 async def notify_owners(req: NotifyOwnersRequest):
-    """Send notifications for findings to document owners."""
+    """Send notifications for analysis findings to document owners.
+
+    Processes findings and sends targeted notifications to responsible parties
+    via configured communication channels for timely issue resolution and
+    collaborative document maintenance.
+    """
     # Validation is handled by Pydantic model
     try:
         # In a real implementation, this would:
@@ -250,7 +312,12 @@ async def notify_owners(req: NotifyOwnersRequest):
 
 @app.get("/integration/health")
 async def integration_health():
-    """Check integration with other services."""
+    """Check integration health with other services in the ecosystem.
+
+    Performs comprehensive health checks across all integrated services
+    including Document Store, Prompt Store, Interpreter, and Source Agent
+    to ensure reliable cross-service communication and functionality.
+    """
     try:
         health_status = await service_client.get_system_health()
         return {
@@ -278,7 +345,12 @@ async def analyze_with_prompt(
     prompt_name: str,
     **variables
 ):
-    """Analyze using a prompt from Prompt Store."""
+    """Analyze documents using customizable prompts from Prompt Store.
+
+    Leverages the Prompt Store service to retrieve and execute tailored
+    analysis prompts with variable substitution, enabling flexible and
+    specialized document analysis workflows.
+    """
     try:
         # Get prompt from Prompt Store
         prompt_data = await service_client.get_prompt(prompt_category, prompt_name, **variables)
@@ -313,7 +385,12 @@ async def analyze_with_prompt(
 
 @app.post("/integration/natural-language-analysis")
 async def natural_language_analysis(request_data: dict = None):
-    """Analyze using natural language query through Interpreter."""
+    """Analyze documents using natural language queries via Interpreter service.
+
+    Enables users to perform complex analysis operations using conversational
+    language, automatically translating natural language requests into
+    structured analysis workflows and execution plans.
+    """
     try:
         # Handle both JSON payload and query parameter for compatibility
         if request_data and "query" in request_data:
@@ -414,5 +491,11 @@ async def log_analysis_usage(request_data: dict = None):
 
 
 if __name__ == "__main__":
+    """Run the Analysis Service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5020)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )

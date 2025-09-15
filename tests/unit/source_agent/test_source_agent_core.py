@@ -3,163 +3,19 @@
 Tests document fetching, normalization, and code analysis.
 Focused on essential source agent operations following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_source_agent():
-    """Load source-agent service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.source-agent.main",
-            os.path.join(os.getcwd(), 'services', 'source-agent', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Source Agent", version="1.0.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "source-agent"}
-
-        @app.get("/sources")
-        async def list_sources():
-            return {
-                "message": "sources retrieved",
-                "data": {
-                    "sources": ["github", "jira", "confluence"],
-                    "capabilities": {
-                        "github": ["readme_fetch", "pr_normalization", "code_analysis"],
-                        "jira": ["issue_normalization"],
-                        "confluence": ["page_normalization"]
-                    }
-                }
-            }
-
-        @app.post("/docs/fetch")
-        async def fetch_document(request_data: dict):
-            source = request_data.get("source", "")
-            if source == "github":
-                return {
-                    "message": "retrieved",
-                    "data": {
-                        "document": {
-                            "id": "github:readme:test/repo",
-                            "title": "Test Repository README",
-                            "content": "# Test Repository",
-                            "source_type": "github",
-                            "source_id": "test/repo"
-                        },
-                        "source": "github"
-                    }
-                }
-            elif source == "jira":
-                return {
-                    "error": "Jira fetch not implemented",
-                    "error_code": "feature_not_implemented"
-                }
-            elif source == "confluence":
-                return {
-                    "error": "Confluence fetch not implemented",
-                    "error_code": "feature_not_implemented"
-                }
-            else:
-                return {"error": "Invalid source"}, 400
-
-        @app.post("/normalize")
-        async def normalize_data(request_data: dict):
-            source = request_data.get("source", "")
-            if source == "github":
-                return {
-                    "message": "normalized",
-                    "data": {
-                        "envelope": {
-                            "id": "env:github:pr:123",
-                            "document": {
-                                "id": "github:pr:123",
-                                "title": "Test PR",
-                                "content": "PR content",
-                                "source_type": "github"
-                            }
-                        }
-                    }
-                }
-            elif source == "jira":
-                return {
-                    "message": "normalized",
-                    "data": {
-                        "envelope": {
-                            "id": "env:jira:issue:TEST-123",
-                            "document": {
-                                "id": "jira:issue:TEST-123",
-                                "title": "Test Issue",
-                                "content": "Issue content",
-                                "source_type": "jira"
-                            }
-                        }
-                    }
-                }
-            elif source == "confluence":
-                return {
-                    "message": "normalized",
-                    "data": {
-                        "envelope": {
-                            "id": "env:confluence:page:12345",
-                            "document": {
-                                "id": "confluence:page:12345",
-                                "title": "Test Page",
-                                "content": "Page content",
-                                "source_type": "confluence"
-                            }
-                        }
-                    }
-                }
-            else:
-                return {"error": "Invalid source"}, 400
-
-        @app.post("/code/analyze")
-        async def analyze_code(request_data: dict):
-            text = request_data.get("text", "")
-            # Simple endpoint extraction simulation
-            endpoints = []
-            if "@app." in text or "app." in text:
-                endpoints.append("/api/test")
-            if "def " in text:
-                endpoints.append("/function/test")
-
-            return {
-                "message": "analyzed",
-                "data": {
-                    "analysis": "\n".join(endpoints),
-                    "endpoint_count": len(endpoints),
-                    "patterns_found": ["FastAPI", "function"]
-                }
-            }
-
-        return app
+from .test_utils import load_source_agent_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def source_app():
-    """Load source-agent service."""
-    return _load_source_agent()
-
-
-@pytest.fixture
-def client(source_app):
-    """Create test client."""
-    return TestClient(source_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for source agent service."""
+    app = load_source_agent_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestSourceAgentCore:

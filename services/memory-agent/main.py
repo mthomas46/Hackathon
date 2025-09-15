@@ -1,3 +1,19 @@
+"""Service: Memory Agent
+
+Endpoints:
+- POST /memory/put: Store operational context and summaries from events
+- GET /memory/list: Retrieve stored memory items with filtering and pagination
+- GET /health: Service health check with memory statistics
+
+Responsibilities:
+- Store short-lived operational context and event summaries for service coordination
+- Subscribe to Redis pub/sub topics for real-time event processing
+- Provide memory management with TTL-based expiration and capacity limits
+- Support filtering and pagination for memory retrieval operations
+- Maintain event-driven context for distributed system coordination
+
+Dependencies: shared middlewares, Redis for event pub/sub, shared models and utilities.
+"""
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
@@ -50,11 +66,11 @@ from .modules.event_processor import event_processor
 # Import global memory state from dedicated module to avoid circular dependencies
 from .modules.memory_state import _memory
 
-"""Memory Agent
-
-Stores short-lived operational context and summaries from events and services.
-Provides simple put/list endpoints and subscribes to Redis pub/sub topics.
-"""
+# Service configuration constants
+SERVICE_NAME = "memory-agent"
+SERVICE_TITLE = "Memory Agent"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5040
 
 # Global event task
 _event_task = None
@@ -80,7 +96,12 @@ async def _lifespan(app: FastAPI):
 # ============================================================================
 
 # Initialize FastAPI app with shared middleware
-app = FastAPI(title="Memory Agent", version="1.0.0", lifespan=_lifespan)
+app = FastAPI(
+    title=SERVICE_TITLE,
+    version=SERVICE_VERSION,
+    description="Memory agent service for storing operational context and event summaries",
+    lifespan=_lifespan
+)
 
 # Use common middleware setup and error handlers to reduce duplication across services
 setup_common_middleware(app, ServiceNames.MEMORY_AGENT)
@@ -91,30 +112,39 @@ attach_self_register(app, ServiceNames.MEMORY_AGENT)
 # Custom memory-specific health endpoint
 @app.get("/health")
 async def memory_health():
-    """Memory agent health with memory statistics."""
+    """Memory agent health check with comprehensive memory statistics."""
     try:
         stats = get_memory_stats()
         return {
             "status": "healthy",
-            "service": ServiceNames.MEMORY_AGENT,
-            "version": "1.0.0",
+            "service": SERVICE_NAME,
+            "version": SERVICE_VERSION,
             "environment": os.environ.get("ENVIRONMENT", "development"),
             "memory_count": stats.get("total_items", 0),
             "memory_capacity": stats.get("max_items", 0),
             "memory_usage_percent": stats.get("usage_percent", 0),
-            "ttl_seconds": stats.get("ttl_seconds", 0)
+            "ttl_seconds": stats.get("ttl_seconds", 0),
+            "description": "Memory agent operational with active memory management"
         }
     except Exception as e:
         return {
             "status": "unhealthy",
-            "service": ServiceNames.MEMORY_AGENT,
-            "version": "1.0.0",
-            "error": str(e)
+            "service": SERVICE_NAME,
+            "version": SERVICE_VERSION,
+            "error": str(e),
+            "description": "Memory agent experiencing issues"
         }
 
 
 class PutMemoryRequest(BaseModel):
+    """Request model for storing memory items.
+
+    Contains a single memory item to be stored in the memory agent's
+    operational context storage with TTL-based expiration.
+    """
+
     item: MemoryItem
+    """The memory item to store, containing type, key, value, and metadata."""
 
 
 @app.post("/memory/put")
@@ -157,7 +187,13 @@ async def list_memory(type: Optional[str] = None, key: Optional[str] = None, lim
 
 
 if __name__ == "__main__":
+    """Run the Memory Agent service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5040)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )
 
 

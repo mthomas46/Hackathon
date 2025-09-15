@@ -1,8 +1,23 @@
-"""Template processing and rendering for bedrock proxy service."""
+"""Template processing and rendering for bedrock proxy service.
 
+This module defines response templates for structured AI output generation,
+including template detection, content building, and format rendering.
+"""
 from typing import Dict, List
 
 from .utils import bullets_from_text
+
+# Supported template types for response generation
+SUPPORTED_TEMPLATES = [
+    "summary",      # General summary with key points
+    "risks",        # Risk assessment with mitigations
+    "decisions",    # Decision documentation
+    "pr_confidence", # Pull request confidence analysis
+    "life_of_ticket" # Ticket lifecycle tracking
+]
+
+# Supported output formats
+SUPPORTED_FORMATS = ["md", "txt", "json"]
 
 
 # Template configurations
@@ -61,17 +76,29 @@ TEMPLATES = {
     }
 }
 
+# Extract valid values for validation (maintaining backward compatibility)
 VALID_TEMPLATES = list(TEMPLATES.keys())
-VALID_FORMATS = ["md", "txt", "json"]
+VALID_FORMATS = SUPPORTED_FORMATS
 
 
 def detect_template_from_prompt(prompt: str) -> str:
-    """Auto-detect template type from prompt content."""
+    """Auto-detect the most appropriate template type from prompt content.
+
+    Analyzes the input prompt text to determine which response template
+    would be most suitable based on keywords and context.
+
+    Args:
+        prompt: Input text to analyze for template detection
+
+    Returns:
+        Template name string, or empty string if no match found
+    """
     if not prompt:
         return ""
 
     text_lower = prompt.lower()
 
+    # Check for template-specific keywords in order of specificity
     if "summary" in text_lower:
         return "summary"
     elif "risk" in text_lower:
@@ -87,51 +114,93 @@ def detect_template_from_prompt(prompt: str) -> str:
 
 
 def generate_default_title(template: str) -> str:
-    """Generate default title for a template."""
+    """Generate an appropriate default title for the given template type.
+
+    Args:
+        template: Template name (e.g., 'summary', 'risks', etc.)
+
+    Returns:
+        Human-readable title string for the template
+    """
     title_map = {
         "pr_confidence": "PR Confidence Report",
         "life_of_ticket": "Life of the Ticket",
-        "summary": "Summary"
+        "summary": "Summary",
+        "risks": "Risk Assessment",
+        "decisions": "Decision Analysis"
     }
     return title_map.get(template, "Bedrock Proxy Output")
 
 
 def build_template_sections(template: str, prompt: str) -> Dict[str, List[str]]:
-    """Build sections for a given template."""
+    """Build structured content sections for the specified template type.
+
+    Processes the template configuration and generates appropriate content
+    sections based on the template type and input prompt.
+
+    Args:
+        template: Template name to use for content structuring
+        prompt: Input text that may be processed for dynamic content
+
+    Returns:
+        Dictionary mapping section names to lists of content strings
+    """
     if not prompt:
         return {"Notes": ["Empty prompt received."]}
 
     template_config = TEMPLATES.get(template)
     if not template_config:
-        # Default echo-like but structured summary
+        # Fallback to a simple structured summary when template not found
         return {"Echo": bullets_from_text(prompt, 5)}
 
     sections = {}
     for section_name, content in template_config["sections"].items():
         if callable(content):
+            # Dynamic content generation (e.g., bullet points from text)
             sections[section_name] = content(prompt)
         else:
+            # Static content (predefined lists)
             sections[section_name] = content
 
     return sections
 
 
 def render_markdown(title: str, sections: Dict[str, List[str]]) -> str:
-    """Render sections as markdown."""
+    """Render structured content sections as formatted Markdown text.
+
+    Args:
+        title: Main title for the document
+        sections: Dictionary of section names to content lists
+
+    Returns:
+        Complete Markdown document as a string
+    """
     lines: List[str] = [f"# {title}"]
-    for h, items in sections.items():
-        lines.append("")
-        lines.append(f"## {h}")
-        for it in items:
-            lines.append(f"- {it}")
+
+    for section_name, items in sections.items():
+        lines.append("")  # Add spacing between sections
+        lines.append(f"## {section_name}")
+        for item in items:
+            lines.append(f"- {item}")
+
     return "\n".join(lines)
 
 
 def render_text(title: str, sections: Dict[str, List[str]]) -> str:
-    """Render sections as plain text."""
+    """Render structured content sections as plain text format.
+
+    Args:
+        title: Main title for the document
+        sections: Dictionary of section names to content lists
+
+    Returns:
+        Complete plain text document as a string
+    """
     lines: List[str] = [title]
-    for h, items in sections.items():
-        lines.append(f"\n{h}:")
-        for it in items:
-            lines.append(f"- {it}")
+
+    for section_name, items in sections.items():
+        lines.append(f"\n{section_name}:")
+        for item in items:
+            lines.append(f"- {item}")
+
     return "\n".join(lines)

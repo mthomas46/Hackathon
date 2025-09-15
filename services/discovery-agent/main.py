@@ -1,14 +1,17 @@
-"""Discovery Agent Service
-
-Parses inline or remote OpenAPI specs, extracts endpoints, and optionally
-registers the service with the orchestrator's registry. Supports in-process
-ASGI transport for tests using `http://testserver`.
+"""Service: Discovery Agent
 
 Endpoints:
-- POST /discover - Discover and register OpenAPI endpoints
-- GET /health - Service health status
+- POST /discover: Discover and register OpenAPI endpoints from specs or URLs
+- GET /health: Service health status with registration capabilities
 
-Dependencies: shared middlewares, httpx for HTTP requests, optional in-process ASGI transport.
+Responsibilities:
+- Parse inline or remote OpenAPI specifications to extract service endpoints
+- Register discovered services with the orchestrator's service registry
+- Support both inline specs for testing and remote URL fetching for production
+- Compute schema hashes for change detection and versioning
+- Provide dry-run mode for testing without actual registration
+
+Dependencies: shared middlewares, httpx for HTTP requests, orchestrator service for registration.
 """
 
 from fastapi import FastAPI
@@ -47,12 +50,22 @@ from .modules.shared_utils import (
 from .modules.models import DiscoverRequest
 from .modules.discovery_handler import discovery_handler
 
+# Service configuration constants
+SERVICE_NAME = "discovery-agent"
+SERVICE_TITLE = "Discovery Agent"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5045
+
 # ============================================================================
 # APP INITIALIZATION - Using shared patterns for consistency
 # ============================================================================
 
 # Initialize FastAPI app with shared middleware and error handlers
-app = FastAPI(title="Discovery Agent", version="1.0.0")
+app = FastAPI(
+    title=SERVICE_TITLE,
+    version=SERVICE_VERSION,
+    description="Service discovery agent for OpenAPI endpoint registration and orchestration"
+)
 
 # Use common middleware setup and error handlers to reduce duplication across services
 setup_common_middleware(app, ServiceNames.DISCOVERY_AGENT)
@@ -61,16 +74,28 @@ setup_common_middleware(app, ServiceNames.DISCOVERY_AGENT)
 attach_self_register(app, ServiceNames.DISCOVERY_AGENT)
 
 # Register standardized health endpoints
-register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT, "1.0.0")
+register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT, SERVICE_VERSION)
 
 
 @app.post("/discover")
 async def discover(req: DiscoverRequest):
-    """Discover and register OpenAPI endpoints using handler module."""
+    """Discover and register OpenAPI endpoints from specification or URL.
+
+    Parses OpenAPI specifications to extract service endpoints and optionally
+    registers them with the orchestrator. Supports both inline specs for testing
+    and remote URL fetching for production deployments. Includes dry-run mode
+    for testing without actual registration.
+    """
     return await discovery_handler.discover_endpoints(req)
 
 
 if __name__ == "__main__":
+    """Run the Discovery Agent service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5045)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )
 

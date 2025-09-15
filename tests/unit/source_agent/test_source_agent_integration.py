@@ -3,171 +3,19 @@
 Tests service integration, data flow, and end-to-end workflows.
 Focused on integration scenarios following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_source_agent():
-    """Load source-agent service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.source-agent.main",
-            os.path.join(os.getcwd(), 'services', 'source-agent', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Source Agent", version="1.0.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "source-agent"}
-
-        @app.get("/sources")
-        async def list_sources():
-            return {
-                "message": "sources retrieved",
-                "data": {
-                    "sources": ["github", "jira", "confluence"],
-                    "capabilities": {
-                        "github": ["readme_fetch", "pr_normalization", "code_analysis"],
-                        "jira": ["issue_normalization"],
-                        "confluence": ["page_normalization"]
-                    }
-                }
-            }
-
-        @app.post("/docs/fetch")
-        async def fetch_document(request_data: dict):
-            source = request_data.get("source", "")
-            if source == "github":
-                return {
-                    "message": "retrieved",
-                    "data": {
-                        "document": {
-                            "id": "github:readme:test/repo",
-                            "title": "Test Repository README",
-                            "content": "# Test Repository\n\nThis is a test repository.",
-                            "source_type": "github",
-                            "source_id": "test/repo",
-                            "url": "https://github.com/test/repo",
-                            "project": "test/repo"
-                        },
-                        "source": "github"
-                    }
-                }
-            else:
-                return {"error": f"{source} fetch not implemented"}, 501
-
-        @app.post("/normalize")
-        async def normalize_data(request_data: dict):
-            source = request_data.get("source", "")
-            correlation_id = request_data.get("correlation_id", "test-correlation")
-
-            if source == "github":
-                return {
-                    "message": "normalized",
-                    "data": {
-                        "envelope": {
-                            "id": f"env:github:pr:123-{correlation_id}",
-                            "correlation_id": correlation_id,
-                            "document": {
-                                "id": "github:pr:123",
-                                "title": "Test Pull Request",
-                                "content": "This is a test PR for integration testing",
-                                "source_type": "github",
-                                "source_id": "123",
-                                "url": "https://github.com/test/repo/pull/123",
-                                "project": "test/repo",
-                                "metadata": {
-                                    "type": "pull_request",
-                                    "state": "open",
-                                    "merged": False,
-                                    "owner": ["testuser"]
-                                }
-                            }
-                        }
-                    }
-                }
-            elif source == "jira":
-                return {
-                    "message": "normalized",
-                    "data": {
-                        "envelope": {
-                            "id": f"env:jira:issue:TEST-123-{correlation_id}",
-                            "correlation_id": correlation_id,
-                            "document": {
-                                "id": "jira:issue:TEST-123",
-                                "title": "Test Issue",
-                                "content": "This is a test issue for integration",
-                                "source_type": "jira",
-                                "source_id": "TEST-123",
-                                "project": "TEST",
-                                "metadata": {
-                                    "status": "Open",
-                                    "priority": "High",
-                                    "assignee": "testuser"
-                                }
-                            }
-                        }
-                    }
-                }
-            else:
-                return {"error": f"{source} normalization not implemented"}, 501
-
-        @app.post("/code/analyze")
-        async def analyze_code(request_data: dict):
-            text = request_data.get("text", "")
-
-            # Simulate code analysis
-            endpoints = []
-            patterns = []
-
-            if "@app.get" in text or "@app.post" in text:
-                endpoints.extend(["/api/users", "/api/users/{id}"])
-                patterns.append("FastAPI")
-            if "router.get" in text or "router.post" in text:
-                endpoints.extend(["/api/posts", "/api/posts/{id}"])
-                patterns.append("Express.js")
-            if "@GetMapping" in text or "@PostMapping" in text:
-                endpoints.extend(["/api/items", "/api/items/{id}"])
-                patterns.append("Spring Boot")
-            if "def " in text and "route" in text:
-                endpoints.append("/api/functions")
-                patterns.append("Flask")
-
-            return {
-                "message": "analyzed",
-                "data": {
-                    "analysis": "\n".join(endpoints),
-                    "endpoint_count": len(endpoints),
-                    "patterns_found": patterns
-                }
-            }
-
-        return app
+from .test_utils import load_source_agent_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def source_app():
-    """Load source-agent service."""
-    return _load_source_agent()
-
-
-@pytest.fixture
-def client(source_app):
-    """Create test client."""
-    return TestClient(source_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for source agent service."""
+    app = load_source_agent_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestSourceAgentIntegration:

@@ -8,7 +8,7 @@ from typing import Dict, Any
 from services.shared.models import Finding
 
 from .analysis_logic import generate_summary_report, generate_trends_report
-from .shared_utils import service_client
+from .shared_utils import get_analysis_service_client
 
 
 class ReportHandlers:
@@ -18,6 +18,8 @@ class ReportHandlers:
     async def handle_generate_report(req) -> Dict[str, Any]:
         """Generate various types of reports."""
         try:
+            service_client = get_analysis_service_client()
+
             if req.kind == "summary":
                 # Fetch recent findings
                 findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")

@@ -4,245 +4,25 @@ Tests input validation, error scenarios, and edge cases.
 Focused on validation logic following TDD principles.
 """
 
-import importlib.util, os
 import pytest
 from fastapi.testclient import TestClient
 
-
-def _load_secure_analyzer_service():
-    """Load secure-analyzer service dynamically with enhanced protections."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.secure-analyzer.main",
-            os.path.join(os.getcwd(), 'services', 'secure-analyzer', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing with simple protections
-        from fastapi import FastAPI
-        import time
-
-        app = FastAPI(title="Secure Analyzer", version="0.1.0")
-
-        # Simple size limits to prevent issues
-        MAX_CONTENT_SIZE = 10000  # Much smaller limit
-        MAX_KEYWORDS = 10
-        MAX_KEYWORD_LENGTH = 100
-        MAX_PROVIDERS = 5
-
-        @app.post("/detect")
-        async def detect(request_data: dict):
-            try:
-                content = request_data.get("content")
-                keywords = request_data.get("keywords")
-
-                # Basic validation
-                if not content:
-                    return {
-                        "status": "error",
-                        "message": "Content is required",
-                        "error_code": "validation_error"
-                    }, 422
-
-                # Simple size validation
-                if len(content) > MAX_CONTENT_SIZE:
-                    return {
-                        "status": "error",
-                        "message": "Content too large",
-                        "error_code": "validation_error"
-                    }, 413
-
-                # Keywords validation
-                if keywords is not None and not isinstance(keywords, list):
-                    return {
-                        "status": "error",
-                        "message": "Keywords must be a list",
-                        "error_code": "validation_error"
-                    }, 400
-
-                if keywords and len(keywords) > MAX_KEYWORDS:
-                    return {
-                        "status": "error",
-                        "message": "Too many keywords",
-                        "error_code": "validation_error"
-                    }, 400
-
-                # Validate keyword lengths
-                for keyword in keywords or []:
-                    if len(keyword) > MAX_KEYWORD_LENGTH:
-                        return {
-                            "status": "error",
-                            "message": "Keyword too long",
-                            "error_code": "validation_error"
-                        }, 400
-
-                # Simulate brief processing time
-                time.sleep(0.01)
-
-                return {
-                    "sensitive": len(content) > 10,
-                    "matches": ["test"],
-                    "topics": ["test"]
-                }
-
-            except Exception as e:
-                return {
-                    "status": "error",
-                    "message": f"Internal error: {str(e)}",
-                    "error_code": "internal_error"
-                }, 500
-
-        @app.post("/suggest")
-        async def suggest(request_data: dict):
-            try:
-                content = request_data.get("content")
-                keywords = request_data.get("keywords")
-
-                if not content:
-                    return {
-                        "status": "error",
-                        "message": "Content is required",
-                        "error_code": "validation_error"
-                    }, 422
-
-                # Simple size validation
-                if len(content) > MAX_CONTENT_SIZE:
-                    return {
-                        "status": "error",
-                        "message": "Content too large",
-                        "error_code": "validation_error"
-                    }, 413
-
-                if keywords is not None and not isinstance(keywords, list):
-                    return {
-                        "status": "error",
-                        "message": "Keywords must be a list",
-                        "error_code": "validation_error"
-                    }, 400
-
-                # Validate keyword lengths
-                for keyword in keywords or []:
-                    if len(keyword) > MAX_KEYWORD_LENGTH:
-                        return {
-                            "status": "error",
-                            "message": "Keyword too long",
-                            "error_code": "validation_error"
-                        }, 400
-
-                # Simulate brief processing time
-                time.sleep(0.01)
-
-                return {
-                    "sensitive": False,
-                    "allowed_models": ["all"],
-                    "suggestion": "test"
-                }
-
-            except Exception as e:
-                return {
-                    "status": "error",
-                    "message": f"Internal error: {str(e)}",
-                    "error_code": "internal_error"
-                }, 500
-
-        @app.post("/summarize")
-        async def summarize(request_data: dict):
-            try:
-                content = request_data.get("content")
-                providers = request_data.get("providers")
-
-                if not content:
-                    return {
-                        "status": "error",
-                        "message": "Content is required",
-                        "error_code": "validation_error"
-                    }, 422
-
-                # Simple size validation
-                if len(content) > MAX_CONTENT_SIZE:
-                    return {
-                        "status": "error",
-                        "message": "Content too large",
-                        "error_code": "validation_error"
-                    }, 413
-
-                if providers is not None and not isinstance(providers, list):
-                    return {
-                        "status": "error",
-                        "message": "Providers must be a list",
-                        "error_code": "validation_error"
-                    }, 400
-
-                if providers:
-                    if len(providers) > MAX_PROVIDERS:
-                        return {
-                            "status": "error",
-                            "message": "Too many providers",
-                            "error_code": "validation_error"
-                        }, 400
-
-                    for provider in providers:
-                        if not isinstance(provider, dict):
-                            return {
-                                "status": "error",
-                                "message": "Each provider must be an object",
-                                "error_code": "validation_error"
-                            }, 400
-
-                        if "name" not in provider:
-                            return {
-                                "status": "error",
-                                "message": "Each provider must have a name",
-                                "error_code": "validation_error"
-                            }, 422
-
-                        provider_name = provider.get("name", "")
-                        if len(provider_name) > 100:
-                            return {
-                                "status": "error",
-                                "message": "Provider name too long",
-                                "error_code": "validation_error"
-                            }, 400
-
-                # Simulate brief processing time
-                time.sleep(0.01)
-
-                return {
-                    "summary": "test summary",
-                    "provider_used": "test",
-                    "confidence": 0.8
-                }
-
-            except Exception as e:
-                return {
-                    "status": "error",
-                    "message": f"Internal error: {str(e)}",
-                    "error_code": "internal_error"
-                }, 500
-
-        return app
+from .test_utils import load_secure_analyzer_service
 
 
 @pytest.fixture(scope="module")
-def secure_analyzer_app():
-    """Load secure-analyzer service."""
-    return _load_secure_analyzer_service()
-
-
-@pytest.fixture
-def client(secure_analyzer_app):
-    """Create test client."""
-    return TestClient(secure_analyzer_app)
+def client():
+    """Test client fixture for secure analyzer service."""
+    app = load_secure_analyzer_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
+    """Assert that HTTP response is successful."""
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
 
-@pytest.mark.timeout(30)  # 30 second timeout for entire class
 class TestSecureAnalyzerValidation:
     """Test secure analyzer validation and error handling."""
 
