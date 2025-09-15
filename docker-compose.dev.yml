@@ -234,6 +234,28 @@ services:
     profiles:
       - ai_services
 
+  # Architecture Digitizer - Diagram normalization service
+  architecture-digitizer:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/architecture-digitizer/config.yaml:/app/services/architecture-digitizer/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/architecture-digitizer/main.py"
+    ports:
+      - "5105:5105"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5105/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
   # Bedrock Proxy - AWS Bedrock API proxy
   bedrock-proxy:
     image: python:3.12-slim

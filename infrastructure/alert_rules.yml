@@ -163,3 +163,22 @@ groups:
         annotations:
           summary: "Memory agent item limit exceeded"
           description: "Memory agent has {{ $value }} items stored"
+
+      # Architecture Digitizer alerts
+      - alert: ArchitectureDigitizerAPIFailures
+        expr: rate(architecture_digitizer_api_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High architecture digitizer API failure rate"
+          description: "Architecture digitizer API failures per minute: {{ $value }}"
+
+      - alert: ArchitectureDigitizerTimeouts
+        expr: rate(architecture_digitizer_timeout_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High architecture digitizer timeout rate"
+          description: "Architecture digitizer timeouts per minute: {{ $value }}"
