@@ -3,136 +3,19 @@
 Tests UI rendering, service integration, and core frontend operations.
 Focused on essential frontend operations following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_frontend():
-    """Load frontend service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.frontend.main",
-            os.path.join(os.getcwd(), 'services', 'frontend', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        from fastapi.responses import HTMLResponse
-        app = FastAPI(title="Frontend", version="1.0.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "frontend"}
-
-        @app.get("/info")
-        async def info():
-            return {
-                "message": "info retrieved",
-                "data": {
-                    "service": "frontend",
-                    "version": "1.0.0",
-                    "env": {
-                        "REPORTING_URL": "http://reporting:8080",
-                        "DOC_STORE_URL": "http://doc-store:8080",
-                        "CONSISTENCY_ENGINE_URL": "http://consistency-engine:8080"
-                    }
-                }
-            }
-
-        @app.get("/config/effective")
-        async def config_effective():
-            return {
-                "message": "config retrieved",
-                "data": {
-                    "REPORTING_URL": "http://reporting:8080",
-                    "DOC_STORE_URL": "http://doc-store:8080",
-                    "CONSISTENCY_ENGINE_URL": "http://consistency-engine:8080"
-                }
-            }
-
-        @app.get("/metrics")
-        async def metrics():
-            return {
-                "message": "metrics retrieved",
-                "data": {
-                    "service": "frontend",
-                    "routes": 5
-                }
-            }
-
-        @app.get("/")
-        async def index():
-            return HTMLResponse("<html><body><h1>LLM Documentation Ecosystem</h1></body></html>")
-
-        @app.get("/owner-coverage")
-        async def owner_coverage():
-            return HTMLResponse("<html><body><h1>Owner Coverage Report</h1></body></html>")
-
-        @app.get("/topics")
-        async def topics():
-            return HTMLResponse("<html><body><h2>Topic Collections</h2><h3>Kubernetes</h3><ul><li>doc1 <span>(fresh)</span></li></ul></body></html>")
-
-        @app.get("/confluence/consolidation")
-        async def confluence_consolidation():
-            return HTMLResponse("<html><body><h2>Confluence Consolidation Report</h2><p>Consolidation data would be displayed here</p></body></html>")
-
-        @app.get("/search")
-        async def search(q: str = "kubernetes"):
-            import html
-            safe_q = html.escape(q)
-            return HTMLResponse(f"<html><body>Search results for: {safe_q}</body></html>")
-
-        @app.get("/docs/quality")
-        async def docs_quality():
-            return HTMLResponse("<html><body><h2>Document Quality Analysis</h2><p>Quality metrics would be displayed here</p></body></html>")
-
-        @app.get("/findings")
-        async def findings():
-            return HTMLResponse("<html><body><h2>Current Findings</h2><p>Findings data would be displayed here</p></body></html>")
-
-        @app.get("/findings/by-severity")
-        async def findings_by_severity():
-            return HTMLResponse("<html><body><h2>Findings by Severity</h2><p>Severity breakdown would be displayed here</p></body></html>")
-
-        @app.get("/findings/by-type")
-        async def findings_by_type():
-            return HTMLResponse("<html><body><h2>Findings by Type</h2><p>Type breakdown would be displayed here</p></body></html>")
-
-        @app.get("/report")
-        async def report():
-            return HTMLResponse("<html><body><h2>Comprehensive Report</h2><p>Report data would be displayed here</p></body></html>")
-
-        @app.get("/reports/jira/staleness")
-        async def jira_staleness(min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False):
-            return HTMLResponse("<html><body><h2>Jira Staleness Report</h2><p>Staleness data would be displayed here</p></body></html>")
-
-        @app.get("/duplicates/clusters")
-        async def duplicate_clusters():
-            return HTMLResponse("<html><body><h2>Duplicate Clusters Report</h2><p>Clusters data would be displayed here</p></body></html>")
-
-        return app
+from .test_utils import load_frontend_service, _assert_http_ok, _assert_html_response
 
 
 @pytest.fixture(scope="module")
-def frontend_app():
-    """Load frontend service."""
-    return _load_frontend()
-
-
-@pytest.fixture
-def client(frontend_app):
-    """Create test client."""
-    return TestClient(frontend_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for frontend service."""
+    app = load_frontend_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestFrontendCore:

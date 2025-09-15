@@ -1,5 +1,8 @@
-"""Core processing logic for bedrock proxy service."""
+"""Core processing logic for bedrock proxy service.
 
+Handles the main request processing pipeline for AI invoke requests,
+including input sanitization, template detection, and response formatting.
+"""
 from typing import Dict, Any, Optional
 
 from .templates import (
@@ -21,47 +24,74 @@ def process_invoke_request(
     region: Optional[str] = None,
     **kwargs  # Allow passthrough parameters
 ) -> Dict[str, Any]:
-    """Process an invoke request and return structured response."""
+    """Process an AI invoke request and return a structured response.
 
-    # Normalize format to lowercase
-    fmt = (format or "md").lower()
+    This function handles the complete pipeline for processing AI invoke requests:
+    1. Input sanitization and validation
+    2. Template auto-detection from prompt content
+    3. Default title generation
+    4. Structured content building
+    5. Response formatting in requested format
 
-    # Sanitize the prompt to prevent XSS attacks
-    text = sanitize_for_response(prompt or "").strip()
+    Args:
+        prompt: Input text for AI processing
+        template: Response template type (auto-detected if not provided)
+        format: Output format ('md', 'txt', or 'json')
+        title: Custom response title (auto-generated if not provided)
+        model: AI model identifier for metadata
+        region: AWS region for metadata
+        **kwargs: Additional passthrough parameters
 
-    # Auto-detect template if not explicitly provided
-    if not template and text:
-        template = detect_template_from_prompt(text)
+    Returns:
+        Dict containing structured response with title, content, and metadata
+    """
+    # Normalize output format to lowercase with default
+    output_format = (format or "md").lower()
+
+    # Sanitize input prompt to prevent XSS attacks
+    sanitized_prompt = sanitize_for_response(prompt or "").strip()
+
+    # Auto-detect template from prompt content if not explicitly specified
+    detected_template = template
+    if not detected_template and sanitized_prompt:
+        detected_template = detect_template_from_prompt(sanitized_prompt)
 
     # Normalize template to lowercase
-    template = (template or "").lower()
+    normalized_template = (detected_template or "").lower()
 
-    # Generate title if not provided
-    if not title:
-        title = generate_default_title(template)
+    # Generate default title if not provided
+    response_title = title
+    if not response_title:
+        response_title = generate_default_title(normalized_template)
 
-    # Sanitize title for response
-    title = sanitize_for_response(title)
+    # Sanitize title for safe response output
+    sanitized_title = sanitize_for_response(response_title)
 
-    # Build structured content
-    sections = build_template_sections(template, text)
+    # Build structured content sections based on template
+    content_sections = build_template_sections(normalized_template, sanitized_prompt)
 
-    # Sanitize model and region for response
+    # Sanitize model and region identifiers for response metadata
     safe_model = sanitize_for_response(model) if model else None
     safe_region = sanitize_for_response(region) if region else None
 
-    if fmt == "json":
+    # Return structured JSON response for JSON format requests
+    if output_format == "json":
         return {
-            "title": title,
+            "title": sanitized_title,
             "model": safe_model,
             "region": safe_region,
-            "sections": sections,
+            "sections": content_sections,
         }
 
-    # Render formatted output
-    body = render_markdown(title, sections) if fmt == "md" else render_text(title, sections)
+    # Render formatted text output for markdown or plain text
+    formatted_body = (
+        render_markdown(sanitized_title, content_sections)
+        if output_format == "md"
+        else render_text(sanitized_title, content_sections)
+    )
+
     return {
-        "output": body,
+        "output": formatted_body,
         "model": safe_model,
         "region": safe_region
     }

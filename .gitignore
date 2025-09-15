@@ -4,6 +4,7 @@
 ## Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -369,6 +370,10 @@ vulnerability-reports/
 .pytest_cache/
 .mypy_cache/
 .dmypy.json
+
+# Service-specific Python cache
+services/**/__pycache__/
+tests/**/__pycache__/
 
 # OS generated files
 .fuse_hidden*

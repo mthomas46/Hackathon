@@ -1,7 +1,18 @@
-"""Standardized response models and helpers.
+"""Standardized API Response Models and Helpers
 
-Provides consistent API response patterns across all services.
-Reduces code duplication and ensures uniform response structures.
+Comprehensive response handling system used across all services.
+
+This module provides:
+- Standardized response models for success and error cases
+- Consistent API response formatting and structure
+- Helper functions for creating responses
+- Pydantic models for type-safe API responses
+- Error response formatting with proper HTTP status codes
+- Validation error response handling
+- Metadata and correlation ID support
+
+All services use these utilities to ensure consistent API responses,
+proper error handling, and excellent developer experience.
 """
 
 from datetime import datetime, timezone

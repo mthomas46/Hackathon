@@ -1,7 +1,18 @@
-"""Shared utility functions for common operations.
+"""Shared Utility Functions
 
-Provides reusable utility functions for string processing, date handling,
-validation, and other common operations across all services.
+Core utility functions used across all services in the LLM Documentation Ecosystem.
+
+This module provides common functionality for:
+- String processing and validation
+- Date/time handling and formatting
+- HTTP client operations and retries
+- File system operations and path handling
+- Data validation and sanitization
+- ID generation and encoding
+- Rate limiting and concurrency control
+
+All functions are designed to be thread-safe and handle edge cases gracefully.
+Used by all services for consistent behavior and reduced code duplication.
 """
 
 import re
@@ -34,7 +45,18 @@ def extract_variables(text: str) -> List[str]:
 
 
 def generate_id(prefix: str = "", length: int = 12) -> str:
-    """Generate a unique ID with optional prefix."""
+    """Generate a unique ID with optional prefix for consistent identification.
+
+    Creates cryptographically secure unique identifiers using timestamp and UUID.
+    Used across all services for consistent ID generation and correlation tracking.
+
+    Args:
+        prefix: Optional prefix to prepend to the generated ID
+        length: Length of the unique portion (default: 12)
+
+    Returns:
+        Unique ID string with optional prefix
+    """
     unique_id = hashlib.md5(f"{datetime.now(timezone.utc).isoformat()}{uuid.uuid4()}".encode()).hexdigest()[:length]
     return f"{prefix}{unique_id}" if prefix else unique_id
 
@@ -51,7 +73,14 @@ def safe_filename(filename: str) -> str:
 # ============================================================================
 
 def utc_now() -> datetime:
-    """Get current UTC datetime."""
+    """Get current UTC datetime with timezone information.
+
+    Provides consistent UTC timestamp generation across all services.
+    Used for logging, audit trails, and temporal ordering of operations.
+
+    Returns:
+        Current UTC datetime with timezone information
+    """
     return datetime.now(timezone.utc)
 
 

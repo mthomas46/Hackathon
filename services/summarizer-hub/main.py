@@ -1,11 +1,17 @@
 """Service: Summarizer Hub
 
 Endpoints:
-- POST /summarize/ensemble, GET /health
+- POST /summarize/ensemble: Orchestrate summarization across multiple LLM providers
+- GET /health: Service health check
 
-Responsibilities: Fan out summarization to configured providers, merge outputs,
-and return normalized results. Supports rate limiting via env toggle.
-Dependencies: shared middlewares, optional Bedrock native/HTTP, httpx.
+Responsibilities:
+- Fan out summarization requests to configured providers (Ollama, OpenAI, Anthropic, Grok, Bedrock)
+- Merge outputs from multiple providers into normalized results
+- Analyze consistency across provider responses
+- Support rate limiting via environment configuration
+- Handle provider fallback and error recovery
+
+Dependencies: shared middlewares, httpx for HTTP requests, optional Bedrock SDK.
 """
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -21,66 +27,162 @@ from .modules.config_manager import config_manager
 from .modules.provider_manager import provider_manager
 from .modules.response_processor import response_processor
 
-app = FastAPI(title="Summarizer Hub", version="0.1.0")
+# Service configuration constants
+SERVICE_NAME = "summarizer-hub"
+SERVICE_VERSION = "0.1.0"
+DEFAULT_PORT = 5060
+
+# Rate limiting defaults (when enabled)
+DEFAULT_ENSEMBLE_RATE_LIMIT_REQUESTS_PER_SECOND = 2.0
+DEFAULT_ENSEMBLE_RATE_LIMIT_BURST_SIZE = 5
+
+# Provider timeout defaults
+DEFAULT_PROVIDER_TIMEOUT_SECONDS = 60
+DEFAULT_BEDROCK_TIMEOUT_SECONDS = 90
+
+app = FastAPI(
+    title="Summarizer Hub",
+    version=SERVICE_VERSION,
+    description="Multi-provider LLM summarization orchestration service"
+)
 app.add_middleware(RequestIdMiddleware)
-app.add_middleware(RequestMetricsMiddleware, service_name="summarizer-hub")
-attach_self_register(app, "summarizer-hub")
+app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
+attach_self_register(app, SERVICE_NAME)
+
+# Rate limiting configuration (optional)
 _rate_limit_enabled = str(get_config_value("RATE_LIMIT_ENABLED", False, section="summarizer_hub", env_key="RATE_LIMIT_ENABLED")).strip().lower() in ("1", "true", "yes")
 if _rate_limit_enabled:
     app.add_middleware(
         RateLimitMiddleware,
         limits={
-            "/summarize/ensemble": (2.0, 5),
+            "/summarize/ensemble": (DEFAULT_ENSEMBLE_RATE_LIMIT_REQUESTS_PER_SECOND, DEFAULT_ENSEMBLE_RATE_LIMIT_BURST_SIZE),
         },
     )
 
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "summarizer-hub"}
+    """Health check endpoint returning service status and basic information."""
+    return {
+        "status": "healthy",
+        "service": SERVICE_NAME,
+        "version": SERVICE_VERSION,
+        "description": "Summarizer hub service is operational"
+    }
 
 
 class ProviderConfig(BaseModel):
-    name: str  # e.g., "ollama", "openai", "anthropic", "grok"
+    """Configuration for an LLM provider in summarization requests.
+
+    Specifies which provider to use and how to connect to it.
+    Provider configurations can be merged with hub-wide defaults.
+    """
+
+    name: str
+    """Provider name (e.g., "ollama", "openai", "anthropic", "grok", "bedrock")."""
+
     model: Optional[str] = None
-    endpoint: Optional[str] = None  # for local gateways
+    """Model identifier specific to the provider."""
+
+    endpoint: Optional[str] = None
+    """Custom endpoint URL for local gateways or proxies."""
+
     api_key: Optional[str] = None
-    region: Optional[str] = None  # for bedrock
-    profile: Optional[str] = None  # for bedrock (optional named profile)
+    """API key for authenticated providers (not recommended for production)."""
+
+    region: Optional[str] = None
+    """AWS region for Bedrock providers."""
+
+    profile: Optional[str] = None
+    """AWS named profile for Bedrock providers."""
 
 
 class SummarizeRequest(BaseModel):
+    """Request model for ensemble summarization across multiple providers.
+
+    Orchestrates summarization of text using multiple LLM providers,
+    with optional custom prompts and configuration merging.
+    """
+
     text: str
+    """The text content to summarize."""
+
     providers: List[ProviderConfig]
+    """List of provider configurations to use for summarization."""
+
     prompt: Optional[str] = None
-    # Optional: allow referencing hub config providers by name only (no model/endpoint provided inline)
+    """Optional custom prompt to prepend to the text for each provider."""
+
     use_hub_config: Optional[bool] = True
+    """Whether to merge provider configs with hub-wide configuration defaults."""
 
 
 
 
 @app.post("/summarize/ensemble")
 async def summarize_ensemble(req: SummarizeRequest):
-    fire_and_forget("info", "summarize_ensemble", ServiceNames.SUMMARIZER_HUB, {"providers": [p.name for p in req.providers] if req.providers else []})
+    """Orchestrate ensemble summarization across multiple LLM providers.
+
+    Fan out the summarization request to all specified providers, collect their
+    outputs, analyze consistency across responses, and return normalized results.
+    Supports provider configuration merging and automatic fallback handling.
+
+    Protected by optional rate limiting when enabled.
+    """
+    fire_and_forget("info", "summarize_ensemble", ServiceNames.SUMMARIZER_HUB, {
+        "provider_count": len(req.providers),
+        "providers": [p.name for p in req.providers],
+        "use_hub_config": req.use_hub_config,
+        "text_length": len(req.text)
+    })
+
+    # Validate request requirements
     if not req.providers:
-        raise HTTPException(status_code=400, detail="providers required")
-    summaries: Dict[str, str] = {}
-    hub_cfg = config_manager.load_hub_config() if req.use_hub_config else {}
-    for p in req.providers:
-        if hub_cfg:
-            p = config_manager.merge_provider_from_config(p, hub_cfg)
-        output = await provider_manager.summarize_with_provider(p.name, p, req.prompt, req.text)
-        summaries[p.name] = output
-    # Minimal schema validation: ensure each provider returns string output
-    for k, v in list(summaries.items()):
-        if not isinstance(v, str):
-            summaries[k] = str(v)
-    analysis = response_processor.analyze_consistency(summaries)
-    normalized = response_processor.normalize_response(summaries)
-    return {"summaries": summaries, "analysis": analysis, "normalized": normalized}
+        raise HTTPException(status_code=400, detail="At least one provider configuration is required")
+
+    # Initialize results collection
+    provider_summaries: Dict[str, str] = {}
+
+    # Load hub configuration for provider merging (if enabled)
+    hub_config = config_manager.load_hub_config() if req.use_hub_config else {}
+
+    # Process each provider
+    for provider_config in req.providers:
+        # Merge with hub configuration if available
+        if hub_config:
+            provider_config = config_manager.merge_provider_from_config(provider_config, hub_config)
+
+        # Execute summarization with the provider
+        summary_output = await provider_manager.summarize_with_provider(
+            provider_config.name, provider_config, req.prompt, req.text
+        )
+        provider_summaries[provider_config.name] = summary_output
+
+    # Ensure all outputs are strings (minimal validation)
+    for provider_name, output in list(provider_summaries.items()):
+        if not isinstance(output, str):
+            provider_summaries[provider_name] = str(output)
+
+    # Analyze consistency across provider outputs
+    consistency_analysis = response_processor.analyze_consistency(provider_summaries)
+
+    # Normalize responses to common structure
+    normalized_results = response_processor.normalize_response(provider_summaries)
+
+    return {
+        "summaries": provider_summaries,
+        "analysis": consistency_analysis,
+        "normalized": normalized_results
+    }
 
 
 if __name__ == "__main__":
+    """Run the Summarizer Hub service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5060)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )
 

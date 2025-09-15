@@ -1,4 +1,28 @@
-"""CLI Service - Interactive Command Line Interface for LLM Documentation Ecosystem."""
+"""Service: CLI Service
+
+Commands:
+- interactive: Start interactive CLI mode with menu-driven interface
+- get-prompt <category> <name>: Retrieve and display a specific prompt
+- health: Check health status of all ecosystem services
+- list-prompts: List all available prompts with optional category filtering
+- test-integration: Run comprehensive integration tests across all services
+
+Responsibilities:
+- Provide command-line interface for ecosystem management and operations
+- Enable interactive prompt management and testing workflows
+- Display real-time health status and service integration testing
+- Support both programmatic and interactive usage patterns
+- Offer rich terminal UI with tables, panels, and colored output
+
+Features:
+- Interactive menu system with keyboard navigation
+- Rich terminal output with syntax highlighting and formatting
+- Service health monitoring and integration testing
+- Prompt retrieval and management capabilities
+- Workflow execution and status monitoring
+
+Dependencies: All ecosystem services via HTTP clients, Rich library for UI.
+"""
 
 import os
 from typing import Dict, Any, List, Optional
@@ -44,6 +68,10 @@ from .modules.cli_commands import CLICommands
 from .modules.prompt_manager import PromptManager
 from .modules.workflow_manager import WorkflowManager
 
+# Service configuration constants
+SERVICE_NAME = "cli"
+SERVICE_TITLE = "CLI Service"
+SERVICE_VERSION = "1.0.0"
 
 # ============================================================================
 # CLI SERVICE - Using modular architecture
@@ -57,10 +85,10 @@ cli_service = CLICommands()
 # ============================================================================
 
 @click.group()
-@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
+@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output with detailed information')
 @click.pass_context
 def cli(ctx, verbose):
-    """LLM Documentation Ecosystem CLI"""
+    """LLM Documentation Ecosystem CLI - Interactive command-line interface for ecosystem management"""
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
     ctx.obj['cli_service'] = cli_service
@@ -68,16 +96,16 @@ def cli(ctx, verbose):
 @cli.command()
 @click.pass_context
 def interactive(ctx):
-    """Start interactive CLI mode"""
+    """Start interactive CLI mode with menu-driven interface for ecosystem operations"""
     asyncio.run(cli_service.run())
 
 @cli.command()
 @click.argument('category')
 @click.argument('name')
-@click.option('--content', '-c', help='Content variable value')
+@click.option('--content', '-c', help='Content variable value for prompt template substitution')
 @click.pass_context
 def get_prompt(ctx, category, name, content):
-    """Get and display a prompt"""
+    """Retrieve and display a prompt from the Prompt Store with optional variable substitution"""
     async def _get_prompt():
         try:
             variables = {}
@@ -106,21 +134,21 @@ def get_prompt(ctx, category, name, content):
 @cli.command()
 @click.pass_context
 def health(ctx):
-    """Check service health"""
+    """Check and display health status of all ecosystem services with detailed connectivity information"""
     asyncio.run(cli_service.display_health_status())
 
 @cli.command()
-@click.option('--category', '-c', help='Filter by category')
+@click.option('--category', '-c', help='Filter prompts by specific category (e.g., analysis, consistency)')
 @click.pass_context
 def list_prompts(ctx, category):
-    """List available prompts"""
+    """List all available prompts from Prompt Store with optional category filtering"""
     prompt_manager = PromptManager(cli_service.console, cli_service.clients)
     asyncio.run(prompt_manager.list_prompts())
 
 @cli.command()
 @click.pass_context
 def test_integration(ctx):
-    """Test service integration"""
+    """Run comprehensive integration tests across all ecosystem services to verify connectivity and functionality"""
     asyncio.run(cli_service.test_integration())
 
 if __name__ == "__main__":

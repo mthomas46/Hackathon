@@ -3,133 +3,19 @@
 Tests input validation, error scenarios, and edge cases.
 Focused on validation logic following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_source_agent():
-    """Load source-agent service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.source-agent.main",
-            os.path.join(os.getcwd(), 'services', 'source-agent', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Source Agent", version="1.0.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "source-agent"}
-
-        @app.post("/docs/fetch")
-        async def fetch_document(request_data: dict):
-            source = request_data.get("source", "")
-            identifier = request_data.get("identifier", "")
-
-            if not source:
-                return {"detail": "source is required"}, 422
-            if not identifier:
-                return {"detail": "identifier is required"}, 422
-            if source not in ["github", "jira", "confluence"]:
-                return {"detail": "Invalid source type"}, 400
-
-            if source == "github":
-                if ":" not in identifier:
-                    return {"detail": "GitHub identifier must be in format owner:repo"}, 400
-                return {
-                    "message": "retrieved",
-                    "data": {
-                        "document": {
-                            "id": f"github:readme:{identifier}",
-                            "title": f"README for {identifier}",
-                            "content": "# README",
-                            "source_type": "github"
-                        },
-                        "source": "github"
-                    }
-                }
-            else:
-                return {
-                    "error": f"{source} fetch not implemented",
-                    "error_code": "feature_not_implemented"
-                }
-
-        @app.post("/normalize")
-        async def normalize_data(request_data: dict):
-            source = request_data.get("source", "")
-            data = request_data.get("data", {})
-
-            if not source:
-                return {"detail": "source is required"}, 422
-            if not data:
-                return {"detail": "data is required"}, 422
-            if source not in ["github", "jira", "confluence"]:
-                return {"detail": "Invalid source type"}, 400
-
-            return {
-                "message": "normalized",
-                "data": {
-                    "envelope": {
-                        "id": f"env:{source}:test",
-                        "document": {
-                            "id": f"{source}:test",
-                            "title": "Test Document",
-                            "content": "Test content",
-                            "source_type": source
-                        }
-                    }
-                }
-            }
-
-        @app.post("/code/analyze")
-        async def analyze_code(request_data: dict):
-            text = request_data.get("text", "")
-
-            if text is None:
-                return {"detail": "text is required"}, 422
-
-            # Analyze text for endpoints
-            endpoints = []
-            if isinstance(text, str):
-                if "@app." in text:
-                    endpoints.append("/api/endpoint")
-                if "router." in text:
-                    endpoints.append("/router/endpoint")
-
-            return {
-                "message": "analyzed",
-                "data": {
-                    "analysis": "\n".join(endpoints),
-                    "endpoint_count": len(endpoints),
-                    "patterns_found": ["API", "Router"] if endpoints else []
-                }
-            }
-
-        return app
+from .test_utils import load_source_agent_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def source_app():
-    """Load source-agent service."""
-    return _load_source_agent()
-
-
-@pytest.fixture
-def client(source_app):
-    """Create test client."""
-    return TestClient(source_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for source agent service."""
+    app = load_source_agent_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestSourceAgentValidation:

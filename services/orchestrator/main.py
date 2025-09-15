@@ -21,9 +21,72 @@ from services.shared.constants_new import ServiceNames, ErrorCodes, EnvVars
 from services.shared.config import get_config_value
 from services.shared.utilities import utc_now, generate_id, attach_self_register, setup_common_middleware, get_service_client
 
-"""Orchestrator Service
+"""Orchestrator Service - Central Control Plane
 
-Central control plane and coordination service for the LLM Documentation Ecosystem.
+The Orchestrator service serves as the central coordination and control plane for the
+LLM Documentation Ecosystem. It manages complex multi-service workflows, distributed
+transactions, and provides unified APIs for document processing operations.
+
+This service is the most critical component of the ecosystem, coordinating operations
+across all other services and ensuring reliable, scalable document processing pipelines.
+
+## Key Capabilities
+
+### Document Ingestion & Processing
+- **Multi-source ingestion**: Support for GitHub, Jira, Confluence, and Swagger/OpenAPI sources
+- **Workflow orchestration**: Complex document processing pipelines with saga patterns
+- **Natural language queries**: Interpret and execute natural language document queries
+- **Report generation**: Create various types of documentation reports and analytics
+
+### Service Coordination
+- **Service registry**: Dynamic registration and discovery of ecosystem services
+- **Peer coordination**: Distributed orchestrator instances for high availability
+- **Health monitoring**: Comprehensive system health checks across all services
+- **API drift detection**: Monitor service OpenAPI specs for breaking changes
+
+### Reliability & Observability
+- **Saga orchestration**: Reliable distributed transactions with compensation
+- **Dead letter queue**: Failed event recovery and retry mechanisms
+- **Distributed tracing**: End-to-end request tracing across service boundaries
+- **Event replay**: Debugging and recovery through event replay capabilities
+
+## API Endpoints
+
+### Core Operations
+- `POST /ingest` - Document ingestion from various sources
+- `POST /workflows/run` - Execute processing pipelines
+- `POST /query` - Natural language query processing
+- `POST /query/execute` - Execute interpreted queries
+- `POST /report/request` - Generate documentation reports
+
+### Service Management
+- `GET /services` - List registered services
+- `POST /registry/register` - Register new services
+- `GET /registry` - Service registry information
+- `GET /peers` - Orchestrator peer instances
+
+### Infrastructure & Monitoring
+- `GET /health/system` - System-wide health checks
+- `GET /infrastructure/dlq/stats` - DLQ management
+- `GET /infrastructure/saga/stats` - Saga transaction stats
+- `POST /infrastructure/events/replay` - Event replay for debugging
+
+### Development & Testing
+- `POST /demo/e2e` - End-to-end demonstrations
+- `POST /registry/poll-openapi` - API drift detection
+
+## Architecture
+
+The Orchestrator implements several advanced patterns:
+- **Saga Orchestration**: For reliable distributed transactions
+- **Event Sourcing**: For audit trails and event replay
+- **Circuit Breaker**: For resilient service communication
+- **Service Mesh**: Through peer coordination and service discovery
+
+## Dependencies
+
+Requires all ecosystem services, Redis for eventing, and shared orchestration utilities.
+The service is designed to gracefully degrade when dependencies are unavailable.
 """
 
 try:
@@ -97,6 +160,12 @@ except ImportError:
 # Create shared client instance for all orchestrator operations
 service_client = get_service_client(timeout=30)
 
+# Service configuration constants
+SERVICE_NAME = "orchestrator"
+SERVICE_TITLE = "Orchestrator"
+SERVICE_VERSION = "0.1.0"
+DEFAULT_PORT = 5099
+
 # ============================================================================
 # MODULE IMPORTS - Split functionality into focused modules
 # ============================================================================
@@ -125,14 +194,18 @@ from .modules.infrastructure_handlers import infrastructure_handlers
 from .modules.workflow_handlers import workflow_handlers
 from .modules.demo_handlers import demo_handlers
 
-app = FastAPI(title="Orchestrator", version="0.1.0")
+app = FastAPI(
+    title=SERVICE_TITLE,
+    description="Central control plane and coordination service for the LLM Documentation Ecosystem",
+    version=SERVICE_VERSION
+)
 
 # Use common middleware setup to reduce duplication across services
 setup_common_middleware(app, ServiceNames.ORCHESTRATOR)
 
 # Install error handlers and health endpoints
 register_exception_handlers(app)
-register_health_endpoints(app, ServiceNames.ORCHESTRATOR, "0.1.0")
+register_health_endpoints(app, ServiceNames.ORCHESTRATOR, SERVICE_VERSION)
 
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.ORCHESTRATOR)
@@ -163,7 +236,15 @@ app.post("/summarization/suggest")(summarization_suggest)
 
 @app.get("/health/system")
 async def system_health():
-    """Comprehensive system health check including all services."""
+    """Comprehensive system-wide health check across all ecosystem services.
+
+    Performs health checks on all registered services in the ecosystem,
+    including connectivity, responsiveness, and basic functionality validation.
+    Used for monitoring, load balancing, and service discovery decisions.
+
+    Returns:
+        dict: Health status summary with individual service statuses
+    """
     return await health_handlers.handle_system_health()
 
 # ============================================================================
@@ -189,7 +270,15 @@ app.get("/services")(list_services)
 
 @app.get("/workflows")
 async def list_workflows():
-    """Get available workflows from all services."""
+    """List all available workflow configurations and capabilities.
+
+    Retrieves workflow definitions from all services in the ecosystem,
+    including supported operations, input/output schemas, and orchestration
+    patterns. Used by clients to discover available processing pipelines.
+
+    Returns:
+        dict: Available workflows organized by service and capability
+    """
     return await health_handlers.handle_workflows_list()
 
 
@@ -223,6 +312,18 @@ class IngestionRequest(BaseModel):
 
 @app.post("/ingest")
 async def request_ingestion(req: IngestionRequest):
+    """Request document ingestion from various external sources.
+
+    Initiates document ingestion workflows from supported sources including
+    GitHub repositories, Jira projects, Confluence spaces, and Swagger/OpenAPI specs.
+    Publishes ingestion requests via Redis pub/sub for distributed processing.
+
+    Args:
+        req: Ingestion request with source type and optional scope/correlation_id
+
+    Returns:
+        dict: Acceptance confirmation with correlation ID for tracking
+    """
     fire_and_forget("info", "ingestion requested", ServiceNames.ORCHESTRATOR, {"source": req.source})
     # Publish to Redis if available
     if aioredis:
@@ -252,6 +353,12 @@ _workflow_history: List[Dict[str, Any]] = []
 
 @app.post("/workflows/run")
 async def run_workflow(req: WorkflowRunRequest):
+    """Execute a distributed document processing workflow with saga orchestration.
+
+    Initiates a full document ingestion and analysis pipeline across multiple
+    services, using saga transactions to ensure reliable distributed operations.
+    Includes tracing and event replay capabilities for observability and recovery.
+    """
     with TraceContext(tracer, "workflow_run", req.correlation_id) as span:
         fire_and_forget("info", "workflow run requested", ServiceNames.ORCHESTRATOR, {"scope": req.scope})
         
@@ -312,6 +419,12 @@ class DemoE2ERequest(BaseModel):
 
 @app.post("/demo/e2e")
 async def demo_e2e(req: DemoE2ERequest, request: Request):
+    """Execute end-to-end demonstration combining summary and log analysis.
+
+    Performs a complete demonstration of the ecosystem by generating documentation
+    summaries and analyzing service logs, showcasing the integration capabilities
+    and data flow across multiple services in a realistic scenario.
+    """
     fire_and_forget("info", "demo_e2e", ServiceNames.ORCHESTRATOR, {"format": req.format})
     reporting = get_config_value(EnvVars.REPORTING_URL_ENV, "http://reporting:5030", section="services", env_key=EnvVars.REPORTING_URL_ENV)
     headers = {EnvVars.CORRELATION_ID_HEADER: request.headers.get(EnvVars.CORRELATION_ID_HEADER, "")}
@@ -345,6 +458,18 @@ class ServiceRegistration(BaseModel):
 
 @app.post("/registry/register")
 async def registry_register(svc: ServiceRegistration):
+    """Register a new service with the orchestrator registry.
+
+    Adds a service to the distributed service registry, enabling service discovery
+    and coordination across the ecosystem. Supports OpenAPI specification registration
+    for automatic API drift detection and endpoint validation.
+
+    Args:
+        svc: Service registration details including name, URLs, and metadata
+
+    Returns:
+        dict: Registration confirmation with service details
+    """
     _registry[svc.name] = {
         "name": svc.name,
         "base_url": svc.base_url,
@@ -376,7 +501,11 @@ async def registry_list():
 
 @app.get("/infrastructure/dlq/stats")
 async def get_dlq_stats():
-    """Get Dead Letter Queue statistics."""
+    """Get Dead Letter Queue statistics and failed event tracking.
+
+    Provides comprehensive metrics on failed events, retry attempts, and
+    recovery status for debugging and monitoring distributed system reliability.
+    """
     stats = await dlq.get_dlq_stats()
     return stats
 
@@ -393,7 +522,12 @@ async def retry_dlq_events(limit: int = 10):
 
 @app.get("/infrastructure/saga/stats")
 async def get_saga_stats():
-    """Get Saga transaction statistics."""
+    """Get Saga transaction orchestration statistics and performance metrics.
+
+    Provides insights into distributed transaction success rates, compensation
+    operations, and saga lifecycle metrics for monitoring system reliability
+    and identifying potential failure patterns.
+    """
     stats = await saga_orchestrator.get_saga_stats()
     return stats
 
@@ -451,20 +585,9 @@ async def get_trace(trace_id: str):
     spans = await tracer.get_trace(trace_id)
     return {"trace_id": trace_id, "spans": [span.__dict__ for span in spans]}
 
-@app.get("/infrastructure/tracing/service/{service_name}")
-async def get_service_traces(service_name: str, limit: int = 100):
-    """Get recent traces for a service."""
-    spans = await tracer.get_service_traces(service_name, limit)
-    return {"service": service_name, "spans": [span.__dict__ for span in spans]}
+# Tracing routes moved to infrastructure router to avoid conflicts
 
-@app.post("/infrastructure/events/clear")
-async def clear_events(
-    event_type: Optional[str] = None,
-    correlation_id: Optional[str] = None
-):
-    """Clear events matching criteria."""
-    cleared = await event_replay_manager.clear_events(event_type, correlation_id)
-    return {"cleared_events": cleared}
+# Events routes moved to infrastructure router to avoid conflicts
 
 
 @app.get("/peers")
@@ -628,6 +751,12 @@ async def docstore_save(req: StoreDocumentRequest, request: Request):
 
 
 if __name__ == "__main__":
+    """Run the Orchestrator service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5099)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )
 

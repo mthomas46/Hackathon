@@ -1,5 +1,8 @@
-"""Owner resolution and caching for notification service."""
+"""Owner resolution and caching for notification service.
 
+Provides efficient mapping of owner names to notification targets with
+configurable caching to reduce resolution overhead.
+"""
 import os
 import json
 import time
@@ -7,89 +10,157 @@ from typing import Dict, Any, Optional
 
 
 class OwnerResolver:
-    """Manages owner-to-target resolution with caching."""
+    """Manages owner-to-target resolution with TTL-based caching.
+
+    This class handles the mapping of owner names/handles to their
+    notification targets (email, webhook URLs, etc.) with automatic
+    caching and fallback heuristics for unknown owners.
+    """
 
     def __init__(self, cache_ttl: float = 300.0):
-        self._resolve_cache: Dict[str, Dict[str, Any]] = {}
-        self._cache_ttl = cache_ttl
+        """Initialize the owner resolver with cache settings.
+
+        Args:
+            cache_ttl: Time-to-live for cached resolutions in seconds (default: 300)
+        """
+        self._resolution_cache: Dict[str, Dict[str, Any]] = {}
+        self._cache_ttl_seconds = cache_ttl
 
     def resolve_owners(self, owners: list[str]) -> Dict[str, Dict[str, str]]:
-        """Resolve owners to their target information with caching."""
-        result: Dict[str, Dict[str, str]] = {}
+        """Resolve multiple owner names to their notification targets.
 
-        for owner in owners or []:
-            # Check cache first
-            cached = self._resolve_cache.get(owner)
-            if cached and self._is_cache_valid(cached):
-                # Return cached result without _ts field
-                result[owner] = {k: v for k, v in cached.items() if k != "_ts"}
+        Processes a list of owner identifiers and returns their corresponding
+        notification targets. Uses caching for performance and applies
+        fallback heuristics for unknown owners.
+
+        Args:
+            owners: List of owner names to resolve
+
+        Returns:
+            Dictionary mapping owner names to their target information
+        """
+        resolved_targets: Dict[str, Dict[str, str]] = {}
+
+        for owner_name in owners or []:
+            # Check cache first for performance
+            cached_resolution = self._resolution_cache.get(owner_name)
+            if cached_resolution and self._is_cache_entry_valid(cached_resolution):
+                # Return cached result without internal timestamp field
+                resolved_targets[owner_name] = {
+                    key: value
+                    for key, value in cached_resolution.items()
+                    if key != "_ts"
+                }
                 continue
 
-            # Resolve owner information
-            owner_info = self._resolve_owner(owner)
+            # Resolve owner information from mapping or heuristics
+            target_info = self._resolve_single_owner(owner_name)
 
-            # Cache the result
-            self._resolve_cache[owner] = {**owner_info, "_ts": time.time()}
+            # Cache the resolution result with timestamp
+            self._resolution_cache[owner_name] = {
+                **target_info,
+                "_ts": time.time()
+            }
 
-            result[owner] = owner_info
+            resolved_targets[owner_name] = target_info
 
-        return result
+        return resolved_targets
 
-    def _is_cache_valid(self, cached_entry: Dict[str, Any]) -> bool:
-        """Check if cached entry is still valid."""
-        cache_time = cached_entry.get("_ts", 0)
-        return (time.time() - cache_time) <= self._cache_ttl
+    def _is_cache_entry_valid(self, cached_entry: Dict[str, Any]) -> bool:
+        """Check if a cached resolution entry is still valid based on TTL.
 
-    def _resolve_owner(self, owner: str) -> Dict[str, str]:
-        """Resolve a single owner to target information."""
-        # Load owner mapping from configuration
-        owner_map = self._load_owner_map()
+        Args:
+            cached_entry: Cached entry with timestamp
 
-        # Get mapping if available
-        owner_info = owner_map.get(owner, {})
+        Returns:
+            True if the entry is within TTL, False if expired
+        """
+        cache_timestamp = cached_entry.get("_ts", 0)
+        elapsed_seconds = time.time() - cache_timestamp
+        return elapsed_seconds <= self._cache_ttl_seconds
 
-        # Apply heuristics if no mapping found
-        if not owner_info:
-            owner_info = self._apply_resolution_heuristics(owner)
+    def _resolve_single_owner(self, owner: str) -> Dict[str, str]:
+        """Resolve a single owner name to notification target information.
 
-        return owner_info
+        Args:
+            owner: Owner name to resolve
 
-    def _load_owner_map(self) -> Dict[str, Dict[str, str]]:
-        """Load owner-to-target mapping from environment or file."""
-        data: Dict[str, Dict[str, str]] = {}
+        Returns:
+            Dictionary with target information (e.g., {"email": "user@domain.com"})
+        """
+        # Load owner mapping from configuration sources
+        owner_mapping = self._load_owner_mapping()
 
-        # Try environment variable first
-        env_json = os.environ.get("NOTIFY_OWNER_MAP_JSON")
-        if env_json:
+        # Get direct mapping if available
+        target_info = owner_mapping.get(owner, {})
+
+        # Apply heuristics if no direct mapping found
+        if not target_info:
+            target_info = self._apply_resolution_heuristics(owner)
+
+        return target_info
+
+    def _load_owner_mapping(self) -> Dict[str, Dict[str, str]]:
+        """Load owner-to-target mapping from configuration sources.
+
+        Attempts to load owner mappings from environment variables or files.
+        Supports both JSON environment variables and external configuration files.
+
+        Returns:
+            Dictionary mapping owner names to their target configurations
+        """
+        mapping_data: Dict[str, Dict[str, str]] = {}
+
+        # Try environment variable first for containerized deployments
+        json_config = os.environ.get("NOTIFY_OWNER_MAP_JSON")
+        if json_config:
             try:
-                data = json.loads(env_json)
-            except Exception:
-                data = {}
+                mapping_data = json.loads(json_config)
+            except json.JSONDecodeError:
+                # Log error but continue with empty mapping
+                mapping_data = {}
 
-        # Try file if no env var
+        # Try file-based configuration if no env var
         else:
-            file_path = os.environ.get("NOTIFY_OWNER_MAP_FILE")
-            if file_path and os.path.exists(file_path):
+            config_file_path = os.environ.get("NOTIFY_OWNER_MAP_FILE")
+            if config_file_path and os.path.exists(config_file_path):
                 try:
-                    with open(file_path, "r") as fh:
-                        data = json.load(fh)
-                except Exception:
-                    data = {}
+                    with open(config_file_path, "r", encoding="utf-8") as config_file:
+                        mapping_data = json.load(config_file)
+                except (json.JSONDecodeError, IOError):
+                    # Log error but continue with empty mapping
+                    mapping_data = {}
 
-        return data
+        return mapping_data
 
     def _apply_resolution_heuristics(self, owner: str) -> Dict[str, str]:
-        """Apply heuristics to resolve owner when no mapping exists."""
+        """Apply intelligent heuristics to resolve owners without explicit mappings.
+
+        Uses pattern matching to infer notification targets from owner names:
+        - URLs are treated as webhook endpoints
+        - Email-like strings are treated as email addresses
+        - Other strings are treated as generic handles
+
+        Args:
+            owner: Owner identifier to analyze
+
+        Returns:
+            Dictionary with inferred target information
+        """
         if owner.startswith(("http://", "https://")):
             return {"webhook": owner}
-        elif "@" in owner:
+        elif "@" in owner and "." in owner:
             return {"email": owner}
         else:
             return {"handle": owner}
 
     def clear_cache(self) -> None:
-        """Clear the resolution cache."""
-        self._resolve_cache.clear()
+        """Clear all cached owner resolutions.
+
+        Forces fresh resolution of all owners on next request.
+        Useful for testing or when configuration changes.
+        """
+        self._resolution_cache.clear()
 
 
 # Global instance

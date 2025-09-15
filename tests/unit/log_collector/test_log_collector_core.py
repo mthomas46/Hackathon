@@ -3,147 +3,21 @@
 Tests log collection, storage, retrieval, and statistics.
 Focused on essential log collector operations following TDD principles.
 """
-
-import importlib.util, os
 import pytest
 from fastapi.testclient import TestClient
 
-
-@pytest.fixture(scope="class", autouse=True)
-def clear_logs_class():
-    """Clear global log storage before test class to ensure test isolation."""
-    try:
-        # Force reload the module to get fresh state
-        import sys
-        import importlib
-
-        if 'services.log_collector.main' in sys.modules:
-            importlib.reload(sys.modules['services.log_collector.main'])
-
-        # Import and clear logs
-        import services.log_collector.main as log_module
-        if hasattr(log_module, '_logs'):
-            log_module._logs.clear()
-    except Exception as e:
-        # If we can't reload, that's okay - tests should handle existing state
-        pass
-
-
-@pytest.fixture(autouse=True)
-def clear_logs_test():
-    """Clear global log storage before each test to ensure test isolation."""
-    try:
-        # Try to access and clear the logs from already loaded module
-        import sys
-        if 'services.log_collector.main' in sys.modules:
-            mod = sys.modules['services.log_collector.main']
-            if hasattr(mod, '_logs'):
-                mod._logs.clear()
-    except Exception:
-        pass
-
-
-def _load_log_collector_service():
-    """Load log-collector service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.log-collector.main",
-            os.path.join(os.getcwd(), 'services', 'log-collector', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Log Collector", version="0.1.0")
-
-        # Mock storage for testing
-        mock_logs = []
-        max_logs = 5000
-
-        @app.get("/health")
-        async def health():
-            return {"status": "healthy", "service": "log-collector", "count": len(mock_logs)}
-
-        @app.post("/logs")
-        async def put_log(request_data: dict):
-            entry = request_data.copy()
-            if "timestamp" not in entry or not entry["timestamp"]:
-                from datetime import datetime, timezone
-                entry["timestamp"] = datetime.now(timezone.utc).isoformat()
-
-            mock_logs.append(entry)
-            if len(mock_logs) > max_logs:
-                del mock_logs[: len(mock_logs) - max_logs]
-
-            return {"status": "ok", "count": len(mock_logs)}
-
-        @app.post("/logs/batch")
-        async def put_logs(request_data: dict):
-            items = request_data.get("items", [])
-            added = 0
-            for item in items:
-                result = await put_log(item)
-                added += 1
-
-            return {"status": "ok", "count": len(mock_logs), "added": added}
-
-        @app.get("/logs")
-        async def list_logs(service: str = None, level: str = None, limit: int = 100):
-            filtered_logs = mock_logs
-
-            if service:
-                filtered_logs = [log for log in filtered_logs if log.get("service") == service]
-
-            if level:
-                filtered_logs = [log for log in filtered_logs if log.get("level") == level]
-
-            return {"items": filtered_logs[-limit:]}
-
-        @app.get("/stats")
-        async def stats():
-            by_level = {}
-            by_service = {}
-            errors_by_service = {}
-
-            for log in mock_logs:
-                level = str(log.get("level", "")).lower()
-                service = log.get("service", "")
-
-                by_level[level] = by_level.get(level, 0) + 1
-                by_service[service] = by_service.get(service, 0) + 1
-
-                if level in ("error", "fatal"):
-                    errors_by_service[service] = errors_by_service.get(service, 0) + 1
-
-            top_services = sorted(by_service.items(), key=lambda x: x[1], reverse=True)[:5]
-
-            return {
-                "count": len(mock_logs),
-                "by_level": by_level,
-                "by_service": by_service,
-                "errors_by_service": errors_by_service,
-                "top_services": top_services
-            }
-
-        return app
+from .test_utils import load_log_collector_service, clear_logs_class, clear_logs_test
 
 
 @pytest.fixture(scope="module")
-def log_collector_app():
-    """Load log-collector service."""
-    return _load_log_collector_service()
-
-
-@pytest.fixture
-def client(log_collector_app):
-    """Create test client."""
-    return TestClient(log_collector_app)
+def client():
+    """Test client fixture for log collector service."""
+    app = load_log_collector_service()
+    return TestClient(app)
 
 
 def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
+    """Assert that HTTP response is successful."""
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
 

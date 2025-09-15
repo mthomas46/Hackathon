@@ -3,38 +3,19 @@
 Tests memory statistics, cleanup, and management operations.
 Focused on operational aspects following TDD principles.
 """
-
-import importlib.util, os
 import pytest
+import importlib.util, os
 from fastapi.testclient import TestClient
 
-
-def _load_memory_agent():
-    """Load memory-agent service dynamically."""
-    spec = importlib.util.spec_from_file_location(
-        "services.memory-agent.main",
-        os.path.join(os.getcwd(), 'services', 'memory-agent', 'main.py')
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.app
+from .test_utils import load_memory_agent_service, _assert_http_ok
 
 
 @pytest.fixture(scope="module")
-def memory_app():
-    """Load memory-agent service."""
-    return _load_memory_agent()
-
-
-@pytest.fixture
-def client(memory_app):
-    """Create test client."""
-    return TestClient(memory_app)
-
-
-def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+def client():
+    """Test client fixture for memory agent service."""
+    app = load_memory_agent_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 class TestMemoryManagement:

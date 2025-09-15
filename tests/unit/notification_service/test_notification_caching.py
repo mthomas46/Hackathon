@@ -4,33 +4,19 @@ Tests notification deduplication, caching, and performance optimizations.
 Focused on cache management and duplicate prevention following TDD principles.
 """
 
-import importlib.util, os
 import pytest
 import time
 from fastapi.testclient import TestClient
 
-
-def _load_notification_service():
-    """Load notification-service dynamically."""
-    spec = importlib.util.spec_from_file_location(
-        "services.notification-service.main",
-        os.path.join(os.getcwd(), 'services', 'notification-service', 'main.py')
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.app
+from .test_utils import load_notification_service
 
 
 @pytest.fixture(scope="module")
-def notification_app():
-    """Load notification-service."""
-    return _load_notification_service()
-
-
-@pytest.fixture
-def client(notification_app):
-    """Create test client."""
-    return TestClient(notification_app)
+def client():
+    """Test client fixture for notification service."""
+    app = load_notification_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 def _assert_http_ok(response):

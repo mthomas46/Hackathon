@@ -1,7 +1,17 @@
-"""Standardized error handling utilities and exception classes.
+"""Standardized Error Handling and Exception Classes
 
-Provides consistent error handling patterns across all services.
-Reduces code duplication and ensures uniform error responses.
+Comprehensive error handling system used across all services in the ecosystem.
+
+This module provides:
+- Custom exception classes for different error types
+- Standardized error response formatting
+- FastAPI exception handlers and middleware
+- Error logging and monitoring integration
+- Validation error handling and formatting
+- Service-specific error codes and categories
+
+All services use these utilities to ensure consistent error handling,
+logging, and user experience across the entire ecosystem.
 """
 
 import os
@@ -25,7 +35,17 @@ from pydantic import ValidationError
 # ============================================================================
 
 class ServiceException(Exception):
-    """Base exception class for service-specific errors."""
+    """Base exception class for service-specific errors.
+
+    All custom exceptions in the ecosystem should inherit from this class
+    to ensure consistent error handling, logging, and response formatting.
+
+    Attributes:
+        message: Human-readable error message
+        error_code: Machine-readable error code for client handling
+        status_code: HTTP status code for the response
+        details: Additional error details and context
+    """
 
     def __init__(self, message: str, error_code: str = "internal_error",
                  status_code: int = 500, details: Optional[Dict[str, Any]] = None):

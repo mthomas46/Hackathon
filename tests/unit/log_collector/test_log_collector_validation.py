@@ -4,210 +4,23 @@ Tests input validation, error scenarios, and edge cases.
 Focused on validation logic following TDD principles.
 """
 
-import importlib.util, os
 import pytest
 from fastapi.testclient import TestClient
 
-
-@pytest.fixture(scope="class", autouse=True)
-def clear_logs_class():
-    """Clear global log storage before test class to ensure test isolation."""
-    try:
-        # Force reload the module to get fresh state
-        import sys
-        import importlib
-
-        if 'services.log_collector.main' in sys.modules:
-            importlib.reload(sys.modules['services.log_collector.main'])
-
-        # Import and clear logs
-        import services.log_collector.main as log_module
-        if hasattr(log_module, '_logs'):
-            log_module._logs.clear()
-    except Exception as e:
-        # If we can't reload, that's okay - tests should handle existing state
-        pass
-
-
-@pytest.fixture(autouse=True)
-def clear_logs_test():
-    """Clear global log storage before each test to ensure test isolation."""
-    try:
-        # Try to access and clear the logs from already loaded module
-        import sys
-        if 'services.log-collector.main' in sys.modules:
-            mod = sys.modules['services.log_collector.main']
-            if hasattr(mod, '_logs'):
-                mod._logs.clear()
-    except Exception:
-        pass
-
-
-def _load_log_collector_service():
-    """Load log-collector service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.log-collector.main",
-            os.path.join(os.getcwd(), 'services', 'log-collector', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.app
-    except Exception as e:
-        # If loading fails, create a minimal mock app for testing
-        from fastapi import FastAPI
-        app = FastAPI(title="Log Collector", version="0.1.0")
-
-        @app.post("/logs")
-        async def put_log(request_data: dict):
-            from fastapi.responses import JSONResponse
-
-            # Basic validation
-            if not request_data.get("service"):
-                return JSONResponse(
-                    status_code=422,
-                    content={"status": "error", "message": "Service is required"}
-                )
-
-            if not request_data.get("level"):
-                return JSONResponse(
-                    status_code=422,
-                    content={"status": "error", "message": "Level is required"}
-                )
-
-            if not request_data.get("message"):
-                return JSONResponse(
-                    status_code=422,
-                    content={"status": "error", "message": "Message is required"}
-                )
-
-            # Length validations
-            if len(request_data["service"]) > 100:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Service name too long"}
-                )
-
-            if len(request_data["level"]) > 20:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Level too long"}
-                )
-
-            if len(request_data["message"]) > 10000:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Message too long"}
-                )
-
-            return {"status": "ok", "count": 1}
-
-        @app.post("/logs/batch")
-        async def put_logs(request_data: dict):
-            from fastapi.responses import JSONResponse
-
-            items = request_data.get("items", [])
-
-            if not isinstance(items, list):
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Items must be a list"}
-                )
-
-            if len(items) > 100:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Batch too large"}
-                )
-
-            for i, item in enumerate(items):
-                if not isinstance(item, dict):
-                    return JSONResponse(
-                        status_code=400,
-                        content={"status": "error", "message": f"Item {i} must be an object"}
-                    )
-
-                # Validate each item
-                if not item.get("service"):
-                    return JSONResponse(
-                        status_code=422,
-                        content={"status": "error", "message": f"Item {i}: Service is required"}
-                    )
-
-                if not item.get("level"):
-                    return JSONResponse(
-                        status_code=422,
-                        content={"status": "error", "message": f"Item {i}: Level is required"}
-                    )
-
-                if not item.get("message"):
-                    return JSONResponse(
-                        status_code=422,
-                        content={"status": "error", "message": f"Item {i}: Message is required"}
-                    )
-
-                if len(item["service"]) > 100:
-                    return JSONResponse(
-                        status_code=400,
-                        content={"status": "error", "message": f"Item {i}: Service name too long"}
-                    )
-
-                if len(item["level"]) > 20:
-                    return JSONResponse(
-                        status_code=400,
-                        content={"status": "error", "message": f"Item {i}: Level too long"}
-                    )
-
-                if len(item["message"]) > 10000:
-                    return JSONResponse(
-                        status_code=400,
-                        content={"status": "error", "message": f"Item {i}: Message too long"}
-                    )
-
-            return {"status": "ok", "count": len(items), "added": len(items)}
-
-        @app.get("/logs")
-        async def list_logs(service: str = None, level: str = None, limit: int = 100):
-            from fastapi.responses import JSONResponse
-
-            if service and len(service) > 100:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Service name too long"}
-                )
-
-            if level and len(level) > 20:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Level too long"}
-                )
-
-            if limit < 1 or limit > 1000:
-                return JSONResponse(
-                    status_code=400,
-                    content={"status": "error", "message": "Limit must be between 1 and 1000"}
-                )
-
-            return {"items": []}
-
-        return app
+from .test_utils import load_log_collector_service, clear_logs_class, clear_logs_test
 
 
 @pytest.fixture(scope="module")
-def log_collector_app():
-    """Load log-collector service."""
-    return _load_log_collector_service()
-
-
-@pytest.fixture
-def client(log_collector_app):
-    """Create test client."""
-    return TestClient(log_collector_app)
+def client():
+    """Test client fixture for log collector service."""
+    app = load_log_collector_service()
+    return TestClient(app)
 
 
 def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
+    """Assert that HTTP response is successful."""
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+
 
 
 class TestLogCollectorValidation:

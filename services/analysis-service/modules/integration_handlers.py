@@ -5,7 +5,7 @@ Handles the complex logic for integration endpoints.
 import os
 from typing import Dict, Any
 
-from .shared_utils import _create_analysis_error_response, service_client
+from .shared_utils import _create_analysis_error_response, get_analysis_service_client
 
 
 class IntegrationHandlers:
@@ -15,6 +15,8 @@ class IntegrationHandlers:
     async def handle_analyze_with_prompt(target_id: str, prompt_category: str, prompt_name: str, **variables) -> Dict[str, Any]:
         """Analyze using a prompt from Prompt Store."""
         try:
+            service_client = get_analysis_service_client()
+
             # Get prompt from Prompt Store
             prompt_data = await service_client.get_prompt(prompt_category, prompt_name, **variables)
 
@@ -50,6 +52,8 @@ class IntegrationHandlers:
     async def handle_natural_language_analysis(request_data: dict = None) -> Dict[str, Any]:
         """Analyze using natural language query through Interpreter."""
         try:
+            service_client = get_analysis_service_client()
+
             # Handle both JSON payload and query parameter for compatibility
             if request_data and "query" in request_data:
                 query = request_data["query"]
@@ -94,6 +98,7 @@ class IntegrationHandlers:
     async def handle_get_available_prompt_categories() -> Dict[str, Any]:
         """Get available prompt categories for analysis."""
         try:
+            service_client = get_analysis_service_client()
             categories = await service_client.get_json(f"{service_client.prompt_store_url()}/prompts/categories")
             return categories
         except Exception as e:
@@ -107,6 +112,8 @@ class IntegrationHandlers:
     async def handle_log_analysis_usage(request_data: dict = None) -> Dict[str, Any]:
         """Log analysis usage for analytics."""
         try:
+            service_client = get_analysis_service_client()
+
             # Handle JSON payload for test compatibility
             if request_data:
                 prompt_id = request_data.get("prompt_id", "test-prompt")
@@ -151,6 +158,7 @@ class IntegrationHandlers:
     async def handle_integration_health() -> Dict[str, Any]:
         """Check integration with other services."""
         try:
+            service_client = get_analysis_service_client()
             health_status = await service_client.get_system_health()
             return {
                 "analysis_service": "healthy",

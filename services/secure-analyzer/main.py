@@ -1,10 +1,19 @@
 """Service: Secure Analyzer
 
 Endpoints:
-- POST /detect, /suggest, /summarize; GET /health
+- POST /detect: Analyze content for sensitive information and security risks
+- POST /suggest: Recommend appropriate AI models based on content sensitivity
+- POST /summarize: Generate secure summaries with policy-based provider filtering
+- GET /health: Service health check
 
-Responsibilities: Detect sensitive content; gate summarization providers; call summarizer-hub per policy.
-Dependencies: shared middlewares/logging, ServiceClients; environment-driven provider lists.
+Responsibilities:
+- Detect sensitive content (PII, secrets, credentials) using pattern matching
+- Enforce security policies for AI model selection based on content sensitivity
+- Gate summarization requests to appropriate providers with circuit breaker protection
+- Provide dead-letter queue for failed notification deliveries
+- Cache owner resolutions and implement intelligent fallbacks
+
+Dependencies: shared middlewares/logging, ServiceClients, httpx for external calls.
 """
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
@@ -26,9 +35,26 @@ from .modules.content_detector import content_detector
 from .modules.policy_enforcer import policy_enforcer
 from .modules.validation import validate_content, validate_keywords, validate_providers
 
-# Circuit breaker and operation timeout logic moved to modules/circuit_breaker.py
+# Service configuration constants
+SERVICE_NAME = "secure-analyzer"
+SERVICE_VERSION = "0.1.0"
+DEFAULT_PORT = 5070
 
-app = FastAPI(title="Secure Analyzer", version="0.1.0")
+# Content validation limits
+MAX_CONTENT_SIZE_BYTES = 1000000  # 1MB
+MAX_KEYWORDS_COUNT = 1000
+MAX_KEYWORD_LENGTH = 500
+MAX_PROVIDER_NAME_LENGTH = 100
+
+# Circuit breaker defaults
+DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES = 5
+DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60
+
+app = FastAPI(
+    title="Secure Analyzer",
+    version=SERVICE_VERSION,
+    description="AI content security analysis service with policy enforcement and circuit breaker protection"
+)
 # Use common middleware setup to reduce duplication across services
 from services.shared.utilities import setup_common_middleware
 setup_common_middleware(app, ServiceNames.SECURE_ANALYZER)
@@ -37,39 +63,69 @@ attach_self_register(app, ServiceNames.SECURE_ANALYZER)
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "secure-analyzer"}
+    """Health check endpoint returning service status and basic information."""
+    return {
+        "status": "healthy",
+        "service": SERVICE_NAME,
+        "version": SERVICE_VERSION,
+        "circuit_breaker_open": circuit_breaker.is_open(),
+        "description": "Secure analyzer service is operational"
+    }
 
 
 class DetectRequest(BaseModel):
+    """Request model for content security detection.
+
+    Analyzes provided content for sensitive information, secrets,
+    and security vulnerabilities using pattern matching.
+    """
+
     content: str
+    """Text content to analyze for security risks and sensitive data."""
+
     keywords: Optional[List[str]] = None
+    """Additional keywords to search for beyond default security patterns."""
+
     keyword_document: Optional[str] = None
+    """URL or reference to external keyword document (currently unimplemented)."""
 
     @field_validator('content')
     @classmethod
     def validate_content(cls, v):
+        """Validate content field with size and emptiness checks."""
         if not v or not v.strip():
-            raise ValueError('Content cannot be empty')
-        if len(v) > 1000000:  # 1MB limit
-            raise ValueError('Content too large (max 1MB)')
+            raise ValueError('Content cannot be empty or contain only whitespace')
+        if len(v) > MAX_CONTENT_SIZE_BYTES:
+            raise ValueError(f'Content exceeds maximum size of {MAX_CONTENT_SIZE_BYTES:,} bytes')
         return v
 
     @field_validator('keywords')
     @classmethod
     def validate_keywords(cls, v):
+        """Validate keywords list with count and length checks."""
         if v is not None:
-            if len(v) > 1000:
-                raise ValueError('Too many keywords (max 1000)')
+            if len(v) > MAX_KEYWORDS_COUNT:
+                raise ValueError(f'Too many keywords (maximum {MAX_KEYWORDS_COUNT})')
             for keyword in v:
-                if len(keyword) > 500:
-                    raise ValueError('Keyword too long (max 500 characters)')
+                if len(keyword) > MAX_KEYWORD_LENGTH:
+                    raise ValueError(f'Keyword exceeds maximum length of {MAX_KEYWORD_LENGTH} characters')
         return v
 
 
 class DetectResponse(BaseModel):
+    """Response model for content detection results.
+
+    Contains the analysis results indicating whether content is sensitive
+    and what specific patterns or topics were detected.
+    """
     sensitive: bool
+    """Whether the content contains sensitive information that may require special handling."""
+
     matches: List[str]
+    """List of specific patterns or keywords that were detected in the content."""
+
     topics: List[str]
+    """Security topics identified in the content (e.g., 'pii', 'secrets', 'credentials')."""
 
 
 # Pattern matching and content detection logic moved to modules/content_detector.py
@@ -77,29 +133,40 @@ class DetectResponse(BaseModel):
 
 @app.post("/detect", response_model=DetectResponse)
 async def detect(req: DetectRequest):
-    """Detect sensitive content in the provided text."""
-    # Check circuit breaker
+    """Detect sensitive content and security risks in the provided text.
+
+    Analyzes content for sensitive information including PII, secrets,
+    credentials, and security vulnerabilities. Supports custom keywords
+    and external keyword documents.
+
+    Protected by circuit breaker to prevent cascade failures.
+    """
+    # Check circuit breaker to prevent cascade failures
     if circuit_breaker.is_open():
-        print(f"[SECURE_ANALYZER] Circuit breaker is OPEN - rejecting detect request")
+        print(f"[{SERVICE_NAME.upper()}] Circuit breaker is OPEN - rejecting detect request")
         raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
 
     async with operation_timeout_context("detect"):
-        fire_and_forget("info", "detect", ServiceNames.SECURE_ANALYZER, {"has_kw": bool(req.keywords), "has_doc": bool(req.keyword_document)})
+        fire_and_forget("info", "detect", ServiceNames.SECURE_ANALYZER, {
+            "has_keywords": bool(req.keywords),
+            "has_keyword_doc": bool(req.keyword_document),
+            "content_length": len(req.content)
+        })
 
         # Load additional keywords from URL if provided
         extra_keywords = req.keywords or []
         if req.keyword_document:
-            print(f"[SECURE_ANALYZER] Loading keywords from URL: {req.keyword_document}")
+            print(f"[{SERVICE_NAME.upper()}] Loading keywords from URL: {req.keyword_document}")
             try:
                 # TODO: Implement URL keyword loading
-                print(f"[SECURE_ANALYZER] Loaded {len(extra_keywords)} keywords total")
+                print(f"[{SERVICE_NAME.upper()}] Loaded {len(extra_keywords)} keywords total")
             except Exception as e:
-                print(f"[SECURE_ANALYZER] Failed to load keywords from URL: {e}")
+                print(f"[{SERVICE_NAME.upper()}] Failed to load keywords from URL: {e}")
 
-        # Detect sensitive content
-        result = content_detector.detect_sensitive_content(req.content, extra_keywords)
+        # Detect sensitive content using pattern matching
+        detection_result = content_detector.detect_sensitive_content(req.content, extra_keywords)
 
-        return DetectResponse(**result)
+        return DetectResponse(**detection_result)
 
 
 class SuggestRequest(BaseModel):
@@ -273,7 +340,13 @@ async def summarize(req: SummarizeRequest):
 
 
 if __name__ == "__main__":
+    """Run the Secure Analyzer service directly."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5070)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=DEFAULT_PORT,
+        log_level="info"
+    )
 
 

@@ -4,36 +4,22 @@ Tests provider management and configuration merging.
 Focused on provider setup and configuration following TDD principles.
 """
 
-import importlib.util, os
 import pytest
 from fastapi.testclient import TestClient
 
-
-def _load_summarizer_hub():
-    """Load summarizer-hub service dynamically."""
-    spec = importlib.util.spec_from_file_location(
-        "services.summarizer-hub.main",
-        os.path.join(os.getcwd(), 'services', 'summarizer-hub', 'main.py')
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.app
+from .test_utils import load_summarizer_hub_service
 
 
 @pytest.fixture(scope="module")
-def summarizer_app():
-    """Load summarizer-hub service."""
-    return _load_summarizer_hub()
-
-
-@pytest.fixture
-def client(summarizer_app):
-    """Create test client."""
-    return TestClient(summarizer_app)
+def client():
+    """Test client fixture for summarizer hub service."""
+    app = load_summarizer_hub_service()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 
 def _assert_http_ok(response):
-    """Assert HTTP 200 response."""
+    """Assert that HTTP response is successful."""
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
 

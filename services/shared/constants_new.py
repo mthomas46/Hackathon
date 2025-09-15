@@ -1,4 +1,18 @@
-"""Shared constants and enums to reduce magic strings and numbers."""
+"""Shared Constants and Configuration
+
+Centralized constants, enums, and configuration values used across all services.
+
+This module provides:
+- HTTP status codes with descriptive names
+- Environment variable names and defaults
+- Service names and identifiers
+- Regular expression patterns for validation
+- Error codes and categories
+- Default configuration values
+
+All constants are designed to be imported and used consistently across
+the entire ecosystem to reduce magic strings and improve maintainability.
+"""
 
 from enum import Enum
 
