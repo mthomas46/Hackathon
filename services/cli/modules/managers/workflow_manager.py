@@ -10,7 +10,7 @@ from rich.prompt import Prompt
 
 from services.shared.clients import ServiceClients
 
-from .shared_utils import (
+from ..shared_utils import (
     get_default_timeout,
     get_cli_clients,
     create_menu_table,

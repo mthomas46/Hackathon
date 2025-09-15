@@ -1,6 +1,6 @@
 """Configuration Validation Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 import json
 import yaml

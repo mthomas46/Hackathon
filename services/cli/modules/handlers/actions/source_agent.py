@@ -4,7 +4,7 @@ import base64
 import httpx
 
 from services.shared.clients import ServiceClients
-from ..helpers import print_kv, print_list, save_data
+from ...utils.display_helpers import print_kv, print_list, save_data
 from services.shared.credentials import get_secret
 import os
 

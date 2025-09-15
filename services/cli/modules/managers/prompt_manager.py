@@ -12,7 +12,7 @@ from rich.prompt import Prompt, Confirm
 from services.shared.clients import ServiceClients
 from services.shared.credentials import get_secret
 
-from .shared_utils import (
+from ..shared_utils import (
     get_default_timeout,
     get_cli_clients,
     create_menu_table,

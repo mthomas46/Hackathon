@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Tuple, Callable
 from rich.prompt import Prompt
 
 from services.shared.clients import ServiceClients
-from ..helpers import print_kv, print_list, save_data
+from ...utils.display_helpers import print_kv, print_list, save_data
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
