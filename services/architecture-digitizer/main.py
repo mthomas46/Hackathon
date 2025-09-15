@@ -16,7 +16,7 @@ Dependencies: None (standalone service with external API calls)
 
 from typing import Dict, Any, Optional, List
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form
 from pydantic import BaseModel, field_validator
 
 # ============================================================================
@@ -31,14 +31,22 @@ from services.shared.metrics import (
     get_service_metrics,
     metrics_endpoint,
     record_architecture_digitizer_request,
-    record_architecture_digitizer_api_failure
+    record_architecture_digitizer_api_failure,
+    record_architecture_digitizer_file_upload
 )
 
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
-from .modules.normalizers import get_normalizer
-from .modules.models import NormalizeRequest, NormalizeResponse, SupportedSystemsResponse
+from .modules.normalizers import get_normalizer, get_file_normalizer
+from .modules.models import (
+    NormalizeRequest,
+    NormalizeResponse,
+    FileNormalizeRequest,
+    FileNormalizeResponse,
+    SupportedSystemsResponse,
+    SupportedFileFormatsResponse
+)
 
 # Service configuration constants
 SERVICE_NAME = "architecture-digitizer"
@@ -135,6 +143,105 @@ async def normalize_architecture(request: NormalizeRequest):
             detail=error_msg
         )
 
+@app.post("/normalize-file", response_model=FileNormalizeResponse)
+async def normalize_file_upload(
+    file: UploadFile = File(...),
+    system: str = Form(..., description="Diagram system (miro, figjam, lucid, confluence)"),
+    file_format: str = Form(..., description="File format (json, xml, html)")
+):
+    """Normalize an uploaded diagram file into standardized format.
+
+    Accepts diagram files exported from supported systems and converts them
+    into the common Software Architecture JSON schema.
+    """
+    import time
+    start_time = time.time()
+
+    try:
+        # Validate file size (10MB limit)
+        file_size = 0
+        content = await file.read()
+        file_size = len(content)
+
+        if file_size > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(
+                status_code=413,
+                detail="File too large. Maximum size is 10MB."
+            )
+
+        # Reset file pointer
+        await file.seek(0)
+
+        # Get the appropriate file normalizer for the system
+        file_normalizer = get_file_normalizer(system)
+        if not file_normalizer:
+            record_architecture_digitizer_request(metrics, system, "error")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported system: {system}"
+            )
+
+        # Check if the file format is supported for this system
+        if not file_normalizer.supports_format(file_format):
+            record_architecture_digitizer_request(metrics, system, "error")
+            raise HTTPException(
+                status_code=400,
+                detail=f"File format '{file_format}' not supported for system '{system}'"
+            )
+
+        # Read file content
+        content = await file.read()
+
+        # Normalize the file
+        result = await file_normalizer.normalize_file(content, file.filename, file_format)
+
+        # Record successful metrics
+        duration = time.time() - start_time
+        record_architecture_digitizer_request(metrics, system, "success", duration)
+        record_architecture_digitizer_file_upload(metrics, system, file_format, file_size, "success", duration)
+
+        # Log successful normalization
+        fire_and_forget(
+            "info",
+            f"Successfully normalized {system} file {file.filename} ({file_format})",
+            SERVICE_NAME,
+            {"system": system, "filename": file.filename, "file_format": file_format, "file_size": file_size, "duration": duration}
+        )
+
+        return FileNormalizeResponse(
+            success=True,
+            system=system,
+            file_format=file_format,
+            filename=file.filename,
+            data=result,
+            message=f"File {file.filename} normalized successfully"
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Record failure metrics
+        duration = time.time() - start_time
+        record_architecture_digitizer_request(metrics, system, "error", duration)
+        record_architecture_digitizer_api_failure(metrics, system, type(e).__name__)
+        record_architecture_digitizer_file_upload(metrics, system, file_format, file_size, "error", duration)
+
+        error_msg = f"Failed to normalize {system} file: {str(e)}"
+
+        # Log the error
+        fire_and_forget(
+            "error",
+            error_msg,
+            SERVICE_NAME,
+            {"system": system, "filename": file.filename if 'file' in locals() else "unknown", "file_format": file_format, "file_size": file_size, "error": str(e), "duration": duration}
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=error_msg
+        )
+
 @app.get("/supported-systems", response_model=SupportedSystemsResponse)
 async def get_supported_systems():
     """Get list of supported diagram systems and their capabilities."""
@@ -152,6 +259,26 @@ async def get_supported_systems():
     return SupportedSystemsResponse(
         systems=systems_info,
         count=len(systems_info)
+    )
+
+@app.get("/supported-file-formats/{system}", response_model=SupportedFileFormatsResponse)
+async def get_supported_file_formats(system: str):
+    """Get supported file formats for a specific diagram system."""
+    from .modules.normalizers import get_file_normalizer
+
+    file_normalizer = get_file_normalizer(system)
+    if not file_normalizer:
+        raise HTTPException(
+            status_code=404,
+            detail=f"System '{system}' not found or not supported for file uploads"
+        )
+
+    supported_formats = file_normalizer.get_supported_formats()
+
+    return SupportedFileFormatsResponse(
+        system=system,
+        supported_formats=supported_formats,
+        count=len(supported_formats)
     )
 
 # ============================================================================
