@@ -10,6 +10,7 @@ Responsibilities:
 - Analyze consistency across provider responses
 - Support rate limiting via environment configuration
 - Handle provider fallback and error recovery
+- Record job data to frontend cache for visualization and monitoring
 
 Dependencies: shared middlewares, httpx for HTTP requests, optional Bedrock SDK.
 """
@@ -168,6 +169,40 @@ async def summarize_ensemble(req: SummarizeRequest):
 
     # Normalize responses to common structure
     normalized_results = response_processor.normalize_response(provider_summaries)
+
+    # Record job in frontend cache for visualization
+    try:
+        import time
+        start_time = time.time()
+        # Simulate execution time calculation (in a real implementation, you'd track this)
+        execution_time = time.time() - start_time
+
+        # Extract models from providers
+        models = {}
+        for provider_config in req.providers:
+            if provider_config.model:
+                models[provider_config.name] = provider_config.model
+
+        # Record the job
+        frontend_url = get_config_value("FRONTEND_URL", "http://frontend:3000", section="summarizer_hub", env_key="FRONTEND_URL")
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            await client.post(f"{frontend_url}/api/summarizer/record-job", json={
+                "job_id": f"ensemble_{int(time.time())}",
+                "text_length": len(req.text),
+                "providers": [p.name for p in req.providers],
+                "models": models,
+                "prompt": req.prompt,
+                "execution_time": execution_time,
+                "results": {
+                    "summaries": provider_summaries,
+                    "normalized": normalized_results
+                },
+                "consistency_analysis": consistency_analysis
+            })
+    except Exception as e:
+        # Don't fail the summarization if caching fails
+        fire_and_forget("warning", "cache_recording_failed", ServiceNames.SUMMARIZER_HUB, {"error": str(e)})
 
     return {
         "summaries": provider_summaries,
