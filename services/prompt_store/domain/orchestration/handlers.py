@@ -3,7 +3,7 @@
 from typing import Dict, Any
 from ...core.handler import BaseHandler
 from .service import PromptOrchestrator
-from ...shared.responses import create_success_response, create_error_response
+from services.shared.responses import create_success_response, create_error_response
 
 
 class OrchestrationHandlers(BaseHandler):

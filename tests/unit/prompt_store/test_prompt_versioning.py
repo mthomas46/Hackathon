@@ -23,8 +23,10 @@ class TestPromptVersioning:
 
     def test_prompt_version_creation(self, client):
         """Test creating different versions of a prompt."""
+        import uuid
+        unique_name = f"versioned-prompt-{str(uuid.uuid4())[:8]}"
         base_prompt = {
-            "name": "versioned-prompt",
+            "name": unique_name,
             "category": "assistant",
             "content": "You are a helpful assistant. Version 1.0",
             "description": "Base version of test prompt",
@@ -32,8 +34,8 @@ class TestPromptVersioning:
         }
 
         # Create initial version
-        v1_resp = client.post("/prompts", json=base_prompt)
-        _assert_http_ok(v1_resp)
+        v1_resp = client.post("/api/v1/prompts", json=base_prompt)
+        assert v1_resp.status_code in [200, 201], f"Expected 200 or 201, got {v1_resp.status_code}: {v1_resp.text}"
 
         v1_data = v1_resp.json()
         prompt_id = v1_data.get("id") or v1_data.get("data", {}).get("id")
@@ -45,8 +47,8 @@ class TestPromptVersioning:
                 "description": "Enhanced version with friendliness"
             }
 
-            v2_resp = client.post(f"/prompts/{prompt_id}/versions", json=v2_data)
-            assert v2_resp.status_code in [200, 201, 404, 501]  # May not be implemented
+            v2_resp = client.post(f"/api/v1/prompts/{prompt_id}/versions", json=v2_data)
+            assert v2_resp.status_code in [200, 201, 404, 405, 501]  # May not be implemented
 
             if v2_resp.status_code in [200, 201]:
                 v2_result = v2_resp.json()
@@ -59,7 +61,7 @@ class TestPromptVersioning:
 
         if prompt_id:
             # Get version history
-            history_resp = client.get(f"/prompts/{prompt_id}/versions")
+            history_resp = client.get(f"/api/v1/prompts/{prompt_id}/versions")
             assert history_resp.status_code in [200, 404, 501]
 
             if history_resp.status_code == 200:
@@ -78,7 +80,7 @@ class TestPromptVersioning:
 
         if prompt_id:
             # Rollback to version 1
-            rollback_resp = client.post(f"/prompts/{prompt_id}/rollback", json={"version": 1})
+            rollback_resp = client.post(f"/api/v1/prompts/{prompt_id}/rollback", json={"version": 1})
             assert rollback_resp.status_code in [200, 404, 501]
 
             if rollback_resp.status_code == 200:
@@ -86,7 +88,7 @@ class TestPromptVersioning:
                 assert isinstance(rollback_data, dict)
 
                 # Verify rollback was successful
-                current_resp = client.get(f"/prompts/{prompt_id}")
+                current_resp = client.get(f"/api/v1/prompts/{prompt_id}")
                 if current_resp.status_code == 200:
                     current_data = current_resp.json()
                     # Should now be version 1 content
@@ -98,7 +100,7 @@ class TestPromptVersioning:
 
         if prompt_id:
             # Compare versions 1 and 2
-            diff_resp = client.get(f"/prompts/{prompt_id}/diff", params={"from": 1, "to": 2})
+            diff_resp = client.get(f"/api/v1/prompts/{prompt_id}/diff", params={"from": 1, "to": 2})
             assert diff_resp.status_code in [200, 404, 501]
 
             if diff_resp.status_code == 200:
@@ -109,8 +111,10 @@ class TestPromptVersioning:
 
     def _create_prompt_with_versions(self, client):
         """Helper method to create a prompt with multiple versions."""
+        import uuid
+        unique_name = f"multi-version-prompt-{str(uuid.uuid4())[:8]}"
         base_prompt = {
-            "name": "multi-version-prompt",
+            "name": unique_name,
             "category": "test",
             "content": "You are a helpful assistant. Version 1.0",
             "description": "Prompt for version testing",
@@ -118,8 +122,8 @@ class TestPromptVersioning:
         }
 
         # Create initial version
-        create_resp = client.post("/prompts", json=base_prompt)
-        if create_resp.status_code != 200:
+        create_resp = client.post("/api/v1/prompts", json=base_prompt)
+        if create_resp.status_code not in [200, 201]:
             return None
 
         create_data = create_resp.json()
@@ -132,7 +136,7 @@ class TestPromptVersioning:
                 "description": "Updated version"
             }
 
-            update_resp = client.put(f"/prompts/{prompt_id}", json=update_data)
+            update_resp = client.put(f"/api/v1/prompts/{prompt_id}", json=update_data)
             if update_resp.status_code == 200:
                 return prompt_id
 

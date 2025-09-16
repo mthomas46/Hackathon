@@ -2,7 +2,7 @@
 
 Handles document validation, processing, and business rules.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from ...core.service import BaseService
 from ...core.entities import Document
 from .repository import DocumentRepository

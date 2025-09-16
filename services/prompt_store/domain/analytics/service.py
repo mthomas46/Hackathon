@@ -10,8 +10,8 @@ from .entities import PromptPerformanceMetrics, UserSatisfactionScore
 from .repository import AnalyticsRepository
 from ...core.service import BaseService
 from ...infrastructure.cache import prompt_store_cache
-from ...shared.clients import ServiceClients
-from ...shared.utilities import generate_id, utc_now
+from services.shared.clients import ServiceClients
+from services.shared.utilities import generate_id, utc_now
 
 
 class AnalyticsService(BaseService[PromptPerformanceMetrics]):

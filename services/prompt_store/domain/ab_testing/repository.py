@@ -177,6 +177,60 @@ class ABTestRepository(BaseRepository[ABTest]):
 
         return test.prompt_a_id if selected == "A" else test.prompt_b_id
 
+    def create_ab_test(self, test_data: Dict[str, Any]) -> ABTest:
+        """Create a new A/B test."""
+        from services.prompt_store.core.entities import ABTest
+        import uuid
+
+        # Create ABTest entity
+        ab_test = ABTest(
+            name=test_data["name"],
+            description=test_data.get("description", ""),
+            prompt_a_id=test_data["prompt_a_id"],
+            prompt_b_id=test_data["prompt_b_id"],
+            test_metric=test_data.get("test_metric", "response_quality"),
+            is_active=test_data.get("is_active", True),
+            traffic_split=test_data.get("traffic_percentage", 50) / 100.0,  # Convert percentage to decimal
+            target_audience=test_data.get("target_audience", {}),
+            created_by=test_data["created_by"],
+            status=test_data.get("status", "active"),
+            traffic_percentage=test_data.get("traffic_percentage", 50)
+        )
+
+        # Set ID if not provided
+        if not ab_test.id:
+            ab_test.id = str(uuid.uuid4())
+
+        # Save to database
+        return self.save(ab_test)
+
+    def get_ab_test(self, test_id: str) -> Optional[ABTest]:
+        """Get A/B test by ID (alias for get_by_id)."""
+        return self.get_by_id(test_id)
+
+    def record_test_result(self, test_id: str, prompt_id: str, metric_value: float,
+                          sample_size: int = 1, session_id: Optional[str] = None) -> ABTestResult:
+        """Record a test result for an A/B test."""
+        from services.prompt_store.core.entities import ABTestResult
+        import uuid
+
+        result = ABTestResult(
+            test_id=test_id,
+            prompt_id=prompt_id,
+            metric_value=metric_value,
+            sample_size=sample_size,
+            confidence_level=0.0,  # Will be calculated later
+            statistical_significance=False  # Will be calculated later
+        )
+
+        # Set ID if not provided
+        if not result.id:
+            result.id = str(uuid.uuid4())
+
+        # Save to database
+        result_repo = ABTestResultRepository()
+        return result_repo.save(result)
+
 
 class ABTestResultRepository:
     """Repository for A/B test result entities."""

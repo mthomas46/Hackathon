@@ -128,26 +128,30 @@ class TestRelationshipsRepository:
 class TestRelationshipsService:
     """Test RelationshipsService business logic."""
 
-    def test_create_relationship_success(self, prompt_store_db):
+    @pytest.mark.asyncio
+    async def test_create_relationship_success(self, prompt_store_db):
         """Test successful relationship creation through service."""
+        import uuid
+        unique_id = str(uuid.uuid4())[:8]
+
         from services.prompt_store.domain.prompts.service import PromptService
         prompt_service = PromptService()
 
         prompt1 = prompt_service.create_entity({
-            "name": "service_source",
+            "name": f"service_source_{unique_id}",
             "category": "test",
             "content": "Source content",
             "created_by": "test_user"
         })
         prompt2 = prompt_service.create_entity({
-            "name": "service_target",
+            "name": f"service_target_{unique_id}",
             "category": "test",
             "content": "Target content",
             "created_by": "test_user"
         })
 
         service = RelationshipsService()
-        result = service.create_relationship(
+        result = await service.create_relationship(
             prompt1.id,
             {
                 "target_prompt_id": prompt2.id,
@@ -207,7 +211,8 @@ class TestRelationshipsService:
 class TestRelationshipsHandlers:
     """Test RelationshipsHandlers HTTP operations."""
 
-    def test_handle_create_relationship_success(self):
+    @pytest.mark.asyncio
+    async def test_handle_create_relationship_success(self):
         """Test successful relationship creation handler."""
         handlers = RelationshipsHandlers()
 
@@ -226,7 +231,7 @@ class TestRelationshipsHandlers:
                 strength=0.8
             )
 
-            result = handlers.handle_create_relationship("source_id", relationship_data)
+            result = await handlers.handle_create_relationship("source_id", relationship_data)
 
             assert result["success"] is True
             assert result["data"]["relationship_type"] == "extends"

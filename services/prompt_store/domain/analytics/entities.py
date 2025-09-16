@@ -23,6 +23,10 @@ class PromptPerformanceMetrics(BaseEntity):
     cost_estimate_usd: float = 0.0
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
         return {
@@ -45,6 +49,29 @@ class PromptPerformanceMetrics(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PromptPerformanceMetrics':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            total_requests=data.get("total_requests", 0),
+            successful_requests=data.get("successful_requests", 0),
+            failed_requests=data.get("failed_requests", 0),
+            average_response_time_ms=data.get("average_response_time_ms", 0.0),
+            median_response_time_ms=data.get("median_response_time_ms", 0.0),
+            p95_response_time_ms=data.get("p95_response_time_ms", 0.0),
+            p99_response_time_ms=data.get("p99_response_time_ms", 0.0),
+            total_tokens_used=data.get("total_tokens_used", 0),
+            average_tokens_per_request=data.get("average_tokens_per_request", 0.0),
+            cost_estimate_usd=data.get("cost_estimate_usd", 0.0),
+            last_updated=datetime.fromisoformat(data["last_updated"]) if isinstance(data.get("last_updated"), str) else datetime.utcnow(),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )
+
 
 @dataclass
 class UserSatisfactionScore(BaseEntity):
@@ -57,6 +84,10 @@ class UserSatisfactionScore(BaseEntity):
     context_tags: List[str] = field(default_factory=list)
     response_quality_score: Optional[float] = None  # AI-assessed quality
     use_case_category: str = "general"
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -74,6 +105,24 @@ class UserSatisfactionScore(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UserSatisfactionScore':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            user_id=data["user_id"],
+            session_id=data["session_id"],
+            rating=data["rating"],
+            feedback_text=data.get("feedback_text"),
+            context_tags=data.get("context_tags", []),
+            response_quality_score=data.get("response_quality_score"),
+            use_case_category=data.get("use_case_category", "general"),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )
+
 
 @dataclass
 class PromptOptimizationSuggestion(BaseEntity):
@@ -89,6 +138,10 @@ class PromptOptimizationSuggestion(BaseEntity):
     implemented: bool = False
     implemented_at: Optional[datetime] = None
     implementation_result: Optional[Dict[str, Any]] = None
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -109,6 +162,27 @@ class PromptOptimizationSuggestion(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PromptOptimizationSuggestion':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            current_version=data["current_version"],
+            suggestion_type=data["suggestion_type"],
+            confidence_score=data["confidence_score"],
+            suggestion_text=data["suggestion_text"],
+            proposed_changes=data.get("proposed_changes"),
+            expected_impact=data["expected_impact"],
+            llm_service_used=data["llm_service_used"],
+            implemented=data.get("implemented", False),
+            implemented_at=datetime.fromisoformat(data["implemented_at"]) if isinstance(data.get("implemented_at"), str) else None,
+            implementation_result=data.get("implementation_result"),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )
+
 
 @dataclass
 class PromptEvolutionMetrics(BaseEntity):
@@ -122,6 +196,10 @@ class PromptEvolutionMetrics(BaseEntity):
     user_satisfaction_change: Optional[float] = None
     token_efficiency_change: Optional[float] = None
     cost_savings_usd: Optional[float] = None
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -140,6 +218,25 @@ class PromptEvolutionMetrics(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PromptEvolutionMetrics':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            from_version=data["from_version"],
+            to_version=data["to_version"],
+            change_type=data["change_type"],
+            performance_delta=data["performance_delta"],
+            quality_improvement_score=data["quality_improvement_score"],
+            user_satisfaction_change=data.get("user_satisfaction_change"),
+            token_efficiency_change=data.get("token_efficiency_change"),
+            cost_savings_usd=data.get("cost_savings_usd"),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )
+
 
 @dataclass
 class CostOptimizationMetrics(BaseEntity):
@@ -152,6 +249,10 @@ class CostOptimizationMetrics(BaseEntity):
     optimization_opportunities: List[Dict[str, Any]] = field(default_factory=list)
     cost_trend: str = "stable"  # "increasing", "decreasing", "stable"
     projected_monthly_savings: Optional[float] = None
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -168,6 +269,24 @@ class CostOptimizationMetrics(BaseEntity):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'CostOptimizationMetrics':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            total_cost_usd=data["total_cost_usd"],
+            cost_per_request_usd=data["cost_per_request_usd"],
+            token_efficiency_score=data["token_efficiency_score"],
+            optimization_opportunities=data.get("optimization_opportunities", []),
+            cost_trend=data.get("cost_trend", "stable"),
+            projected_monthly_savings=data.get("projected_monthly_savings"),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )
 
 
 @dataclass
@@ -202,6 +321,26 @@ class BiasDetectionResult(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'BiasDetectionResult':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            bias_type=data["bias_type"],
+            severity_score=data["severity_score"],
+            detected_phrases=data["detected_phrases"],
+            suggested_alternatives=data["suggested_alternatives"],
+            confidence_score=data["confidence_score"],
+            analysis_method=data["analysis_method"],
+            resolved=data.get("resolved", False),
+            resolved_at=datetime.fromisoformat(data["resolved_at"]) if isinstance(data.get("resolved_at"), str) else None,
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )
+
 
 @dataclass
 class PromptTestingResult(BaseEntity):
@@ -217,6 +356,10 @@ class PromptTestingResult(BaseEntity):
     expected_output_similarity: float  # How close to expected result
     error_message: Optional[str] = None
     test_metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -236,3 +379,24 @@ class PromptTestingResult(BaseEntity):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PromptTestingResult':
+        """Create entity from dictionary representation."""
+        from datetime import datetime
+        return cls(
+            id=data.get("id"),
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            test_suite_id=data["test_suite_id"],
+            test_case_id=data["test_case_id"],
+            test_name=data["test_name"],
+            passed=data["passed"],
+            execution_time_ms=data["execution_time_ms"],
+            output_quality_score=data["output_quality_score"],
+            expected_output_similarity=data["expected_output_similarity"],
+            error_message=data.get("error_message"),
+            test_metadata=data.get("test_metadata", {}),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+        )

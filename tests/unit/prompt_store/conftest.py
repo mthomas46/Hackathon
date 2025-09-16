@@ -13,13 +13,13 @@ from services.prompt_store.db.schema import init_database
 from services.prompt_store.db.connection import get_prompt_store_connection
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def temp_db_path():
-    """Create a temporary database path for testing."""
+    """Create a temporary database path for each test to ensure isolation."""
     with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
         temp_path = f.name
 
-    # Set environment variable for the test session
+    # Set environment variable for this test
     original_db = os.environ.get("PROMPT_STORE_DB")
     os.environ["PROMPT_STORE_DB"] = temp_path
 
@@ -35,9 +35,31 @@ def temp_db_path():
     Path(temp_path).unlink(missing_ok=True)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def prompt_store_db(temp_db_path):
-    """Initialize the prompt_store database for testing."""
+    """Initialize the prompt_store database for each test."""
+    # Drop existing tables to ensure clean schema
+    conn = get_prompt_store_connection()
+    cursor = conn.cursor()
+
+    # Drop tables if they exist (for clean schema updates)
+    tables_to_drop = [
+        'cost_optimization_metrics', 'prompt_evolution_metrics', 'prompt_optimization_suggestions',
+        'user_satisfaction_scores', 'prompt_performance_metrics', 'prompt_testing_results',
+        'bias_detection_results', 'notifications', 'webhook_deliveries', 'webhooks',
+        'bulk_operations', 'prompt_relationships', 'prompt_usage', 'ab_test_results',
+        'ab_tests', 'prompt_versions', 'prompts', 'prompts_fts'
+    ]
+
+    for table in tables_to_drop:
+        try:
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
+        except Exception:
+            pass  # Table might not exist
+
+    conn.commit()
+    conn.close()
+
     # Initialize database schema
     init_database()
 

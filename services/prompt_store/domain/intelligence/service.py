@@ -2,8 +2,8 @@
 
 import re
 from typing import Dict, Any, List, Optional
-from ...shared.clients import ServiceClients
-from ...shared.utilities import generate_id, utc_now
+from services.shared.clients import ServiceClients
+from services.shared.utilities import generate_id, utc_now
 
 
 class IntelligenceService:

@@ -128,7 +128,7 @@ class PromptHandlers(BaseHandler):
                 data=result
             )
         except Exception as e:
-            error_response = create_error_response(f"Failed to list prompts: {str(e)}", "INTERNAL_ERROR")
+            return create_error_response(f"Failed to list prompts: {str(e)}", "INTERNAL_ERROR")
 
     async def handle_search_prompts(self, query: str, category: Optional[str] = None,
                                    tags: Optional[List[str]] = None, limit: int = 50) -> Dict[str, Any]:

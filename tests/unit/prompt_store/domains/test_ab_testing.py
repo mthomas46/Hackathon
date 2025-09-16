@@ -16,20 +16,23 @@ from services.prompt_store.core.models import ABTestCreate
 class TestABTestRepository:
     """Test ABTestRepository operations."""
 
-    def test_create_ab_test_success(self, prompt_store_db):
+    def test_create_ab_test_success(self, prompt_store_db, clean_db):
         """Test successful A/B test creation."""
         from services.prompt_store.domain.prompts.service import PromptService
+        import uuid
+
         prompt_service = PromptService()
 
-        # Create test prompts
+        # Create test prompts with unique names
+        unique_id = str(uuid.uuid4())[:8]
         prompt_a = prompt_service.create_entity({
-            "name": "ab_test_prompt_a",
+            "name": f"ab_test_prompt_a_{unique_id}",
             "category": "test",
             "content": "Version A content",
             "created_by": "test_user"
         })
         prompt_b = prompt_service.create_entity({
-            "name": "ab_test_prompt_b",
+            "name": f"ab_test_prompt_b_{unique_id}",
             "category": "test",
             "content": "Version B content",
             "created_by": "test_user"
@@ -37,7 +40,7 @@ class TestABTestRepository:
 
         repo = ABTestRepository()
         test_data = {
-            "name": "test_ab_experiment",
+            "name": f"test_ab_experiment_{unique_id}",
             "description": "A/B test for prompt effectiveness",
             "prompt_a_id": prompt_a.id,
             "prompt_b_id": prompt_b.id,
@@ -46,7 +49,7 @@ class TestABTestRepository:
         }
 
         ab_test = repo.create_ab_test(test_data)
-        assert ab_test.name == "test_ab_experiment"
+        assert ab_test.name == f"test_ab_experiment_{unique_id}"
         assert ab_test.prompt_a_id == prompt_a.id
         assert ab_test.prompt_b_id == prompt_b.id
         assert ab_test.traffic_percentage == 50
@@ -225,11 +228,12 @@ class TestABTestService:
 class TestABTestHandlers:
     """Test ABTestHandlers HTTP operations."""
 
-    def test_handle_create_ab_test_success(self):
+    @pytest.mark.asyncio
+    async def test_handle_create_ab_test_success(self):
         """Test successful A/B test creation handler."""
         handlers = ABTestHandlers()
 
-        with patch.object(handlers.ab_test_service, 'create_ab_test') as mock_create:
+        with patch.object(handlers.service, 'create_ab_test') as mock_create:
             mock_create.return_value = {
                 "id": "test_ab_test_id",
                 "name": "test_experiment",
@@ -244,17 +248,18 @@ class TestABTestHandlers:
                 traffic_percentage=50
             )
 
-            result = handlers.handle_create_ab_test(test_data)
+            result = await handlers.handle_create_ab_test(test_data)
 
-            assert result["success"] is True
-            assert result["data"]["name"] == "test_experiment"
+            assert result.success is True
+            assert result.data["name"] == "test_experiment"
             mock_create.assert_called_once()
 
-    def test_handle_get_ab_test_success(self):
+    @pytest.mark.asyncio
+    async def test_handle_get_ab_test_success(self):
         """Test successful A/B test retrieval handler."""
         handlers = ABTestHandlers()
 
-        with patch.object(handlers.ab_test_service, 'get_ab_test') as mock_get:
+        with patch.object(handlers.service, 'get_ab_test') as mock_get:
             mock_get.return_value = {
                 "id": "test_id",
                 "name": "test_experiment",
@@ -262,37 +267,39 @@ class TestABTestHandlers:
                 "traffic_percentage": 50
             }
 
-            result = handlers.handle_get_ab_test("test_id")
+            result = await handlers.handle_get_ab_test("test_id")
 
-            assert result["success"] is True
-            assert result["data"]["status"] == "active"
+            assert result.success is True
+            assert result.data["status"] == "active"
             mock_get.assert_called_once_with("test_id")
 
-    def test_handle_select_variant_success(self):
+    @pytest.mark.asyncio
+    async def test_handle_select_variant_success(self):
         """Test successful variant selection handler."""
         handlers = ABTestHandlers()
 
-        with patch.object(handlers.ab_test_service, 'select_prompt_variant') as mock_select:
+        with patch.object(handlers.service, 'select_prompt_variant') as mock_select:
             mock_select.return_value = "prompt_a_id"
 
-            result = handlers.handle_select_variant("test_id", "user_123")
+            result = await handlers.handle_select_variant("test_id", "user_123")
 
-            assert result["success"] is True
-            assert result["data"]["selected_prompt_id"] == "prompt_a_id"
+            assert result.success is True
+            assert result.data["selected_prompt_id"] == "prompt_a_id"
             mock_select.assert_called_once_with("test_id", "user_123")
 
-    def test_handle_get_test_results_success(self):
+    @pytest.mark.asyncio
+    async def test_handle_get_test_results_success(self):
         """Test successful test results retrieval handler."""
         handlers = ABTestHandlers()
 
-        with patch.object(handlers.ab_test_service, 'get_test_results') as mock_results:
+        with patch.object(handlers.service, 'get_ab_test_results') as mock_results:
             mock_results.return_value = [
                 {"metric_value": 0.85, "sample_size": 100},
                 {"metric_value": 0.90, "sample_size": 150}
             ]
 
-            result = handlers.handle_get_test_results("test_id")
+            result = await handlers.handle_get_test_results("test_id")
 
-            assert result["success"] is True
-            assert len(result["data"]["results"]) == 2
+            assert result.success is True
+            assert len(result.data["results"]) == 2
             mock_results.assert_called_once_with("test_id")

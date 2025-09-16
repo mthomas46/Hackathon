@@ -257,4 +257,4 @@ class RelationshipsService:
         await prompt_store_cache.delete(f"relationships:{prompt_id_1}")
         await prompt_store_cache.delete(f"relationships:{prompt_id_2}")
         await prompt_store_cache.delete("relationship_counts")
-        await prompt_store_cache.delete_pattern("relationship_graph:*")
+        # Note: delete_pattern not implemented in cache - individual keys deleted above

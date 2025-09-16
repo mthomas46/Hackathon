@@ -1,9 +1,9 @@
 """Intelligence handlers for cross-service prompt generation."""
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from ...core.handler import BaseHandler
 from .service import IntelligenceService
-from ...shared.responses import create_success_response, create_error_response
+from services.shared.responses import create_success_response, create_error_response
 
 
 class IntelligenceHandlers(BaseHandler):

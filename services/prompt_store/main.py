@@ -11,7 +11,7 @@ import asyncio
 # SHARED MODULES - Optimized import consolidation
 # ============================================================================
 from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.responses import create_success_response, create_error_response, SuccessResponse
 from services.shared.error_handling import ServiceException, install_error_handlers
 from services.shared.constants_new import ServiceNames
 from services.shared.utilities import setup_common_middleware, attach_self_register
@@ -108,19 +108,23 @@ async def get_prompt(prompt_id: str):
     """Get a single prompt by ID."""
     return await prompt_handlers.handle_get_prompt(prompt_id)
 
-@app.get("/api/v1/prompts", response_model=Dict[str, Any])
+@app.get("/api/v1/prompts", response_model=SuccessResponse)
 async def list_prompts(
     category: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    **filters
+    filters: Optional[Dict[str, Any]] = None
 ):
     """List prompts with filtering and pagination."""
+    if filters is None:
+        filters = {}
     return await prompt_handlers.handle_list_prompts(category, limit, offset, **filters)
 
-@app.get("/api/v1/prompts/search/{category}/{name}", response_model=Dict[str, Any])
-async def get_prompt_by_name(category: str, name: str, **variables):
+@app.get("/api/v1/prompts/search/{category}/{name}", response_model=SuccessResponse)
+async def get_prompt_by_name(category: str, name: str, variables: Optional[Dict[str, Any]] = None):
     """Get prompt by category/name and optionally fill template variables."""
+    if variables is None:
+        variables = {}
     return await prompt_handlers.handle_get_prompt_by_name(category, name, **variables)
 
 @app.put("/api/v1/prompts/{prompt_id}", response_model=Dict[str, Any])
@@ -128,7 +132,7 @@ async def update_prompt(prompt_id: str, updates: PromptUpdate):
     """Update a prompt with validation."""
     return await prompt_handlers.handle_update_prompt(prompt_id, updates)
 
-@app.delete("/api/v1/prompts/{prompt_id}", response_model=Dict[str, Any])
+@app.delete("/api/v1/prompts/{prompt_id}", response_model=SuccessResponse)
 async def delete_prompt(prompt_id: str):
     """Soft delete a prompt."""
     return await prompt_handlers.handle_delete_prompt(prompt_id)
@@ -137,9 +141,11 @@ async def delete_prompt(prompt_id: str):
 # ADVANCED PROMPT FEATURES
 # ============================================================================
 
-@app.post("/api/v1/prompts/{prompt_id}/fork", response_model=Dict[str, Any])
-async def fork_prompt(prompt_id: str, new_name: str, created_by: str = "api_user", **changes):
+@app.post("/api/v1/prompts/{prompt_id}/fork", response_model=SuccessResponse)
+async def fork_prompt(prompt_id: str, new_name: str, created_by: str = "api_user", changes: Optional[Dict[str, Any]] = None):
     """Fork a prompt to create a new variant."""
+    if changes is None:
+        changes = {}
     return await prompt_handlers.handle_fork_prompt(prompt_id, new_name, created_by, **changes)
 
 @app.put("/api/v1/prompts/{prompt_id}/content", response_model=Dict[str, Any])
@@ -287,10 +293,10 @@ async def list_active_refinements(user_id: Optional[str] = None):
 # ANALYTICS ENDPOINTS
 # ============================================================================
 
-@app.get("/api/v1/analytics/summary", response_model=Dict[str, Any])
+@app.get("/api/v1/analytics/summary", response_model=SuccessResponse)
 async def get_analytics_summary(days_back: int = 30):
     """Get comprehensive analytics summary."""
-    return await analytics_handlers.handle_get_analytics_summary(days_back)
+    return await analytics_handlers.handle_get_analytics_dashboard(days_back)
 
 @app.get("/api/v1/analytics/prompts/{prompt_id}", response_model=Dict[str, Any])
 async def get_prompt_analytics(prompt_id: str, days_back: int = 30):
@@ -311,7 +317,7 @@ async def create_ab_test(test_data: ABTestCreate):
     """Create a new A/B test."""
     return await ab_test_handlers.handle_create_ab_test(test_data)
 
-@app.get("/api/v1/ab-tests", response_model=Dict[str, Any])
+@app.get("/api/v1/ab-tests", response_model=SuccessResponse)
 async def list_ab_tests(limit: int = 50, offset: int = 0):
     """List A/B tests."""
     return await ab_test_handlers.handle_list_ab_tests(limit, offset)
