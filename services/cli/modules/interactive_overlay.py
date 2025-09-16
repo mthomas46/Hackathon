@@ -27,6 +27,17 @@ class InteractiveOverlay:
         self.use_custom_styling = True
         self.auto_health_checks = True
 
+        # Performance enhancements
+        self.menu_cache = {}  # Cache rendered menus
+        self.health_cache = {}  # Cache service health status
+        self.cache_ttl = 300  # 5 minute cache TTL
+        self.last_cache_update = 0
+
+        # Advanced UX features
+        self.command_history = []
+        self.favorites = set()
+        self.usage_stats = {}
+
     async def enhanced_menu_loop(
         self,
         manager: BaseManager,
@@ -34,12 +45,13 @@ class InteractiveOverlay:
         menu_items: Optional[List[Tuple[str, str]]] = None,
         back_option: str = "b",
         enable_shortcuts: bool = True,
-        enable_search: bool = True
+        enable_search: bool = True,
+        enable_cache: bool = True
     ) -> None:
         """Enhanced menu loop with questionary for better UX."""
 
-        # Get menu items from manager if not provided
-        items = menu_items if menu_items is not None else await manager.get_main_menu()
+        # Performance: Async menu loading with caching
+        items = await self._load_menu_items_cached(manager, title, menu_items, enable_cache)
 
         # Add back option
         display_items = [f"{key}: {desc}" for key, desc in items]
@@ -79,9 +91,9 @@ class InteractiveOverlay:
 
                 # Handle the choice
                 if await manager.handle_submenu_choice(choice):
-                    # Show success feedback
+                    # Show success feedback with operation name
                     if choice not in ["h", "help"]:
-                        await self._show_success_feedback()
+                        await self._show_success_feedback(f"Menu selection ({choice})")
 
             except KeyboardInterrupt:
                 self.console.print("\n[yellow]⚠️  Operation interrupted by user[/yellow]")
@@ -154,7 +166,7 @@ class InteractiveOverlay:
             menu_info.append(f"  {key}", style="bold green")
             menu_info.append(f" → {desc}\n", style="white")
 
-        # Add navigation guide
+        # Add navigation guide with visual enhancements
         guide_parts = []
         guide_parts.append("💡 Navigation: ↑↓ arrows, Enter to select")
 
@@ -168,6 +180,20 @@ class InteractiveOverlay:
 
         menu_info.append(f"\n[dim]{' | '.join(guide_parts)}[/dim]", style="dim cyan")
 
+        # Add usage stats and favorites indicators
+        if self.usage_stats:
+            popular = self.get_popular_commands(1)
+            if popular:
+                menu_info.append(f"\n[dim]⭐ Popular: {popular[0]}[/dim]", style="dim yellow")
+
+        # Add cache status indicator
+        if enable_cache:
+            # Check cache status synchronously
+            current_time = asyncio.get_event_loop().time()
+            cache_fresh = current_time - self.last_cache_update < self.cache_ttl
+            cache_status = "🟢" if cache_fresh else "🟡"
+            menu_info.append(f" [dim]{cache_status} Cached[/dim]", style="dim green")
+
         panel = Panel(
             menu_info,
             title="[bold blue]🎮 Interactive Menu[/bold blue]",
@@ -177,14 +203,67 @@ class InteractiveOverlay:
 
         self.console.print(panel)
 
-    async def _show_success_feedback(self) -> None:
-        """Show enhanced success feedback after operation."""
+    async def _load_menu_items_cached(self, manager: BaseManager, title: str,
+                                    menu_items: Optional[List[Tuple[str, str]]], enable_cache: bool) -> List[Tuple[str, str]]:
+        """Load menu items with caching for better performance."""
+        cache_key = f"{title}_{manager.__class__.__name__}"
+
+        # Check cache if enabled
+        if enable_cache and cache_key in self.menu_cache:
+            cached_time, cached_items = self.menu_cache[cache_key]
+            if asyncio.get_event_loop().time() - cached_time < self.cache_ttl:
+                return cached_items
+
+        # Load fresh menu items
+        items = menu_items if menu_items is not None else await manager.get_main_menu()
+
+        # Cache the result if enabled
+        if enable_cache:
+            self.menu_cache[cache_key] = (asyncio.get_event_loop().time(), items)
+
+        return items
+
+    async def _check_cache_validity(self) -> bool:
+        """Check if caches need to be invalidated."""
+        current_time = asyncio.get_event_loop().time()
+        if current_time - self.last_cache_update > self.cache_ttl:
+            self.menu_cache.clear()
+            self.health_cache.clear()
+            self.last_cache_update = current_time
+            return False
+        return True
+
+    def add_to_favorites(self, manager_name: str, menu_item: str):
+        """Add a menu item to favorites for quick access."""
+        self.favorites.add(f"{manager_name}:{menu_item}")
+
+    def is_favorite(self, manager_name: str, menu_item: str) -> bool:
+        """Check if a menu item is favorited."""
+        return f"{manager_name}:{menu_item}" in self.favorites
+
+    def record_command_usage(self, command: str):
+        """Record command usage for analytics."""
+        self.command_history.append({
+            'command': command,
+            'timestamp': asyncio.get_event_loop().time(),
+            'count': self.usage_stats.get(command, 0) + 1
+        })
+        self.usage_stats[command] = self.usage_stats.get(command, 0) + 1
+
+    def get_popular_commands(self, limit: int = 5) -> List[str]:
+        """Get most popular commands based on usage."""
+        return sorted(self.usage_stats.keys(),
+                     key=lambda x: self.usage_stats[x],
+                     reverse=True)[:limit]
+
+    async def _show_success_feedback(self, operation: str = "Operation") -> None:
+        """Show enhanced success feedback after operation with visual indicators."""
         try:
-            # Enhanced success feedback with animation
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: questionary.print("✅ Operation completed successfully!", style="bold green")
-            )
+            # Show success indicator
+            self.show_status_indicator("success", f"{operation} completed successfully!")
+
+            # Record command usage for analytics
+            self.record_command_usage(operation)
 
             # Show helpful tip (if enabled)
             if self.show_tips:
@@ -206,17 +285,13 @@ class InteractiveOverlay:
 
             await asyncio.sleep(0.8)  # Brief pause for user to read
         except Exception:
-            # Enhanced fallback with tips
-            self.console.print("[green]✅ Operation completed successfully![/green]")
+            # Enhanced fallback with visual indicators
+            self.show_status_indicator("success", "Operation completed successfully!")
 
             # Show tip in fallback mode too
             import random
-            if random.random() < 0.2:  # 20% chance in fallback
-                tip = random.choice([
-                    "[dim cyan]💡 Tip: Press 's' for service health status[/dim]",
-                    "[dim cyan]💡 Tip: Use main menu numbers for quick access[/dim]"
-                ])
-                self.console.print(tip)
+            if self.show_tips and random.random() < 0.2:  # 20% chance in fallback
+                self.show_status_indicator("info", "Tip: Press 's' for service health status")
 
             from rich.prompt import Prompt
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
@@ -268,6 +343,7 @@ class InteractiveOverlay:
             )
 
             if "Settings" in choice:
+                await self._show_loading_spinner("Redirecting to Settings...")
                 self.console.print("[green]✅ Redirecting to Settings for service diagnostics...[/green]")
                 return False  # Will redirect to settings
             elif "Continue" in choice:
@@ -284,6 +360,58 @@ class InteractiveOverlay:
             self.console.print("[cyan]💡 Recommended: Check service status in Settings menu[/cyan]")
             self.console.print("[dim]   Run: python3 run_cli.py interactive → press 's'[/dim]")
             return False
+
+    async def _show_loading_spinner(self, message: str, duration: float = 1.0):
+        """Show a loading spinner with message."""
+        try:
+            from rich.spinner import Spinner
+            from rich.live import Live
+
+            spinner = Spinner("dots", text=f"[cyan]{message}[/cyan]")
+            with Live(spinner, refresh_per_second=10, console=self.console):
+                await asyncio.sleep(duration)
+        except Exception:
+            # Fallback to simple message
+            self.console.print(f"[cyan]{message}[/cyan]")
+            await asyncio.sleep(duration * 0.5)
+
+    async def _show_progress_bar(self, operation: str, total: int = 100):
+        """Show a progress bar for long-running operations."""
+        try:
+            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                console=self.console,
+                transient=True
+            ) as progress:
+                task = progress.add_task(f"[cyan]{operation}...", total=total)
+
+                for i in range(total):
+                    await asyncio.sleep(0.02)  # Simulate work
+                    progress.update(task, advance=1)
+
+        except Exception:
+            # Fallback to simple spinner
+            await self._show_loading_spinner(operation, 2.0)
+
+    def show_status_indicator(self, status: str, message: str):
+        """Show color-coded status indicators."""
+        status_indicators = {
+            "success": ("✅", "green"),
+            "warning": ("⚠️", "yellow"),
+            "error": ("❌", "red"),
+            "info": ("ℹ️", "blue"),
+            "loading": ("⏳", "cyan"),
+            "cached": ("🟢", "green"),
+            "stale": ("🟡", "yellow")
+        }
+
+        icon, color = status_indicators.get(status, ("❓", "white"))
+        self.console.print(f"[{color}]{icon} {message}[/{color}]")
 
     def _show_service_health_warning(
         self,
