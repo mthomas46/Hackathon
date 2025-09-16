@@ -10,52 +10,40 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class SourceAgentManager:
+class SourceAgentManager(BaseManager):
     """Manager for source agent power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def source_agent_menu(self):
-        """Main source agent menu."""
-        while True:
-            menu = create_menu_table("Source Agent Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Document Fetching (GitHub, Jira, Confluence)"),
-                ("2", "Data Normalization"),
-                ("3", "Code Analysis & Processing"),
-                ("4", "Source Management"),
-                ("5", "Integration Status"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for source agent operations."""
+        return [
+            ("1", "Document Fetching (GitHub, Jira, Confluence)"),
+            ("2", "Data Normalization"),
+            ("3", "Code Analysis & Processing"),
+            ("4", "Source Management"),
+            ("5", "Integration Status")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.document_fetching_menu()
-            elif choice == "2":
-                await self.data_normalization_menu()
-            elif choice == "3":
-                await self.code_analysis_menu()
-            elif choice == "4":
-                await self.source_management_menu()
-            elif choice == "5":
-                await self.integration_status_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.document_fetching_menu()
+        elif choice == "2":
+            await self.data_normalization_menu()
+        elif choice == "3":
+            await self.code_analysis_menu()
+        elif choice == "4":
+            await self.source_management_menu()
+        elif choice == "5":
+            await self.integration_status_menu()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def document_fetching_menu(self):
         """Document fetching submenu."""

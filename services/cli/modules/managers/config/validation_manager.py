@@ -13,6 +13,29 @@ from ...formatters.display_utils import DisplayManager
 class ValidationManager(BaseManager):
     """Manager for configuration validation operations."""
 
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for validation operations."""
+        return [
+            ("1", "Validate YAML Syntax"),
+            ("2", "Check Configuration Consistency"),
+            ("3", "Validate Environment Variables"),
+            ("4", "Run Full Validation Suite")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.validate_yaml_syntax()
+        elif choice == "2":
+            await self.check_configuration_consistency()
+        elif choice == "3":
+            await self.validate_environment_variables()
+        elif choice == "4":
+            await self.run_full_validation_suite()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
+
     async def validate_yaml_syntax(self):
         """Validate YAML syntax in configuration files."""
         try:

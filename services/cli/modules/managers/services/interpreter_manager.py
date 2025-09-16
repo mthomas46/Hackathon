@@ -12,55 +12,43 @@ from rich.panel import Panel
 from rich.text import Text
 import json
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class InterpreterManager:
+class InterpreterManager(BaseManager):
     """Manager for interpreter service power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def interpreter_management_menu(self):
-        """Main interpreter management menu."""
-        while True:
-            menu = create_menu_table("Interpreter Service Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Query Interpretation (Analyze queries and extract intents)"),
-                ("2", "Workflow Execution (Execute interpreted workflows)"),
-                ("3", "Intent Management (View supported intents and examples)"),
-                ("4", "Interactive Query Testing"),
-                ("5", "Batch Query Processing"),
-                ("6", "Interpreter Performance & Stats"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for interpreter operations."""
+        return [
+            ("1", "Query Interpretation (Analyze queries and extract intents)"),
+            ("2", "Workflow Execution (Execute interpreted workflows)"),
+            ("3", "Intent Management (View supported intents and examples)"),
+            ("4", "Interactive Query Testing"),
+            ("5", "Batch Query Processing"),
+            ("6", "Interpreter Performance & Stats")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.query_interpretation_menu()
-            elif choice == "2":
-                await self.workflow_execution_menu()
-            elif choice == "3":
-                await self.intent_management_menu()
-            elif choice == "4":
-                await self.interactive_query_testing()
-            elif choice == "5":
-                await self.batch_query_processing()
-            elif choice == "6":
-                await self.interpreter_performance_stats()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.query_interpretation_menu()
+        elif choice == "2":
+            await self.workflow_execution_menu()
+        elif choice == "3":
+            await self.intent_management_menu()
+        elif choice == "4":
+            await self.interactive_query_testing()
+        elif choice == "5":
+            await self.batch_query_processing()
+        elif choice == "6":
+            await self.interpreter_performance_stats()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def query_interpretation_menu(self):
         """Query interpretation submenu."""

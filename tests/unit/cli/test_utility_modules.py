@@ -94,15 +94,15 @@ class TestAPIClient:
     """Test APIClient functionality."""
 
     @pytest.fixture
-    def api_client(self):
+    def api_client(self, mock_clients, mock_console):
         """APIClient instance for testing."""
-        return APIClient(timeout=5.0, max_retries=2)
+        return APIClient(mock_clients, mock_console, timeout=5)
 
-    def test_initialization(self, api_client):
+    def test_initialization(self, api_client, mock_clients, mock_console):
         """Test APIClient initialization."""
-        assert api_client.timeout == 5.0
-        assert api_client.max_retries == 2
-        assert api_client.session is None
+        assert api_client.timeout == 5
+        assert api_client.clients == mock_clients
+        assert api_client.console == mock_console
 
     @pytest.mark.asyncio
     async def test_get_json_success(self, api_client):
@@ -252,10 +252,10 @@ class TestDRYIntegration:
     """Test integration of DRY utilities."""
 
     @pytest.fixture
-    def integrated_setup(self):
+    def integrated_setup(self, mock_clients, mock_console):
         """Set up integrated test with all utilities."""
         cache = CacheManager()
-        api_client = APIClient(timeout=1.0, max_retries=1)
+        api_client = APIClient(mock_clients, mock_console, timeout=1)
         return {
             'cache': cache,
             'api': api_client

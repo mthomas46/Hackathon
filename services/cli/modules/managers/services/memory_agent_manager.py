@@ -14,52 +14,40 @@ import json
 import os
 from datetime import datetime, timezone
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class MemoryAgentManager:
+class MemoryAgentManager(BaseManager):
     """Manager for memory agent power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def memory_agent_menu(self):
-        """Main memory agent menu."""
-        while True:
-            menu = create_menu_table("Memory Agent Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Memory Item Management (Store, List, Search, Delete)"),
-                ("2", "Memory Statistics & Monitoring"),
-                ("3", "Memory Cleanup & Maintenance"),
-                ("4", "Memory Analytics & Reporting"),
-                ("5", "Memory Configuration Management"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for memory agent operations."""
+        return [
+            ("1", "Memory Item Management (Store, List, Search, Delete)"),
+            ("2", "Memory Statistics & Monitoring"),
+            ("3", "Memory Cleanup & Maintenance"),
+            ("4", "Memory Analytics & Reporting"),
+            ("5", "Memory Configuration Management")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.memory_item_management_menu()
-            elif choice == "2":
-                await self.memory_statistics_menu()
-            elif choice == "3":
-                await self.memory_cleanup_menu()
-            elif choice == "4":
-                await self.memory_analytics_menu()
-            elif choice == "5":
-                await self.memory_config_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.memory_item_management_menu()
+        elif choice == "2":
+            await self.memory_statistics_menu()
+        elif choice == "3":
+            await self.memory_cleanup_menu()
+        elif choice == "4":
+            await self.memory_analytics_menu()
+        elif choice == "5":
+            await self.memory_config_menu()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def memory_item_management_menu(self):
         """Memory item management submenu."""

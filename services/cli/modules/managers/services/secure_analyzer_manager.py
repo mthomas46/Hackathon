@@ -14,55 +14,43 @@ import json
 import os
 import asyncio
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class SecureAnalyzerManager:
+class SecureAnalyzerManager(BaseManager):
     """Manager for secure analyzer power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def secure_analyzer_menu(self):
-        """Main secure analyzer menu."""
-        while True:
-            menu = create_menu_table("Secure Analyzer Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Content Security Analysis (Detection, scanning, validation)"),
-                ("2", "Model Policy Management (Suggestions, restrictions, overrides)"),
-                ("3", "Secure Summarization (Policy-filtered AI operations)"),
-                ("4", "Security Policy Configuration"),
-                ("5", "Compliance Reporting & Analytics"),
-                ("6", "Secure Analyzer Health & Monitoring"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for secure analyzer operations."""
+        return [
+            ("1", "Content Security Analysis (Detection, scanning, validation)"),
+            ("2", "Model Policy Management (Suggestions, restrictions, overrides)"),
+            ("3", "Secure Summarization (Policy-filtered AI operations)"),
+            ("4", "Security Policy Configuration"),
+            ("5", "Compliance Reporting & Analytics"),
+            ("6", "Secure Analyzer Health & Monitoring")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.content_security_analysis_menu()
-            elif choice == "2":
-                await self.model_policy_management_menu()
-            elif choice == "3":
-                await self.secure_summarization_menu()
-            elif choice == "4":
-                await self.security_policy_config_menu()
-            elif choice == "5":
-                await self.compliance_reporting_menu()
-            elif choice == "6":
-                await self.secure_analyzer_monitoring_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.content_security_analysis_menu()
+        elif choice == "2":
+            await self.model_policy_management_menu()
+        elif choice == "3":
+            await self.secure_summarization_menu()
+        elif choice == "4":
+            await self.security_policy_config_menu()
+        elif choice == "5":
+            await self.compliance_reporting_menu()
+        elif choice == "6":
+            await self.secure_analyzer_monitoring_menu()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def content_security_analysis_menu(self):
         """Content security analysis submenu."""

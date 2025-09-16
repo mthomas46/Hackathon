@@ -99,3 +99,12 @@ class APIClient:
                     'error': str(e)
                 }
         return results
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        # Cleanup if needed
+        pass

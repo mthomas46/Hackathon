@@ -14,6 +14,54 @@ from ...formatters.display_utils import DisplayManager
 class ServiceConfigManager(BaseManager):
     """Manager for service configuration operations."""
 
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for service configuration."""
+        return [
+            ("1", "View Service Configuration"),
+            ("2", "Edit Service Configuration"),
+            ("3", "Show Configuration Hierarchy"),
+            ("4", "List Configuration Files")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        service = await self._select_service()
+        if not service:
+            return True
+
+        if choice == "1":
+            await self.view_service_configuration(service)
+        elif choice == "2":
+            await self.edit_service_configuration(service)
+        elif choice == "3":
+            await self.show_configuration_hierarchy(service)
+        elif choice == "4":
+            await self._list_config_files_menu(service)
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
+
+    async def _select_service(self) -> Optional[str]:
+        """Select a service to configure."""
+        services = ["orchestrator", "analysis-service", "bedrock-proxy", "frontend", "doc-store"]
+        service = await self.select_from_list(services, "Select service to configure")
+        return service
+
+    async def _list_config_files_menu(self, service: str):
+        """List configuration files for a service."""
+        try:
+            config_files = await self.list_service_config_files(service)
+            if config_files:
+                self.display.show_table(
+                    ["File Path", "Size"],
+                    [[str(f), f"{f.stat().st_size} bytes"] for f in config_files],
+                    f"Configuration Files for {service}"
+                )
+            else:
+                self.display.show_warning(f"No configuration files found for service: {service}")
+        except Exception as e:
+            self.display.show_error(f"Error listing configuration files: {e}")
+
     async def list_service_config_files(self, service: str) -> List[Path]:
         """List all configuration files for a service."""
         config_files = []

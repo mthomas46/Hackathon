@@ -9,93 +9,10 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 
 
-def _load_cli_service():
-    """Load cli service dynamically."""
-    try:
-        spec = importlib.util.spec_from_file_location(
-            "services.cli.main",
-            os.path.join(os.getcwd(), 'services', 'cli', 'main.py')
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod
-    except Exception as e:
-        # If loading fails, create a minimal mock module for testing
-        import types
-
-        # Mock the CLICommands class
-        class MockCLICommands:
-            def __init__(self):
-                self.console = Mock()
-                self.clients = Mock()
-                self.current_user = "test_user"
-                self.session_id = "test_session_123"
-
-            def print_header(self):
-                pass
-
-            def print_menu(self):
-                pass
-
-            def get_choice(self, prompt="Select option"):
-                return "q"
-
-            async def check_service_health(self):
-                return {
-                    "orchestrator": {"status": "healthy", "response": {"overall_healthy": True}},
-                    "prompt-store": {"status": "healthy", "response": {"status": "healthy"}},
-                    "source-agent": {"status": "healthy", "response": {"status": "healthy"}},
-                    "analysis-service": {"status": "healthy", "response": {"status": "healthy"}},
-                    "doc-store": {"status": "healthy", "response": {"status": "healthy"}}
-                }
-
-            async def display_health_status(self):
-                return {"displayed": True}
-
-            async def analytics_menu(self):
-                return {"analytics": "displayed"}
-
-            def ab_testing_menu(self):
-                return {"ab_testing": "placeholder"}
-
-            async def test_integration(self):
-                return {
-                    "Prompt Store Health": True,
-                    "Interpreter Integration": True,
-                    "Orchestrator Integration": True,
-                    "Analysis Service Integration": True,
-                    "Cross-Service Workflow": True
-                }
-
-            async def run(self):
-                return {"interactive_mode": "completed"}
-
-        # Mock the module
-        mod = types.ModuleType("services.cli.main")
-        mod.cli_service = MockCLICommands()
-
-        return mod
+# CLI fixtures are now imported from test_utils.py
 
 
-@pytest.fixture(scope="module")
-def cli_module():
-    """Load cli module."""
-    return _load_cli_service()
-
-
-@pytest.fixture
-def cli_service(cli_module):
-    """Get CLI service instance."""
-    return cli_module.cli_service
-
-
-@pytest.fixture
-def mock_clients():
-    """Mock service clients."""
-    clients = Mock()
-    clients.get_json = AsyncMock()
-    clients.post_json = AsyncMock()
-    return clients
+# mock_clients fixture is now in conftest.py
 
 
 class TestCLIValidation:

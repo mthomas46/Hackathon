@@ -10,55 +10,43 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class BulkOperationsManager:
+class BulkOperationsManager(BaseManager):
     """Manager for bulk operations across multiple services."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def bulk_operations_menu(self):
-        """Main bulk operations menu."""
-        while True:
-            menu = create_menu_table("Bulk Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Mass Document Analysis"),
-                ("2", "Bulk Quality Recalculation"),
-                ("3", "Batch Notifications"),
-                ("4", "Bulk Data Operations"),
-                ("5", "Cross-Service Workflows"),
-                ("6", "Bulk Reporting"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for bulk operations."""
+        return [
+            ("1", "Mass Document Analysis"),
+            ("2", "Bulk Quality Recalculation"),
+            ("3", "Batch Notifications"),
+            ("4", "Bulk Data Operations"),
+            ("5", "Cross-Service Workflows"),
+            ("6", "Bulk Reporting")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.mass_document_analysis()
-            elif choice == "2":
-                await self.bulk_quality_recalculation()
-            elif choice == "3":
-                await self.batch_notifications()
-            elif choice == "4":
-                await self.bulk_data_operations()
-            elif choice == "5":
-                await self.cross_service_workflows()
-            elif choice == "6":
-                await self.bulk_reporting()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.mass_document_analysis()
+        elif choice == "2":
+            await self.bulk_quality_recalculation()
+        elif choice == "3":
+            await self.batch_notifications()
+        elif choice == "4":
+            await self.bulk_data_operations()
+        elif choice == "5":
+            await self.cross_service_workflows()
+        elif choice == "6":
+            await self.bulk_reporting()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def mass_document_analysis(self):
         """Mass document analysis submenu."""

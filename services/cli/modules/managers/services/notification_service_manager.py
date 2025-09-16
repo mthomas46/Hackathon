@@ -14,7 +14,9 @@ import json
 import os
 import asyncio
 
+from ...base.base_manager import BaseManager
 from ...shared_utils import (
+    
     get_cli_clients,
     create_menu_table,
     add_menu_rows,
@@ -23,12 +25,24 @@ from ...shared_utils import (
 )
 
 
-class NotificationServiceManager:
+class NotificationServiceManager(BaseManager):
     """Manager for notification service power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for notification service operations."""
+        return [
+            ("1", "Notification Management"),
+            ("2", "Template Configuration"),
+            ("3", "Delivery Monitoring")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        self.display.show_error("Feature not yet implemented")
+        return True
 
     async def notification_service_menu(self):
         """Main notification service menu."""

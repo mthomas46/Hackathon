@@ -10,56 +10,48 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class OrchestratorManager:
+class OrchestratorManager(BaseManager):
     """Manager for orchestrator power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
-        self.console = console
-        self.clients = clients
-        self.cache = cache or {}
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for orchestrator management."""
+        return [
+            ("1", "Workflow Management (Run, Monitor, History)"),
+            ("2", "Service Registry (Register, List, Poll)"),
+            ("3", "Job Operations (Quality Recalc, Consolidation)"),
+            ("4", "Infrastructure Status (System Health, Metrics)"),
+            ("5", "E2E Demo (Full Pipeline Test)"),
+            ("6", "Orchestrator Configuration")
+        ]
 
     async def orchestrator_management_menu(self):
         """Main orchestrator management menu."""
-        while True:
-            menu = create_menu_table("Orchestrator Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Workflow Management (Run, Monitor, History)"),
-                ("2", "Service Registry (Register, List, Poll)"),
-                ("3", "Job Operations (Quality Recalc, Consolidation)"),
-                ("4", "Infrastructure Status (System Health, Metrics)"),
-                ("5", "E2E Demo (Full Pipeline Test)"),
-                ("6", "Orchestrator Configuration"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+        menu_items = await self.get_main_menu()
+        await self.run_menu_loop("Orchestrator Management", menu_items)
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.workflow_management_menu()
-            elif choice == "2":
-                await self.registry_management_menu()
-            elif choice == "3":
-                await self.job_operations_menu()
-            elif choice == "4":
-                await self.infrastructure_status_menu()
-            elif choice == "5":
-                await self.e2e_demo_menu()
-            elif choice == "6":
-                await self.configuration_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle menu choice selection."""
+        if choice == "1":
+            await self.workflow_management_menu()
+        elif choice == "2":
+            await self.registry_management_menu()
+        elif choice == "3":
+            await self.job_operations_menu()
+        elif choice == "4":
+            await self.infrastructure_status_menu()
+        elif choice == "5":
+            await self.e2e_demo_menu()
+        elif choice == "6":
+            await self.configuration_menu()
+        else:
+            return False
+        return True
 
     async def workflow_management_menu(self):
         """Workflow management submenu."""

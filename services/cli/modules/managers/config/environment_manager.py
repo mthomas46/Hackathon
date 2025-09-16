@@ -13,6 +13,29 @@ from ...formatters.display_utils import DisplayManager
 class EnvironmentManager(BaseManager):
     """Manager for environment variable operations."""
 
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for environment operations."""
+        return [
+            ("1", "View Current Environment"),
+            ("2", "Check Required Variables"),
+            ("3", "Validate Environment Setup"),
+            ("4", "Environment Diagnostics")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.view_current_environment()
+        elif choice == "2":
+            await self.check_required_variables()
+        elif choice == "3":
+            await self.validate_environment_setup()
+        elif choice == "4":
+            await self.environment_diagnostics()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
+
     async def view_current_environment(self):
         """View current environment variables."""
         try:

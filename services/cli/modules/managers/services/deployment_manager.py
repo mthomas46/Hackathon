@@ -15,13 +15,16 @@ import json
 import os
 import yaml
 import subprocess
+from ...base.base_manager import BaseManager
 import asyncio
 import time
 from pathlib import Path
 from collections import defaultdict
 import re
 
+    
 from ...shared_utils import (
+    
     get_cli_clients,
     create_menu_table,
     add_menu_rows,
@@ -30,14 +33,26 @@ from ...shared_utils import (
 )
 
 
-class DeploymentManager:
+class DeploymentManager(BaseManager):
     """Manager for comprehensive deployment controls and orchestration."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
         self.deployment_history = []
         self.scaling_history = []
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for deployment operations."""
+        return [
+            ("1", "Deployment Management"),
+            ("2", "Scaling Operations"),
+            ("3", "Monitoring & Health")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        self.display.show_error("Feature not yet implemented")
+        return True
 
     async def deployment_controls_menu(self):
         """Main deployment controls menu."""

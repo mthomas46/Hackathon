@@ -12,11 +12,14 @@ from rich.panel import Panel
 from rich.text import Text
 import json
 import os
+from ...base.base_manager import BaseManager
 import asyncio
 from datetime import datetime
 from collections import defaultdict
 
+    
 from ...shared_utils import (
+    
     get_cli_clients,
     create_menu_table,
     add_menu_rows,
@@ -25,16 +28,28 @@ from ...shared_utils import (
 )
 
 
-class BedrockProxyManager:
+class BedrockProxyManager(BaseManager):
     """Manager for bedrock proxy power-user operations."""
 
     SUPPORTED_TEMPLATES = ['summary', 'risks', 'decisions', 'pr_confidence', 'life_of_ticket']
     SUPPORTED_FORMATS = ['md', 'txt', 'json']
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
         self.invocation_history = []
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for bedrock proxy operations."""
+        return [
+            ("1", "Template Management"),
+            ("2", "Format Configuration"),
+            ("3", "Invocation History")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        self.display.show_error("Feature not yet implemented")
+        return True
 
     async def bedrock_proxy_menu(self):
         """Main bedrock proxy menu."""

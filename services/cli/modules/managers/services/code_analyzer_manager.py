@@ -15,6 +15,7 @@ import os
 import asyncio
 import subprocess
 
+from ...base.base_manager import BaseManager
 from ...shared_utils import (
     get_cli_clients,
     create_menu_table,
@@ -24,12 +25,28 @@ from ...shared_utils import (
 )
 
 
-class CodeAnalyzerManager:
+class CodeAnalyzerManager(BaseManager):
     """Manager for code analyzer power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for code analyzer operations."""
+        return [
+            ("1", "Code Analysis (Endpoint extraction, pattern analysis)"),
+            ("2", "File & Repository Analysis"),
+            ("3", "Git Integration (Patch analysis, CI/CD)"),
+            ("4", "Security Scanning (Vulnerability detection, secret scanning)"),
+            ("5", "Style Management (Programming standards, examples)"),
+            ("6", "Analysis History & Reporting")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        # Basic implementation - just show error for now
+        self.display.show_error("Feature not yet implemented")
+        return True
 
     async def code_analyzer_menu(self):
         """Main code analyzer menu."""

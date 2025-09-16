@@ -12,47 +12,63 @@ from rich.prompt import Prompt, Confirm
 from services.shared.clients import ServiceClients
 from services.shared.credentials import get_secret
 
-from ..base.base_manager import BaseManager
+from .shared_utils import (
+    get_default_timeout,
+    get_cli_clients,
+    create_menu_table,
+    add_menu_rows,
+    create_prompt_table,
+    create_search_results_table,
+    validate_prompt_data,
+    extract_variables_from_content,
+    format_prompt_details,
+    parse_tags_input
+)
 
-
-class PromptManager(BaseManager):
+class PromptManager:
     """Handle prompt management CLI operations."""
 
-    def __init__(self, console: Console, clients: ServiceClients, cache: Optional[Dict[str, Any]] = None):
-        super().__init__(console, clients, cache)
-
-    async def get_main_menu(self) -> List[tuple[str, str]]:
-        """Return the main menu items for prompt management."""
-        return [
-            ("1", "List Available Prompts"),
-            ("2", "Search Prompts"),
-            ("3", "Create New Prompt"),
-            ("4", "Update Existing Prompt"),
-            ("5", "Delete Prompt"),
-            ("6", "View Prompt Details")
-        ]
-
-    async def handle_choice(self, choice: str) -> bool:
-        """Handle menu choice selection."""
-        if choice == "1":
-            await self.list_prompts()
-        elif choice == "2":
-            await self.search_prompts()
-        elif choice == "3":
-            await self.create_prompt()
-        elif choice == "4":
-            await self.update_prompt()
-        elif choice == "5":
-            await self.delete_prompt()
-        elif choice == "6":
-            await self.view_prompt_details()
-        else:
-            return False
-        return True
+    def __init__(self, console: Console, clients: ServiceClients):
+        self.console = console
+        self.clients = clients
 
     async def prompt_management_menu(self):
         """Prompt management submenu."""
-        await self.run_menu_loop("Prompt Management")
+        while True:
+            self.console.print("\n[bold cyan]Prompt Management[/bold cyan]")
+            menu = create_menu_table("", ["Option", "Description"])
+            add_menu_rows(menu, [
+                ("1", "List prompts"),
+                ("2", "Create new prompt"),
+                ("3", "View prompt details"),
+                ("4", "Update prompt"),
+                ("5", "Delete prompt"),
+                ("6", "Fork prompt"),
+                ("7", "Search prompts"),
+                ("b", "Back to main menu")
+            ])
+            self.console.print(menu)
+
+            choice = Prompt.ask("[bold green]Select option[/bold green]")
+
+            if choice == "1":
+                await self.list_prompts()
+            elif choice == "2":
+                await self.create_prompt()
+            elif choice == "3":
+                await self.view_prompt()
+            elif choice == "4":
+                await self.update_prompt()
+            elif choice == "5":
+                await self.delete_prompt()
+            elif choice == "6":
+                await self.fork_prompt()
+            elif choice == "7":
+                await self.search_prompts()
+            elif choice.lower() == "b":
+                break
+            else:
+                self.console.print("[red]Invalid option. Please try again.[/red]")
 
     async def list_prompts(self):
         """List all prompts."""
