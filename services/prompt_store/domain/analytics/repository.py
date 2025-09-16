@@ -13,6 +13,119 @@ class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):
     def __init__(self):
         super().__init__("prompt_performance_metrics")
 
+    def save(self, entity: PromptPerformanceMetrics) -> PromptPerformanceMetrics:
+        """Save entity to database."""
+        row = self._entity_to_row(entity)
+        execute_query(f"""
+            INSERT OR REPLACE INTO {self.table_name}
+            (id, prompt_id, version, total_requests, successful_requests, failed_requests,
+             average_response_time_ms, median_response_time_ms, p95_response_time_ms, p99_response_time_ms,
+             total_tokens_used, average_tokens_per_request, cost_estimate_usd, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            row['id'], row['prompt_id'], row['version'], row['total_requests'],
+            row['successful_requests'], row['failed_requests'], row['average_response_time_ms'],
+            row['median_response_time_ms'], row['p95_response_time_ms'], row['p99_response_time_ms'],
+            row['total_tokens_used'], row['average_tokens_per_request'], row['cost_estimate_usd'],
+            row['created_at'], row['updated_at']
+        ))
+        return entity
+
+    def get_by_id(self, entity_id: str) -> Optional[PromptPerformanceMetrics]:
+        """Get entity by ID."""
+        row = execute_query(
+            f"SELECT * FROM {self.table_name} WHERE id = ?",
+            (entity_id,),
+            fetch_one=True
+        )
+        return self._row_to_entity(row) if row else None
+
+    def get_all(self, limit: int = 50, offset: int = 0, **filters) -> Dict[str, Any]:
+        """Get all entities with pagination and filters."""
+        where_clause = ""
+        params = []
+
+        if filters:
+            conditions = []
+            for key, value in filters.items():
+                conditions.append(f"{key} = ?")
+                params.append(value)
+            where_clause = f"WHERE {' AND '.join(conditions)}"
+
+        rows = execute_query(
+            f"SELECT * FROM {self.table_name} {where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            params + [limit, offset],
+            fetch_all=True
+        )
+
+        entities = [self._row_to_entity(row) for row in rows]
+
+        # Get total count
+        count_result = execute_query(
+            f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}",
+            params,
+            fetch_one=True
+        )
+        total_count = count_result['count'] if count_result else 0
+
+        return {
+            "items": entities,
+            "total": total_count,
+            "limit": limit,
+            "offset": offset
+        }
+
+    def update(self, entity_id: str, updates: Dict[str, Any]) -> Optional[PromptPerformanceMetrics]:
+        """Update entity."""
+        if not updates:
+            return self.get_by_id(entity_id)
+
+        set_clause = ", ".join(f"{key} = ?" for key in updates.keys())
+        params = list(updates.values()) + [entity_id]
+
+        execute_query(
+            f"UPDATE {self.table_name} SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+            params
+        )
+
+        return self.get_by_id(entity_id)
+
+    def delete(self, entity_id: str) -> bool:
+        """Delete entity."""
+        result = execute_query(
+            f"DELETE FROM {self.table_name} WHERE id = ?",
+            (entity_id,)
+        )
+        return result is not None
+
+    def exists(self, entity_id: str) -> bool:
+        """Check if entity exists."""
+        result = execute_query(
+            f"SELECT 1 FROM {self.table_name} WHERE id = ? LIMIT 1",
+            (entity_id,),
+            fetch_one=True
+        )
+        return result is not None
+
+    def count(self, **filters) -> int:
+        """Count entities with filters."""
+        where_clause = ""
+        params = []
+
+        if filters:
+            conditions = []
+            for key, value in filters.items():
+                conditions.append(f"{key} = ?")
+                params.append(value)
+            where_clause = f"WHERE {' AND '.join(conditions)}"
+
+        result = execute_query(
+            f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}",
+            params,
+            fetch_one=True
+        )
+        return result['count'] if result else 0
+
     def _row_to_entity(self, row: Dict[str, Any]) -> PromptPerformanceMetrics:
         """Convert database row to entity."""
         from datetime import datetime

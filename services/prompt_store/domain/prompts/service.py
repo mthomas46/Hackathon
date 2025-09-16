@@ -81,7 +81,8 @@ class PromptService(BaseService[Prompt]):
 
         # Cache the prompt (only if event loop is running)
         try:
-            asyncio.create_task(self._cache_prompt(saved_prompt))
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._cache_prompt(saved_prompt))
         except RuntimeError:
             # No event loop running (e.g., in tests), skip async caching
             pass

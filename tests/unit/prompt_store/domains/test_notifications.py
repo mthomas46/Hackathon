@@ -155,7 +155,7 @@ class TestNotificationsService:
             "is_active": True,
             "created_by": "test_user"
         }
-        webhook_result = service.register_webhook(webhook_data)
+        webhook_result = await service.register_webhook(webhook_data)
 
         # Notify event
         result = await service.notify_event(
@@ -164,8 +164,8 @@ class TestNotificationsService:
         )
 
         assert result["event_type"] == "prompt.created"
-        assert result["total_webhooks"] >= 1
-        assert "notifications_sent" in result
+        assert result["webhook_notifications"]["total"] >= 1
+        assert result["total_sent"] >= 1
 
     def test_get_notification_stats(self, prompt_store_db):
         """Test getting notification statistics."""

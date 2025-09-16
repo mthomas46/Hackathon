@@ -20,6 +20,13 @@ class PromptTestingResult(BaseEntity):
     expected_output_similarity: float  # How close to expected result
     error_message: Optional[str] = None
     test_metadata: Dict[str, Any] = field(default_factory=dict)
+    id: Optional[str] = field(default=None)
+    created_at: datetime = field(default_factory=lambda: datetime.now())
+    updated_at: datetime = field(default_factory=lambda: datetime.now())
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -40,6 +47,29 @@ class PromptTestingResult(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PromptTestingResult':
+        """Create entity from dictionary representation."""
+        entity = cls(
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            test_suite_id=data["test_suite_id"],
+            test_case_id=data["test_case_id"],
+            test_name=data["test_name"],
+            passed=data["passed"],
+            execution_time_ms=data["execution_time_ms"],
+            output_quality_score=data["output_quality_score"],
+            expected_output_similarity=data["expected_output_similarity"],
+            error_message=data.get("error_message"),
+            test_metadata=data.get("test_metadata", {})
+        )
+        entity.id = data.get("id")
+        if "created_at" in data:
+            entity.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+        if "updated_at" in data and data["updated_at"]:
+            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+        return entity
+
 
 @dataclass
 class BiasDetectionResult(BaseEntity):
@@ -54,6 +84,13 @@ class BiasDetectionResult(BaseEntity):
     analysis_method: str  # "pattern_matching", "llm_analysis", "statistical"
     resolved: bool = False
     resolved_at: Optional[datetime] = None
+    id: Optional[str] = field(default=None)
+    created_at: datetime = field(default_factory=lambda: datetime.now())
+    updated_at: datetime = field(default_factory=lambda: datetime.now())
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -73,6 +110,29 @@ class BiasDetectionResult(BaseEntity):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'BiasDetectionResult':
+        """Create entity from dictionary representation."""
+        entity = cls(
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            bias_type=data["bias_type"],
+            severity_score=data["severity_score"],
+            detected_phrases=data["detected_phrases"],
+            suggested_alternatives=data["suggested_alternatives"],
+            confidence_score=data["confidence_score"],
+            analysis_method=data["analysis_method"],
+            resolved=data.get("resolved", False)
+        )
+        entity.id = data.get("id")
+        if "resolved_at" in data and data["resolved_at"]:
+            entity.resolved_at = datetime.fromisoformat(data["resolved_at"].replace('Z', '+00:00'))
+        if "created_at" in data:
+            entity.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+        if "updated_at" in data and data["updated_at"]:
+            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+        return entity
+
 
 @dataclass
 class ValidationReport(BaseEntity):
@@ -85,6 +145,13 @@ class ValidationReport(BaseEntity):
     overall_score: float  # 0.0 to 1.0
     issues_count: int
     recommendations: List[str]
+    id: Optional[str] = field(default=None)
+    created_at: datetime = field(default_factory=lambda: datetime.now())
+    updated_at: datetime = field(default_factory=lambda: datetime.now())
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -101,3 +168,23 @@ class ValidationReport(BaseEntity):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ValidationReport':
+        """Create entity from dictionary representation."""
+        entity = cls(
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            linting_results=data["linting_results"],
+            bias_detection_results=data["bias_detection_results"],
+            testing_results=data["testing_results"],
+            overall_score=data["overall_score"],
+            issues_count=data["issues_count"],
+            recommendations=data["recommendations"]
+        )
+        entity.id = data.get("id")
+        if "created_at" in data:
+            entity.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+        if "updated_at" in data and data["updated_at"]:
+            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+        return entity

@@ -171,6 +171,7 @@ def create_webhooks_table() -> str:
             is_active BOOLEAN DEFAULT 1,
             retry_count INTEGER DEFAULT 3,
             timeout_seconds INTEGER DEFAULT 30,
+            created_by TEXT,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         )
@@ -207,9 +208,11 @@ def create_notifications_table() -> str:
             recipient_type TEXT DEFAULT 'webhook',  -- webhook, email, etc.
             recipient_id TEXT,
             status TEXT DEFAULT 'pending',
+            retry_count INTEGER DEFAULT 0,
             sent_at TEXT,
             error_message TEXT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
         )
     """
 

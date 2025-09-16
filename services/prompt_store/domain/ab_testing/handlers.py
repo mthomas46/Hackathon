@@ -19,10 +19,10 @@ class ABTestHandlers(BaseHandler):
     async def handle_create_ab_test(self, test_data: ABTestCreate) -> Dict[str, Any]:
         """Create a new A/B test."""
         try:
-            ab_test = self.service.create_entity(test_data.dict())
+            ab_test_dict = self.service.create_ab_test(test_data.model_dump())
             return create_success_response(
                 message="A/B test created successfully",
-                data=ab_test.to_dict()
+                data=ab_test_dict
             )
         except ValueError as e:
             return create_error_response(str(e), "VALIDATION_ERROR")
@@ -47,13 +47,19 @@ class ABTestHandlers(BaseHandler):
     async def handle_get_ab_test(self, test_id: str) -> Dict[str, Any]:
         """Get A/B test details."""
         try:
-            ab_test = self.service.get_entity(test_id)
+            ab_test = self.service.get_ab_test(test_id)
             if not ab_test:
                 return create_error_response("A/B test not found", "NOT_FOUND")
 
+            # Handle both dict and ABTest object returns
+            if isinstance(ab_test, dict):
+                data = ab_test
+            else:
+                data = ab_test.to_dict()
+
             return create_success_response(
                 message="A/B test retrieved successfully",
-                data=ab_test.to_dict()
+                data=data
             )
         except Exception as e:
             return create_error_response(f"Failed to get A/B test: {str(e)}", "INTERNAL_ERROR")
@@ -72,10 +78,10 @@ class ABTestHandlers(BaseHandler):
     async def handle_get_test_results(self, test_id: str) -> Dict[str, Any]:
         """Get A/B test results."""
         try:
-            results = self.service.get_test_results(test_id)
+            results = self.service.get_ab_test_results(test_id)
             return create_success_response(
                 message="A/B test results retrieved successfully",
-                data=results
+                data={"results": results}
             )
         except ValueError as e:
             return create_error_response(str(e), "VALIDATION_ERROR")
@@ -95,6 +101,17 @@ class ABTestHandlers(BaseHandler):
             return create_error_response(str(e), "VALIDATION_ERROR")
         except Exception as e:
             return create_error_response(f"Failed to record test result: {str(e)}", "INTERNAL_ERROR")
+
+    async def handle_select_variant(self, test_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Handle variant selection for A/B testing."""
+        try:
+            result = self.service.select_prompt_variant(test_id, user_id)
+            return create_success_response(
+                message="Variant selected successfully",
+                data={"selected_prompt_id": result}
+            )
+        except Exception as e:
+            return create_error_response(f"Failed to select variant: {str(e)}", "INTERNAL_ERROR")
 
     async def handle_end_test(self, test_id: str, winner: Optional[str] = None) -> Dict[str, Any]:
         """End an A/B test."""

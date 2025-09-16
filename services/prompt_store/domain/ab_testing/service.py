@@ -305,3 +305,21 @@ class ABTestService(BaseService[ABTest]):
         # This would integrate with the usage tracking system
         # For now, just increment counters
         pass
+
+    def create_ab_test(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new A/B test (convenience method)."""
+        ab_test = self.create_entity(test_data)
+        return ab_test.to_dict()
+
+    def get_ab_test(self, test_id: str) -> Optional[ABTest]:
+        """Get A/B test by ID (alias for get_entity)."""
+        return self.get_entity(test_id)
+
+    def select_prompt_variant(self, test_id: str, user_id: Optional[str] = None) -> Optional[str]:
+        """Select a prompt variant for A/B testing (convenience method)."""
+        result = self.select_prompt_for_test(test_id, user_id)
+        return result.get("selected_prompt", {}).get("id") if result else None
+
+    def get_ab_test_results(self, test_id: str) -> Dict[str, Any]:
+        """Get test results (convenience method)."""
+        return self.get_test_results(test_id)

@@ -12,10 +12,12 @@ from dataclasses import dataclass, field
 class BaseEntity(ABC):
     """Base entity with common fields and methods."""
 
-    def __init__(self):
-        self.id: Optional[str] = None
-        self.created_at: datetime = datetime.now(timezone.utc)
-        self.updated_at: datetime = datetime.now(timezone.utc)
+    def __init__(self, id: Optional[str] = None):
+        # Only set id if it's not already set
+        if not hasattr(self, 'id') or self.id is None:
+            self.id = id
+        self.created_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
 
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
@@ -31,6 +33,12 @@ class BaseEntity(ABC):
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
         self.updated_at = datetime.now(timezone.utc)
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields for dataclasses."""
+        if self.id is None:
+            self.id = None  # Will be set by repository
+        # created_at and updated_at are already set by field defaults
 
 
 @dataclass
@@ -53,7 +61,7 @@ class Prompt(BaseEntity):
 
     def __post_init__(self):
         """Initialize BaseEntity fields."""
-        super().__init__()
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert prompt to dictionary."""
@@ -110,14 +118,14 @@ class PromptVersion(BaseEntity):
     prompt_id: str
     version: int
     content: str
-    variables: List[str]
+    variables: List[str] = field(default_factory=list)
     change_summary: str = ""
     change_type: str = "update"  # create, update, fork, rollback
     created_by: str = ""
 
     def __post_init__(self):
         """Initialize BaseEntity fields."""
-        super().__init__()
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert version to dictionary."""
@@ -166,6 +174,12 @@ class ABTest(BaseEntity):
     target_audience: Dict[str, Any] = field(default_factory=dict)
     created_by: str = ""
     winner: Optional[str] = None  # "A", "B", or None
+    status: str = "active"  # active, completed, paused
+    traffic_percentage: float = 50.0
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert A/B test to dictionary."""
@@ -178,6 +192,8 @@ class ABTest(BaseEntity):
             "test_metric": self.test_metric,
             "is_active": self.is_active,
             "traffic_split": self.traffic_split,
+            "traffic_percentage": self.traffic_percentage,
+            "status": self.status,
             "start_date": self.start_date.isoformat(),
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "target_audience": self.target_audience,
@@ -228,6 +244,11 @@ class PromptUsage(BaseEntity):
     success: bool = True
     error_message: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+    llm_service: str = "unknown"
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert usage to dictionary."""
@@ -244,6 +265,7 @@ class PromptUsage(BaseEntity):
             "success": self.success,
             "error_message": self.error_message,
             "metadata": self.metadata,
+            "llm_service": self.llm_service,
             "created_at": self.created_at.isoformat()
         }
 
@@ -278,6 +300,10 @@ class PromptRelationship(BaseEntity):
     strength: float = 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_by: str = ""
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert relationship to dictionary."""
@@ -321,6 +347,12 @@ class ABTestResult(BaseEntity):
     sample_size: int
     confidence_level: float = 0.0
     statistical_significance: bool = False
+    failed_requests: int = 0
+    successful_requests: int = 0
+
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert A/B test result to dictionary."""
@@ -332,6 +364,8 @@ class ABTestResult(BaseEntity):
             "sample_size": self.sample_size,
             "confidence_level": self.confidence_level,
             "statistical_significance": self.statistical_significance,
+            "failed_requests": self.failed_requests,
+            "successful_requests": self.successful_requests,
             "recorded_at": self.created_at.isoformat()
         }
 
@@ -367,25 +401,9 @@ class BulkOperation(BaseEntity):
     completed_at: Optional[datetime] = None
     created_by: str = ""
 
-    def __init__(self, operation_type: str, status: str = "pending", total_items: int = 0,
-                 processed_items: int = 0, successful_items: int = 0, failed_items: int = 0,
-                 errors: Optional[List[str]] = None, metadata: Optional[Dict[str, Any]] = None,
-                 results: Optional[List[Dict[str, Any]]] = None, completed_at: Optional[datetime] = None,
-                 created_by: str = "", id: Optional[str] = None):
-        """Initialize bulk operation with proper field handling."""
-        super().__init__()
-        self.id = id
-        self.operation_type = operation_type
-        self.status = status
-        self.total_items = total_items
-        self.processed_items = processed_items
-        self.successful_items = successful_items
-        self.failed_items = failed_items
-        self.errors = errors or []
-        self.metadata = metadata or {}
-        self.results = results or []
-        self.completed_at = completed_at
-        self.created_by = created_by
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        BaseEntity.__init__(self)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert bulk operation to dictionary."""
