@@ -8,12 +8,12 @@
     "elm:install": "elm install",
     "elm:make": "elm make src/elm/Main.elm --output=static/elm.js",
     "elm:make:optimized": "elm make src/elm/Main.elm --output=static/elm.js --optimize",
-    "elm:reactor": "elm reactor",
+    "elm:make:watch": "elm-watch hot",
     "elm:test": "elm-test",
-    "elm:test:watch": "elm-test --watch",
     "build": "npm run elm:make:optimized",
-    "dev": "npm run elm:reactor",
-    "test": "npm run elm:test"
+    "dev": "run-pty % npm run elm:make:watch % npm run test",
+    "test": "elm-test --watch",
+    "test:ci": "elm-test"
   },
   "keywords": [
     "elm",
@@ -25,7 +25,9 @@
   "license": "MIT",
   "devDependencies": {
     "elm": "^0.19.1-6",
+    "elm-json": "^0.2.13",
     "elm-test": "^0.19.1-revision12",
-    "elm-json": "^0.2.13"
+    "elm-watch": "^1.1.2",
+    "run-pty": "^5.0.0"
   }
 }
