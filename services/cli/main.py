@@ -2,6 +2,26 @@
 
 Commands:
 - interactive: Start interactive CLI mode with menu-driven interface
+
+Usage:
+    python main.py [command] [args...]
+    or
+    python -m services.cli.main [command] [args...]
+"""
+
+# Handle import path issues when running as standalone script
+import sys
+import os
+if __name__ == "__main__":
+    # Add parent directory to path for imports when running as script
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+
+"""Service: CLI Service
+
+Commands:
+- interactive: Start interactive CLI mode with menu-driven interface
 - get-prompt <category> <name>: Retrieve and display a specific prompt
 - health: Check health status of all ecosystem services
 - list-prompts: List all available prompts with optional category filtering
@@ -81,8 +101,9 @@ Dependencies: All ecosystem services via HTTP clients, Rich library for UI.
 """
 
 import os
-from typing import Dict, Any, List, Optional
+import signal
 import asyncio
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import click
 from rich.console import Console
@@ -99,31 +120,60 @@ from services.shared.constants_new import ServiceNames, ErrorCodes
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
-from .modules.shared_utils import (
-    get_cli_clients,
-    handle_cli_error,
-    create_cli_success_response,
-    build_cli_context,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    get_service_health_url,
-    create_service_health_table,
-    create_workflow_status_table,
-    create_prompt_table,
-    create_search_results_table,
-    create_integration_test_table,
-    validate_prompt_data,
-    extract_variables_from_content,
-    format_prompt_details,
-    format_analytics_display,
-    parse_tags_input,
-    create_health_status_display,
-    log_cli_metrics
-)
-from .modules.cli_commands import CLICommands
-from .modules.prompt_manager import PromptManager
-from .modules.workflow_manager import WorkflowManager
+try:
+    # Try relative imports first (for module execution)
+    from .modules.shared_utils import (
+        get_cli_clients,
+        handle_cli_error,
+        create_cli_success_response,
+        build_cli_context,
+        create_menu_table,
+        add_menu_rows,
+        print_panel,
+        get_service_health_url,
+        create_service_health_table,
+        create_workflow_status_table,
+        create_prompt_table,
+        create_search_results_table,
+        create_integration_test_table,
+        validate_prompt_data,
+        extract_variables_from_content,
+        format_prompt_details,
+        format_analytics_display,
+        parse_tags_input,
+        create_health_status_display,
+        log_cli_metrics
+    )
+    from .modules.cli_commands import CLICommands
+    from .modules.prompt_manager import PromptManager
+    from .modules.managers.workflow_manager import WorkflowManager
+except ImportError:
+    # Fall back to absolute imports (for standalone execution)
+    from services.cli.modules.shared_utils import (
+        get_cli_clients,
+        handle_cli_error,
+        create_cli_success_response,
+        build_cli_context,
+        create_menu_table,
+        add_menu_rows,
+        print_panel,
+        get_service_health_url,
+        create_service_health_table,
+        create_workflow_status_table,
+        create_prompt_table,
+        create_search_results_table,
+        create_integration_test_table,
+        validate_prompt_data,
+        extract_variables_from_content,
+        format_prompt_details,
+        format_analytics_display,
+        parse_tags_input,
+        create_health_status_display,
+        log_cli_metrics
+    )
+    from services.cli.modules.cli_commands import CLICommands
+    from services.cli.modules.prompt_manager import PromptManager
+    from services.cli.modules.managers.workflow_manager import WorkflowManager
 
 # Service configuration constants
 SERVICE_NAME = "cli"
@@ -154,7 +204,24 @@ def cli(ctx, verbose):
 @click.pass_context
 def interactive(ctx):
     """Start interactive CLI mode with menu-driven interface for ecosystem operations"""
-    asyncio.run(cli_service.run())
+    # Setup interrupt handling for graceful shutdown
+    def signal_handler(signum, frame):
+        console = Console()
+        console.print("\n[yellow]⚠️  Interrupt received. Shutting down gracefully...[/yellow]")
+        # Force exit for immediate termination
+        os._exit(1)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    try:
+        asyncio.run(cli_service.run())
+    except KeyboardInterrupt:
+        console = Console()
+        console.print("\n[yellow]⚠️  CLI interrupted by user[/yellow]")
+    except Exception as e:
+        console = Console()
+        console.print(f"\n[red]❌ Fatal CLI error: {e}[/red]")
 
 @cli.command()
 @click.argument('category')

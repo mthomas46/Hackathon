@@ -8,13 +8,8 @@ import importlib.util, os
 from unittest.mock import Mock, patch, AsyncMock
 from click.testing import CliRunner
 
-from .test_utils import load_cli_service, _assert_cli_success, _assert_cli_error, sample_prompt_request
-
-
-@pytest.fixture(scope="module")
-def cli_service():
-    """CLI service fixture for testing."""
-    return load_cli_service()
+from .test_utils import load_cli_service, load_cli_module, _assert_cli_success, _assert_cli_error, sample_prompt_request
+from .test_base import CLIAssertionMixin
 
 
 @pytest.fixture(scope="module")
@@ -23,30 +18,15 @@ def cli_runner():
     return CliRunner()
 
 
-@pytest.fixture
-def mock_clients(mocker):
-    """Mock clients fixture for testing CLI functionality."""
-    mock_client = mocker.Mock()
-    return mock_client
+# mock_clients fixture is now in conftest.py
 
 
-class TestCLICore:
+class TestCLICore(CLIAssertionMixin):
     """Test core CLI functionality."""
 
     def test_cli_service_initialization(self, cli_service):
         """Test CLI service initialization."""
-        assert cli_service is not None
-        assert hasattr(cli_service, 'console')
-        assert hasattr(cli_service, 'clients')
-        assert hasattr(cli_service, 'current_user')
-        assert hasattr(cli_service, 'session_id')
-
-    def test_cli_service_attributes(self, cli_service):
-        """Test CLI service attributes are properly set."""
-        assert cli_service.current_user is not None
-        assert cli_service.session_id is not None
-        assert cli_service.console is not None
-        assert cli_service.clients is not None
+        self.assert_cli_service_initialized(cli_service)
 
     def test_print_header_method(self, cli_service):
         """Test print_header method."""

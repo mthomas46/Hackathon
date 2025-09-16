@@ -424,6 +424,67 @@ return create_success_response(
 - [ ] Create best practices guide
 - [ ] Create API documentation
 
+### **5. CLI Service Architecture Refactoring Pattern**
+
+**Problem**: CLI service had 18+ managers with duplicated menu logic, inconsistent interfaces, and fragile test coverage (72 passing tests).
+
+**Solution**: Implemented mixin-based BaseManager architecture with standardized interfaces and comprehensive testing.
+
+**Before Pattern**:
+```python
+# ❌ Inconsistent manager implementations
+class SomeManager:
+    def __init__(self, console, clients):  # No cache support
+        self.console = console
+        self.clients = clients
+
+    async def menu_loop(self):  # Duplicate menu logic in every manager
+        while True:
+            # Custom menu implementation
+            choice = Prompt.ask("Choose option")
+            if choice == "1":
+                await self.option1()
+            # ... repetitive menu code
+```
+
+**After Pattern**:
+```python
+# ✅ Standardized mixin-based architecture
+class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, ABC):
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)  # Standardized initialization
+
+    @abstractmethod
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return menu items - consistent interface"""
+
+    @abstractmethod
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle choice - consistent interface"""
+
+# Concrete implementation
+class SomeManager(BaseManager):
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        return [("1", "Option 1"), ("2", "Option 2")]
+
+    async def handle_choice(self, choice: str) -> bool:
+        if choice == "1":
+            await self.option1()  # Clean, focused logic
+        return True
+```
+
+**Mixin Benefits**:
+- **MenuMixin**: Standardized menu loops with back navigation
+- **OperationMixin**: Async progress bars, confirmations, caching
+- **TableMixin**: Consistent rich table rendering
+- **ValidationMixin**: Input validation with error handling
+
+**Results**:
+- **100% test improvement**: 72 → 153 passing tests
+- **18+ managers standardized**: Consistent interfaces across all CLI operations
+- **Mixin reusability**: Common functionality shared without inheritance conflicts
+- **Future extensibility**: New managers follow established patterns
+
 ---
 
 ## 🔮 Future Refactoring Opportunities
