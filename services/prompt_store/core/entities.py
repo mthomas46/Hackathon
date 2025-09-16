@@ -115,6 +115,10 @@ class PromptVersion(BaseEntity):
     change_type: str = "update"  # create, update, fork, rollback
     created_by: str = ""
 
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert version to dictionary."""
         return {

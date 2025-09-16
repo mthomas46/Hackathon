@@ -32,6 +32,7 @@ from services.prompt_store.domain.bulk.handlers import BulkOperationHandlers
 from services.prompt_store.domain.refinement.handlers import PromptRefinementHandlers
 from services.prompt_store.domain.lifecycle.handlers import LifecycleHandlers
 from services.prompt_store.domain.relationships.handlers import RelationshipsHandlers
+from services.prompt_store.domain.notifications.handlers import NotificationsHandlers
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 
 # ============================================================================
@@ -82,6 +83,7 @@ bulk_handlers = BulkOperationHandlers()
 refinement_handlers = PromptRefinementHandlers()
 lifecycle_handlers = LifecycleHandlers()
 relationships_handlers = RelationshipsHandlers()
+notifications_handlers = NotificationsHandlers()
 
 # ============================================================================
 # PROMPT MANAGEMENT ENDPOINTS
@@ -256,6 +258,11 @@ async def apply_refined_prompt(prompt_id: str, session_id: str, user_id: str = "
 async def get_refinement_history(prompt_id: str):
     """Get refinement history for a prompt."""
     return await refinement_handlers.handle_get_refinement_history(prompt_id)
+
+@app.get("/api/v1/prompts/{prompt_id}/versions/{version}/refinement", response_model=Dict[str, Any])
+async def get_version_refinement_details(prompt_id: str, version: int):
+    """Get detailed refinement information for a specific version."""
+    return await refinement_handlers.handle_get_version_refinement_details(prompt_id, version)
 
 @app.get("/api/v1/refinement/sessions/active", response_model=Dict[str, Any])
 async def list_active_refinements(user_id: Optional[str] = None):
@@ -453,19 +460,54 @@ async def warmup_cache():
 # ============================================================================
 
 @app.post("/api/v1/webhooks", response_model=Dict[str, Any])
-async def register_webhook(webhook: WebhookCreate):
+async def register_webhook(webhook: WebhookCreate, user_id: str = "api_user"):
     """Register a webhook for event notifications."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return await notifications_handlers.handle_register_webhook(webhook, user_id)
 
 @app.get("/api/v1/webhooks", response_model=Dict[str, Any])
-async def list_webhooks():
+async def list_webhooks(active_only: bool = False):
     """List registered webhooks."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return notifications_handlers.handle_list_webhooks(active_only)
+
+@app.get("/api/v1/webhooks/{webhook_id}", response_model=Dict[str, Any])
+async def get_webhook(webhook_id: str):
+    """Get webhook details."""
+    return notifications_handlers.handle_get_webhook(webhook_id)
+
+@app.put("/api/v1/webhooks/{webhook_id}", response_model=Dict[str, Any])
+async def update_webhook(webhook_id: str, updates: Dict[str, Any], user_id: str = "api_user"):
+    """Update webhook configuration."""
+    return await notifications_handlers.handle_update_webhook(webhook_id, updates, user_id)
+
+@app.delete("/api/v1/webhooks/{webhook_id}", response_model=Dict[str, Any])
+async def delete_webhook(webhook_id: str, user_id: str = "api_user"):
+    """Delete a webhook."""
+    return await notifications_handlers.handle_delete_webhook(webhook_id, user_id)
+
+@app.post("/api/v1/notifications/trigger", response_model=Dict[str, Any])
+async def trigger_notification(event_type: str, event_data: Dict[str, Any], user_id: str = "api_user"):
+    """Manually trigger event notifications."""
+    return await notifications_handlers.handle_notify_event(event_type, event_data, user_id)
+
+@app.post("/api/v1/notifications/process", response_model=Dict[str, Any])
+async def process_notifications():
+    """Process pending notifications."""
+    return await notifications_handlers.handle_process_notifications()
 
 @app.get("/api/v1/notifications/stats", response_model=Dict[str, Any])
 async def get_notification_stats():
     """Get notification delivery statistics."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return notifications_handlers.handle_get_notification_stats()
+
+@app.post("/api/v1/notifications/cleanup", response_model=Dict[str, Any])
+async def cleanup_notifications(days_old: int = 30):
+    """Clean up old notification records."""
+    return notifications_handlers.handle_cleanup_notifications(days_old)
+
+@app.get("/api/v1/notifications/events", response_model=Dict[str, Any])
+async def get_valid_events():
+    """Get list of valid event types."""
+    return notifications_handlers.handle_get_valid_events()
 
 
 if __name__ == "__main__":

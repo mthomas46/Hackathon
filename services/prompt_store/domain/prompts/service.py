@@ -79,8 +79,12 @@ class PromptService(BaseService[Prompt]):
         # Save to database
         saved_prompt = self.repository.save(prompt)
 
-        # Cache the prompt
-        asyncio.create_task(self._cache_prompt(saved_prompt))
+        # Cache the prompt (only if event loop is running)
+        try:
+            asyncio.create_task(self._cache_prompt(saved_prompt))
+        except RuntimeError:
+            # No event loop running (e.g., in tests), skip async caching
+            pass
 
         return saved_prompt
 

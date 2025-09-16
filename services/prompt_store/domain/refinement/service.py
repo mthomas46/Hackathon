@@ -12,11 +12,7 @@ from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.utilities import generate_id, utc_now
 
 # Import LLM service clients
-try:
-    from services.shared.clients import ServiceClients
-    LLM_SERVICES_AVAILABLE = True
-except ImportError:
-    LLM_SERVICES_AVAILABLE = False
+from services.shared.clients import ServiceClients
 
 # Import doc store client
 try:
@@ -31,7 +27,7 @@ class PromptRefinementService:
 
     def __init__(self):
         self.prompt_service = PromptService()
-        self.llm_clients = ServiceClients() if LLM_SERVICES_AVAILABLE else None
+        self.llm_clients = ServiceClients()
         self.doc_service = None  # Will be initialized when needed
 
     async def initialize_doc_service(self):
@@ -52,8 +48,7 @@ class PromptRefinementService:
         3. Store refinement result in doc_store
         4. Return refinement session info
         """
-        if not LLM_SERVICES_AVAILABLE:
-            raise ValueError("LLM services not available for prompt refinement")
+        # LLM services are always available through ServiceClients
 
         await self.initialize_doc_service()
         if not self.doc_service:
@@ -184,14 +179,24 @@ class PromptRefinementService:
         if not result_doc:
             raise ValueError("Result document not found")
 
-        # Extract refined prompt from document (this would depend on the document structure)
+        # Extract refined prompt from document
         refined_content = self._extract_refined_prompt_from_document(result_doc)
+
+        # Get original prompt for comparison
+        original_prompt = self.prompt_service.get_entity(prompt_id)
+        if not original_prompt:
+            raise ValueError(f"Original prompt {prompt_id} not found")
+
+        # Generate detailed change summary
+        change_summary = self._generate_refinement_change_summary(
+            original_prompt, refined_content, session, result_doc
+        )
 
         # Update the original prompt with versioning
         updated_prompt = self.prompt_service.update_prompt_content(
             prompt_id=prompt_id,
             content=refined_content,
-            change_summary=f"Refined using LLM service: {session.get('llm_service')}",
+            change_summary=change_summary,
             updated_by=user_id
         )
 
@@ -269,17 +274,145 @@ class PromptRefinementService:
 
     async def _call_llm_service(self, service_name: str, request: Dict[str, Any]) -> Dict[str, Any]:
         """Call the specified LLM service for refinement."""
-        if not self.llm_clients:
-            raise ValueError("LLM services not available")
-
-        # This would need to be implemented based on the actual LLM service APIs
-        # For now, return a mock response
         if service_name == "interpreter":
-            return await self.llm_clients.call_interpreter(request)
+            # Use interpreter service for natural language prompt refinement
+            # Convert our refinement request to interpreter format
+            interpreter_request = {
+                "query": self._format_refinement_query_for_interpreter(request),
+                "user_id": request.get("user_id", "system")
+            }
+
+            try:
+                response = await self.llm_clients.interpret_query(
+                    interpreter_request["query"],
+                    interpreter_request["user_id"]
+                )
+
+                # Extract the refined prompt from interpreter response
+                if response.get("success") and "data" in response:
+                    interpreted_data = response["data"]
+                    # The interpreter returns workflow/intent data, we need to extract refined prompt
+                    return self._extract_refined_prompt_from_interpreter_response(interpreted_data, request)
+                else:
+                    raise ValueError(f"Interpreter service error: {response}")
+
+            except Exception as e:
+                raise ValueError(f"Failed to call interpreter service: {str(e)}")
+
         elif service_name == "bedrock-proxy":
-            return await self.llm_clients.call_bedrock(request)
+            # Use bedrock-proxy for direct LLM refinement
+            bedrock_request = {
+                "prompt": self._format_refinement_prompt_for_bedrock(request),
+                "template": "summary",  # Use summary template for refinement
+                "format": "md",
+                "model": "anthropic.claude-3-sonnet-20240229-v1:0"
+            }
+
+            try:
+                response = await self._call_bedrock_service(bedrock_request)
+
+                # Extract refined prompt from bedrock response
+                if "output" in response:
+                    return {"refined_content": response["output"]}
+                else:
+                    raise ValueError(f"Bedrock service returned invalid response: {response}")
+
+            except Exception as e:
+                raise ValueError(f"Failed to call bedrock service: {str(e)}")
+
         else:
             raise ValueError(f"Unsupported LLM service: {service_name}")
+
+    async def _call_bedrock_service(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """Call Bedrock proxy service directly."""
+        import httpx
+
+        bedrock_url = self.llm_clients.get_config_value("BEDROCK_PROXY_URL", "http://bedrock-proxy:7090/invoke", section="services", env_key="BEDROCK_PROXY_URL")
+
+        async with httpx.AsyncClient(timeout=60) as client:
+            try:
+                response = await client.post(bedrock_url, json=request)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                raise ValueError(f"Bedrock service HTTP error: {e.response.status_code} - {e.response.text}")
+            except Exception as e:
+                raise ValueError(f"Bedrock service error: {str(e)}")
+
+    def _format_refinement_query_for_interpreter(self, request: Dict[str, Any]) -> str:
+        """Format refinement request as natural language query for interpreter."""
+        original_prompt = request.get("original_prompt", {})
+        instructions = request.get("refinement_instructions", "")
+
+        query = f"""
+        I have this prompt that needs refinement:
+
+        Original Prompt:
+        Name: {original_prompt.get('name', 'N/A')}
+        Category: {original_prompt.get('category', 'N/A')}
+        Content: {original_prompt.get('content', 'N/A')}
+
+        Refinement Instructions: {instructions}
+
+        Please provide an improved version of this prompt that addresses the refinement instructions.
+        Focus on clarity, specificity, and effectiveness.
+        """
+
+        return query.strip()
+
+    def _extract_refined_prompt_from_interpreter_response(self, interpreter_data: Dict[str, Any], original_request: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract refined prompt from interpreter service response."""
+        # The interpreter service returns workflow/intent data
+        # For refinement, we look for the interpreted intent and extract refined content
+
+        if "intent" in interpreter_data:
+            intent = interpreter_data["intent"]
+
+            # If the intent indicates refinement, extract the refined prompt
+            if "refine" in intent.lower() or "improve" in intent.lower():
+                # Look for refined content in entities or response_text
+                entities = interpreter_data.get("entities", {})
+                response_text = interpreter_data.get("response_text", "")
+
+                # Try to extract refined prompt from response
+                if response_text:
+                    return {"refined_content": response_text}
+                elif "refined_prompt" in entities:
+                    return {"refined_content": entities["refined_prompt"]}
+                else:
+                    # Fallback: use the original prompt with some basic improvements
+                    original_content = original_request.get("original_prompt", {}).get("content", "")
+                    return {"refined_content": f"Improved version of: {original_content}"}
+
+        # Fallback response
+        return {"refined_content": "Unable to refine prompt - interpreter service returned unexpected response"}
+
+    def _format_refinement_prompt_for_bedrock(self, request: Dict[str, Any]) -> str:
+        """Format refinement request as prompt for Bedrock."""
+        original_prompt = request.get("original_prompt", {})
+        instructions = request.get("refinement_instructions", "")
+
+        prompt = f"""
+You are an expert prompt engineer. Your task is to refine and improve the following prompt based on the given instructions.
+
+Original Prompt:
+- Name: {original_prompt.get('name', 'N/A')}
+- Category: {original_prompt.get('category', 'N/A')}
+- Content: {original_prompt.get('content', 'N/A')}
+
+Refinement Instructions:
+{instructions}
+
+Please provide an improved version of this prompt that:
+1. Is more clear and specific
+2. Better achieves its intended purpose
+3. Uses more effective language and structure
+4. Addresses any issues mentioned in the refinement instructions
+
+Provide only the refined prompt content, without additional explanation or formatting.
+"""
+
+        return prompt.strip()
 
     async def _store_refinement_result(self, session_id: str, original_prompt: Any,
                                      llm_response: Dict[str, Any], llm_service: str,
@@ -292,16 +425,21 @@ class PromptRefinementService:
             session_id, original_prompt, llm_response, llm_service
         )
 
-        # Create document in doc_store
+        # Create document in doc_store with enhanced metadata
         doc_data = {
             "content": doc_content,
             "content_type": "prompt_refinement_result",
             "metadata": {
                 "session_id": session_id,
                 "original_prompt_id": original_prompt.id,
+                "original_prompt_name": original_prompt.name,
+                "original_prompt_version": original_prompt.version,
                 "llm_service": llm_service,
                 "refinement_type": "llm_assisted",
-                "user_id": user_id
+                "user_id": user_id,
+                "llm_response": llm_response,  # Store full LLM response for extraction fallback
+                "refined_content": llm_response.get('refined_content', ''),
+                "created_at": utc_now().isoformat()
             },
             "correlation_id": f"refinement_{session_id}"
         }
@@ -394,6 +532,153 @@ class PromptRefinementService:
 
     def _extract_refined_prompt_from_document(self, document: Any) -> str:
         """Extract refined prompt content from result document."""
-        # This would parse the document to extract the refined prompt
-        # For now, return the document content as-is
-        return document.content
+        content = document.content
+
+        # Parse the document to extract the refined prompt
+        # Look for the "Refined Prompt" section
+        lines = content.split('\n')
+        refined_section_found = False
+        refined_prompt_lines = []
+
+        for line in lines:
+            if line.startswith('## Refined Prompt'):
+                refined_section_found = True
+                continue
+            elif line.startswith('## ') and refined_section_found:
+                # We've reached the next section, stop collecting
+                break
+            elif refined_section_found and line.startswith('```'):
+                # Skip the code block markers
+                continue
+            elif refined_section_found:
+                # Collect the refined prompt content
+                refined_prompt_lines.append(line)
+
+        if refined_prompt_lines:
+            # Join the lines and clean up any extra whitespace
+            refined_content = '\n'.join(refined_prompt_lines).strip()
+            # Remove any trailing empty lines
+            return '\n'.join([line for line in refined_content.split('\n') if line.strip()])
+        else:
+            # Fallback: try to extract from LLM response if stored in metadata
+            if hasattr(document, 'metadata') and document.metadata:
+                llm_response = document.metadata.get('llm_response', {})
+                if isinstance(llm_response, dict) and 'refined_content' in llm_response:
+                    return llm_response['refined_content']
+
+            # Last resort: return the whole content
+            return content
+
+    def _generate_refinement_change_summary(self, original_prompt: Any, refined_content: str,
+                                           session: Dict[str, Any], result_doc: Any) -> str:
+        """Generate detailed change summary for refinement versioning."""
+        import difflib
+
+        # Calculate content differences
+        original_lines = original_prompt.content.splitlines(keepends=True)
+        refined_lines = refined_content.splitlines(keepends=True)
+
+        # Get diff statistics
+        diff = list(difflib.unified_diff(original_lines, refined_lines,
+                                       fromfile='original', tofile='refined', lineterm=''))
+
+        added_lines = len([line for line in diff if line.startswith('+') and not line.startswith('+++')])
+        removed_lines = len([line for line in diff if line.startswith('-') and not line.startswith('---')])
+
+        # Get session and LLM details
+        llm_service = session.get('llm_service', 'unknown')
+        refinement_instructions = session.get('refinement_instructions', '')
+
+        # Generate summary
+        summary_parts = [
+            f"LLM-assisted refinement using {llm_service}",
+            f"Content changes: +{added_lines} lines, -{removed_lines} lines"
+        ]
+
+        if refinement_instructions:
+            # Truncate long instructions for summary
+            instructions_preview = refinement_instructions[:100]
+            if len(refinement_instructions) > 100:
+                instructions_preview += "..."
+            summary_parts.append(f"Instructions: {instructions_preview}")
+
+        # Add metadata if available
+        if hasattr(result_doc, 'metadata') and result_doc.metadata:
+            metadata = result_doc.metadata
+            if 'original_prompt_version' in metadata:
+                summary_parts.append(f"Applied to version {metadata['original_prompt_version']}")
+
+        return " | ".join(summary_parts)
+
+    async def get_refinement_history(self, prompt_id: str) -> Dict[str, Any]:
+        """Get refinement history for a prompt, including version relationships."""
+        # Get all versions for this prompt
+        versions = self.prompt_service._get_prompt_versions(prompt_id)
+
+        # Get all refinement sessions that might be related to this prompt
+        # This would ideally query the database for refinement sessions
+        # For now, we'll build the history from version change summaries
+
+        refinement_history = []
+        for version in versions:
+            if "LLM-assisted refinement" in version.change_summary:
+                refinement_history.append({
+                    "version": version.version,
+                    "change_summary": version.change_summary,
+                    "created_by": version.created_by,
+                    "created_at": version.created_at.isoformat(),
+                    "change_type": version.change_type
+                })
+
+        return {
+            "prompt_id": prompt_id,
+            "refinement_history": refinement_history,
+            "total_refinements": len(refinement_history)
+        }
+
+    async def get_version_refinement_details(self, prompt_id: str, version: int) -> Dict[str, Any]:
+        """Get detailed refinement information for a specific version."""
+        # Get the version
+        version_entity = self.prompt_service._get_version_repo().get_version_by_number(prompt_id, version)
+        if not version_entity:
+            raise ValueError(f"Version {version} not found for prompt {prompt_id}")
+
+        # Check if this version was created by refinement
+        is_refinement = "LLM-assisted refinement" in version_entity.change_summary
+
+        details = {
+            "version": version,
+            "change_summary": version_entity.change_summary,
+            "created_by": version_entity.created_by,
+            "created_at": version_entity.created_at.isoformat(),
+            "is_refinement": is_refinement
+        }
+
+        if is_refinement:
+            # Try to extract refinement details from the summary
+            details["refinement_info"] = self._parse_refinement_summary(version_entity.change_summary)
+
+        return details
+
+    def _parse_refinement_summary(self, summary: str) -> Dict[str, Any]:
+        """Parse refinement details from version change summary."""
+        parts = summary.split(" | ")
+        info = {}
+
+        for part in parts:
+            if part.startswith("LLM-assisted refinement using "):
+                info["llm_service"] = part.replace("LLM-assisted refinement using ", "")
+            elif part.startswith("Content changes: "):
+                changes = part.replace("Content changes: ", "")
+                # Parse +X lines, -Y lines
+                import re
+                match = re.search(r'\+(\d+) lines, -(\d+) lines', changes)
+                if match:
+                    info["lines_added"] = int(match.group(1))
+                    info["lines_removed"] = int(match.group(2))
+            elif part.startswith("Instructions: "):
+                info["refinement_instructions"] = part.replace("Instructions: ", "")
+            elif part.startswith("Applied to version "):
+                info["source_version"] = int(part.replace("Applied to version ", ""))
+
+        return info
