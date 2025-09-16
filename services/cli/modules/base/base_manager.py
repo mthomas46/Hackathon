@@ -12,10 +12,10 @@ import asyncio
 from ..utils.cache_utils import CacheManager
 from ..utils.api_utils import APIClient
 from ..formatters.display_utils import DisplayManager
-from .mixins import MenuMixin, OperationMixin, TableMixin, ValidationMixin
+from .mixins import MenuMixin, OperationMixin, TableMixin, ValidationMixin, HealthCheckMixin
 
 
-class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, ABC):
+class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, HealthCheckMixin, ABC):
     """Base class for all CLI managers providing common functionality."""
 
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
@@ -35,6 +35,55 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, ABC):
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
         pass
+
+    def get_required_services(self) -> List[str]:
+        """Return list of services required by this manager.
+
+        Override this method in subclasses to specify which services
+        must be running for the manager's features to work.
+
+        Returns:
+            List of service names (from ServiceNames constants)
+        """
+        return []
+
+    async def check_required_services(self) -> Dict[str, Dict[str, Any]]:
+        """Check health of all required services.
+
+        Returns:
+            Dict mapping service names to health status
+        """
+        required_services = self.get_required_services()
+        if not required_services:
+            return {}
+
+        return await self.check_services_health(required_services)
+
+    async def validate_service_dependencies(self) -> bool:
+        """Validate that all required services are healthy.
+
+        Returns:
+            True if all required services are healthy, False otherwise
+        """
+        health_results = await self.check_required_services()
+        if not health_results:
+            return True  # No required services
+
+        unhealthy_services = []
+        for service_name, health_data in health_results.items():
+            if not self.is_service_healthy(health_data):
+                unhealthy_services.append(service_name)
+
+        if unhealthy_services:
+            self.display.show_error(
+                f"The following required services are not available: {', '.join(unhealthy_services)}"
+            )
+            self.display.show_info(
+                "Please ensure services are running and try again, or check service status in Settings."
+            )
+            return False
+
+        return True
 
 
     async def confirm_action(self, message: str, default: bool = False) -> bool:
@@ -258,5 +307,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, ABC):
         await self.run_submenu_loop(title, items, back_option)
 
     async def handle_submenu_choice(self, choice: str) -> bool:
-        """Handle submenu choice by delegating to handle_choice."""
+        """Handle submenu choice by delegating to handle_choice with service validation."""
+        # Check service dependencies before allowing menu progression
+        if not await self.validate_service_dependencies():
+            return False
+
         return await self.handle_choice(choice)

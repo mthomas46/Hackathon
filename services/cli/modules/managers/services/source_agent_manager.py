@@ -10,6 +10,7 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
+from services.shared.constants_new import ServiceNames
 from ...base.base_manager import BaseManager
 
 
@@ -18,6 +19,10 @@ class SourceAgentManager(BaseManager):
 
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)
+
+    def get_required_services(self) -> List[str]:
+        """Return list of services required by this manager."""
+        return [ServiceNames.SOURCE_AGENT]
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for source agent operations."""

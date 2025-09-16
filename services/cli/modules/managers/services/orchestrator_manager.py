@@ -10,6 +10,7 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
+from services.shared.constants_new import ServiceNames
 from ...base.base_manager import BaseManager
 
 
@@ -34,6 +35,10 @@ class OrchestratorManager(BaseManager):
         """Main orchestrator management menu."""
         menu_items = await self.get_main_menu()
         await self.run_menu_loop("Orchestrator Management", menu_items)
+
+    def get_required_services(self) -> List[str]:
+        """Return list of services required by this manager."""
+        return [ServiceNames.ORCHESTRATOR, ServiceNames.DOC_STORE]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle menu choice selection."""
