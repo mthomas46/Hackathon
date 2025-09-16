@@ -292,18 +292,30 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         return result is not None
 
     async def run_menu_loop(self, title: str, menu_items: Optional[List[tuple[str, str]]] = None,
-                           back_option: str = "b") -> None:
+                           back_option: str = "b", use_interactive: bool = True) -> None:
         """Standard menu loop implementation - ELIMINATES CODE DUPLICATION.
 
         Args:
             title: Menu title
             menu_items: List of (choice, description) tuples. If None, calls get_main_menu()
             back_option: Option to exit menu (default: 'b')
+            use_interactive: Whether to use enhanced interactive overlay (default: True)
         """
         # Use provided menu_items or get them from the manager
         items = menu_items if menu_items is not None else await self.get_main_menu()
 
-        # Delegate to mixin for the actual menu loop
+        # Try to use interactive overlay if available and requested
+        if use_interactive:
+            try:
+                from ..interactive_overlay import get_interactive_overlay
+                overlay = get_interactive_overlay(self.console)
+                await overlay.enhanced_menu_loop(self, title, items, back_option)
+                return
+            except ImportError:
+                # Questionary not available, fall back to standard menu
+                pass
+
+        # Delegate to mixin for the standard menu loop
         await self.run_submenu_loop(title, items, back_option)
 
     async def handle_submenu_choice(self, choice: str) -> bool:

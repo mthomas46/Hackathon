@@ -461,7 +461,7 @@ class CLICommands:
                     prompt_manager = PromptManager(self.console, self.clients)
                     await prompt_manager.prompt_management_menu()
                 elif choice.lower() == "s":
-                    await self.settings_manager.run_menu_loop("Settings & Service Status")
+                    await self.settings_manager.run_menu_loop("Settings & Service Status", use_interactive=True)
                 elif choice.lower() == "c":
                     await self.cache_management_menu()
                 elif choice.lower() in ["q", "quit", "exit"]:
