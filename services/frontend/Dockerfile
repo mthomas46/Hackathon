@@ -19,19 +19,13 @@ COPY tests/ ./tests/
 RUN npm run build
 
 # Production stage with Python FastAPI backend
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app/services/frontend
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy Python dependencies and install
-COPY requirements.txt* ./
-RUN pip install --no-cache-dir -r requirements.txt || echo "No requirements.txt found"
+# Install required Python packages
+RUN pip install --no-cache-dir fastapi uvicorn httpx pydantic aiofiles
 
 # Copy Python application files
 COPY *.py ./
@@ -41,16 +35,16 @@ COPY modules/ ./modules/
 # Copy built Elm assets from builder stage
 COPY --from=elm-builder /app/static/ ./static/
 
-# Create a simple requirements.txt if it doesn't exist
-RUN echo "fastapi==0.104.1\nuvicorn[standard]==0.24.0\naiofiles==23.2.1" > requirements.txt && \
-    pip install --no-cache-dir -r requirements.txt
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV ENVIRONMENT=production
 
 # Expose port
-EXPOSE 8000
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:3000/health')"
 
 # Start the FastAPI application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "main.py"]
