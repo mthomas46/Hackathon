@@ -384,6 +384,72 @@ class TaxonomyTreeResponse(BaseModel):
     taxonomy_tree: Dict[str, List[TaxonomyNode]]
 
 
+class LifecyclePolicyRequest(BaseModel):
+    """Request model for creating lifecycle policies."""
+    name: str
+    description: str
+    conditions: Dict[str, Any]
+    actions: Dict[str, Any]
+    priority: int = 0
+
+
+class LifecycleTransitionRequest(BaseModel):
+    """Request model for phase transitions."""
+    new_phase: str
+    reason: Optional[str] = None
+
+
+class LifecyclePolicyInfo(BaseModel):
+    """Lifecycle policy information."""
+    id: str
+    name: str
+    description: str
+    conditions: Dict[str, Any]
+    actions: Dict[str, Any]
+    priority: int
+    enabled: bool
+    created_at: str
+    updated_at: str
+
+
+class LifecycleInfo(BaseModel):
+    """Document lifecycle information."""
+    id: str
+    document_id: str
+    current_phase: str
+    retention_period_days: Optional[int]
+    archival_date: Optional[str]
+    deletion_date: Optional[str]
+    last_reviewed: Optional[str]
+    compliance_status: str
+    applied_policies: List[str]
+    metadata: Dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+class LifecycleReportResponse(BaseModel):
+    """Response model for lifecycle reports."""
+    phase_distribution: List[Dict[str, Any]]
+    upcoming_transitions: Dict[str, Any]
+    recent_events: List[Dict[str, Any]]
+    policy_effectiveness: List[Dict[str, Any]]
+    report_period_days: int
+
+
+class LifecycleStatusResponse(BaseModel):
+    """Response model for lifecycle status."""
+    lifecycle: LifecycleInfo
+    next_transition: Optional[Dict[str, Any]] = None
+    compliance_issues: List[str] = []
+
+
+class PoliciesListResponse(BaseModel):
+    """Response model for listing policies."""
+    policies: List[LifecyclePolicyInfo]
+    total: int
+
+
 class BulkDocumentItem(BaseModel):
     """Bulk document creation item."""
     id: Optional[str] = None

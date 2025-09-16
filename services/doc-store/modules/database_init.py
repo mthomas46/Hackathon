@@ -137,6 +137,54 @@ def init_database() -> None:
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS lifecycle_policies (
+              id TEXT PRIMARY KEY,
+              name TEXT UNIQUE,
+              description TEXT,
+              conditions TEXT,
+              actions TEXT,
+              priority INTEGER DEFAULT 0,
+              enabled BOOLEAN DEFAULT 1,
+              created_at TEXT,
+              updated_at TEXT
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_lifecycle (
+              id TEXT PRIMARY KEY,
+              document_id TEXT,
+              current_phase TEXT DEFAULT 'active',
+              retention_period_days INTEGER,
+              archival_date TEXT,
+              deletion_date TEXT,
+              last_reviewed TEXT,
+              compliance_status TEXT DEFAULT 'compliant',
+              applied_policies TEXT,
+              metadata TEXT,
+              created_at TEXT,
+              updated_at TEXT,
+              FOREIGN KEY(document_id) REFERENCES documents(id)
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS lifecycle_events (
+              id TEXT PRIMARY KEY,
+              document_id TEXT,
+              event_type TEXT,
+              policy_id TEXT,
+              old_phase TEXT,
+              new_phase TEXT,
+              details TEXT,
+              performed_by TEXT,
+              created_at TEXT,
+              FOREIGN KEY(document_id) REFERENCES documents(id),
+              FOREIGN KEY(policy_id) REFERENCES lifecycle_policies(id)
+            )
+        """)
+
         # Create indexes for performance
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON documents(content_hash)",
@@ -158,7 +206,15 @@ def init_database() -> None:
             "CREATE INDEX IF NOT EXISTS idx_semantic_metadata_entity_type ON semantic_metadata(entity_type)",
             "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_tag ON tag_taxonomy(tag)",
             "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_category ON tag_taxonomy(category)",
-            "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_parent ON tag_taxonomy(parent_tag)"
+            "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_parent ON tag_taxonomy(parent_tag)",
+            "CREATE INDEX IF NOT EXISTS idx_lifecycle_policies_name ON lifecycle_policies(name)",
+            "CREATE INDEX IF NOT EXISTS idx_lifecycle_policies_enabled ON lifecycle_policies(enabled)",
+            "CREATE INDEX IF NOT EXISTS idx_document_lifecycle_document_id ON document_lifecycle(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_document_lifecycle_phase ON document_lifecycle(current_phase)",
+            "CREATE INDEX IF NOT EXISTS idx_document_lifecycle_deletion_date ON document_lifecycle(deletion_date)",
+            "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_document_id ON lifecycle_events(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_type ON lifecycle_events(event_type)",
+            "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_created_at ON lifecycle_events(created_at)"
         ]
 
         for index in indexes:
