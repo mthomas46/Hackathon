@@ -46,8 +46,8 @@ class WorkflowManager(BaseManager):
         return True
 
     async def workflow_orchestration_menu(self):
-        """Workflow orchestration submenu."""
-        await self.run_menu_loop("Workflow Orchestration")
+        """Workflow orchestration submenu with enhanced interactive experience."""
+        await self.run_menu_loop("Workflow Orchestration", use_interactive=True)
 
     async def run_document_analysis(self):
         """Run document analysis workflow."""

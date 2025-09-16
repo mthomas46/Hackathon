@@ -51,8 +51,8 @@ class PromptManager(BaseManager):
         return True
 
     async def prompt_management_menu(self):
-        """Prompt management submenu."""
-        await self.run_menu_loop("Prompt Management")
+        """Prompt management submenu with enhanced interactive experience."""
+        await self.run_menu_loop("Prompt Management", use_interactive=True)
 
     async def list_prompts(self):
         """List all prompts."""

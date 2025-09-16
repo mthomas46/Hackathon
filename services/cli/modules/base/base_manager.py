@@ -309,7 +309,10 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
             try:
                 from ..interactive_overlay import get_interactive_overlay
                 overlay = get_interactive_overlay(self.console)
-                await overlay.enhanced_menu_loop(self, title, items, back_option)
+                await overlay.enhanced_menu_loop(
+                    self, title, items, back_option,
+                    enable_shortcuts=True, enable_search=True
+                )
                 return
             except ImportError:
                 # Questionary not available, fall back to standard menu
