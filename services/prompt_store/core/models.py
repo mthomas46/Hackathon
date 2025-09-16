@@ -200,3 +200,82 @@ class NotificationResponse(BaseModel):
     recent_events: List[Dict[str, Any]]
     webhook_stats: Dict[str, Any]
     event_types: Dict[str, int]
+
+
+# ============================================================================
+# LIFECYCLE MANAGEMENT MODELS
+# ============================================================================
+
+class PromptLifecycleUpdate(BaseModel):
+    """Request model for updating prompt lifecycle status."""
+    status: str
+    reason: Optional[str] = None
+
+
+class LifecycleStatusResponse(BaseModel):
+    """Response model for prompts by lifecycle status."""
+    status: str
+    prompts: List[Dict[str, Any]]
+    count: int
+    limit: int
+    offset: int
+
+
+class LifecycleHistoryResponse(BaseModel):
+    """Response model for lifecycle history."""
+    prompt_id: str
+    current_status: str
+    lifecycle_history: List[Dict[str, Any]]
+    history_count: int
+
+
+class LifecycleCountsResponse(BaseModel):
+    """Response model for lifecycle status counts."""
+    status_counts: Dict[str, int]
+    total_prompts: int
+    last_updated: str
+
+
+class LifecycleTransitionValidation(BaseModel):
+    """Response model for transition validation."""
+    valid: bool
+    current_status: str
+    requested_status: str
+    reason: Optional[str] = None
+
+
+class BulkLifecycleUpdate(BaseModel):
+    """Request model for bulk lifecycle updates."""
+    prompt_ids: List[str]
+    status: str
+    reason: Optional[str] = None
+
+
+# ============================================================================
+# RELATIONSHIPS MODELS
+# ============================================================================
+
+class RelationshipUpdate(BaseModel):
+    """Request model for updating relationship properties."""
+    strength: Optional[float] = Field(None, ge=0.0, le=1.0)
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class RelationshipGraphRequest(BaseModel):
+    """Request model for relationship graph queries."""
+    depth: Optional[int] = Field(2, ge=1, le=5)
+    include_prompt_details: Optional[bool] = True
+
+
+class RelatedPromptsFilter(BaseModel):
+    """Request model for filtering related prompts."""
+    relationship_types: Optional[List[str]] = None
+    min_strength: Optional[float] = Field(0.0, ge=0.0, le=1.0)
+    direction: Optional[str] = Field("both", pattern="^(both|outgoing|incoming)$")
+
+
+class RelationshipValidationRequest(BaseModel):
+    """Request model for relationship validation."""
+    source_prompt_id: str
+    target_prompt_id: str
+    relationship_type: str

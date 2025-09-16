@@ -64,7 +64,6 @@ class PromptService(BaseService[Prompt]):
 
         # Create prompt entity
         prompt = Prompt(
-            id=entity_id or generate_id(),
             name=name,
             category=category,
             description=data.get("description", ""),
@@ -75,6 +74,7 @@ class PromptService(BaseService[Prompt]):
             created_by=data.get("created_by", "api_user"),
             performance_score=complexity  # Initial score based on complexity
         )
+        prompt.id = entity_id or generate_id()
 
         # Save to database
         saved_prompt = self.repository.save(prompt)

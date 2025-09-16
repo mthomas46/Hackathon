@@ -22,13 +22,16 @@ from services.shared.config import get_config_value
 # ============================================================================
 from services.prompt_store.core.models import (
     PromptCreate, PromptUpdate, ABTestCreate, PromptSearchFilters,
-    BulkOperationCreate, PromptRelationshipCreate, WebhookCreate
+    BulkOperationCreate, PromptRelationshipCreate, WebhookCreate,
+    PromptLifecycleUpdate, BulkLifecycleUpdate
 )
 from services.prompt_store.domain.prompts.handlers import PromptHandlers
 from services.prompt_store.domain.ab_testing.handlers import ABTestHandlers
 from services.prompt_store.domain.analytics.handlers import AnalyticsHandlers
 from services.prompt_store.domain.bulk.handlers import BulkOperationHandlers
 from services.prompt_store.domain.refinement.handlers import PromptRefinementHandlers
+from services.prompt_store.domain.lifecycle.handlers import LifecycleHandlers
+from services.prompt_store.domain.relationships.handlers import RelationshipsHandlers
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 
 # ============================================================================
@@ -77,6 +80,8 @@ ab_test_handlers = ABTestHandlers()
 analytics_handlers = AnalyticsHandlers()
 bulk_handlers = BulkOperationHandlers()
 refinement_handlers = PromptRefinementHandlers()
+lifecycle_handlers = LifecycleHandlers()
+relationships_handlers = RelationshipsHandlers()
 
 # ============================================================================
 # PROMPT MANAGEMENT ENDPOINTS
@@ -310,14 +315,46 @@ async def get_ab_test_results(test_id: str):
 # ============================================================================
 
 @app.post("/api/v1/prompts/{prompt_id}/relationships", response_model=Dict[str, Any])
-async def add_prompt_relationship(prompt_id: str, relationship: PromptRelationshipCreate):
+async def add_prompt_relationship(prompt_id: str, relationship: PromptRelationshipCreate,
+                                user_id: str = "api_user"):
     """Add a relationship between prompts."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return await relationships_handlers.handle_create_relationship(prompt_id, relationship, user_id)
 
 @app.get("/api/v1/prompts/{prompt_id}/relationships", response_model=Dict[str, Any])
 async def get_prompt_relationships(prompt_id: str, direction: str = "both"):
     """Get relationships for a prompt."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return relationships_handlers.handle_get_relationships(prompt_id, direction)
+
+@app.put("/api/v1/relationships/{relationship_id}/strength", response_model=Dict[str, Any])
+async def update_relationship_strength(relationship_id: str, strength: float, user_id: str = "api_user"):
+    """Update the strength of a relationship."""
+    return relationships_handlers.handle_update_relationship_strength(relationship_id, strength, user_id)
+
+@app.delete("/api/v1/relationships/{relationship_id}", response_model=Dict[str, Any])
+async def delete_relationship(relationship_id: str, user_id: str = "api_user"):
+    """Delete a relationship."""
+    return relationships_handlers.handle_delete_relationship(relationship_id, user_id)
+
+@app.get("/api/v1/prompts/{prompt_id}/relationships/graph", response_model=Dict[str, Any])
+async def get_relationship_graph(prompt_id: str, depth: int = 2):
+    """Get relationship graph for a prompt."""
+    return relationships_handlers.handle_get_relationship_graph(prompt_id, depth)
+
+@app.get("/api/v1/relationships/stats", response_model=Dict[str, Any])
+async def get_relationship_stats():
+    """Get relationship statistics."""
+    return relationships_handlers.handle_get_relationship_stats()
+
+@app.get("/api/v1/prompts/{prompt_id}/related", response_model=Dict[str, Any])
+async def find_related_prompts(prompt_id: str, relationship_types: Optional[List[str]] = None,
+                             min_strength: float = 0.0):
+    """Find prompts related to the given prompt."""
+    return relationships_handlers.handle_find_related_prompts(prompt_id, relationship_types, min_strength)
+
+@app.post("/api/v1/relationships/validate", response_model=Dict[str, Any])
+async def validate_relationship(source_prompt_id: str, target_prompt_id: str, relationship_type: str):
+    """Validate if a relationship can be created."""
+    return relationships_handlers.handle_validate_relationship(source_prompt_id, target_prompt_id, relationship_type)
 
 @app.get("/api/v1/prompts/{prompt_id}/versions", response_model=Dict[str, Any])
 async def get_prompt_versions(prompt_id: str, limit: int = 50, offset: int = 0):
@@ -334,14 +371,42 @@ async def rollback_prompt_version(prompt_id: str, version_number: int, reason: s
 # ============================================================================
 
 @app.put("/api/v1/prompts/{prompt_id}/lifecycle", response_model=Dict[str, Any])
-async def update_prompt_lifecycle(prompt_id: str, status: str, reason: str = ""):
+async def update_prompt_lifecycle(prompt_id: str, lifecycle_update: PromptLifecycleUpdate,
+                                user_id: str = "api_user"):
     """Update prompt lifecycle status (draft/published/deprecated/archived)."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return await lifecycle_handlers.handle_update_lifecycle_status(
+        prompt_id, lifecycle_update, user_id
+    )
 
 @app.get("/api/v1/prompts/lifecycle/{status}", response_model=Dict[str, Any])
 async def get_prompts_by_lifecycle_status(status: str, limit: int = 50, offset: int = 0):
     """Get prompts by lifecycle status."""
-    return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
+    return await lifecycle_handlers.handle_get_prompts_by_status(status, limit, offset)
+
+@app.get("/api/v1/prompts/{prompt_id}/lifecycle/history", response_model=Dict[str, Any])
+def get_prompt_lifecycle_history(prompt_id: str):
+    """Get the lifecycle transition history for a prompt."""
+    return lifecycle_handlers.handle_get_lifecycle_history(prompt_id)
+
+@app.get("/api/v1/lifecycle/counts", response_model=Dict[str, Any])
+def get_lifecycle_status_counts():
+    """Get counts of prompts in each lifecycle status."""
+    return lifecycle_handlers.handle_get_status_counts()
+
+@app.get("/api/v1/lifecycle/rules", response_model=Dict[str, Any])
+def get_lifecycle_transition_rules():
+    """Get valid lifecycle transition rules."""
+    return lifecycle_handlers.handle_get_transition_rules()
+
+@app.post("/api/v1/prompts/{prompt_id}/lifecycle/validate", response_model=Dict[str, Any])
+def validate_lifecycle_transition(prompt_id: str, new_status: str):
+    """Validate if a lifecycle transition is allowed for a prompt."""
+    return lifecycle_handlers.handle_validate_transition(prompt_id, new_status)
+
+@app.post("/api/v1/lifecycle/bulk", response_model=Dict[str, Any])
+async def bulk_lifecycle_update(update_data: BulkLifecycleUpdate, user_id: str = "api_user"):
+    """Perform bulk lifecycle status updates."""
+    return await lifecycle_handlers.handle_bulk_lifecycle_update(update_data, user_id)
 
 # ============================================================================
 # CACHE MANAGEMENT
