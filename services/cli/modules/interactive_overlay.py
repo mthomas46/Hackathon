@@ -32,7 +32,9 @@ class InteractiveOverlay:
         manager: BaseManager,
         title: str,
         menu_items: Optional[List[Tuple[str, str]]] = None,
-        back_option: str = "b"
+        back_option: str = "b",
+        enable_shortcuts: bool = True,
+        enable_search: bool = True
     ) -> None:
         """Enhanced menu loop with questionary for better UX."""
 
@@ -43,19 +45,25 @@ class InteractiveOverlay:
         display_items = [f"{key}: {desc}" for key, desc in items]
         display_items.append(f"{back_option}: Back")
 
+        # Create keyboard shortcuts mapping
+        shortcuts = {}
+        if enable_shortcuts:
+            for key, desc in items:
+                if len(key) == 1 and key.isalnum():
+                    shortcuts[key.lower()] = key
+                    shortcuts[key.upper()] = key
+
         while True:
             try:
-                # Create enhanced menu display
-                self._show_enhanced_menu_header(title, items)
+                # Create enhanced menu display with shortcuts info
+                self._show_enhanced_menu_header(title, items, enable_shortcuts, enable_search)
 
-                # Use questionary for interactive selection
+                # Use questionary for interactive selection (with built-in shortcuts)
                 if self.use_interactive:
                     choice_display = await self._questionary_select(
                         f"Select option for {title}:",
                         display_items
                     )
-
-                    # Extract choice key from display string
                     choice = choice_display.split(':')[0].strip()
                 else:
                     # Fallback to original method
@@ -134,7 +142,8 @@ class InteractiveOverlay:
 
             self.console.print("[red]Invalid selection. Please try again.[/red]")
 
-    def _show_enhanced_menu_header(self, title: str, items: List[Tuple[str, str]]) -> None:
+    def _show_enhanced_menu_header(self, title: str, items: List[Tuple[str, str]],
+                                  enable_shortcuts: bool = True, enable_search: bool = True) -> None:
         """Show enhanced menu header with service status and keyboard shortcuts."""
         # Create a rich panel with menu information
         menu_info = Text()
@@ -145,8 +154,19 @@ class InteractiveOverlay:
             menu_info.append(f"  {key}", style="bold green")
             menu_info.append(f" → {desc}\n", style="white")
 
-        # Add keyboard shortcuts guide
-        menu_info.append("\n[dim]💡 Navigation: ↑↓ arrows, Enter to select, 'b' for back[/dim]", style="dim cyan")
+        # Add navigation guide
+        guide_parts = []
+        guide_parts.append("💡 Navigation: ↑↓ arrows, Enter to select")
+
+        if enable_shortcuts:
+            guide_parts.append("Type option key directly")
+
+        guide_parts.append("'b' for back")
+
+        if enable_search:
+            guide_parts.append("'/' to search")
+
+        menu_info.append(f"\n[dim]{' | '.join(guide_parts)}[/dim]", style="dim cyan")
 
         panel = Panel(
             menu_info,
