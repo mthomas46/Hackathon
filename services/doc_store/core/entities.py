@@ -5,10 +5,28 @@ Defines core business objects and their relationships.
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from abc import ABC, abstractmethod
+
+
+class BaseEntity(ABC):
+    """Base entity with common fields and methods."""
+
+    id: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    @abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert entity to dictionary representation."""
+        pass
+
+    def update_timestamp(self) -> None:
+        """Update the updated_at timestamp."""
+        self.updated_at = datetime.utcnow()
 
 
 @dataclass
-class Document:
+class Document(BaseEntity):
     """Core document entity."""
     id: str
     content: str
@@ -32,7 +50,7 @@ class Document:
 
 
 @dataclass
-class Analysis:
+class Analysis(BaseEntity):
     """Analysis result entity."""
     id: str
     document_id: str
@@ -42,6 +60,7 @@ class Analysis:
     score: Optional[float] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -58,7 +77,7 @@ class Analysis:
 
 
 @dataclass
-class DocumentRelationship:
+class DocumentRelationship(BaseEntity):
     """Document relationship entity."""
     id: str
     source_document_id: str
@@ -84,13 +103,14 @@ class DocumentRelationship:
 
 
 @dataclass
-class DocumentTag:
+class DocumentTag(BaseEntity):
     """Document tag entity."""
     id: str
     document_id: str
     tag: str
     confidence: float = 1.0
     created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -104,7 +124,7 @@ class DocumentTag:
 
 
 @dataclass
-class LifecyclePolicy:
+class LifecyclePolicy(BaseEntity):
     """Lifecycle policy entity."""
     id: str
     name: str
