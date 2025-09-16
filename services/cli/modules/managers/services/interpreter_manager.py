@@ -22,8 +22,8 @@ class InterpreterManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def interpreter_management_menu(self):
-        """Main interpreter management menu."""
-        await self.run_menu_loop("Interpreter Management")
+        """Main interpreter management menu with enhanced interactive experience."""
+        await self.run_menu_loop("Interpreter Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for interpreter operations."""

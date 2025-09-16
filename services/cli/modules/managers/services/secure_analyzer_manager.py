@@ -24,8 +24,8 @@ class SecureAnalyzerManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def secure_analyzer_menu(self):
-        """Main secure analyzer management menu."""
-        await self.run_menu_loop("Secure Analyzer Management")
+        """Main secure analyzer management menu with enhanced interactive experience."""
+        await self.run_menu_loop("Secure Analyzer Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for secure analyzer operations."""

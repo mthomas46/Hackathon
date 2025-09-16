@@ -25,8 +25,8 @@ class SourceAgentManager(BaseManager):
         return [ServiceNames.SOURCE_AGENT]
 
     async def source_agent_menu(self):
-        """Main source agent management menu."""
-        await self.run_menu_loop("Source Agent Management")
+        """Main source agent management menu with enhanced interactive experience."""
+        await self.run_menu_loop("Source Agent Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for source agent operations."""

@@ -54,8 +54,8 @@ class AnalysisManager(BaseManager):
         return True
 
     async def analysis_reports_menu(self):
-        """Main analysis and reports menu."""
-        await self.run_menu_loop("Analysis & Reports")
+        """Main analysis and reports menu with enhanced interactive experience."""
+        await self.run_menu_loop("Analysis & Reports", use_interactive=True)
 
     async def run_analysis_menu(self):
         """Run analysis submenu."""

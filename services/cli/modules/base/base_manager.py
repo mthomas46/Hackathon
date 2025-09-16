@@ -292,14 +292,14 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         return result is not None
 
     async def run_menu_loop(self, title: str, menu_items: Optional[List[tuple[str, str]]] = None,
-                           back_option: str = "b", use_interactive: bool = True) -> None:
+                           back_option: str = "b", use_interactive: bool = False) -> None:
         """Standard menu loop implementation - ELIMINATES CODE DUPLICATION.
 
         Args:
             title: Menu title
             menu_items: List of (choice, description) tuples. If None, calls get_main_menu()
             back_option: Option to exit menu (default: 'b')
-            use_interactive: Whether to use enhanced interactive overlay (default: True)
+            use_interactive: Whether to use enhanced interactive overlay (default: False)
         """
         # Use provided menu_items or get them from the manager
         items = menu_items if menu_items is not None else await self.get_main_menu()
