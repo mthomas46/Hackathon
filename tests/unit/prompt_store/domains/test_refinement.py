@@ -506,3 +506,159 @@ class TestRefinementHandlers:
             assert result_dict["success"] is False
             assert result_dict["error_code"] == "INTERNAL_ERROR"
             assert "Database connection failed" in result_dict["message"]
+
+
+@pytest.mark.unit
+class TestRefinementPerformance:
+    """Performance tests for refinement operations."""
+
+    def test_refinement_change_summary_generation_performance(self, benchmark):
+        """Benchmark change summary generation performance."""
+        service = PromptRefinementService()
+
+        # Create test data
+        original_prompt = Mock()
+        original_prompt.content = "Write a Python function that adds two numbers and returns the result."
+
+        refined_content = """Write a comprehensive Python function that adds two numbers with the following features:
+1. Type hints for parameters and return value
+2. Input validation to ensure parameters are numbers
+3. Error handling for edge cases
+4. Clear documentation with examples
+5. Return the calculated sum
+
+def add_numbers(a: float, b: float) -> float:
+    \"\"\"Add two numbers and return the result.
+
+    Args:
+        a: First number to add
+        b: Second number to add
+
+    Returns:
+        The sum of the two numbers
+
+    Raises:
+        TypeError: If inputs are not numeric
+    \"\"\"
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        raise TypeError("Both arguments must be numbers")
+
+    return a + b"""
+
+        session = {
+            "llm_service": "interpreter",
+            "refinement_instructions": "Add type hints, input validation, error handling, and comprehensive documentation"
+        }
+
+        result_doc = Mock()
+        result_doc.metadata = {"original_prompt_version": 1}
+
+        # Benchmark the function
+        result = benchmark(
+            service._generate_refinement_change_summary,
+            original_prompt, refined_content, session, result_doc
+        )
+
+        # Verify result structure
+        assert "LLM-assisted refinement" in result
+        assert "Content changes:" in result
+        assert "Instructions:" in result
+
+    def test_extract_refined_prompt_performance(self, benchmark):
+        """Benchmark refined prompt extraction performance."""
+        service = PromptRefinementService()
+
+        # Create test document with complex content
+        mock_doc = Mock()
+        mock_doc.content = """# Prompt Refinement Result
+
+**Session ID:** test-session-123
+
+**Original Prompt:** Write basic function
+**LLM Service:** interpreter
+**Timestamp:** 2024-01-01T10:00:00
+
+## Original Prompt
+```
+Write a Python function.
+```
+
+## Refined Prompt
+```
+Write a comprehensive Python function with proper error handling,
+type hints, and documentation that performs the following task:
+
+def process_data(data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    \"\"\"Process a list of dictionaries and return aggregated results.
+
+    This function takes a list of dictionaries containing numeric data,
+    validates the input, performs calculations, and returns a summary.
+
+    Args:
+        data: List of dictionaries with numeric values
+
+    Returns:
+        Dictionary containing sum, average, min, and max values
+
+    Raises:
+        ValueError: If data is empty or contains invalid values
+    \"\"\"
+    if not data:
+        raise ValueError("Data list cannot be empty")
+
+    try:
+        # Extract all numeric values
+        all_values = []
+        for item in data:
+            if not isinstance(item, dict):
+                raise ValueError("All items must be dictionaries")
+            for key, value in item.items():
+                if isinstance(value, (int, float)):
+                    all_values.append(value)
+
+        if not all_values:
+            raise ValueError("No numeric values found in data")
+
+        return {
+            "sum": sum(all_values),
+            "average": sum(all_values) / len(all_values),
+            "min": min(all_values),
+            "max": max(all_values),
+            "count": len(all_values)
+        }
+    except Exception as e:
+        raise ValueError(f"Error processing data: {str(e)}")
+```
+
+## Refinement Analysis
+The refined prompt includes:
+- Comprehensive type hints
+- Detailed error handling
+- Input validation
+- Clear documentation
+- Example usage
+"""
+
+        # Benchmark extraction
+        result = benchmark(service._extract_refined_prompt_from_document, mock_doc)
+
+        # Verify extraction worked
+        assert "comprehensive Python function" in result
+        assert "def process_data" in result
+        assert "type hints" in result
+
+    def test_parse_refinement_summary_performance(self, benchmark):
+        """Benchmark refinement summary parsing performance."""
+        service = PromptRefinementService()
+
+        summary = "LLM-assisted refinement using bedrock-proxy | Content changes: +15 lines, -3 lines | Instructions: Add comprehensive error handling, type hints, and detailed documentation with examples | Applied to version 2"
+
+        # Benchmark parsing
+        result = benchmark(service._parse_refinement_summary, summary)
+
+        # Verify parsed data
+        assert result["llm_service"] == "bedrock-proxy"
+        assert result["lines_added"] == 15
+        assert result["lines_removed"] == 3
+        assert "error handling" in result["refinement_instructions"]
+        assert result["source_version"] == 2

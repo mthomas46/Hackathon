@@ -2,52 +2,92 @@
 
 ## 🏗️ Architecture Overview
 
-The LLM Documentation Ecosystem now includes advanced services for prompt management, CLI interaction, and natural language processing:
+The LLM Documentation Ecosystem is a comprehensive platform for intelligent prompt engineering, documentation generation, and cross-service orchestration:
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   CLI Service   │    │ Prompt Store    │    │ Interpreter     │
-│   (Port 5130)   │◄──►│   (Port 5110)   │◄──►│   (Port 5120)   │
-│                 │    │                 │    │                 │
-│ • Interactive   │    │ • CRUD Ops      │    │ • NLP Engine     │
-│ • Menu System   │    │ • A/B Testing   │    │ • Intent Recog   │
-│ • Workflow Exec │    │ • Analytics     │    │ • Query Parsing  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │  Orchestrator   │
-                    │   (Port 5000)   │
-                    └─────────────────┘
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   CLI Service   │    │ Prompt Store    │    │ Interpreter     │    │ Document Store  │
+│   (Port 5130)   │◄──►│   (Port 5110)   │◄──►│   (Port 5120)   │◄──►│   (Port 5140)   │
+│                 │    │                 │    │                 │    │                 │
+│ • Interactive   │    │ • AI Analytics  │    │ • NLP Engine     │    │ • Doc Storage    │
+│ • Menu System   │    │ • A/B Testing   │    │ • Intent Recog   │    │ • Versioning     │
+│ • Workflow Exec │    │ • Optimization  │    │ • Query Parsing  │    │ • Search         │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │                       │
+         │                       │                       │                       │
+         ▼                       ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Code Analyzer   │    │  Summarizer     │    │ Notification    │    │  Orchestrator   │
+│   (Port 5150)   │    │   Hub (5160)    │    │ Service (5210)   │    │   (Port 5000)   │
+│                 │    │                 │    │                 │    │                 │
+│ • Code Analysis │    │ • Doc Summary   │    │ • Event Notif    │    │ • Service Coord │
+│ • AST Parsing   │    │ • Key Concepts  │    │ • Webhooks       │    │ • Load Balance  │
+│ • Complexity    │    │ • Topic Extract │    │ • Email/Slack    │    │ • Health Checks │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## 🚀 New Services
+## 🚀 Core Services
 
-### 1. Prompt Store Service (`services/prompt-store/`)
-[README](./prompt-store/README.md) · [Tests](../tests/unit/prompt_store)
-**Port: 5110** | **Purpose: Advanced prompt management with persistence**
+### 1. 🤖 Prompt Store Service (`services/prompt_store/`)
+[README](./prompt_store/README.md) · [Tests](../tests/unit/prompt_store)
+**Port: 5110** | **Purpose: Intelligent Prompt Engineering Platform**
 
-#### Features:
-- ✅ **Full CRUD Operations**: Create, read, update, delete prompts
-- ✅ **Version Control**: Track prompt evolution with full history
-- ✅ **A/B Testing**: Test prompt variations in production
-- ✅ **Analytics**: Usage tracking and performance metrics
-- ✅ **Database Persistence**: SQLite with automatic migrations
-- ✅ **REST API**: Complete HTTP API for prompt management
+#### 🧠 Advanced Features:
+- ✅ **Full CRUD Operations**: Create, read, update, delete prompts with validation
+- ✅ **Version Control**: Complete prompt evolution tracking with change summaries
+- ✅ **Lifecycle Management**: Draft → Published → Deprecated → Archived workflow
+- ✅ **Semantic Relationships**: Extends, references, alternatives between prompts
+- ✅ **A/B Testing Automation**: Automated optimization experiments with traffic splitting
+- ✅ **AI-Powered Analytics**: Performance metrics, user satisfaction, cost optimization
+- ✅ **Dynamic Orchestration**: Conditional chains and prompt pipelines
+- ✅ **Cross-Service Intelligence**: Code-to-prompt and document-driven generation
+- ✅ **Quality Assurance**: Automated testing, linting, bias detection
+- ✅ **Real-time Notifications**: Webhook + notification service integration
+- ✅ **Bulk Operations**: Batch processing for efficiency
 
-#### Key Endpoints:
+#### 🎯 Key Endpoints (28+ total):
 ```bash
+# Core Operations
 GET    /health                    # Health check
-POST   /prompts                   # Create prompt
-GET    /prompts                   # List prompts
-GET    /prompts/{id}             # Get specific prompt
-PUT    /prompts/{id}             # Update prompt
-DELETE /prompts/{id}             # Delete prompt
-POST   /ab-tests                 # Create A/B test
-GET    /analytics                # Get analytics
-POST   /migrate                  # Migrate from YAML
+POST   /api/v1/prompts            # Create prompt
+GET    /api/v1/prompts            # List prompts
+GET    /api/v1/prompts/{id}       # Get specific prompt
+PUT    /api/v1/prompts/{id}       # Update prompt
+
+# Analytics & Intelligence
+GET    /api/v1/analytics/dashboard    # Performance dashboard
+POST   /api/v1/analytics/usage        # Record usage metrics
+POST   /api/v1/analytics/satisfaction # User feedback
+
+# A/B Testing & Optimization
+POST   /api/v1/optimization/ab-tests       # Create A/B test
+GET    /api/v1/optimization/ab-tests/{id}/results # Test results
+POST   /api/v1/optimization/variations     # Generate variations
+
+# Orchestration & Workflows
+POST   /api/v1/orchestration/chains        # Create conditional chains
+POST   /api/v1/orchestration/pipelines     # Create prompt pipelines
+POST   /api/v1/orchestration/prompts/select # Optimal prompt selection
+
+# Cross-Service Intelligence
+POST   /api/v1/intelligence/code/generate      # Generate from code
+POST   /api/v1/intelligence/document/generate  # Generate from docs
+POST   /api/v1/intelligence/service/generate   # Service integration prompts
+
+# Quality Assurance
+POST   /api/v1/validation/lint         # Lint prompts
+POST   /api/v1/validation/bias-detect  # Detect bias
+POST   /api/v1/validation/test-suites  # Create test suites
 ```
+
+#### 📊 Advanced Capabilities:
+- **Performance Analytics**: Success rates, response times, token usage, cost tracking
+- **User Satisfaction**: Rating system with AI-assisted quality assessment
+- **Cost Optimization**: Monitor and optimize LLM API usage across services
+- **Bias Detection**: Pattern matching and LLM-based bias analysis
+- **Automated Testing**: Comprehensive test suites for prompt validation
+- **Evolution Tracking**: Monitor prompt improvements over time
+- **Context-Aware Selection**: Intelligent prompt recommendation engine
 
 #### Usage Examples:
 ```bash
@@ -70,72 +110,211 @@ curl -X POST http://localhost:5110/migrate
 
 ---
 
-### 2. CLI Service (`services/cli/`)
-[README](./cli/README.md) · [Tests](../tests/unit/cli)
-**Purpose: Interactive command-line interface**
+### 2. 📄 Document Store Service (`services/doc_store/`)
+[README](./doc_store/README.md) · [Tests](../tests/unit/doc_store)
+**Port: 5140** | **Purpose: Advanced document storage and management**
 
 #### Features:
-- ✅ **Interactive Menu System**: User-friendly navigation
-- ✅ **Rich Terminal UI**: Beautiful console interface with colors
-- ✅ **Workflow Orchestration**: Execute complex workflows
-- ✅ **Health Monitoring**: Real-time service status
-- ✅ **Prompt Management**: Create and manage prompts via CLI
+- ✅ **Document CRUD**: Full create, read, update operations
+- ✅ **Version Control**: Track document evolution
+- ✅ **Content Hashing**: Duplicate detection and integrity
+- ✅ **Metadata Management**: Rich metadata with JSON support
+- ✅ **Correlation Tracking**: Link documents to related entities
+- ✅ **Search & Filtering**: Full-text search and metadata filtering
+- ✅ **Bulk Operations**: Batch document processing
+- ✅ **Analytics**: Usage tracking and performance metrics
 
-#### Usage:
+#### Key Endpoints:
 ```bash
-# Interactive mode
-python services/cli/main.py interactive
-
-# Direct commands
-python services/cli/main.py get-prompt summarization default --content "test content"
-python services/cli/main.py list-prompts --category analysis
-python services/cli/main.py health
-```
-
-#### Menu Structure:
-```
-Main Menu:
-1. Prompt Management
-   ├── List prompts
-   ├── Create new prompt
-   ├── View prompt details
-   ├── Update prompt
-   ├── Delete prompt
-   └── Fork prompt
-
-2. A/B Testing
-   ├── Create test
-   ├── View test results
-   └── Select prompt for testing
-
-3. Workflow Orchestration
-   ├── Run document analysis
-   ├── Trigger ingestion workflow
-   ├── Execute consistency check
-   ├── Generate reports
-   └── View workflow status
-
-4. Analytics & Monitoring
-   └── View system analytics
-
-5. Service Health Check
-   └── Check all service statuses
+POST   /api/v1/documents         # Create document
+GET    /api/v1/documents         # List documents
+GET    /api/v1/documents/{id}    # Get document
+PUT    /api/v1/documents/{id}    # Update document
+DELETE /api/v1/documents/{id}    # Delete document
+GET    /api/v1/search            # Search documents
 ```
 
 ---
 
-### 3. Interpreter Service (`services/interpreter/`)
-[README](./interpreter/README.md) · [Tests](../tests/unit/interpreter)
+### 3. 🔍 Code Analyzer Service (`services/code-analyzer/`)
+[README](./code-analyzer/README.md) · [Tests](../tests/unit/code_analyzer)
+**Port: 5150** | **Purpose: Static code analysis for prompt generation**
 
-### 4. Analysis Service (`services/analysis-service/`)
-[README](./analysis-service/README.md) · [Tests](../tests/unit/analysis_service)
+#### Features:
+- ✅ **AST Parsing**: Abstract syntax tree analysis
+- ✅ **Function/Method Detection**: Extract function signatures and purposes
+- ✅ **Class Analysis**: Object-oriented structure analysis
+- ✅ **Complexity Metrics**: Cyclomatic complexity calculation
+- ✅ **Language Support**: Multiple programming language support
+- ✅ **Dependency Analysis**: Import and dependency mapping
+- ✅ **Documentation Generation**: Automatic docstring analysis
 
-### 5. Notification Service (`services/notification-service/`)
+#### Key Endpoints:
+```bash
+POST   /analyze                  # Analyze code
+GET    /health                   # Health check
+```
+
+---
+
+### 4. 📝 Summarizer Hub Service (`services/summarizer-hub/`)
+[README](./summarizer-hub/README.md) · [Tests](../tests/unit/summarizer_hub)
+**Port: 5160** | **Purpose: Document summarization and key concept extraction**
+
+#### Features:
+- ✅ **Document Summarization**: Extractive and abstractive summarization
+- ✅ **Key Concept Extraction**: Identify main topics and concepts
+- ✅ **Topic Modeling**: Uncover latent topics in documents
+- ✅ **Sentiment Analysis**: Document sentiment and tone analysis
+- ✅ **Language Detection**: Automatic language identification
+- ✅ **Readability Scoring**: Assess document complexity
+- ✅ **Multi-format Support**: Handle various document formats
+
+#### Key Endpoints:
+```bash
+POST   /summarize                # Summarize document
+GET    /health                   # Health check
+```
+
+---
+
+### 5. 📢 Notification Service (`services/notification-service/`)
 [README](./notification-service/README.md) · [Tests](../tests/unit/notification_service)
+**Port: 5210** | **Purpose: Centralized notification management**
 
-### 6. GitHub MCP (`services/github-mcp/`)
+#### Features:
+- ✅ **Multi-channel Support**: Email, Slack, webhooks, SMS
+- ✅ **Owner Resolution**: Map owners to notification targets
+- ✅ **Deduplication**: Prevent notification spam
+- ✅ **Dead Letter Queue**: Handle failed deliveries
+- ✅ **Template Support**: Customizable notification templates
+- ✅ **Priority Levels**: High, medium, low priority notifications
+- ✅ **Retry Logic**: Automatic retry for failed deliveries
+- ✅ **Analytics**: Delivery success tracking
+
+#### Key Endpoints:
+```bash
+POST   /notify                  # Send notification
+POST   /owners/update           # Update owner mappings
+POST   /owners/resolve          # Resolve owners to targets
+GET    /dlq                     # View dead letter queue
+GET    /health                  # Health check
+```
+
+---
+
+### 6. 🎯 Interpreter Service (`services/interpreter/`)
+[README](./interpreter/README.md) · [Tests](../tests/unit/interpreter)
+**Port: 5120** | **Purpose: Natural language processing and intent recognition**
+
+#### Features:
+- ✅ **Intent Recognition**: Understand user intentions
+- ✅ **Entity Extraction**: Extract structured data from text
+- ✅ **Query Parsing**: Convert natural language to structured queries
+- ✅ **Multi-intent Support**: Handle complex multi-step requests
+- ✅ **Confidence Scoring**: Rate interpretation accuracy
+- ✅ **Context Awareness**: Maintain conversation context
+- ✅ **Language Support**: Multiple language processing
+
+#### Supported Intents:
+```python
+{
+  "intents": [
+    "create_prompt", "get_prompt", "list_prompts",
+    "run_analysis", "generate_report", "health_check",
+    "ab_test_create", "workflow_execute"
+  ]
+}
+```
+
+---
+
+### 7. 🧪 Analysis Service (`services/analysis-service/`)
+[README](./analysis-service/README.md) · [Tests](../tests/unit/analysis_service)
+**Purpose: Code and documentation analysis**
+
+#### Features:
+- ✅ **Code Analysis**: Static analysis for multiple languages
+- ✅ **Documentation Consistency**: Check doc alignment
+- ✅ **Quality Metrics**: Code quality and documentation scores
+- ✅ **Dependency Analysis**: Module and package relationships
+- ✅ **Security Scanning**: Basic security vulnerability detection
+
+---
+
+### 8. 🎮 CLI Service (`services/cli/`)
+[README](./cli/README.md) · [Tests](../tests/unit/cli)
+**Port: 5130** | **Purpose: Interactive command-line interface**
+
+#### Enhanced Features:
+- ✅ **Interactive Menu System**: User-friendly navigation
+- ✅ **Rich Terminal UI**: Beautiful console interface with colors
+- ✅ **Workflow Orchestration**: Execute complex workflows
+- ✅ **Health Monitoring**: Real-time service status
+- ✅ **Advanced Prompt Management**: Full CRUD operations
+- ✅ **A/B Testing Interface**: Create and monitor tests
+- ✅ **Analytics Dashboard**: CLI-based analytics viewing
+- ✅ **Bulk Operations**: Batch processing commands
+
+#### Enhanced Menu Structure:
+```
+Main Menu:
+1. 🤖 Prompt Management
+   ├── 📋 List all prompts
+   ├── ➕ Create new prompt
+   ├── 👁️  View prompt details
+   ├── ✏️  Update prompt
+   ├── 🗑️  Delete prompt
+   └── 🍴 Fork prompt
+   └── 🔗 Manage relationships
+
+2. 🧪 A/B Testing
+   ├── 🆕 Create new test
+   ├── 📊 View test results
+   ├── 🎯 Select prompts for testing
+   └── 🏁 End test and declare winner
+
+3. 🔄 Workflow Orchestration
+   ├── 📄 Run document analysis
+   ├── 📥 Trigger ingestion workflow
+   ├── ✅ Execute consistency check
+   ├── 📊 Generate reports
+   └── 📈 View workflow status
+
+4. 📊 Analytics & Intelligence
+   ├── 📈 View performance dashboard
+   ├── 💰 Cost optimization insights
+   ├── 👥 User satisfaction metrics
+   └── 🎯 Usage trends analysis
+
+5. 🔧 Quality Assurance
+   ├── 🔍 Lint prompts
+   ├── ⚖️  Detect bias
+   ├── 🧪 Run test suites
+   └── 📋 Create validation rules
+
+6. 🌐 Cross-Service Intelligence
+   ├── 💻 Generate from code analysis
+   ├── 📄 Generate from documents
+   ├── 🔧 Service integration prompts
+   └── 📊 Effectiveness analysis
+
+7. 🔔 Notifications & Monitoring
+   └── 📡 Service health check
+```
+
+---
+
+### 9. 🎪 GitHub MCP (`services/github-mcp/`)
 [README](./github-mcp/README.md) · [Tests](../tests/unit/github_mcp)
-**Port: 5120** | **Purpose: Natural language processing for user queries**
+**Purpose: GitHub integration and repository management**
+
+#### Features:
+- ✅ **Repository Analysis**: Code and documentation analysis
+- ✅ **Issue/PR Management**: GitHub workflow integration
+- ✅ **Webhook Processing**: Real-time GitHub event handling
+- ✅ **Documentation Sync**: Keep docs aligned with code
+- ✅ **Collaboration Tools**: Team workflow support
 
 #### Features:
 - ✅ **Intent Recognition**: Understand user intentions from natural language
