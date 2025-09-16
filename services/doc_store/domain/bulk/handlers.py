@@ -23,11 +23,19 @@ class BulkOperationsHandlers(BaseHandler):
         # Convert to BulkDocumentItem objects
         bulk_items = []
         for doc_data in documents:
+            # Handle both dict and Pydantic model inputs
+            if hasattr(doc_data, 'model_dump'):
+                # Pydantic model
+                doc_dict = doc_data.model_dump()
+            else:
+                # Dict
+                doc_dict = doc_data
+
             item = BulkDocumentItem(
-                id=doc_data.get('id'),
-                content=doc_data.get('content', ''),
-                metadata=doc_data.get('metadata'),
-                correlation_id=doc_data.get('correlation_id')
+                id=doc_dict.get('id'),
+                content=doc_dict.get('content', ''),
+                metadata=doc_dict.get('metadata'),
+                correlation_id=doc_dict.get('correlation_id')
             )
             bulk_items.append(item)
 
@@ -43,11 +51,7 @@ class BulkOperationsHandlers(BaseHandler):
 
         operation = self.service.create_bulk_operation('search_documents', queries)
 
-        return await self._handle_request(
-            lambda: operation.to_dict(),
-            operation="bulk_search",
-            query_count=len(queries)
-        )
+        return await self._handle_request(lambda: operation.to_dict())
 
     async def handle_bulk_tag_documents(self, document_ids: List[str]) -> Dict[str, Any]:
         """Handle bulk tagging operation."""
@@ -56,11 +60,7 @@ class BulkOperationsHandlers(BaseHandler):
 
         operation = self.service.create_bulk_operation('tag_documents', document_ids)
 
-        return await self._handle_request(
-            lambda: operation.to_dict(),
-            operation="bulk_tag_documents",
-            document_count=len(document_ids)
-        )
+        return await self._handle_request(lambda: operation.to_dict())
 
     async def handle_get_bulk_operation_status(self, operation_id: str) -> Dict[str, Any]:
         """Handle operation status request."""
@@ -68,22 +68,13 @@ class BulkOperationsHandlers(BaseHandler):
         if not operation:
             return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("Operation not found")))
 
-        return await self._handle_request(
-            lambda: operation.to_dict(),
-            operation="get_bulk_operation_status",
-            operation_id=operation_id
-        )
+        return await self._handle_request(lambda: operation.to_dict())
 
     async def handle_list_bulk_operations(self, status: str = None, limit: int = 50) -> Dict[str, Any]:
         """Handle list operations request."""
         result = self.service.list_operations(status, limit)
 
-        return await self._handle_request(
-            lambda: result,
-            operation="list_bulk_operations",
-            status_filter=status,
-            limit=limit
-        )
+        return await self._handle_request(lambda: result)
 
     async def handle_cancel_bulk_operation(self, operation_id: str) -> Dict[str, Any]:
         """Handle operation cancellation."""
@@ -92,18 +83,10 @@ class BulkOperationsHandlers(BaseHandler):
         if not cancelled:
             return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("Operation could not be cancelled")))
 
-        return await self._handle_request(
-            lambda: {"operation_id": operation_id, "cancelled": True},
-            operation="cancel_bulk_operation",
-            operation_id=operation_id
-        )
+        return await self._handle_request(lambda: {"operation_id": operation_id, "cancelled": True})
 
     async def handle_cleanup_bulk_operations(self, days_to_keep: int = 30) -> Dict[str, Any]:
         """Handle cleanup of old operations."""
         result = self.service.cleanup_old_operations(days_to_keep)
 
-        return await self._handle_request(
-            lambda: result,
-            operation="cleanup_bulk_operations",
-            days_to_keep=days_to_keep
-        )
+        return await self._handle_request(lambda: result)

@@ -5,6 +5,7 @@ Handles bulk operation data and batch processing.
 import asyncio
 import json
 import uuid
+from datetime import datetime
 from typing import List, Optional, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 from ...core.repository import BaseRepository
@@ -30,8 +31,8 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
             failed_items=row['failed_items'],
             errors=json.loads(row['errors'] or '[]'),
             metadata=json.loads(row['metadata'] or '{}'),
-            created_at=row['created_at'],
-            completed_at=row.get('completed_at'),
+            created_at=datetime.fromisoformat(row['created_at'].replace('Z', '+00:00')) if isinstance(row['created_at'], str) else row['created_at'],
+            completed_at=datetime.fromisoformat(row['completed_at'].replace('Z', '+00:00')) if row.get('completed_at') and isinstance(row['completed_at'], str) else row.get('completed_at'),
             results=json.loads(row['results'] or '[]')
         )
 

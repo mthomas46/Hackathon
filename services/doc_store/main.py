@@ -34,7 +34,7 @@ app = FastAPI(
 )
 
 # Setup shared middleware and utilities
-setup_common_middleware(app)
+setup_common_middleware(app, ServiceNames.DOC_STORE)
 install_error_handlers(app)
 register_health_endpoints(app, ServiceNames.DOC_STORE)
 attach_self_register(app, ServiceNames.DOC_STORE)

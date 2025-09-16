@@ -26,8 +26,7 @@ class BaseHandler(ABC):
 
             return create_success_response(
                 f"Operation completed successfully",
-                result,
-                {"operation": operation.__name__}
+                result
             )
 
         except ServiceException as e:

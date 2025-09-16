@@ -9,6 +9,7 @@ import sys
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, AsyncMock, patch
+from fastapi.testclient import TestClient
 
 # Setup Python path for doc store modules
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.absolute()
@@ -177,3 +178,62 @@ def sample_notification_event():
         "metadata": {"content_length": 1000},
         "created_at": "2024-01-01T00:00:00Z"
     }
+
+
+@pytest.fixture
+def client():
+    """FastAPI test client for API endpoint testing."""
+    from services.doc_store.main import app
+    return TestClient(app)
+
+
+# Base test classes for common patterns
+class BaseTestCase:
+    """Base test case with common utilities."""
+
+    def assert_success_response(self, response):
+        """Assert that a response indicates success."""
+        # Handle both dict and response object formats
+        if hasattr(response, 'model_dump'):
+            response = response.model_dump()
+
+        assert "success" in response
+        assert response["success"] is True
+        assert "data" in response
+
+    def assert_error_response(self, response, error_code: str = None):
+        """Assert that a response indicates an error."""
+        # Handle both dict and response object formats
+        if hasattr(response, 'model_dump'):
+            response = response.model_dump()
+
+        assert "success" in response
+        assert response["success"] is False
+        if error_code:
+            assert response.get("error_code") == error_code
+
+    def assert_http_success(self, response):
+        """Assert HTTP response is successful."""
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        self.assert_success_response(data)
+        return data
+
+    def assert_http_error(self, response, status_code: int = 200, error_code: str = None):
+        """Assert HTTP response indicates an error."""
+        assert response.status_code == status_code, f"Expected {status_code}, got {response.status_code}: {response.text}"
+        data = response.json()
+        self.assert_error_response(data, error_code)
+        return data
+
+
+class AsyncBaseTestCase(BaseTestCase):
+    """Base test case for async tests."""
+
+    async def assert_async_success_response(self, response):
+        """Assert that an async response indicates success."""
+        self.assert_success_response(response)
+
+    async def assert_async_error_response(self, response, error_code: str = None):
+        """Assert that an async response indicates an error."""
+        self.assert_error_response(response, error_code)

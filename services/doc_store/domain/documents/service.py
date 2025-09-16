@@ -90,6 +90,10 @@ class DocumentService(BaseService[Document]):
         """Get documents by correlation ID."""
         return self.repository.get_documents_by_correlation_id(correlation_id)
 
+    def list_documents(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+        """List documents with pagination."""
+        return self.list_entities(limit, offset)
+
     def _validate_metadata(self, metadata: Dict[str, Any]) -> None:
         """Validate document metadata."""
         if not isinstance(metadata, dict):
