@@ -15,6 +15,7 @@ from services.prompt_store.domain.notifications.repository import (
 )
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.utilities import generate_id, utc_now
+from services.shared.clients import ServiceClients
 
 
 class NotificationsService:
@@ -22,6 +23,7 @@ class NotificationsService:
 
     def __init__(self):
         self.repo = NotificationsRepository()
+        self.clients = ServiceClients()
 
     # Webhook management
     async def register_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -103,22 +105,33 @@ class NotificationsService:
         }
 
     # Event notification
-    async def notify_event(self, event_type: str, event_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Send notifications for an event to all registered webhooks."""
+    async def notify_event(self, event_type: str, event_data: Dict[str, Any],
+                          owners: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Send notifications for an event using both webhooks and notification service.
 
-        # Get active webhooks for this event
+        Args:
+            event_type: Type of event (e.g., 'prompt.created', 'ab_test.completed')
+            event_data: Event data payload
+            owners: Optional list of owners to notify via notification service
+
+        Returns:
+            Dict with notification results
+        """
+
+        results = {
+            "event_type": event_type,
+            "webhook_notifications": {"sent": 0, "failed": 0, "total": 0},
+            "service_notifications": {"sent": 0, "failed": 0},
+            "total_sent": 0,
+            "total_failed": 0
+        }
+
+        # 1. Send via webhooks (existing functionality)
         webhooks = self.repo.get_active_webhooks_for_event(event_type)
+        results["webhook_notifications"]["total"] = len(webhooks)
 
-        if not webhooks:
-            return {
-                "event_type": event_type,
-                "notifications_sent": 0,
-                "message": "No active webhooks registered for this event type"
-            }
-
-        # Create notifications and send them
-        sent_count = 0
-        failed_count = 0
+        webhook_sent = 0
+        webhook_failed = 0
 
         for webhook in webhooks:
             try:
@@ -130,17 +143,167 @@ class NotificationsService:
                 # Send webhook asynchronously
                 asyncio.create_task(self._send_webhook_notification(webhook, notification))
 
-                sent_count += 1
+                webhook_sent += 1
 
             except Exception as e:
                 print(f"Failed to send notification to webhook {webhook.id}: {str(e)}")
+                webhook_failed += 1
+
+        results["webhook_notifications"]["sent"] = webhook_sent
+        results["webhook_notifications"]["failed"] = webhook_failed
+
+        # 2. Send via notification service if owners are specified
+        if owners:
+            try:
+                # Create human-readable message based on event type
+                message = self._create_notification_message(event_type, event_data)
+
+                service_result = await self.send_notification_via_service(
+                    event_type=event_type,
+                    message=message,
+                    owners=owners,
+                    metadata={
+                        "event_data": event_data,
+                        "source": "prompt_store",
+                        "timestamp": utc_now().isoformat()
+                    }
+                )
+
+                if service_result["status"] == "sent":
+                    results["service_notifications"]["sent"] = 1
+                else:
+                    results["service_notifications"]["failed"] = 1
+
+            except Exception as e:
+                print(f"Failed to send notification via service: {str(e)}")
+                results["service_notifications"]["failed"] = 1
+
+        # Calculate totals
+        results["total_sent"] = results["webhook_notifications"]["sent"] + results["service_notifications"]["sent"]
+        results["total_failed"] = results["webhook_notifications"]["failed"] + results["service_notifications"]["failed"]
+
+        return results
+
+    def _create_notification_message(self, event_type: str, event_data: Dict[str, Any]) -> str:
+        """Create a human-readable notification message based on event type."""
+        if event_type == "prompt.created":
+            prompt_id = event_data.get("id", "unknown")
+            prompt_name = event_data.get("name", "unknown")
+            return f"New prompt '{prompt_name}' created (ID: {prompt_id})"
+
+        elif event_type == "prompt.updated":
+            prompt_id = event_data.get("id", "unknown")
+            prompt_name = event_data.get("name", "unknown")
+            version = event_data.get("version", "unknown")
+            return f"Prompt '{prompt_name}' updated to version {version} (ID: {prompt_id})"
+
+        elif event_type == "prompt.lifecycle_changed":
+            prompt_id = event_data.get("id", "unknown")
+            prompt_name = event_data.get("name", "unknown")
+            new_status = event_data.get("status", "unknown")
+            return f"Prompt '{prompt_name}' status changed to '{new_status}' (ID: {prompt_id})"
+
+        elif event_type == "ab_test.started":
+            test_id = event_data.get("id", "unknown")
+            test_name = event_data.get("name", "unknown")
+            return f"A/B test '{test_name}' started (ID: {test_id})"
+
+        elif event_type == "ab_test.completed":
+            test_id = event_data.get("id", "unknown")
+            test_name = event_data.get("name", "unknown")
+            winner = event_data.get("winner", "unknown")
+            return f"A/B test '{test_name}' completed. Winner: {winner} (ID: {test_id})"
+
+        elif event_type == "bulk_operation.completed":
+            operation_id = event_data.get("id", "unknown")
+            operation_type = event_data.get("operation_type", "unknown")
+            success_count = event_data.get("successful_items", 0)
+            total_count = event_data.get("total_items", 0)
+            return f"Bulk operation '{operation_type}' completed: {success_count}/{total_count} items processed (ID: {operation_id})"
+
+        else:
+            return f"Prompt Store event: {event_type}"
+
+    async def send_notification_via_service(self, event_type: str, message: str,
+                                          owners: List[str], metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Send notification via the centralized notification service.
+
+        Args:
+            event_type: Type of event for categorization
+            message: Human-readable message
+            owners: List of owner names to resolve and notify
+            metadata: Additional context data
+
+        Returns:
+            Dict with notification results
+        """
+        try:
+            # Prepare notification payload
+            notification_payload = {
+                "channel": "prompt_store",
+                "event_type": event_type,
+                "message": message,
+                "owners": owners,
+                "metadata": metadata or {},
+                "source": "prompt_store"
+            }
+
+            # Send via notification service
+            response = await self.clients.send_notification(notification_payload)
+
+            if response.get("success"):
+                return {
+                    "status": "sent",
+                    "notification_id": response.get("notification_id"),
+                    "message": "Notification sent successfully",
+                    "owners_notified": len(owners)
+                }
+            else:
+                return {
+                    "status": "failed",
+                    "error": response.get("error", "Unknown error"),
+                    "message": "Failed to send notification via service"
+                }
+
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "message": "Exception occurred while sending notification"
+            }
+
+    async def send_bulk_notifications(self, notifications: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Send multiple notifications in batch via notification service.
+
+        Args:
+            notifications: List of notification payloads
+
+        Returns:
+            Dict with batch results
+        """
+        results = []
+        sent_count = 0
+        failed_count = 0
+
+        for notification in notifications:
+            result = await self.send_notification_via_service(
+                event_type=notification.get("event_type", "bulk_notification"),
+                message=notification.get("message", ""),
+                owners=notification.get("owners", []),
+                metadata=notification.get("metadata", {})
+            )
+
+            results.append(result)
+            if result["status"] == "sent":
+                sent_count += 1
+            else:
                 failed_count += 1
 
         return {
-            "event_type": event_type,
-            "notifications_sent": sent_count,
-            "notifications_failed": failed_count,
-            "total_webhooks": len(webhooks)
+            "total_notifications": len(notifications),
+            "sent": sent_count,
+            "failed": failed_count,
+            "results": results
         }
 
     async def process_pending_notifications(self) -> Dict[str, Any]:

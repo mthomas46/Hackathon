@@ -227,6 +227,15 @@ def get_all_table_schemas() -> List[str]:
         create_webhooks_table(),
         create_webhook_deliveries_table(),
         create_notifications_table(),
+
+        # Analytics tables
+        create_prompt_performance_metrics_table(),
+        create_user_satisfaction_scores_table(),
+        create_prompt_optimization_suggestions_table(),
+        create_prompt_evolution_metrics_table(),
+        create_cost_optimization_metrics_table(),
+        create_bias_detection_results_table(),
+        create_prompt_testing_results_table(),
     ]
 
 
@@ -288,7 +297,172 @@ def create_indexes() -> List[str]:
         "CREATE INDEX IF NOT EXISTS idx_notifications_event_type ON notifications(event_type)",
         "CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status)",
         "CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at)",
+
+        # Analytics indexes
+        "CREATE INDEX IF NOT EXISTS idx_performance_metrics_prompt_version ON prompt_performance_metrics(prompt_id, version)",
+        "CREATE INDEX IF NOT EXISTS idx_performance_metrics_created ON prompt_performance_metrics(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_satisfaction_scores_prompt ON user_satisfaction_scores(prompt_id)",
+        "CREATE INDEX IF NOT EXISTS idx_satisfaction_scores_rating ON user_satisfaction_scores(rating)",
+        "CREATE INDEX IF NOT EXISTS idx_satisfaction_scores_created ON user_satisfaction_scores(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_optimization_suggestions_prompt ON prompt_optimization_suggestions(prompt_id)",
+        "CREATE INDEX IF NOT EXISTS idx_optimization_suggestions_implemented ON prompt_optimization_suggestions(implemented)",
+        "CREATE INDEX IF NOT EXISTS idx_evolution_metrics_prompt ON prompt_evolution_metrics(prompt_id)",
+        "CREATE INDEX IF NOT EXISTS idx_cost_metrics_prompt ON cost_optimization_metrics(prompt_id)",
+        "CREATE INDEX IF NOT EXISTS idx_bias_results_prompt ON bias_detection_results(prompt_id)",
+        "CREATE INDEX IF NOT EXISTS idx_testing_results_prompt ON prompt_testing_results(prompt_id)",
+        "CREATE INDEX IF NOT EXISTS idx_testing_results_passed ON prompt_testing_results(passed)",
     ]
+
+
+# Analytics table schemas
+def create_prompt_performance_metrics_table() -> str:
+    """Create prompt performance metrics table."""
+    return """
+        CREATE TABLE IF NOT EXISTS prompt_performance_metrics (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            version INTEGER NOT NULL,
+            total_requests INTEGER DEFAULT 0,
+            successful_requests INTEGER DEFAULT 0,
+            failed_requests INTEGER DEFAULT 0,
+            average_response_time_ms REAL DEFAULT 0.0,
+            median_response_time_ms REAL DEFAULT 0.0,
+            p95_response_time_ms REAL DEFAULT 0.0,
+            p99_response_time_ms REAL DEFAULT 0.0,
+            total_tokens_used INTEGER DEFAULT 0,
+            average_tokens_per_request REAL DEFAULT 0.0,
+            cost_estimate_usd REAL DEFAULT 0.0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
+
+
+def create_user_satisfaction_scores_table() -> str:
+    """Create user satisfaction scores table."""
+    return """
+        CREATE TABLE IF NOT EXISTS user_satisfaction_scores (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            rating REAL NOT NULL,
+            feedback_text TEXT,
+            context_tags TEXT,  -- JSON array
+            response_quality_score REAL,
+            use_case_category TEXT DEFAULT 'general',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
+
+
+def create_prompt_optimization_suggestions_table() -> str:
+    """Create prompt optimization suggestions table."""
+    return """
+        CREATE TABLE IF NOT EXISTS prompt_optimization_suggestions (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            current_version INTEGER NOT NULL,
+            suggestion_type TEXT NOT NULL,
+            confidence_score REAL NOT NULL,
+            suggestion_text TEXT NOT NULL,
+            proposed_changes TEXT,  -- JSON
+            expected_impact TEXT NOT NULL,
+            llm_service_used TEXT NOT NULL,
+            implemented BOOLEAN DEFAULT FALSE,
+            implemented_at TEXT,
+            implementation_result TEXT,  -- JSON
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
+
+
+def create_prompt_evolution_metrics_table() -> str:
+    """Create prompt evolution metrics table."""
+    return """
+        CREATE TABLE IF NOT EXISTS prompt_evolution_metrics (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            from_version INTEGER NOT NULL,
+            to_version INTEGER NOT NULL,
+            change_type TEXT NOT NULL,
+            performance_delta TEXT,  -- JSON
+            quality_improvement_score REAL NOT NULL,
+            user_satisfaction_change REAL,
+            token_efficiency_change REAL,
+            cost_savings_usd REAL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
+
+
+def create_cost_optimization_metrics_table() -> str:
+    """Create cost optimization metrics table."""
+    return """
+        CREATE TABLE IF NOT EXISTS cost_optimization_metrics (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            version INTEGER NOT NULL,
+            total_cost_usd REAL NOT NULL,
+            cost_per_request_usd REAL NOT NULL,
+            token_efficiency_score REAL NOT NULL,
+            optimization_opportunities TEXT,  -- JSON array
+            cost_trend TEXT DEFAULT 'stable',
+            projected_monthly_savings REAL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
+
+
+def create_bias_detection_results_table() -> str:
+    """Create bias detection results table."""
+    return """
+        CREATE TABLE IF NOT EXISTS bias_detection_results (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            version INTEGER NOT NULL,
+            bias_type TEXT NOT NULL,
+            severity_score REAL NOT NULL,
+            detected_phrases TEXT,  -- JSON array
+            suggested_alternatives TEXT,  -- JSON array
+            confidence_score REAL NOT NULL,
+            analysis_method TEXT NOT NULL,
+            resolved BOOLEAN DEFAULT FALSE,
+            resolved_at TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
+
+
+def create_prompt_testing_results_table() -> str:
+    """Create prompt testing results table."""
+    return """
+        CREATE TABLE IF NOT EXISTS prompt_testing_results (
+            id TEXT PRIMARY KEY,
+            prompt_id TEXT NOT NULL,
+            version INTEGER NOT NULL,
+            test_suite_id TEXT NOT NULL,
+            test_case_id TEXT NOT NULL,
+            test_name TEXT NOT NULL,
+            passed BOOLEAN NOT NULL,
+            execution_time_ms REAL NOT NULL,
+            output_quality_score REAL NOT NULL,
+            expected_output_similarity REAL NOT NULL,
+            error_message TEXT,
+            test_metadata TEXT,  -- JSON
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(prompt_id) REFERENCES prompts(id) ON DELETE CASCADE
+        )
+    """
 
 
 def init_database() -> None:

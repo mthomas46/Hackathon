@@ -86,3 +86,23 @@ class DocumentRepository(BaseRepository[Document]):
             (correlation_id,),
             fetch_all=True
         )
+
+    def get_by_metadata_field(self, field_name: str, field_value: str) -> List[Document]:
+        """Get documents by a specific metadata field value."""
+        # Use JSON_EXTRACT for SQLite JSON queries
+        rows = execute_query(
+            "SELECT * FROM documents WHERE json_extract(metadata, ?) = ? ORDER BY created_at DESC",
+            (f"$.{field_name}", field_value),
+            fetch_all=True
+        )
+        return [self._row_to_entity(row) for row in rows]
+
+    def get_by_metadata_field_exists(self, field_name: str) -> List[Document]:
+        """Get documents where a specific metadata field exists."""
+        # Use JSON_EXTRACT to check if field exists and is not null
+        rows = execute_query(
+            "SELECT * FROM documents WHERE json_extract(metadata, ?) IS NOT NULL ORDER BY created_at DESC",
+            (f"$.{field_name}",),
+            fetch_all=True
+        )
+        return [self._row_to_entity(row) for row in rows]
