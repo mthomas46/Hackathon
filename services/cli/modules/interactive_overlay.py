@@ -18,9 +18,14 @@ from .base.base_manager import BaseManager
 class InteractiveOverlay:
     """Overlay class providing enhanced interactive CLI experiences."""
 
-    def __init__(self, console: Console):
+    def __init__(self, console: Console, enable_interactive: bool = True):
         self.console = console
-        self.use_interactive = True  # Toggle for fallback to original system
+        self.use_interactive = enable_interactive  # Toggle for fallback to original system
+
+        # Configuration for user preferences
+        self.show_tips = True
+        self.use_custom_styling = True
+        self.auto_health_checks = True
 
     async def enhanced_menu_loop(
         self,
@@ -79,11 +84,31 @@ class InteractiveOverlay:
                     break
 
     async def _questionary_select(self, message: str, choices: List[str]) -> str:
-        """Use questionary for interactive selection."""
+        """Use questionary for interactive selection with enhanced styling."""
         try:
+            # Create enhanced questionary selection with custom styling (if enabled)
+            if self.use_custom_styling:
+                style = questionary.Style([
+                    ('qmark', 'fg:#673ab7 bold'),       # Purple question mark
+                    ('question', 'bold'),               # Bold question text
+                    ('answer', 'fg:#ff5722 bold'),      # Orange answer highlight
+                    ('pointer', 'fg:#673ab7 bold'),     # Purple pointer
+                    ('selected', 'fg:#ff5722 bold'),    # Orange selected item
+                    ('separator', 'fg:#cc5454'),        # Red separator
+                    ('instruction', ''),                # Default instruction text
+                ])
+            else:
+                style = None
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None,
-                lambda: questionary.select(message, choices=choices).ask()
+                lambda: questionary.select(
+                    message,
+                    choices=choices,
+                    style=style,
+                    use_indicator=True,
+                    use_shortcuts=True
+                ).ask()
             )
             return result
         except Exception:
@@ -110,7 +135,7 @@ class InteractiveOverlay:
             self.console.print("[red]Invalid selection. Please try again.[/red]")
 
     def _show_enhanced_menu_header(self, title: str, items: List[Tuple[str, str]]) -> None:
-        """Show enhanced menu header with service status."""
+        """Show enhanced menu header with service status and keyboard shortcuts."""
         # Create a rich panel with menu information
         menu_info = Text()
         menu_info.append(f"\n{title}\n", style="bold cyan")
@@ -120,9 +145,12 @@ class InteractiveOverlay:
             menu_info.append(f"  {key}", style="bold green")
             menu_info.append(f" → {desc}\n", style="white")
 
+        # Add keyboard shortcuts guide
+        menu_info.append("\n[dim]💡 Navigation: ↑↓ arrows, Enter to select, 'b' for back[/dim]", style="dim cyan")
+
         panel = Panel(
             menu_info,
-            title="[bold blue]Interactive Menu[/bold blue]",
+            title="[bold blue]🎮 Interactive Menu[/bold blue]",
             border_style="blue",
             padding=(1, 2)
         )
@@ -130,17 +158,46 @@ class InteractiveOverlay:
         self.console.print(panel)
 
     async def _show_success_feedback(self) -> None:
-        """Show success feedback after operation."""
+        """Show enhanced success feedback after operation."""
         try:
-            # Quick success indicator
+            # Enhanced success feedback with animation
             await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: questionary.print("✅ Operation completed successfully!", style="bold green")
             )
-            await asyncio.sleep(0.5)  # Brief pause
+
+            # Show helpful tip (if enabled)
+            if self.show_tips:
+                tips = [
+                    "💡 Tip: Press 's' anytime for service health status",
+                    "💡 Tip: Use arrow keys for quick navigation",
+                    "💡 Tip: Press 'b' to go back to previous menu",
+                    "💡 Tip: All interactive menus support keyboard shortcuts"
+                ]
+
+                # Show a random tip occasionally
+                import random
+                if random.random() < 0.3:  # 30% chance
+                    tip = random.choice(tips)
+                    await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        lambda: questionary.print(tip, style="dim cyan")
+                    )
+
+            await asyncio.sleep(0.8)  # Brief pause for user to read
         except Exception:
-            # Fallback
+            # Enhanced fallback with tips
             self.console.print("[green]✅ Operation completed successfully![/green]")
+
+            # Show tip in fallback mode too
+            import random
+            if random.random() < 0.2:  # 20% chance in fallback
+                tip = random.choice([
+                    "[dim cyan]💡 Tip: Press 's' for service health status[/dim]",
+                    "[dim cyan]💡 Tip: Use main menu numbers for quick access[/dim]"
+                ])
+                self.console.print(tip)
+
             from rich.prompt import Prompt
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
@@ -175,23 +232,37 @@ class InteractiveOverlay:
             choice = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: questionary.select(
-                    "What would you like to do?",
+                    "⚠️  Service Health Warning - Choose your action:",
                     choices=options,
-                    default=options[0]
+                    default=options[0],
+                    style=questionary.Style([
+                        ('qmark', 'fg:#ff9800 bold'),       # Orange warning question mark
+                        ('question', 'bold fg:#ff9800'),    # Bold orange question
+                        ('answer', 'fg:#4caf50 bold'),      # Green answer
+                        ('pointer', 'fg:#ff9800 bold'),     # Orange pointer
+                        ('selected', 'fg:#4caf50 bold'),    # Green selected
+                        ('separator', 'fg:#ff9800'),        # Orange separator
+                    ]),
+                    use_indicator=True
                 ).ask()
             )
 
             if "Settings" in choice:
+                self.console.print("[green]✅ Redirecting to Settings for service diagnostics...[/green]")
                 return False  # Will redirect to settings
             elif "Continue" in choice:
+                self.console.print("[yellow]⚠️  Proceeding despite service warnings...[/yellow]")
                 return True   # Proceed despite warnings
             else:
+                self.console.print("[blue]ℹ️  Returning to main menu...[/blue]")
                 return False  # Go back
 
         except Exception:
-            # Fallback
-            self.console.print("[yellow]⚠️  Some required services are unavailable.[/yellow]")
-            self.console.print("[cyan]💡 Check service status in Settings menu (press 's')[/cyan]")
+            # Enhanced fallback with better guidance
+            self.console.print("[yellow]⚠️  Service Dependency Warning[/yellow]")
+            self.console.print("[red]❌ Some required services are not available[/red]")
+            self.console.print("[cyan]💡 Recommended: Check service status in Settings menu[/cyan]")
+            self.console.print("[dim]   Run: python3 run_cli.py interactive → press 's'[/dim]")
             return False
 
     def _show_service_health_warning(
@@ -228,9 +299,38 @@ class InteractiveOverlay:
 # Global overlay instance
 interactive_overlay = None
 
-def get_interactive_overlay(console: Console) -> InteractiveOverlay:
-    """Get or create the global interactive overlay instance."""
+def get_interactive_overlay(console: Console, enable_interactive: bool = True,
+                           show_tips: bool = True, use_custom_styling: bool = True) -> InteractiveOverlay:
+    """Get or create the global interactive overlay instance with configuration options.
+
+    Args:
+        console: Rich console instance
+        enable_interactive: Whether to use interactive features (default: True)
+        show_tips: Whether to show helpful tips (default: True)
+        use_custom_styling: Whether to use custom questionary styling (default: True)
+
+    Returns:
+        Configured InteractiveOverlay instance
+    """
     global interactive_overlay
     if interactive_overlay is None:
-        interactive_overlay = InteractiveOverlay(console)
+        interactive_overlay = InteractiveOverlay(
+            console=console,
+            enable_interactive=enable_interactive
+        )
+        interactive_overlay.show_tips = show_tips
+        interactive_overlay.use_custom_styling = use_custom_styling
+
     return interactive_overlay
+
+def configure_interactive_overlay(show_tips: bool = True, use_custom_styling: bool = True) -> None:
+    """Configure the global interactive overlay settings.
+
+    Args:
+        show_tips: Whether to show helpful tips
+        use_custom_styling: Whether to use custom questionary styling
+    """
+    global interactive_overlay
+    if interactive_overlay is not None:
+        interactive_overlay.show_tips = show_tips
+        interactive_overlay.use_custom_styling = use_custom_styling
