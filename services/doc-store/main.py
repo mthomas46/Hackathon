@@ -54,7 +54,8 @@ from .modules.models import (
     VersionComparison, VersionRollbackRequest, VersionCleanupRequest, CacheStatsResponse, CacheInvalidationRequest,
     AddRelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse,
     TagDocumentRequest, TagSearchRequest, TaxonomyNodeRequest, DocumentTagsResponse,
-    TagSearchResponse, TagStatisticsResponse, TaxonomyTreeResponse
+    TagSearchResponse, TagStatisticsResponse, TaxonomyTreeResponse,
+    BulkDocumentCreateRequest, BulkSearchRequest, BulkTagRequest, BulkOperationStatus, BulkOperationsListResponse
 )
 from .modules.database_init import init_database
 from .modules.document_handlers import document_handlers
@@ -65,6 +66,7 @@ from .modules.versioning_handlers import versioning_handlers
 from .modules.cache_handlers import cache_handlers
 from .modules.relationship_handlers import relationship_handlers
 from .modules.tagging_handlers import tagging_handlers
+from .modules.bulk_handlers import bulk_handlers
 from .modules.caching import docstore_cache
 
 # ============================================================================
@@ -644,6 +646,66 @@ async def get_taxonomy_tree(root_category: Optional[str] = None):
     descriptions, and synonyms for semantic navigation and understanding.
     """
     return await tagging_handlers.handle_get_taxonomy_tree(root_category)
+
+
+@app.post("/bulk/documents", response_model=Dict[str, Any])
+async def bulk_create_documents(req: BulkDocumentCreateRequest):
+    """Create multiple documents in a bulk operation.
+
+    Processes document creation asynchronously with progress tracking,
+    error handling, and concurrent processing for optimal performance.
+    """
+    return await bulk_handlers.handle_bulk_create_documents(req)
+
+
+@app.post("/bulk/search", response_model=Dict[str, Any])
+async def bulk_search(req: BulkSearchRequest):
+    """Execute multiple search queries in bulk.
+
+    Processes multiple search operations concurrently with progress tracking
+    and result aggregation for efficient batch search operations.
+    """
+    return await bulk_handlers.handle_bulk_search(req)
+
+
+@app.post("/bulk/tag", response_model=Dict[str, Any])
+async def bulk_tag_documents(req: BulkTagRequest):
+    """Tag multiple documents in bulk.
+
+    Automatically tags multiple documents with semantic information,
+    processing them concurrently with progress monitoring.
+    """
+    return await bulk_handlers.handle_bulk_tag_documents(req)
+
+
+@app.get("/bulk/operations/{operation_id}", response_model=BulkOperationStatus)
+async def get_bulk_operation_status(operation_id: str):
+    """Get the status and progress of a bulk operation.
+
+    Provides real-time progress tracking, error reporting, and result
+    summary for bulk operations including creation, search, and tagging.
+    """
+    return await bulk_handlers.handle_get_bulk_operation_status(operation_id)
+
+
+@app.get("/bulk/operations", response_model=BulkOperationsListResponse)
+async def list_bulk_operations(status: Optional[str] = None, limit: int = 50):
+    """List bulk operations with optional status filtering.
+
+    Retrieves a list of bulk operations with their current status,
+    progress, and summary information for monitoring and management.
+    """
+    return await bulk_handlers.handle_list_bulk_operations(status, limit)
+
+
+@app.post("/bulk/operations/{operation_id}/cancel")
+async def cancel_bulk_operation(operation_id: str):
+    """Cancel a running bulk operation.
+
+    Stops a bulk operation that is currently pending or processing,
+    preventing further resource consumption and processing.
+    """
+    return await bulk_handlers.handle_cancel_bulk_operation(operation_id)
 
 
 if __name__ == "__main__":
