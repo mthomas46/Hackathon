@@ -12,3 +12,7 @@ aioredis==2.0.1
 # ollama==0.1.7
 # openai==1.3.0
 # anthropic==0.7.0
+# Add questionary for enhanced interactive CLI experience
+questionary==2.0.1
+# Optional: prompt_toolkit for advanced features  
+prompt-toolkit==3.0.43
