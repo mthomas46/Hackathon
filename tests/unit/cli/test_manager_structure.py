@@ -60,12 +60,11 @@ class TestManagerStructure(BaseManagerTestMixin, ManagerAssertionMixin):
 
         # Mock the submenu methods to avoid full execution
         with patch.object(manager, 'workflow_management_menu') as mock_workflow:
-            with patch.object(manager, 'handle_choice', return_value=True):
-                with patch('rich.prompt.Prompt.ask', side_effect=["1", "", "b"]):
-                    await manager.orchestrator_management_menu()
+            with patch('rich.prompt.Prompt.ask', side_effect=["1", "", "b"]):
+                await manager.orchestrator_management_menu()
 
-                    # Should call the workflow menu
-                    mock_workflow.assert_called_once()
+                # Should call the workflow menu
+                mock_workflow.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_manager_cache_integration(self):

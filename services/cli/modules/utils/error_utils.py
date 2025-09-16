@@ -1,5 +1,6 @@
 """Error handling utilities for CLI operations."""
 
+import asyncio
 from typing import Dict, Any
 from services.shared.error_handling import ServiceException, ValidationException
 from services.shared.logging import fire_and_forget
