@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 from bson import ObjectId
 
 # Shared modules
-from services.shared.health import register_health_endpoints, DependencyHealth
+from services.shared.health import register_health_endpoints, DependencyHealth, HealthManager
 from services.shared.responses import create_success_response, create_error_response
 from services.shared.error_handling import ServiceException, install_error_handlers
 from services.shared.constants_new import ServiceNames, ErrorCodes
@@ -205,13 +205,7 @@ async def check_mongodb_health() -> DependencyHealth:
             error=str(e)
         )
 
-# Register health endpoints
-health_manager = register_health_endpoints(
-    app,
-    service_name=ServiceNames.CONFLUENCE_HUB
-)
-
-# Add custom health endpoint with dependency checks
+# Add custom health endpoint with dependency checks first
 @app.get("/health")
 async def health_check():
     """Health check endpoint that validates MongoDB and Confluence connectivity."""
@@ -242,6 +236,16 @@ async def health_check():
             message="Health check failed",
             details=str(e)
         )
+
+# Register additional health endpoints for compatibility (excluding /health to avoid conflicts)
+health_manager = HealthManager(ServiceNames.CONFLUENCE_HUB, "1.0.0")
+
+# System health check
+from services.shared.health import create_system_health_endpoint, create_dependency_health_endpoint
+app.get("/health/system")(create_system_health_endpoint(health_manager))
+
+# Dependency health check
+app.get("/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
 
 # ============================================================================
 # API ENDPOINTS
