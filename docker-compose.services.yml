@@ -1,10 +1,10 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ============================================================================
   # NEW SERVICES
   # ============================================================================
-  
+
   prompt-store:
     build:
       context: .
@@ -40,7 +40,7 @@ services:
       - analysis-service
     networks:
       - llm-network
-    command: ["sleep", "infinity"]  # Keep container running for interactive use
+    command: ["sleep", "infinity"] # Keep container running for interactive use
 
   interpreter:
     build:
@@ -67,7 +67,7 @@ services:
   # ============================================================================
   # EXISTING SERVICES (for reference)
   # ============================================================================
-  
+
   redis:
     image: redis:7-alpine
     ports:
@@ -83,7 +83,7 @@ services:
       - llm-network
 
   analysis-service:
-    # ... existing configuration  
+    # ... existing configuration
     networks:
       - llm-network
 
@@ -97,9 +97,49 @@ services:
     networks:
       - llm-network
 
+  confluence-hub:
+    build:
+      context: .
+      dockerfile: services/confluence-hub/Dockerfile
+    ports:
+      - "5070:5070"
+    environment:
+      - CONFLUENCE_BASE_URL=${ConfluenceBaseUrl}
+      - CONFLUENCE_USERNAME=${ConfluenceUsername}
+      - CONFLUENCE_API_TOKEN=${ConfluenceApiToken}
+      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017/confluence_hub
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - llm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MongoDB for Confluence Hub
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=confluence_hub
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - llm-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   prompt_store_data:
   redis_data:
+  mongodb_data:
 
 networks:
   llm-network:

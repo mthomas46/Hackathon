@@ -15,6 +15,18 @@ services:
   SOURCE_AGENT_URL: http://source-agent:5000
   NOTIFICATION_URL: http://notification-service:5095
   SUMMARIZER_HUB_URL: http://summarizer-hub:5060
+  CONFLUENCE_HUB_URL: http://confluence-hub:5070
+
+# Confluence Hub Configuration
+confluence_hub:
+  # These can be overridden by environment variables:
+  # ConfluenceBaseUrl, ConfluenceUsername, ConfluenceApiToken, MongoConnectionString
+  confluence_base_url: "" # Set via ConfluenceBaseUrl env var
+  confluence_username: "" # Set via ConfluenceUsername env var
+  confluence_api_token: "" # Set via ConfluenceApiToken env var
+  mongo_connection_string: "mongodb://mongodb:27017/confluence_hub" # Set via MongoConnectionString env var
+  max_page_depth: 10
+  default_session_timeout_hours: 24
 
 orchestrator:
   ORCHESTRATOR_PEERS: ""
@@ -24,5 +36,3 @@ http_client:
   retry_attempts: 3
   retry_base_ms: 150
   circuit_enabled: false
-
-

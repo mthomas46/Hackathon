@@ -106,6 +106,7 @@ class ServiceNames:
     NOTIFICATION_SERVICE = "notification-service"
     LOG_COLLECTOR = "log-collector"
     BEDROCK_PROXY = "bedrock-proxy"
+    CONFLUENCE_HUB = "confluence-hub"
 
 
 class ServicePorts:
