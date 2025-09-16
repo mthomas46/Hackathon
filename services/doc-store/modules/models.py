@@ -81,3 +81,88 @@ class SearchResponse(BaseModel):
 class MetadataPatch(BaseModel):
     """Request model for metadata updates."""
     updates: Dict[str, Any]
+
+
+class AnalyticsResponse(BaseModel):
+    """Response model for analytics endpoint."""
+    total_documents: int
+    total_analyses: int
+    total_ensembles: int
+    total_style_examples: int
+    storage_stats: Dict[str, Any]
+    quality_metrics: Dict[str, Any]
+    temporal_trends: Dict[str, Any]
+    content_insights: Dict[str, Any]
+    relationship_insights: Dict[str, Any]
+
+
+class AnalyticsSummaryResponse(BaseModel):
+    """Response model for analytics summary endpoint."""
+    summary: Dict[str, Any]
+    key_insights: List[str]
+    recommendations: List[str]
+
+
+class AdvancedSearchRequest(BaseModel):
+    """Request model for advanced search endpoint."""
+    q: Optional[str] = None
+    content_type: Optional[str] = None
+    source_type: Optional[str] = None
+    language: Optional[str] = None
+    tags: Optional[List[str]] = None
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    has_analysis: Optional[bool] = None
+    min_score: Optional[float] = None
+    sort_by: str = "relevance"
+    sort_order: str = "desc"
+    limit: int = 20
+    offset: int = 0
+
+
+class FacetItem(BaseModel):
+    """Facet item model."""
+    value: str
+    count: int
+
+
+class DateRangeFacet(BaseModel):
+    """Date range facet model."""
+    range: str
+    count: int
+
+
+class AnalysisStatusFacet(BaseModel):
+    """Analysis status facet model."""
+    status: str
+    count: int
+
+
+class SearchFacets(BaseModel):
+    """Search facets model."""
+    content_type: List[FacetItem]
+    source_type: List[FacetItem]
+    language: List[FacetItem]
+    date_ranges: List[DateRangeFacet]
+    analysis_status: List[AnalysisStatusFacet]
+
+
+class AdvancedSearchItem(BaseModel):
+    """Advanced search result item."""
+    id: str
+    content: str
+    metadata: Dict[str, Any]
+    created_at: str
+    content_length: int
+    analysis_count: int
+    average_analysis_score: float
+
+
+class AdvancedSearchResponse(BaseModel):
+    """Response model for advanced search endpoint."""
+    items: List[AdvancedSearchItem]
+    total: int
+    limit: int
+    offset: int
+    facets: SearchFacets
+    query: Dict[str, Any]

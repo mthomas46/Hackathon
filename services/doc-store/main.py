@@ -49,12 +49,14 @@ from services.shared.constants_new import ServiceNames
 from .modules.models import (
     PutDocumentRequest, GetDocumentResponse, PutAnalysisRequest,
     ListAnalysesResponse, StyleExamplesResponse, ListDocumentsResponse,
-    QualityResponse, SearchResponse, MetadataPatch
+    QualityResponse, SearchResponse, MetadataPatch, AnalyticsResponse, AnalyticsSummaryResponse,
+    AdvancedSearchRequest, AdvancedSearchResponse
 )
 from .modules.database_init import init_database
 from .modules.document_handlers import document_handlers
 from .modules.analysis_handlers import analysis_handlers
 from .modules.search_handlers import search_handlers
+from .modules.analytics_handlers import analytics_handlers
 
 # ============================================================================
 # ROUTES - Include existing router
@@ -345,6 +347,30 @@ async def search(q: str, limit: int = 20):
     """
     return await search_handlers.handle_search(q, limit)
 
+
+@app.post("/search/advanced", response_model=AdvancedSearchResponse)
+async def advanced_search(req: AdvancedSearchRequest):
+    """Advanced search with filtering, faceting, and sorting capabilities.
+
+    Provides powerful search functionality with metadata filters, date ranges,
+    content type filtering, and faceted results for enhanced discovery.
+    """
+    return await search_handlers.handle_advanced_search(
+        q=req.q,
+        content_type=req.content_type,
+        source_type=req.source_type,
+        language=req.language,
+        tags=req.tags,
+        date_from=req.date_from,
+        date_to=req.date_to,
+        has_analysis=req.has_analysis,
+        min_score=req.min_score,
+        sort_by=req.sort_by,
+        sort_order=req.sort_order,
+        limit=req.limit,
+        offset=req.offset
+    )
+
 @app.get("/documents/quality", response_model=QualityResponse)
 async def documents_quality(stale_threshold_days: int = 180, min_views: int = 3):
     """Analyze document quality and flag issues.
@@ -359,6 +385,26 @@ async def documents_quality(stale_threshold_days: int = 180, min_views: int = 3)
 async def patch_document_metadata(doc_id: str, req: MetadataPatch):
     """Patch document metadata."""
     return await document_handlers.handle_patch_document_metadata(doc_id, req)
+
+
+@app.get("/analytics", response_model=AnalyticsResponse)
+async def get_analytics(days_back: int = 30):
+    """Get comprehensive analytics and insights for the document store.
+
+    Provides detailed analytics on storage patterns, quality trends, usage statistics,
+    and insights into content relationships and evolution over the specified time period.
+    """
+    return await analytics_handlers.handle_analytics(days_back)
+
+
+@app.get("/analytics/summary", response_model=AnalyticsSummaryResponse)
+async def get_analytics_summary():
+    """Get analytics summary with key insights and recommendations.
+
+    Provides a high-level overview of document store health, key metrics,
+    and actionable recommendations for optimization and maintenance.
+    """
+    return await analytics_handlers.handle_analytics_summary()
 
 
 if __name__ == "__main__":
