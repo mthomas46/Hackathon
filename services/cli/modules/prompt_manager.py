@@ -25,7 +25,6 @@ from .shared_utils import (
     parse_tags_input
 )
 
-
 class PromptManager:
     """Handle prompt management CLI operations."""
 

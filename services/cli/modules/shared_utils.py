@@ -18,6 +18,11 @@ from services.shared.responses import create_success_response, create_error_resp
 from services.shared.logging import fire_and_forget
 from services.shared.utilities import utc_now
 
+# Import new base classes and utilities
+from .base import BaseManager, BaseFormatter, BaseHandler
+from .utils import CacheManager, APIClient, handle_cli_error, log_cli_operation, log_cli_command
+from .formatters import DisplayManager, TableFormatter, StatusFormatter
+
 # Global configuration for CLI service
 _DEFAULT_TIMEOUT = 30
 _DEFAULT_USER = os.environ.get("USER", "cli_user")
@@ -287,3 +292,87 @@ def log_cli_metrics(operation: str, duration: float, success: bool, **additional
     }
     context.update(additional)
     fire_and_forget("info", f"CLI operation completed: {operation}", ServiceNames.CLI, context)
+
+
+# Enhanced visual feedback utilities
+def create_progress_spinner(console: Console, description: str = "Processing"):
+    """Create a progress spinner with enhanced visual feedback."""
+    return console.status(f"[bold green]{description}...[/bold green]")
+
+
+def create_success_message(console: Console, message: str):
+    """Display a success message with enhanced formatting."""
+    console.print(f"[green]✅ {message}[/green]")
+
+
+def create_error_message(console: Console, message: str):
+    """Display an error message with enhanced formatting."""
+    console.print(f"[red]❌ {message}[/red]")
+
+
+def create_warning_message(console: Console, message: str):
+    """Display a warning message with enhanced formatting."""
+    console.print(f"[yellow]⚠️  {message}[/yellow]")
+
+
+def create_info_message(console: Console, message: str):
+    """Display an info message with enhanced formatting."""
+    console.print(f"[blue]ℹ️  {message}[/blue]")
+
+
+# Enhanced caching utilities
+def create_cache_key(*parts):
+    """Create a standardized cache key from parts."""
+    return ".".join(str(part) for part in parts if part)
+
+
+def is_cache_valid(cache_item: Dict[str, Any], ttl_seconds: int = 300) -> bool:
+    """Check if a cache item is still valid."""
+    import time
+    return time.time() - cache_item.get('timestamp', 0) < ttl_seconds
+
+
+# Graceful error handling utilities
+def handle_graceful_error(console: Console, error: Exception, operation: str, show_details: bool = False):
+    """Handle errors gracefully with user-friendly messages."""
+    from services.shared.error_handling import ServiceException, ValidationException
+
+    if isinstance(error, ServiceException):
+        create_error_message(console, f"Service error during {operation}: {error.message}")
+        if show_details and error.details:
+            console.print(f"[dim]Details: {error.details}[/dim]")
+    elif isinstance(error, ValidationException):
+        create_error_message(console, f"Validation error during {operation}: {error.message}")
+    elif isinstance(error, KeyboardInterrupt):
+        create_warning_message(console, f"Operation '{operation}' interrupted by user")
+    elif isinstance(error, asyncio.TimeoutError):
+        create_error_message(console, f"Operation '{operation}' timed out")
+    else:
+        create_error_message(console, f"Unexpected error during {operation}: {str(error)}")
+
+
+# Enhanced table creation utilities
+def create_enhanced_table(title: str, columns: List[str], styles: List[str] = None) -> Table:
+    """Create an enhanced table with better styling."""
+    table = Table(title=title)
+
+    if styles is None:
+        styles = ["cyan", "white", "green", "yellow", "magenta"]
+
+    for i, column in enumerate(columns):
+        style = styles[i % len(styles)] if i < len(styles) else "white"
+        table.add_column(column, style=style)
+
+    return table
+
+
+def add_table_rows_enhanced(table: Table, rows: List[List[str]], max_rows: int = None):
+    """Add rows to table with optional row limiting."""
+    display_rows = rows[:max_rows] if max_rows else rows
+
+    for row in display_rows:
+        table.add_row(*row)
+
+    if max_rows and len(rows) > max_rows:
+        table.add_row(*["[dim]...[/dim]"] * len(rows[0]))
+        table.add_row(*[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1))

@@ -107,6 +107,42 @@ class ServiceClients:
         return get_config_value("SOURCE_AGENT_URL", "http://source-agent:5000", section="services", env_key="SOURCE_AGENT_URL")
 
     # ============================================================================
+    # ADDITIONAL SERVICE URLS (for CLI compatibility)
+    # ============================================================================
+
+    def discovery_agent_url(self) -> str:
+        """Get Discovery Agent service URL."""
+        return get_config_value("DISCOVERY_AGENT_URL", "http://discovery-agent:5140", section="services", env_key="DISCOVERY_AGENT_URL")
+
+    def frontend_url(self) -> str:
+        """Get Frontend service URL."""
+        return get_config_value("FRONTEND_URL", "http://frontend:5150", section="services", env_key="FRONTEND_URL")
+
+    def summarizer_hub_url(self) -> str:
+        """Get Summarizer Hub service URL."""
+        return get_config_value("SUMMARIZER_HUB_URL", "http://summarizer-hub:5160", section="services", env_key="SUMMARIZER_HUB_URL")
+
+    def secure_analyzer_url(self) -> str:
+        """Get Secure Analyzer service URL."""
+        return get_config_value("SECURE_ANALYZER_URL", "http://secure-analyzer:5170", section="services", env_key="SECURE_ANALYZER_URL")
+
+    def memory_agent_url(self) -> str:
+        """Get Memory Agent service URL."""
+        return get_config_value("MEMORY_AGENT_URL", "http://memory-agent:5180", section="services", env_key="MEMORY_AGENT_URL")
+
+    def code_analyzer_url(self) -> str:
+        """Get Code Analyzer service URL."""
+        return get_config_value("CODE_ANALYZER_URL", "http://code-analyzer:5190", section="services", env_key="CODE_ANALYZER_URL")
+
+    def log_collector_url(self) -> str:
+        """Get Log Collector service URL."""
+        return get_config_value("LOG_COLLECTOR_URL", "http://log-collector:5200", section="services", env_key="LOG_COLLECTOR_URL")
+
+    def notification_service_url(self) -> str:
+        """Get Notification Service URL."""
+        return get_config_value("NOTIFICATION_SERVICE_URL", "http://notification-service:5210", section="services", env_key="NOTIFICATION_SERVICE_URL")
+
+    # ============================================================================
     # INTEGRATION METHODS
     # ============================================================================
 
