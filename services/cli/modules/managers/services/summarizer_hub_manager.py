@@ -24,8 +24,8 @@ class SummarizerHubManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def summarizer_hub_menu(self):
-        """Main summarizer hub management menu."""
-        await self.run_menu_loop("Summarizer Hub Management")
+        """Main summarizer hub management menu with enhanced interactive experience."""
+        await self.run_menu_loop("Summarizer Hub Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for summarizer hub operations."""

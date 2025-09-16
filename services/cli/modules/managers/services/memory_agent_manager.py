@@ -24,8 +24,8 @@ class MemoryAgentManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def memory_agent_menu(self):
-        """Main memory agent management menu."""
-        await self.run_menu_loop("Memory Agent Management")
+        """Main memory agent management menu with enhanced interactive experience."""
+        await self.run_menu_loop("Memory Agent Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for memory agent operations."""
