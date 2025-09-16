@@ -1,7 +1,7 @@
 # Base requirements shared across all services
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-pydantic==2.5.0
+pydantic>=2.8.0
 httpx==0.25.2
 redis==5.0.1
 aioredis==2.0.1
