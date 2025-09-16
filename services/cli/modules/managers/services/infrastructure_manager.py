@@ -20,8 +20,8 @@ class InfrastructureManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def infrastructure_menu(self):
-        """Main infrastructure management menu."""
-        await self.run_menu_loop("Infrastructure Management")
+        """Main infrastructure management menu with enhanced interactive experience."""
+        await self.run_menu_loop("Infrastructure Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for infrastructure operations."""

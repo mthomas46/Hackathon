@@ -32,9 +32,9 @@ class OrchestratorManager(BaseManager):
         ]
 
     async def orchestrator_management_menu(self):
-        """Main orchestrator management menu."""
+        """Main orchestrator management menu with enhanced interactive experience."""
         menu_items = await self.get_main_menu()
-        await self.run_menu_loop("Orchestrator Management", menu_items)
+        await self.run_menu_loop("Orchestrator Management", menu_items, use_interactive=True)
 
     def get_required_services(self) -> List[str]:
         """Return list of services required by this manager."""
