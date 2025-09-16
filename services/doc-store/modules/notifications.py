@@ -159,7 +159,7 @@ class NotificationManager:
                 print(f"Error notifying listener: {e}")
 
     async def _deliver_webhooks(self, event: NotificationEvent):
-        """Deliver event to registered webhooks."""
+        """Deliver event to registered webhooks via notification service."""
         matching_webhooks = [
             webhook for webhook in self.webhooks.values()
             if event.event_type in webhook.events and webhook.is_active
@@ -178,26 +178,22 @@ class NotificationManager:
             "timestamp": event.created_at
         }
 
-        # Deliver to each matching webhook
-        tasks = [self._deliver_to_webhook(webhook, event, payload) for webhook in matching_webhooks]
+        # Deliver to each matching webhook via notification service
+        from services.shared.clients import ServiceClients
+        clients = ServiceClients()
+
+        tasks = []
+        for webhook in matching_webhooks:
+            task = self._deliver_via_notification_service(webhook, event, payload, clients)
+            tasks.append(task)
+
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def _deliver_to_webhook(self, webhook: Webhook, event: NotificationEvent, payload: Dict[str, Any]):
-        """Deliver event to a specific webhook."""
+    async def _deliver_via_notification_service(self, webhook: Webhook, event: NotificationEvent, payload: Dict[str, Any], clients: 'ServiceClients'):
+        """Deliver event to a specific webhook via notification service."""
         delivery_id = f"delivery_{webhook.id}_{event.id}"
 
         try:
-            headers = dict(webhook.headers)
-            headers.update({
-                "Content-Type": "application/json",
-                "User-Agent": "DocStore-Webhook/1.0"
-            })
-
-            # Add signature if secret is configured
-            if webhook.secret:
-                signature = self._generate_signature(json.dumps(payload), webhook.secret)
-                headers["X-DocStore-Signature"] = signature
-
             # Create delivery record
             execute_db_query("""
                 INSERT INTO webhook_deliveries
@@ -212,66 +208,66 @@ class NotificationManager:
                 utc_now().isoformat()
             ))
 
-            # Attempt delivery with retries
-            success = False
-            last_error = None
+            # Send notification via notification service
+            try:
+                # Add webhook signature if configured
+                headers = dict(webhook.headers)
+                if webhook.secret:
+                    signature = self._generate_signature(json.dumps(payload), webhook.secret)
+                    headers["X-DocStore-Signature"] = signature
 
-            for attempt in range(webhook.retry_count):
-                try:
-                    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=webhook.timeout_seconds)) as session:
-                        async with session.post(webhook.url, json=payload, headers=headers) as response:
-                            response_body = await response.text()
-                            response_code = response.status
+                # Prepare metadata for notification service
+                metadata = {
+                    "event_id": event.id,
+                    "entity_type": event.entity_type,
+                    "entity_id": event.entity_id,
+                    "user_id": event.user_id,
+                    "timestamp": event.created_at,
+                    "webhook_headers": headers
+                }
 
-                            # Update delivery record
-                            execute_db_query("""
-                                UPDATE webhook_deliveries
-                                SET status = ?, response_code = ?, response_body = ?,
-                                    attempt_count = ?, delivered_at = ?, updated_at = ?
-                                WHERE id = ?
-                            """, (
-                                "delivered" if response_code < 400 else "failed",
-                                response_code,
-                                response_body[:5000] if response_body else None,  # Limit response body size
-                                attempt + 1,
-                                utc_now().isoformat() if response_code < 400 else None,
-                                utc_now().isoformat(),
-                                delivery_id
-                            ))
+                # Send via notification service
+                result = await clients.notify_via_service(
+                    channel="webhook",
+                    target=webhook.url,
+                    title=f"DocStore Event: {event.event_type}",
+                    message=f"Event: {event.event_type}\nEntity: {event.entity_type}/{event.entity_id}",
+                    metadata=metadata,
+                    labels=[event.event_type, event.entity_type]
+                )
 
-                            if response_code < 400:
-                                success = True
-                                break
-                            else:
-                                last_error = f"HTTP {response_code}: {response_body}"
-
-                except Exception as e:
-                    last_error = str(e)
-
-                    # Update delivery record with error
+                # Update delivery record based on notification service result
+                if result.get("status") == "sent":
                     execute_db_query("""
                         UPDATE webhook_deliveries
-                        SET status = 'failed', error_message = ?, attempt_count = ?, updated_at = ?
+                        SET status = 'delivered', response_code = 200, attempt_count = 1,
+                            delivered_at = ?, updated_at = ?
                         WHERE id = ?
                     """, (
-                        last_error,
-                        attempt + 1,
+                        utc_now().isoformat(),
+                        utc_now().isoformat(),
+                        delivery_id
+                    ))
+                else:
+                    # Notification service handles retries, so we mark as failed if it fails
+                    execute_db_query("""
+                        UPDATE webhook_deliveries
+                        SET status = 'failed', error_message = ?, attempt_count = 1, updated_at = ?
+                        WHERE id = ?
+                    """, (
+                        result.get("detail", "Notification service failed"),
                         utc_now().isoformat(),
                         delivery_id
                     ))
 
-                    if attempt < webhook.retry_count - 1:
-                        # Wait before retry (exponential backoff)
-                        await asyncio.sleep(2 ** attempt)
-
-            if not success:
-                # Final failure
+            except Exception as e:
+                # Update delivery record with error
                 execute_db_query("""
                     UPDATE webhook_deliveries
-                    SET status = 'failed', error_message = ?, updated_at = ?
+                    SET status = 'failed', error_message = ?, attempt_count = 1, updated_at = ?
                     WHERE id = ?
                 """, (
-                    last_error or "Unknown error",
+                    str(e),
                     utc_now().isoformat(),
                     delivery_id
                 ))
