@@ -1,6 +1,7 @@
 """MongoDB client for storing and retrieving Confluence pages."""
 
 import logging
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -104,4 +105,129 @@ class MongoDBClient:
             return await self.collection.count_documents(query)
         except Exception as e:
             logger.error(f"Error counting pages: {str(e)}")
+            raise
+    
+    # ============================================================================
+    # EMBEDDING METHODS
+    # ============================================================================
+    
+    async def update_page_embedding(self, page_id: str, embedding: List[float]) -> bool:
+        """Update a page with its embedding vector.
+        
+        Args:
+            page_id: MongoDB document ID
+            embedding: Embedding vector
+            
+        Returns:
+            True if update was successful
+        """
+        try:
+            result = await self.collection.update_one(
+                {"_id": ObjectId(page_id)},
+                {"$set": {"embedding": embedding, "embedding_updated_at": datetime.utcnow()}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            logger.error(f"Error updating embedding for page {page_id}: {str(e)}")
+            raise
+    
+    async def get_pages_with_embeddings(self) -> List[Dict[str, Any]]:
+        """Get all pages that have embeddings.
+        
+        Returns:
+            List of pages with embeddings
+        """
+        try:
+            cursor = self.collection.find(
+                {"embedding": {"$exists": True, "$ne": []}},
+                {"_id": 1, "embedding": 1, "title": 1, "confluence_page_id": 1}
+            )
+            pages = await cursor.to_list(length=None)
+            
+            # Convert ObjectId to string
+            for page in pages:
+                page["_id"] = str(page["_id"])
+            
+            return pages
+        except Exception as e:
+            logger.error(f"Error retrieving pages with embeddings: {str(e)}")
+            raise
+    
+    async def get_pages_without_embeddings(self) -> List[Dict[str, Any]]:
+        """Get all pages that don't have embeddings.
+        
+        Returns:
+            List of pages without embeddings
+        """
+        try:
+            cursor = self.collection.find(
+                {"$or": [
+                    {"embedding": {"$exists": False}},
+                    {"embedding": {"$size": 0}}
+                ]},
+                {"_id": 1, "title": 1, "content": 1, "confluence_page_id": 1}
+            )
+            pages = await cursor.to_list(length=None)
+            
+            # Convert ObjectId to string
+            for page in pages:
+                page["_id"] = str(page["_id"])
+            
+            return pages
+        except Exception as e:
+            logger.error(f"Error retrieving pages without embeddings: {str(e)}")
+            raise
+    
+    async def count_pages_with_embeddings(self) -> int:
+        """Count pages that have embeddings.
+        
+        Returns:
+            Number of pages with embeddings
+        """
+        try:
+            return await self.collection.count_documents({
+                "embedding": {"$exists": True, "$ne": []}
+            })
+        except Exception as e:
+            logger.error(f"Error counting pages with embeddings: {str(e)}")
+            raise
+    
+    async def get_all_pages(self) -> List[Dict[str, Any]]:
+        """Get all pages from the collection.
+        
+        Returns:
+            List of all pages
+        """
+        try:
+            cursor = self.collection.find(
+                {},
+                {"_id": 1, "title": 1, "content": 1, "confluence_page_id": 1}
+            )
+            pages = await cursor.to_list(length=None)
+            
+            # Convert ObjectId to string
+            for page in pages:
+                page["_id"] = str(page["_id"])
+            
+            return pages
+        except Exception as e:
+            logger.error(f"Error retrieving all pages: {str(e)}")
+            raise
+    
+    async def get_page_by_id(self, page_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific page by its MongoDB ID.
+        
+        Args:
+            page_id: MongoDB document ID
+            
+        Returns:
+            Page document or None if not found
+        """
+        try:
+            page = await self.collection.find_one({"_id": ObjectId(page_id)})
+            if page:
+                page["_id"] = str(page["_id"])
+            return page
+        except Exception as e:
+            logger.error(f"Error retrieving page by ID {page_id}: {str(e)}")
             raise

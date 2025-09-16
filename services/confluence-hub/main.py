@@ -7,6 +7,13 @@ Endpoints:
 - DELETE /confluence-hub/pages/{page_id}: Delete a specific page from the database
 - GET /confluence-hub/pages/{page_id}: Get a specific page by its Confluence page ID
 
+Embeddings Endpoints:
+- POST /confluence-hub/embeddings/generate: Generate embeddings for all pages without embeddings
+- POST /confluence-hub/embeddings/generate/{page_id}: Generate embedding for a specific page
+- GET /confluence-hub/embeddings/stats: Get embeddings statistics and service status
+- POST /confluence-hub/search: Search for similar documents using semantic search
+- POST /confluence-hub/embeddings/refresh: Refresh the in-memory embeddings cache
+
 Responsibilities:
 - Retrieve Confluence pages and their hierarchies
 - Convert Confluence content to markdown format
@@ -16,6 +23,10 @@ Responsibilities:
 
 Dependencies: MongoDB, Confluence API.
 """
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
 
 import asyncio
 from datetime import datetime, timezone
@@ -91,7 +102,13 @@ class PageListResponse(BaseModel):
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from modules import ConfluenceClient, MongoDBClient, process_confluence_page
+from modules import (
+    ConfluenceClient, 
+    MongoDBClient, 
+    process_confluence_page,
+    EmbeddingsManager,
+    VectorSearchService
+)
 
 # ============================================================================
 # APPLICATION SETUP
@@ -111,17 +128,20 @@ install_error_handlers(app)
 # Global clients
 confluence_client: Optional[ConfluenceClient] = None
 mongodb_client: Optional[MongoDBClient] = None
+embeddings_manager: Optional[EmbeddingsManager] = None
+vector_search_service: Optional[VectorSearchService] = None
 
 @app.on_event("startup")
 async def startup():
     """Initialize clients and database on startup."""
-    global confluence_client, mongodb_client
+    global confluence_client, mongodb_client, embeddings_manager, vector_search_service
     
     # Get configuration
     confluence_base_url = get_config_value("CONFLUENCE_BASE_URL", env_key="ConfluenceBaseUrl")
     confluence_username = get_config_value("CONFLUENCE_USERNAME", env_key="ConfluenceUsername")
     confluence_api_token = get_config_value("CONFLUENCE_API_TOKEN", env_key="ConfluenceApiToken")
     mongo_connection_string = get_config_value("MONGO_CONNECTION_STRING", env_key="MongoConnectionString")
+    openai_api_key = get_config_value("OPENAI_API_KEY", env_key="OpenAIApiKey")
     
     if not all([confluence_base_url, confluence_username, confluence_api_token, mongo_connection_string]):
         missing = []
@@ -133,7 +153,7 @@ async def startup():
         logger.error(f"Missing required environment variables: {missing}")
         raise ValueError(f"Missing required environment variables: {missing}")
     
-    # Initialize clients
+    # Initialize core clients
     confluence_client = ConfluenceClient(confluence_base_url, confluence_username, confluence_api_token)
     mongodb_client = MongoDBClient(mongo_connection_string)
     
@@ -142,10 +162,27 @@ async def startup():
         await mongodb_client.test_connectivity()
         await mongodb_client.create_indexes()
         await confluence_client.test_connectivity()
-        logger.info("All services initialized successfully")
+        logger.info("Core services initialized successfully")
     except Exception as e:
-        logger.error(f"Error during startup: {str(e)}")
+        logger.error(f"Error during core service startup: {str(e)}")
         raise
+    
+    # Initialize embeddings services if OpenAI API key is available
+    if openai_api_key:
+        try:
+            vector_search_service = VectorSearchService()
+            embeddings_manager = EmbeddingsManager(openai_api_key, mongodb_client, vector_search_service)
+            await embeddings_manager.initialize()
+            logger.info("Embeddings services initialized successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize embeddings services: {str(e)}")
+            logger.warning("Embeddings functionality will be unavailable")
+            embeddings_manager = None
+            vector_search_service = None
+    else:
+        logger.warning("OpenAI API key not provided. Embeddings functionality will be unavailable")
+        embeddings_manager = None
+        vector_search_service = None
 
 # ============================================================================
 # HEALTH CHECK ENDPOINT
@@ -395,6 +432,135 @@ async def delete_page(page_id: str):
         raise
     except Exception as e:
         logger.error(f"Error in delete_page: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# EMBEDDINGS ENDPOINTS
+# ============================================================================
+
+@app.post("/confluence-hub/embeddings/generate")
+async def generate_embeddings():
+    """Manually trigger embeddings generation for all pages without embeddings."""
+    try:
+        if not embeddings_manager:
+            raise HTTPException(
+                status_code=503, 
+                detail="Embeddings service not available. OpenAI API key may not be configured."
+            )
+        
+        logger.info("Manual embeddings generation triggered")
+        result = await embeddings_manager.generate_embeddings_for_all_pages(
+            batch_size=5,
+            skip_existing=True
+        )
+        
+        return create_success_response(data=result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating embeddings: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/confluence-hub/embeddings/generate/{page_id}")
+async def generate_embedding_for_page(page_id: str):
+    """Generate embedding for a specific page."""
+    try:
+        if not embeddings_manager:
+            raise HTTPException(
+                status_code=503, 
+                detail="Embeddings service not available. OpenAI API key may not be configured."
+            )
+        
+        result = await embeddings_manager.generate_embedding_for_page(page_id)
+        return create_success_response(data=result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating embedding for page {page_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/confluence-hub/embeddings/stats")
+async def get_embeddings_stats():
+    """Get statistics about embeddings in the database."""
+    try:
+        if not embeddings_manager:
+            raise HTTPException(
+                status_code=503, 
+                detail="Embeddings service not available. OpenAI API key may not be configured."
+            )
+        
+        stats = await embeddings_manager.get_embedding_statistics()
+        service_status = await embeddings_manager.get_service_status()
+        
+        return create_success_response(data={
+            "statistics": stats,
+            "service_status": service_status
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting embeddings stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class SearchRequest(BaseModel):
+    """Request model for semantic search."""
+    query: str = Field(..., description="Search query text")
+    limit: int = Field(default=5, description="Maximum number of results to return")
+    min_score: float = Field(default=0.15, description="Minimum similarity score threshold")
+
+@app.post("/confluence-hub/search")
+async def search_similar_documents(request: SearchRequest):
+    """Search for documents similar to the query text using semantic search."""
+    try:
+        if not embeddings_manager:
+            raise HTTPException(
+                status_code=503, 
+                detail="Embeddings service not available. OpenAI API key may not be configured."
+            )
+        
+        results = await embeddings_manager.search_similar_documents(
+            query_text=request.query,
+            limit=request.limit,
+            min_score=request.min_score
+        )
+        
+        return create_success_response(data={
+            "query": request.query,
+            "results": results,
+            "total_found": len(results)
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error searching documents: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/confluence-hub/embeddings/refresh")
+async def refresh_embeddings_cache():
+    """Refresh the in-memory embeddings cache."""
+    try:
+        if not vector_search_service:
+            raise HTTPException(
+                status_code=503, 
+                detail="Vector search service not available. OpenAI API key may not be configured."
+            )
+        
+        await vector_search_service.refresh(mongodb_client)
+        stats = vector_search_service.get_stats()
+        
+        return create_success_response(data={
+            "message": "Embeddings cache refreshed successfully",
+            "cache_stats": stats
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error refreshing embeddings cache: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
