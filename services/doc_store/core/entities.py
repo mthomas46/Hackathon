@@ -103,6 +103,46 @@ class DocumentRelationship(BaseEntity):
 
 
 @dataclass
+class GraphNode:
+    """Graph node with document information."""
+    document_id: str
+    title: str = ""
+    content_type: str = ""
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    degree: int = 0
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "document_id": self.document_id,
+            "title": self.title,
+            "content_type": self.content_type,
+            "metadata": self.metadata,
+            "degree": self.degree,
+        }
+
+
+@dataclass
+class GraphEdge:
+    """Graph edge with relationship information."""
+    source_id: str
+    target_id: str
+    relationship_type: str
+    strength: float = 1.0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "source_id": self.source_id,
+            "target_id": self.target_id,
+            "relationship_type": self.relationship_type,
+            "strength": self.strength,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
 class DocumentTag(BaseEntity):
     """Document tag entity."""
     id: str
@@ -212,4 +252,94 @@ class BulkOperation:
             },
             "created_at": self.created_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+        }
+
+
+@dataclass
+class NotificationEvent(BaseEntity):
+    """Notification event entity."""
+    id: str
+    event_type: str
+    entity_type: str
+    entity_id: str
+    user_id: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "id": self.id,
+            "event_type": self.event_type,
+            "entity_type": self.entity_type,
+            "entity_id": self.entity_id,
+            "user_id": self.user_id,
+            "metadata": self.metadata,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+@dataclass
+class Webhook(BaseEntity):
+    """Webhook configuration entity."""
+    id: str
+    name: str
+    url: str
+    secret: Optional[str] = None
+    events: List[str] = field(default_factory=list)
+    headers: Dict[str, str] = field(default_factory=dict)
+    is_active: bool = True
+    retry_count: int = 3
+    timeout_seconds: int = 30
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "url": self.url,
+            "secret": "***" if self.secret else None,  # Don't expose secrets
+            "events": self.events,
+            "headers": self.headers,
+            "is_active": self.is_active,
+            "retry_count": self.retry_count,
+            "timeout_seconds": self.timeout_seconds,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
+
+@dataclass
+class WebhookDelivery(BaseEntity):
+    """Webhook delivery record entity."""
+    id: str
+    webhook_id: str
+    event_id: str
+    status: str
+    response_code: Optional[int] = None
+    response_body: Optional[str] = None
+    error_message: Optional[str] = None
+    attempt_count: int = 1
+    delivered_at: Optional[datetime] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "id": self.id,
+            "webhook_id": self.webhook_id,
+            "event_id": self.event_id,
+            "status": self.status,
+            "response_code": self.response_code,
+            "response_body": self.response_body,
+            "error_message": self.error_message,
+            "attempt_count": self.attempt_count,
+            "delivered_at": self.delivered_at.isoformat() if self.delivered_at else None,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
