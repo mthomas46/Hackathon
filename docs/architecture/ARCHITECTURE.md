@@ -17,6 +17,7 @@ All services ─► [Log Collector]
 - FastAPI + shared middleware (request id, metrics)
 - Standard health endpoints and success/error envelopes
 - Service discovery via Orchestrator registry (selected services self-register)
+- **CLI Service**: Mixin-based architecture with 18+ standardized managers (100% test coverage)
 - Tests organized per-service under `tests/unit/<service>`
 
 ## Envelopes
@@ -24,6 +25,7 @@ All services ─► [Log Collector]
 - Error envelope: `{ "success": false, "error_code": "...", "details": {...}, "request_id": "..." }`
 
 ## Key responsibilities
+- **CLI Service**: Interactive TUI with 18+ specialized managers for service operations
 - Interpreter: intent recognition and workflow creation
 - Prompt Store: prompt CRUD, A/B testing, analytics
 - Analysis Service: consistency checks, reports
