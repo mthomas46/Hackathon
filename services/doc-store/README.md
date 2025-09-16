@@ -6,9 +6,11 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 
 ## Key Features
 - SQLite-backed store with FTS5 for document search and semantic fallback.
+- Advanced analytics and insights with storage trends, quality metrics, and temporal analysis.
+- Enhanced search with filtering, faceting, sorting, and metadata-based queries.
 - Quality scoring (stale, redundant, low_views, missing_owner) and list APIs.
 - Enveloped write endpoint `/documents/enveloped` and standard `/documents`.
-- `/search`, `/documents/_list`, `/documents/quality`, `/info`, `/metrics`.
+- `/search`, `/search/advanced`, `/analytics`, `/analytics/summary`, `/documents/_list`, `/documents/quality`, `/info`, `/metrics`.
 
 ## Goal
 - Persist documents and LLM/code analyses for deep and ensemble comparisons.
@@ -38,14 +40,22 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 | Method | Path                     | Description |
 |--------|--------------------------|-------------|
 | GET    | /health                  | Health check |
+| GET    | /info                    | Service information |
+| GET    | /config/effective        | Effective configuration |
+| GET    | /metrics                 | Service metrics |
 | POST   | /documents               | Create document |
 | POST   | /documents/enveloped     | Strict DocumentEnvelope write |
 | GET    | /documents/{id}          | Get by id |
+| PATCH  | /documents/{id}/metadata | Patch metadata |
+| GET    | /documents/_list         | List recent documents |
 | POST   | /analyses                | Create analysis |
 | GET    | /analyses?document_id=   | List analyses for document |
 | GET    | /search?q=               | FTS with semantic fallback |
+| POST   | /search/advanced         | Advanced search with filters/facets |
 | GET    | /documents/quality       | Quality signals |
-| PATCH  | /documents/{id}/metadata | Patch metadata |
+| GET    | /analytics               | Comprehensive analytics |
+| GET    | /analytics/summary       | Analytics summary with insights |
+| GET    | /style/examples          | List style examples |
 
 ## Related
 - Orchestrator: [../orchestrator/README.md](../orchestrator/README.md)
@@ -58,9 +68,44 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
   - Handle `/documents/_list` vs nested `data.items` responses in mocks
   - FTS `/search` results presence rather than exact IDs in all scenarios
 
+## Analytics & Insights
+
+The doc-store provides comprehensive analytics capabilities to understand document storage patterns, quality trends, and ecosystem usage:
+
+### Analytics Endpoints
+- **GET /analytics**: Detailed analytics with configurable time periods
+  - Storage statistics (size, compression, distribution)
+  - Quality metrics (analysis coverage, staleness, model performance)
+  - Temporal trends (creation rates, analysis patterns)
+  - Content insights (duplication, source distribution, most analyzed documents)
+  - Relationship insights (analysis coverage, collaboration patterns)
+
+- **GET /analytics/summary**: High-level summary with key insights and recommendations
+  - Executive summary of storage and quality metrics
+  - Automated insights based on patterns and trends
+  - Actionable recommendations for optimization
+
+### Advanced Search
+- **POST /search/advanced**: Powerful search with filtering and faceting
+  - Full-text search with FTS5 and semantic fallback
+  - Metadata filtering (content_type, source_type, language, tags)
+  - Date range filtering and analysis status filtering
+  - Multiple sorting options (relevance, date, size, analysis count)
+  - Pagination and faceted results for enhanced discovery
+  - Rich result metadata (analysis counts, scores, content length)
+
+### Quality Assessment
+- **GET /documents/quality**: Intelligent quality scoring and issue detection
+  - Stale content identification based on configurable thresholds
+  - Low-signal content detection
+  - Missing metadata and incomplete document flagging
+  - Priority scoring for maintenance focus
+
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
 - Designed to be called by orchestrator/consistency-engine/reporting.
+- Analytics data supports monitoring dashboards and automated insights.
+- Advanced search powers intelligent document discovery across the ecosystem.
 
 ## Config
 Configuration is config-first via `services/shared/config.get_config_value`.

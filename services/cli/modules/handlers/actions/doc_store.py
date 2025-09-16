@@ -57,11 +57,61 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.get_json(url)
         await save_data(console, data, fmt, path, content_key="content")
 
+    async def view_analytics():
+        days = Prompt.ask("Analysis period (days)", default="30")
+        url = f"{clients.doc_store_url()}/analytics"
+        data = await clients.get_json(url, params={"days_back": days})
+        print_kv(console, "Analytics", data)
+
+    async def view_analytics_summary():
+        url = f"{clients.doc_store_url()}/analytics/summary"
+        data = await clients.get_json(url)
+        print_kv(console, "Analytics Summary", data)
+
+    async def advanced_search():
+        # Build search query interactively
+        q = Prompt.ask("Search query (optional)", default="")
+        content_type = Prompt.ask("Content type filter (optional)", default="")
+        source_type = Prompt.ask("Source type filter (optional)", default="")
+        language = Prompt.ask("Language filter (optional)", default="")
+        has_analysis_input = Prompt.ask("Analysis filter (analyzed/unanalyzed/both)", default="both")
+
+        # Convert analysis filter
+        has_analysis = None
+        if has_analysis_input == "analyzed":
+            has_analysis = True
+        elif has_analysis_input == "unanalyzed":
+            has_analysis = False
+
+        # Build request payload
+        payload = {}
+        if q:
+            payload["q"] = q
+        if content_type:
+            payload["content_type"] = content_type
+        if source_type:
+            payload["source_type"] = source_type
+        if language:
+            payload["language"] = language
+        if has_analysis is not None:
+            payload["has_analysis"] = has_analysis
+
+        if not payload:
+            console.print("[yellow]No search criteria specified, showing recent documents...[/yellow]")
+            payload["limit"] = 10
+
+        url = f"{clients.doc_store_url()}/search/advanced"
+        data = await clients.post_json(url, payload)
+        print_kv(console, "Advanced Search Results", data)
+
     return [
         ("Search documents", list_documents),
+        ("Advanced search with filters", advanced_search),
         ("Get document by ID", get_document),
         ("Create document", put_document),
         ("List quality signals", quality),
+        ("View analytics (detailed)", view_analytics),
+        ("View analytics summary", view_analytics_summary),
         ("View config (effective)", config_effective),
         ("DB probe (write/read)", db_probe),
         ("Download document", download_document),
