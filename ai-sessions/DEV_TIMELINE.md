@@ -178,6 +178,32 @@ The September 14 sessions significantly expanded the application's capabilities 
   - Enhanced user experience with modern CLI features
   - Comprehensive test coverage maintained
 
+**Session 4: Doc-Store Hardening & CLI Integration (September 16, 2025)**
+- **Doc-Store Service Hardening**
+  - Comprehensive test data population with 15 document types
+  - Service launcher with proper environment configuration
+  - Fallback handlers for robust operation across environments
+  - Local database testing mode for development workflows
+
+- **CLI Integration & Testing**
+  - Enhanced ServiceClients with dual HTTP/database access modes
+  - CLI configured for local doc-store testing
+  - All doc-store operations accessible via interactive CLI
+  - Production-ready service with FastAPI and SQLite backend
+
+- **Document Types Covered**
+  - Source documents: GitHub (READMEs/issues/PRs), Jira (epics/stories), Confluence (pages)
+  - Code documents: Python and TypeScript with metadata
+  - API documentation: OpenAPI specifications and references
+  - Analysis results: Consistency, security, and quality reports
+  - Ensemble results: Multi-analyzer summaries and recommendations
+
+- **Technical Achievements**
+  - Database schema with proper indexing and WAL mode
+  - Content hashing for deduplication and integrity
+  - Response format compatibility with existing CLI expectations
+  - Environment-based configuration for different deployment modes
+
 ---
 
 **Note**: All session files in `./ai-sessions/` contain detailed implementation logs, technical decisions, and lessons learned. Refer to specific files for detailed context on particular features or fixes.
