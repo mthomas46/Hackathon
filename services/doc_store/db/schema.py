@@ -268,6 +268,7 @@ def create_bulk_operations_table() -> str:
           successful_items INTEGER DEFAULT 0,
           failed_items INTEGER DEFAULT 0,
           errors TEXT,
+          results TEXT,
           metadata TEXT,
           created_at TEXT NOT NULL,
           completed_at TEXT
