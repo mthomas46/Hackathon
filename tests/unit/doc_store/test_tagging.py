@@ -280,12 +280,12 @@ class TestSemanticTaggingIntegration:
     async def test_automatic_tagging_on_document_creation(self):
         """Test that documents are automatically tagged during creation."""
         from services.doc_store.modules.document_handlers import DocumentHandlers
-        from services.doc_store.modules.models import PutDocumentRequest
+        from services.doc_store.core.models import DocumentRequest
 
         content = "This Python Flask API uses SQLAlchemy for database operations."
         metadata = {"type": "api", "language": "python"}
 
-        request = PutDocumentRequest(content=content, metadata=metadata)
+        request = DocumentRequest(content=content, metadata=metadata)
 
         with patch('services.doc_store.modules.document_handlers.execute_db_query') as mock_execute:
             with patch('services.doc_store.modules.document_handlers.create_document_logic') as mock_create:

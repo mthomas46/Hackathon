@@ -199,11 +199,12 @@ class TestBulkOperationsIntegration:
     async def test_bulk_create_api_endpoint(self):
         """Test bulk document creation API endpoint."""
         from services.doc_store.modules.bulk_handlers import BulkHandlers
-        from services.doc_store.modules.models import BulkDocumentCreateRequest, BulkDocumentItem
+        from services.doc_store.core.models import BulkDocumentRequest
 
-        request = BulkDocumentCreateRequest(documents=[
-            BulkDocumentItem(content="Doc 1 content", metadata={"type": "test"}),
-            BulkDocumentItem(content="Doc 2 content", metadata={"type": "test"})
+        from services.doc_store.core.models import DocumentRequest
+        request = BulkDocumentRequest(documents=[
+            DocumentRequest(content="Doc 1 content", metadata={"type": "test"}),
+            DocumentRequest(content="Doc 2 content", metadata={"type": "test"})
         ])
 
         with patch('services.doc_store.modules.bulk_handlers.bulk_processor') as mock_processor:

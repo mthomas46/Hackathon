@@ -367,7 +367,7 @@ class TestNotificationIntegration:
     async def test_webhook_registration_api(self):
         """Test webhook registration API endpoint."""
         from services.doc_store.modules.notification_handlers import NotificationHandlers
-        from services.doc_store.modules.models import WebhookRequest
+        from services.doc_store.core.models import WebhookRequest
 
         request = WebhookRequest(
             name="API Webhook",
