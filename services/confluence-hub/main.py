@@ -1,11 +1,11 @@
 """Service: Confluence Hub
 
 Endpoints:
-- POST /convert-page: Convert a Confluence page and all subpages to markdown and store in MongoDB
-- GET /health: Health check endpoint that validates MongoDB and Confluence connectivity
-- GET /pages: Retrieve stored pages with optional filtering
-- DELETE /pages/{page_id}: Delete a specific page from the database
-- GET /pages/{page_id}: Get a specific page by its Confluence page ID
+- POST /confluence-hub/convert-page: Convert a Confluence page and all subpages to markdown and store in MongoDB
+- GET /confluence-hub/health: Health check endpoint that validates MongoDB and Confluence connectivity
+- GET /confluence-hub/pages: Retrieve stored pages with optional filtering
+- DELETE /confluence-hub/pages/{page_id}: Delete a specific page from the database
+- GET /confluence-hub/pages/{page_id}: Get a specific page by its Confluence page ID
 
 Responsibilities:
 - Retrieve Confluence pages and their hierarchies
@@ -206,7 +206,7 @@ async def check_mongodb_health() -> DependencyHealth:
         )
 
 # Add custom health endpoint with dependency checks first
-@app.get("/health")
+@app.get("/confluence-hub/health")
 async def health_check():
     """Health check endpoint that validates MongoDB and Confluence connectivity."""
     try:
@@ -238,20 +238,18 @@ async def health_check():
         )
 
 # Register additional health endpoints for compatibility (excluding /health to avoid conflicts)
+# Note: Skipping system health endpoint due to recursion issue in shared health module
 health_manager = HealthManager(ServiceNames.CONFLUENCE_HUB, "1.0.0")
 
-# System health check
-from services.shared.health import create_system_health_endpoint, create_dependency_health_endpoint
-app.get("/health/system")(create_system_health_endpoint(health_manager))
-
-# Dependency health check
-app.get("/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
+# Dependency health check only
+from services.shared.health import create_dependency_health_endpoint
+app.get("/confluence-hub/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
 
 # ============================================================================
 # API ENDPOINTS
 # ============================================================================
 
-@app.post("/convert-page")
+@app.post("/confluence-hub/convert-page")
 async def convert_page(request: ConvertPageRequest):
     """Convert a Confluence page and all its subpages to markdown and store in MongoDB."""
     try:
@@ -329,7 +327,7 @@ async def convert_page(request: ConvertPageRequest):
         logger.error(f"Error in convert_page: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/pages", response_model=PageListResponse)
+@app.get("/confluence-hub/pages", response_model=PageListResponse)
 async def get_pages(
     session_id: Optional[str] = Query(None, description="Filter by session ID"),
     limit: int = Query(100, ge=1, le=1000, description="Number of pages to return"),
@@ -359,7 +357,7 @@ async def get_pages(
         logger.error(f"Error in get_pages: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/pages/{page_id}")
+@app.get("/confluence-hub/pages/{page_id}")
 async def get_page(page_id: str):
     """Get a specific page by its Confluence page ID."""
     try:
@@ -378,7 +376,7 @@ async def get_page(page_id: str):
         logger.error(f"Error in get_page: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/pages/{page_id}")
+@app.delete("/confluence-hub/pages/{page_id}")
 async def delete_page(page_id: str):
     """Delete a specific page from the database."""
     try:

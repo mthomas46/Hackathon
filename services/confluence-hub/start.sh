@@ -130,7 +130,7 @@ fi
 
 # Start the service
 echo "🎯 Starting Confluence Hub Service on port 5070..."
-echo "   Health endpoint: http://localhost:5070/health"
+echo "   Health endpoint: http://localhost:5070/confluence-hub/health"
 echo "   API docs: http://localhost:5070/docs"
 echo ""
 
