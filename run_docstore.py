@@ -25,12 +25,9 @@ def main():
     # Default port
     port = os.environ.get('PORT', '5010')
 
-    # Change to doc_store directory and run main.py directly
-    os.chdir(str(docstore_dir))
-
-    # Run main.py with uvicorn
+    # Run as module from project root to avoid relative import issues
     cmd = [
-        sys.executable, 'main.py'
+        sys.executable, '-m', 'services.doc_store.main'
     ]
 
     try:
