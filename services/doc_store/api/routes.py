@@ -4,13 +4,18 @@ Consolidated route definitions for all endpoints.
 """
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, Dict, Any, List
+from services.shared.responses import SuccessResponse
 
 # Import handlers from domains
 from ..domain.documents.handlers import document_handlers
+from ..domain.bulk.handlers import BulkOperationsHandlers
+from ..domain.analytics.handlers import AnalyticsHandlers
+from ..domain.lifecycle.handlers import LifecycleHandlers
+from ..domain.versioning.handlers import VersioningHandlers
 from ..core.models import (
     DocumentRequest, DocumentResponse, DocumentListResponse,
     MetadataUpdateRequest, SearchRequest, SearchResponse,
-    QualityResponse, AnalyticsRequest, AnalyticsResponse,
+    QualityResponse, AnalyticsRequest,
     DocumentVersionResponse, VersionComparison, VersionRollbackRequest,
     RelationshipsResponse, PathsResponse, GraphStatisticsResponse,
     TagRequest, TagResponse, TagSearchRequest, TagSearchResponse,
@@ -22,6 +27,11 @@ from ..core.models import (
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["docstore"])
+
+# Initialize handlers
+bulk_handlers = BulkOperationsHandlers()
+analytics_handlers = AnalyticsHandlers()
+lifecycle_handlers = LifecycleHandlers()
 
 
 # Document endpoints
@@ -73,15 +83,13 @@ async def get_quality_metrics(limit: int = Query(1000, ge=1, le=10000)):
 
 
 # Analytics endpoints
-@router.get("/analytics/summary", response_model=AnalyticsResponse)
+@router.get("/analytics/summary", response_model=SuccessResponse)
 async def get_analytics_summary(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
     """Get analytics summary."""
-    request = AnalyticsRequest(start_date=start_date, end_date=end_date)
-    # TODO: Implement analytics handlers
-    raise HTTPException(status_code=501, detail="Analytics not yet implemented")
+    return await analytics_handlers.handle_get_analytics_summary()
 
 
 # Versioning endpoints
@@ -154,22 +162,25 @@ async def search_by_tags(request: TagSearchRequest):
 @router.post("/lifecycle/policies")
 async def create_lifecycle_policy(request: LifecyclePolicyRequest):
     """Create lifecycle policy."""
-    # TODO: Implement lifecycle handlers
-    raise HTTPException(status_code=501, detail="Lifecycle management not yet implemented")
+    return await lifecycle_handlers.handle_create_policy(
+        request.name, request.description, request.conditions, request.actions, request.priority
+    )
 
 
 @router.post("/documents/{document_id}/lifecycle/transition")
 async def transition_document_phase(document_id: str, request: LifecycleTransitionRequest):
     """Transition document to new lifecycle phase."""
-    # TODO: Implement lifecycle handlers
-    raise HTTPException(status_code=501, detail="Lifecycle management not yet implemented")
+    return await lifecycle_handlers.handle_apply_lifecycle_policies({
+        "id": document_id,
+        "new_phase": request.new_phase,
+        "reason": request.reason
+    })
 
 
 @router.get("/documents/{document_id}/lifecycle", response_model=LifecycleStatusResponse)
 async def get_document_lifecycle(document_id: str):
     """Get document lifecycle status."""
-    # TODO: Implement lifecycle handlers
-    raise HTTPException(status_code=501, detail="Lifecycle management not yet implemented")
+    return await lifecycle_handlers.handle_get_document_lifecycle(document_id)
 
 
 # Notification endpoints
@@ -195,32 +206,28 @@ async def get_notification_stats():
 
 
 # Bulk operations endpoints
-@router.post("/bulk/documents")
+@router.post("/bulk/documents", response_model=SuccessResponse)
 async def create_documents_bulk(request: BulkDocumentRequest):
     """Create multiple documents in bulk."""
-    # TODO: Implement bulk handlers
-    raise HTTPException(status_code=501, detail="Bulk operations not yet implemented")
+    return await bulk_handlers.handle_bulk_create_documents(request.documents)
 
 
-@router.get("/bulk/operations", response_model=BulkOperationsListResponse)
+@router.get("/bulk/operations", response_model=SuccessResponse)
 async def list_bulk_operations(status: Optional[str] = None, limit: int = Query(50, ge=1, le=100)):
     """List bulk operations."""
-    # TODO: Implement bulk handlers
-    raise HTTPException(status_code=501, detail="Bulk operations not yet implemented")
+    return await bulk_handlers.handle_list_bulk_operations(status, limit)
 
 
-@router.get("/bulk/operations/{operation_id}", response_model=BulkOperationStatus)
+@router.get("/bulk/operations/{operation_id}", response_model=SuccessResponse)
 async def get_bulk_operation_status(operation_id: str):
     """Get bulk operation status."""
-    # TODO: Implement bulk handlers
-    raise HTTPException(status_code=501, detail="Bulk operations not yet implemented")
+    return await bulk_handlers.handle_get_bulk_operation_status(operation_id)
 
 
-@router.delete("/bulk/operations/{operation_id}")
+@router.delete("/bulk/operations/{operation_id}", response_model=SuccessResponse)
 async def cancel_bulk_operation(operation_id: str):
     """Cancel bulk operation."""
-    # TODO: Implement bulk handlers
-    raise HTTPException(status_code=501, detail="Bulk operations not yet implemented")
+    return await bulk_handlers.handle_cancel_bulk_operation(operation_id)
 
 
 # Cache management endpoints

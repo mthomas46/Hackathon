@@ -83,8 +83,7 @@ class DocumentHandlers:
 
             return create_success_response(
                 "Documents listed successfully",
-                result,
-                {"count": len(result["items"])}
+                result
             )
 
         except Exception as e:

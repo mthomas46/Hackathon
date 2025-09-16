@@ -22,14 +22,15 @@ class DocumentRepository(BaseRepository[Document]):
 
     def _row_to_entity(self, row: Dict[str, Any]) -> Document:
         """Convert database row to Document entity."""
+        from datetime import datetime
         return Document(
             id=row['id'],
             content=row['content'],
             content_hash=row['content_hash'],
             metadata=json.loads(row['metadata'] or '{}'),
             correlation_id=row.get('correlation_id'),
-            created_at=row['created_at'],
-            updated_at=row.get('updated_at')
+            created_at=datetime.fromisoformat(row['created_at'].replace('Z', '+00:00')) if isinstance(row['created_at'], str) else row['created_at'],
+            updated_at=datetime.fromisoformat(row['updated_at'].replace('Z', '+00:00')) if row.get('updated_at') and isinstance(row['updated_at'], str) else row.get('updated_at')
         )
 
     def _entity_to_row(self, entity: Document) -> Dict[str, Any]:

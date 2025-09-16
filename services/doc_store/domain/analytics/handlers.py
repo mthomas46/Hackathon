@@ -37,7 +37,4 @@ class AnalyticsHandlers(BaseHandler):
         """Handle analytics summary request."""
         summary = self.service.get_analytics_summary()
 
-        return await self._handle_request(
-            lambda: summary,
-            operation="get_analytics_summary"
-        )
+        return await self._handle_request(lambda: summary)
