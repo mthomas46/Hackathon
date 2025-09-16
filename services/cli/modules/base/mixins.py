@@ -11,6 +11,8 @@ from rich.table import Table
 from rich.panel import Panel
 import asyncio
 
+from services.shared.constants_new import ServiceNames
+
 
 class MenuMixin(ABC):
     """Mixin providing common menu handling functionality."""
@@ -316,3 +318,151 @@ class ValidationMixin(ABC):
                     self.display.show_error(f"Retry also failed: {retry_error}")
 
         return False
+
+
+class HealthCheckMixin(ABC):
+    """Mixin providing service health checking functionality."""
+
+    async def check_service_health(self, service_name: str) -> Dict[str, Any]:
+        """Check the health of a specific service.
+
+        Args:
+            service_name: Name of the service to check
+
+        Returns:
+            Dict containing health status information
+        """
+        try:
+            # Get service health URL
+            health_url = self._get_service_health_url(service_name)
+
+            # Attempt to connect with timeout
+            response = await asyncio.wait_for(
+                self.clients.get_json(health_url),
+                timeout=5.0  # 5 second timeout
+            )
+
+            return {
+                "status": "healthy",
+                "response": response,
+                "timestamp": asyncio.get_event_loop().time()
+            }
+
+        except asyncio.TimeoutError:
+            return {
+                "status": "unreachable",
+                "error": "Service timeout (5s)",
+                "timestamp": asyncio.get_event_loop().time()
+            }
+        except Exception as e:
+            return {
+                "status": "unreachable",
+                "error": str(e),
+                "timestamp": asyncio.get_event_loop().time()
+            }
+
+    async def check_services_health(self, service_names: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Check health of multiple services.
+
+        Args:
+            service_names: List of service names to check
+
+        Returns:
+            Dict mapping service names to health status
+        """
+        results = {}
+
+        with self.console.status(f"[bold green]Checking {len(service_names)} services...[/bold green]") as status:
+            tasks = []
+            for service_name in service_names:
+                task = asyncio.create_task(self.check_service_health(service_name))
+                tasks.append((service_name, task))
+
+            for service_name, task in tasks:
+                results[service_name] = await task
+
+        return results
+
+    def _get_service_health_url(self, service_name: str) -> str:
+        """Get the health check URL for a service.
+
+        Args:
+            service_name: Name of the service
+
+        Returns:
+            Health check URL for the service
+        """
+        # Map service names to their health URLs
+        url_map = {
+            ServiceNames.ORCHESTRATOR: f"{self.clients.orchestrator_url()}/health",
+            ServiceNames.ANALYSIS_SERVICE: f"{self.clients.analysis_service_url()}/health",
+            ServiceNames.DOC_STORE: f"{self.clients.doc_store_url()}/health",
+            ServiceNames.SOURCE_AGENT: f"{self.clients.source_agent_url()}/health",
+            ServiceNames.PROMPT_STORE: f"{self.clients.prompt_store_url()}/health",
+            ServiceNames.DISCOVERY_AGENT: f"{self.clients.discovery_agent_url()}/health",
+            ServiceNames.INTERPRETER: f"{self.clients.interpreter_url()}/health",
+            ServiceNames.FRONTEND: f"{self.clients.frontend_url()}/health",
+            ServiceNames.SUMMARIZER_HUB: f"{self.clients.summarizer_hub_url()}/health",
+            ServiceNames.SECURE_ANALYZER: f"{self.clients.secure_analyzer_url()}/health",
+            ServiceNames.MEMORY_AGENT: f"{self.clients.memory_agent_url()}/health",
+            ServiceNames.CODE_ANALYZER: f"{self.clients.code_analyzer_url()}/health",
+            ServiceNames.LOG_COLLECTOR: f"{self.clients.log_collector_url()}/health",
+            ServiceNames.NOTIFICATION_SERVICE: f"{self.clients.notification_service_url()}/health"
+        }
+
+        return url_map.get(service_name, f"http://localhost:5000/health")
+
+    def is_service_healthy(self, health_data: Dict[str, Any]) -> bool:
+        """Check if a service health response indicates healthy status.
+
+        Args:
+            health_data: Health check response data
+
+        Returns:
+            True if service is healthy, False otherwise
+        """
+        return health_data.get("status") == "healthy"
+
+    def format_health_status(self, service_name: str, health_data: Dict[str, Any]) -> Tuple[str, str]:
+        """Format health status for display.
+
+        Args:
+            service_name: Name of the service
+            health_data: Health check data
+
+        Returns:
+            Tuple of (status_display, details)
+        """
+        status = health_data.get("status", "unknown")
+
+        if status == "healthy":
+            status_display = "[green]✓ Healthy[/green]"
+            details = "Service responding normally"
+        elif status == "unreachable":
+            error = health_data.get("error", "Unknown error")
+            status_display = "[red]✗ Unreachable[/red]"
+            details = f"Cannot connect: {error}"
+        else:
+            status_display = "[yellow]? Unknown[/yellow]"
+            details = f"Status: {status}"
+
+        return status_display, details
+
+    async def display_service_health_table(self, health_results: Dict[str, Dict[str, Any]],
+                                          title: str = "Service Health Status") -> None:
+        """Display service health results in a formatted table.
+
+        Args:
+            health_results: Dict mapping service names to health data
+            title: Table title
+        """
+        table = Table(title=title, border_style="blue")
+        table.add_column("Service", style="cyan", no_wrap=True)
+        table.add_column("Status", style="green")
+        table.add_column("Details", style="white")
+
+        for service_name, health_data in health_results.items():
+            status_display, details = self.format_health_status(service_name, health_data)
+            table.add_row(service_name, status_display, details)
+
+        self.console.print(table)

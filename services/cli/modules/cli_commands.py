@@ -33,6 +33,7 @@ from .shared_utils import (
 )
 from .handlers.service_actions import ServiceActions
 from .managers.config.config_manager import ConfigManager
+from .managers.config.settings_manager import SettingsManager
 from .managers.analysis.analysis_service_manager import AnalysisServiceManager
 from .managers.monitoring.advanced_monitoring_manager import AdvancedMonitoringManager
 from .managers.services import (
@@ -88,6 +89,7 @@ class CLICommands:
         self.bedrock_proxy_manager = BedrockProxyManager(self.console, self.clients, self._cache)
         self.analysis_service_manager = AnalysisServiceManager(self.console, self.clients, self._cache)
         self.config_manager = ConfigManager(self.console, self.clients, self._cache)
+        self.settings_manager = SettingsManager(self.console, self.clients, self._cache)
         self.deployment_manager = DeploymentManager(self.console, self.clients, self._cache)
         self.advanced_monitoring_manager = AdvancedMonitoringManager(self.console, self.clients, self._cache)
         self.architecture_digitizer_manager = ArchitectureDigitizerManager(self.console, self.clients, self._cache)
@@ -201,6 +203,7 @@ class CLICommands:
             ("21", "Advanced Monitoring (Dashboards, SLO/SLA)"),
             ("22", "Analytics & Testing"),
             ("23", "Prompt Management"),
+            ("s", "Settings & Service Status"),
             ("c", "Cache Management"),
             ("q", "Quit")
         ])
@@ -457,6 +460,8 @@ class CLICommands:
                 elif choice == "23":
                     prompt_manager = PromptManager(self.console, self.clients)
                     await prompt_manager.prompt_management_menu()
+                elif choice.lower() == "s":
+                    await self.settings_manager.run_menu_loop("Settings & Service Status")
                 elif choice.lower() == "c":
                     await self.cache_management_menu()
                 elif choice.lower() in ["q", "quit", "exit"]:
