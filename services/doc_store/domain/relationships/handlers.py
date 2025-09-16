@@ -4,7 +4,7 @@ Handles relationship-related HTTP requests and responses.
 """
 from typing import Dict, Any, Optional
 from ...core.handler import BaseHandler
-from ...core.models import AddRelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse
+from ...core.models import RelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse
 from .service import RelationshipsService
 
 

@@ -12,6 +12,9 @@ from ..domain.bulk.handlers import BulkOperationsHandlers
 from ..domain.analytics.handlers import AnalyticsHandlers
 from ..domain.lifecycle.handlers import LifecycleHandlers
 from ..domain.versioning.handlers import VersioningHandlers
+from ..domain.relationships.handlers import RelationshipsHandlers
+from ..domain.tagging.handlers import TaggingHandlers
+from ..domain.notifications.handlers import NotificationsHandlers
 from ..core.models import (
     DocumentRequest, DocumentResponse, DocumentListResponse,
     MetadataUpdateRequest, SearchRequest, SearchResponse,
@@ -32,6 +35,10 @@ router = APIRouter(prefix="/api/v1", tags=["docstore"])
 bulk_handlers = BulkOperationsHandlers()
 analytics_handlers = AnalyticsHandlers()
 lifecycle_handlers = LifecycleHandlers()
+versioning_handlers = VersioningHandlers()
+relationships_handlers = RelationshipsHandlers()
+tagging_handlers = TaggingHandlers()
+notifications_handlers = NotificationsHandlers()
 
 
 # Document endpoints
@@ -93,69 +100,67 @@ async def get_analytics_summary(
 
 
 # Versioning endpoints
-@router.get("/documents/{document_id}/versions", response_model=DocumentVersionResponse)
-async def get_document_versions(document_id: str):
+@router.get("/documents/{document_id}/versions", response_model=SuccessResponse)
+async def get_document_versions(document_id: str, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)):
     """Get document version history."""
-    # TODO: Implement versioning handlers
-    raise HTTPException(status_code=501, detail="Versioning not yet implemented")
+    return await versioning_handlers.handle_get_document_versions(document_id, limit, offset)
 
 
-@router.post("/documents/{document_id}/versions/rollback")
+@router.post("/documents/{document_id}/versions/rollback", response_model=SuccessResponse)
 async def rollback_document_version(document_id: str, request: VersionRollbackRequest):
     """Rollback document to previous version."""
-    # TODO: Implement versioning handlers
-    raise HTTPException(status_code=501, detail="Versioning not yet implemented")
+    return await versioning_handlers.handle_rollback_to_version(document_id, request.version_number, request.reason)
 
 
 # Relationship endpoints
-@router.post("/relationships")
+@router.post("/relationships", response_model=SuccessResponse)
 async def add_relationship(request: Dict[str, Any]):  # Using dict for now
     """Add relationship between documents."""
-    # TODO: Implement relationship handlers
-    raise HTTPException(status_code=501, detail="Relationships not yet implemented")
+    return await relationships_handlers.handle_add_relationship(
+        request["source_document_id"],
+        request["target_document_id"],
+        request["relationship_type"],
+        request.get("strength", 1.0),
+        request.get("metadata", {})
+    )
 
 
-@router.get("/documents/{document_id}/relationships", response_model=RelationshipsResponse)
+@router.get("/documents/{document_id}/relationships", response_model=SuccessResponse)
 async def get_document_relationships(
     document_id: str,
     direction: str = Query("both", regex="^(both|outgoing|incoming)$")
 ):
     """Get relationships for a document."""
-    # TODO: Implement relationship handlers
-    raise HTTPException(status_code=501, detail="Relationships not yet implemented")
+    return await relationships_handlers.handle_get_relationships(document_id, direction)
 
 
-@router.get("/relationships/paths", response_model=PathsResponse)
+@router.get("/relationships/paths", response_model=SuccessResponse)
 async def find_relationship_paths(
     start_id: str = Query(..., description="Starting document ID"),
     end_id: str = Query(..., description="Ending document ID"),
     max_depth: int = Query(3, ge=1, le=10)
 ):
     """Find paths between documents."""
-    # TODO: Implement relationship handlers
-    raise HTTPException(status_code=501, detail="Relationships not yet implemented")
+    return await relationships_handlers.handle_find_paths(start_id, end_id, max_depth)
 
 
-@router.get("/relationships/stats", response_model=GraphStatisticsResponse)
+@router.get("/relationships/stats", response_model=SuccessResponse)
 async def get_relationship_statistics():
     """Get relationship graph statistics."""
-    # TODO: Implement relationship handlers
-    raise HTTPException(status_code=501, detail="Relationships not yet implemented")
+    return await relationships_handlers.handle_get_graph_statistics()
 
 
 # Tagging endpoints
-@router.post("/documents/{document_id}/tags", response_model=TagResponse)
+@router.post("/documents/{document_id}/tags", response_model=SuccessResponse)
 async def tag_document(document_id: str, request: TagRequest):
     """Automatically tag a document."""
-    # TODO: Implement tagging handlers
-    raise HTTPException(status_code=501, detail="Tagging not yet implemented")
+    return await tagging_handlers.handle_tag_document(document_id)
 
 
-@router.get("/tags/search", response_model=TagSearchResponse)
+@router.get("/tags/search", response_model=SuccessResponse)
 async def search_by_tags(request: TagSearchRequest):
     """Search documents by tags."""
-    # TODO: Implement tagging handlers
-    raise HTTPException(status_code=501, detail="Tagging not yet implemented")
+    return await tagging_handlers.handle_search_by_tags(request.tags, request.limit, request.offset)
 
 
 # Lifecycle endpoints
@@ -184,25 +189,24 @@ async def get_document_lifecycle(document_id: str):
 
 
 # Notification endpoints
-@router.post("/webhooks")
+@router.post("/webhooks", response_model=SuccessResponse)
 async def register_webhook(request: WebhookRequest):
     """Register webhook for notifications."""
-    # TODO: Implement notification handlers
-    raise HTTPException(status_code=501, detail="Notifications not yet implemented")
+    return await notifications_handlers.handle_register_webhook(
+        request.name, request.url, request.events, request.secret, request.is_active, request.retry_count, request.timeout_seconds
+    )
 
 
-@router.get("/webhooks", response_model=WebhooksListResponse)
+@router.get("/webhooks", response_model=SuccessResponse)
 async def list_webhooks():
     """List registered webhooks."""
-    # TODO: Implement notification handlers
-    raise HTTPException(status_code=501, detail="Notifications not yet implemented")
+    return await notifications_handlers.handle_list_webhooks()
 
 
-@router.get("/notifications/stats", response_model=NotificationStatsResponse)
+@router.get("/notifications/stats", response_model=SuccessResponse)
 async def get_notification_stats():
     """Get notification statistics."""
-    # TODO: Implement notification handlers
-    raise HTTPException(status_code=501, detail="Notifications not yet implemented")
+    return await notifications_handlers.handle_get_notification_stats()
 
 
 # Bulk operations endpoints
