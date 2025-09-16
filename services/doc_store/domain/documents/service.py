@@ -2,29 +2,27 @@
 
 Handles document validation, processing, and business rules.
 """
-import uuid
 from typing import Dict, Any, Optional
-from services.shared.envelopes import DocumentEnvelope
+from ...core.service import BaseService
 from ...core.entities import Document
 from .repository import DocumentRepository
 
 
-class DocumentService:
+class DocumentService(BaseService[Document]):
     """Service for document business logic."""
 
     def __init__(self):
-        self.repository = DocumentRepository()
+        super().__init__(DocumentRepository())
 
-    def create_document(self, content: str, metadata: Optional[Dict[str, Any]] = None,
-                       document_id: Optional[str] = None, correlation_id: Optional[str] = None) -> Document:
-        """Create a new document with validation."""
-        # Validate content
+    def _validate_entity(self, entity: Document) -> None:
+        """Validate document before saving."""
+        self._validate_metadata(entity.metadata)
+
+    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> Document:
+        """Create document from data."""
+        content = data.get('content', '')
         if not content or not content.strip():
             raise ValueError("Document content cannot be empty")
-
-        # Generate ID if not provided
-        if not document_id:
-            document_id = str(uuid.uuid4())
 
         # Calculate content hash
         content_hash = self.repository.calculate_content_hash(content)
@@ -32,54 +30,29 @@ class DocumentService:
         # Check for duplicates
         existing = self.repository.get_by_content_hash(content_hash)
         if existing:
-            # Return existing document if content is identical
             return existing
 
-        # Create document entity
-        document = Document(
-            id=document_id,
+        return Document(
+            id=entity_id,
             content=content,
             content_hash=content_hash,
-            metadata=metadata or {},
-            correlation_id=correlation_id
+            metadata=data.get('metadata', {}),
+            correlation_id=data.get('correlation_id')
         )
 
-        # Validate metadata
-        self._validate_metadata(document.metadata)
-
-        # Save to repository
-        self.repository.save(document)
-
-        return document
-
-    def get_document(self, document_id: str) -> Optional[Document]:
-        """Get document by ID."""
-        return self.repository.get_by_id(document_id)
+    def create_document(self, content: str, metadata: Optional[Dict[str, Any]] = None,
+                       document_id: Optional[str] = None, correlation_id: Optional[str] = None) -> Document:
+        """Create a new document with validation."""
+        data = {
+            'content': content,
+            'metadata': metadata or {},
+            'correlation_id': correlation_id
+        }
+        return self.create_entity(data, document_id)
 
     def update_metadata(self, document_id: str, metadata: Dict[str, Any]) -> None:
         """Update document metadata."""
-        # Validate the document exists
-        document = self.repository.get_by_id(document_id)
-        if not document:
-            raise ValueError(f"Document {document_id} not found")
-
-        # Validate metadata
-        self._validate_metadata(metadata)
-
-        # Update in repository
-        self.repository.update_metadata(document_id, metadata)
-
-    def list_documents(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
-        """List documents with pagination."""
-        documents = self.repository.list_documents(limit, offset)
-
-        return {
-            "items": documents,
-            "total": len(documents),
-            "has_more": len(documents) == limit,
-            "limit": limit,
-            "offset": offset
-        }
+        self.update_entity(document_id, {'metadata': metadata})
 
     def search_documents(self, query: str, limit: int = 50) -> Dict[str, Any]:
         """Search documents by content."""
@@ -113,19 +86,9 @@ class DocumentService:
             "redundant_percentage": (redundant_count / total * 100) if total > 0 else 0
         }
 
-    def get_related_documents(self, correlation_id: str) -> List[Dict[str, Any]]:
+    def get_related_documents(self, correlation_id: str) -> list[Dict[str, Any]]:
         """Get documents by correlation ID."""
         return self.repository.get_documents_by_correlation_id(correlation_id)
-
-    def delete_document(self, document_id: str) -> None:
-        """Delete document by ID."""
-        # Validate the document exists
-        document = self.repository.get_by_id(document_id)
-        if not document:
-            raise ValueError(f"Document {document_id} not found")
-
-        # Delete from repository
-        self.repository.delete_document(document_id)
 
     def _validate_metadata(self, metadata: Dict[str, Any]) -> None:
         """Validate document metadata."""
