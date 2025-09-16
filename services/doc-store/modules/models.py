@@ -166,3 +166,55 @@ class AdvancedSearchResponse(BaseModel):
     offset: int
     facets: SearchFacets
     query: Dict[str, Any]
+
+
+class DocumentVersion(BaseModel):
+    """Document version model."""
+    id: str
+    version_number: int
+    content_hash: str
+    change_summary: str
+    changed_by: str
+    created_at: str
+    content_size: int
+
+
+class DocumentVersionsResponse(BaseModel):
+    """Response model for document versions listing."""
+    document_id: str
+    total_versions: int
+    versions: List[DocumentVersion]
+    limit: int
+    offset: int
+
+
+class DocumentVersionDetail(BaseModel):
+    """Detailed document version model."""
+    id: str
+    document_id: str
+    version_number: int
+    content: str
+    content_hash: str
+    metadata: Dict[str, Any]
+    change_summary: str
+    changed_by: str
+    created_at: str
+
+
+class VersionComparison(BaseModel):
+    """Version comparison model."""
+    document_id: str
+    version_a: Dict[str, Any]
+    version_b: Dict[str, Any]
+    differences: Dict[str, Any]
+
+
+class VersionRollbackRequest(BaseModel):
+    """Request model for version rollback."""
+    version_number: int
+    changed_by: Optional[str] = None
+
+
+class VersionCleanupRequest(BaseModel):
+    """Request model for version cleanup."""
+    keep_versions: int = 10

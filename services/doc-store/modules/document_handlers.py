@@ -24,6 +24,7 @@ from .shared_utils import (
 )
 from .document_ops import create_document_logic
 from .models import GetDocumentResponse
+from .versioning import create_document_version, get_document_versions, get_document_version
 
 
 class DocumentHandlers:
@@ -41,6 +42,19 @@ class DocumentHandlers:
                 "metadata": meta,
                 "correlation_id": req.correlation_id
             })
+
+            # Check if document already exists for versioning
+            existing_doc = get_document_by_id(req.id)
+            if existing_doc:
+                # Create a version of the existing document before updating
+                create_document_version(
+                    document_id=req.id,
+                    content=existing_doc.get("content", ""),
+                    content_hash=existing_doc.get("content_hash", ""),
+                    metadata=existing_doc.get("metadata", {}),
+                    change_summary="Document updated via PUT request",
+                    changed_by=req.correlation_id or "api"
+                )
 
             # Create a shallow copy of the request object with coerced metadata for downstream logic
             class _ReqShim:

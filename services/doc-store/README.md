@@ -56,6 +56,11 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 | GET    | /analytics               | Comprehensive analytics |
 | GET    | /analytics/summary       | Analytics summary with insights |
 | GET    | /style/examples          | List style examples |
+| GET    | /documents/{id}/versions | Get document versions |
+| GET    | /documents/{id}/versions/{n} | Get specific version |
+| GET    | /documents/{id}/versions/{a}/compare/{b} | Compare versions |
+| POST   | /documents/{id}/rollback | Rollback to version |
+| POST   | /documents/{id}/versions/cleanup | Cleanup old versions |
 
 ## Related
 - Orchestrator: [../orchestrator/README.md](../orchestrator/README.md)
@@ -101,11 +106,56 @@ The doc-store provides comprehensive analytics capabilities to understand docume
   - Missing metadata and incomplete document flagging
   - Priority scoring for maintenance focus
 
+## Document Versioning & History
+
+The doc-store provides comprehensive document versioning capabilities to track changes, enable rollbacks, and maintain audit trails:
+
+### Version Control Features
+- **Automatic Versioning**: Every document update creates a new version automatically
+- **Complete History**: Full version history with content, metadata, and change tracking
+- **Version Comparison**: Side-by-side comparison of any two versions
+- **Rollback Support**: Ability to revert documents to previous versions
+- **Version Cleanup**: Automated cleanup of old versions to manage storage
+
+### Versioning Endpoints
+- **GET /documents/{id}/versions**: Retrieve complete version history for a document
+  - Pagination support for large version histories
+  - Includes version numbers, change summaries, timestamps, and content sizes
+
+- **GET /documents/{id}/versions/{n}**: Get full content and metadata for a specific version
+  - Complete document restoration capabilities
+  - Metadata and content integrity verification
+
+- **GET /documents/{id}/versions/{a}/compare/{b}**: Compare any two versions
+  - Content diff highlighting
+  - Metadata change tracking
+  - Size and hash comparisons
+
+- **POST /documents/{id}/rollback**: Rollback document to specified version
+  - Creates new version record for rollback operation
+  - Maintains complete audit trail
+  - Optional attribution for change tracking
+
+- **POST /documents/{id}/versions/cleanup**: Manage version storage
+  - Configurable retention policies
+  - Automatic cleanup of old versions
+  - Storage optimization for large document histories
+
+### Version Metadata
+Each version tracks:
+- Version number (sequential)
+- Content hash for integrity
+- Full content and metadata snapshots
+- Change summary and attribution
+- Timestamp and correlation data
+- Content size for storage tracking
+
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
 - Designed to be called by orchestrator/consistency-engine/reporting.
 - Analytics data supports monitoring dashboards and automated insights.
 - Advanced search powers intelligent document discovery across the ecosystem.
+- Versioning enables collaborative workflows and change management across services.
 
 ## Config
 Configuration is config-first via `services/shared/config.get_config_value`.
