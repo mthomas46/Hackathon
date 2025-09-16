@@ -66,6 +66,12 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 | GET    | /graph/paths/{start}/{end} | Find relationship paths |
 | GET    | /graph/statistics | Graph statistics |
 | POST   | /documents/{id}/relationships/extract | Extract relationships |
+| POST   | /documents/{id}/tags | Tag document |
+| GET    | /documents/{id}/tags | Get document tags |
+| POST   | /search/tags | Search by tags |
+| GET    | /tags/statistics | Tag statistics |
+| POST   | /taxonomy/nodes | Create taxonomy node |
+| GET    | /taxonomy/tree | Get taxonomy tree |
 | GET    | /cache/stats | Cache statistics |
 | POST   | /cache/invalidate | Invalidate cache |
 | POST   | /cache/warmup | Warm up cache |
@@ -200,6 +206,45 @@ The doc-store includes a high-performance caching system for optimal query perfo
 - **POST /cache/invalidate**: Selective cache clearing by tags or operations
 - **POST /cache/warmup**: Preload critical data for performance
 - **POST /cache/optimize**: Memory optimization and cleanup operations
+
+## Semantic Tagging & Taxonomy
+
+The doc-store provides advanced semantic tagging capabilities for intelligent content classification and discovery:
+
+### Automatic Tagging
+- **Content Analysis**: Extracts entities like programming languages, frameworks, URLs, emails, and file types
+- **Metadata Tagging**: Uses document metadata for high-confidence tag generation
+- **Confidence Scoring**: Weighted tagging with confidence metrics for quality assessment
+- **Category Classification**: Tags organized by categories (programming_language, framework, technical_domain, etc.)
+
+### Semantic Search
+- **Tag-Based Search**: Find documents by semantic tags with confidence filtering
+- **Category Filtering**: Narrow searches by tag categories
+- **Multi-Tag Queries**: Combine multiple tags for precise content discovery
+- **Tag Analytics**: Statistics on tag distribution and coverage
+
+### Taxonomy Management
+- **Hierarchical Organization**: Parent-child relationships between tags
+- **Synonym Support**: Multiple terms mapping to the same concept
+- **Category Structure**: Organized tag hierarchies by domain
+- **Description Metadata**: Rich descriptions for tag meanings and usage
+
+### Tagging Endpoints
+- **POST /documents/{id}/tags**: Automatically tag a document with semantic information
+- **GET /documents/{id}/tags**: Retrieve tags for a document with category filtering
+- **POST /search/tags**: Search documents by semantic tags with advanced filtering
+- **GET /tags/statistics**: Comprehensive tag analytics and usage statistics
+- **POST /taxonomy/nodes**: Create taxonomy nodes with descriptions and relationships
+- **GET /taxonomy/tree**: Navigate hierarchical tag taxonomy structure
+
+### Automatic Tagging Process
+Documents are automatically tagged during creation with:
+- Programming languages detected in code blocks
+- Frameworks and libraries identified in imports
+- Technical domains extracted from content
+- File types and extensions recognized
+- URLs and external references categorized
+- Document types and content characteristics classified
 
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
