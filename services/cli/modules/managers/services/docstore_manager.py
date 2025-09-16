@@ -10,6 +10,7 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
+from ...base.base_manager import BaseManager
 from ...shared_utils import (
     get_cli_clients,
     create_menu_table,
@@ -19,13 +20,24 @@ from ...shared_utils import (
 )
 
 
-class DocStoreManager:
+class DocStoreManager(BaseManager):
     """Manager for document store power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
-        self.console = console
-        self.clients = clients
-        self.cache = cache or {}
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for docstore operations."""
+        return [
+            ("1", "Document Management"),
+            ("2", "Search Operations"),
+            ("3", "Storage Configuration")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        self.display.show_error("Feature not yet implemented")
+        return True
 
     async def docstore_management_menu(self):
         """Main document store management menu."""

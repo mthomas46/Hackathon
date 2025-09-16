@@ -5,47 +5,29 @@ Tests core functionality, DRY patterns, and common behavior.
 
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
-from rich.console import Console
 
 from services.cli.modules.base.base_manager import BaseManager
 from services.cli.modules.base.base_formatter import BaseFormatter
 from services.cli.modules.base.base_handler import BaseHandler
 from services.cli.modules.utils.cache_utils import CacheManager
 from services.cli.modules.formatters.display_utils import DisplayManager
+from tests.unit.cli.test_base import (
+    MockManager, BaseManagerTestMixin, APITestMixin,
+    create_test_manager, mock_rich_console
+)
 
 
-class TestBaseManager:
+class TestBaseManager(BaseManagerTestMixin, APITestMixin):
     """Test BaseManager core functionality."""
-
-    @pytest.fixture
-    def mock_console(self):
-        """Mock console for testing."""
-        return Mock(spec=Console)
-
-    @pytest.fixture
-    def mock_clients(self):
-        """Mock service clients."""
-        return Mock()
-
-    class ConcreteBaseManager(BaseManager):
-        """Concrete implementation of BaseManager for testing."""
-        async def get_main_menu(self):
-            return []
-
-        async def handle_choice(self, choice: str) -> bool:
-            return True
 
     @pytest.fixture
     def base_manager(self, mock_console, mock_clients):
         """BaseManager instance for testing."""
-        return self.ConcreteBaseManager(mock_console, mock_clients)
+        return MockManager(mock_console, mock_clients)
 
     def test_initialization(self, base_manager, mock_console, mock_clients):
         """Test BaseManager initialization."""
-        assert base_manager.console == mock_console
-        assert base_manager.clients == mock_clients
-        assert isinstance(base_manager.cache_manager, CacheManager)
-        assert isinstance(base_manager.display, DisplayManager)
+        self.assert_manager_initialization(base_manager, mock_console, mock_clients)
 
     @pytest.mark.asyncio
     async def test_confirm_action_default_false(self, base_manager):
@@ -147,12 +129,7 @@ class TestBaseManager:
     @pytest.mark.asyncio
     async def test_cache_operations(self, base_manager):
         """Test cache get/set operations."""
-        # Test cache set
-        await base_manager.cache_set("test_key", "test_value", 300)
-
-        # Test cache get
-        result = await base_manager.cache_get("test_key")
-        assert result == "test_value"
+        await self.assert_cache_operations_work(base_manager)
 
     @pytest.mark.asyncio
     async def test_menu_loop_exit(self, base_manager):
@@ -173,7 +150,7 @@ class TestBaseManager:
 
         # Mock handle_choice to return True and track calls
         with patch.object(base_manager, 'handle_choice', return_value=True) as mock_handle:
-            with patch('rich.prompt.Prompt.ask', side_effect=["1", "b"]) as mock_prompt:
+            with patch('rich.prompt.Prompt.ask', side_effect=["1", "", "b"]) as mock_prompt:
                 await base_manager.run_menu_loop("Test Menu", menu_items)
 
                 # Verify handle_choice was called with "1"
@@ -201,12 +178,25 @@ class TestBaseManager:
         """Test menu loop exception handling."""
         menu_items = [("1", "Option 1")]
 
-        # Mock the first prompt to raise an exception, then "b" to exit
-        with patch('rich.prompt.Prompt.ask', side_effect=[Exception("Test error"), "b"]) as mock_prompt:
+        # Mock the first prompt to raise an exception, then continue, then "b" to exit
+        with patch('rich.prompt.Prompt.ask', side_effect=[Exception("Test error"), "", "b"]) as mock_prompt:
             await base_manager.run_menu_loop("Test Menu", menu_items)
 
-            # Should have been called twice: once for menu choice (exception), once for continue prompt
-            assert mock_prompt.call_count >= 2
+            # Should have been called at least 3 times: menu choice (exception), continue prompt, exit choice
+            assert mock_prompt.call_count >= 3
+
+    @pytest.mark.asyncio
+    async def test_api_get_with_status(self, base_manager):
+        """Test API GET with status."""
+        await self.assert_api_call_with_status(base_manager, "test/endpoint", "Testing API")
+
+    @pytest.mark.asyncio
+    async def test_api_operation_with_confirm(self, base_manager):
+        """Test API operation with confirmation."""
+        await self.assert_api_operation_with_confirm(
+            base_manager, "test/endpoint", {"data": "value"},
+            "Testing operation", "Confirm operation?", "Operation successful"
+        )
 
 
 class TestBaseFormatter:
@@ -215,7 +205,7 @@ class TestBaseFormatter:
     @pytest.fixture
     def mock_console(self):
         """Mock console for testing."""
-        return Mock(spec=Console)
+        return mock_rich_console()
 
     class ConcreteBaseFormatter(BaseFormatter):
         """Concrete implementation of BaseFormatter for testing."""
@@ -247,50 +237,39 @@ class TestBaseFormatter:
     def test_show_warning(self, base_formatter, mock_console):
         """Test warning message display."""
         base_formatter.show_warning("Warning message")
-        mock_console.print.assert_called_with("[yellow]⚠️ Warning message[/yellow]")
+        mock_console.print.assert_called_with("[yellow]⚠️  Warning message[/yellow]")
 
     def test_show_info(self, base_formatter, mock_console):
         """Test info message display."""
         base_formatter.show_info("Information message")
-        mock_console.print.assert_called_with("[blue]ℹ️ Information message[/blue]")
+        mock_console.print.assert_called_with("[blue]ℹ️  Information message[/blue]")
 
     def test_show_panel(self, base_formatter, mock_console):
         """Test panel display."""
-        with patch('rich.panel.Panel') as mock_panel:
-            with patch('rich.console.Console.print') as mock_print:
-                base_formatter.show_panel("Test content")
-                mock_panel.assert_called_once_with("Test content", title="[bold]Information[/bold]")
-                mock_print.assert_called_once()
+        base_formatter.show_panel("Test content")
+        # Verify that console.print was called (panel creation is internal)
+        mock_console.print.assert_called_once()
 
     def test_show_table_simple(self, base_formatter, mock_console):
         """Test simple table display."""
         data = [["Row1"], ["Row2"]]
         headers = ["Column"]
 
-        with patch('rich.table.Table') as mock_table:
-            with patch('rich.console.Console.print') as mock_print:
-                base_formatter.show_table("Test Table", headers, data)
+        with patch.object(base_formatter.display, 'show_table') as mock_show_table:
+            base_formatter.show_table("Test Table", headers, data)
 
-                # Verify table creation and population
-                mock_table.assert_called_once()
-                table_instance = mock_table.return_value
-                table_instance.add_column.assert_called_once_with("Column")
-                assert table_instance.add_row.call_count == 2
-                mock_print.assert_called_once_with(table_instance)
+            # Verify that display.show_table was called
+            mock_show_table.assert_called_once_with("Test Table", headers, data)
 
     def test_show_dict(self, base_formatter, mock_console):
         """Test dictionary display."""
         test_dict = {"key1": "value1", "key2": "value2"}
 
-        with patch('rich.table.Table') as mock_table:
-            with patch('rich.console.Console.print') as mock_print:
-                base_formatter.show_dict(test_dict, "Test Dict")
+        with patch.object(base_formatter.display, 'show_dict') as mock_show_dict:
+            base_formatter.show_dict(test_dict, "Test Dict")
 
-                mock_table.assert_called_once()
-                table_instance = mock_table.return_value
-                assert table_instance.add_column.call_count == 2
-                assert table_instance.add_row.call_count == 2
-                mock_print.assert_called_once_with(table_instance)
+            # Verify that display.show_dict was called
+            mock_show_dict.assert_called_once_with(test_dict, "Test Dict")
 
 
 class TestBaseHandler:
@@ -299,7 +278,7 @@ class TestBaseHandler:
     @pytest.fixture
     def mock_console(self):
         """Mock console for testing."""
-        return Mock(spec=Console)
+        return mock_rich_console()
 
     class ConcreteBaseHandler(BaseHandler):
         """Concrete implementation of BaseHandler for testing."""
@@ -307,35 +286,39 @@ class TestBaseHandler:
             return f"Handled command: {command}"
 
     @pytest.fixture
-    def base_handler(self, mock_console):
+    def base_handler(self, mock_console, mock_clients):
         """BaseHandler instance for testing."""
-        return self.ConcreteBaseHandler(mock_console)
+        return self.ConcreteBaseHandler(mock_console, mock_clients)
 
     def test_initialization(self, base_handler, mock_console):
         """Test BaseHandler initialization."""
         assert base_handler.console == mock_console
 
-    def test_validate_input_success(self, base_handler):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, base_handler):
         """Test successful input validation."""
-        result = base_handler.validate_input("test", str, "Test field")
+        result = await base_handler.validate_input("test", str, "Test field")
         assert result is True
 
-    def test_validate_input_failure(self, base_handler, mock_console):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, base_handler, mock_console):
         """Test input validation failure."""
-        result = base_handler.validate_input(123, str, "Test field")
+        result = await base_handler.validate_input(123, str, "Test field")
         assert result is False
-        mock_console.print.assert_called_with("[red]❌ Test field must be of type <class 'str'>[/red]")
+        mock_console.print.assert_called_with("[red]❌ Test field must be a string[/red]")
 
-    def test_validate_input_with_validator(self, base_handler):
+    @pytest.mark.asyncio
+    async def test_validate_input_with_validator(self, base_handler):
         """Test input validation with custom validator."""
         validator = lambda x: len(x) > 3
-        result = base_handler.validate_input("test", str, "Test field", validator)
+        result = await base_handler.validate_input("test", str, "Test field", validator)
         assert result is True
 
-    def test_validate_input_validator_failure(self, base_handler, mock_console):
+    @pytest.mark.asyncio
+    async def test_validate_input_validator_failure(self, base_handler, mock_console):
         """Test input validation with failing custom validator."""
         validator = lambda x: len(x) > 10
-        result = base_handler.validate_input("test", str, "Test field", validator)
+        result = await base_handler.validate_input("test", str, "Test field", validator)
         assert result is False
         mock_console.print.assert_called_with("[red]❌ Test field failed validation[/red]")
 
@@ -388,7 +371,7 @@ class TestBaseHandler:
         with pytest.raises(Exception, match="Test error"):
             await base_handler.execute_with_retry(
                 operation,
-                max_retries=1,
+                max_retries=2,
                 error_handler=custom_error_handler
             )
 

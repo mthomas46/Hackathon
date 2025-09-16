@@ -13,55 +13,43 @@ from rich.text import Text
 import json
 import os
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class DiscoveryAgentManager:
+class DiscoveryAgentManager(BaseManager):
     """Manager for discovery agent power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def discovery_agent_menu(self):
-        """Main discovery agent menu."""
-        while True:
-            menu = create_menu_table("Discovery Agent Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Service Discovery (OpenAPI parsing and endpoint extraction)"),
-                ("2", "Bulk Discovery Operations"),
-                ("3", "Discovery History and Results"),
-                ("4", "Service Registration Management"),
-                ("5", "Discovery Validation and Testing"),
-                ("6", "Discovery Agent Configuration"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for discovery agent operations."""
+        return [
+            ("1", "Service Discovery (OpenAPI parsing and endpoint extraction)"),
+            ("2", "Bulk Discovery Operations"),
+            ("3", "Discovery History and Results"),
+            ("4", "Service Registration Management"),
+            ("5", "Discovery Validation and Testing"),
+            ("6", "Discovery Agent Configuration")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.service_discovery_menu()
-            elif choice == "2":
-                await self.bulk_discovery_menu()
-            elif choice == "3":
-                await self.discovery_history_menu()
-            elif choice == "4":
-                await self.service_registration_menu()
-            elif choice == "5":
-                await self.discovery_validation_menu()
-            elif choice == "6":
-                await self.discovery_config_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.service_discovery_menu()
+        elif choice == "2":
+            await self.bulk_discovery_menu()
+        elif choice == "3":
+            await self.discovery_history_menu()
+        elif choice == "4":
+            await self.service_registration_menu()
+        elif choice == "5":
+            await self.discovery_validation_menu()
+        elif choice == "6":
+            await self.discovery_config_menu()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def service_discovery_menu(self):
         """Service discovery submenu."""

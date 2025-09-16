@@ -10,56 +10,43 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class InfrastructureManager:
+class InfrastructureManager(BaseManager):
     """Manager for infrastructure power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def infrastructure_menu(self):
-        """Main infrastructure menu."""
-        while True:
-            menu = create_menu_table("Infrastructure Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Redis Operations (Pub/Sub, Keys, Performance)"),
-                ("2", "Dead Letter Queue (DLQ) Management"),
-                ("3", "Saga Orchestration Monitoring"),
-                ("4", "Distributed Tracing"),
-                ("5", "Event History & Replay"),
-                ("6", "Infrastructure Health Dashboard"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for infrastructure operations."""
+        return [
+            ("1", "Redis Operations (Pub/Sub, Keys, Performance)"),
+            ("2", "Dead Letter Queue (DLQ) Management"),
+            ("3", "Saga Orchestration Monitoring"),
+            ("4", "Distributed Tracing"),
+            ("5", "Event History & Replay"),
+            ("6", "Infrastructure Health Dashboard")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.redis_operations_menu()
-            elif choice == "2":
-                await self.dlq_management_menu()
-            elif choice == "3":
-                await self.saga_monitoring_menu()
-            elif choice == "4":
-                await self.tracing_menu()
-            elif choice == "5":
-                await self.event_history_menu()
-            elif choice == "6":
-                await self.infrastructure_health_dashboard()
-                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.redis_operations_menu()
+        elif choice == "2":
+            await self.dlq_management_menu()
+        elif choice == "3":
+            await self.saga_monitoring_menu()
+        elif choice == "4":
+            await self.tracing_menu()
+        elif choice == "5":
+            await self.event_history_menu()
+        elif choice == "6":
+            await self.infrastructure_health_dashboard()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def redis_operations_menu(self):
         """Redis operations submenu."""

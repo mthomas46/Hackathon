@@ -12,6 +12,29 @@ from ...formatters.display_utils import DisplayManager
 class DockerManager(BaseManager):
     """Manager for Docker configuration operations."""
 
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for Docker operations."""
+        return [
+            ("1", "View Docker Compose Configuration"),
+            ("2", "Validate Docker Compose Files"),
+            ("3", "Check Docker Service Health"),
+            ("4", "Docker Environment Variables")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.view_docker_compose_configuration()
+        elif choice == "2":
+            await self.validate_docker_compose_files()
+        elif choice == "3":
+            await self.check_docker_service_health()
+        elif choice == "4":
+            await self.docker_environment_variables()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
+
     async def view_docker_compose_configuration(self):
         """View Docker Compose configuration."""
         try:

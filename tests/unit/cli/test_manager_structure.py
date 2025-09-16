@@ -5,119 +5,83 @@ Tests the new manager organization and base class integration.
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from rich.console import Console
 
 from services.cli.modules.managers import (
     ConfigManager, AnalysisServiceManager, AdvancedMonitoringManager,
     OrchestratorManager, WorkflowManager, PromptManager
 )
 from services.cli.modules.base.base_manager import BaseManager
+from tests.unit.cli.test_base import (
+    BaseManagerTestMixin, ManagerAssertionMixin,
+    assert_class_inheritance, assert_method_exists
+)
 
 
-class TestManagerStructure:
+class TestManagerStructure(BaseManagerTestMixin, ManagerAssertionMixin):
     """Test manager structure and organization."""
-
-    @pytest.fixture
-    def mock_console(self):
-        """Mock console for testing."""
-        return Mock(spec=Console)
-
-    @pytest.fixture
-    def mock_clients(self):
-        """Mock service clients."""
-        return Mock()
 
     def test_manager_imports(self):
         """Test that all managers can be imported successfully."""
         # This test ensures the import structure works
-        assert ConfigManager is not None
-        assert AnalysisServiceManager is not None
-        assert AdvancedMonitoringManager is not None
-        assert OrchestratorManager is not None
-        assert WorkflowManager is not None
-        assert PromptManager is not None
+        managers = [
+            ConfigManager, AnalysisServiceManager, AdvancedMonitoringManager,
+            OrchestratorManager, WorkflowManager, PromptManager
+        ]
 
-    def test_service_manager_inheritance(self, mock_console, mock_clients):
+        for manager in managers:
+            assert manager is not None
+
+    def test_service_manager_inheritance(self):
         """Test that service managers inherit from BaseManager."""
-        manager = OrchestratorManager(mock_console, mock_clients)
-        assert isinstance(manager, BaseManager)
-        assert hasattr(manager, 'console')
-        assert hasattr(manager, 'clients')
-        assert hasattr(manager, 'cache_manager')
-        assert hasattr(manager, 'display')
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
+        assert_class_inheritance(manager, BaseManager)
+        self.assert_manager_inheritance(manager)
 
-    def test_config_manager_inheritance(self, mock_console, mock_clients):
+    def test_config_manager_inheritance(self):
         """Test that specialized managers inherit from BaseManager."""
-        manager = ConfigManager(mock_console, mock_clients)
-        assert isinstance(manager, BaseManager)
+        manager = ConfigManager(self.mock_console, self.mock_clients)
+        assert_class_inheritance(manager, BaseManager)
 
-    def test_manager_initialization(self, mock_console, mock_clients):
+    def test_manager_initialization(self):
         """Test manager initialization with proper base class setup."""
-        manager = OrchestratorManager(mock_console, mock_clients)
-
-        assert manager.console == mock_console
-        assert manager.clients == mock_clients
-        assert manager.cache_manager is not None
-        assert manager.display is not None
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
+        self.assert_manager_initialization(manager, self.mock_console, self.mock_clients)
 
     @pytest.mark.asyncio
-    async def test_menu_loop_integration(self, mock_console, mock_clients):
+    async def test_menu_loop_integration(self):
         """Test that managers integrate with the new menu loop system."""
-        manager = OrchestratorManager(mock_console, mock_clients)
-
-        # Mock the menu loop to avoid actual user interaction
-        menu_items = [("1", "Test Option")]
-
-        with patch.object(manager, 'handle_choice', return_value=True) as mock_handle:
-            with patch('rich.prompt.Prompt.ask', side_effect=["1", "b"]) as mock_prompt:
-                await manager.run_menu_loop("Test Menu", menu_items)
-
-                # Should call handle_choice with "1"
-                mock_handle.assert_called_once_with("1")
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
+        await self.assert_menu_loop_works(manager)
 
     @pytest.mark.asyncio
-    async def test_orchestrator_menu_integration(self, mock_console, mock_clients):
+    async def test_orchestrator_menu_integration(self):
         """Test orchestrator manager menu integration."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Mock the submenu methods to avoid full execution
         with patch.object(manager, 'workflow_management_menu') as mock_workflow:
             with patch.object(manager, 'handle_choice', return_value=True):
-                with patch('rich.prompt.Prompt.ask', side_effect=["1", "b"]):
+                with patch('rich.prompt.Prompt.ask', side_effect=["1", "", "b"]):
                     await manager.orchestrator_management_menu()
 
                     # Should call the workflow menu
                     mock_workflow.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_manager_cache_integration(self, mock_console, mock_clients):
+    async def test_manager_cache_integration(self):
         """Test manager cache integration."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
+        await self.assert_cache_operations_work(manager)
 
-        # Test cache operations through base manager
-        await manager.cache_set("test_key", "test_value")
-        result = await manager.cache_get("test_key")
-
-        assert result == "test_value"
-
-    def test_manager_display_integration(self, mock_console, mock_clients):
+    def test_manager_display_integration(self):
         """Test manager display integration."""
-        manager = OrchestratorManager(mock_console, mock_clients)
-
-        # Test display methods through base manager
-        manager.display.show_success("Test success")
-        manager.display.show_error("Test error")
-        manager.display.show_warning("Test warning")
-        manager.display.show_info("Test info")
-
-        # Verify console was called (mock verification would be more complex)
-        # For now, just ensure the display object exists
-        assert manager.display is not None
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
+        self.assert_display_methods_work(manager)
 
     @pytest.mark.asyncio
-    async def test_manager_error_handling(self, mock_console, mock_clients):
+    async def test_manager_error_handling(self):
         """Test manager error handling through base class."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Mock a failing operation
         async def failing_operation():
@@ -127,48 +91,38 @@ class TestManagerStructure:
         with pytest.raises(ValueError):
             await manager.run_with_progress(failing_operation(), "Test operation")
 
-    def test_workflow_manager_standalone(self, mock_console, mock_clients):
+    def test_workflow_manager_standalone(self):
         """Test workflow manager as standalone component."""
-        manager = WorkflowManager(mock_console, mock_clients)
+        manager = WorkflowManager(self.mock_console, self.mock_clients)
 
         assert isinstance(manager, BaseManager)
         assert hasattr(manager, 'workflow_orchestration_menu')
 
-    def test_prompt_manager_standalone(self, mock_console, mock_clients):
+    def test_prompt_manager_standalone(self):
         """Test prompt manager as standalone component."""
-        manager = PromptManager(mock_console, mock_clients)
+        manager = PromptManager(self.mock_console, self.mock_clients)
 
         assert isinstance(manager, BaseManager)
         assert hasattr(manager, 'prompt_management_menu')
 
 
-class TestDRYPatterns:
+class TestDRYPatterns(BaseManagerTestMixin):
     """Test DRY patterns across managers."""
 
-    @pytest.fixture
-    def mock_console(self):
-        """Mock console for testing."""
-        return Mock(spec=Console)
-
-    @pytest.fixture
-    def mock_clients(self):
-        """Mock service clients."""
-        return Mock()
-
-    def test_common_menu_structure(self, mock_console, mock_clients):
+    def test_common_menu_structure(self):
         """Test that managers follow common menu patterns."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Should have standard menu loop method from BaseManager
-        assert hasattr(manager, 'run_menu_loop')
+        assert_method_exists(manager, 'run_menu_loop')
 
         # Should have handle_choice method
-        assert hasattr(manager, 'handle_choice')
+        assert_method_exists(manager, 'handle_choice')
 
     @pytest.mark.asyncio
-    async def test_consistent_error_handling(self, mock_console, mock_clients):
+    async def test_consistent_error_handling(self):
         """Test consistent error handling across managers."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Test that all managers handle errors through the same base mechanism
         async def test_operation():
@@ -177,9 +131,9 @@ class TestDRYPatterns:
         result = await manager.run_with_progress(test_operation(), "Test")
         assert result == "success"
 
-    def test_shared_utility_access(self, mock_console, mock_clients):
+    def test_shared_utility_access(self):
         """Test that managers have access to shared utilities."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Should have access to cache manager
         assert hasattr(manager, 'cache_manager')
@@ -188,14 +142,14 @@ class TestDRYPatterns:
         assert hasattr(manager, 'display')
 
         # Should have access to base utility methods
-        assert hasattr(manager, 'confirm_action')
-        assert hasattr(manager, 'get_user_input')
-        assert hasattr(manager, 'select_from_list')
+        assert_method_exists(manager, 'confirm_action')
+        assert_method_exists(manager, 'get_user_input')
+        assert_method_exists(manager, 'select_from_list')
 
     @pytest.mark.asyncio
-    async def test_menu_loop_reusability(self, mock_console, mock_clients):
+    async def test_menu_loop_reusability(self):
         """Test that menu loop can be reused across different contexts."""
-        manager = OrchestratorManager(mock_console, mock_clients)
+        manager = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Test with different menu configurations
         simple_menu = [("1", "Option 1")]
@@ -207,43 +161,27 @@ class TestDRYPatterns:
             await manager.run_menu_loop("Complex Menu", complex_menu)
 
 
-class TestManagerIntegration:
+class TestManagerIntegration(BaseManagerTestMixin):
     """Test integration between different managers."""
 
-    @pytest.fixture
-    def mock_console(self):
-        """Mock console for testing."""
-        return Mock(spec=Console)
-
-    @pytest.fixture
-    def mock_clients(self):
-        """Mock service clients."""
-        return Mock()
-
-    def test_manager_type_hierarchy(self, mock_console, mock_clients):
+    def test_manager_type_hierarchy(self):
         """Test manager type hierarchy and relationships."""
         # Test that different manager types work together
-        orchestrator = OrchestratorManager(mock_console, mock_clients)
-        config = ConfigManager(mock_console, mock_clients)
-        analysis = AnalysisServiceManager(mock_console, mock_clients)
+        orchestrator = OrchestratorManager(self.mock_console, self.mock_clients)
+        config = ConfigManager(self.mock_console, self.mock_clients)
+        analysis = AnalysisServiceManager(self.mock_console, self.mock_clients)
 
         managers = [orchestrator, config, analysis]
 
         # All should be BaseManager instances
         for manager in managers:
-            assert isinstance(manager, BaseManager)
-
-        # All should have common interface
-        for manager in managers:
-            assert hasattr(manager, 'console')
-            assert hasattr(manager, 'clients')
-            assert hasattr(manager, 'run_menu_loop')
+            assert_class_inheritance(manager, BaseManager)
 
     @pytest.mark.asyncio
-    async def test_shared_cache_between_managers(self, mock_console, mock_clients):
+    async def test_shared_cache_between_managers(self):
         """Test that managers can share cache when needed."""
-        manager1 = OrchestratorManager(mock_console, mock_clients)
-        manager2 = OrchestratorManager(mock_console, mock_clients)
+        manager1 = OrchestratorManager(self.mock_console, self.mock_clients)
+        manager2 = OrchestratorManager(self.mock_console, self.mock_clients)
 
         # Set cache on one manager
         await manager1.cache_set("shared_key", "shared_value")
@@ -256,12 +194,63 @@ class TestManagerIntegration:
         assert result1 == "shared_value"
         assert result2 is None  # Different cache instances
 
-    def test_manager_method_consistency(self, mock_console, mock_clients):
+    def test_manager_method_consistency(self):
         """Test that managers have consistent method signatures."""
         managers = [
-            OrchestratorManager(mock_console, mock_clients),
-            WorkflowManager(mock_console, mock_clients),
-            PromptManager(mock_console, mock_clients)
+            OrchestratorManager(self.mock_console, self.mock_clients),
+            WorkflowManager(self.mock_console, self.mock_clients),
+            PromptManager(self.mock_console, self.mock_clients)
+        ]
+
+        # All managers should have common BaseManager methods
+        common_methods = ['confirm_action', 'get_user_input', 'select_from_list', 'run_menu_loop']
+
+        for manager in managers:
+            for method in common_methods:
+                assert_method_exists(manager, method)
+
+    def test_manager_type_hierarchy(self):
+        """Test manager type hierarchy and relationships."""
+        # Test that different manager types work together
+        orchestrator = OrchestratorManager(self.mock_console, self.mock_clients)
+        config = ConfigManager(self.mock_console, self.mock_clients)
+        analysis = AnalysisServiceManager(self.mock_console, self.mock_clients)
+
+        managers = [orchestrator, config, analysis]
+
+        # All should be BaseManager instances
+        for manager in managers:
+            assert_class_inheritance(manager, BaseManager)
+
+        # All should have common interface
+        for manager in managers:
+            assert_method_exists(manager, 'console')
+            assert_method_exists(manager, 'clients')
+            assert_method_exists(manager, 'run_menu_loop')
+
+    @pytest.mark.asyncio
+    async def test_shared_cache_between_managers(self):
+        """Test that managers can share cache when needed."""
+        manager1 = OrchestratorManager(self.mock_console, self.mock_clients)
+        manager2 = OrchestratorManager(self.mock_console, self.mock_clients)
+
+        # Set cache on one manager
+        await manager1.cache_set("shared_key", "shared_value")
+
+        # Other manager should be able to access it (if using same cache instance)
+        # Note: In this test setup, they have separate cache instances
+        result1 = await manager1.cache_get("shared_key")
+        result2 = await manager2.cache_get("shared_key")
+
+        assert result1 == "shared_value"
+        assert result2 is None  # Different cache instances
+
+    def test_manager_method_consistency(self):
+        """Test that managers have consistent method signatures."""
+        managers = [
+            OrchestratorManager(self.mock_console, self.mock_clients),
+            WorkflowManager(self.mock_console, self.mock_clients),
+            PromptManager(self.mock_console, self.mock_clients)
         ]
 
         # All managers should have common BaseManager methods

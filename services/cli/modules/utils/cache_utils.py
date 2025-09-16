@@ -66,3 +66,12 @@ class CacheManager:
             'active_entries': total_entries - expired_entries,
             'expired_entries': expired_entries
         }
+
+    async def delete(self, key: str):
+        """Delete a specific key from cache."""
+        if key in self.cache:
+            del self.cache[key]
+
+    async def clear(self):
+        """Clear all cache entries."""
+        self.cache.clear()

@@ -9,12 +9,15 @@ from rich.text import Text
 from rich.columns import Columns
 from rich.layout import Layout
 
+from ..formatters.display_utils import DisplayManager
+
 
 class BaseFormatter(ABC):
     """Base class for CLI display formatters."""
 
     def __init__(self, console: Console):
         self.console = console
+        self.display = DisplayManager(console)
 
     def create_table(self, title: str, columns: List[str], styles: Optional[List[str]] = None) -> Table:
         """Create a styled table."""
@@ -121,3 +124,11 @@ class BaseFormatter(ABC):
     def format_operation_result(self, operation: str, result: Any) -> str:
         """Format operation result for display."""
         pass
+
+    def show_table(self, title: str, headers: List[str], data: List[List[str]]):
+        """Show data in a table format."""
+        self.display.show_table(title, headers, data)
+
+    def show_dict(self, data: Dict[str, Any], title: str = "Data"):
+        """Show dictionary data."""
+        self.display.show_dict(data, title)

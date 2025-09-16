@@ -10,56 +10,47 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class AnalysisManager:
+class AnalysisManager(BaseManager):
     """Manager for analysis service power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
-        self.console = console
-        self.clients = clients
-        self.cache = cache or {}
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for analysis management."""
+        return [
+            ("1", "Run Analysis (Quality, Consistency, Security)"),
+            ("2", "View Analysis Findings"),
+            ("3", "Generate Reports (Confluence, Jira, Custom)"),
+            ("4", "Quality Metrics & Statistics"),
+            ("5", "Analysis Detectors Management"),
+            ("6", "Integration Analysis (Prompt-based)")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle menu choice selection."""
+        if choice == "1":
+            await self.run_analysis_menu()
+        elif choice == "2":
+            await self.view_findings_menu()
+        elif choice == "3":
+            await self.generate_reports_menu()
+        elif choice == "4":
+            await self.quality_metrics_menu()
+        elif choice == "5":
+            await self.detectors_management_menu()
+        elif choice == "6":
+            await self.integration_analysis_menu()
+        else:
+            return False
+        return True
 
     async def analysis_reports_menu(self):
         """Main analysis and reports menu."""
-        while True:
-            menu = create_menu_table("Analysis & Reports", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Run Analysis (Quality, Consistency, Security)"),
-                ("2", "View Analysis Findings"),
-                ("3", "Generate Reports (Confluence, Jira, Custom)"),
-                ("4", "Quality Metrics & Statistics"),
-                ("5", "Analysis Detectors Management"),
-                ("6", "Integration Analysis (Prompt-based)"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
-
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.run_analysis_menu()
-            elif choice == "2":
-                await self.view_findings_menu()
-            elif choice == "3":
-                await self.generate_reports_menu()
-            elif choice == "4":
-                await self.quality_metrics_menu()
-            elif choice == "5":
-                await self.detectors_management_menu()
-            elif choice == "6":
-                await self.integration_analysis_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+        await self.run_menu_loop("Analysis & Reports")
 
     async def run_analysis_menu(self):
         """Run analysis submenu."""
@@ -91,24 +82,22 @@ class AnalysisManager:
 
     async def run_quality_analysis(self):
         """Run quality analysis."""
-        try:
-            target = Prompt.ask("[bold cyan]Analysis target[/bold cyan]",
-                              choices=["documents", "prompts", "all"], default="all")
+        target = await self.select_from_list(["documents", "prompts", "all"]) or "all"
 
-            with self.console.status(f"[bold green]Running quality analysis on {target}...") as status:
-                response = await self.clients.post_json("analysis-service/analyze", {
-                    "type": "quality",
-                    "target": target
-                })
+        response = await self.api_post_with_status(
+            "analysis-service/analyze",
+            {"type": "quality", "target": target},
+            f"Running quality analysis on {target}"
+        )
 
-            if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Quality analysis started: {response['analysis_id']}[/green]")
-                await self.monitor_analysis(response["analysis_id"])
-            else:
-                self.console.print("[red]❌ Failed to start quality analysis[/red]")
-
-        except Exception as e:
-            self.console.print(f"[red]Error running quality analysis: {e}[/red]")
+        if response and response.get("analysis_id"):
+            self.display.show_success(f"Quality analysis started: {response['analysis_id']}")
+            await self.monitor_operation(
+                response["analysis_id"],
+                "analysis",
+                lambda aid: self.clients.get_json(f"analysis-service/analysis/{aid}"),
+                lambda data: data.get("completed", False)
+            )
 
     async def run_consistency_analysis(self):
         """Run consistency analysis."""
@@ -178,38 +167,12 @@ class AnalysisManager:
 
     async def monitor_analysis(self, analysis_id: str):
         """Monitor analysis progress."""
-        try:
-            import asyncio
-
-            self.console.print(f"[yellow]Monitoring analysis {analysis_id}...[/yellow]")
-
-            while True:
-                await asyncio.sleep(2)
-
-                try:
-                    response = await self.clients.get_json(f"analysis-service/analysis/{analysis_id}")
-
-                    if response.get("completed"):
-                        status = response.get("status", "unknown")
-                        if status == "success":
-                            self.console.print(f"[green]✅ Analysis {analysis_id} completed successfully![/green]")
-                        else:
-                            self.console.print(f"[red]❌ Analysis {analysis_id} failed: {response.get('error', 'Unknown error')}[/red]")
-                        break
-                    else:
-                        progress = response.get("progress", 0)
-                        current_step = response.get("current_step", "processing")
-                        self.console.print(f"[yellow]⏳ Progress: {progress}% - {current_step}[/yellow]")
-
-                except KeyboardInterrupt:
-                    self.console.print("[yellow]Stopped monitoring analysis.[/yellow]")
-                    break
-                except Exception as e:
-                    self.console.print(f"[red]Error monitoring analysis: {e}[/red]")
-                    break
-
-        except Exception as e:
-            self.console.print(f"[red]Error monitoring analysis: {e}[/red]")
+        await self.monitor_operation(
+            analysis_id,
+            "analysis",
+            lambda aid: self.clients.get_json(f"analysis-service/analysis/{aid}"),
+            lambda data: data.get("completed", False)
+        )
 
     async def view_findings_menu(self):
         """View findings submenu."""
@@ -248,42 +211,17 @@ class AnalysisManager:
 
     async def view_all_findings(self):
         """View all findings."""
-        try:
-            with self.console.status("[bold green]Fetching findings...") as status:
-                response = await self.clients.get_json("analysis-service/findings")
+        response = await self.api_get_with_status("analysis-service/findings", "Fetching findings")
 
-            if response.get("findings"):
-                table = Table(title="Analysis Findings")
-                table.add_column("ID", style="cyan")
-                table.add_column("Type", style="green")
-                table.add_column("Severity", style="red")
-                table.add_column("Title", style="white")
-                table.add_column("Target", style="yellow")
+        if response and response.get("findings"):
+            table = self.create_findings_table("Analysis Findings")
+            for finding in response["findings"][:20]:  # Show first 20
+                self.add_finding_row(table, finding)
 
-                for finding in response["findings"][:20]:  # Show first 20
-                    severity_color = {
-                        "critical": "red",
-                        "high": "red",
-                        "medium": "yellow",
-                        "low": "green",
-                        "info": "blue"
-                    }.get(finding.get("severity", "unknown"), "white")
-
-                    table.add_row(
-                        finding.get("id", "N/A")[:8],
-                        finding.get("type", "unknown"),
-                        f"[{severity_color}]{finding.get('severity', 'unknown')}[/{severity_color}]",
-                        finding.get("title", "No title")[:50],
-                        finding.get("target", "unknown")[:30]
-                    )
-
-                self.console.print(table)
-                self.console.print(f"[dim]Showing {min(20, len(response['findings']))} of {len(response['findings'])} findings[/dim]")
-            else:
-                self.console.print("[yellow]No findings found.[/yellow]")
-
-        except Exception as e:
-            self.console.print(f"[red]Error fetching findings: {e}[/red]")
+            self.console.print(table)
+            self.console.print(f"[dim]Showing {min(20, len(response['findings']))} of {len(response['findings'])} findings[/dim]")
+        elif response:
+            self.display.show_warning("No findings found.")
 
     async def filter_findings_by_severity(self):
         """Filter findings by severity."""

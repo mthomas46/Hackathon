@@ -12,9 +12,10 @@ import asyncio
 from ..utils.cache_utils import CacheManager
 from ..utils.api_utils import APIClient
 from ..formatters.display_utils import DisplayManager
+from .mixins import MenuMixin, OperationMixin, TableMixin, ValidationMixin
 
 
-class BaseManager(ABC):
+class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, ABC):
     """Base class for all CLI managers providing common functionality."""
 
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
@@ -35,32 +36,6 @@ class BaseManager(ABC):
         """Handle a menu choice. Return True to continue, False to exit."""
         pass
 
-    async def run_menu_loop(self, title: str):
-        """Run the standard menu loop for this manager."""
-        while True:
-            try:
-                menu_items = await self.get_main_menu()
-                self.display.show_menu(title, menu_items)
-
-                choice = Prompt.ask("[bold green]Select option[/bold green]").strip()
-
-                if choice.lower() in ["q", "quit", "exit"]:
-                    break
-                elif choice.lower() == "b" or choice.lower() == "back":
-                    break
-                elif await self.handle_choice(choice):
-                    # Choice handled successfully, show pause message
-                    if choice not in ["h", "help"]:
-                        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
-                else:
-                    self.display.show_error("Invalid option. Please try again.")
-
-            except KeyboardInterrupt:
-                self.display.show_warning("Operation interrupted by user")
-                break
-            except Exception as e:
-                self.display.show_error(f"Menu error: {e}")
-                Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def confirm_action(self, message: str, default: bool = False) -> bool:
         """Get user confirmation for an action."""
@@ -116,3 +91,172 @@ class BaseManager(ABC):
     async def cache_set(self, key: str, value: Any, ttl: int = 300):
         """Set cached value with TTL."""
         await self.cache_manager.set(key, value, ttl)
+
+    def create_status_table(self, title: str) -> Table:
+        """Create a standard status table."""
+        from ..shared_utils import create_enhanced_table
+        return create_enhanced_table(title, ["Service", "Status", "Details"])
+
+    def create_workflow_table(self, title: str = "Active Workflows") -> Table:
+        """Create a standard workflow table."""
+        from ..shared_utils import create_enhanced_table
+        return create_enhanced_table(title, ["ID", "Status", "Type", "Progress", "Started"])
+
+    def create_service_table(self, title: str = "Services") -> Table:
+        """Create a standard service table."""
+        from ..shared_utils import create_enhanced_table
+        return create_enhanced_table(title, ["Name", "URL", "Status", "Last Seen"])
+
+    def create_findings_table(self, title: str = "Analysis Findings") -> Table:
+        """Create a standard findings table."""
+        from ..shared_utils import create_enhanced_table
+        return create_enhanced_table(title, ["ID", "Type", "Severity", "Title", "Target"])
+
+    def add_workflow_row(self, table: Table, workflow: Dict[str, Any]) -> None:
+        """Add a workflow row to a workflow table."""
+        status_color = {
+            "running": "yellow",
+            "completed": "green",
+            "failed": "red",
+            "pending": "blue"
+        }.get(workflow.get("status", "unknown"), "white")
+
+        table.add_row(
+            workflow.get("id", "N/A")[:8],
+            f"[{status_color}]{workflow.get('status', 'unknown')}[/{status_color}]",
+            workflow.get("type", "unknown"),
+            f"{workflow.get('progress', 0)}%",
+            workflow.get("started_at", "unknown")
+        )
+
+    def add_service_row(self, table: Table, service: Dict[str, Any]) -> None:
+        """Add a service row to a service table."""
+        status_color = "green" if service.get("status") == "healthy" else "red"
+        table.add_row(
+            service.get("name", "N/A"),
+            service.get("url", "N/A"),
+            f"[{status_color}]{service.get('status', 'unknown')}[/{status_color}]",
+            service.get("last_seen", "unknown")
+        )
+
+    def add_finding_row(self, table: Table, finding: Dict[str, Any]) -> None:
+        """Add a finding row to a findings table."""
+        severity_color = {
+            "critical": "red",
+            "high": "red",
+            "medium": "yellow",
+            "low": "green",
+            "info": "blue"
+        }.get(finding.get("severity", "unknown"), "white")
+
+        table.add_row(
+            finding.get("id", "N/A")[:8],
+            finding.get("type", "unknown"),
+            f"[{severity_color}]{finding.get('severity', 'unknown')}[/{severity_color}]",
+            finding.get("title", "No title")[:50],
+            finding.get("target", "unknown")[:30]
+        )
+
+    async def monitor_operation(self, operation_id: str, operation_type: str,
+                               status_func, success_check, progress_func=None,
+                               interval: int = 2) -> bool:
+        """Generic monitoring utility for async operations.
+
+        Args:
+            operation_id: ID of the operation to monitor
+            operation_type: Type of operation (workflow, analysis, etc.)
+            status_func: Async function to get status (should return dict with status info)
+            success_check: Function to check if operation completed successfully
+            progress_func: Optional function to display progress
+            interval: Polling interval in seconds
+
+        Returns:
+            bool: True if operation completed successfully
+        """
+        import asyncio
+
+        self.console.print(f"[yellow]Monitoring {operation_type} {operation_id}...[/yellow]")
+
+        while True:
+            try:
+                await asyncio.sleep(interval)
+
+                status_data = await status_func(operation_id)
+
+                if success_check(status_data):
+                    status = status_data.get("status", "unknown")
+                    if status == "success" or status == "completed":
+                        self.display.show_success(f"{operation_type.title()} {operation_id} completed successfully!")
+                    else:
+                        self.display.show_error(f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}")
+                    return status == "success" or status == "completed"
+                elif status_data.get("failed"):
+                    self.display.show_error(f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}")
+                    return False
+                else:
+                    # Still running, show progress if available
+                    if progress_func:
+                        progress_func(status_data)
+                    else:
+                        progress = status_data.get("progress", 0)
+                        current_step = status_data.get("current_step", "processing")
+                        self.console.print(f"[yellow]⏳ Progress: {progress}% - {current_step}[/yellow]")
+
+            except KeyboardInterrupt:
+                self.display.show_warning(f"Stopped monitoring {operation_type}")
+                return False
+            except Exception as e:
+                self.display.show_error(f"Error monitoring {operation_type}: {e}")
+                return False
+
+    async def api_get_with_status(self, endpoint: str, description: str) -> Optional[Dict[str, Any]]:
+        """Make GET request with status message and error handling."""
+        with self.console.status(f"[bold green]{description}...[/bold green]") as status:
+            try:
+                return await self.clients.get_json(endpoint)
+            except Exception as e:
+                self.display.show_error(f"Error {description}: {e}")
+                return None
+
+    async def api_post_with_status(self, endpoint: str, data: Dict[str, Any],
+                                  description: str, success_msg: str = None) -> Optional[Dict[str, Any]]:
+        """Make POST request with status message and error handling."""
+        with self.console.status(f"[bold green]{description}...[/bold green]") as status:
+            try:
+                result = await self.clients.post_json(endpoint, data)
+                if success_msg:
+                    self.display.show_success(success_msg)
+                return result
+            except Exception as e:
+                self.display.show_error(f"Error {description}: {e}")
+                return None
+
+    async def api_operation_with_confirm(self, endpoint: str, data: Dict[str, Any],
+                                        description: str, confirm_msg: str,
+                                        success_msg: str) -> bool:
+        """Perform API operation with user confirmation."""
+        if not await self.confirm_action(confirm_msg):
+            self.display.show_info(f"{description} cancelled.")
+            return False
+
+        result = await self.api_post_with_status(endpoint, data, description, success_msg)
+        return result is not None
+
+    async def run_menu_loop(self, title: str, menu_items: Optional[List[tuple[str, str]]] = None,
+                           back_option: str = "b") -> None:
+        """Standard menu loop implementation - ELIMINATES CODE DUPLICATION.
+
+        Args:
+            title: Menu title
+            menu_items: List of (choice, description) tuples. If None, calls get_main_menu()
+            back_option: Option to exit menu (default: 'b')
+        """
+        # Use provided menu_items or get them from the manager
+        items = menu_items if menu_items is not None else await self.get_main_menu()
+
+        # Delegate to mixin for the actual menu loop
+        await self.run_submenu_loop(title, items, back_option)
+
+    async def handle_submenu_choice(self, choice: str) -> bool:
+        """Handle submenu choice by delegating to handle_choice."""
+        return await self.handle_choice(choice)

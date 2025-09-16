@@ -14,55 +14,43 @@ import json
 import os
 import asyncio
 
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...base.base_manager import BaseManager
 
 
-class SummarizerHubManager:
+class SummarizerHubManager(BaseManager):
     """Manager for summarizer hub power-user operations."""
 
-    def __init__(self, console: Console, clients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
 
-    async def summarizer_hub_menu(self):
-        """Main summarizer hub menu."""
-        while True:
-            menu = create_menu_table("Summarizer Hub Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Ensemble Summarization (Multi-provider AI operations)"),
-                ("2", "Provider Management (Configure and test LLM providers)"),
-                ("3", "Model Performance Analysis"),
-                ("4", "Summarization Job Monitoring"),
-                ("5", "AI Operations Analytics"),
-                ("6", "Summarizer Hub Health & Configuration"),
-                ("b", "Back to Main Menu")
-            ])
-            self.console.print(menu)
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for summarizer hub operations."""
+        return [
+            ("1", "Ensemble Summarization (Multi-provider AI operations)"),
+            ("2", "Provider Management (Configure and test LLM providers)"),
+            ("3", "Model Performance Analysis"),
+            ("4", "Summarization Job Monitoring"),
+            ("5", "AI Operations Analytics"),
+            ("6", "Summarizer Hub Health & Configuration")
+        ]
 
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.ensemble_summarization_menu()
-            elif choice == "2":
-                await self.provider_management_menu()
-            elif choice == "3":
-                await self.model_performance_menu()
-            elif choice == "4":
-                await self.summarization_job_monitoring_menu()
-            elif choice == "5":
-                await self.ai_operations_analytics_menu()
-            elif choice == "6":
-                await self.summarizer_hub_health_menu()
-            elif choice.lower() in ["b", "back"]:
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        if choice == "1":
+            await self.ensemble_summarization_menu()
+        elif choice == "2":
+            await self.provider_management_menu()
+        elif choice == "3":
+            await self.model_performance_menu()
+        elif choice == "4":
+            await self.summarization_job_monitoring_menu()
+        elif choice == "5":
+            await self.ai_operations_analytics_menu()
+        elif choice == "6":
+            await self.summarizer_hub_health_menu()
+        else:
+            self.display.show_error("Invalid option. Please try again.")
+        return True
 
     async def ensemble_summarization_menu(self):
         """Ensemble summarization submenu."""

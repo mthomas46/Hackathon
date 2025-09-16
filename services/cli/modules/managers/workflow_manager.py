@@ -10,56 +10,44 @@ from rich.prompt import Prompt
 
 from services.shared.clients import ServiceClients
 
-from ..shared_utils import (
-    get_default_timeout,
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel
-)
+from ..base.base_manager import BaseManager
 
 
-class WorkflowManager:
+class WorkflowManager(BaseManager):
     """Handle workflow orchestration CLI operations."""
 
-    def __init__(self, console: Console, clients: ServiceClients):
-        self.console = console
-        self.clients = clients
+    def __init__(self, console: Console, clients: ServiceClients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for workflow management."""
+        return [
+            ("1", "Create New Workflow"),
+            ("2", "List Active Workflows"),
+            ("3", "Monitor Workflow Status"),
+            ("4", "Workflow Templates"),
+            ("5", "Workflow History")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle menu choice selection."""
+        if choice == "1":
+            await self.create_workflow()
+        elif choice == "2":
+            await self.list_workflows()
+        elif choice == "3":
+            await self.monitor_workflows()
+        elif choice == "4":
+            await self.workflow_templates()
+        elif choice == "5":
+            await self.workflow_history()
+        else:
+            return False
+        return True
 
     async def workflow_orchestration_menu(self):
         """Workflow orchestration submenu."""
-        while True:
-            self.console.print("\n[bold cyan]Workflow Orchestration[/bold cyan]")
-            menu = create_menu_table("", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Run document analysis"),
-                ("2", "Trigger ingestion workflow"),
-                ("3", "Execute consistency check"),
-                ("4", "Generate reports"),
-                ("5", "View workflow status"),
-                ("6", "Execute custom workflow"),
-                ("b", "Back to main menu")
-            ])
-            self.console.print(menu)
-
-            choice = Prompt.ask("[bold green]Select option[/bold green]")
-
-            if choice == "1":
-                await self.run_document_analysis()
-            elif choice == "2":
-                await self.trigger_ingestion()
-            elif choice == "3":
-                await self.run_consistency_check()
-            elif choice == "4":
-                await self.generate_reports()
-            elif choice == "5":
-                await self.view_workflow_status()
-            elif choice == "6":
-                await self.execute_custom_workflow()
-            elif choice.lower() == "b":
-                break
-            else:
-                self.console.print("[red]Invalid option. Please try again.[/red]")
+        await self.run_menu_loop("Workflow Orchestration")
 
     async def run_document_analysis(self):
         """Run document analysis workflow."""

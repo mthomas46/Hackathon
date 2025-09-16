@@ -10,7 +10,9 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 
+from ...base.base_manager import BaseManager
 from ...shared_utils import (
+    
     get_cli_clients,
     create_menu_table,
     add_menu_rows,
@@ -19,13 +21,24 @@ from ...shared_utils import (
 )
 
 
-class ArchitectureDigitizerManager:
+class ArchitectureDigitizerManager(BaseManager):
     """Manager for architecture digitizer CLI operations."""
 
-    def __init__(self, console: Console, clients, cache: Dict[str, Any] = None):
-        self.console = console
-        self.clients = clients
-        self.cache = cache or {}
+    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+        super().__init__(console, clients, cache)
+
+    async def get_main_menu(self) -> List[tuple[str, str]]:
+        """Return the main menu items for architecture digitizer operations."""
+        return [
+            ("1", "Architecture Analysis"),
+            ("2", "System Modeling"),
+            ("3", "Documentation Generation")
+        ]
+
+    async def handle_choice(self, choice: str) -> bool:
+        """Handle a menu choice. Return True to continue, False to exit."""
+        self.display.show_error("Feature not yet implemented")
+        return True
 
     async def architecture_digitizer_menu(self):
         """Main architecture digitizer menu."""
