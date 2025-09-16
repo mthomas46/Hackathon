@@ -72,6 +72,12 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 | GET    | /tags/statistics | Tag statistics |
 | POST   | /taxonomy/nodes | Create taxonomy node |
 | GET    | /taxonomy/tree | Get taxonomy tree |
+| POST   | /bulk/documents | Bulk document creation |
+| POST   | /bulk/search | Bulk search operations |
+| POST   | /bulk/tag | Bulk document tagging |
+| GET    | /bulk/operations/{id} | Bulk operation status |
+| GET    | /bulk/operations | List bulk operations |
+| POST   | /bulk/operations/{id}/cancel | Cancel bulk operation |
 | GET    | /cache/stats | Cache statistics |
 | POST   | /cache/invalidate | Invalidate cache |
 | POST   | /cache/warmup | Warm up cache |
@@ -245,6 +251,49 @@ Documents are automatically tagged during creation with:
 - File types and extensions recognized
 - URLs and external references categorized
 - Document types and content characteristics classified
+
+## Bulk Operations & Batch Processing
+
+The doc-store provides high-performance bulk operations for efficient large-scale document management and processing.
+
+### Bulk Document Operations
+- **Bulk Creation**: Create multiple documents concurrently with progress tracking
+- **Batch Processing**: Asynchronous processing with configurable concurrency limits
+- **Error Handling**: Comprehensive error reporting and partial success handling
+- **Progress Monitoring**: Real-time status updates and operation tracking
+
+### Batch Search & Analysis
+- **Bulk Search**: Execute multiple search queries simultaneously
+- **Concurrent Processing**: Parallel search operations for optimal performance
+- **Result Aggregation**: Unified result handling with metadata preservation
+- **Resource Management**: Controlled concurrency to prevent system overload
+
+### Bulk Tagging Operations
+- **Mass Tagging**: Apply semantic tagging to multiple documents at once
+- **Progress Tracking**: Monitor tagging progress across large document sets
+- **Error Recovery**: Continue processing after individual failures
+- **Performance Optimization**: Batched database operations for efficiency
+
+### Operation Management
+- **Status Monitoring**: Real-time progress tracking for all bulk operations
+- **Operation History**: Complete audit trail of bulk operations
+- **Cancellation Support**: Stop running operations to conserve resources
+- **Result Retrieval**: Access detailed results and error reports
+
+### Bulk Operations Endpoints
+- **POST /bulk/documents**: Create multiple documents with progress tracking
+- **POST /bulk/search**: Execute multiple search queries concurrently
+- **POST /bulk/tag**: Tag multiple documents with semantic information
+- **GET /bulk/operations/{id}**: Monitor specific bulk operation progress
+- **GET /bulk/operations**: List and filter bulk operations by status
+- **POST /bulk/operations/{id}/cancel**: Cancel running bulk operations
+
+### Performance Characteristics
+- Configurable concurrency limits (default: 10 concurrent operations)
+- Batch size optimization (default: 100 items per batch)
+- Memory-efficient processing with streaming result handling
+- Automatic resource cleanup and connection management
+- Comprehensive error handling and recovery mechanisms
 
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).

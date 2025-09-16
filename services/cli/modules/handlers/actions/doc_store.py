@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple, Callable
 from rich.prompt import Prompt
+import json
 
 from services.shared.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list, save_data
@@ -188,11 +189,56 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.get_json(url)
         print_kv(console, "Tag Statistics", data)
 
+    async def bulk_create_documents():
+        count = Prompt.ask("Number of documents to create", default="5")
+        count = int(count)
+
+        documents = []
+        for i in range(count):
+            console.print(f"\n[bold cyan]Document {i+1}/{count}[/bold cyan]")
+            content = Prompt.ask(f"Content for document {i+1}")
+            metadata_input = Prompt.ask(f"Metadata JSON (optional)", default="{}")
+
+            try:
+                metadata = json.loads(metadata_input) if metadata_input.strip() else {}
+            except:
+                metadata = {}
+
+            documents.append({
+                "content": content,
+                "metadata": metadata
+            })
+
+        payload = {"documents": documents}
+        url = f"{clients.doc_store_url()}/bulk/documents"
+        data = await clients.post_json(url, payload)
+        operation_id = data.get("operation_id")
+        console.print(f"[green]Bulk operation started: {operation_id}[/green]")
+        console.print("Use 'Monitor bulk operation' to check progress.")
+
+    async def monitor_bulk_operation():
+        operation_id = Prompt.ask("Bulk operation ID")
+        url = f"{clients.doc_store_url()}/bulk/operations/{operation_id}"
+        data = await clients.get_json(url)
+        print_kv(console, f"Bulk Operation Status: {operation_id}", data)
+
+    async def list_bulk_operations():
+        status_filter = Prompt.ask("Status filter (optional)", default="")
+        params = {}
+        if status_filter:
+            params["status"] = status_filter
+        url = f"{clients.doc_store_url()}/bulk/operations"
+        data = await clients.get_json(url, params=params)
+        print_kv(console, "Bulk Operations", data)
+
     return [
         ("Search documents", list_documents),
         ("Advanced search with filters", advanced_search),
         ("Get document by ID", get_document),
         ("Create document", put_document),
+        ("Bulk create documents", bulk_create_documents),
+        ("Monitor bulk operation", monitor_bulk_operation),
+        ("List bulk operations", list_bulk_operations),
         ("List quality signals", quality),
         ("View document tags", view_document_tags),
         ("Tag document", tag_document_cli),

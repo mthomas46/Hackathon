@@ -382,3 +382,69 @@ class TaxonomyTreeResponse(BaseModel):
     """Response model for taxonomy tree."""
     root_category: Optional[str]
     taxonomy_tree: Dict[str, List[TaxonomyNode]]
+
+
+class BulkDocumentItem(BaseModel):
+    """Bulk document creation item."""
+    id: Optional[str] = None
+    content: str
+    metadata: Optional[Dict[str, Any]] = None
+    correlation_id: Optional[str] = None
+
+
+class BulkDocumentCreateRequest(BaseModel):
+    """Request model for bulk document creation."""
+    documents: List[BulkDocumentItem]
+
+
+class BulkSearchQuery(BaseModel):
+    """Bulk search query item."""
+    q: Optional[str] = None
+    content_type: Optional[str] = None
+    source_type: Optional[str] = None
+    language: Optional[str] = None
+    tags: Optional[List[str]] = None
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    has_analysis: Optional[bool] = None
+    limit: int = 20
+    offset: int = 0
+
+
+class BulkSearchRequest(BaseModel):
+    """Request model for bulk search."""
+    queries: List[BulkSearchQuery]
+
+
+class BulkTagRequest(BaseModel):
+    """Request model for bulk tagging."""
+    document_ids: List[str]
+
+
+class BulkOperationStatus(BaseModel):
+    """Response model for bulk operation status."""
+    operation_id: str
+    operation_type: str
+    status: str
+    progress: Dict[str, Any]
+    created_at: str
+    completed_at: Optional[str]
+    errors: List[Dict[str, Any]]
+
+
+class BulkOperationSummary(BaseModel):
+    """Summary of bulk operation results."""
+    operation_id: str
+    operation_type: str
+    status: str
+    total_items: int
+    successful_items: int
+    failed_items: int
+    created_at: str
+
+
+class BulkOperationsListResponse(BaseModel):
+    """Response model for listing bulk operations."""
+    operations: List[BulkOperationSummary]
+    total: int
+    status_filter: Optional[str]
