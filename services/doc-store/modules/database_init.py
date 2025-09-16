@@ -93,6 +93,50 @@ def init_database() -> None:
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_tags (
+              id TEXT PRIMARY KEY,
+              document_id TEXT,
+              tag TEXT,
+              category TEXT,
+              confidence REAL DEFAULT 1.0,
+              metadata TEXT,
+              created_at TEXT,
+              FOREIGN KEY(document_id) REFERENCES documents(id),
+              UNIQUE(document_id, tag, category)
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS semantic_metadata (
+              id TEXT PRIMARY KEY,
+              document_id TEXT,
+              entity_type TEXT,
+              entity_value TEXT,
+              confidence REAL,
+              start_offset INTEGER,
+              end_offset INTEGER,
+              metadata TEXT,
+              created_at TEXT,
+              FOREIGN KEY(document_id) REFERENCES documents(id),
+              UNIQUE(document_id, entity_type, entity_value, start_offset, end_offset)
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS tag_taxonomy (
+              id TEXT PRIMARY KEY,
+              tag TEXT UNIQUE,
+              category TEXT,
+              description TEXT,
+              parent_tag TEXT,
+              synonyms TEXT,
+              created_at TEXT,
+              updated_at TEXT,
+              FOREIGN KEY(parent_tag) REFERENCES tag_taxonomy(tag)
+            )
+        """)
+
         # Create indexes for performance
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON documents(content_hash)",
@@ -106,7 +150,15 @@ def init_database() -> None:
             "CREATE INDEX IF NOT EXISTS idx_relationships_source ON document_relationships(source_document_id)",
             "CREATE INDEX IF NOT EXISTS idx_relationships_target ON document_relationships(target_document_id)",
             "CREATE INDEX IF NOT EXISTS idx_relationships_type ON document_relationships(relationship_type)",
-            "CREATE INDEX IF NOT EXISTS idx_relationships_strength ON document_relationships(strength)"
+            "CREATE INDEX IF NOT EXISTS idx_relationships_strength ON document_relationships(strength)",
+            "CREATE INDEX IF NOT EXISTS idx_document_tags_document_id ON document_tags(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_document_tags_tag ON document_tags(tag)",
+            "CREATE INDEX IF NOT EXISTS idx_document_tags_category ON document_tags(category)",
+            "CREATE INDEX IF NOT EXISTS idx_semantic_metadata_document_id ON semantic_metadata(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_semantic_metadata_entity_type ON semantic_metadata(entity_type)",
+            "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_tag ON tag_taxonomy(tag)",
+            "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_category ON tag_taxonomy(category)",
+            "CREATE INDEX IF NOT EXISTS idx_tag_taxonomy_parent ON tag_taxonomy(parent_tag)"
         ]
 
         for index in indexes:
