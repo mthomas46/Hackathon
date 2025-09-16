@@ -141,7 +141,7 @@ from services.shared.error_handling import install_error_handlers
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
-from .modules.shared_utils import (
+from services.frontend.modules.shared_utils import (
     get_reporting_url,
     get_doc_store_url,
     get_consistency_engine_url,
@@ -161,27 +161,27 @@ from .modules.shared_utils import (
 # ============================================================================
 # UI HANDLERS - Extracted page rendering logic
 # ============================================================================
-from .modules.ui_handlers import ui_handlers
-from .modules.summarizer_cache import get_cached_summarizer_data, record_summarizer_job
-from .modules.log_cache import (
+from services.frontend.modules.ui_handlers import ui_handlers
+from services.frontend.modules.summarizer_cache import get_cached_summarizer_data, record_summarizer_job
+from services.frontend.modules.log_cache import (
     get_cached_logs_data,
     fetch_logs_from_collector,
     fetch_log_stats_from_collector,
     stream_logs,
     analyze_log_patterns
 )
-from .modules.data_browser import (
+from services.frontend.modules.data_browser import (
     data_browser,
     get_doc_store_summary,
     get_prompt_store_summary
 )
-from .modules.orchestrator_monitor import (
+from services.frontend.modules.orchestrator_monitor import (
     orchestrator_monitor,
     get_orchestrator_summary
 )
-from .modules.analysis_monitor import analysis_monitor
-from .modules.bedrock_proxy_monitor import bedrock_proxy_monitor
-from .modules.code_analyzer_monitor import code_analyzer_monitor
+from services.frontend.modules.analysis_monitor import analysis_monitor
+from services.frontend.modules.bedrock_proxy_monitor import bedrock_proxy_monitor
+from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
 
 # ============================================================================
 # RENDER UTILITIES - HTML rendering functions
@@ -216,6 +216,8 @@ app = FastAPI(
     description="HTML UI service for documentation consistency analysis and reporting"
 )
 
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+
 # Use common middleware setup and error handlers to reduce duplication across services
 setup_common_middleware(app, ServiceNames.FRONTEND)
 install_error_handlers(app)
@@ -223,9 +225,8 @@ install_error_handlers(app)
 # Register standardized health endpoints
 register_health_endpoints(app, ServiceNames.FRONTEND, SERVICE_VERSION)
 
-# Mount static files for Elm application
-if os.path.exists("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static files
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 @app.get("/info")
@@ -303,23 +304,15 @@ async def metrics():
         return handle_frontend_error("get metrics", e, **build_frontend_context("get_metrics"))
 
 
-@app.get("/elm")
-async def elm_app():
-    """Serve the Elm Hello World application.
+@app.get("/app/{path:path}")
+async def spa_catch_all(path: str):
+    print("SPA catch-all route called")
+    """Catch-all route for Elm SPA routing.
 
-    Returns the HTML page with the compiled Elm application.
+    Serves index.html for any route under /app so that Elm can handle
+    client-side routing for the single-page application.
     """
-    return FileResponse("static/index.html")
-
-
-@app.get("/")
-async def index():
-    """Render the main frontend index page.
-
-    Returns the main dashboard HTML page with navigation links to all
-    available UI views for documentation analysis and reporting.
-    """
-    return ui_handlers.handle_index()
+    return FileResponse(os.path.join(static_dir, "index.html"))
 
 
 @app.get("/owner-coverage")
@@ -2797,9 +2790,16 @@ async def run_cli_integration_tests():
 if __name__ == "__main__":
     """Run the Frontend service directly."""
     import uvicorn
+    import os
+
+    # Enable auto-reload in development
+    is_dev = os.getenv("ENVIRONMENT", "production") == "development"
+
     uvicorn.run(
-        app,
+        "main:app" if is_dev else app,
         host="0.0.0.0",
         port=DEFAULT_PORT,
-        log_level="info"
+        log_level="info",
+        reload=is_dev,
+        reload_dirs=["services/frontend"] if is_dev else None
     )
