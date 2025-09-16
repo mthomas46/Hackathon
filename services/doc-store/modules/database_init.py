@@ -62,13 +62,31 @@ def init_database() -> None:
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_versions (
+              id TEXT PRIMARY KEY,
+              document_id TEXT,
+              version_number INTEGER,
+              content TEXT,
+              content_hash TEXT,
+              metadata TEXT,
+              change_summary TEXT,
+              changed_by TEXT,
+              created_at TEXT,
+              FOREIGN KEY(document_id) REFERENCES documents(id)
+            )
+        """)
+
         # Create indexes for performance
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON documents(content_hash)",
             "CREATE INDEX IF NOT EXISTS idx_analyses_document_id ON analyses(document_id)",
             "CREATE INDEX IF NOT EXISTS idx_analyses_prompt_hash ON analyses(prompt_hash)",
             "CREATE INDEX IF NOT EXISTS idx_analyses_created_at ON analyses(created_at)",
-            "CREATE INDEX IF NOT EXISTS idx_style_examples_language ON style_examples(language)"
+            "CREATE INDEX IF NOT EXISTS idx_style_examples_language ON style_examples(language)",
+            "CREATE INDEX IF NOT EXISTS idx_document_versions_document_id ON document_versions(document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_document_versions_version_number ON document_versions(version_number)",
+            "CREATE INDEX IF NOT EXISTS idx_document_versions_created_at ON document_versions(created_at)"
         ]
 
         for index in indexes:

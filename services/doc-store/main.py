@@ -50,13 +50,15 @@ from .modules.models import (
     PutDocumentRequest, GetDocumentResponse, PutAnalysisRequest,
     ListAnalysesResponse, StyleExamplesResponse, ListDocumentsResponse,
     QualityResponse, SearchResponse, MetadataPatch, AnalyticsResponse, AnalyticsSummaryResponse,
-    AdvancedSearchRequest, AdvancedSearchResponse
+    AdvancedSearchRequest, AdvancedSearchResponse, DocumentVersionsResponse, DocumentVersionDetail,
+    VersionComparison, VersionRollbackRequest, VersionCleanupRequest
 )
 from .modules.database_init import init_database
 from .modules.document_handlers import document_handlers
 from .modules.analysis_handlers import analysis_handlers
 from .modules.search_handlers import search_handlers
 from .modules.analytics_handlers import analytics_handlers
+from .modules.versioning_handlers import versioning_handlers
 
 # ============================================================================
 # ROUTES - Include existing router
@@ -405,6 +407,56 @@ async def get_analytics_summary():
     and actionable recommendations for optimization and maintenance.
     """
     return await analytics_handlers.handle_analytics_summary()
+
+
+@app.get("/documents/{document_id}/versions", response_model=DocumentVersionsResponse)
+async def get_document_versions(document_id: str, limit: int = 50, offset: int = 0):
+    """Get version history for a document.
+
+    Retrieves the complete version history for a document, including version numbers,
+    change summaries, timestamps, and metadata for each version.
+    """
+    return await versioning_handlers.handle_get_document_versions(document_id, limit, offset)
+
+
+@app.get("/documents/{document_id}/versions/{version_number}", response_model=DocumentVersionDetail)
+async def get_document_version(document_id: str, version_number: int):
+    """Get a specific version of a document.
+
+    Retrieves the full content and metadata for a specific version of a document,
+    allowing for detailed inspection and comparison.
+    """
+    return await versioning_handlers.handle_get_document_version(document_id, version_number)
+
+
+@app.get("/documents/{document_id}/versions/{version_a}/compare/{version_b}", response_model=VersionComparison)
+async def compare_document_versions(document_id: str, version_a: int, version_b: int):
+    """Compare two versions of a document.
+
+    Provides detailed comparison between two document versions, highlighting
+    content changes, metadata differences, and change summaries.
+    """
+    return await versioning_handlers.handle_compare_versions(document_id, version_a, version_b)
+
+
+@app.post("/documents/{document_id}/rollback")
+async def rollback_document_version(document_id: str, req: VersionRollbackRequest):
+    """Rollback a document to a previous version.
+
+    Reverts a document to a specified previous version, creating a new version
+    record to maintain the complete change history.
+    """
+    return await versioning_handlers.handle_rollback_version(document_id, req)
+
+
+@app.post("/documents/{document_id}/versions/cleanup")
+async def cleanup_document_versions(document_id: str, req: VersionCleanupRequest):
+    """Clean up old versions of a document.
+
+    Removes old versions beyond the specified retention limit, keeping only
+    the most recent versions to manage storage efficiently.
+    """
+    return await versioning_handlers.handle_cleanup_versions(document_id, req)
 
 
 if __name__ == "__main__":

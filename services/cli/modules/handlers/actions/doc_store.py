@@ -104,12 +104,40 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.post_json(url, payload)
         print_kv(console, "Advanced Search Results", data)
 
+    async def view_document_versions():
+        doc_id = Prompt.ask("Document ID")
+        limit = Prompt.ask("Limit (default 10)", default="10")
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/versions"
+        data = await clients.get_json(url, params={"limit": limit})
+        print_kv(console, f"Versions for {doc_id}", data)
+
+    async def rollback_document():
+        doc_id = Prompt.ask("Document ID")
+        version = Prompt.ask("Version number to rollback to")
+        changed_by = Prompt.ask("Changed by (optional)", default="cli_user")
+
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/rollback"
+        data = await clients.post_json(url, {"version_number": int(version), "changed_by": changed_by})
+        print_kv(console, f"Rollback Result for {doc_id}", data)
+
+    async def compare_versions():
+        doc_id = Prompt.ask("Document ID")
+        version_a = Prompt.ask("First version number")
+        version_b = Prompt.ask("Second version number")
+
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/versions/{version_a}/compare/{version_b}"
+        data = await clients.get_json(url)
+        print_kv(console, f"Comparison {version_a} vs {version_b}", data)
+
     return [
         ("Search documents", list_documents),
         ("Advanced search with filters", advanced_search),
         ("Get document by ID", get_document),
         ("Create document", put_document),
         ("List quality signals", quality),
+        ("View document versions", view_document_versions),
+        ("Compare document versions", compare_versions),
+        ("Rollback document to version", rollback_document),
         ("View analytics (detailed)", view_analytics),
         ("View analytics summary", view_analytics_summary),
         ("View config (effective)", config_effective),
