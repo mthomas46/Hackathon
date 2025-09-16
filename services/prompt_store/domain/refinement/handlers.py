@@ -102,18 +102,28 @@ class PromptRefinementHandlers:
     async def handle_get_refinement_history(self, prompt_id: str) -> Dict[str, Any]:
         """Get refinement history for a prompt."""
         try:
-            # This would query for all refinement sessions related to a prompt
-            # For now, return a placeholder
+            history = await self.service.get_refinement_history(prompt_id)
             return create_success_response(
                 message="Refinement history retrieved successfully",
-                data={
-                    "prompt_id": prompt_id,
-                    "refinement_sessions": [],
-                    "total_refinements": 0
-                }
+                data=history
             )
+        except ValueError as e:
+            return create_error_response(str(e), "VALIDATION_ERROR")
         except Exception as e:
             return create_error_response(f"Failed to get refinement history: {str(e)}", "INTERNAL_ERROR")
+
+    async def handle_get_version_refinement_details(self, prompt_id: str, version: int) -> Dict[str, Any]:
+        """Get detailed refinement information for a specific version."""
+        try:
+            details = await self.service.get_version_refinement_details(prompt_id, version)
+            return create_success_response(
+                message="Version refinement details retrieved successfully",
+                data=details
+            )
+        except ValueError as e:
+            return create_error_response(str(e), "VALIDATION_ERROR")
+        except Exception as e:
+            return create_error_response(f"Failed to get version refinement details: {str(e)}", "INTERNAL_ERROR")
 
     async def handle_list_active_refinements(self, user_id: Optional[str] = None) -> Dict[str, Any]:
         """List all active refinement sessions."""

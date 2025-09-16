@@ -7,6 +7,7 @@ from .bulk import BulkOperationService, BulkOperationRepository, BulkOperationHa
 from .refinement import PromptRefinementService, PromptRefinementHandlers
 from .lifecycle import LifecycleService, LifecycleRepository, LifecycleHandlers
 from .relationships import RelationshipsService, RelationshipsRepository, RelationshipsHandlers
+from .notifications import NotificationsService, NotificationsRepository, NotificationsHandlers
 
 __all__ = [
     'PromptService', 'PromptRepository', 'PromptHandlers',
@@ -15,5 +16,6 @@ __all__ = [
     'BulkOperationService', 'BulkOperationRepository', 'BulkOperationHandlers',
     'PromptRefinementService', 'PromptRefinementHandlers',
     'LifecycleService', 'LifecycleRepository', 'LifecycleHandlers',
-    'RelationshipsService', 'RelationshipsRepository', 'RelationshipsHandlers'
+    'RelationshipsService', 'RelationshipsRepository', 'RelationshipsHandlers',
+    'NotificationsService', 'NotificationsRepository', 'NotificationsHandlers'
 ]
