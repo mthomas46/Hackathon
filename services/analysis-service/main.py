@@ -60,7 +60,7 @@ DEFAULT_PORT = 5020
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import AnalysisRequest, ReportRequest, NotifyOwnersRequest, FindingsResponse
+from .modules.models import AnalysisRequest, ReportRequest, NotifyOwnersRequest, FindingsResponse, ArchitectureAnalysisRequest
 from .modules.analysis_handlers import analysis_handlers
 from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
@@ -488,6 +488,61 @@ async def log_analysis_usage(request_data: dict = None):
         return {"status": "logged"}
     except Exception as e:
         return {"error": f"Failed to log usage: {e}"}
+
+
+@app.post("/architecture/analyze")
+async def analyze_architecture(req: ArchitectureAnalysisRequest):
+    """Analyze architectural diagrams for consistency, completeness, and best practices.
+
+    Performs specialized analysis on normalized architecture data from the
+    architecture-digitizer service, identifying potential issues, inconsistencies,
+    and providing recommendations for improvement.
+    """
+    try:
+        # Get the appropriate analyzer for the analysis type
+        analyzer = integration_handlers.get_architecture_analyzer(req.analysis_type)
+        if not analyzer:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported architecture analysis type: {req.analysis_type}"
+            )
+
+        # Perform the analysis
+        results = await analyzer.analyze_architecture(req.components, req.connections, req.options or {})
+
+        # Log the analysis
+        fire_and_forget(
+            "info",
+            f"Completed architecture analysis: {req.analysis_type}",
+            SERVICE_NAME,
+            {
+                "analysis_type": req.analysis_type,
+                "component_count": len(req.components),
+                "connection_count": len(req.connections)
+            }
+        )
+
+        return create_success_response(
+            "Architecture analysis completed",
+            results,
+            analysis_type=req.analysis_type,
+            component_count=len(req.components),
+            connection_count=len(req.connections)
+        )
+
+    except Exception as e:
+        # Log the error
+        fire_and_forget(
+            "error",
+            f"Architecture analysis failed: {req.analysis_type}",
+            SERVICE_NAME,
+            {"error": str(e)}
+        )
+
+        return create_error_response(
+            f"Architecture analysis failed: {str(e)}",
+            error_code=ErrorCodes.ANALYSIS_FAILED
+        )
 
 
 if __name__ == "__main__":

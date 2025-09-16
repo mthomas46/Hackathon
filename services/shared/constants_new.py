@@ -106,6 +106,7 @@ class ServiceNames:
     NOTIFICATION_SERVICE = "notification-service"
     LOG_COLLECTOR = "log-collector"
     BEDROCK_PROXY = "bedrock-proxy"
+    ARCHITECTURE_DIGITIZER = "architecture-digitizer"
 
 
 class ServicePorts:

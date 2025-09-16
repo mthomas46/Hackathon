@@ -19,14 +19,19 @@ class WorkflowManager(BaseManager):
     def __init__(self, console: Console, clients: ServiceClients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)
 
+    async def get_required_services(self) -> List[str]:
+        """Return list of required services for this manager."""
+        return ["orchestrator", "interpreter", "architecture-digitizer", "analysis-service", "doc-store"]
+
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for workflow management."""
         return [
             ("1", "Create New Workflow"),
             ("2", "List Active Workflows"),
             ("3", "Monitor Workflow Status"),
-            ("4", "Workflow Templates"),
-            ("5", "Workflow History")
+            ("4", "Architecture Processing Workflows"),
+            ("5", "Workflow Templates"),
+            ("6", "Workflow History")
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -38,8 +43,10 @@ class WorkflowManager(BaseManager):
         elif choice == "3":
             await self.monitor_workflows()
         elif choice == "4":
-            await self.workflow_templates()
+            await self.architecture_workflows()
         elif choice == "5":
+            await self.workflow_templates()
+        elif choice == "6":
             await self.workflow_history()
         else:
             return False
@@ -214,7 +221,216 @@ class WorkflowManager(BaseManager):
                     url = f"{self.clients.interpreter_url()}/execute"
                     workflow_result = await self.clients.post_json(url, payload)
                     self.console.print("[green]✅ Workflow executed![/green]")
-                    self.console.print(f"Results: {workflow_result}")
 
         except Exception as e:
             self.console.print(f"[red]Error processing query: {e}[/red]")
+
+
+    async def architecture_workflows(self):
+        """Architecture processing workflow menu."""
+        from rich.table import Table
+        from rich.prompt import Prompt
+
+        while True:
+            # Create workflow options table
+            table = Table(title="🏗️ Architecture Processing Workflows")
+            table.add_column("Option", style="cyan", no_wrap=True)
+            table.add_column("Workflow", style="white")
+            table.add_column("Description", style="dim white")
+
+            table.add_row("1", "Diagram → Doc Store", "Normalize diagram and store in document store")
+            table.add_row("2", "Diagram → Analysis", "Normalize diagram and run architecture analysis")
+            table.add_row("3", "Full Pipeline", "Normalize → Store → Analyze → Report")
+            table.add_row("4", "Batch Processing", "Process multiple diagrams in batch")
+            table.add_row("b", "Back", "Return to workflow menu")
+
+            self.console.print(table)
+
+            choice = Prompt.ask("[bold green]Select workflow[/bold green]")
+
+            if choice == "1":
+                await self._diagram_to_docstore_workflow()
+            elif choice == "2":
+                await self._diagram_to_analysis_workflow()
+            elif choice == "3":
+                await self._full_architecture_pipeline()
+            elif choice == "4":
+                await self._batch_diagram_processing()
+            elif choice.lower() in ["b", "back"]:
+                break
+            else:
+                self.console.print("[red]Invalid option. Please try again.[/red]")
+
+    async def _diagram_to_docstore_workflow(self):
+        """Workflow: Normalize diagram and store in doc-store."""
+        self.console.print("\n[bold green]🏗️ Diagram → Doc Store Workflow[/bold green]")
+        self.console.print("This workflow will normalize an architecture diagram and store it in the document store.")
+
+        # Get diagram source
+        system = Prompt.ask("System (miro/figjam/lucid/confluence)")
+        board_id = Prompt.ask("Board/Document ID")
+        token = Prompt.ask("API Token", password=True)
+
+        if not Prompt.ask("Proceed with workflow? (y/n)", default="n").lower().startswith("y"):
+            return
+
+        try:
+            with self.console.status("[bold green]Processing diagram...[/bold green]") as status:
+                # Step 1: Normalize diagram
+                normalize_result = await self.clients.post_json(
+                    "architecture-digitizer/normalize",
+                    {"system": system, "board_id": board_id, "token": token}
+                )
+
+                if not normalize_result.get("success"):
+                    self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
+                    return
+
+                # The normalized data is automatically stored in doc-store via the architecture-digitizer service
+                self.console.print("[green]✅ Diagram normalized and stored in document store![/green]")
+                self.console.print(f"Components: {len(normalize_result.get('data', {}).get('components', []))}")
+                self.console.print(f"Connections: {len(normalize_result.get('data', {}).get('connections', []))}")
+
+        except Exception as e:
+            self.console.print(f"[red]❌ Workflow failed: {e}[/red]")
+
+    async def _diagram_to_analysis_workflow(self):
+        """Workflow: Normalize diagram and run architecture analysis."""
+        self.console.print("\n[bold green]🏗️ Diagram → Analysis Workflow[/bold green]")
+        self.console.print("This workflow will normalize a diagram and run comprehensive architecture analysis.")
+
+        # Get diagram source
+        system = Prompt.ask("System (miro/figjam/lucid/confluence)")
+        board_id = Prompt.ask("Board/Document ID")
+        token = Prompt.ask("API Token", password=True)
+        analysis_type = Prompt.ask("Analysis type (consistency/completeness/best_practices/combined)", default="combined")
+
+        if not Prompt.ask("Proceed with workflow? (y/n)", default="n").lower().startswith("y"):
+            return
+
+        try:
+            with self.console.status("[bold green]Processing and analyzing diagram...[/bold green]") as status:
+                # Step 1: Normalize diagram
+                normalize_result = await self.clients.post_json(
+                    "architecture-digitizer/normalize",
+                    {"system": system, "board_id": board_id, "token": token}
+                )
+
+                if not normalize_result.get("success"):
+                    self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
+                    return
+
+                # Step 2: Run architecture analysis
+                components = normalize_result.get("data", {}).get("components", [])
+                connections = normalize_result.get("data", {}).get("connections", [])
+
+                analysis_result = await self.clients.post_json(
+                    "analysis-service/architecture/analyze",
+                    {
+                        "components": components,
+                        "connections": connections,
+                        "analysis_type": analysis_type
+                    }
+                )
+
+                # Display results
+                self.console.print("[green]✅ Architecture analysis completed![/green]")
+
+                issues = analysis_result.get("issues", [])
+                if issues:
+                    from rich.table import Table
+                    issue_table = Table(title="Analysis Issues")
+                    issue_table.add_column("Severity", style="red")
+                    issue_table.add_column("Type", style="cyan")
+                    issue_table.add_column("Issue", style="white")
+
+                    for issue in issues[:10]:  # Show first 10 issues
+                        issue_table.add_row(
+                            issue.get("severity", "unknown"),
+                            issue.get("issue_type", "unknown"),
+                            issue.get("message", "")
+                        )
+
+                    self.console.print(issue_table)
+
+                    if len(issues) > 10:
+                        self.console.print(f"[dim]... and {len(issues) - 10} more issues[/dim]")
+                else:
+                    self.console.print("[green]No issues found - architecture looks good![/green]")
+
+        except Exception as e:
+            self.console.print(f"[red]❌ Workflow failed: {e}[/red]")
+
+    async def _full_architecture_pipeline(self):
+        """Complete architecture processing pipeline."""
+        self.console.print("\n[bold green]🏗️ Full Architecture Pipeline[/bold green]")
+        self.console.print("Complete workflow: Normalize → Store → Analyze → Generate Report")
+
+        # Get diagram source
+        system = Prompt.ask("System (miro/figjam/lucid/confluence)")
+        board_id = Prompt.ask("Board/Document ID")
+        token = Prompt.ask("API Token", password=True)
+
+        if not Prompt.ask("Proceed with full pipeline? (y/n)", default="n").lower().startswith("y"):
+            return
+
+        try:
+            with self.console.status("[bold green]Running full architecture pipeline...[/bold green]") as status:
+                # Step 1: Normalize (which also stores in doc-store)
+                normalize_result = await self.clients.post_json(
+                    "architecture-digitizer/normalize",
+                    {"system": system, "board_id": board_id, "token": token}
+                )
+
+                if not normalize_result.get("success"):
+                    self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
+                    return
+
+                # Step 2: Run comprehensive analysis
+                components = normalize_result.get("data", {}).get("components", [])
+                connections = normalize_result.get("data", {}).get("connections", [])
+
+                analysis_result = await self.clients.post_json(
+                    "analysis-service/architecture/analyze",
+                    {
+                        "components": components,
+                        "connections": connections,
+                        "analysis_type": "combined"
+                    }
+                )
+
+                # Step 3: Generate report and store in doc-store
+                report_data = {
+                    "title": f"Architecture Analysis Report - {system.upper()} {board_id}",
+                    "system": system,
+                    "board_id": board_id,
+                    "normalization_result": normalize_result,
+                    "analysis_result": analysis_result,
+                    "generated_at": "now"
+                }
+
+                await self.clients.post_json("doc-store/store", {
+                    "type": "architecture_report",
+                    "content": str(report_data),
+                    "metadata": {
+                        "source_type": "architecture_pipeline",
+                        "type": "report",
+                        "system": system,
+                        "board_id": board_id
+                    }
+                })
+
+                self.console.print("[green]✅ Full architecture pipeline completed![/green]")
+                self.console.print("📊 Report generated and stored in document store")
+                self.console.print(f"🔍 Issues found: {len(analysis_result.get('issues', []))}")
+
+        except Exception as e:
+            self.console.print(f"[red]❌ Pipeline failed: {e}[/red]")
+
+    async def _batch_diagram_processing(self):
+        """Batch process multiple diagrams."""
+        self.console.print("\n[bold green]🏗️ Batch Diagram Processing[/bold green]")
+        self.console.print("Process multiple architecture diagrams in batch mode.")
+        self.console.print("[yellow]Feature coming soon! This will support CSV input of diagram URLs/tokens.[/yellow]")
+
+        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
