@@ -40,7 +40,7 @@ def main():
 
     # Test 1: Check if services can be imported
     print("\n1. Testing Service Imports...")
-    services = ["orchestrator", "doc-store", "analysis-service", "source-agent"]
+    services = ["orchestrator", "doc_store", "analysis-service", "source-agent"]
 
     importable_services = []
     for service in services:

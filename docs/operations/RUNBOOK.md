@@ -23,7 +23,7 @@
 ### Quick Health Check Script
 ```bash
 # Check all services health
-SERVICES=(prompt-store interpreter orchestrator doc-store source-agent analysis-service)
+SERVICES=(prompt-store interpreter orchestrator doc_store source-agent analysis-service)
 for service in "${SERVICES[@]}"; do
   echo "Checking $service..."
   curl -f http://localhost:$(get_port $service)/health || echo "$service health check failed"
@@ -285,7 +285,7 @@ done
 ```bash
 # Daily health check script
 #!/bin/bash
-SERVICES=("prompt-store" "interpreter" "orchestrator" "doc-store" "source-agent")
+SERVICES=("prompt-store" "interpreter" "orchestrator" "doc_store" "source-agent")
 for service in "${SERVICES[@]}"; do
   echo "=== $service ==="
   curl -s http://localhost:$(get_port $service)/health | jq .

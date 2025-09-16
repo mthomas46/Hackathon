@@ -382,7 +382,7 @@ class SemanticTagger:
     def __init__(self):
         self.analyzer = ContentAnalyzer()
 
-    def tag_document(self, document_id: str, content: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    async def tag_document(self, document_id: str, content: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Tag a document with semantic information."""
         try:
             # Analyze content for entities
@@ -399,7 +399,7 @@ class SemanticTagger:
 
             # Invalidate relevant caches
             from .caching import docstore_cache
-            docstore_cache.invalidate(tags=["tags", f"doc:{document_id}"])
+            await docstore_cache.invalidate(tags=["tags", f"doc:{document_id}"])
 
             return {
                 "document_id": document_id,

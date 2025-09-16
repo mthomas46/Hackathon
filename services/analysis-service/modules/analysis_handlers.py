@@ -35,7 +35,7 @@ class AnalysisHandlers:
 
             for target_id in req.targets:
                 if target_id.startswith("doc:"):
-                    # Fetch from doc-store
+                    # Fetch from doc_store
                     doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
                     if doc_data:
                         docs.append(Document(**doc_data))

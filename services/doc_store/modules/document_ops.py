@@ -1,7 +1,7 @@
 """Document operations for the Doc Store service.
 
 This module contains all document CRUD operations and related functionality,
-extracted from the main doc-store service to improve maintainability.
+extracted from the main doc_store service to improve maintainability.
 """
 
 import json

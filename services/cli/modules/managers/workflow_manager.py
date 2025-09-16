@@ -21,7 +21,7 @@ class WorkflowManager(BaseManager):
 
     async def get_required_services(self) -> List[str]:
         """Return list of required services for this manager."""
-        return ["orchestrator", "interpreter", "architecture-digitizer", "analysis-service", "doc-store"]
+        return ["orchestrator", "interpreter", "architecture-digitizer", "analysis-service", "doc_store"]
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for workflow management."""
@@ -262,7 +262,7 @@ class WorkflowManager(BaseManager):
                 self.console.print("[red]Invalid option. Please try again.[/red]")
 
     async def _diagram_to_docstore_workflow(self):
-        """Workflow: Normalize diagram and store in doc-store."""
+        """Workflow: Normalize diagram and store in doc_store."""
         self.console.print("\n[bold green]🏗️ Diagram → Doc Store Workflow[/bold green]")
         self.console.print("This workflow will normalize an architecture diagram and store it in the document store.")
 
@@ -286,7 +286,7 @@ class WorkflowManager(BaseManager):
                     self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
                     return
 
-                # The normalized data is automatically stored in doc-store via the architecture-digitizer service
+                # The normalized data is automatically stored in doc_store via the architecture-digitizer service
                 self.console.print("[green]✅ Diagram normalized and stored in document store![/green]")
                 self.console.print(f"Components: {len(normalize_result.get('data', {}).get('components', []))}")
                 self.console.print(f"Connections: {len(normalize_result.get('data', {}).get('connections', []))}")
@@ -376,7 +376,7 @@ class WorkflowManager(BaseManager):
 
         try:
             with self.console.status("[bold green]Running full architecture pipeline...[/bold green]") as status:
-                # Step 1: Normalize (which also stores in doc-store)
+                # Step 1: Normalize (which also stores in doc_store)
                 normalize_result = await self.clients.post_json(
                     "architecture-digitizer/normalize",
                     {"system": system, "board_id": board_id, "token": token}
@@ -399,7 +399,7 @@ class WorkflowManager(BaseManager):
                     }
                 )
 
-                # Step 3: Generate report and store in doc-store
+                # Step 3: Generate report and store in doc_store
                 report_data = {
                     "title": f"Architecture Analysis Report - {system.upper()} {board_id}",
                     "system": system,
@@ -409,7 +409,7 @@ class WorkflowManager(BaseManager):
                     "generated_at": "now"
                 }
 
-                await self.clients.post_json("doc-store/store", {
+                await self.clients.post_json("doc_store/store", {
                     "type": "architecture_report",
                     "content": str(report_data),
                     "metadata": {

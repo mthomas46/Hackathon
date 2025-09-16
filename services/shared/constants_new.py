@@ -92,7 +92,7 @@ class ServiceNames:
     """Standardized service names."""
     ORCHESTRATOR = "orchestrator"
     ANALYSIS_SERVICE = "analysis-service"
-    DOC_STORE = "doc-store"
+    DOC_STORE = "doc_store"
     SOURCE_AGENT = "source-agent"
     PROMPT_STORE = "prompt-store"
     INTERPRETER = "interpreter"

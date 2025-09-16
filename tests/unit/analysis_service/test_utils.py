@@ -202,12 +202,12 @@ def load_analysis_service():
             return {
                 "analysis_service": "healthy",
                 "integrations": {
-                    "doc-store": "healthy",
+                    "doc_store": "healthy",
                     "prompt-store": "healthy",
                     "interpreter": "healthy"
                 },
                 "available_services": [
-                    "doc-store",
+                    "doc_store",
                     "source-agent",
                     "prompt-store",
                     "interpreter",

@@ -16,7 +16,7 @@ Used by all services to communicate with each other reliably and consistently.
 
 import os
 import httpx
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from datetime import datetime, timezone
 from services.shared.resilience import with_retries, CircuitBreaker, with_circuit  # type: ignore
 from services.shared.config import get_config_value
@@ -113,7 +113,7 @@ class ServiceClients:
 
     def doc_store_url(self) -> str:
         """Get Doc Store service URL."""
-        return get_config_value("DOC_STORE_URL", "http://doc-store:5010", section="services", env_key="DOC_STORE_URL")
+        return get_config_value("DOC_STORE_URL", "http://doc_store:5010", section="services", env_key="DOC_STORE_URL")
 
     def source_agent_url(self) -> str:
         """Get Source Agent service URL."""
@@ -232,7 +232,7 @@ class ServiceClients:
         service_urls = {
             "orchestrator": self.orchestrator_url(),
             "analysis-service": self.analysis_service_url(),
-            "doc-store": self.doc_store_url(),
+            "doc_store": self.doc_store_url(),
             "source-agent": self.source_agent_url(),
             "prompt-store": self.prompt_store_url(),
             "interpreter": self.interpreter_url(),
@@ -253,7 +253,7 @@ class ServiceClients:
         services = [
             "orchestrator",
             "analysis-service",
-            "doc-store",
+            "doc_store",
             "source-agent",
             "prompt-store",
             "interpreter"
@@ -302,7 +302,7 @@ class ServiceClients:
         import json
         from services.shared.utilities import utc_now
 
-        db_path = os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3")
+        db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
         conn = sqlite3.connect(db_path)
         conn.execute("PRAGMA journal_mode=WAL;")
 
@@ -338,14 +338,14 @@ class ServiceClients:
             conn.close()
 
     async def _get_docstore_local(self, url: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Handle doc-store requests locally from database."""
+        """Handle doc_store requests locally from database."""
 
-        db_path = os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3")
+        db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
         conn = sqlite3.connect(db_path)
 
         try:
             # Parse the URL path
-            path = url.replace("doc-store/", "").split("?")[0]  # Remove query params
+            path = url.replace("doc_store/", "").split("?")[0]  # Remove query params
 
             if path == "documents/_list":
                 return await self._list_documents_local(conn, params)
@@ -427,7 +427,7 @@ class ServiceClients:
         }
 
     async def _get_info_local(self, conn: sqlite3.Connection) -> Dict[str, Any]:
-        """Get doc-store info from local database."""
+        """Get doc_store info from local database."""
         cur = conn.execute("SELECT COUNT(*) FROM documents")
         doc_count = cur.fetchone()[0]
 
@@ -451,7 +451,7 @@ class ServiceClients:
                 "document_count": doc_count,
                 "analysis_count": analysis_count,
                 "document_types": document_types,
-                "database_path": os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3")
+                "database_path": os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
             }
         }
 
@@ -611,7 +611,7 @@ class ServiceClients:
         return {
             "status": "success",
             "data": {
-                "database_path": os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3"),
+                "database_path": os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3"),
                 "doc_store_url": os.environ.get("DOC_STORE_URL", "local"),
                 "timeout": 30,
                 "retry_attempts": 3
@@ -682,7 +682,7 @@ class ServiceClients:
     async def get_json(self, url: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """GET JSON and parse JSON response."""
         # Check for local database access
-        if url.startswith("doc-store/") and self.doc_store_url() == "local":
+        if url.startswith("doc_store/") and self.doc_store_url() == "local":
             return await self._get_docstore_local(url, params)
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:

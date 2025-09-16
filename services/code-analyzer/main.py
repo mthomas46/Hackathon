@@ -13,7 +13,7 @@ Responsibilities:
 - Extract API endpoints from various code formats (FastAPI, Flask, Express.js)
 - Manage programming style examples for code quality assessment
 - Perform security scanning for sensitive information
-- Optional persistence to doc-store and Redis for analysis results
+- Optional persistence to doc_store and Redis for analysis results
 
 Dependencies: shared models/envelopes/hashutil, optional Redis, ServiceClients.
 """
@@ -122,7 +122,7 @@ async def analyze_text(req: AnalyzeTextRequest):
         style_examples=req.style_examples
     )
 
-    # Persist analysis result to external services (Redis/doc-store)
+    # Persist analysis result to external services (Redis/doc_store)
     await persist_analysis_result(result)
 
     return result
@@ -173,7 +173,7 @@ async def analyze_files(req: AnalyzeFilesRequest):
         style_examples=req.style_examples
     )
 
-    # Persist analysis result to external services (Redis/doc-store)
+    # Persist analysis result to external services (Redis/doc_store)
     await persist_analysis_result(result)
 
     return result

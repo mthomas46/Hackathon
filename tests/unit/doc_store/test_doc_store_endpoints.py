@@ -21,7 +21,7 @@ def test_info_config_metrics_endpoints(client):
     _assert_http_ok(r)
     data = r.json()
     assert data.get("success") is True
-    assert data.get("data", {}).get("service") == "doc-store"
+    assert data.get("data", {}).get("service") == "doc_store"
 
     r = client.get("/config/effective")
     _assert_http_ok(r)

@@ -145,7 +145,7 @@ class BulkProcessor:
             operation.completed_at = utc_now()
 
             # Invalidate relevant caches
-            docstore_cache.invalidate(tags=["documents", "analytics"])
+            await docstore_cache.invalidate(tags=["documents", "analytics"])
 
             return {
                 "operation_id": operation_id,
@@ -320,7 +320,7 @@ class BulkProcessor:
             operation.results = tagging_results
 
             # Invalidate tag caches
-            docstore_cache.invalidate(tags=["tags"])
+            await docstore_cache.invalidate(tags=["tags"])
 
             return {
                 "operation_id": operation_id,

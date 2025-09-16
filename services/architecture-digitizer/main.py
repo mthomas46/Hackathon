@@ -58,7 +58,7 @@ async def store_architecture_in_docstore(
     normalized_data: Dict[str, Any],
     metadata: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Store normalized architecture data in doc-store."""
+    """Store normalized architecture data in doc_store."""
     try:
         client = get_service_client()
 
@@ -97,7 +97,7 @@ async def store_architecture_in_docstore(
         if metadata:
             doc_metadata.update(metadata)
 
-        # Store in doc-store
+        # Store in doc_store
         result = await client.store_document({
             "content": content,
             "metadata": doc_metadata,
@@ -113,7 +113,7 @@ async def store_architecture_in_docstore(
             "board_id": board_id,
             "error": str(e)
         })
-        return {"status": "error", "error": f"Failed to store in doc-store: {e}"}
+        return {"status": "error", "error": f"Failed to store in doc_store: {e}"}
 
 # Service configuration constants
 SERVICE_NAME = "architecture-digitizer"
@@ -173,7 +173,7 @@ async def normalize_architecture(request: NormalizeRequest):
         duration = time.time() - start_time
         record_architecture_digitizer_request(metrics, request.system, "success", duration)
 
-        # Store normalized data in doc-store (fire and forget)
+        # Store normalized data in doc_store (fire and forget)
         fire_and_forget(
             store_architecture_in_docstore,
             request.system,
@@ -276,7 +276,7 @@ async def normalize_file_upload(
         record_architecture_digitizer_request(metrics, system, "success", duration)
         record_architecture_digitizer_file_upload(metrics, system, file_format, file_size, "success", duration)
 
-        # Store normalized data in doc-store (fire and forget)
+        # Store normalized data in doc_store (fire and forget)
         fire_and_forget(
             store_architecture_in_docstore,
             system,

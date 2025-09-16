@@ -97,7 +97,7 @@ class ServiceActions:
                 items: List[Dict[str, Any]] = []
                 svc_getters = [
                     ("orchestrator", self.clients.orchestrator_url),
-                    ("doc-store", self.clients.doc_store_url),
+                    ("doc_store", self.clients.doc_store_url),
                     ("analysis-service", self.clients.analysis_service_url),
                     ("source-agent", self.clients.source_agent_url),
                 ]

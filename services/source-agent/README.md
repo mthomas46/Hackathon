@@ -130,7 +130,7 @@ List supported sources and their capabilities.
 Health check endpoint.
 
 ## Related
-- Doc Store: [../doc-store/README.md](../doc-store/README.md)
+- Doc Store: [../doc_store/README.md](../doc_store/README.md)
 - Orchestrator: [../orchestrator/README.md](../orchestrator/README.md)
 
 ## Testing

@@ -106,7 +106,7 @@ class DocumentHandlers:
 
                 # Automatically tag the document with semantic information
                 try:
-                    semantic_tagger.tag_document(doc_id, req.content, meta)
+                    await semantic_tagger.tag_document(doc_id, req.content, meta)
                 except Exception:
                     # Tagging is best-effort, don't fail document creation if it fails
                     pass
@@ -201,7 +201,7 @@ class DocumentHandlers:
         import json
         from services.shared.utilities import ensure_directory
 
-        db_path = os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3")
+        db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
         ensure_directory(os.path.dirname(db_path))
         conn = sqlite3.connect(db_path)
         conn.execute("PRAGMA journal_mode=WAL;")

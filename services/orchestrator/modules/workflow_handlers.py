@@ -28,7 +28,7 @@ class WorkflowHandlers:
                 "parameters": parameters,
                 "context": context,
                 "steps": [
-                    {"step_id": "step1", "status": "pending", "service": "doc-store"},
+                    {"step_id": "step1", "status": "pending", "service": "doc_store"},
                     {"step_id": "step2", "status": "pending", "service": "analysis-service"}
                 ]
             }
@@ -80,7 +80,7 @@ class WorkflowHandlers:
             # Placeholder - would integrate with actual service registry
             services = [
                 {
-                    "service_name": "doc-store",
+                    "service_name": "doc_store",
                     "service_url": "http://localhost:5087",
                     "capabilities": ["document_storage", "search"],
                     "status": "active",

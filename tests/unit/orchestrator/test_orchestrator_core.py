@@ -313,14 +313,14 @@ class TestOrchestratorCore:
 
     def test_infrastructure_tracing_service_endpoint(self, client):
         """Test service trace retrieval."""
-        response = client.get("/infrastructure/tracing/service/doc-store")
+        response = client.get("/infrastructure/tracing/service/doc_store")
         _assert_http_ok(response)
 
         data = response.json()
         assert "service_name" in data
         assert "traces" in data
         assert "total" in data
-        assert data["service_name"] == "doc-store"
+        assert data["service_name"] == "doc_store"
 
     def test_infrastructure_events_clear_endpoint(self, client):
         """Test event clearing functionality."""

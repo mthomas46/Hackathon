@@ -15,7 +15,7 @@ analysis:
 
 # Service URLs for analysis integrations
 services:
-  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
   prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
   interpreter_url: ${INTERPRETER_URL:-http://interpreter:5120}

@@ -1,11 +1,11 @@
 # Running Doc Store Individually
 
-The doc-store service requires both Redis (for caching) and SQLite (for persistence).
+The doc_store service requires both Redis (for caching) and SQLite (for persistence).
 
 ## Quick Start
 
 ```bash
-cd services/doc-store
+cd services/doc_store
 docker-compose up
 ```
 
@@ -24,7 +24,7 @@ This will start:
 Configuration is loaded from:
 - `../../config.yml` (project-wide settings)
 - `../shared/config.yaml` (shared service settings)
-- `./config.yaml` (doc-store-specific settings)
+- `./config.yaml` (doc_store-specific settings)
 
 ## Health Check
 
@@ -36,5 +36,5 @@ curl http://localhost:5087/health
 
 ```bash
 # Access SQLite database
-docker exec -it <container_id> sqlite3 /app/services/doc-store/db.sqlite3
+docker exec -it <container_id> sqlite3 /app/services/doc_store/db.sqlite3
 ```

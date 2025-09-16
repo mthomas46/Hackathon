@@ -164,7 +164,7 @@ class IntegrationHandlers:
                 "analysis_service": "healthy",
                 "integrations": health_status,
                 "available_services": [
-                    "doc-store",
+                    "doc_store",
                     "source-agent",
                     "prompt-store",
                     "interpreter",

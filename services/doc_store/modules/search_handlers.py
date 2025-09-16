@@ -323,7 +323,7 @@ class SearchHandlers:
         """Flag potentially stale, redundant, or low-signal documents."""
         from services.shared.utilities import ensure_directory
         import os
-        db_path = os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3")
+        db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
         ensure_directory(os.path.dirname(db_path))
         import sqlite3
         conn = sqlite3.connect(db_path)

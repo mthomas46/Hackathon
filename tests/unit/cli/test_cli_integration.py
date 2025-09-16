@@ -29,8 +29,8 @@ class TestCLIIntegration:
             {"overall_healthy": True, "services": 5, "uptime": 3600},  # orchestrator
             {"status": "healthy", "prompts": 150, "categories": 10},  # prompt-store
             {"status": "healthy", "sources": ["github", "jira"], "last_sync": "2024-01-01"},  # source-agent
-            {"status": "healthy", "integrations": ["doc-store", "orchestrator"]},  # analysis
-            {"status": "healthy", "documents": 500, "index_size": 1024},  # doc-store
+            {"status": "healthy", "integrations": ["doc_store", "orchestrator"]},  # analysis
+            {"status": "healthy", "documents": 500, "index_size": 1024},  # doc_store
         ]
 
         mock_clients.get_json.side_effect = health_responses
@@ -41,7 +41,7 @@ class TestCLIIntegration:
         # Step 3: Verify health data structure
         assert len(health_data) == 5
 
-        expected_services = ["orchestrator", "prompt-store", "source-agent", "analysis-service", "doc-store"]
+        expected_services = ["orchestrator", "prompt-store", "source-agent", "analysis-service", "doc_store"]
         for service in expected_services:
             assert service in health_data
             assert health_data[service]["status"] == "healthy"
@@ -105,9 +105,9 @@ class TestCLIIntegration:
             elif url == "interpreter/health":
                 return {"status": "healthy"}
             elif url == "orchestrator/health/system":
-                return {"overall_healthy": True, "services": ["prompt-store", "doc-store"]}
+                return {"overall_healthy": True, "services": ["prompt-store", "doc_store"]}
             elif url == "analysis-service/integration/health":
-                return {"integrations": ["doc-store", "source-agent"], "status": "healthy"}
+                return {"integrations": ["doc_store", "source-agent"], "status": "healthy"}
             else:
                 raise Exception(f"Unexpected URL: {url}")
 
@@ -185,7 +185,7 @@ class TestCLIIntegration:
                 "prompt-store": {"status": "healthy", "response": {"status": "healthy", "prompts": 150}, "timestamp": 1234567890.0},
                 "source-agent": {"status": "healthy", "response": {"status": "healthy", "last_sync": "2024-01-01"}, "timestamp": 1234567890.0},
                 "analysis-service": {"status": "healthy", "response": {"status": "healthy", "integrations": 3}, "timestamp": 1234567890.0},
-                "doc-store": {"status": "healthy", "response": {"status": "healthy", "documents": 500}, "timestamp": 1234567890.0}
+                "doc_store": {"status": "healthy", "response": {"status": "healthy", "documents": 500}, "timestamp": 1234567890.0}
             },
             # Scenario 1: Partial degradation (source-agent unhealthy)
             {
@@ -193,7 +193,7 @@ class TestCLIIntegration:
                 "prompt-store": {"status": "healthy", "response": {"status": "healthy", "prompts": 150}, "timestamp": 1234567890.0},
                 "source-agent": {"status": "unhealthy", "error": "Sync failed", "timestamp": 1234567890.0},
                 "analysis-service": {"status": "healthy", "response": {"status": "healthy", "integrations": 3}, "timestamp": 1234567890.0},
-                "doc-store": {"status": "healthy", "response": {"status": "healthy", "documents": 500}, "timestamp": 1234567890.0}
+                "doc_store": {"status": "healthy", "response": {"status": "healthy", "documents": 500}, "timestamp": 1234567890.0}
             },
             # Scenario 2: Recovery (all healthy again)
             {
@@ -201,7 +201,7 @@ class TestCLIIntegration:
                 "prompt-store": {"status": "healthy", "response": {"status": "healthy", "prompts": 150}, "timestamp": 1234567890.0},
                 "source-agent": {"status": "healthy", "response": {"status": "healthy", "last_sync": "2024-01-01"}, "timestamp": 1234567890.0},
                 "analysis-service": {"status": "healthy", "response": {"status": "healthy", "integrations": 3}, "timestamp": 1234567890.0},
-                "doc-store": {"status": "healthy", "response": {"status": "healthy", "documents": 500}, "timestamp": 1234567890.0}
+                "doc_store": {"status": "healthy", "response": {"status": "healthy", "documents": 500}, "timestamp": 1234567890.0}
             }
         ]
 
@@ -260,7 +260,7 @@ class TestCLIIntegration:
                 "next_steps": ["call_summarizer", "store_result"]
             },
 
-            # 3. Store result in doc-store
+            # 3. Store result in doc_store
             {
                 "doc_id": "summary_001",
                 "status": "stored",
@@ -289,7 +289,7 @@ class TestCLIIntegration:
         async def mock_post_json(url, payload, **kwargs):
             if url == "orchestrator/query":
                 return workflow_responses[1]  # interpretation data
-            elif url == "doc-store/documents":
+            elif url == "doc_store/documents":
                 return workflow_responses[2]  # storage data
             else:
                 raise Exception(f"Unexpected POST URL: {url}")
@@ -315,7 +315,7 @@ class TestCLIIntegration:
         assert process_result["intent"] == "summarize"
 
         # Store result
-        store_result = await mock_clients.post_json("doc-store/documents", {
+        store_result = await mock_clients.post_json("doc_store/documents", {
             "content": "Summary result...",
             "metadata": {"source": "orchestrator", "prompt": "comprehensive"}
         })
@@ -369,7 +369,7 @@ class TestCLIIntegration:
                 "services": {
                     "orchestrator": {"url": "http://orchestrator:5099", "status": "active"},
                     "prompt-store": {"url": "http://prompt-store:5060", "status": "active"},
-                    "doc-store": {"url": "http://doc-store:5075", "status": "active"},
+                    "doc_store": {"url": "http://doc_store:5075", "status": "active"},
                     "source-agent": {"url": "http://source-agent:5065", "status": "active"},
                     "analysis-service": {"url": "http://analysis-service:5077", "status": "active"}
                 }
@@ -385,7 +385,7 @@ class TestCLIIntegration:
         assert "services" in discovery_result
         services = discovery_result["services"]
 
-        expected_services = ["orchestrator", "prompt-store", "doc-store", "source-agent", "analysis-service"]
+        expected_services = ["orchestrator", "prompt-store", "doc_store", "source-agent", "analysis-service"]
         for service in expected_services:
             assert service in services
             assert "url" in services[service]
@@ -424,7 +424,7 @@ class TestCLIIntegration:
 
         # Store documents in bulk
         for doc in bulk_documents:
-            result = await mock_clients.post_json("doc-store/documents", doc)
+            result = await mock_clients.post_json("doc_store/documents", doc)
             assert "status" in result
             assert result["status"] == "stored"
 
@@ -550,7 +550,7 @@ class TestCLIIntegration:
         assert prompt_config["prompt_store"]["max_prompts_per_category"] == 100
 
         # Get doc store config
-        doc_config = await mock_clients.get_json("doc-store/config")
+        doc_config = await mock_clients.get_json("doc_store/config")
         assert "doc_store" in doc_config
         assert "max_document_size_mb" in doc_config["doc_store"]
         assert doc_config["doc_store"]["max_document_size_mb"] == 50
@@ -624,7 +624,7 @@ class TestCLIIntegration:
             {"status": "healthy"},
             {"status": "healthy"},
             {"overall_healthy": True},
-            {"integrations": ["doc-store"]},
+            {"integrations": ["doc_store"]},
             {"prompts": []},
             {"intent": "test"},
             {"interpretation": "test response"}
@@ -641,7 +641,7 @@ class TestCLIIntegration:
             get_call_count += 1
 
             if url == "analysis-service/integration/health":
-                return {"integrations": ["doc-store"], "status": "healthy"}
+                return {"integrations": ["doc_store"], "status": "healthy"}
             elif "health" in url:
                 if "orchestrator" in url:
                     return {"overall_healthy": True}
@@ -662,7 +662,7 @@ class TestCLIIntegration:
 
             if "orchestrator/query" in url:
                 return {"interpretation": "User wants comprehensive summary", "intent": "summarize"}
-            elif "doc-store/documents" in url:
+            elif "doc_store/documents" in url:
                 return {"doc_id": "summary_001", "status": "stored"}
             elif "interpret" in url:
                 return {"intent": "test"}
@@ -687,7 +687,7 @@ class TestCLIIntegration:
         assert "interpretation" in process_result
 
         # 4. Store result
-        store_result = await mock_clients.post_json("doc-store/documents", {"content": "Summary result"})
+        store_result = await mock_clients.post_json("doc_store/documents", {"content": "Summary result"})
         assert store_result["status"] == "stored"
 
         # 5. Update analytics
@@ -717,7 +717,7 @@ class TestCLIIntegration:
         load_responses = [
             {"instances": ["orchestrator-1", "orchestrator-2"], "active": "orchestrator-1"},
             {"instances": ["prompt-store-1", "prompt-store-2", "prompt-store-3"], "active": "prompt-store-2"},
-            {"instances": ["doc-store-1", "doc-store-2"], "active": "doc-store-1"}
+            {"instances": ["doc_store-1", "doc_store-2"], "active": "doc_store-1"}
         ]
 
         mock_clients.get_json.side_effect = load_responses
@@ -725,7 +725,7 @@ class TestCLIIntegration:
         # Step 2: Test load balancer status
         orchestrator_lb = await mock_clients.get_json("orchestrator/load-balancer")
         prompt_lb = await mock_clients.get_json("prompt-store/load-balancer")
-        doc_lb = await mock_clients.get_json("doc-store/load-balancer")
+        doc_lb = await mock_clients.get_json("doc_store/load-balancer")
 
         # Step 3: Verify load balancing configuration
         assert "instances" in orchestrator_lb

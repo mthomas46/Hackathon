@@ -40,7 +40,7 @@ services:
       - orchestrator
       - frontend
       - analysis-service
-      - doc-store
+      - doc_store
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -150,20 +150,20 @@ services:
         reservations:
           memory: 256M
 
-  doc-store:
+  doc_store:
     image: python:3.12-slim
     working_dir: /app
     volumes:
       - ./:/app:ro
       - ./config.yml:/app/config.yml:ro
-      - ./services/doc-store/config.yaml:/app/services/doc-store/config.yaml:ro
+      - ./services/doc_store/config.yaml:/app/services/doc_store/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - REDIS_HOST=redis
       - ENVIRONMENT=production
       - USE_POSTGRESQL=true
       - LOG_LEVEL=WARNING
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis psycopg2-binary && python services/doc-store/main.py"
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis psycopg2-binary && python services/doc_store/main.py"
     networks:
       - doc-ecosystem-prod
     depends_on:
@@ -202,7 +202,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      doc-store:
+      doc_store:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5020/health"]

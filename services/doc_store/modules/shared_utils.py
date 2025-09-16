@@ -1,6 +1,6 @@
 """Shared utilities for Doc Store service modules.
 
-This module contains common utilities used across all doc-store modules
+This module contains common utilities used across all doc_store modules
 to eliminate code duplication and ensure consistency.
 """
 
@@ -21,7 +21,7 @@ def _validate_db_path(db_path: str) -> str:
     # Ensure the path doesn't contain dangerous characters
     if any(char in db_path for char in ['..', '/', '\\', ':', '*', '?', '"', '<', '>', '|']):
         # Use default if suspicious characters found
-        return "services/doc-store/db.sqlite3"
+        return "services/doc_store/db.sqlite3"
     return db_path
 
 def _validate_connection_pool_size(size_str: str) -> int:
@@ -35,12 +35,12 @@ def _validate_connection_pool_size(size_str: str) -> int:
     except (ValueError, TypeError):
         return 5
 
-_DB_PATH = _validate_db_path(os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3"))
+_DB_PATH = _validate_db_path(os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3"))
 _CONNECTION_POOL_SIZE = _validate_connection_pool_size(os.environ.get("DOCSTORE_CONNECTION_POOL_SIZE", "5"))
 _connection_pool = []
 
 def get_doc_store_db_path() -> str:
-    """Get the database path for doc-store service."""
+    """Get the database path for doc_store service."""
     return _DB_PATH
 
 def get_doc_store_connection():
@@ -95,7 +95,7 @@ def return_connection_to_pool(conn):
             pass
 
 def handle_doc_store_error(operation: str, error: Exception, error_code: Optional[str] = None, **context) -> Dict[str, Any]:
-    """Standardized error handling for doc-store operations.
+    """Standardized error handling for doc_store operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -109,7 +109,7 @@ def handle_doc_store_error(operation: str, error: Exception, error_code: Optiona
     )
 
 def create_doc_store_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for doc-store operations.
+    """Standardized success response for doc_store operations.
 
     Returns a consistent success response format.
     """
@@ -128,12 +128,12 @@ def create_doc_store_success_response(operation: str, data: Any, **context) -> D
     return response_dict
 
 def build_doc_store_context(operation: str, doc_id: Optional[str] = None, **additional) -> Dict[str, Any]:
-    """Build context dictionary for doc-store operations.
+    """Build context dictionary for doc_store operations.
 
     Provides consistent context for logging and responses.
     """
     context = {
-        "service": "doc-store"
+        "service": "doc_store"
     }
 
     if doc_id:

@@ -76,8 +76,8 @@ from .modules.caching import docstore_cache
 # ============================================================================
 from .routes.documents import router as documents_router
 
-_cfg = load_yaml_config("services/doc-store/config.yaml")
-DB_PATH = get_config_value("DOCSTORE_DB", _cfg.get("db_path", "services/doc-store/db.sqlite3"), section="doc_store", env_key="DOCSTORE_DB")
+_cfg = load_yaml_config("services/doc_store/config.yaml")
+DB_PATH = get_config_value("DOCSTORE_DB", _cfg.get("db_path", "services/doc_store/db.sqlite3"), section="doc_store", env_key="DOCSTORE_DB")
 
 
 # ============================================================================
@@ -165,7 +165,7 @@ def _init_db() -> None:
         conn.close()
 
 # Service configuration constants
-SERVICE_NAME = "doc-store"
+SERVICE_NAME = "doc_store"
 SERVICE_TITLE = "Doc Store"
 SERVICE_VERSION = "1.0.0"
 DEFAULT_PORT = 5087

@@ -1,21 +1,21 @@
 # Individual Docker Compose for Doc Store Service
-# This allows the doc-store to run independently with its own Redis instance and SQLite database
+# This allows the doc_store to run independently with its own Redis instance and SQLite database
 
 version: "3.9"
 
 services:
-  doc-store:
+  doc_store:
     image: python:3.12-slim
     working_dir: /app
     volumes:
       - ../../:/app:ro
-      - ./:/app/services/doc-store:rw
+      - ./:/app/services/doc_store:rw
       - ../../:/app:ro
-      - doc_store_data:/app/services/doc-store
+      - doc_store_data:/app/services/doc_store
     environment:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc-store/main.py"
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc_store/main.py"
     ports:
       - "5087:5087"
     depends_on:
@@ -33,7 +33,7 @@ services:
       - "6379:6379"
     volumes:
       - ../../:/app:ro
-      - ./:/app/services/doc-store:rw
+      - ./:/app/services/doc_store:rw
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:

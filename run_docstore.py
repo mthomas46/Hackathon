@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Doc Store Service Launcher - Run the doc-store service with proper environment setup
+Doc Store Service Launcher - Run the doc_store service with proper environment setup
 """
 
 import os
@@ -9,10 +9,10 @@ import subprocess
 from pathlib import Path
 
 def main():
-    """Launch the doc-store service with proper environment."""
+    """Launch the doc_store service with proper environment."""
     # Get the directory where this script is located
     script_dir = Path(__file__).parent.absolute()
-    docstore_dir = script_dir / 'services' / 'doc-store'
+    docstore_dir = script_dir / 'services' / 'doc_store'
 
     # Set PYTHONPATH to include the project root
     env = os.environ.copy()
@@ -25,7 +25,7 @@ def main():
     # Default port
     port = os.environ.get('PORT', '5010')
 
-    # Change to doc-store directory and run main.py directly
+    # Change to doc_store directory and run main.py directly
     os.chdir(str(docstore_dir))
 
     # Run main.py with uvicorn

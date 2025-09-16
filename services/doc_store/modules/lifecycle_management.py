@@ -234,7 +234,7 @@ class LifecycleManager:
 
             # Log lifecycle initialization
             self._log_lifecycle_event(
-                document_id=doc_id,
+                document_id=document_id,
                 event_type="initialized",
                 details={"applied_policies": [p.name for p in applied_policies]}
             )
@@ -256,6 +256,10 @@ class LifecycleManager:
 
             if not document:
                 return []
+
+            # Parse metadata JSON
+            if isinstance(document.get('metadata'), str):
+                document['metadata'] = json.loads(document['metadata'])
 
             # Get analysis count and tags
             analysis_count = execute_db_query(

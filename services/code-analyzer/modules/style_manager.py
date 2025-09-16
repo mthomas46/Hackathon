@@ -27,7 +27,7 @@ class StyleExamplesManager:
             # Try to get from in-memory store first
             examples = self._examples.get(language_lower, [])
 
-            # Also check doc-store if configured
+            # Also check doc_store if configured
             ds = os.environ.get("DOC_STORE_URL")
             if ds:
                 try:
@@ -46,7 +46,7 @@ class StyleExamplesManager:
         for lang, examples in self._examples.items():
             summary[lang] = len(examples)
 
-        # Also check doc-store for additional languages
+        # Also check doc_store for additional languages
         ds = os.environ.get("DOC_STORE_URL")
         if ds:
             try:
@@ -65,7 +65,7 @@ class StyleExamplesManager:
         return {"items": [{"language": lang, "count": count} for lang, count in summary.items()]}
 
     def persist_examples(self, items: List[Dict[str, Any]]) -> None:
-        """Persist style examples to doc-store if configured."""
+        """Persist style examples to doc_store if configured."""
         ds = os.environ.get("DOC_STORE_URL")
         if not ds:
             return

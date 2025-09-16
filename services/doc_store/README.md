@@ -23,7 +23,7 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 > See also: [Glossary](../../docs/Glossary.md) · [Features & Interactions](../../docs/FEATURES_AND_INTERACTIONS.md)
 
 ## Storage
-- Default: SQLite (file `services/doc-store/db.sqlite3`). Easy to swap for Postgres later.
+- Default: SQLite (file `services/doc_store/db.sqlite3`). Easy to swap for Postgres later.
 - Tables:
   - documents(id, content, content_hash, metadata, created_at)
   - analyses(id, document_id, analyzer, model, prompt_hash, result, score, metadata, created_at)
@@ -103,7 +103,7 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 
 ## Analytics & Insights
 
-The doc-store provides comprehensive analytics capabilities to understand document storage patterns, quality trends, and ecosystem usage:
+The doc_store provides comprehensive analytics capabilities to understand document storage patterns, quality trends, and ecosystem usage:
 
 ### Analytics Endpoints
 - **GET /analytics**: Detailed analytics with configurable time periods
@@ -136,7 +136,7 @@ The doc-store provides comprehensive analytics capabilities to understand docume
 
 ## Document Versioning & History
 
-The doc-store provides comprehensive document versioning capabilities to track changes, enable rollbacks, and maintain audit trails:
+The doc_store provides comprehensive document versioning capabilities to track changes, enable rollbacks, and maintain audit trails:
 
 ### Version Control Features
 - **Automatic Versioning**: Every document update creates a new version automatically
@@ -180,7 +180,7 @@ Each version tracks:
 
 ## Document Relationship Graph
 
-The doc-store provides comprehensive relationship mapping and graph analysis capabilities to understand document interconnections and dependencies:
+The doc_store provides comprehensive relationship mapping and graph analysis capabilities to understand document interconnections and dependencies:
 
 ### Relationship Types
 - **references**: Document mentions or links to other documents
@@ -205,7 +205,7 @@ The doc-store provides comprehensive relationship mapping and graph analysis cap
 
 ### Cache Performance Layer
 
-The doc-store includes a high-performance caching system for optimal query performance:
+The doc_store includes a high-performance caching system for optimal query performance:
 
 ### Caching Features
 - **Redis Integration**: Distributed caching with configurable memory limits
@@ -222,7 +222,7 @@ The doc-store includes a high-performance caching system for optimal query perfo
 
 ## Semantic Tagging & Taxonomy
 
-The doc-store provides advanced semantic tagging capabilities for intelligent content classification and discovery:
+The doc_store provides advanced semantic tagging capabilities for intelligent content classification and discovery:
 
 ### Automatic Tagging
 - **Content Analysis**: Extracts entities like programming languages, frameworks, URLs, emails, and file types
@@ -261,7 +261,7 @@ Documents are automatically tagged during creation with:
 
 ## Bulk Operations & Batch Processing
 
-The doc-store provides high-performance bulk operations for efficient large-scale document management and processing.
+The doc_store provides high-performance bulk operations for efficient large-scale document management and processing.
 
 ### Bulk Document Operations
 - **Bulk Creation**: Create multiple documents concurrently with progress tracking
@@ -304,7 +304,7 @@ The doc-store provides high-performance bulk operations for efficient large-scal
 
 ## Real-Time Notifications & Webhooks
 
-The doc-store provides comprehensive real-time notification capabilities for event-driven integrations and external system synchronization.
+The doc_store provides comprehensive real-time notification capabilities for event-driven integrations and external system synchronization.
 
 ### Event System
 - **Event Types**: document.created, document.updated, document.deleted, analysis.completed, lifecycle.transition
@@ -372,7 +372,7 @@ The doc-store provides comprehensive real-time notification capabilities for eve
 
 ## Notification Service Integration
 
-The doc-store integrates with the centralized notification service for enterprise-grade notification management and delivery.
+The doc_store integrates with the centralized notification service for enterprise-grade notification management and delivery.
 
 ### Notification Service Features
 - **Centralized Notification Management**: All notifications routed through dedicated notification service
@@ -383,7 +383,7 @@ The doc-store integrates with the centralized notification service for enterpris
 
 ### Integration Architecture
 - **Event Emission**: Doc-store emits structured events for all significant operations
-- **Webhook Registration**: Webhooks configured in doc-store but delivered via notification service
+- **Webhook Registration**: Webhooks configured in doc_store but delivered via notification service
 - **Owner Resolution**: Automatic resolution of owners to notification targets
 - **Delivery Tracking**: Comprehensive delivery history and success/failure tracking
 - **Fallback Support**: Local delivery mechanisms when notification service unavailable
@@ -411,7 +411,7 @@ The doc-store integrates with the centralized notification service for enterpris
 
 ### Configuration
 - **NOTIFICATION_SERVICE_URL**: URL of the notification service (default: http://notification-service:5210)
-- **Webhook Configuration**: Webhooks registered through doc-store API but delivered via notification service
+- **Webhook Configuration**: Webhooks registered through doc_store API but delivered via notification service
 - **Owner Mapping**: Owner resolution handled by notification service with caching
 
 ### Benefits of Integration
@@ -433,7 +433,7 @@ The doc-store integrates with the centralized notification service for enterpris
 ## Config
 Configuration is config-first via `services/shared/config.get_config_value`.
 
-- `DOCSTORE_DB` (or `doc_store.db_path` in `config/app.yaml`): DB path/DSN (default `services/doc-store/db.sqlite3`)
+- `DOCSTORE_DB` (or `doc_store.db_path` in `config/app.yaml`): DB path/DSN (default `services/doc_store/db.sqlite3`)
 - `REDIS_HOST` (or `redis.host` in `config/app.yaml`): optional publish of envelope events
 - `DOC_STORE_URL` (or `services.DOC_STORE_URL` in `config/app.yaml`): base URL for this service
 
@@ -442,7 +442,7 @@ See `config/app.yaml` for central defaults.
 ## Environment
 | Name | Description | Default |
 |------|-------------|---------|
-| DOCSTORE_DB | Database path/DSN | services/doc-store/db.sqlite3 |
+| DOCSTORE_DB | Database path/DSN | services/doc_store/db.sqlite3 |
 | REDIS_HOST | Optional Redis for events | - |
 | DOC_STORE_URL | Base URL for this service | - |
 

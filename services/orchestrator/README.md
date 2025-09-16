@@ -121,7 +121,7 @@ Response shape:
 - End-to-end job that collects logs and returns a Log Analysis report.
 
 ## Related
-- Doc Store: [../doc-store/README.md](../doc-store/README.md)
+- Doc Store: [../doc_store/README.md](../doc_store/README.md)
 - Source Agent: [../source-agent/README.md](../source-agent/README.md)
 - Analysis Service: [../analysis-service/README.md](../analysis-service/README.md)
 

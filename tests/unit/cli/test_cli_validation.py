@@ -68,7 +68,7 @@ class TestCLIValidation:
             {},  # Empty prompt-store response
             {},  # Empty source-agent response
             {},  # Empty analysis response
-            {}   # Empty doc-store response
+            {}   # Empty doc_store response
         ]
 
         health_data = await cli_service.check_service_health()
@@ -101,7 +101,7 @@ class TestCLIValidation:
                 "prompt-store": {"status": "unhealthy", "error": "Invalid response format", "timestamp": 1234567890.0},
                 "source-agent": {"status": "unhealthy", "error": "Invalid response format", "timestamp": 1234567890.0},
                 "analysis-service": {"status": "unhealthy", "error": "Invalid response format", "timestamp": 1234567890.0},
-                "doc-store": {"status": "unhealthy", "error": "Invalid response format", "timestamp": 1234567890.0}
+                "doc_store": {"status": "unhealthy", "error": "Invalid response format", "timestamp": 1234567890.0}
             }
 
         cli_service.check_service_health = mock_check_service_health
@@ -489,7 +489,7 @@ class TestCLIValidation:
             {"status": "healthy", "count": 100},  # prompt-store
             {"status": "healthy", "uptime": 3600},  # source-agent
             {"status": "healthy", "integrations": []},  # analysis
-            {"status": "healthy", "documents": 500},  # doc-store
+            {"status": "healthy", "documents": 500},  # doc_store
         ]
 
         health_data = await cli_service.check_service_health()

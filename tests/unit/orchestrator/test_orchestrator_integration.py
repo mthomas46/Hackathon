@@ -277,7 +277,7 @@ def _load_orchestrator_service():
                 "data": {
                     "flagged": 5,
                     "timestamp": "2024-01-01T00:00:00Z",
-                    "services_checked": ["doc-store", "source-agent"]
+                    "services_checked": ["doc_store", "source-agent"]
                 }
             }
 
@@ -301,7 +301,7 @@ def _load_orchestrator_service():
         async def poll_openapi():
             # Mock OpenAPI polling
             results = [
-                {"service": "doc-store-service", "changed": True, "hash": "abc123"},
+                {"service": "doc_store-service", "changed": True, "hash": "abc123"},
                 {"service": "analysis-service", "changed": False, "hash": "def456"},
                 {"service": "source-agent-service", "changed": True, "hash": "ghi789"}
             ]
@@ -441,7 +441,7 @@ def _load_orchestrator_service():
                 "message": "Services retrieved",
                 "data": [
                     {
-                        "name": "doc-store",
+                        "name": "doc_store",
                         "status": "healthy",
                         "version": "1.0.0",
                         "endpoints": ["/documents", "/search", "/health"]
@@ -538,9 +538,9 @@ class TestOrchestratorIntegration:
         # Step 1: Register multiple services
         services_to_register = [
             {
-                "name": "doc-store-service",
-                "base_url": "http://doc-store:5087",
-                "openapi_url": "http://doc-store:5087/openapi.json",
+                "name": "doc_store-service",
+                "base_url": "http://doc_store:5087",
+                "openapi_url": "http://doc_store:5087/openapi.json",
                 "endpoints": ["/documents", "/search", "/health"],
                 "metadata": {"type": "storage", "version": "1.0.0"}
             },
@@ -706,8 +706,8 @@ class TestOrchestratorIntegration:
         # Step 1: Register services
         services = [
             {
-                "name": "doc-store",
-                "base_url": "http://doc-store:5087",
+                "name": "doc_store",
+                "base_url": "http://doc_store:5087",
                 "metadata": {"role": "storage"}
             },
             {
@@ -892,7 +892,7 @@ class TestOrchestratorIntegration:
         """Test multi-service coordination workflow."""
         # Step 1: Register all ecosystem services
         ecosystem_services = [
-            {"name": "doc-store", "base_url": "http://doc-store:5087", "metadata": {"role": "storage"}},
+            {"name": "doc_store", "base_url": "http://doc_store:5087", "metadata": {"role": "storage"}},
             {"name": "source-agent", "base_url": "http://source-agent:5086", "metadata": {"role": "ingestion"}},
             {"name": "analysis-service", "base_url": "http://analysis-service:5020", "metadata": {"role": "analysis"}},
             {"name": "prompt-store", "base_url": "http://prompt-store:5091", "metadata": {"role": "prompts"}},
