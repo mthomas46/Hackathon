@@ -327,6 +327,12 @@ class DocStoreCache:
         except Exception:
             return 0
 
+    async def close(self) -> None:
+        """Close cache connections."""
+        if self.redis_client:
+            await self.redis_client.close()
+            self.redis_client = None
+
 
 # Global cache instance
 docstore_cache = DocStoreCache()

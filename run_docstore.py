@@ -20,10 +20,14 @@ def main():
 
     # Set default database path if not set
     if 'DOCSTORE_DB' not in env:
-        env['DOCSTORE_DB'] = str(docstore_dir / 'db.sqlite3')
+        env['DOCSTORE_DB'] = 'db.sqlite3'  # Relative to service directory
 
     # Default port
     port = os.environ.get('PORT', '5010')
+
+    # Set DOCSTORE_PORT environment variable
+    if 'DOCSTORE_PORT' not in env:
+        env['DOCSTORE_PORT'] = port
 
     # Run as module from project root to avoid relative import issues
     cmd = [

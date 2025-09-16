@@ -65,7 +65,7 @@ if __name__ == "__main__":
     import uvicorn
     
     # Load port from configuration
-    port = get_config_value("port", 5000, section="doc_store", env_key="DOCSTORE_PORT")
+    port = get_config_value("port", 5000, section="server", env_key="DOCSTORE_PORT")
     
     uvicorn.run(
         app,

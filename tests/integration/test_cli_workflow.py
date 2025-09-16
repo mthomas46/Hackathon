@@ -147,19 +147,19 @@ class TestCLIWorkflowIntegration:
     async def test_menu_navigation_workflow(self, cli_commands):
         """Test menu navigation workflow."""
         # Mock the main menu selection and submenu
-        with patch.object(cli_commands, 'get_choice', side_effect=['1', 'q']):
+        with patch.object(cli_commands, 'get_choice', side_effect=['5', 'q']):
             with patch.object(cli_commands, 'print_header'):
                 with patch.object(cli_commands, 'print_menu'):
-                    with patch.object(cli_commands.orchestrator_manager, 'orchestrator_management_menu') as mock_orchestrator_menu:
+                    with patch('services.cli.modules.managers.workflow_manager.WorkflowManager.workflow_orchestration_menu') as mock_workflow_menu:
                         # Mock the orchestrator menu to avoid full execution
                         async def mock_menu():
                             pass
-                        mock_orchestrator_menu.side_effect = mock_menu
+                        mock_workflow_menu.side_effect = mock_menu
 
                         await cli_commands.run()
 
-                        # Should have called orchestrator menu
-                        mock_orchestrator_menu.assert_called_once()
+                        # Should have called workflow orchestration menu
+                        mock_workflow_menu.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_error_recovery_workflow(self, cli_commands, mock_clients):
