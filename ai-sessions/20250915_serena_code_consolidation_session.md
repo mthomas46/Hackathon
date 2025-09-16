@@ -28,35 +28,38 @@ Kick off a focused refactor to audit each service against its tests, consolidate
 
 ## Activity Log
 
-### September 16, 2025 - Phase 4 & 5 Enhancements + Test Fixes
-- **Phase 4: Performance & Scalability**
-  - ✅ Implemented async menu loading with intelligent caching (5-minute TTL)
-  - ✅ Added loading spinners with Rich Live components
-  - ✅ Created progress bars for long-running operations
-  - ✅ Enhanced cache validity checking and status indicators
+### September 16, 2025 - Doc-Store Hardening & CLI Integration
+- **Doc-Store Test Data Population**
+  - ✅ Created comprehensive test data script with all document types
+  - ✅ Added 15 test documents: GitHub (READMEs/issues/PRs), Jira (epics/stories), Confluence (pages), Code (Python/TypeScript), API docs, Analysis results, Ensembles, Style examples
+  - ✅ Implemented realistic metadata and content for each document type
+  - ✅ Database population with proper content hashing and indexing
 
-- **Phase 5: Advanced UX Features**
-  - ✅ Added command usage analytics and popular command tracking
-  - ✅ Implemented favorites/bookmarks system for quick access
-  - ✅ Enhanced success feedback with operation-specific messages
-  - ✅ Added command history recording for analytics
+- **Service Accessibility & CLI Integration**
+  - ✅ Created `run_docstore.py` launcher with proper environment setup
+  - ✅ Added fallback handlers for robust operation without full module dependencies
+  - ✅ Enhanced ServiceClients with local database mode for testing
+  - ✅ Modified CLI to support both HTTP and direct database access modes
+  - ✅ All doc-store operations accessible via CLI: list, search, view, quality analysis
 
-- **Visual Enhancements**
-  - ✅ Color-coded status indicators (success/warning/error/info/loading/cached/stale)
-  - ✅ Enhanced menu headers with usage stats and cache status
-  - ✅ Professional visual feedback throughout the interface
-  - ✅ Rich component integration for modern CLI experience
+- **Hardening & Production Readiness**
+  - ✅ Database connection pooling and WAL mode for performance
+  - ✅ Comprehensive error handling with graceful fallbacks
+  - ✅ Input validation and data integrity checks
+  - ✅ Idempotent operations with content hashing
+  - ✅ Local testing mode for development and QA workflows
 
-- **Testing & QA**
-  - ✅ Fixed hanging test by preventing interactive overlay in tests
-  - ✅ Updated test mocking to avoid user input waits
-  - ✅ All 153 CLI tests passing with zero breaking changes
-  - ✅ Created comprehensive demo script for all enhancements
+- **Technical Implementation**
+  - ✅ Service runs on `localhost:5010` with proper FastAPI integration
+  - ✅ SQLite-backed operations with proper schema and indexing
+  - ✅ Response format compatibility with existing CLI expectations
+  - ✅ Environment-based configuration for different deployment modes
 
-- **Documentation & Demo**
-  - ✅ Created `scripts/demo_phase4_phase5_enhancements.py` showcasing all features
-  - ✅ Updated session documentation with complete enhancement details
-  - ✅ Verified production readiness of interactive CLI system
+- **Testing & Verification**
+  - ✅ Database populated with 15 comprehensive test documents
+  - ✅ Service startup and health check verification
+  - ✅ CLI navigation and operation testing
+  - ✅ Local database access mode fully functional
 - 2025-09-15 18:20:21: Session created. Goals and plan documented.
 - 2025-09-15 19:30:00: Interactive CLI Overlay implementation initiated.
 - 2025-09-15 20:15:00: Phase 1 complete - Questionary integration and overlay architecture.
