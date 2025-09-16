@@ -55,7 +55,8 @@ from .modules.models import (
     AddRelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse,
     TagDocumentRequest, TagSearchRequest, TaxonomyNodeRequest, DocumentTagsResponse,
     TagSearchResponse, TagStatisticsResponse, TaxonomyTreeResponse,
-    BulkDocumentCreateRequest, BulkSearchRequest, BulkTagRequest, BulkOperationStatus, BulkOperationsListResponse
+    BulkDocumentCreateRequest, BulkSearchRequest, BulkTagRequest, BulkOperationStatus, BulkOperationsListResponse,
+    WebhookRequest, WebhooksListResponse, EventsListResponse, WebhookDeliveryResponse, NotificationStatsResponse
 )
 from .modules.database_init import init_database
 from .modules.document_handlers import document_handlers
@@ -67,6 +68,7 @@ from .modules.cache_handlers import cache_handlers
 from .modules.relationship_handlers import relationship_handlers
 from .modules.tagging_handlers import tagging_handlers
 from .modules.bulk_handlers import bulk_handlers
+from .modules.notification_handlers import notification_handlers
 from .modules.caching import docstore_cache
 
 # ============================================================================
@@ -706,6 +708,78 @@ async def cancel_bulk_operation(operation_id: str):
     preventing further resource consumption and processing.
     """
     return await bulk_handlers.handle_cancel_bulk_operation(operation_id)
+
+
+@app.post("/webhooks", response_model=Dict[str, Any])
+async def register_webhook(req: WebhookRequest):
+    """Register a webhook for event notifications.
+
+    Creates a webhook endpoint that will receive HTTP POST requests for specified
+    event types, enabling real-time integration with external systems.
+    """
+    return await notification_handlers.handle_register_webhook(req)
+
+
+@app.get("/webhooks", response_model=WebhooksListResponse)
+async def get_webhooks():
+    """Get all registered webhooks.
+
+    Lists all configured webhooks with their event subscriptions,
+    delivery settings, and current status.
+    """
+    return await notification_handlers.handle_get_webhooks()
+
+
+@app.post("/events", response_model=Dict[str, Any])
+async def emit_event(event_type: str, entity_type: str, entity_id: str,
+                    user_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    """Manually emit a notification event.
+
+    Triggers event processing and webhook delivery for testing and
+    integration purposes.
+    """
+    return await notification_handlers.handle_emit_event(event_type, entity_type, entity_id, user_id, metadata)
+
+
+@app.get("/events", response_model=EventsListResponse)
+async def get_event_history(event_type: Optional[str] = None, entity_type: Optional[str] = None,
+                          entity_id: Optional[str] = None, limit: int = 100):
+    """Get notification event history.
+
+    Retrieves historical event data with optional filtering by event type,
+    entity type, and entity ID for monitoring and debugging.
+    """
+    return await notification_handlers.handle_get_event_history(event_type, entity_type, entity_id, limit)
+
+
+@app.get("/webhooks/deliveries", response_model=WebhookDeliveryResponse)
+async def get_webhook_deliveries(webhook_id: Optional[str] = None, status: Optional[str] = None, limit: int = 100):
+    """Get webhook delivery history.
+
+    Provides detailed delivery logs including success/failure status,
+    response codes, error messages, and retry attempts.
+    """
+    return await notification_handlers.handle_get_webhook_deliveries(webhook_id, status, limit)
+
+
+@app.get("/notifications/stats", response_model=NotificationStatsResponse)
+async def get_notification_stats(days_back: int = 7):
+    """Get comprehensive notification statistics.
+
+    Provides analytics on event distribution, webhook delivery success rates,
+    and failure patterns for system monitoring and optimization.
+    """
+    return await notification_handlers.handle_get_notification_stats(days_back)
+
+
+@app.post("/webhooks/{webhook_id}/test")
+async def test_webhook(webhook_id: str):
+    """Test a webhook by sending a test event.
+
+    Sends a test event to verify webhook configuration and connectivity
+    without triggering actual system events.
+    """
+    return await notification_handlers.handle_test_webhook(webhook_id)
 
 
 if __name__ == "__main__":

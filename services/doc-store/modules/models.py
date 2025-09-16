@@ -450,6 +450,85 @@ class PoliciesListResponse(BaseModel):
     total: int
 
 
+class WebhookRequest(BaseModel):
+    """Request model for registering webhooks."""
+    name: str
+    url: str
+    events: List[str]
+    secret: Optional[str] = None
+    headers: Optional[Dict[str, str]] = None
+    retry_count: int = 3
+    timeout_seconds: int = 30
+
+
+class WebhookInfo(BaseModel):
+    """Webhook information."""
+    id: str
+    name: str
+    url: str
+    events: List[str]
+    headers: Dict[str, str]
+    is_active: bool
+    retry_count: int
+    timeout_seconds: int
+    created_at: str
+    updated_at: str
+
+
+class NotificationEventInfo(BaseModel):
+    """Notification event information."""
+    id: str
+    event_type: str
+    entity_type: str
+    entity_id: str
+    user_id: Optional[str]
+    metadata: Dict[str, Any]
+    created_at: str
+
+
+class WebhookDeliveryInfo(BaseModel):
+    """Webhook delivery information."""
+    id: str
+    webhook_id: str
+    webhook_name: str
+    event_type: str
+    event_id: str
+    status: str
+    response_code: Optional[int]
+    error_message: Optional[str]
+    attempt_count: int
+    delivered_at: Optional[str]
+    created_at: str
+
+
+class NotificationStatsResponse(BaseModel):
+    """Response model for notification statistics."""
+    period_days: int
+    event_distribution: List[Dict[str, Any]]
+    webhook_delivery_stats: Dict[str, Any]
+    recent_failures: List[Dict[str, Any]]
+
+
+class WebhookDeliveryResponse(BaseModel):
+    """Response model for webhook deliveries."""
+    deliveries: List[WebhookDeliveryInfo]
+    total: int
+    filters: Dict[str, Any]
+
+
+class WebhooksListResponse(BaseModel):
+    """Response model for listing webhooks."""
+    webhooks: List[WebhookInfo]
+    total: int
+
+
+class EventsListResponse(BaseModel):
+    """Response model for listing events."""
+    events: List[NotificationEventInfo]
+    total: int
+    filters: Dict[str, Any]
+
+
 class BulkDocumentItem(BaseModel):
     """Bulk document creation item."""
     id: Optional[str] = None
