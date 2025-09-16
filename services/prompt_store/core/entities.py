@@ -51,6 +51,10 @@ class Prompt(BaseEntity):
     performance_score: float = 0.0
     usage_count: int = 0
 
+    def __post_init__(self):
+        """Initialize BaseEntity fields."""
+        super().__init__()
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert prompt to dictionary."""
         return {

@@ -20,14 +20,17 @@ class PromptHandlers(BaseHandler):
         """Create a new prompt."""
         try:
             prompt = self.service.create_entity(prompt_data.dict())
-            return create_success_response(
+            response = create_success_response(
                 message="Prompt created successfully",
                 data=prompt.to_dict()
             )
+            return response.model_dump()
         except ValueError as e:
-            return create_error_response(str(e), "VALIDATION_ERROR")
+            error_response = create_error_response(str(e), "VALIDATION_ERROR")
+            return error_response.model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to create prompt: {str(e)}", "INTERNAL_ERROR")
+            error_response = create_error_response(f"Failed to create prompt: {str(e)}", "INTERNAL_ERROR")
+            return error_response.model_dump()
 
     async def handle_get_prompt_by_name(self, category: str, name: str, **variables) -> Dict[str, Any]:
         """Get prompt by category/name and fill variables."""
