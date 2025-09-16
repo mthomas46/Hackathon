@@ -68,3 +68,23 @@ class CodeAnalysisRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError('Text field is required and cannot be empty')
         return v
+
+
+class ArchitectureProcessRequest(BaseModel):
+    """Request model for architecture diagram processing."""
+    system: str  # miro, figjam, lucid, confluence
+    board_id: str
+    token: str
+
+    @field_validator('system')
+    @classmethod
+    def validate_system(cls, v):
+        supported = ['miro', 'figjam', 'lucid', 'confluence']
+        if v not in supported:
+            from pydantic_core import PydanticCustomError
+            raise PydanticCustomError(
+                'system_not_supported',
+                'Unsupported system: {system}. Must be one of {supported}',
+                {'system': v, 'supported': supported}
+            )
+        return v

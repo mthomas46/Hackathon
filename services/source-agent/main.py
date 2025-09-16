@@ -81,7 +81,7 @@ from .modules.shared_utils import (
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import DocumentRequest, NormalizationRequest, CodeAnalysisRequest
+from .modules.models import DocumentRequest, NormalizationRequest, CodeAnalysisRequest, ArchitectureProcessRequest
 from .modules.fetch_handler import fetch_handler
 from .modules.normalize_handler import normalize_handler
 from .modules.code_analyzer import code_analyzer
@@ -136,6 +136,33 @@ async def normalize_data(req: NormalizationRequest):
     clean content, and extract structured information from raw source data.
     """
     return normalize_handler.normalize_data(req.source, req.data, req.correlation_id)
+
+
+@app.post("/architecture/process")
+async def process_architecture(req: ArchitectureProcessRequest):
+    """Process architectural diagrams using the architecture-digitizer service.
+
+    Forwards diagram processing requests to the architecture-digitizer service
+    for normalization into standardized JSON schema.
+    """
+    try:
+        from services.shared.utilities import get_service_client
+
+        client = get_service_client()
+
+        # Forward request to architecture-digitizer
+        result = await client.post_json("architecture-digitizer/normalize", {
+            "system": req.system,
+            "board_id": req.board_id,
+            "token": req.token
+        })
+
+        context = build_source_agent_context("architecture_process", system=req.system)
+        return create_source_agent_success_response("processed", result, **context)
+
+    except Exception as e:
+        context = build_source_agent_context("architecture_process", system=req.system)
+        return handle_source_agent_error("process architecture", e, **context)
 
 
 @app.post("/code/analyze")

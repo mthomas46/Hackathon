@@ -95,3 +95,31 @@ class FindingsResponse(BaseModel):
     count: int
     severity_counts: Dict[str, int]
     type_counts: Dict[str, int]
+
+
+class ArchitectureAnalysisRequest(BaseModel):
+    """Input for architecture analysis operations."""
+    components: List[Dict[str, Any]]
+    connections: List[Dict[str, Any]]
+    analysis_type: str = "consistency"  # consistency, completeness, best_practices
+    options: Optional[Dict[str, Any]] = None
+
+    @field_validator('components')
+    @classmethod
+    def validate_components(cls, v):
+        if not v:
+            raise ValueError('Components cannot be empty')
+        for comp in v:
+            if not comp.get('id'):
+                raise ValueError('Each component must have an id')
+            if not comp.get('type'):
+                raise ValueError('Each component must have a type')
+        return v
+
+    @field_validator('analysis_type')
+    @classmethod
+    def validate_analysis_type(cls, v):
+        supported = ['consistency', 'completeness', 'best_practices', 'combined']
+        if v not in supported:
+            raise ValueError(f'Unsupported analysis type: {v}. Must be one of {supported}')
+        return v

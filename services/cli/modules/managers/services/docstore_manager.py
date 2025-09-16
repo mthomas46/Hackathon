@@ -26,6 +26,10 @@ class DocStoreManager(BaseManager):
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)
 
+    async def get_required_services(self) -> List[str]:
+        """Return list of required services for this manager."""
+        return ["doc-store"]
+
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for docstore operations."""
         return [
