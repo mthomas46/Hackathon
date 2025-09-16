@@ -88,7 +88,10 @@ class PageListResponse(BaseModel):
     session_id: Optional[str] = None
 
 # Import modularized components
-from .modules import ConfluenceClient, MongoDBClient, process_confluence_page
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from modules import ConfluenceClient, MongoDBClient, process_confluence_page
 
 # ============================================================================
 # APPLICATION SETUP
@@ -102,7 +105,7 @@ app = FastAPI(
 )
 
 # Setup middleware and error handling
-setup_common_middleware(app)
+setup_common_middleware(app, ServiceNames.CONFLUENCE_HUB)
 install_error_handlers(app)
 
 # Global clients
@@ -203,11 +206,42 @@ async def check_mongodb_health() -> DependencyHealth:
         )
 
 # Register health endpoints
-register_health_endpoints(
+health_manager = register_health_endpoints(
     app,
-    service_name=ServiceNames.CONFLUENCE_HUB,
-    dependency_checks=[check_confluence_health, check_mongodb_health]
+    service_name=ServiceNames.CONFLUENCE_HUB
 )
+
+# Add custom health endpoint with dependency checks
+@app.get("/health")
+async def health_check():
+    """Health check endpoint that validates MongoDB and Confluence connectivity."""
+    try:
+        confluence_health = await check_confluence_health()
+        mongodb_health = await check_mongodb_health()
+        
+        overall_healthy = (
+            confluence_health.status == "healthy" and 
+            mongodb_health.status == "healthy"
+        )
+        
+        return create_success_response(
+            data={
+                "status": "healthy" if overall_healthy else "unhealthy",
+                "service": ServiceNames.CONFLUENCE_HUB,
+                "timestamp": utc_now().isoformat(),
+                "dependencies": [
+                    confluence_health.dict(),
+                    mongodb_health.dict()
+                ]
+            }
+        )
+    except Exception as e:
+        logger.error(f"Health check error: {str(e)}")
+        return create_error_response(
+            error_code=ErrorCodes.HEALTH_CHECK_FAILED,
+            message="Health check failed",
+            details=str(e)
+        )
 
 # ============================================================================
 # API ENDPOINTS

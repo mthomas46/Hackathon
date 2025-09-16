@@ -5,8 +5,13 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "🚀 Starting Confluence Hub Service"
 echo "=================================="
+echo "📍 Working directory: $SCRIPT_DIR"
 
 # Check if .env file exists
 if [ ! -f .env ]; then
@@ -59,7 +64,33 @@ echo "✅ All required environment variables are set"
 # Check if MongoDB is running (if using local MongoDB)
 if [[ "$MongoConnectionString" == *"localhost"* ]] || [[ "$MongoConnectionString" == *"127.0.0.1"* ]]; then
     echo "🔍 Checking if MongoDB is running locally..."
-    if ! pgrep -x "mongod" > /dev/null; then
+    
+    # Try multiple ways to detect MongoDB
+    MONGODB_RUNNING=false
+    
+    # Method 1: Check for mongod process
+    if pgrep -x "mongod" > /dev/null; then
+        MONGODB_RUNNING=true
+    fi
+    
+    # Method 2: Check for docker container named mongodb
+    if command -v docker &> /dev/null && docker ps --format "table {{.Names}}" | grep -q "mongodb"; then
+        MONGODB_RUNNING=true
+    fi
+    
+    # Method 3: Try to connect to MongoDB port
+    if command -v nc &> /dev/null && nc -z localhost 27017; then
+        MONGODB_RUNNING=true
+    fi
+    
+    # Method 4: Try to connect with mongo/mongosh if available
+    if command -v mongosh &> /dev/null && mongosh --eval "db.adminCommand('ping')" --quiet > /dev/null 2>&1; then
+        MONGODB_RUNNING=true
+    elif command -v mongo &> /dev/null && mongo --eval "db.adminCommand('ping')" --quiet > /dev/null 2>&1; then
+        MONGODB_RUNNING=true
+    fi
+    
+    if [ "$MONGODB_RUNNING" = false ]; then
         echo "⚠️  MongoDB doesn't appear to be running locally"
         echo "💡 To start MongoDB with Docker:"
         echo "   docker run -d -p 27017:27017 --name mongodb mongo:latest"
@@ -77,10 +108,24 @@ if [[ "$MongoConnectionString" == *"localhost"* ]] || [[ "$MongoConnectionString
     fi
 fi
 
+# Detect and use virtual environment
+VENV_PATH=""
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+if [ -f "$PROJECT_ROOT/.venv/bin/python" ]; then
+    VENV_PATH="$PROJECT_ROOT/.venv/bin/"
+    echo "📦 Using virtual environment at $PROJECT_ROOT/.venv/"
+elif [ -f "$SCRIPT_DIR/.venv/bin/python" ]; then
+    VENV_PATH="$SCRIPT_DIR/.venv/bin/"
+    echo "📦 Using virtual environment at $SCRIPT_DIR/.venv/"
+else
+    echo "📦 No virtual environment found, using system Python"
+fi
+
 # Install dependencies if needed
-if [ ! -d "venv" ] && [ ! -f "requirements.txt" ]; then
+if [ ! -z "$VENV_PATH" ] && [ ! -f "${VENV_PATH}uvicorn" ]; then
     echo "📦 Installing dependencies..."
-    pip install -r requirements.txt
+    ${VENV_PATH}pip install -r requirements.txt
 fi
 
 # Start the service
@@ -95,11 +140,27 @@ export ConfluenceUsername
 export ConfluenceApiToken
 export MongoConnectionString
 
-# Start with uvicorn if available, otherwise give instructions
-if command -v uvicorn &> /dev/null; then
-    uvicorn main:app --host 0.0.0.0 --port 5070 --reload
+# Set Python path for imports
+export PYTHONPATH="$PROJECT_ROOT"
+
+# Start with uvicorn
+if [ ! -z "$VENV_PATH" ] && [ -f "${VENV_PATH}uvicorn" ]; then
+    echo "🚀 Starting with virtual environment..."
+    cd "$PROJECT_ROOT"
+    "${VENV_PATH}uvicorn" services.confluence-hub.main:app --host 0.0.0.0 --port 5070 --reload
+elif command -v uvicorn &> /dev/null; then
+    echo "🚀 Starting with system uvicorn..."
+    cd "$PROJECT_ROOT"
+    uvicorn services.confluence-hub.main:app --host 0.0.0.0 --port 5070 --reload
 else
     echo "⚠️  uvicorn not found. Installing..."
-    pip install uvicorn[standard]
-    uvicorn main:app --host 0.0.0.0 --port 5070 --reload
+    if [ ! -z "$VENV_PATH" ]; then
+        "${VENV_PATH}pip" install uvicorn[standard]
+        cd "$PROJECT_ROOT"
+        "${VENV_PATH}uvicorn" services.confluence-hub.main:app --host 0.0.0.0 --port 5070 --reload
+    else
+        pip install uvicorn[standard]
+        cd "$PROJECT_ROOT"
+        uvicorn services.confluence-hub.main:app --host 0.0.0.0 --port 5070 --reload
+    fi
 fi
