@@ -19,7 +19,7 @@ def main():
 
     # Configure for local testing mode
     env['DOC_STORE_URL'] = 'local'
-    env['DOCSTORE_DB'] = os.path.join(script_dir, 'services', 'doc-store', 'db.sqlite3')
+    env['DOCSTORE_DB'] = os.path.join(script_dir, 'services', 'doc_store', 'db.sqlite3')
 
     # Change to CLI directory
     os.chdir(cli_dir)

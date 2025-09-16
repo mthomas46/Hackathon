@@ -108,7 +108,7 @@ class TestEnvironment:
             return
 
         if services_to_start is None:
-            services_to_start = ["orchestrator", "doc-store", "analysis-service", "source-agent"]
+            services_to_start = ["orchestrator", "doc_store", "analysis-service", "source-agent"]
 
         for service in services_to_start:
             self._setup_service(service)
@@ -134,8 +134,8 @@ class TestEnvironment:
                     "ANALYSIS_SERVICE_URL": "http://localhost:18002"
                 }
             },
-            "doc-store": {
-                "image": "doc-consistency-doc-store:latest",
+            "doc_store": {
+                "image": "doc-consistency-doc_store:latest",
                 "ports": {"8000": 18001},
                 "env": {
                     "ENVIRONMENT": "test",
@@ -200,9 +200,9 @@ class TestEnvironment:
         if self.test_mode == "mocked":
             return f"http://mock-{service_name}:8000"
         elif self.test_mode == "integration":
-            return f"http://localhost:8{['orchestrator', 'doc-store', 'analysis-service', 'source-agent'].index(service_name) + 1}00"
+            return f"http://localhost:8{['orchestrator', 'doc_store', 'analysis-service', 'source-agent'].index(service_name) + 1}00"
 
-        return f"http://localhost:1800{['orchestrator', 'doc-store', 'analysis-service', 'source-agent'].index(service_name)}"
+        return f"http://localhost:1800{['orchestrator', 'doc_store', 'analysis-service', 'source-agent'].index(service_name)}"
 
 
 class TestRunner:
@@ -271,7 +271,7 @@ class TestRunner:
     def run_integration_tests(self, services: List[str] = None):
         """Run integration tests across services."""
         if services is None:
-            services = ["orchestrator", "doc-store", "analysis-service", "source-agent"]
+            services = ["orchestrator", "doc_store", "analysis-service", "source-agent"]
 
         self.test_mode = "integration"
         self.environment = TestEnvironment("integration")
@@ -359,7 +359,7 @@ class DockerTestRunner:
     def build_service_images(self, services: List[str] = None):
         """Build Docker images for services."""
         if services is None:
-            services = ["orchestrator", "doc-store", "analysis-service", "source-agent", "frontend"]
+            services = ["orchestrator", "doc_store", "analysis-service", "source-agent", "frontend"]
 
         for service in services:
             self._build_service_image(service)
@@ -425,7 +425,7 @@ class DockerTestRunner:
     def create_test_compose_file(self, services: List[str] = None):
         """Create Docker Compose file for testing."""
         if services is None:
-            services = ["orchestrator", "doc-store", "analysis-service", "source-agent"]
+            services = ["orchestrator", "doc_store", "analysis-service", "source-agent"]
 
         compose_content = """
 version: '3.8'
@@ -470,7 +470,7 @@ services:
       - /app/__pycache__
     depends_on:
       - orchestrator
-      - doc-store
+      - doc_store
       - analysis-service
       - source-agent
     environment:

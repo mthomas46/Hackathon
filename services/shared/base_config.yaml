@@ -12,7 +12,7 @@ redis:
 services:
   # Common service URLs used across multiple services
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
-  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
   source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
   frontend_url: ${FRONTEND_URL:-http://frontend:3000}

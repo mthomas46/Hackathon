@@ -28,7 +28,7 @@ Timeframe: next 1–2 weeks. Scope-preserving improvements focused on hardening,
    - Config: `detectors.enable_llm` and thresholds.
    - Outcome: deterministic baseline; lower cost and variance.
 
-7. Add indices and vacuum cadence for doc-store (if enabled)
+7. Add indices and vacuum cadence for doc_store (if enabled)
    - Indices on `content_hash`, `document_id`; periodic maintenance.
    - Outcome: faster queries, smaller DB.
 

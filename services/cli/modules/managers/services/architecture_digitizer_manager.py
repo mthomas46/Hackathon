@@ -29,7 +29,7 @@ class ArchitectureDigitizerManager(BaseManager):
 
     async def get_required_services(self) -> List[str]:
         """Return list of required services for this manager."""
-        return ["architecture-digitizer", "doc-store"]
+        return ["architecture-digitizer", "doc_store"]
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for architecture digitizer operations."""

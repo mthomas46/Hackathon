@@ -48,7 +48,7 @@ def get_reporting_url() -> str:
 
 def get_doc_store_url() -> str:
     """Get doc store service URL from config/env with fallback."""
-    return get_config_value("DOC_STORE_URL", "http://doc-store:5010", section="services", env_key=_DOC_STORE_URL_ENV)
+    return get_config_value("DOC_STORE_URL", "http://doc_store:5010", section="services", env_key=_DOC_STORE_URL_ENV)
 
 def get_consistency_engine_url() -> str:
     """Get consistency engine service URL from config/env with fallback."""
@@ -230,7 +230,7 @@ def fetch_service_data(service_name: str, endpoint: str, params: Optional[Dict[s
         clients = get_frontend_clients()
 
     service_url_map = {
-        "doc-store": clients.doc_store_url(),
+        "doc_store": clients.doc_store_url(),
         "analysis-service": clients.analysis_service_url(),
         "source-agent": clients.source_agent_url(),
         "orchestrator": clients.orchestrator_url(),
@@ -263,7 +263,7 @@ def fetch_service_data(service_name: str, endpoint: str, params: Optional[Dict[s
 def get_service_url(service_name: str) -> str:
     """Get the URL for a specific service."""
     url_map = {
-        "doc-store": get_doc_store_url(),
+        "doc_store": get_doc_store_url(),
         "reporting": get_reporting_url(),
         "consistency-engine": get_consistency_engine_url(),
     }

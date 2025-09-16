@@ -96,8 +96,8 @@ class TestOrchestratorRegistry:
         """Test registry contents after service registration."""
         # First register a service
         service_data = {
-            "name": "doc-store-test",
-            "url": "http://doc-store:8000",
+            "name": "doc_store-test",
+            "url": "http://doc_store:8000",
             "version": "1.0.0",
             "capabilities": ["documents", "search"],
             "status": "healthy"

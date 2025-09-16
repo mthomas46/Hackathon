@@ -14,7 +14,7 @@ SERVICE_REGISTRY: Dict[str, Tuple[str, str]] = {
     "orchestrator": ("services.orchestrator.main", "app"),
     "source_agent": ("services.source-agent.main", "app"),
     "analysis_service": ("services.analysis-service.main", "app"),
-    "doc_store": ("services.doc-store.main", "app"),
+    "doc_store": ("services.doc_store.main", "app"),
     "frontend": ("services.frontend.main", "app"),
     "memory_agent": ("services.memory-agent.main", "app"),
     "discovery_agent": ("services.discovery-agent.main", "app"),

@@ -65,7 +65,7 @@ postgresql:
 sqlite:
   databases:
     doc_store:
-      path: services/doc-store/db.sqlite3
+      path: services/doc_store/db.sqlite3
     prompt_store:
       path: /app/data/prompt_store.db
 ```
@@ -74,7 +74,7 @@ sqlite:
 ```yaml
 services:
   orchestrator_url: http://orchestrator:5099
-  doc_store_url: http://doc-store:5087
+  doc_store_url: http://doc_store:5087
   # ... all service URLs
 
 ports:
@@ -339,7 +339,7 @@ cd services/{service-name} && docker-compose up
 
 # Examples:
 cd services/orchestrator && docker-compose up      # + Redis
-cd services/doc-store && docker-compose up         # + Redis + SQLite
+cd services/doc_store && docker-compose up         # + Redis + SQLite
 cd services/frontend && docker-compose up          # Standalone
 cd services/prompt-store && docker-compose up      # + SQLite
 ```
@@ -347,7 +347,7 @@ cd services/prompt-store && docker-compose up      # + SQLite
 **Service Categories by Dependencies:**
 
 **Redis + SQLite services:**
-- `doc-store` - Redis for caching, SQLite for document storage
+- `doc_store` - Redis for caching, SQLite for document storage
 
 **Redis-only services:**
 - `orchestrator`, `analysis-service`, `source-agent`, `memory-agent`, `code-analyzer`

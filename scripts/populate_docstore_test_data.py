@@ -496,7 +496,7 @@ def create_api_docs() -> List[Dict[str, Any]]:
     """Create test API documentation."""
     return [
         {
-            "id": "api:doc-store:endpoints",
+            "id": "api:doc_store:endpoints",
             "content": """# Doc Store API Reference
 
 ## Documents
@@ -597,7 +597,7 @@ Get document quality metrics.
             "metadata": {
                 "source_type": "api",
                 "type": "reference",
-                "service": "doc-store",
+                "service": "doc_store",
                 "version": "v1.0",
                 "endpoints": 15,
                 "format": "OpenAPI-like"
@@ -1008,7 +1008,7 @@ export function createAnalysisConfig(params: {
 
 
 async def populate_docstore():
-    """Populate the doc-store with comprehensive test data."""
+    """Populate the doc_store with comprehensive test data."""
     print("🌱 Populating Doc Store with comprehensive test data...")
 
     # For now, populate directly to SQLite database
@@ -1019,7 +1019,7 @@ async def populate_docstore():
     from services.shared.utilities import stable_hash, utc_now
 
     # Get database path from config or default
-    db_path = os.environ.get("DOCSTORE_DB", "services/doc-store/db.sqlite3")
+    db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
     conn = sqlite3.connect(db_path)
@@ -1169,7 +1169,7 @@ async def populate_docstore():
         print(f"  • {len(ensembles)} ensemble results")
         print(f"  • {len(style_examples)} style examples")
         print("\n🔧 Next steps:")
-        print("  1. Run doc-store service: python3 services/doc-store/main.py")
+        print("  1. Run doc_store service: python3 services/doc_store/main.py")
         print("  2. Test via CLI: python3 run_cli.py → Document Store")
         print("  3. Verify operations: list, search, quality analysis, etc.")
 

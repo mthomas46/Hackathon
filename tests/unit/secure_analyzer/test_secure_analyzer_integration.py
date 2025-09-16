@@ -289,7 +289,7 @@ class TestSecureAnalyzerIntegration:
         # Simulate integration with different services
         integration_scenarios = [
             {
-                "service": "doc-store",
+                "service": "doc_store",
                 "content": "Retrieved document with API_KEY = 'sk-doc123'",
                 "expected_provider": "bedrock"  # Should use secure provider
             },

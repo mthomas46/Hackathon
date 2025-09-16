@@ -27,7 +27,7 @@ postgres:
 services:
   # Core services
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
-  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
   source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
   frontend_url: ${FRONTEND_URL:-http://frontend:3000}
@@ -144,7 +144,7 @@ providers:
 
 database:
   # SQLite paths (development)
-  doc_store_path: ${DOCSTORE_DB:-services/doc-store/db.sqlite3}
+  doc_store_path: ${DOCSTORE_DB:-services/doc_store/db.sqlite3}
   prompt_store_path: ${PROMPT_STORE_DB:-/app/data/prompt_store.db}
 
   # Connection settings

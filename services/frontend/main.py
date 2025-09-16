@@ -14,7 +14,7 @@ Endpoints (HTML):
 - GET /reports/jira/staleness: Jira staleness report with filtering options
 - GET /duplicates/clusters: Duplicate clusters report page
 - GET /workflows/status: Workflow and job status monitoring dashboard
-- GET /doc-store/browser: Doc-store data browser for document exploration
+- GET /doc_store/browser: Doc-store data browser for document exploration
 - GET /prompt-store/browser: Prompt-store data browser for prompt exploration
 - GET /code-analyzer/dashboard: Code analyzer service dashboard
 - GET /bedrock-proxy/dashboard: Bedrock proxy service dashboard
@@ -420,12 +420,12 @@ async def ui_logs_dashboard():
     return ui_handlers.handle_logs_dashboard()
 
 
-@app.get("/doc-store/browser")
+@app.get("/doc_store/browser")
 async def ui_doc_store_browser():
-    """Render doc-store data browser for document exploration.
+    """Render doc_store data browser for document exploration.
 
     Provides a read-only interface for browsing documents, analyses,
-    quality metrics, and style examples stored in the doc-store.
+    quality metrics, and style examples stored in the doc_store.
     """
     return ui_handlers.handle_doc_store_browser()
 
@@ -865,9 +865,9 @@ async def get_logs_stats():
         return handle_frontend_error("get logs stats", e, **build_frontend_context("get_logs_stats"))
 
 
-@app.get("/api/doc-store/status")
+@app.get("/api/doc_store/status")
 async def get_doc_store_status():
-    """Get comprehensive doc-store status and summary for visualization.
+    """Get comprehensive doc_store status and summary for visualization.
 
     Returns cached document data, analyses, quality metrics, and style examples
     for dashboard visualization and data browsing.
@@ -876,22 +876,22 @@ async def get_doc_store_status():
         summary = get_doc_store_summary()
 
         return create_frontend_success_response(
-            "doc-store status retrieved",
+            "doc_store status retrieved",
             summary,
             **build_frontend_context("get_doc_store_status")
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc-store status", e, **build_frontend_context("get_doc_store_status"))
+        return handle_frontend_error("get doc_store status", e, **build_frontend_context("get_doc_store_status"))
 
 
-@app.get("/api/doc-store/documents")
+@app.get("/api/doc_store/documents")
 async def get_doc_store_documents(
     limit: int = 20,
     offset: int = 0,
     force_refresh: bool = False
 ):
-    """Get documents from doc-store with pagination.
+    """Get documents from doc_store with pagination.
 
     Retrieves documents with metadata for browsing and visualization.
     """
@@ -909,10 +909,10 @@ async def get_doc_store_documents(
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc-store documents", e, **build_frontend_context("get_doc_store_documents"))
+        return handle_frontend_error("get doc_store documents", e, **build_frontend_context("get_doc_store_documents"))
 
 
-@app.get("/api/doc-store/documents/{doc_id}")
+@app.get("/api/doc_store/documents/{doc_id}")
 async def get_doc_store_document(doc_id: str):
     """Get a specific document by ID.
 
@@ -935,17 +935,17 @@ async def get_doc_store_document(doc_id: str):
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc-store document", e, **build_frontend_context("get_doc_store_document"))
+        return handle_frontend_error("get doc_store document", e, **build_frontend_context("get_doc_store_document"))
 
 
-@app.get("/api/doc-store/analyses")
+@app.get("/api/doc_store/analyses")
 async def get_doc_store_analyses(
     document_id: Optional[str] = None,
     limit: int = 20,
     offset: int = 0,
     force_refresh: bool = False
 ):
-    """Get analyses from doc-store with optional filtering.
+    """Get analyses from doc_store with optional filtering.
 
     Retrieves analysis results with optional filtering by document ID.
     """
@@ -964,10 +964,10 @@ async def get_doc_store_analyses(
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc-store analyses", e, **build_frontend_context("get_doc_store_analyses"))
+        return handle_frontend_error("get doc_store analyses", e, **build_frontend_context("get_doc_store_analyses"))
 
 
-@app.get("/api/doc-store/quality")
+@app.get("/api/doc_store/quality")
 async def get_doc_store_quality(force_refresh: bool = False):
     """Get document quality metrics and analysis.
 
@@ -977,16 +977,16 @@ async def get_doc_store_quality(force_refresh: bool = False):
         result = await data_browser.get_doc_store_quality(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "doc-store quality metrics retrieved",
+            "doc_store quality metrics retrieved",
             result,
             **build_frontend_context("get_doc_store_quality")
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc-store quality", e, **build_frontend_context("get_doc_store_quality"))
+        return handle_frontend_error("get doc_store quality", e, **build_frontend_context("get_doc_store_quality"))
 
 
-@app.get("/api/doc-store/style-examples")
+@app.get("/api/doc_store/style-examples")
 async def get_doc_store_style_examples(force_refresh: bool = False):
     """Get style examples by programming language.
 
@@ -996,18 +996,18 @@ async def get_doc_store_style_examples(force_refresh: bool = False):
         result = await data_browser.get_doc_store_style_examples(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "doc-store style examples retrieved",
+            "doc_store style examples retrieved",
             result,
             **build_frontend_context("get_doc_store_style_examples")
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc-store style examples", e, **build_frontend_context("get_doc_store_style_examples"))
+        return handle_frontend_error("get doc_store style examples", e, **build_frontend_context("get_doc_store_style_examples"))
 
 
-@app.get("/api/doc-store/search")
+@app.get("/api/doc_store/search")
 async def search_doc_store(q: str, limit: int = 20):
-    """Search documents in doc-store.
+    """Search documents in doc_store.
 
     Performs full-text search across document content and metadata.
     """
@@ -1021,7 +1021,7 @@ async def search_doc_store(q: str, limit: int = 20):
         )
 
     except Exception as e:
-        return handle_frontend_error("search doc-store", e, **build_frontend_context("search_doc_store"))
+        return handle_frontend_error("search doc_store", e, **build_frontend_context("search_doc_store"))
 
 
 @app.get("/api/prompt-store/status")

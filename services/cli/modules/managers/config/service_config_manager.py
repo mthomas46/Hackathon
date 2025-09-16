@@ -43,7 +43,7 @@ class ServiceConfigManager(BaseManager):
 
     async def _select_service(self) -> Optional[str]:
         """Select a service to configure."""
-        services = ["orchestrator", "analysis-service", "bedrock-proxy", "frontend", "doc-store"]
+        services = ["orchestrator", "analysis-service", "bedrock-proxy", "frontend", "doc_store"]
         service = await self.select_from_list(services, "Select service to configure")
         return service
 

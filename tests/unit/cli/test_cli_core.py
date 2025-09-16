@@ -70,7 +70,7 @@ class TestCLICore(CLIAssertionMixin):
         assert "prompt-store" in health_data
         assert "source-agent" in health_data
         assert "analysis-service" in health_data
-        assert "doc-store" in health_data
+        assert "doc_store" in health_data
 
         for service, data in health_data.items():
             # In test environment, services may be marked as unhealthy due to loading issues
@@ -93,7 +93,7 @@ class TestCLICore(CLIAssertionMixin):
                 "prompt-store": {"status": "unhealthy", "error": "Connection failed", "timestamp": 1234567890.0},
                 "source-agent": {"status": "healthy", "response": {"status": "healthy"}, "timestamp": 1234567890.0},
                 "analysis-service": {"status": "healthy", "response": {"status": "healthy"}, "timestamp": 1234567890.0},
-                "doc-store": {"status": "healthy", "response": {"status": "healthy"}, "timestamp": 1234567890.0}
+                "doc_store": {"status": "healthy", "response": {"status": "healthy"}, "timestamp": 1234567890.0}
             }
 
         cli_service.check_service_health = mock_check_service_health
@@ -169,7 +169,7 @@ class TestCLICore(CLIAssertionMixin):
             {"status": "healthy"},  # prompt-store health
             {"status": "healthy"},  # interpreter health
             {"overall_healthy": True},  # orchestrator health
-            {"integrations": ["doc-store", "source-agent"]},  # analysis health
+            {"integrations": ["doc_store", "source-agent"]},  # analysis health
             {"status": "healthy"},  # prompt-store prompts
             {"intent": "analyze"},  # interpreter interpret
             {"interpretation": "system status"}  # orchestrator query

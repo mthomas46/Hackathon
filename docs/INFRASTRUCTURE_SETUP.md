@@ -142,7 +142,7 @@ SQLite is used for persistent data storage in development and can be used in pro
 
 ```
 services/
-├── doc-store/
+├── doc_store/
 │   └── db.sqlite3          # Document storage
 ├── prompt-store/
 │   └── prompt_store.db     # Prompt templates and history
@@ -158,7 +158,7 @@ SQLite databases are configured in `config.yml`:
 sqlite:
   databases:
     doc_store:
-      path: services/doc-store/db.sqlite3
+      path: services/doc_store/db.sqlite3
       connection_pool_size: 5
     prompt_store:
       path: /app/data/prompt_store.db
@@ -220,7 +220,7 @@ postgresql:
 
 ```bash
 # Export SQLite data
-sqlite3 services/doc-store/db.sqlite3 .dump > doc_store_backup.sql
+sqlite3 services/doc_store/db.sqlite3 .dump > doc_store_backup.sql
 
 # Convert to PostgreSQL format and import
 # (Use tools like pgloader or write custom migration scripts)
@@ -235,7 +235,7 @@ BACKUP_DIR="/backups/sqlite"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 # Backup document store
-sqlite3 services/doc-store/db.sqlite3 ".backup '${BACKUP_DIR}/doc_store_${DATE}.db'"
+sqlite3 services/doc_store/db.sqlite3 ".backup '${BACKUP_DIR}/doc_store_${DATE}.db'"
 
 # Backup prompt store
 sqlite3 /app/data/prompt_store.db ".backup '${BACKUP_DIR}/prompt_store_${DATE}.db'"

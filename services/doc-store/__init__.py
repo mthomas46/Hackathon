@@ -1,1 +1,0 @@
-"""Doc Store service package."""

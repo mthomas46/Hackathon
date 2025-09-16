@@ -42,7 +42,7 @@ class TestDocStoreCore:
 
         service_data = data["data"]
         assert "service" in service_data
-        assert service_data["service"] == "doc-store"
+        assert service_data["service"] == "doc_store"
 
     def test_config_effective_endpoint(self, client):
         """Test effective configuration endpoint."""

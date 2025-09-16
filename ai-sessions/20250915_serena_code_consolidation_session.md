@@ -40,7 +40,7 @@ Kick off a focused refactor to audit each service against its tests, consolidate
   - ✅ Added fallback handlers for robust operation without full module dependencies
   - ✅ Enhanced ServiceClients with local database mode for testing
   - ✅ Modified CLI to support both HTTP and direct database access modes
-  - ✅ All doc-store operations accessible via CLI: list, search, view, quality analysis
+  - ✅ All doc_store operations accessible via CLI: list, search, view, quality analysis
 
 - **Hardening & Production Readiness**
   - ✅ Database connection pooling and WAL mode for performance

@@ -19,7 +19,7 @@ services:
       - REDIS_HOST=redis
       - REPORTING_URL=http://reporting:5030
       - SECURE_ANALYZER_URL=http://secure-analyzer:5070
-      - DOC_STORE_URL=http://doc-store:5087
+      - DOC_STORE_URL=http://doc_store:5087
     ports: ["5099:5099"]
     depends_on: [redis, reporting]
 
@@ -31,9 +31,9 @@ services:
     environment:
       - REDIS_HOST=redis
       - CODE_ANALYZER_URL=http://code-analyzer:5085
-      - DOC_STORE_URL=http://doc-store:5087
+      - DOC_STORE_URL=http://doc_store:5087
     ports: ["5000:5000"]
-    depends_on: [redis, code-analyzer, doc-store]
+    depends_on: [redis, code-analyzer, doc_store]
 
   jira-agent:
     image: python:3.11-slim
@@ -42,9 +42,9 @@ services:
     command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.jira_agent.main:app --host 0.0.0.0 --port 5001"
     environment:
       - REDIS_HOST=redis
-      - DOC_STORE_URL=http://doc-store:5087
+      - DOC_STORE_URL=http://doc_store:5087
     ports: ["5001:5001"]
-    depends_on: [redis, doc-store]
+    depends_on: [redis, doc_store]
 
   confluence-agent:
     image: python:3.11-slim
@@ -53,9 +53,9 @@ services:
     command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.confluence_agent.main:app --host 0.0.0.0 --port 5050"
     environment:
       - REDIS_HOST=redis
-      - DOC_STORE_URL=http://doc-store:5087
+      - DOC_STORE_URL=http://doc_store:5087
     ports: ["5050:5050"]
-    depends_on: [redis, doc-store]
+    depends_on: [redis, doc_store]
 
   swagger-agent:
     image: python:3.11-slim
@@ -64,9 +64,9 @@ services:
     command: sh -c "pip install -q fastapi uvicorn httpx pydantic && uvicorn services.swagger_agent.main:app --host 0.0.0.0 --port 5010"
     environment:
       - REDIS_HOST=redis
-      - DOC_STORE_URL=http://doc-store:5087
+      - DOC_STORE_URL=http://doc_store:5087
     ports: ["5010:5010"]
-    depends_on: [redis, doc-store]
+    depends_on: [redis, doc_store]
 
   consistency-engine:
     image: python:3.11-slim
@@ -88,9 +88,9 @@ services:
     environment:
       - CONSISTENCY_ENGINE_URL=http://consistency-engine:5020
       - LOG_COLLECTOR_URL=http://log-collector:5080
-      - DOC_STORE_URL=http://doc-store:5087
+      - DOC_STORE_URL=http://doc_store:5087
     ports: ["5030:5030"]
-    depends_on: [consistency-engine, log-collector, doc-store]
+    depends_on: [consistency-engine, log-collector, doc_store]
 
   frontend:
     image: python:3.11-slim
@@ -132,7 +132,7 @@ services:
     ports: ["5085:5085"]
     depends_on: [redis]
 
-  doc-store:
+  doc_store:
     image: python:3.11-slim
     working_dir: /app
     volumes: [".:/app"]

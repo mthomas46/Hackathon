@@ -209,7 +209,7 @@ with TraceContext(tracer, "operation_name", trace_id) as span:
 - `/orchestrator/` - Orchestrator API
 - `/reporting/` - Reporting API
 - `/consistency-engine/` - Consistency Engine API
-- `/doc-store/` - Doc Store API
+- `/doc_store/` - Doc Store API
 - `/ingest/` - Ingestion endpoints (higher rate limits)
 - `/webhooks/` - Webhook endpoints
 

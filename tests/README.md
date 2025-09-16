@@ -514,7 +514,7 @@ python tests/test_runner.py live orchestrator
 ```bash
 pytest tests/services/doc_store -m "not slow and not live" -n auto
 pytest tests/services/doc_store -m integration -n auto
-python tests/test_runner.py live doc-store
+python tests/test_runner.py live doc_store
 ```
 
 ### Source Agent

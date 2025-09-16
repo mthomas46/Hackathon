@@ -21,7 +21,7 @@ class DocStoreUIHandlers:
 
     @staticmethod
     def handle_doc_store_browser() -> HTMLResponse:
-        """Render doc-store data browser for document exploration."""
+        """Render doc_store data browser for document exploration."""
         try:
             html = """
 <!DOCTYPE html>
@@ -374,7 +374,7 @@ class DocStoreUIHandlers:
             document.getElementById('documents-container').innerHTML = 'Loading documents...';
 
             try {
-                const response = await fetch(\`/api/doc-store/documents?limit={{limit}&offset={{currentDocOffset}\`);
+                const response = await fetch(\`/api/doc_store/documents?limit={{limit}&offset={{currentDocOffset}\`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -443,7 +443,7 @@ class DocStoreUIHandlers:
             document.getElementById('search-container').innerHTML = 'Searching...';
 
             try {
-                const response = await fetch(\`/api/doc-store/search?q={{encodeURIComponent(query)}&limit={{limit}\`);
+                const response = await fetch(\`/api/doc_store/search?q={{encodeURIComponent(query)}&limit={{limit}\`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -492,7 +492,7 @@ class DocStoreUIHandlers:
             document.getElementById('quality-container').innerHTML = 'Loading quality metrics...';
 
             try {
-                const response = await fetch('/api/doc-store/quality');
+                const response = await fetch('/api/doc_store/quality');
                 const data = await response.json();
 
                 if (data.success) {
@@ -550,7 +550,7 @@ class DocStoreUIHandlers:
 
             document.getElementById('analyses-container').innerHTML = 'Loading analyses...';
 
-            let url = \`/api/doc-store/analyses?limit={{limit}&offset={{currentAnalysisOffset}\`;
+            let url = \`/api/doc_store/analyses?limit={{limit}&offset={{currentAnalysisOffset}\`;
             if (docId) url += \`&document_id={{docId}\`;
 
             try {
@@ -614,7 +614,7 @@ class DocStoreUIHandlers:
             document.getElementById('styles-container').innerHTML = 'Loading style examples...';
 
             try {
-                const response = await fetch('/api/doc-store/style-examples');
+                const response = await fetch('/api/doc_store/style-examples');
                 const data = await response.json();
 
                 if (data.success) {
@@ -664,7 +664,7 @@ class DocStoreUIHandlers:
 
         function viewDocument(docId) {
             // Navigate to document detail view
-            window.open(\`/api/doc-store/documents/{{docId}\`, '_blank');
+            window.open(\`/api/doc_store/documents/{{docId}\`, '_blank');
         }
 
         function clearSearch() {

@@ -50,7 +50,7 @@ This documentation provides comprehensive guidance for the LLM Documentation Eco
 ### 🛠️ **Service Documentation**
 - **[Source Agent](../services/source-agent/README.md)** - Multi-source document ingestion service
 - **[Orchestrator](../services/orchestrator/README.md)** - Control plane, registry, workflows
-- **[Doc Store](../services/doc-store/README.md)** - Storage, search, quality signals
+- **[Doc Store](../services/doc_store/README.md)** - Storage, search, quality signals
 - **[Frontend](../services/frontend/README.md)** - Web UI
 - **[Summarizer Hub](../services/summarizer-hub/README.md)** - Provider fan-out
 - **[Prompt Store](../services/prompt-store/README.md)** - Prompts DB/API

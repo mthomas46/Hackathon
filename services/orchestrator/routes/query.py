@@ -35,6 +35,6 @@ async def execute_query(req: QueryRequest):
         "status": "executed",
         "results": {
             "documents_found": 5,
-            "services_used": ["doc-store", "analyzer"]
+            "services_used": ["doc_store", "analyzer"]
         }
     }

@@ -121,7 +121,7 @@ class WorkflowBuilder:
                 ),
                 WorkflowStep(
                     step_id="store_documents",
-                    service="doc-store",
+                    service="doc_store",
                     operation="store",
                     params={"validate": True}
                 )

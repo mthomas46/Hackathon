@@ -28,7 +28,7 @@ Shared modules:
   - `BEDROCK_*`: AWS Bedrock configuration (if enabled in summarizer-hub).
   - `SUMMARIZER_HUB_URL`: for secure-analyzer.
   - `NOTIFICATION_URL`: base for notification-service.
-  - `DOC_STORE_URL`: base for doc-store.
+  - `DOC_STORE_URL`: base for doc_store.
 
 ## Services and Health
 
