@@ -12,7 +12,7 @@ import pytest
 
 # Import modules normally now that directory uses underscores
 from services.doc_store.modules.relationships import RelationshipGraph, relationship_graph
-from services.doc_store.modules.models import AddRelationshipRequest
+from services.doc_store.core.models import RelationshipRequest
 
 
 class TestRelationshipGraph:
@@ -322,7 +322,7 @@ class TestRelationshipGraphIntegration:
     async def test_relationship_extraction_on_document_creation(self):
         """Test that relationships are extracted when documents are created."""
         from services.doc_store.modules.document_handlers import DocumentHandlers
-        from services.doc_store.modules.models import PutDocumentRequest
+        from services.doc_store.core.models import DocumentRequest
 
         # Create a document with references
         content = """
@@ -330,7 +330,7 @@ class TestRelationshipGraphIntegration:
         It also extends the functionality from base-module-doc.
         """
 
-        request = PutDocumentRequest(
+        request = DocumentRequest(
             content=content,
             metadata={"type": "implementation", "source_type": "code"}
         )
@@ -356,7 +356,7 @@ class TestRelationshipGraphIntegration:
         from services.doc_store.modules.relationship_handlers import RelationshipHandlers
 
         # Test adding a relationship
-        request = AddRelationshipRequest(
+        request = RelationshipRequest(
             source_id="doc1",
             target_id="doc2",
             relationship_type="references",

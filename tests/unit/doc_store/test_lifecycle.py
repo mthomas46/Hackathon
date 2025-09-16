@@ -280,7 +280,7 @@ class TestLifecycleManagementIntegration:
     async def test_lifecycle_api_endpoints(self):
         """Test lifecycle management API endpoints."""
         from services.doc_store.modules.lifecycle_handlers import LifecycleHandlers
-        from services.doc_store.modules.models import LifecyclePolicyRequest
+        from services.doc_store.core.models import LifecyclePolicyRequest
 
         # Test policy creation
         policy_request = LifecyclePolicyRequest(
@@ -353,7 +353,7 @@ class TestLifecycleManagementIntegration:
     async def test_document_phase_transition_api(self):
         """Test document phase transition API."""
         from services.doc_store.modules.lifecycle_handlers import LifecycleHandlers
-        from services.doc_store.modules.models import LifecycleTransitionRequest
+        from services.doc_store.core.models import LifecycleTransitionRequest
 
         transition_request = LifecycleTransitionRequest(
             new_phase="archived",
