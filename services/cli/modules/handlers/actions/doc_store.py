@@ -231,6 +231,81 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.get_json(url, params=params)
         print_kv(console, "Bulk Operations", data)
 
+    async def register_webhook():
+        name = Prompt.ask("Webhook name")
+        url_input = Prompt.ask("Webhook URL")
+        events_input = Prompt.ask("Events (comma-separated)")
+        events = [event.strip() for event in events_input.split(",") if event.strip()]
+        secret = Prompt.ask("Secret (optional)", default="")
+        secret = secret if secret else None
+
+        payload = {
+            "name": name,
+            "url": url_input,
+            "events": events
+        }
+        if secret:
+            payload["secret"] = secret
+
+        url = f"{clients.doc_store_url()}/webhooks"
+        data = await clients.post_json(url, payload)
+        print_kv(console, f"Webhook Registration: {name}", data)
+
+    async def list_webhooks():
+        url = f"{clients.doc_store_url()}/webhooks"
+        data = await clients.get_json(url)
+        print_kv(console, "Webhooks", data)
+
+    async def emit_test_event():
+        event_type = Prompt.ask("Event type", default="document.created")
+        entity_type = Prompt.ask("Entity type", default="document")
+        entity_id = Prompt.ask("Entity ID")
+        user_id = Prompt.ask("User ID (optional)", default="")
+        user_id = user_id if user_id else None
+
+        payload = {
+            "event_type": event_type,
+            "entity_type": entity_type,
+            "entity_id": entity_id
+        }
+        if user_id:
+            payload["user_id"] = user_id
+
+        url = f"{clients.doc_store_url()}/events"
+        data = await clients.post_json(url, payload)
+        print_kv(console, f"Event Emission: {event_type}", data)
+
+    async def view_event_history():
+        event_type = Prompt.ask("Event type filter (optional)", default="")
+        entity_type = Prompt.ask("Entity type filter (optional)", default="")
+        entity_id = Prompt.ask("Entity ID filter (optional)", default="")
+        limit = Prompt.ask("Limit", default="50")
+
+        params = {"limit": int(limit)}
+        if event_type:
+            params["event_type"] = event_type
+        if entity_type:
+            params["entity_type"] = entity_type
+        if entity_id:
+            params["entity_id"] = entity_id
+
+        url = f"{clients.doc_store_url()}/events"
+        data = await clients.get_json(url, params=params)
+        print_kv(console, "Event History", data)
+
+    async def view_notification_stats():
+        days = Prompt.ask("Days back", default="7")
+        url = f"{clients.doc_store_url()}/notifications/stats"
+        params = {"days_back": int(days)}
+        data = await clients.get_json(url, params=params)
+        print_kv(console, "Notification Statistics", data)
+
+    async def test_webhook():
+        webhook_id = Prompt.ask("Webhook ID")
+        url = f"{clients.doc_store_url()}/webhooks/{webhook_id}/test"
+        data = await clients.post_json(url, {})
+        print_kv(console, f"Webhook Test: {webhook_id}", data)
+
     return [
         ("Search documents", list_documents),
         ("Advanced search with filters", advanced_search),
@@ -250,6 +325,12 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("View document versions", view_document_versions),
         ("Compare document versions", compare_versions),
         ("Rollback document to version", rollback_document),
+        ("Register webhook", register_webhook),
+        ("List webhooks", list_webhooks),
+        ("Emit test event", emit_test_event),
+        ("View event history", view_event_history),
+        ("View notification stats", view_notification_stats),
+        ("Test webhook", test_webhook),
         ("View analytics (detailed)", view_analytics),
         ("View analytics summary", view_analytics_summary),
         ("View config (effective)", config_effective),

@@ -185,6 +185,65 @@ def init_database() -> None:
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS webhooks (
+              id TEXT PRIMARY KEY,
+              name TEXT UNIQUE,
+              url TEXT,
+              secret TEXT,
+              events TEXT,
+              headers TEXT,
+              is_active BOOLEAN DEFAULT 1,
+              retry_count INTEGER DEFAULT 3,
+              timeout_seconds INTEGER DEFAULT 30,
+              created_at TEXT,
+              updated_at TEXT
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS webhook_deliveries (
+              id TEXT PRIMARY KEY,
+              webhook_id TEXT,
+              event_type TEXT,
+              event_id TEXT,
+              payload TEXT,
+              status TEXT,
+              response_code INTEGER,
+              response_body TEXT,
+              error_message TEXT,
+              attempt_count INTEGER DEFAULT 1,
+              delivered_at TEXT,
+              created_at TEXT,
+              FOREIGN KEY(webhook_id) REFERENCES webhooks(id)
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS notification_events (
+              id TEXT PRIMARY KEY,
+              event_type TEXT,
+              entity_type TEXT,
+              entity_id TEXT,
+              user_id TEXT,
+              metadata TEXT,
+              created_at TEXT
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS notification_subscriptions (
+              id TEXT PRIMARY KEY,
+              user_id TEXT,
+              event_types TEXT,
+              delivery_methods TEXT,
+              filters TEXT,
+              is_active BOOLEAN DEFAULT 1,
+              created_at TEXT,
+              updated_at TEXT
+            )
+        """)
+
         # Create indexes for performance
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON documents(content_hash)",
@@ -214,7 +273,17 @@ def init_database() -> None:
             "CREATE INDEX IF NOT EXISTS idx_document_lifecycle_deletion_date ON document_lifecycle(deletion_date)",
             "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_document_id ON lifecycle_events(document_id)",
             "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_type ON lifecycle_events(event_type)",
-            "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_created_at ON lifecycle_events(created_at)"
+            "CREATE INDEX IF NOT EXISTS idx_lifecycle_events_created_at ON lifecycle_events(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_webhooks_name ON webhooks(name)",
+            "CREATE INDEX IF NOT EXISTS idx_webhooks_active ON webhooks(is_active)",
+            "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id)",
+            "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries(status)",
+            "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created_at ON webhook_deliveries(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_events_type ON notification_events(event_type)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_events_entity ON notification_events(entity_type, entity_id)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_events_created_at ON notification_events(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_user ON notification_subscriptions(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_active ON notification_subscriptions(is_active)"
         ]
 
         for index in indexes:

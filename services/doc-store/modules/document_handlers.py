@@ -27,6 +27,7 @@ from .models import GetDocumentResponse
 from .versioning import create_document_version, get_document_versions, get_document_version
 from .relationships import relationship_graph
 from .semantic_tagging import semantic_tagger
+from .notifications import notification_manager
 
 
 class DocumentHandlers:
@@ -109,6 +110,19 @@ class DocumentHandlers:
                 except Exception:
                     # Tagging is best-effort, don't fail document creation if it fails
                     pass
+
+            # Emit document creation event
+            if result.get("id"):
+                notification_manager.emit_event(
+                    event_type="document.created",
+                    entity_type="document",
+                    entity_id=result["id"],
+                    metadata={
+                        "content_length": len(req.content),
+                        "type": meta.get("type"),
+                        "source_type": meta.get("source_type")
+                    }
+                )
 
             context = build_doc_store_context("document_creation", doc_id=result.get("id"))
             return create_doc_store_success_response("created", result, **context)

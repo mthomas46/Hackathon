@@ -78,6 +78,13 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 | GET    | /bulk/operations/{id} | Bulk operation status |
 | GET    | /bulk/operations | List bulk operations |
 | POST   | /bulk/operations/{id}/cancel | Cancel bulk operation |
+| POST   | /webhooks | Register webhook |
+| GET    | /webhooks | List webhooks |
+| POST   | /events | Emit event |
+| GET    | /events | Event history |
+| GET    | /webhooks/deliveries | Webhook deliveries |
+| GET    | /notifications/stats | Notification stats |
+| POST   | /webhooks/{id}/test | Test webhook |
 | GET    | /cache/stats | Cache statistics |
 | POST   | /cache/invalidate | Invalidate cache |
 | POST   | /cache/warmup | Warm up cache |
@@ -294,6 +301,74 @@ The doc-store provides high-performance bulk operations for efficient large-scal
 - Memory-efficient processing with streaming result handling
 - Automatic resource cleanup and connection management
 - Comprehensive error handling and recovery mechanisms
+
+## Real-Time Notifications & Webhooks
+
+The doc-store provides comprehensive real-time notification capabilities for event-driven integrations and external system synchronization.
+
+### Event System
+- **Event Types**: document.created, document.updated, document.deleted, analysis.completed, lifecycle.transition
+- **Event Metadata**: Rich context information including timestamps, user IDs, and entity details
+- **Event History**: Complete audit trail of all system events with filtering and pagination
+- **Real-Time Processing**: Asynchronous event emission and processing
+
+### Webhook Management
+- **Webhook Registration**: Configure HTTP endpoints for event delivery
+- **Event Filtering**: Subscribe to specific event types and entity types
+- **Security**: HMAC signature verification for webhook authenticity
+- **Retry Logic**: Automatic retry with exponential backoff for failed deliveries
+- **Delivery Tracking**: Comprehensive logging of delivery attempts and responses
+
+### Delivery System
+- **Asynchronous Delivery**: Non-blocking webhook delivery to prevent system slowdown
+- **Concurrent Processing**: Parallel delivery to multiple webhooks
+- **Timeout Management**: Configurable timeouts for webhook responses
+- **Error Handling**: Detailed error reporting and failure analysis
+- **Success Monitoring**: Delivery success rates and performance metrics
+
+### Notification Statistics
+- **Event Analytics**: Event type distribution and frequency analysis
+- **Delivery Metrics**: Success rates, response times, and failure patterns
+- **Webhook Performance**: Individual webhook delivery statistics
+- **System Health**: Notification system monitoring and alerting
+- **Failure Analysis**: Recent failures and error pattern identification
+
+### Event Types
+- **Document Events**: created, updated, deleted, versioned, tagged
+- **Analysis Events**: completed, failed, quality_checked
+- **Lifecycle Events**: archived, deleted, policy_applied
+- **Relationship Events**: linked, unlinked, graph_updated
+- **Bulk Operation Events**: started, completed, failed
+
+### Webhook Features
+- **Custom Headers**: Support for authentication and custom headers
+- **Event Matching**: Flexible event type and entity filtering
+- **Signature Verification**: HMAC-SHA256 signature validation
+- **Retry Configuration**: Customizable retry counts and timeouts
+- **Active/Inactive Status**: Enable/disable webhooks without deletion
+
+### Integration Patterns
+- **External Systems**: Real-time synchronization with external applications
+- **Monitoring Systems**: Alert generation and dashboard updates
+- **Audit Systems**: Compliance and security event forwarding
+- **Workflow Triggers**: Automated business process initiation
+- **Data Pipelines**: Event-driven data processing and ETL operations
+
+### Notification Endpoints
+- **POST /webhooks**: Register new webhook endpoints for event delivery
+- **GET /webhooks**: List all configured webhooks and their settings
+- **POST /events**: Manually emit events for testing and integration
+- **GET /events**: Retrieve event history with advanced filtering
+- **GET /webhooks/deliveries**: Monitor webhook delivery success and failures
+- **GET /notifications/stats**: Comprehensive notification system analytics
+- **POST /webhooks/{id}/test**: Test webhook configuration and connectivity
+
+### Security & Reliability
+- **Authentication**: Webhook signature verification for secure delivery
+- **Rate Limiting**: Protection against webhook endpoint overload
+- **Circuit Breaking**: Automatic failure detection and recovery
+- **Audit Logging**: Complete delivery history for compliance
+- **Error Isolation**: Individual webhook failures don't affect others
 
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
