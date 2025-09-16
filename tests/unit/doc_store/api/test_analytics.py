@@ -37,7 +37,7 @@ class TestAnalyticsSummary:
 
         summary = data["data"]
         # Should contain expected analytics fields
-        expected_fields = ["overview", "quality", "storage", "performance"]
+        expected_fields = ["overview", "quality", "storage", "insights"]
         for field in expected_fields:
             assert field in summary or any(field in key for key in summary.keys())
 

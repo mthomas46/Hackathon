@@ -19,6 +19,12 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
     def __init__(self):
         super().__init__("bulk_operations")
 
+    def get_by_id(self, operation_id: str) -> Optional[BulkOperation]:
+        """Get bulk operation by operation_id."""
+        query = f"SELECT * FROM {self.table_name} WHERE operation_id = ?"
+        row = execute_query(query, (operation_id,), fetch_one=True)
+        return self._row_to_entity(row) if row else None
+
     def _row_to_entity(self, row: Dict[str, Any]) -> BulkOperation:
         """Convert database row to BulkOperation entity."""
         return BulkOperation(

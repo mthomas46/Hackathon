@@ -116,5 +116,6 @@ class TestBulkOperationsIntegration:
 
             result = await handler.handle_bulk_create_documents(documents)
 
-            assert result["success"] is True
-            assert "operation_id" in result["data"]
+            result_dict = result.model_dump()
+            assert result_dict["success"] is True
+            assert "operation_id" in result_dict["data"]

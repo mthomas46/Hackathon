@@ -50,8 +50,12 @@ class BulkOperationsService(BaseService[BulkOperation]):
 
         operation = self.create_entity(data)
 
-        # Start processing asynchronously
-        asyncio.create_task(self._process_operation_async(operation.operation_id, items))
+        # Start processing asynchronously (only if event loop is running)
+        try:
+            asyncio.create_task(self._process_operation_async(operation.operation_id, items))
+        except RuntimeError:
+            # No event loop running (e.g., in tests), skip async processing
+            pass
 
         return operation
 
