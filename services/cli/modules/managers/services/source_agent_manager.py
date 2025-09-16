@@ -24,6 +24,10 @@ class SourceAgentManager(BaseManager):
         """Return list of services required by this manager."""
         return [ServiceNames.SOURCE_AGENT]
 
+    async def source_agent_menu(self):
+        """Main source agent management menu."""
+        await self.run_menu_loop("Source Agent Management")
+
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for source agent operations."""
         return [

@@ -23,6 +23,10 @@ class MemoryAgentManager(BaseManager):
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)
 
+    async def memory_agent_menu(self):
+        """Main memory agent management menu."""
+        await self.run_menu_loop("Memory Agent Management")
+
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for memory agent operations."""
         return [

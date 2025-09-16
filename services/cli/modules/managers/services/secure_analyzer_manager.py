@@ -23,6 +23,10 @@ class SecureAnalyzerManager(BaseManager):
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)
 
+    async def secure_analyzer_menu(self):
+        """Main secure analyzer management menu."""
+        await self.run_menu_loop("Secure Analyzer Management")
+
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for secure analyzer operations."""
         return [
