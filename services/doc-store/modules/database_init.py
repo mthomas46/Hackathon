@@ -77,6 +77,22 @@ def init_database() -> None:
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_relationships (
+              id TEXT PRIMARY KEY,
+              source_document_id TEXT,
+              target_document_id TEXT,
+              relationship_type TEXT,
+              strength REAL DEFAULT 1.0,
+              metadata TEXT,
+              created_at TEXT,
+              updated_at TEXT,
+              FOREIGN KEY(source_document_id) REFERENCES documents(id),
+              FOREIGN KEY(target_document_id) REFERENCES documents(id),
+              UNIQUE(source_document_id, target_document_id, relationship_type)
+            )
+        """)
+
         # Create indexes for performance
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON documents(content_hash)",
@@ -86,7 +102,11 @@ def init_database() -> None:
             "CREATE INDEX IF NOT EXISTS idx_style_examples_language ON style_examples(language)",
             "CREATE INDEX IF NOT EXISTS idx_document_versions_document_id ON document_versions(document_id)",
             "CREATE INDEX IF NOT EXISTS idx_document_versions_version_number ON document_versions(version_number)",
-            "CREATE INDEX IF NOT EXISTS idx_document_versions_created_at ON document_versions(created_at)"
+            "CREATE INDEX IF NOT EXISTS idx_document_versions_created_at ON document_versions(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_relationships_source ON document_relationships(source_document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_relationships_target ON document_relationships(target_document_id)",
+            "CREATE INDEX IF NOT EXISTS idx_relationships_type ON document_relationships(relationship_type)",
+            "CREATE INDEX IF NOT EXISTS idx_relationships_strength ON document_relationships(strength)"
         ]
 
         for index in indexes:

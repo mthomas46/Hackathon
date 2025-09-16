@@ -17,6 +17,7 @@ from .shared_utils import (
     get_doc_store_connection
 )
 from .models import AnalyticsResponse, AnalyticsSummaryResponse
+from .caching import docstore_cache
 
 
 class AnalyticsHandlers:
@@ -26,6 +27,14 @@ class AnalyticsHandlers:
     async def handle_analytics(days_back: int = 30) -> Dict[str, Any]:
         """Generate comprehensive analytics for the document store."""
         try:
+            # Check cache first
+            cache_key = f"analytics:{days_back}"
+            cached_result = await docstore_cache.get("analytics", {"days_back": days_back}, tags=["analytics"])
+
+            if cached_result:
+                context = build_doc_store_context("analytics_generation", days_back=days_back, cached=True)
+                return create_doc_store_success_response("analytics retrieved from cache", cached_result, **context)
+
             # Get database path
             conn = get_doc_store_connection()
             db_path = conn.execute("PRAGMA database_list").fetchone()['file']
@@ -47,6 +56,9 @@ class AnalyticsHandlers:
                 "content_insights": result.content_insights,
                 "relationship_insights": result.relationship_insights
             }
+
+            # Cache the result for 5 minutes
+            await docstore_cache.set("analytics", {"days_back": days_back}, response_data, ttl=300, tags=["analytics"])
 
             context = build_doc_store_context("analytics_generation", days_back=days_back)
             return create_doc_store_success_response("analytics generated", response_data, **context)

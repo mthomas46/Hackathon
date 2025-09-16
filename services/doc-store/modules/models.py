@@ -218,3 +218,83 @@ class VersionRollbackRequest(BaseModel):
 class VersionCleanupRequest(BaseModel):
     """Request model for version cleanup."""
     keep_versions: int = 10
+
+
+class AddRelationshipRequest(BaseModel):
+    """Request model for adding relationships."""
+    source_id: str
+    target_id: str
+    relationship_type: str
+    strength: float = 1.0
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class RelationshipInfo(BaseModel):
+    """Relationship information model."""
+    id: str
+    source_id: str
+    target_id: str
+    relationship_type: str
+    strength: float
+    metadata: Dict[str, Any]
+    created_at: str
+    updated_at: str
+    related_document_title: Optional[str] = None
+    related_document_metadata: Dict[str, Any] = {}
+
+
+class RelationshipsResponse(BaseModel):
+    """Response model for relationship queries."""
+    document_id: str
+    relationships: List[RelationshipInfo]
+    total_count: int
+    direction: str
+    relationship_type_filter: Optional[str] = None
+
+
+class GraphPath(BaseModel):
+    """Graph path model."""
+    source: str
+    target: str
+    type: str
+    strength: float
+    metadata: Dict[str, Any]
+
+
+class PathsResponse(BaseModel):
+    """Response model for path finding."""
+    start_document: str
+    end_document: str
+    max_depth: int
+    paths_found: int
+    paths: List[List[GraphPath]]
+
+
+class GraphStatisticsResponse(BaseModel):
+    """Response model for graph statistics."""
+    total_relationships: int
+    relationship_types: List[Dict[str, Any]]
+    top_nodes_by_degree: List[Dict[str, Any]]
+    connected_components: Dict[str, Any]
+    average_relationship_strength: float
+    graph_density: float
+
+
+class CacheStatsResponse(BaseModel):
+    """Response model for cache statistics."""
+    cache_enabled: bool
+    local_cache_entries: int
+    total_hits: int
+    total_misses: int
+    hit_rate_percent: float
+    total_size_bytes: int
+    evictions: int
+    avg_response_time_ms: float
+    redis_stats: Dict[str, Any]
+    uptime_seconds: float
+
+
+class CacheInvalidationRequest(BaseModel):
+    """Request model for cache invalidation."""
+    tags: Optional[List[str]] = None
+    operation: Optional[str] = None

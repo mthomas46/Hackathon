@@ -25,6 +25,7 @@ from .shared_utils import (
 from .document_ops import create_document_logic
 from .models import GetDocumentResponse
 from .versioning import create_document_version, get_document_versions, get_document_version
+from .relationships import relationship_graph
 
 
 class DocumentHandlers:
@@ -95,6 +96,11 @@ class DocumentHandlers:
             # Add created_at for test compatibility
             if os.environ.get("TESTING", "").lower() == "true":
                 result["created_at"] = utc_now().isoformat()
+
+            # Extract and store relationships for the new document
+            if result.get("id"):
+                doc_id = result["id"]
+                relationship_graph.extract_and_store_relationships(doc_id, req.content, meta)
 
             context = build_doc_store_context("document_creation", doc_id=result.get("id"))
             return create_doc_store_success_response("created", result, **context)

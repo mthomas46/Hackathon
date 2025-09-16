@@ -129,12 +129,39 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.get_json(url)
         print_kv(console, f"Comparison {version_a} vs {version_b}", data)
 
+    async def view_relationships():
+        doc_id = Prompt.ask("Document ID")
+        direction = Prompt.ask("Direction (incoming/outgoing/both)", default="both")
+        rel_type = Prompt.ask("Relationship type filter (optional)", default="")
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/relationships"
+        params = {"direction": direction}
+        if rel_type:
+            params["relationship_type"] = rel_type
+        data = await clients.get_json(url, params=params)
+        print_kv(console, f"Relationships for {doc_id}", data)
+
+    async def find_paths():
+        start_id = Prompt.ask("Start document ID")
+        end_id = Prompt.ask("End document ID")
+        max_depth = Prompt.ask("Max depth", default="3")
+        url = f"{clients.doc_store_url()}/graph/paths/{start_id}/{end_id}"
+        data = await clients.get_json(url, params={"max_depth": max_depth})
+        print_kv(console, f"Paths from {start_id} to {end_id}", data)
+
+    async def graph_stats():
+        url = f"{clients.doc_store_url()}/graph/statistics"
+        data = await clients.get_json(url)
+        print_kv(console, "Graph Statistics", data)
+
     return [
         ("Search documents", list_documents),
         ("Advanced search with filters", advanced_search),
         ("Get document by ID", get_document),
         ("Create document", put_document),
         ("List quality signals", quality),
+        ("View document relationships", view_relationships),
+        ("Find relationship paths", find_paths),
+        ("View graph statistics", graph_stats),
         ("View document versions", view_document_versions),
         ("Compare document versions", compare_versions),
         ("Rollback document to version", rollback_document),

@@ -61,6 +61,15 @@ Tests: [tests/unit/doc_store](../../tests/unit/doc_store)
 | GET    | /documents/{id}/versions/{a}/compare/{b} | Compare versions |
 | POST   | /documents/{id}/rollback | Rollback to version |
 | POST   | /documents/{id}/versions/cleanup | Cleanup old versions |
+| POST   | /relationships | Add relationship |
+| GET    | /documents/{id}/relationships | Get document relationships |
+| GET    | /graph/paths/{start}/{end} | Find relationship paths |
+| GET    | /graph/statistics | Graph statistics |
+| POST   | /documents/{id}/relationships/extract | Extract relationships |
+| GET    | /cache/stats | Cache statistics |
+| POST   | /cache/invalidate | Invalidate cache |
+| POST   | /cache/warmup | Warm up cache |
+| POST   | /cache/optimize | Optimize cache |
 
 ## Related
 - Orchestrator: [../orchestrator/README.md](../orchestrator/README.md)
@@ -150,12 +159,56 @@ Each version tracks:
 - Timestamp and correlation data
 - Content size for storage tracking
 
+## Document Relationship Graph
+
+The doc-store provides comprehensive relationship mapping and graph analysis capabilities to understand document interconnections and dependencies:
+
+### Relationship Types
+- **references**: Document mentions or links to other documents
+- **derived_from**: Document created from or based on another document
+- **correlated**: Documents sharing correlation IDs or related contexts
+- **analyzed_by**: Analysis results linked to source documents
+- **external_reference**: Links to external URLs and resources
+
+### Graph Analysis Features
+- **Automatic Relationship Extraction**: Content analysis discovers document references and dependencies
+- **Graph Traversal**: Find connection paths between any two documents
+- **Relationship Queries**: Explore incoming/outgoing relationships with filtering
+- **Graph Statistics**: Comprehensive network analysis including connectivity and density metrics
+- **Strength Scoring**: Weighted relationships based on relevance and importance
+
+### Relationship Endpoints
+- **POST /relationships**: Manually create relationships between documents
+- **GET /documents/{id}/relationships**: Query relationships for specific documents
+- **GET /graph/paths/{start}/{end}**: Discover connection paths through the graph
+- **GET /graph/statistics**: Network analysis and connectivity metrics
+- **POST /documents/{id}/relationships/extract**: Auto-extract relationships from existing documents
+
+### Cache Performance Layer
+
+The doc-store includes a high-performance caching system for optimal query performance:
+
+### Caching Features
+- **Redis Integration**: Distributed caching with configurable memory limits
+- **Intelligent Invalidation**: Tag-based cache invalidation for data consistency
+- **Performance Monitoring**: Hit rates, response times, and memory usage tracking
+- **Fallback Support**: Local caching when Redis unavailable
+- **Warm-up Capabilities**: Preload frequently accessed data
+
+### Cache Management
+- **GET /cache/stats**: Comprehensive performance metrics and statistics
+- **POST /cache/invalidate**: Selective cache clearing by tags or operations
+- **POST /cache/warmup**: Preload critical data for performance
+- **POST /cache/optimize**: Memory optimization and cleanup operations
+
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
 - Designed to be called by orchestrator/consistency-engine/reporting.
 - Analytics data supports monitoring dashboards and automated insights.
 - Advanced search powers intelligent document discovery across the ecosystem.
 - Versioning enables collaborative workflows and change management across services.
+- Relationship graph supports dependency analysis and knowledge mapping.
+- Caching layer ensures high performance for large document collections.
 
 ## Config
 Configuration is config-first via `services/shared/config.get_config_value`.

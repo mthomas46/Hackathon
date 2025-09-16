@@ -51,7 +51,8 @@ from .modules.models import (
     ListAnalysesResponse, StyleExamplesResponse, ListDocumentsResponse,
     QualityResponse, SearchResponse, MetadataPatch, AnalyticsResponse, AnalyticsSummaryResponse,
     AdvancedSearchRequest, AdvancedSearchResponse, DocumentVersionsResponse, DocumentVersionDetail,
-    VersionComparison, VersionRollbackRequest, VersionCleanupRequest
+    VersionComparison, VersionRollbackRequest, VersionCleanupRequest, CacheStatsResponse, CacheInvalidationRequest,
+    AddRelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse
 )
 from .modules.database_init import init_database
 from .modules.document_handlers import document_handlers
@@ -59,6 +60,9 @@ from .modules.analysis_handlers import analysis_handlers
 from .modules.search_handlers import search_handlers
 from .modules.analytics_handlers import analytics_handlers
 from .modules.versioning_handlers import versioning_handlers
+from .modules.cache_handlers import cache_handlers
+from .modules.relationship_handlers import relationship_handlers
+from .modules.caching import docstore_cache
 
 # ============================================================================
 # ROUTES - Include existing router
@@ -174,6 +178,27 @@ attach_self_register(app, ServiceNames.DOC_STORE)
 
 # Initialize database
 init_database()
+
+# Initialize cache
+@app.on_event("startup")
+async def startup_event():
+    """Initialize cache on startup."""
+    redis_host = get_config_value("REDIS_HOST", None, section="redis", env_key="REDIS_HOST")
+    if redis_host:
+        redis_url = f"redis://{redis_host}"
+    else:
+        redis_url = None
+
+    cache_initialized = await docstore_cache.initialize()
+    if cache_initialized:
+        print(f"✅ Doc-store cache initialized with Redis")
+    else:
+        print(f"⚠️  Doc-store cache initialized without Redis (local only)")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up cache on shutdown."""
+    await docstore_cache.close()
 
 
 # ============================================================================
@@ -457,6 +482,101 @@ async def cleanup_document_versions(document_id: str, req: VersionCleanupRequest
     the most recent versions to manage storage efficiently.
     """
     return await versioning_handlers.handle_cleanup_versions(document_id, req)
+
+
+@app.get("/cache/stats", response_model=CacheStatsResponse)
+async def get_cache_stats():
+    """Get comprehensive cache performance statistics.
+
+    Provides detailed metrics on cache performance, hit rates, memory usage,
+    and Redis connection status for performance monitoring and optimization.
+    """
+    return await cache_handlers.handle_get_cache_stats()
+
+
+@app.post("/cache/invalidate")
+async def invalidate_cache(req: CacheInvalidationRequest):
+    """Invalidate cache entries by tags or operation.
+
+    Allows selective cache invalidation to ensure data freshness while
+    maintaining performance for unchanged data.
+    """
+    return await cache_handlers.handle_invalidate_cache(tags=req.tags, operation=req.operation)
+
+
+@app.post("/cache/warmup")
+async def warmup_cache():
+    """Warm up the cache with frequently accessed data.
+
+    Preloads commonly accessed documents, analytics, and search results
+    to improve initial response times after service restart.
+    """
+    return await cache_handlers.handle_warmup_cache()
+
+
+@app.post("/cache/optimize")
+async def optimize_cache():
+    """Optimize cache performance and memory usage.
+
+    Performs cache cleanup, memory optimization, and performance tuning
+    to maintain optimal caching efficiency.
+    """
+    return await cache_handlers.handle_optimize_cache()
+
+
+@app.post("/relationships", response_model=Dict[str, Any])
+async def add_relationship(req: AddRelationshipRequest):
+    """Add a relationship between documents.
+
+    Creates a directed relationship between two documents with configurable
+    strength and metadata for building knowledge graphs and dependency maps.
+    """
+    return await relationship_handlers.handle_add_relationship(
+        req.source_id, req.target_id, req.relationship_type, req.strength, req.metadata
+    )
+
+
+@app.get("/documents/{document_id}/relationships", response_model=RelationshipsResponse)
+async def get_document_relationships(document_id: str, relationship_type: Optional[str] = None,
+                                   direction: str = "both", limit: int = 50):
+    """Get relationships for a document.
+
+    Retrieves all relationships connected to a document, with optional filtering
+    by relationship type and direction (incoming, outgoing, or both).
+    """
+    return await relationship_handlers.handle_get_relationships(
+        document_id, relationship_type, direction, limit
+    )
+
+
+@app.get("/graph/paths/{start_id}/{end_id}", response_model=PathsResponse)
+async def find_relationship_paths(start_id: str, end_id: str, max_depth: int = 3):
+    """Find relationship paths between documents.
+
+    Discovers connection paths between two documents through the relationship
+    graph, useful for understanding indirect dependencies and relationships.
+    """
+    return await relationship_handlers.handle_find_paths(start_id, end_id, max_depth)
+
+
+@app.get("/graph/statistics", response_model=GraphStatisticsResponse)
+async def get_graph_statistics():
+    """Get comprehensive relationship graph statistics.
+
+    Provides insights into the document relationship network including
+    connectivity, relationship types distribution, and graph metrics.
+    """
+    return await relationship_handlers.handle_graph_statistics()
+
+
+@app.post("/documents/{document_id}/relationships/extract")
+async def extract_document_relationships(document_id: str):
+    """Extract relationships for an existing document.
+
+    Analyzes document content and metadata to automatically discover and
+    store relationships with other documents in the system.
+    """
+    return await relationship_handlers.handle_extract_relationships(document_id)
 
 
 if __name__ == "__main__":
