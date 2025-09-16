@@ -22,6 +22,10 @@ class DiscoveryAgentManager(BaseManager):
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)
 
+    async def discovery_agent_menu(self):
+        """Main discovery agent management menu."""
+        await self.run_menu_loop("Discovery Agent Management")
+
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for discovery agent operations."""
         return [
