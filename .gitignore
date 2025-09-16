@@ -272,13 +272,23 @@ docker-compose.override.yml
 *.yaml.bak
 kustomization.yaml.bak
 
-## Node.js (if any frontend components)
+## Node.js and Frontend
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .npm
 .yarn
+package-lock.json
+
+# Elm
+elm-stuff/
+elm.js
+repl-temp-*
+
+# Frontend build artifacts
+services/frontend/static/elm.js
+services/frontend/elm-stuff/
 
 ## Build Artifacts
 # Compiled services
