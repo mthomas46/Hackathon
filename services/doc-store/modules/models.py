@@ -298,3 +298,87 @@ class CacheInvalidationRequest(BaseModel):
     """Request model for cache invalidation."""
     tags: Optional[List[str]] = None
     operation: Optional[str] = None
+
+
+class TagDocumentRequest(BaseModel):
+    """Request model for tagging a document."""
+    force_retag: bool = False
+
+
+class TagSearchRequest(BaseModel):
+    """Request model for tag-based search."""
+    tags: List[str]
+    categories: Optional[List[str]] = None
+    min_confidence: float = 0.0
+    limit: int = 50
+
+
+class TaxonomyNodeRequest(BaseModel):
+    """Request model for creating taxonomy nodes."""
+    tag: str
+    category: str
+    description: str = ""
+    parent_tag: Optional[str] = None
+    synonyms: Optional[List[str]] = None
+
+
+class TagInfo(BaseModel):
+    """Tag information model."""
+    id: str
+    tag: str
+    category: str
+    confidence: float
+    metadata: Dict[str, Any]
+    created_at: str
+
+
+class DocumentTagsResponse(BaseModel):
+    """Response model for document tags."""
+    document_id: str
+    tags: List[TagInfo]
+    total_tags: int
+    category_filter: Optional[str] = None
+
+
+class TagSearchResult(BaseModel):
+    """Tag search result model."""
+    document_id: str
+    content: str
+    metadata: Dict[str, Any]
+    created_at: str
+    tag_matches: int
+    avg_tag_confidence: float
+
+
+class TagSearchResponse(BaseModel):
+    """Response model for tag search."""
+    query: Dict[str, Any]
+    results: List[TagSearchResult]
+    total_results: int
+
+
+class TagStatisticsResponse(BaseModel):
+    """Response model for tag statistics."""
+    total_tags: int
+    total_tagged_documents: int
+    total_documents: int
+    tag_coverage_percentage: float
+    category_distribution: List[Dict[str, Any]]
+    popular_tags: List[Dict[str, Any]]
+
+
+class TaxonomyNode(BaseModel):
+    """Taxonomy node model."""
+    tag: str
+    category: str
+    description: str
+    parent_tag: Optional[str]
+    synonyms: List[str]
+    created_at: str
+    children: List[Dict[str, Any]] = []
+
+
+class TaxonomyTreeResponse(BaseModel):
+    """Response model for taxonomy tree."""
+    root_category: Optional[str]
+    taxonomy_tree: Dict[str, List[TaxonomyNode]]

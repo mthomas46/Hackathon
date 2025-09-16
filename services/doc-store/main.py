@@ -52,7 +52,9 @@ from .modules.models import (
     QualityResponse, SearchResponse, MetadataPatch, AnalyticsResponse, AnalyticsSummaryResponse,
     AdvancedSearchRequest, AdvancedSearchResponse, DocumentVersionsResponse, DocumentVersionDetail,
     VersionComparison, VersionRollbackRequest, VersionCleanupRequest, CacheStatsResponse, CacheInvalidationRequest,
-    AddRelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse
+    AddRelationshipRequest, RelationshipsResponse, PathsResponse, GraphStatisticsResponse,
+    TagDocumentRequest, TagSearchRequest, TaxonomyNodeRequest, DocumentTagsResponse,
+    TagSearchResponse, TagStatisticsResponse, TaxonomyTreeResponse
 )
 from .modules.database_init import init_database
 from .modules.document_handlers import document_handlers
@@ -62,6 +64,7 @@ from .modules.analytics_handlers import analytics_handlers
 from .modules.versioning_handlers import versioning_handlers
 from .modules.cache_handlers import cache_handlers
 from .modules.relationship_handlers import relationship_handlers
+from .modules.tagging_handlers import tagging_handlers
 from .modules.caching import docstore_cache
 
 # ============================================================================
@@ -577,6 +580,70 @@ async def extract_document_relationships(document_id: str):
     store relationships with other documents in the system.
     """
     return await relationship_handlers.handle_extract_relationships(document_id)
+
+
+@app.post("/documents/{document_id}/tags", response_model=Dict[str, Any])
+async def tag_document(document_id: str, req: TagDocumentRequest):
+    """Automatically tag a document with semantic information.
+
+    Analyzes document content and metadata to extract semantic entities
+    and generate intelligent tags for improved discoverability.
+    """
+    return await tagging_handlers.handle_tag_document(document_id)
+
+
+@app.get("/documents/{document_id}/tags", response_model=DocumentTagsResponse)
+async def get_document_tags(document_id: str, category: Optional[str] = None):
+    """Get semantic tags for a document.
+
+    Retrieves automatically generated tags and their confidence scores,
+    optionally filtered by category (programming_language, framework, etc.).
+    """
+    return await tagging_handlers.handle_get_document_tags(document_id, category)
+
+
+@app.post("/search/tags", response_model=TagSearchResponse)
+async def search_by_tags(req: TagSearchRequest):
+    """Search documents by semantic tags.
+
+    Finds documents that match specified tags with configurable confidence
+    thresholds and category filtering for precise content discovery.
+    """
+    return await tagging_handlers.handle_search_by_tags(
+        req.tags, req.categories, req.min_confidence, req.limit
+    )
+
+
+@app.get("/tags/statistics", response_model=TagStatisticsResponse)
+async def get_tag_statistics():
+    """Get comprehensive tag statistics and analytics.
+
+    Provides insights into tag distribution, coverage, and usage patterns
+    across the document collection for content strategy optimization.
+    """
+    return await tagging_handlers.handle_get_tag_statistics()
+
+
+@app.post("/taxonomy/nodes", response_model=Dict[str, Any])
+async def create_taxonomy_node(req: TaxonomyNodeRequest):
+    """Create a taxonomy node for tag organization.
+
+    Defines hierarchical relationships between tags with descriptions
+    and synonyms for improved semantic understanding and search.
+    """
+    return await tagging_handlers.handle_create_taxonomy_node(
+        req.tag, req.category, req.description, req.parent_tag, req.synonyms
+    )
+
+
+@app.get("/taxonomy/tree", response_model=TaxonomyTreeResponse)
+async def get_taxonomy_tree(root_category: Optional[str] = None):
+    """Get hierarchical taxonomy tree structure.
+
+    Retrieves the complete tag taxonomy with parent-child relationships,
+    descriptions, and synonyms for semantic navigation and understanding.
+    """
+    return await tagging_handlers.handle_get_taxonomy_tree(root_category)
 
 
 if __name__ == "__main__":

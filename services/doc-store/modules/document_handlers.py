@@ -26,6 +26,7 @@ from .document_ops import create_document_logic
 from .models import GetDocumentResponse
 from .versioning import create_document_version, get_document_versions, get_document_version
 from .relationships import relationship_graph
+from .semantic_tagging import semantic_tagger
 
 
 class DocumentHandlers:
@@ -101,6 +102,13 @@ class DocumentHandlers:
             if result.get("id"):
                 doc_id = result["id"]
                 relationship_graph.extract_and_store_relationships(doc_id, req.content, meta)
+
+                # Automatically tag the document with semantic information
+                try:
+                    semantic_tagger.tag_document(doc_id, req.content, meta)
+                except Exception:
+                    # Tagging is best-effort, don't fail document creation if it fails
+                    pass
 
             context = build_doc_store_context("document_creation", doc_id=result.get("id"))
             return create_doc_store_success_response("created", result, **context)

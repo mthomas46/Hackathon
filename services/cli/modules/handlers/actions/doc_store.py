@@ -153,12 +153,51 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.get_json(url)
         print_kv(console, "Graph Statistics", data)
 
+    async def view_document_tags():
+        doc_id = Prompt.ask("Document ID")
+        category = Prompt.ask("Category filter (optional)", default="")
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/tags"
+        params = {}
+        if category:
+            params["category"] = category
+        data = await clients.get_json(url, params=params)
+        print_kv(console, f"Tags for {doc_id}", data)
+
+    async def tag_document_cli():
+        doc_id = Prompt.ask("Document ID")
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/tags"
+        data = await clients.post_json(url, {})
+        print_kv(console, f"Tagging result for {doc_id}", data)
+
+    async def search_by_tags():
+        tags_input = Prompt.ask("Tags (comma-separated)")
+        tags = [tag.strip() for tag in tags_input.split(",") if tag.strip()]
+        categories_input = Prompt.ask("Categories (optional, comma-separated)", default="")
+        categories = [cat.strip() for cat in categories_input.split(",") if cat.strip()] if categories_input else None
+
+        payload = {"tags": tags}
+        if categories:
+            payload["categories"] = categories
+
+        url = f"{clients.doc_store_url()}/search/tags"
+        data = await clients.post_json(url, payload)
+        print_kv(console, "Tag Search Results", data)
+
+    async def tag_statistics():
+        url = f"{clients.doc_store_url()}/tags/statistics"
+        data = await clients.get_json(url)
+        print_kv(console, "Tag Statistics", data)
+
     return [
         ("Search documents", list_documents),
         ("Advanced search with filters", advanced_search),
         ("Get document by ID", get_document),
         ("Create document", put_document),
         ("List quality signals", quality),
+        ("View document tags", view_document_tags),
+        ("Tag document", tag_document_cli),
+        ("Search by tags", search_by_tags),
+        ("View tag statistics", tag_statistics),
         ("View document relationships", view_relationships),
         ("Find relationship paths", find_paths),
         ("View graph statistics", graph_stats),
