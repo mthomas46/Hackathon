@@ -306,6 +306,38 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         data = await clients.post_json(url, {})
         print_kv(console, f"Webhook Test: {webhook_id}", data)
 
+    async def send_notification():
+        channel = Prompt.ask("Channel (webhook/email/slack)", default="webhook")
+        target = Prompt.ask("Target (URL/email/channel)")
+        title = Prompt.ask("Title")
+        message = Prompt.ask("Message")
+        metadata_input = Prompt.ask("Metadata JSON (optional)", default="{}")
+        labels_input = Prompt.ask("Labels (comma-separated, optional)", default="")
+
+        try:
+            metadata = json.loads(metadata_input) if metadata_input.strip() else {}
+        except:
+            metadata = {}
+
+        labels = [label.strip() for label in labels_input.split(",") if label.strip()] if labels_input else []
+
+        # Send via notification service
+        try:
+            result = await clients.notify_via_service(channel, target, title, message, metadata, labels)
+            print_kv(console, "Notification Sent", result)
+        except Exception as e:
+            console.print(f"[red]Failed to send notification: {e}[/red]")
+
+    async def resolve_owners():
+        owners_input = Prompt.ask("Owners (comma-separated)")
+        owners = [owner.strip() for owner in owners_input.split(",") if owner.strip()]
+
+        try:
+            result = await clients.resolve_owners_via_service(owners)
+            print_kv(console, "Owner Resolution", result)
+        except Exception as e:
+            console.print(f"[red]Failed to resolve owners: {e}[/red]")
+
     return [
         ("Search documents", list_documents),
         ("Advanced search with filters", advanced_search),
@@ -331,6 +363,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("View event history", view_event_history),
         ("View notification stats", view_notification_stats),
         ("Test webhook", test_webhook),
+        ("Send notification", send_notification),
+        ("Resolve owners", resolve_owners),
         ("View analytics (detailed)", view_analytics),
         ("View analytics summary", view_analytics_summary),
         ("View config (effective)", config_effective),

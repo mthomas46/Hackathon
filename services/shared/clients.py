@@ -155,6 +155,26 @@ class ServiceClients:
         """Get Notification Service URL."""
         return get_config_value("NOTIFICATION_SERVICE_URL", "http://notification-service:5210", section="services", env_key="NOTIFICATION_SERVICE_URL")
 
+    async def notify_via_service(self, channel: str, target: str, title: str, message: str,
+                                metadata: Optional[Dict[str, Any]] = None, labels: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Send notification via notification service."""
+        url = f"{self.notification_service_url()}/notify"
+        payload = {
+            "channel": channel,
+            "target": target,
+            "title": title,
+            "message": message,
+            "metadata": metadata or {},
+            "labels": labels or []
+        }
+        return await self.post_json(url, payload)
+
+    async def resolve_owners_via_service(self, owners: List[str]) -> Dict[str, Any]:
+        """Resolve owners to notification targets via notification service."""
+        url = f"{self.notification_service_url()}/owners/resolve"
+        payload = {"owners": owners}
+        return await self.post_json(url, payload)
+
     # ============================================================================
     # INTEGRATION METHODS
     # ============================================================================

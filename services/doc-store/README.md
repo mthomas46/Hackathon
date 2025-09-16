@@ -370,6 +370,57 @@ The doc-store provides comprehensive real-time notification capabilities for eve
 - **Audit Logging**: Complete delivery history for compliance
 - **Error Isolation**: Individual webhook failures don't affect others
 
+## Notification Service Integration
+
+The doc-store integrates with the centralized notification service for enterprise-grade notification management and delivery.
+
+### Notification Service Features
+- **Centralized Notification Management**: All notifications routed through dedicated notification service
+- **Owner Resolution**: Automatic mapping of owners to notification targets (email, Slack, webhooks)
+- **Deduplication**: Prevents spam by suppressing duplicate notifications within time windows
+- **Dead Letter Queue**: Failed notifications automatically queued for retry or analysis
+- **Multi-Channel Support**: Webhook, email, and Slack notification channels
+
+### Integration Architecture
+- **Event Emission**: Doc-store emits structured events for all significant operations
+- **Webhook Registration**: Webhooks configured in doc-store but delivered via notification service
+- **Owner Resolution**: Automatic resolution of owners to notification targets
+- **Delivery Tracking**: Comprehensive delivery history and success/failure tracking
+- **Fallback Support**: Local delivery mechanisms when notification service unavailable
+
+### Supported Event Types
+- **Document Events**: `document.created`, `document.updated`, `document.deleted`
+- **Analysis Events**: `analysis.completed`, `analysis.failed`, `analysis.quality_checked`
+- **Lifecycle Events**: `lifecycle.archived`, `lifecycle.deleted`, `lifecycle.policy_applied`
+- **Relationship Events**: `relationship.created`, `relationship.updated`
+- **Bulk Operation Events**: `bulk.started`, `bulk.completed`, `bulk.failed`
+
+### Notification Service Endpoints Integration
+- **POST /notify**: Direct notification sending through notification service
+- **POST /owners/resolve**: Owner to notification target resolution
+- **GET /dlq**: Dead letter queue access for failed notifications
+- **POST /owners/update**: Owner registry management
+
+### Delivery Flow
+1. **Event Emission**: Doc-store emits events for system operations
+2. **Webhook Matching**: Registered webhooks matched against event types
+3. **Notification Service**: Webhook delivery routed through notification service
+4. **Deduplication**: Notification service prevents duplicate notifications
+5. **Retry Logic**: Failed deliveries automatically retried with exponential backoff
+6. **DLQ Management**: Persistent failures moved to dead letter queue
+
+### Configuration
+- **NOTIFICATION_SERVICE_URL**: URL of the notification service (default: http://notification-service:5210)
+- **Webhook Configuration**: Webhooks registered through doc-store API but delivered via notification service
+- **Owner Mapping**: Owner resolution handled by notification service with caching
+
+### Benefits of Integration
+- **Centralized Management**: All notifications managed through single service
+- **Enterprise Features**: Deduplication, DLQ, owner resolution built-in
+- **Scalability**: Notification service can handle high-volume notification loads
+- **Reliability**: Robust retry mechanisms and failure handling
+- **Audit Trail**: Complete notification history and delivery tracking
+
 ## Integration
 - Emits `docs.stored` DocumentEnvelope on create (if `REDIS_HOST` set).
 - Designed to be called by orchestrator/consistency-engine/reporting.
