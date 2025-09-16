@@ -223,7 +223,7 @@ class LifecyclePolicy(BaseEntity):
 
 
 @dataclass
-class BulkOperation:
+class BulkOperation(BaseEntity):
     """Bulk operation entity."""
     operation_id: str
     operation_type: str
@@ -233,6 +233,7 @@ class BulkOperation:
     successful_items: int = 0
     failed_items: int = 0
     errors: List[str] = field(default_factory=list)
+    results: List[Dict[str, Any]] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = None
@@ -340,6 +341,100 @@ class WebhookDelivery(BaseEntity):
             "error_message": self.error_message,
             "attempt_count": self.attempt_count,
             "delivered_at": self.delivered_at.isoformat() if self.delivered_at else None,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+@dataclass
+class BulkDocumentItem:
+    """Represents a document in a bulk operation."""
+    id: Optional[str] = None
+    content: str = ""
+    metadata: Optional[Dict[str, Any]] = None
+    correlation_id: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "id": self.id,
+            "content": self.content,
+            "metadata": self.metadata or {},
+            "correlation_id": self.correlation_id,
+        }
+
+
+@dataclass
+class SemanticEntity:
+    """Semantic entity extracted from content."""
+    entity_type: str
+    entity_value: str
+    confidence: float = 1.0
+    start_offset: int = 0
+    end_offset: int = 0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "entity_type": self.entity_type,
+            "entity_value": self.entity_value,
+            "confidence": self.confidence,
+            "start_offset": self.start_offset,
+            "end_offset": self.end_offset,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class TaxonomyNode:
+    """Tag taxonomy node."""
+    tag: str
+    category: str
+    description: str = ""
+    parent_tag: Optional[str] = None
+    synonyms: List[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "tag": self.tag,
+            "category": self.category,
+            "description": self.description,
+            "parent_tag": self.parent_tag,
+            "synonyms": self.synonyms,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
+
+@dataclass
+class DocumentVersion(BaseEntity):
+    """Document version entity."""
+    id: str
+    document_id: str
+    version_number: int
+    content: str
+    content_hash: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    change_summary: str = ""
+    changed_by: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            "id": self.id,
+            "document_id": self.document_id,
+            "version_number": self.version_number,
+            "content": self.content,
+            "content_hash": self.content_hash,
+            "metadata": self.metadata,
+            "change_summary": self.change_summary,
+            "changed_by": self.changed_by,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
