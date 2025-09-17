@@ -163,6 +163,287 @@ ensure_directory(path)
 
 ---
 
+## 🏗️ Domain-Driven Design (DDD) Patterns
+
+### **1. Bounded Context Separation Pattern**
+
+**Problem**: Monolithic service architecture with mixed concerns and tight coupling.
+
+**Solution**: Domain-Driven Design with clear bounded contexts and separation of concerns.
+
+```python
+# ❌ Before: Monolithic structure
+services/orchestrator/
+├── main.py (900+ lines, everything mixed)
+├── modules/
+│   ├── routes.py (presentation logic)
+│   ├── models.py (mixed domain/infrastructure)
+│   └── services.py (business logic + infrastructure)
+
+# ✅ After: DDD architecture
+services/orchestrator/
+├── main.py (200 lines, clean composition)
+├── domain/ (7 bounded contexts)
+│   ├── workflow_management/
+│   │   ├── entities/ (domain objects)
+│   │   ├── value_objects/ (immutable values)
+│   │   ├── services/ (domain services)
+│   │   └── events/ (domain events)
+│   └── [other bounded contexts...]
+├── application/ (use cases and commands)
+├── infrastructure/ (repositories, external services)
+└── presentation/api/ (routes and DTOs)
+```
+
+**Benefits**:
+- Clear separation of concerns
+- Independent bounded context evolution
+- Improved testability and maintainability
+- Scalable architecture for complex domains
+
+### **2. Domain Result Pattern**
+
+**Problem**: Inconsistent error handling and success/failure communication.
+
+**Solution**: Standardized DomainResult wrapper for all domain operations.
+
+```python
+# ❌ Before: Inconsistent return types
+def execute_workflow(workflow_id):
+    # Could return dict, raise exception, return None...
+    if not workflow_exists:
+        raise HTTPException(404, "Workflow not found")
+    return {"status": "success", "data": workflow}
+
+# ✅ After: Consistent DomainResult pattern
+from services.orchestrator.shared.domain import DomainResult
+
+def execute_workflow(workflow_id) -> DomainResult[Workflow]:
+    if not workflow_exists:
+        return DomainResult.failure_result(
+            ["Workflow not found"],
+            "Unable to locate workflow"
+        )
+    return DomainResult.success_result(workflow, "Workflow executed successfully")
+```
+
+**Benefits**:
+- Type-safe success/failure handling
+- Consistent error communication
+- Better error context and debugging
+- Improved API reliability
+
+### **3. Dependency Injection Container Pattern**
+
+**Problem**: Tight coupling between components and difficult testing.
+
+**Solution**: Centralized dependency injection container with clean composition.
+
+```python
+# ❌ Before: Direct instantiation and tight coupling
+class WorkflowService:
+    def __init__(self):
+        self.repository = WorkflowRepository()  # Tight coupling
+        self.executor = WorkflowExecutor()
+
+# ✅ After: Dependency injection with container
+class OrchestratorContainer:
+    def __init__(self):
+        self.workflow_repository = InMemoryWorkflowRepository()
+        self.workflow_executor = WorkflowExecutor()
+        # Initialize all dependencies...
+
+    def _init_application_layer(self):
+        self.create_workflow_use_case = CreateWorkflowUseCase(self.workflow_repository)
+        # Initialize all use cases...
+
+container = OrchestratorContainer()  # Single composition root
+```
+
+**Benefits**:
+- Loose coupling between components
+- Easy testing with mocked dependencies
+- Centralized dependency management
+- Clear component lifecycle
+
+### **4. Repository Interface Pattern**
+
+**Problem**: Infrastructure concerns leaking into domain logic.
+
+**Solution**: Repository interfaces with clean separation of domain and infrastructure.
+
+```python
+# Domain layer defines interface
+class WorkflowRepositoryInterface(ABC):
+    @abstractmethod
+    def save_workflow(self, workflow: Workflow) -> bool:
+        pass
+
+    @abstractmethod
+    def get_workflow(self, workflow_id: WorkflowId) -> Optional[Workflow]:
+        pass
+
+# Infrastructure implements interface
+class InMemoryWorkflowRepository(WorkflowRepositoryInterface):
+    def __init__(self):
+        self._workflows = {}
+
+    def save_workflow(self, workflow: Workflow) -> bool:
+        self._workflows[workflow.workflow_id.value] = workflow
+        return True
+
+    def get_workflow(self, workflow_id: WorkflowId) -> Optional[Workflow]:
+        return self._workflows.get(workflow_id.value)
+
+# Domain services depend on abstraction
+class WorkflowDomainService:
+    def __init__(self, repository: WorkflowRepositoryInterface):
+        self.repository = repository  # Depends on interface, not implementation
+```
+
+**Benefits**:
+- Clean separation of domain and infrastructure
+- Easy to swap implementations (memory → database)
+- Improved testability with in-memory implementations
+- Domain logic remains pure
+
+### **5. Value Object Immutability Pattern**
+
+**Problem**: Mutable domain objects leading to inconsistent state.
+
+**Solution**: Immutable value objects for domain concepts.
+
+```python
+# ❌ Before: Mutable objects
+class WorkflowId:
+    def __init__(self, value):
+        self.value = value  # Can be changed!
+
+# ✅ After: Immutable value objects
+from dataclasses import dataclass
+from typing import Any
+
+@dataclass(frozen=True)  # Immutable
+class WorkflowId:
+    value: str
+
+    def __post_init__(self):
+        # Validation in constructor
+        if not self.value:
+            raise ValueError("WorkflowId cannot be empty")
+
+    @classmethod
+    def from_string(cls, value: str) -> 'WorkflowId':
+        return cls(value=value)
+```
+
+**Benefits**:
+- Thread safety and predictability
+- Validation at creation time
+- Clear domain concepts
+- Reduced bugs from state mutations
+
+### **6. Use Case Pattern with Commands and Queries**
+
+**Problem**: Mixed read/write operations and unclear intent.
+
+**Solution**: Separate use cases for commands (writes) and queries (reads).
+
+```python
+# Commands (writes) - Intent to change state
+@dataclass
+class CreateWorkflowCommand:
+    name: str
+    description: str
+    created_by: str
+
+class CreateWorkflowUseCase(UseCase):
+    def __init__(self, repository: WorkflowRepositoryInterface):
+        self.repository = repository
+
+    async def execute(self, command: CreateWorkflowCommand) -> DomainResult[Workflow]:
+        # Business logic for creating workflow
+        workflow = Workflow(
+            name=command.name,
+            description=command.description,
+            created_by=command.created_by
+        )
+        success = self.repository.save_workflow(workflow)
+        return DomainResult.success_result(workflow) if success else DomainResult.failure_result(["Save failed"])
+
+# Queries (reads) - No side effects
+@dataclass
+class ListWorkflowsQuery:
+    name_filter: Optional[str] = None
+    limit: int = 50
+
+class ListWorkflowsQuery:
+    def __init__(self, repository: WorkflowRepositoryInterface):
+        self.repository = repository
+
+    async def execute(self, query: ListWorkflowsQuery) -> List[Workflow]:
+        return self.repository.list_workflows(
+            name_filter=query.name_filter,
+            limit=query.limit
+        )
+```
+
+**Benefits**:
+- Clear separation of read/write concerns
+- CQRS (Command Query Responsibility Segregation) pattern
+- Better performance optimization opportunities
+- Clear intent and side effects
+
+### **7. Layer Isolation Testing Pattern**
+
+**Problem**: Difficult to test individual components due to tight coupling.
+
+**Solution**: Test each layer in isolation with appropriate mocks.
+
+```python
+# Domain layer tests - Pure business logic
+def test_workflow_creation_domain_logic():
+    # Test domain entities and services in isolation
+    workflow_id = WorkflowId.from_string("wf-123")
+    workflow = Workflow(name="Test", created_by="user")
+    assert workflow.workflow_id == workflow_id
+
+# Application layer tests - Use case testing
+@pytest.mark.asyncio
+async def test_create_workflow_use_case():
+    # Mock repository to test use case logic
+    mock_repo = AsyncMock()
+    mock_repo.save_workflow.return_value = True
+
+    use_case = CreateWorkflowUseCase(mock_repo)
+    command = CreateWorkflowCommand(name="Test", description="Test workflow", created_by="user")
+
+    result = await use_case.execute(command)
+
+    assert result.is_success()
+    mock_repo.save_workflow.assert_called_once()
+
+# Infrastructure layer tests - Repository testing
+def test_workflow_repository_operations():
+    repo = InMemoryWorkflowRepository()
+
+    # Test repository operations
+    workflow = create_test_workflow()
+    result = repo.save_workflow(workflow)
+    assert result is True
+
+    retrieved = repo.get_workflow(workflow.workflow_id)
+    assert retrieved == workflow
+```
+
+**Benefits**:
+- Fast, focused unit tests
+- Clear test boundaries
+- Easy to identify and fix issues
+- Parallel test execution possible
+
+---
+
 ## 🧪 Test Consolidation Patterns
 
 ### **1. Health Endpoint Testing Pattern**

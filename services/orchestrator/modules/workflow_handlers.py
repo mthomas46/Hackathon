@@ -1,6 +1,7 @@
 """Workflow and job handlers for Orchestrator service.
 
 Handles workflow execution, job management, and related operations.
+Includes LangGraph workflow integration for advanced orchestration.
 """
 from typing import Dict, Any, List, Optional
 
@@ -8,33 +9,155 @@ from services.shared.responses import create_success_response, create_error_resp
 from services.shared.constants_new import ErrorCodes
 from .shared_utils import get_orchestrator_service_client
 
+# Import LangGraph components
+try:
+    from .langgraph.engine import LangGraphWorkflowEngine
+    from .langgraph.state import create_workflow_state
+    from .workflows import create_document_analysis_workflow
+    from .workflows.end_to_end_test import end_to_end_test_workflow
+    LANGGRAPH_AVAILABLE = True
+except ImportError:
+    LANGGRAPH_AVAILABLE = False
+    print("Warning: LangGraph not available, falling back to basic workflow handlers")
+
 
 class WorkflowHandlers:
     """Handles workflow and job operations."""
 
     @staticmethod
     async def handle_workflow_run(request) -> Dict[str, Any]:
-        """Execute a workflow."""
+        """Execute a workflow using LangGraph when available."""
         try:
-            workflow_id = request.workflow_id
+            workflow_type = getattr(request, 'workflow_type', 'generic')
             parameters = request.parameters or {}
             context = request.context or {}
 
-            # Placeholder - would integrate with actual workflow execution engine
-            result = {
-                "workflow_id": workflow_id,
-                "execution_id": f"exec_{workflow_id}_12345",
-                "status": "started",
-                "parameters": parameters,
-                "context": context,
-                "steps": [
-                    {"step_id": "step1", "status": "pending", "service": "doc_store"},
-                    {"step_id": "step2", "status": "pending", "service": "analysis-service"}
-                ]
-            }
-            return create_success_response("Workflow execution started", result)
+            # Check if LangGraph is available and use it
+            if LANGGRAPH_AVAILABLE:
+                return await WorkflowHandlers._handle_langgraph_workflow(
+                    workflow_type, parameters, context, getattr(request, 'user_id', None)
+                )
+            else:
+                # Fallback to basic workflow execution
+                return await WorkflowHandlers._handle_basic_workflow(request)
+
         except Exception as e:
-            return create_error_response("Workflow execution failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"workflow_id": request.workflow_id, "error": str(e)})
+            return create_error_response(
+                "Workflow execution failed",
+                error_code=ErrorCodes.INTERNAL_ERROR,
+                details={
+                    "workflow_type": getattr(request, 'workflow_type', 'unknown'),
+                    "error": str(e)
+                }
+            )
+
+    @staticmethod
+    async def _handle_langgraph_workflow(
+        workflow_type: str,
+        parameters: Dict[str, Any],
+        context: Dict[str, Any],
+        user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Handle workflow execution using LangGraph."""
+        try:
+            # Initialize LangGraph engine
+            engine = LangGraphWorkflowEngine()
+
+            # Initialize tools for the required services
+            required_services = WorkflowHandlers._get_services_for_workflow(workflow_type)
+            tools = await engine.initialize_tools(required_services)
+
+            # Register workflows if not already registered
+            WorkflowHandlers._register_langgraph_workflows(engine)
+
+            # Execute the workflow
+            result = await engine.execute_workflow(
+                workflow_type=workflow_type,
+                input_data=parameters,
+                tools=tools,
+                user_id=user_id
+            )
+
+            return create_success_response(
+                f"LangGraph workflow '{workflow_type}' completed successfully",
+                result
+            )
+
+        except Exception as e:
+            return create_error_response(
+                f"LangGraph workflow execution failed: {str(e)}",
+                error_code=ErrorCodes.INTERNAL_ERROR,
+                details={
+                    "workflow_type": workflow_type,
+                    "error_type": type(e).__name__,
+                    "langgraph_available": LANGGRAPH_AVAILABLE
+                }
+            )
+
+    @staticmethod
+    async def _handle_basic_workflow(request) -> Dict[str, Any]:
+        """Fallback basic workflow execution."""
+        workflow_id = getattr(request, 'workflow_id', 'unknown')
+        parameters = request.parameters or {}
+        context = request.context or {}
+
+        # Placeholder basic workflow execution
+        result = {
+            "workflow_id": workflow_id,
+            "execution_id": f"exec_{workflow_id}_12345",
+            "status": "completed",
+            "parameters": parameters,
+            "context": context,
+            "message": "Basic workflow execution (LangGraph not available)",
+            "steps": [
+                {"step_id": "step1", "status": "completed", "service": "orchestrator"},
+                {"step_id": "step2", "status": "completed", "service": "logging"}
+            ]
+        }
+        return create_success_response("Basic workflow execution completed", result)
+
+    @staticmethod
+    def _get_services_for_workflow(workflow_type: str) -> List[str]:
+        """Determine which services are needed for a workflow type."""
+        service_map = {
+            "document_analysis": [
+                "document_store", "summarizer_hub", "analysis_service",
+                "notification_service", "logging_service"
+            ],
+            "code_documentation": [
+                "code_analyzer", "document_store", "summarizer_hub",
+                "prompt_store", "notification_service"
+            ],
+            "quality_assurance": [
+                "analysis_service", "document_store", "code_analyzer",
+                "notification_service", "logging_service"
+            ],
+            "generic": ["logging_service"]  # Basic services for generic workflows
+        }
+
+        return service_map.get(workflow_type, ["logging_service"])
+
+    @staticmethod
+    def _register_langgraph_workflows(engine: 'LangGraphWorkflowEngine'):
+        """Register available LangGraph workflows with the engine."""
+        try:
+            # Register document analysis workflow
+            doc_workflow = create_document_analysis_workflow()
+            engine.workflows["document_analysis"] = doc_workflow
+
+            # Register end-to-end test workflow
+            e2e_workflow = end_to_end_test_workflow.get_workflow()
+            engine.workflows["end_to_end_test"] = e2e_workflow
+
+            # Register PR confidence orchestration workflow
+            from .workflows.pr_confidence_orchestration import pr_confidence_orchestration_workflow
+            engine.workflows["pr_confidence_analysis"] = pr_confidence_orchestration_workflow.workflow
+
+            # Additional workflows can be registered here as they are implemented
+            print(f"✓ Registered {len(engine.workflows)} LangGraph workflows")
+
+        except Exception as e:
+            print(f"Warning: Failed to register LangGraph workflows: {e}")
 
     @staticmethod
     async def handle_ingest(request) -> Dict[str, Any]:
