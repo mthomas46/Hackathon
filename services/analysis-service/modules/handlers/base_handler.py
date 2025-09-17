@@ -6,6 +6,11 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Union, Protocol, TypeVar, Generic, Awaitable
 from datetime import datetime, timezone
 
+from services.shared.core.di.services import (
+    ILoggerService, ICacheService, IEventPublisher, IServiceClient, IMetricsService
+)
+from services.shared.core.di.registry import get_service
+
 # Type variables for generic handlers
 TRequest = TypeVar('TRequest')
 TResponse = TypeVar('TResponse')
@@ -63,21 +68,36 @@ class AnalysisResult:
 class BaseAnalysisHandler(ABC):
     """Base class for all analysis handlers providing common functionality."""
 
-    def __init__(self, handler_name: str) -> None:
+    def __init__(self,
+                 handler_name: str,
+                 logger: Optional[ILoggerService] = None,
+                 cache: Optional[ICacheService] = None,
+                 event_publisher: Optional[IEventPublisher] = None,
+                 service_client: Optional[IServiceClient] = None,
+                 metrics: Optional[IMetricsService] = None) -> None:
         self.handler_name: str = handler_name
+
+        # Use injected services or get from registry
+        self._logger = logger or get_service(ILoggerService)
+        self._cache = cache or get_service(ICacheService)
+        self._event_publisher = event_publisher or get_service(IEventPublisher)
+        self._service_client = service_client or get_service(IServiceClient)
+        self._metrics = metrics or get_service(IMetricsService)
+
+        # Fallback logger for when services aren't available
         self.logger: logging.Logger = logging.getLogger(f"{__name__}.{handler_name}")
 
-    async def _get_service_client(self) -> Optional[Any]:
+    async def _get_service_client(self) -> Optional[IServiceClient]:
         """Get service client for external service communication."""
-        return get_service_client("analysis-service")
+        return self._service_client
 
-    async def _fetch_documents(self, document_ids: List[str]) -> List[Document]:
+    async def _fetch_documents(self, document_ids: List[str]) -> List[Any]:
         """Fetch documents from document store."""
-        documents: List[Document] = []
+        documents: List[Any] = []
         service_client = await self._get_service_client()
 
         if not service_client:
-            self.logger.warning("Service client not available")
+            await self._logger.warning("Service client not available", handler=self.handler_name)
             return documents
 
         for doc_id in document_ids:
@@ -86,22 +106,23 @@ class BaseAnalysisHandler(ABC):
                     f"{service_client.doc_store_url()}/documents/{doc_id}"
                 )
                 if doc_data:
-                    documents.append(Document(**doc_data))
+                    # Try to create Document object, fallback to dict
+                    try:
+                        documents.append(Document(**doc_data))
+                    except Exception:
+                        documents.append(doc_data)
             except Exception as e:
-                self.logger.error(f"Failed to fetch document {doc_id}: {e}")
+                await self._logger.error(f"Failed to fetch document {doc_id}: {e}",
+                                       handler=self.handler_name, doc_id=doc_id)
 
         return documents
 
     async def _publish_event(self, event_type: str, event_data: Dict[str, Any]) -> None:
         """Publish event to Redis for external systems."""
-        if not aioredis:
+        if not self._event_publisher:
             return
 
         try:
-            from services.shared.config import get_config_value
-            redis_host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
-            client = aioredis.from_url(f"redis://{redis_host}")
-
             event_payload: Dict[str, Any] = {
                 "event_type": event_type,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -109,11 +130,11 @@ class BaseAnalysisHandler(ABC):
                 **event_data
             }
 
-            await client.publish(event_type, event_payload)
-            await client.close()
+            await self._event_publisher.publish(event_type, event_payload)
 
         except Exception as e:
-            self.logger.error(f"Failed to publish event {event_type}: {e}")
+            await self._logger.error(f"Failed to publish event {event_type}: {e}",
+                                   handler=self.handler_name, event_type=event_type)
 
     def _create_analysis_result(self,
                               analysis_id: str,
@@ -152,7 +173,7 @@ class BaseAnalysisHandler(ABC):
 
     async def _log_analysis_start(self, analysis_id: str, analysis_type: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """Log analysis start event."""
-        self.logger.info(f"Starting {analysis_type} analysis", extra={
+        await self._logger.info(f"Starting {analysis_type} analysis", {
             "analysis_id": analysis_id,
             "analysis_type": analysis_type,
             "handler": self.handler_name,
@@ -172,7 +193,7 @@ class BaseAnalysisHandler(ABC):
                                    execution_time: float,
                                    result_summary: Optional[Dict[str, Any]] = None) -> None:
         """Log analysis completion event."""
-        self.logger.info(f"Completed {analysis_type} analysis in {execution_time:.2f}s", extra={
+        await self._logger.info(f"Completed {analysis_type} analysis in {execution_time:.2f}s", {
             "analysis_id": analysis_id,
             "analysis_type": analysis_type,
             "handler": self.handler_name,
@@ -187,6 +208,14 @@ class BaseAnalysisHandler(ABC):
             "execution_time": execution_time,
             "result_summary": result_summary or {}
         })
+
+        # Record metrics if available
+        if self._metrics:
+            await self._metrics.record_histogram(
+                "analysis.duration",
+                execution_time,
+                {"analysis_type": analysis_type, "handler": self.handler_name}
+            )
 
     @abstractmethod
     async def handle(self, request: Any) -> AnalysisResult:
@@ -246,7 +275,13 @@ class HandlerRegistry:
         """Execute analysis using appropriate handler."""
         handler = self.get_handler(analysis_type)
         if not handler:
-            logger.error(f"No handler registered for analysis type: {analysis_type}")
+            # Try to get logger from registry for error logging
+            try:
+                error_logger = get_service(ILoggerService)
+                await error_logger.error(f"No handler registered for analysis type: {analysis_type}",
+                                       analysis_type=analysis_type)
+            except Exception:
+                logger.error(f"No handler registered for analysis type: {analysis_type}")
             return None
 
         return await handler.execute_with_timing(request)
