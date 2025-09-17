@@ -107,6 +107,7 @@ class ServiceNames:
     LOG_COLLECTOR = "log-collector"
     BEDROCK_PROXY = "bedrock-proxy"
     ARCHITECTURE_DIGITIZER = "architecture-digitizer"
+    LLM_GATEWAY = "llm-gateway"
 
 
 class ServicePorts:
@@ -118,6 +119,7 @@ class ServicePorts:
     PROMPT_STORE = 5110
     INTERPRETER = 5120
     CLI = 5130
+    LLM_GATEWAY = 5055
 
 
 # ============================================================================
