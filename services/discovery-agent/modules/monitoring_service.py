@@ -6,7 +6,11 @@ using the log-collector service for centralized logging and metrics collection.
 
 import uuid
 from typing import Dict, Any, Optional
-from services.shared.clients import ServiceClients
+try:
+    from services.shared.clients import ServiceClients
+except ImportError:
+    # Fallback for when running in Docker or different environment
+    ServiceClients = None
 
 
 class DiscoveryAgentMonitoring:
