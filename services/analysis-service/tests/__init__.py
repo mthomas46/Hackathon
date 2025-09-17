@@ -1,6 +1,3 @@
-"""Tests for Analysis Service - Domain-Driven Design Architecture."""
+"""Analysis Service Tests - Comprehensive test suite for DDD architecture."""
 
-# Test configuration and utilities
-from .conftest import *
-
-__all__ = []
+__version__ = "1.0.0"
