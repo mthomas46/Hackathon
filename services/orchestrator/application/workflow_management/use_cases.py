@@ -1,7 +1,6 @@
 """Use Cases for Workflow Management"""
 
 from typing import Optional, List, Tuple
-from abc import ABC, abstractmethod
 
 from .commands import *
 from .queries import *
@@ -10,15 +9,8 @@ from ...domain.workflow_management import (
     WorkflowId, ExecutionId, ParameterType, ActionType,
     WorkflowValidator, ParameterResolver, WorkflowExecutor
 )
-
-
-class UseCase(ABC):
-    """Base class for all use cases."""
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs):
-        """Execute the use case."""
-        pass
+from ...shared.application import UseCase
+from ...shared.domain import DomainResult
 
 
 class CreateWorkflowUseCase(UseCase):
@@ -27,7 +19,7 @@ class CreateWorkflowUseCase(UseCase):
     def __init__(self, workflow_repository):
         self.workflow_repository = workflow_repository
 
-    async def execute(self, command: CreateWorkflowCommand) -> Tuple[bool, str, Optional[Workflow]]:
+    async def execute(self, command: CreateWorkflowCommand) -> DomainResult[Workflow]:
         """Execute the create workflow use case."""
         try:
             # Create workflow entity
@@ -67,16 +59,16 @@ class CreateWorkflowUseCase(UseCase):
             # Validate workflow
             is_valid, validation_errors = WorkflowValidator.validate_workflow(workflow)
             if not is_valid:
-                return False, f"Workflow validation failed: {', '.join(validation_errors)}", None
+                return DomainResult.failure_result(validation_errors, "Workflow validation failed")
 
             # Save workflow
             if self.workflow_repository.save_workflow(workflow):
-                return True, "Workflow created successfully", workflow
+                return DomainResult.success_result(workflow, "Workflow created successfully")
             else:
-                return False, "Failed to save workflow", None
+                return DomainResult.single_error("Failed to save workflow")
 
         except Exception as e:
-            return False, f"Failed to create workflow: {str(e)}", None
+            return DomainResult.single_error(f"Failed to create workflow: {str(e)}")
 
 
 class ExecuteWorkflowUseCase(UseCase):

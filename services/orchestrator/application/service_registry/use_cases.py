@@ -1,7 +1,6 @@
 """Use Cases for Service Registry"""
 
 from typing import Optional, List
-from abc import ABC, abstractmethod
 
 from .commands import *
 from .queries import *
@@ -9,15 +8,7 @@ from ...domain.service_registry import (
     Service, ServiceId, ServiceDiscoveryService, ServiceRegistrationService
 )
 from ...shared.domain import DomainResult
-
-
-class UseCase(ABC):
-    """Base class for all use cases."""
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs):
-        """Execute the use case."""
-        pass
+from ...shared.application import UseCase
 
 
 class RegisterServiceUseCase(UseCase):

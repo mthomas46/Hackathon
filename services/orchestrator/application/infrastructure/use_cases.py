@@ -1,7 +1,7 @@
 """Infrastructure Application Use Cases"""
 
 from typing import List, Optional, Dict, Any
-from abc import ABC, abstractmethod
+
 
 from ...domain.infrastructure.services import DLQService, SagaService, TracingService, EventStreamingService
 from ...domain.infrastructure import SagaInstance, DistributedTrace, DLQEvent
@@ -16,15 +16,7 @@ from .queries import (
 )
 
 
-class UseCase(ABC):
-    """Base use case class."""
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs):
-        """Execute the use case."""
-        pass
-
-
+from ...shared.application import UseCase
 class StartSagaUseCase(UseCase):
     """Use case for starting a saga."""
 
