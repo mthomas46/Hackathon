@@ -77,7 +77,7 @@ nav:
     - Core Services:
       - Source Agent: services/source-agent/README.md
       - Orchestrator: services/orchestrator/README.md
-      - Doc Store: services/doc-store/README.md
+      - Doc Store: services/doc_store/README.md
       - Analysis Service: services/analysis-service/README.md
     - AI Services:
       - Summarizer Hub: services/summarizer-hub/README.md

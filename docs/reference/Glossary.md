@@ -7,7 +7,7 @@
 - **Agents**: Source-specific services (GitHub, Jira, Confluence, Swagger) that normalize external data into internal formats.
 - **Consistency Engine (CE)**: Batch analyzer that detects inconsistencies across normalized documents and API schemas.
 - **Reporting**: Aggregates findings into reports (life-of-ticket, trends, consolidation) and surfaces notification workflows.
-  - Includes Jira Staleness: detects outdated or duplicate Jira tickets using doc-store quality, light semantic overlap, and CE references; optional summary via summarizer-hub.
+  - Includes Jira Staleness: detects outdated or duplicate Jira tickets using doc_store quality, light semantic overlap, and CE references; optional summary via summarizer-hub.
 - **Doc Store**: Lightweight SQLite store for documents/analyses; provides search (FTS), quality signals, and listing APIs.
 - **Frontend**: Minimal portal to browse findings, trends, search, and quality signals.
 

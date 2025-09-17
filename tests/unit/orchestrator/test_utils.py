@@ -193,7 +193,7 @@ def load_orchestrator_service():
         async def list_services():
             return {
                 "services": [
-                    {"name": "doc-store", "status": "healthy"},
+                    {"name": "doc_store", "status": "healthy"},
                     {"name": "analysis-service", "status": "healthy"},
                     {"name": "source-agent", "status": "healthy"}
                 ]
@@ -211,8 +211,8 @@ def load_orchestrator_service():
             return {
                 "services": [
                     {
-                        "name": "doc-store",
-                        "base_url": "http://doc-store:5087",
+                        "name": "doc_store",
+                        "base_url": "http://doc_store:5087",
                         "status": "healthy"
                     }
                 ]
@@ -233,7 +233,7 @@ def load_orchestrator_service():
                 "data": {
                     "overall_status": "healthy",
                     "services": {
-                        "doc-store": "healthy",
+                        "doc_store": "healthy",
                         "analysis-service": "healthy",
                         "source-agent": "healthy"
                     },
@@ -359,7 +359,7 @@ def load_orchestrator_service():
             return {
                 "results": [
                     {
-                        "service": "doc-store",
+                        "service": "doc_store",
                         "changed": False,
                         "hash": "abc123"
                     }

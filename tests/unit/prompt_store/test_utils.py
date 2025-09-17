@@ -23,8 +23,8 @@ def load_prompt_store_service():
     """
     try:
         spec = importlib.util.spec_from_file_location(
-            "services.prompt-store.main",
-            os.path.join(os.getcwd(), 'services', 'prompt-store', 'main.py')
+            "services.prompt_store.main",
+            os.path.join(os.getcwd(), 'services', 'prompt_store', 'main.py')
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)

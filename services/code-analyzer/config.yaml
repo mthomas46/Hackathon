@@ -11,4 +11,4 @@ code_analyzer:
 
 # Service URLs
 services:
-  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}

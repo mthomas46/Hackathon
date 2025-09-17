@@ -61,7 +61,7 @@ def load_cli_module():
                     "prompt-store": {"status": "healthy", "response": {"status": "healthy"}},
                     "source-agent": {"status": "healthy", "response": {"status": "healthy"}},
                     "analysis-service": {"status": "healthy", "response": {"status": "healthy"}},
-                    "doc-store": {"status": "healthy", "response": {"status": "healthy"}}
+                    "doc_store": {"status": "healthy", "response": {"status": "healthy"}}
                 }
 
             async def display_health_status(self):
@@ -195,7 +195,7 @@ sample_prompt_request = {
 sample_health_response = {
     "overall_status": "healthy",
     "services": {
-        "doc-store": {"status": "healthy", "response_time": 0.1},
+        "doc_store": {"status": "healthy", "response_time": 0.1},
         "analysis-service": {"status": "healthy", "response_time": 0.15},
         "prompt-store": {"status": "healthy", "response_time": 0.08}
     }

@@ -32,8 +32,8 @@ def secure_analyzer_app():
 
 @pytest.fixture(scope="module")
 def doc_store_app():
-    """Load doc-store service."""
-    return _load_service("doc-store", "doc-store")
+    """Load doc_store service."""
+    return _load_service("doc_store", "doc_store")
 
 
 @pytest.fixture(scope="module")

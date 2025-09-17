@@ -30,9 +30,9 @@ scrape_configs:
     scrape_interval: 10s
     metrics_path: '/metrics'
 
-  - job_name: 'doc-store'
+  - job_name: 'doc_store'
     static_configs:
-      - targets: ['doc-store:5087']
+      - targets: ['doc_store:5087']
     scrape_interval: 10s
     metrics_path: '/metrics'
 

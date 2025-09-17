@@ -53,7 +53,7 @@ class ServicesOverviewMonitor:
             # Define all services and their health endpoints
             services = {
                 "orchestrator": {"url_func": get_orchestrator_url, "endpoint": "/health"},
-                "doc-store": {"url_func": get_doc_store_url, "endpoint": "/health"},
+                "doc_store": {"url_func": get_doc_store_url, "endpoint": "/health"},
                 "prompt-store": {"url_func": get_prompt_store_url, "endpoint": "/health"},
                 "analysis-service": {"url_func": get_analysis_service_url, "endpoint": "/health"},
                 "summarizer-hub": {"url_func": get_summarizer_hub_url, "endpoint": "/health"},
@@ -127,7 +127,7 @@ class ServicesOverviewMonitor:
 
             # Group services by category
             service_categories = {
-                "core_infrastructure": ["orchestrator", "doc-store", "prompt-store", "frontend"],
+                "core_infrastructure": ["orchestrator", "doc_store", "prompt-store", "frontend"],
                 "analysis_services": ["analysis-service", "code-analyzer", "secure-analyzer"],
                 "ai_ml_services": ["summarizer-hub", "bedrock-proxy", "interpreter"],
                 "integration_services": ["discovery-agent", "github-mcp", "source-agent"],
@@ -173,7 +173,7 @@ class ServicesOverviewMonitor:
             # Map service names to their URL functions and detailed endpoints
             service_configs = {
                 "orchestrator": (get_orchestrator_url, "/health"),
-                "doc-store": (get_doc_store_url, "/health"),
+                "doc_store": (get_doc_store_url, "/health"),
                 "prompt-store": (get_prompt_store_url, "/health"),
                 "analysis-service": (get_analysis_service_url, "/health"),
                 "summarizer-hub": (get_summarizer_hub_url, "/health"),

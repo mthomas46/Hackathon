@@ -25,7 +25,7 @@ from pydantic import BaseModel, field_validator
 from services.shared.health import register_health_endpoints
 from services.shared.responses import create_success_response, create_error_response
 from services.shared.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import setup_common_middleware, attach_self_register
+from services.shared.utilities import setup_common_middleware, attach_self_register, get_service_client
 from services.shared.logging import fire_and_forget
 from services.shared.metrics import (
     get_service_metrics,
@@ -47,6 +47,73 @@ from .modules.models import (
     SupportedSystemsResponse,
     SupportedFileFormatsResponse
 )
+
+# ============================================================================
+# DOC-STORE INTEGRATION FUNCTIONS
+# ============================================================================
+
+async def store_architecture_in_docstore(
+    system: str,
+    board_id: str,
+    normalized_data: Dict[str, Any],
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Store normalized architecture data in doc_store."""
+    try:
+        client = get_service_client()
+
+        # Create document content from normalized data
+        content = f"""# Architecture Diagram: {system.upper()} - {board_id}
+
+## Components ({len(normalized_data.get('components', []))} items)
+
+{chr(10).join(f"- **{comp.get('name', comp.get('id', 'Unknown'))}** ({comp.get('type', 'unknown')}): {comp.get('description', 'No description')}" for comp in normalized_data.get('components', []))}
+
+## Connections ({len(normalized_data.get('connections', []))} items)
+
+{chr(10).join(f"- {conn.get('from_id', 'Unknown')} → {conn.get('to_id', 'Unknown')}: {conn.get('label', 'No label')}" for conn in normalized_data.get('connections', []))}
+
+## Metadata
+
+- **Source System**: {system}
+- **Board ID**: {board_id}
+- **Total Components**: {len(normalized_data.get('components', []))}
+- **Total Connections**: {len(normalized_data.get('connections', []))}
+- **Processed At**: {normalized_data.get('processed_at', 'Unknown')}
+"""
+
+        # Create document metadata
+        doc_metadata = {
+            "source_type": "architecture",
+            "type": "diagram",
+            "system": system,
+            "board_id": board_id,
+            "component_count": len(normalized_data.get('components', [])),
+            "connection_count": len(normalized_data.get('connections', [])),
+            "processed_at": normalized_data.get('processed_at'),
+        }
+
+        # Add any additional metadata
+        if metadata:
+            doc_metadata.update(metadata)
+
+        # Store in doc_store
+        result = await client.store_document({
+            "content": content,
+            "metadata": doc_metadata,
+            "id": f"architecture:{system}:{board_id}"
+        })
+
+        return result
+
+    except Exception as e:
+        # Log error but don't fail the request
+        fire_and_forget("architecture_digitizer_docstore_error", {
+            "system": system,
+            "board_id": board_id,
+            "error": str(e)
+        })
+        return {"status": "error", "error": f"Failed to store in doc_store: {e}"}
 
 # Service configuration constants
 SERVICE_NAME = "architecture-digitizer"
@@ -105,6 +172,15 @@ async def normalize_architecture(request: NormalizeRequest):
         # Record successful metrics
         duration = time.time() - start_time
         record_architecture_digitizer_request(metrics, request.system, "success", duration)
+
+        # Store normalized data in doc_store (fire and forget)
+        fire_and_forget(
+            store_architecture_in_docstore,
+            request.system,
+            request.board_id,
+            result,
+            {"request_duration": duration}
+        )
 
         # Log successful normalization
         fire_and_forget(
@@ -199,6 +275,20 @@ async def normalize_file_upload(
         duration = time.time() - start_time
         record_architecture_digitizer_request(metrics, system, "success", duration)
         record_architecture_digitizer_file_upload(metrics, system, file_format, file_size, "success", duration)
+
+        # Store normalized data in doc_store (fire and forget)
+        fire_and_forget(
+            store_architecture_in_docstore,
+            system,
+            f"file:{file.filename}",
+            result,
+            {
+                "filename": file.filename,
+                "file_format": file_format,
+                "file_size": file_size,
+                "request_duration": duration
+            }
+        )
 
         # Log successful normalization
         fire_and_forget(

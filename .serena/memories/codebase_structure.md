@@ -5,7 +5,7 @@
 ├── services/                    # All microservices
 │   ├── shared/                 # Common utilities and patterns
 │   ├── orchestrator/           # Control plane (port 5099)
-│   ├── doc-store/             # Document storage (port 5087)
+│   ├── doc_store/             # Document storage (port 5087)
 │   ├── source-agent/          # Data ingestion (port 5000)
 │   ├── analysis-service/      # AI analysis (port 5020)
 │   ├── prompt-store/          # Prompt management (port 5110)

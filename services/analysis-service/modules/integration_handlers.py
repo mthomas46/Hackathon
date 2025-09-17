@@ -164,7 +164,7 @@ class IntegrationHandlers:
                 "analysis_service": "healthy",
                 "integrations": health_status,
                 "available_services": [
-                    "doc-store",
+                    "doc_store",
                     "source-agent",
                     "prompt-store",
                     "interpreter",
@@ -177,6 +177,20 @@ class IntegrationHandlers:
                 "integrations": {"error": str(e)},
                 "available_services": []
             }
+
+    def get_architecture_analyzer(self, analysis_type: str):
+        """Get architecture analyzer for the specified analysis type."""
+        # Import here to avoid circular imports
+        from .architecture_analyzer import ArchitectureAnalyzer
+
+        analyzers = {
+            "consistency": ArchitectureAnalyzer(),
+            "completeness": ArchitectureAnalyzer(),
+            "best_practices": ArchitectureAnalyzer(),
+            "combined": ArchitectureAnalyzer()
+        }
+
+        return analyzers.get(analysis_type)
 
 
 # Create singleton instance

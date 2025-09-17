@@ -14,7 +14,7 @@ pytest -q
 
 # 3. Start core services locally
 python services/orchestrator/main.py     # 5099 - Control plane
-python services/doc-store/main.py        # 5087 - Document storage
+python services/doc_store/main.py        # 5087 - Document storage
 python services/source-agent/main.py     # 5000 - Data ingestion
 ```
 
@@ -71,11 +71,11 @@ brew install redis && redis-server
 3. **Run development stack**:
 ```bash
 # Start core services
-docker-compose -f docker-compose.dev.yml up -d orchestrator doc-store source-agent
+docker-compose -f docker-compose.dev.yml up -d orchestrator doc_store source-agent
 
 # Or run individually
 python services/orchestrator/main.py &
-python services/doc-store/main.py &
+python services/doc_store/main.py &
 python services/source-agent/main.py &
 ```
 
@@ -103,7 +103,7 @@ curl http://localhost:5099/health/system
 | Service | Port | Purpose | Documentation |
 |---------|------|---------|---------------|
 | **Orchestrator** | 5099 | Control plane, workflows | [`services/orchestrator/`](services/orchestrator/) |
-| **Doc Store** | 5087 | Document storage & search | [`services/doc-store/`](services/doc-store/) |
+| **Doc Store** | 5087 | Document storage & search | [`services/doc_store/`](services/doc_store/) |
 | **Source Agent** | 5000 | Multi-source data ingestion | [`services/source-agent/`](services/source-agent/) |
 | **Analysis Service** | 5020 | AI-powered analysis | [`services/analysis-service/`](services/analysis-service/) |
 | **Prompt Store** | 5110 | Prompt management | [`services/prompt-store/`](services/prompt-store/) |

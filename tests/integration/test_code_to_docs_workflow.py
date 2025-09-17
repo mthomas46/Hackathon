@@ -29,8 +29,8 @@ def code_analyzer_app():
 
 @pytest.fixture(scope="module")
 def doc_store_app():
-    """Load doc-store service."""
-    return _load_service("doc-store", "doc-store")
+    """Load doc_store service."""
+    return _load_service("doc_store", "doc_store")
 
 
 @pytest.fixture(scope="module")
@@ -417,9 +417,7 @@ def create_user_v2():
             _assert_http_ok(analyze_resp)
 
             # Store with versioning metadata
-            doc_id = f"user-api-{version['version']}"
-            store_resp = doc_client.post("/documents", json={
-                "id": doc_id,
+            store_resp = doc_client.post("/api/v1/documents", json={
                 "content": analyze_resp.json()["document"]["content"],
                 "metadata": {
                     "type": "api_documentation",
@@ -433,15 +431,15 @@ def create_user_v2():
             versioned_docs.append(store_resp.json()["data"]["id"])
 
         # Step 2: Search for current (non-deprecated) APIs
-        search_resp = doc_client.get("/search", params={
-            "q": "users",
-            "filters": {"deprecated": False}
+        search_resp = doc_client.post("/api/v1/search", json={
+            "query": "users",
+            "metadata": {"deprecated": False}
         })
 
         if search_resp.status_code == 200:
             search_results = search_resp.json()["data"]["items"]
             # Should find v2 but not v1
-            found_v2 = any("v2" in doc["id"] for doc in search_results)
+            found_v2 = any("v2" in doc.get("metadata", {}).get("api_version") == "v2" for doc in search_results)
             found_v1 = any("v1" in doc["id"] for doc in search_results)
 
             if found_v2 or found_v1:  # If filtering is implemented

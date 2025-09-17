@@ -150,9 +150,9 @@ class QueryHandlers:
             if action == "ingest":
                 return await clients.post_json("source-agent/ingest", parameters)
 
-        elif service == "doc-store":
+        elif service == "doc_store":
             if action == "store":
-                return await clients.post_json("doc-store/store", parameters)
+                return await clients.post_json("doc_store/store", parameters)
 
         elif service == "prompt-store":
             if action == "search":

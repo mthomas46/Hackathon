@@ -5,7 +5,7 @@
 #
 # Services included:
 # - Core Infrastructure: Redis, PostgreSQL (optional)
-# - Core Services: orchestrator, doc-store, analysis-service, source-agent, frontend
+# - Core Services: orchestrator, doc_store, analysis-service, source-agent, frontend
 # - AI Services: summarizer-hub, bedrock-proxy, github-mcp
 # - Agent Services: memory-agent, discovery-agent, notification-service
 # - Utility Services: prompt-store, interpreter, cli
@@ -105,19 +105,19 @@ services:
       - core
 
   # Document Store - Document storage and retrieval
-  doc-store:
+  doc_store:
     image: python:3.12-slim
     working_dir: /app
     volumes:
       - ./:/app:ro
       - ./config.yml:/app/config.yml:ro
-      - ./services/doc-store/config.yaml:/app/services/doc-store/config.yaml:ro
+      - ./services/doc_store/config.yaml:/app/services/doc_store/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
-      - doc_store_data:/app/services/doc-store
+      - doc_store_data:/app/services/doc_store
     environment:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc-store/main.py"
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc_store/main.py"
     ports:
       - "5087:5087"
     depends_on:
@@ -149,7 +149,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      doc-store:
+      doc_store:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5020/health"]

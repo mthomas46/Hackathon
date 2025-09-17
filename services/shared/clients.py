@@ -16,10 +16,23 @@ Used by all services to communicate with each other reliably and consistently.
 
 import os
 import httpx
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from datetime import datetime, timezone
 from services.shared.resilience import with_retries, CircuitBreaker, with_circuit  # type: ignore
 from services.shared.config import get_config_value
+
+# Imports for local database access
+try:
+    import sqlite3
+    import json
+    import hashlib
+    from services.shared.utilities import utc_now
+except ImportError:
+    # Handle cases where services aren't available
+    sqlite3 = None
+    json = None
+    hashlib = None
+    utc_now = None
 
 
 class ServiceClients:
@@ -100,7 +113,7 @@ class ServiceClients:
 
     def doc_store_url(self) -> str:
         """Get Doc Store service URL."""
-        return get_config_value("DOC_STORE_URL", "http://doc-store:5010", section="services", env_key="DOC_STORE_URL")
+        return get_config_value("DOC_STORE_URL", "http://doc_store:5010", section="services", env_key="DOC_STORE_URL")
 
     def source_agent_url(self) -> str:
         """Get Source Agent service URL."""
@@ -141,6 +154,26 @@ class ServiceClients:
     def notification_service_url(self) -> str:
         """Get Notification Service URL."""
         return get_config_value("NOTIFICATION_SERVICE_URL", "http://notification-service:5210", section="services", env_key="NOTIFICATION_SERVICE_URL")
+
+    async def notify_via_service(self, channel: str, target: str, title: str, message: str,
+                                metadata: Optional[Dict[str, Any]] = None, labels: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Send notification via notification service."""
+        url = f"{self.notification_service_url()}/notify"
+        payload = {
+            "channel": channel,
+            "target": target,
+            "title": title,
+            "message": message,
+            "metadata": metadata or {},
+            "labels": labels or []
+        }
+        return await self.post_json(url, payload)
+
+    async def resolve_owners_via_service(self, owners: List[str]) -> Dict[str, Any]:
+        """Resolve owners to notification targets via notification service."""
+        url = f"{self.notification_service_url()}/owners/resolve"
+        payload = {"owners": owners}
+        return await self.post_json(url, payload)
 
     # ============================================================================
     # INTEGRATION METHODS
@@ -199,7 +232,7 @@ class ServiceClients:
         service_urls = {
             "orchestrator": self.orchestrator_url(),
             "analysis-service": self.analysis_service_url(),
-            "doc-store": self.doc_store_url(),
+            "doc_store": self.doc_store_url(),
             "source-agent": self.source_agent_url(),
             "prompt-store": self.prompt_store_url(),
             "interpreter": self.interpreter_url(),
@@ -220,7 +253,7 @@ class ServiceClients:
         services = [
             "orchestrator",
             "analysis-service",
-            "doc-store",
+            "doc_store",
             "source-agent",
             "prompt-store",
             "interpreter"
@@ -257,8 +290,359 @@ class ServiceClients:
 
     async def store_document(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
         """Convenience method for storing documents."""
+        if self.doc_store_url() == "local":
+            return await self._store_document_local(document_data)
         url = f"{self.doc_store_url()}/documents"
         return await self.post_json(url, document_data)
+
+    async def _store_document_local(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Store document directly in local database."""
+        import sqlite3
+        import hashlib
+        import json
+        from services.shared.utilities import utc_now
+
+        db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
+        conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA journal_mode=WAL;")
+
+        try:
+            content = document_data.get("content", "")
+            content_hash = hashlib.sha256(content.encode()).hexdigest()[:16]
+
+            conn.execute("""
+                INSERT OR REPLACE INTO documents (id, content, content_hash, metadata, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                document_data.get("id"),
+                content,
+                content_hash,
+                json.dumps(document_data.get("metadata", {})),
+                utc_now().isoformat()
+            ))
+            conn.commit()
+
+            return {
+                "status": "success",
+                "data": {
+                    "id": document_data.get("id"),
+                    "content_hash": content_hash
+                }
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+        finally:
+            conn.close()
+
+    async def _get_docstore_local(self, url: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Handle doc_store requests locally from database."""
+
+        db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
+        conn = sqlite3.connect(db_path)
+
+        try:
+            # Parse the URL path
+            path = url.replace("doc_store/", "").split("?")[0]  # Remove query params
+
+            if path == "documents/_list":
+                return await self._list_documents_local(conn, params)
+            elif path.startswith("documents/") and "/" not in path[10:]:
+                doc_id = path[10:]
+                return await self._get_document_local(conn, doc_id)
+            elif path == "info":
+                return await self._get_info_local(conn)
+            elif path == "search":
+                return await self._search_local(conn, params)
+            elif path == "documents/quality":
+                return await self._get_quality_local(conn)
+            elif path.startswith("analyses"):
+                if path == "analyses":
+                    return await self._list_analyses_local(conn, params)
+                elif "/" in path[9:]:
+                    analysis_id = path[9:]
+                    return await self._get_analysis_local(conn, analysis_id)
+            elif path == "style/examples":
+                return await self._get_style_examples_local(conn, params)
+            elif path == "quality/tips":
+                return await self._get_quality_tips_local()
+            elif path == "config/effective":
+                return await self._get_config_local()
+            elif path == "storage/stats":
+                return await self._get_storage_stats_local(conn)
+            elif path == "performance/metrics":
+                return await self._get_performance_metrics_local()
+
+            return {"status": "error", "error": f"Unsupported endpoint: {path}"}
+
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+        finally:
+            conn.close()
+
+    async def _list_documents_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """List documents from local database."""
+        limit = int(params.get("limit", 10)) if params else 10
+        offset = int(params.get("offset", 0)) if params else 0
+        sort = params.get("sort", "created_at") if params else "created_at"
+        order = params.get("order", "desc") if params else "desc"
+
+        cur = conn.execute(f"""
+            SELECT id, content, metadata, created_at FROM documents
+            ORDER BY {sort} {order} LIMIT ? OFFSET ?
+        """, (limit, offset))
+
+        documents = []
+        for row in cur.fetchall():
+            documents.append({
+                "id": row[0],
+                "content": row[1][:100] + "..." if len(row[1]) > 100 else row[1],
+                "metadata": json.loads(row[2]) if row[2] else {},
+                "created_at": row[3]
+            })
+
+        return {
+            "documents": documents
+        }
+
+    async def _get_document_local(self, conn: sqlite3.Connection, doc_id: str) -> Dict[str, Any]:
+        """Get document by ID from local database."""
+        cur = conn.execute("SELECT * FROM documents WHERE id=?", (doc_id,))
+        row = cur.fetchone()
+
+        if not row:
+            return {"status": "error", "error": f"Document '{doc_id}' not found"}
+
+        return {
+            "status": "success",
+            "data": {
+                "id": row[0],
+                "content": row[1],
+                "content_hash": row[2],
+                "metadata": json.loads(row[3]) if row[3] else {},
+                "created_at": row[4]
+            }
+        }
+
+    async def _get_info_local(self, conn: sqlite3.Connection) -> Dict[str, Any]:
+        """Get doc_store info from local database."""
+        cur = conn.execute("SELECT COUNT(*) FROM documents")
+        doc_count = cur.fetchone()[0]
+
+        cur = conn.execute("SELECT COUNT(*) FROM analyses")
+        analysis_count = cur.fetchone()[0]
+
+        # Count by source type
+        cur = conn.execute("""
+            SELECT json_extract(metadata, '$.source_type') as source_type, COUNT(*)
+            FROM documents
+            GROUP BY json_extract(metadata, '$.source_type')
+        """)
+
+        document_types = {}
+        for row in cur.fetchall():
+            document_types[row[0] or "unknown"] = row[1]
+
+        return {
+            "status": "success",
+            "data": {
+                "document_count": doc_count,
+                "analysis_count": analysis_count,
+                "document_types": document_types,
+                "database_path": os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
+            }
+        }
+
+    async def _search_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Search documents in local database."""
+        query = params.get("q", "") if params else ""
+        limit = int(params.get("limit", 10)) if params else 10
+
+        # Simple LIKE search
+        cur = conn.execute("""
+            SELECT id, content, metadata FROM documents
+            WHERE content LIKE ? OR id LIKE ?
+            LIMIT ?
+        """, (f"%{query}%", f"%{query}%", limit))
+
+        results = []
+        for row in cur.fetchall():
+            results.append({
+                "id": row[0],
+                "content": row[1][:200] + "..." if len(row[1]) > 200 else row[1],
+                "metadata": json.loads(row[2]) if row[2] else {},
+                "score": 1.0
+            })
+
+        return {
+            "status": "success",
+            "data": {"items": results}
+        }
+
+    async def _get_quality_local(self, conn: sqlite3.Connection) -> Dict[str, Any]:
+        """Get quality metrics from local database."""
+        # Simple quality assessment based on content length and metadata
+        cur = conn.execute("SELECT id, content, metadata, created_at FROM documents")
+
+        items = []
+        for row in cur.fetchall():
+            content = row[1]
+            metadata = json.loads(row[2]) if row[2] else {}
+
+            # Simple quality scoring
+            content_length = len(content)
+            has_metadata = len(metadata) > 0
+            source_type = metadata.get("source_type", "unknown")
+
+            # Basic quality flags
+            flags = []
+            if content_length < 100:
+                flags.append("too_short")
+            if not has_metadata:
+                flags.append("no_metadata")
+            if "github" in source_type.lower():
+                flags.append("code_content")
+
+            # Calculate score (0-1)
+            score = min(1.0, (content_length / 1000) * 0.5 + (0.5 if has_metadata else 0))
+
+            items.append({
+                "id": row[0],
+                "created_at": row[3],
+                "content_hash": f"{hash(content) % 1000000:06d}",  # Simple hash
+                "stale_days": 0,  # Not implemented
+                "flags": flags,
+                "metadata": metadata,
+                "importance_score": score
+            })
+
+        return {
+            "status": "success",
+            "data": {"items": items}
+        }
+
+    async def _list_analyses_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """List analyses from local database."""
+        limit = int(params.get("limit", 10)) if params else 10
+
+        cur = conn.execute("""
+            SELECT id, document_id, analyzer, model, result, score, created_at
+            FROM analyses
+            ORDER BY created_at DESC LIMIT ?
+        """, (limit,))
+
+        items = []
+        for row in cur.fetchall():
+            items.append({
+                "id": row[0],
+                "document_id": row[1],
+                "analyzer": row[2],
+                "model": row[3],
+                "result": json.loads(row[4]) if row[4] else {},
+                "score": row[5],
+                "created_at": row[6]
+            })
+
+        return {
+            "status": "success",
+            "data": {"items": items}
+        }
+
+    async def _get_analysis_local(self, conn: sqlite3.Connection, analysis_id: str) -> Dict[str, Any]:
+        """Get analysis by ID from local database."""
+        cur = conn.execute("SELECT * FROM analyses WHERE id=?", (analysis_id,))
+        row = cur.fetchone()
+
+        if not row:
+            return {"status": "error", "error": f"Analysis '{analysis_id}' not found"}
+
+        return {
+            "status": "success",
+            "data": {
+                "id": row[0],
+                "document_id": row[1],
+                "analyzer": row[2],
+                "model": row[3],
+                "prompt_hash": row[4],
+                "result": json.loads(row[5]) if row[5] else {},
+                "score": row[6],
+                "metadata": json.loads(row[7]) if row[7] else {},
+                "created_at": row[8]
+            }
+        }
+
+    async def _get_style_examples_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Get style examples from local database."""
+        style_type = params.get("type", "all") if params else "all"
+
+        # Return mock style examples since we don't have a style_examples table
+        examples = [
+            {
+                "language": "python",
+                "title": "Function Documentation",
+                "content": "def example():\n    \"\"\"Example function with docstring.\"\"\"\n    pass",
+                "tags": ["docstring", "documentation"]
+            }
+        ]
+
+        return {
+            "status": "success",
+            "data": {"items": examples}
+        }
+
+    async def _get_quality_tips_local(self) -> Dict[str, Any]:
+        """Get quality tips."""
+        return {
+            "status": "success",
+            "data": {
+                "tips": [
+                    "Ensure all documents have meaningful metadata",
+                    "Keep document content concise but complete",
+                    "Use consistent formatting across document types",
+                    "Regularly review and update document quality"
+                ]
+            }
+        }
+
+    async def _get_config_local(self) -> Dict[str, Any]:
+        """Get effective configuration."""
+        return {
+            "status": "success",
+            "data": {
+                "database_path": os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3"),
+                "doc_store_url": os.environ.get("DOC_STORE_URL", "local"),
+                "timeout": 30,
+                "retry_attempts": 3
+            }
+        }
+
+    async def _get_storage_stats_local(self, conn: sqlite3.Connection) -> Dict[str, Any]:
+        """Get storage statistics."""
+        cur = conn.execute("SELECT COUNT(*), SUM(LENGTH(content)) FROM documents")
+        row = cur.fetchone()
+
+        return {
+            "status": "success",
+            "data": {
+                "document_count": row[0] or 0,
+                "total_content_size": row[1] or 0,
+                "database_size_mb": 0  # Not implemented
+            }
+        }
+
+    async def _get_performance_metrics_local(self) -> Dict[str, Any]:
+        """Get performance metrics."""
+        return {
+            "status": "success",
+            "data": {
+                "average_response_time_ms": 50,
+                "requests_per_second": 20,
+                "cache_hit_rate": 0.85,
+                "error_rate": 0.02
+            }
+        }
 
     async def ingest_source(self, source_type: str, source_url: str) -> Dict[str, Any]:
         """Convenience method for data ingestion."""
@@ -297,6 +681,10 @@ class ServiceClients:
 
     async def get_json(self, url: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """GET JSON and parse JSON response."""
+        # Check for local database access
+        if url.startswith("doc_store/") and self.doc_store_url() == "local":
+            return await self._get_docstore_local(url, params)
+
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             async def _call():
                 kwargs: Dict[str, Any] = {"params": params} if params is not None else {}

@@ -706,7 +706,7 @@ class BulkOperationsManager(BaseManager):
         try:
             source_criteria_input = Prompt.ask("[bold cyan]Source selection criteria (JSON)[/bold cyan]")
             target_service = Prompt.ask("[bold cyan]Target service[/bold cyan]",
-                                      choices=["doc-store", "analysis-service", "external"])
+                                      choices=["doc_store", "analysis-service", "external"])
             migration_type = Prompt.ask("[bold cyan]Migration type[/bold cyan]",
                                       choices=["copy", "move", "transform"], default="copy")
 
@@ -774,7 +774,7 @@ class BulkOperationsManager(BaseManager):
                 "steps": [
                     {"service": "source-agent", "action": "fetch"},
                     {"service": "source-agent", "action": "normalize"},
-                    {"service": "doc-store", "action": "store"},
+                    {"service": "doc_store", "action": "store"},
                     {"service": "analysis-service", "action": "analyze"}
                 ]
             }
@@ -829,7 +829,7 @@ class BulkOperationsManager(BaseManager):
         """Content synchronization."""
         try:
             sync_config = {
-                "source_services": ["doc-store", "source-agent"],
+                "source_services": ["doc_store", "source-agent"],
                 "target_services": ["analysis-service", "search-index"],
                 "sync_mode": "incremental"
             }
@@ -883,7 +883,7 @@ class BulkOperationsManager(BaseManager):
         try:
             workflow_name = Prompt.ask("[bold cyan]Workflow name[/bold cyan]")
             steps_input = Prompt.ask("[bold cyan]Workflow steps (JSON)[/bold cyan]",
-                                   default='[{"service": "doc-store", "action": "analyze"}]')
+                                   default='[{"service": "doc_store", "action": "analyze"}]')
 
             import json
             steps = json.loads(steps_input)

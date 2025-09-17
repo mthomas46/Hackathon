@@ -10,9 +10,9 @@ from typing import Dict, Any
 
 
 def load_doc_store_service():
-    """Create a mock doc-store service for testing.
+    """Create a mock doc_store service for testing.
 
-    Returns a complete mock FastAPI app that mimics the doc-store service
+    Returns a complete mock FastAPI app that mimics the doc_store service
     for consistent testing across all test files.
 
     Returns:
@@ -25,7 +25,7 @@ def load_doc_store_service():
     # Mock endpoints for testing
     @app.get("/health")
     async def health():
-        return {"status": "healthy", "service": "doc-store"}
+        return {"status": "healthy", "service": "doc_store"}
 
     @app.get("/info")
     async def info():
@@ -33,7 +33,7 @@ def load_doc_store_service():
             "success": True,
             "message": "info retrieved",
             "data": {
-                "service": "doc-store",
+                "service": "doc_store",
                 "version": "1.0.0"
             },
             "timestamp": "2024-01-01T00:00:00Z"
@@ -45,7 +45,7 @@ def load_doc_store_service():
             "success": True,
             "message": "configuration retrieved",
             "data": {
-                "db_path": "services/doc-store/db.sqlite3",
+                "db_path": "services/doc_store/db.sqlite3",
                 "middleware_enabled": True,
                 "redis_enabled": False
             },
@@ -58,10 +58,10 @@ def load_doc_store_service():
             "success": True,
             "message": "metrics retrieved",
             "data": {
-                "service": "doc-store",
+                "service": "doc_store",
                 "routes": 10,
                 "active_connections": 0,
-                "database_path": "services/doc-store/db.sqlite3"
+                "database_path": "services/doc_store/db.sqlite3"
             },
             "timestamp": "2024-01-01T00:00:00Z"
         }

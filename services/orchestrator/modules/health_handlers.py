@@ -45,7 +45,7 @@ class HealthHandlers:
                 "name": "Document Ingestion",
                 "description": "Ingest documents from various sources",
                 "steps": ["validate_source", "extract_content", "store_documents"],
-                "required_services": ["source-agent", "doc-store"],
+                "required_services": ["source-agent", "doc_store"],
                 "estimated_duration": 300
             },
             {
@@ -53,7 +53,7 @@ class HealthHandlers:
                 "name": "Consistency Analysis",
                 "description": "Analyze documentation for consistency issues",
                 "steps": ["fetch_documents", "analyze_patterns", "generate_report"],
-                "required_services": ["doc-store", "analysis-service"],
+                "required_services": ["doc_store", "analysis-service"],
                 "estimated_duration": 600
             },
             {
@@ -61,7 +61,7 @@ class HealthHandlers:
                 "name": "Quality Assessment",
                 "description": "Assess overall documentation quality",
                 "steps": ["collect_metrics", "analyze_quality", "generate_insights"],
-                "required_services": ["doc-store", "analysis-service"],
+                "required_services": ["doc_store", "analysis-service"],
                 "estimated_duration": 450
             }
         ]

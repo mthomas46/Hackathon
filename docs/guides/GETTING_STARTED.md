@@ -56,7 +56,7 @@ curl http://localhost:5099/health/system
 ```bash
 # Terminal 1: Core services
 python services/orchestrator/main.py     # Port 5099 - Control plane
-python services/doc-store/main.py        # Port 5087 - Document storage
+python services/doc_store/main.py        # Port 5087 - Document storage
 
 # Terminal 2: Data ingestion
 python services/source-agent/main.py     # Port 5000 - Multi-source ingestion
@@ -84,7 +84,7 @@ curl http://localhost:5099/health/system
 ```bash
 # Start just the essential services
 python services/orchestrator/main.py &
-python services/doc-store/main.py &
+python services/doc_store/main.py &
 python services/source-agent/main.py &
 
 # Test basic functionality
@@ -108,7 +108,7 @@ pytest tests/unit/orchestrator/ -v
 pytest -v --tb=short
 
 # Run tests for a specific service
-pytest tests/unit/doc-store/ -v
+pytest tests/unit/doc_store/ -v
 ```
 
 ### Test Core Functionality
@@ -198,7 +198,7 @@ curl -X POST http://localhost:5020/analyze \
 ```bash
 # Pick a service based on your interests:
 # - orchestrator: Workflow orchestration
-# - doc-store: Data persistence
+# - doc_store: Data persistence
 # - source-agent: Data ingestion
 # - analysis-service: AI/ML features
 ```

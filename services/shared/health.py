@@ -117,7 +117,7 @@ class HealthManager:
         core_services = {
             "orchestrator": "/health",
             "analysis-service": "/health",
-            "doc-store": "/health",
+            "doc_store": "/health",
             "source-agent": "/health",
             "prompt-store": "/health",
             "interpreter": "/health"
@@ -186,7 +186,7 @@ def create_dependency_health_endpoint(health_manager: HealthManager):
         service_endpoints = {
             "orchestrator": "orchestrator/health",
             "analysis-service": "analysis-service/health",
-            "doc-store": "doc-store/health",
+            "doc_store": "doc_store/health",
             "source-agent": "source-agent/health",
             "prompt-store": "prompt-store/health",
             "interpreter": "interpreter/health"

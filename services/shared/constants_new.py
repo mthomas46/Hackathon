@@ -92,7 +92,7 @@ class ServiceNames:
     """Standardized service names."""
     ORCHESTRATOR = "orchestrator"
     ANALYSIS_SERVICE = "analysis-service"
-    DOC_STORE = "doc-store"
+    DOC_STORE = "doc_store"
     SOURCE_AGENT = "source-agent"
     PROMPT_STORE = "prompt-store"
     INTERPRETER = "interpreter"
@@ -106,6 +106,7 @@ class ServiceNames:
     NOTIFICATION_SERVICE = "notification-service"
     LOG_COLLECTOR = "log-collector"
     BEDROCK_PROXY = "bedrock-proxy"
+    ARCHITECTURE_DIGITIZER = "architecture-digitizer"
 
 
 class ServicePorts:

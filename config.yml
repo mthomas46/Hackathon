@@ -43,7 +43,7 @@ sqlite:
   databases:
     # Document Store Database
     doc_store:
-      path: ${DOCSTORE_DB:-services/doc-store/db.sqlite3}
+      path: ${DOCSTORE_DB:-services/doc_store/db.sqlite3}
       connection_pool_size: ${DOCSTORE_CONNECTION_POOL_SIZE:-5}
       # Auto-initialization settings
       auto_init: true
@@ -121,7 +121,7 @@ services:
 
   # Core Service URLs
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
-  doc_store_url: ${DOC_STORE_URL:-http://doc-store:5087}
+  doc_store_url: ${DOC_STORE_URL:-http://doc_store:5087}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
   source_agent_url: ${SOURCE_AGENT_URL:-http://source-agent:5000}
   frontend_url: ${FRONTEND_URL:-http://frontend:3000}
@@ -235,7 +235,7 @@ memory_agent:
 doc_store:
   port: 5087
   database:
-    path: ${DOCSTORE_DB:-services/doc-store/db.sqlite3}
+    path: ${DOCSTORE_DB:-services/doc_store/db.sqlite3}
     connection_pool_size: ${DOCSTORE_CONNECTION_POOL_SIZE:-5}
 
 # Code Analyzer Configuration
@@ -347,7 +347,7 @@ profiles:
   core:
     - redis
     - orchestrator
-    - doc-store
+    - doc_store
     - analysis-service
     - source-agent
     - frontend

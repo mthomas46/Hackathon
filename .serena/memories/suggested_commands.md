@@ -11,7 +11,7 @@ python start_services.py
 
 # Start individual services
 python services/orchestrator/main.py     # Port 5099
-python services/doc-store/main.py        # Port 5087  
+python services/doc_store/main.py        # Port 5087  
 python services/source-agent/main.py     # Port 5000
 ```
 

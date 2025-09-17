@@ -1,6 +1,6 @@
 """Data browser infrastructure for Frontend service.
 
-Provides read-only browsing capabilities for doc-store and prompt-store data
+Provides read-only browsing capabilities for doc_store and prompt-store data
 with caching, filtering, and pagination support.
 """
 from typing import Dict, Any, List, Optional
@@ -12,7 +12,7 @@ from .shared_utils import get_doc_store_url, get_prompt_store_url, get_frontend_
 
 
 class DataBrowser:
-    """Read-only data browser for doc-store and prompt-store services."""
+    """Read-only data browser for doc_store and prompt-store services."""
 
     def __init__(self):
         self._cache = {
@@ -45,7 +45,7 @@ class DataBrowser:
         offset: int = 0,
         force_refresh: bool = False
     ) -> Dict[str, Any]:
-        """Get documents from doc-store with pagination."""
+        """Get documents from doc_store with pagination."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
             documents = self._cache["doc_store"]["documents"]
             start_idx = offset
@@ -110,7 +110,7 @@ class DataBrowser:
         offset: int = 0,
         force_refresh: bool = False
     ) -> Dict[str, Any]:
-        """Get analyses from doc-store with optional filtering."""
+        """Get analyses from doc_store with optional filtering."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
             analyses = self._cache["doc_store"]["analyses"]
             # Filter by document_id if provided
@@ -286,7 +286,7 @@ class DataBrowser:
             return {"analytics": {}, "error": str(e), "cached": False}
 
     async def get_doc_store_search(self, query: str, limit: int = 20) -> Dict[str, Any]:
-        """Search documents in doc-store."""
+        """Search documents in doc_store."""
         try:
             clients = get_frontend_clients()
             doc_store_url = get_doc_store_url()
@@ -343,7 +343,7 @@ data_browser = DataBrowser()
 
 
 def get_doc_store_summary() -> Dict[str, Any]:
-    """Get a summary of doc-store data."""
+    """Get a summary of doc_store data."""
     docs = data_browser._cache["doc_store"]["documents"]
     analyses = data_browser._cache["doc_store"]["analyses"]
     quality = data_browser._cache["doc_store"]["quality"]

@@ -242,7 +242,7 @@ class CLIAssertionMixin:
         assert isinstance(health_data, dict), "Health data should be a dictionary"
         assert len(health_data) > 0, "Health data should not be empty"
 
-        expected_services = ["orchestrator", "prompt-store", "source-agent", "analysis-service", "doc-store"]
+        expected_services = ["orchestrator", "prompt-store", "source-agent", "analysis-service", "doc_store"]
         for service in expected_services:
             assert service in health_data, f"Health data should include {service}"
 

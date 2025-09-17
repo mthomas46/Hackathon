@@ -73,7 +73,7 @@ Make your documentation reliable again—detect drift early, route to the right 
 ## Run it in minutes
 ```bash
 # Local dev (live code)
-docker compose -f docker-compose.dev.yml up -d redis orchestrator doc-store analysis-service source-agent frontend
+docker compose -f docker-compose.dev.yml up -d redis orchestrator doc_store analysis-service source-agent frontend
 
 # Open the UI
 open http://localhost:3000

@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 
 async def persist_analysis_result(result: Dict[str, Any]) -> None:
-    """Persist analysis result to external services (Redis and doc-store)."""
+    """Persist analysis result to external services (Redis and doc_store)."""
 
     # Publish to Redis if available
     if "aioredis" in globals() or _try_import_redis():
@@ -21,7 +21,7 @@ async def persist_analysis_result(result: Dict[str, Any]) -> None:
             print(f"Redis publishing failed (optional): {e}")
             pass  # Redis publishing is optional
 
-    # Store in doc-store if configured
+    # Store in doc_store if configured
     ds = os.environ.get("DOC_STORE_URL")
     if ds:
         try:
