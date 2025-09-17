@@ -30,6 +30,7 @@ from .infrastructure.external_services.service_client import OrchestratorService
 # Domain services (with static service definitions)
 from .domain.service_registry.services import ServiceDiscoveryService, ServiceRegistrationService
 from .domain.health_monitoring.services import HealthCheckService, SystemMonitoringService
+from .domain.infrastructure.services import DLQService, SagaService, TracingService, EventStreamingService
 from .modules.services import _get_service_definitions
 
 # Application layer
@@ -44,6 +45,21 @@ from .application.health_monitoring.use_cases import (
     CheckSystemHealthUseCase, CheckServiceHealthUseCase, GetSystemHealthUseCase,
     GetServiceHealthUseCase, GetSystemInfoUseCase, GetSystemMetricsUseCase,
     GetSystemConfigUseCase, CheckSystemReadinessUseCase, ListWorkflowsUseCase as HealthListWorkflowsUseCase
+)
+from .application.infrastructure.use_cases import (
+    StartSagaUseCase, ExecuteSagaStepUseCase, GetSagaUseCase, ListSagasUseCase,
+    StartTraceUseCase, GetTraceUseCase, ListTracesUseCase,
+    GetDLQStatsUseCase, ListDLQEventsUseCase, RetryEventUseCase,
+    GetEventStreamStatsUseCase, PublishEventUseCase
+)
+from .application.ingestion.use_cases import (
+    StartIngestionUseCase, GetIngestionStatusUseCase, ListIngestionsUseCase
+)
+from .application.reporting.use_cases import (
+    GenerateReportUseCase, GetReportUseCase, ListReportsUseCase
+)
+from .application.query_processing.use_cases import (
+    ProcessNaturalLanguageQueryUseCase, GetQueryResultUseCase, ListQueriesUseCase
 )
 
 # Presentation layer (API routes) - Optional for now
@@ -61,6 +77,21 @@ try:
     from .presentation.api.infrastructure.routes import router as infrastructure_router
 except ImportError:
     infrastructure_router = None
+
+try:
+    from .presentation.api.ingestion.routes import router as ingestion_router
+except ImportError:
+    ingestion_router = None
+
+try:
+    from .presentation.api.reporting.routes import router as reporting_router
+except ImportError:
+    reporting_router = None
+
+try:
+    from .presentation.api.query_processing.routes import router as query_processing_router
+except ImportError:
+    query_processing_router = None
 
 # Service configuration
 SERVICE_TITLE = "Orchestrator"
@@ -86,6 +117,12 @@ class OrchestratorContainer:
         self.service_registration_service = ServiceRegistrationService()
         self.health_check_service = HealthCheckService()
         self.system_monitoring_service = SystemMonitoringService(self.health_check_service)
+
+        # Infrastructure domain services
+        self.dlq_service = DLQService()
+        self.saga_service = SagaService()
+        self.tracing_service = TracingService()
+        self.event_streaming_service = EventStreamingService()
 
         # Application layer - Workflow Management
         from .domain.workflow_management.services.workflow_executor import WorkflowExecutor
@@ -122,6 +159,35 @@ class OrchestratorContainer:
         self.get_system_config_use_case = GetSystemConfigUseCase(self.system_monitoring_service)
         self.check_system_readiness_use_case = CheckSystemReadinessUseCase(self.system_monitoring_service)
         self.health_list_workflows_use_case = HealthListWorkflowsUseCase()
+
+        # Application layer - Infrastructure
+        self.start_saga_use_case = StartSagaUseCase(self.saga_service)
+        self.execute_saga_step_use_case = ExecuteSagaStepUseCase(self.saga_service)
+        self.get_saga_use_case = GetSagaUseCase(self.saga_service)
+        self.list_sagas_use_case = ListSagasUseCase(self.saga_service)
+        self.start_trace_use_case = StartTraceUseCase(self.tracing_service)
+        self.get_trace_use_case = GetTraceUseCase(self.tracing_service)
+        self.list_traces_use_case = ListTracesUseCase(self.tracing_service)
+        self.get_dlq_stats_use_case = GetDLQStatsUseCase(self.dlq_service)
+        self.list_dlq_events_use_case = ListDLQEventsUseCase(self.dlq_service)
+        self.retry_event_use_case = RetryEventUseCase(self.dlq_service)
+        self.get_event_stream_stats_use_case = GetEventStreamStatsUseCase(self.event_streaming_service)
+        self.publish_event_use_case = PublishEventUseCase(self.event_streaming_service)
+
+        # Application layer - Ingestion
+        self.start_ingestion_use_case = StartIngestionUseCase()
+        self.get_ingestion_status_use_case = GetIngestionStatusUseCase()
+        self.list_ingestions_use_case = ListIngestionsUseCase()
+
+        # Application layer - Reporting
+        self.generate_report_use_case = GenerateReportUseCase()
+        self.get_report_use_case = GetReportUseCase()
+        self.list_reports_use_case = ListReportsUseCase()
+
+        # Application layer - Query Processing
+        self.process_natural_language_query_use_case = ProcessNaturalLanguageQueryUseCase()
+        self.get_query_result_use_case = GetQueryResultUseCase()
+        self.list_queries_use_case = ListQueriesUseCase()
 
 
 # Global container instance
@@ -187,6 +253,24 @@ try:
     app.include_router(infrastructure_router, prefix="/api/v1/infrastructure", tags=["Infrastructure"])
 except ImportError:
     print("⚠️  Infrastructure routes not available")
+
+try:
+    from .presentation.api.ingestion import router as ingestion_router
+    app.include_router(ingestion_router, prefix="/api/v1/ingestion", tags=["Ingestion"])
+except ImportError:
+    print("⚠️  Ingestion routes not available")
+
+try:
+    from .presentation.api.reporting import router as reporting_router
+    app.include_router(reporting_router, prefix="/api/v1/reporting", tags=["Reporting"])
+except ImportError:
+    print("⚠️  Reporting routes not available")
+
+try:
+    from .presentation.api.query_processing import router as query_processing_router
+    app.include_router(query_processing_router, prefix="/api/v1/queries", tags=["Query Processing"])
+except ImportError:
+    print("⚠️  Query Processing routes not available")
 
 # Legacy route support (to be migrated)
 @app.get("/workflows")
