@@ -9,3 +9,4 @@ pydantic>=2.8.0
 httpx>=0.25.2
 redis>=5.0.1
 aioredis>=2.0.1
+aio-pika>=9.5.0

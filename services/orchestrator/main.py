@@ -89,10 +89,40 @@ Requires all ecosystem services, Redis for eventing, and shared orchestration ut
 The service is designed to gracefully degrade when dependencies are unavailable.
 """
 
+# Import Redis manager
+from .modules.redis_manager import (
+    redis_manager,
+    initialize_redis_manager,
+    shutdown_redis_manager,
+    publish_orchestrator_event,
+    get_redis_health,
+    get_redis_metrics
+)
+
+# Import event-driven orchestration
+from .modules.event_driven_orchestration import (
+    initialize_event_driven_orchestration,
+    event_store,
+    cqrs_handler,
+    event_driven_engine,
+    reactive_manager
+)
+
+# Import event streaming
 try:
-    import redis.asyncio as aioredis  # type: ignore
-except Exception:  # fallback if redis not installed yet
-    aioredis = None
+    from services.shared.event_streaming import (
+        initialize_event_streaming,
+        event_stream_processor
+    )
+    EVENT_STREAMING_AVAILABLE = True
+except ImportError:
+    EVENT_STREAMING_AVAILABLE = False
+
+# Import workflow event bridge
+from .modules.workflow_event_bridge import (
+    initialize_workflow_event_bridge,
+    workflow_event_bridge
+)
 
 from services.shared.logging import fire_and_forget
 from services.shared.config import load_yaml_config
@@ -143,15 +173,18 @@ try:
     from services.orchestrator.routes.reports import router as reports_router
     from services.orchestrator.routes.prompts import router as prompts_router
     from services.orchestrator.routes.peers import router as peers_router
+    from services.orchestrator.modules.workflow_management import workflow_api_router
 except ImportError:
     try:
         from .routes.reports import router as reports_router
         from .routes.prompts import router as prompts_router
         from .routes.peers import router as peers_router
+        from .modules.workflow_management import workflow_api_router
     except ImportError:
         from routes.reports import router as reports_router
         from routes.prompts import router as prompts_router
         from routes.peers import router as peers_router
+        from modules.workflow_management import workflow_api_router
 
 # ============================================================================
 # SHARED SERVICE CLIENT
@@ -224,6 +257,41 @@ async def startup_event():
     """Handle orchestrator startup events including automatic tool discovery."""
     print("🚀 Orchestrator service starting up...")
 
+    # Initialize Redis manager FIRST (critical dependency)
+    print("🔧 Initializing Redis manager...")
+    redis_initialized = await initialize_redis_manager()
+    if redis_initialized:
+        print("✅ Redis manager initialized successfully")
+    else:
+        print("⚠️  Redis manager initialization failed - some features may be degraded")
+
+    # Initialize event-driven orchestration framework
+    print("🚀 Initializing event-driven orchestration...")
+    try:
+        await initialize_event_driven_orchestration()
+        print("✅ Event-driven orchestration initialized successfully")
+    except Exception as e:
+        print(f"⚠️  Event-driven orchestration initialization failed: {e}")
+
+    # Initialize event streaming (if available)
+    if EVENT_STREAMING_AVAILABLE:
+        print("🌊 Initializing event streaming...")
+        try:
+            await initialize_event_streaming()
+            print("✅ Event streaming initialized successfully")
+        except Exception as e:
+            print(f"⚠️  Event streaming initialization failed: {e}")
+    else:
+        print("ℹ️  Event streaming not available (shared module not found)")
+
+    # Initialize workflow event bridge
+    print("🔗 Initializing workflow event bridge...")
+    try:
+        await initialize_workflow_event_bridge()
+        print("✅ Workflow event bridge initialized successfully")
+    except Exception as e:
+        print(f"⚠️  Workflow event bridge initialization failed: {e}")
+
     if AUTO_DISCOVER_TOOLS:
         try:
             print("🔍 Auto-discovering ecosystem tools...")
@@ -260,6 +328,18 @@ async def startup_event():
 
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.ORCHESTRATOR)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Handle orchestrator shutdown events."""
+    print("🛑 Orchestrator service shutting down...")
+
+    # Shutdown Redis manager
+    await shutdown_redis_manager()
+    print("✅ Redis manager shutdown complete")
+
+    print("🏁 Orchestrator shutdown completed")
 
 # Initialize infrastructure components
 event_orderer = EventOrderer("orchestrator")
@@ -376,20 +456,32 @@ async def request_ingestion(req: IngestionRequest):
         dict: Acceptance confirmation with correlation ID for tracking
     """
     fire_and_forget("info", "ingestion requested", ServiceNames.ORCHESTRATOR, {"source": req.source})
-    # Publish to Redis if available
-    if aioredis:
-        host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
-        client = aioredis.from_url(f"redis://{host}")
-        payload = json.dumps({
-            "source": req.source, 
-            "scope": req.scope, 
-            "correlation_id": req.correlation_id or "", 
-            "trace_id": generate_id("trace")  # OPTIMIZED: Using shared ID generation
+    # Publish to Redis using RedisManager
+    correlation_id = req.correlation_id or generate_id("correlation")
+    trace_id = generate_id("trace")
+
+    # Publish ingestion event
+    event_published = await publish_orchestrator_event(
+        "ingestion_requested",
+        {
+            "source": req.source,
+            "scope": req.scope,
+            "correlation_id": correlation_id,
+            "trace_id": trace_id,
+            "timestamp": utc_now().isoformat()
+        },
+        correlation_id
+    )
+
+    if event_published:
+        fire_and_forget("info", f"Published ingestion event for {req.source}", ServiceNames.ORCHESTRATOR, {
+            "correlation_id": correlation_id,
+            "trace_id": trace_id
         })
-        try:
-            await client.publish("ingestion.requested", payload)
-        finally:
-            await client.aclose()
+    else:
+        fire_and_forget("warning", f"Failed to publish ingestion event for {req.source}", ServiceNames.ORCHESTRATOR, {
+            "correlation_id": correlation_id
+        })
     return {"status": "accepted", "source": req.source, "correlation_id": req.correlation_id}
 
 
@@ -659,6 +751,7 @@ app.include_router(jobs_router)
 app.include_router(reports_router)
 app.include_router(prompts_router)
 app.include_router(peers_router)
+app.include_router(workflow_api_router)
 
 
 # ----------------------------
