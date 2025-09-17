@@ -42,6 +42,43 @@ python services/source-agent/main.py     # 5000 - Data ingestion
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
+## 🧪 Comprehensive Testing Suite
+
+### **End-to-End Workflow Testing**
+The ecosystem includes comprehensive testing that validates complete workflows from mock data generation through final report creation.
+
+```bash
+# Run the complete end-to-end test (recommended)
+python test_end_to_end_workflow.py
+
+# Run comprehensive test suite with parallel execution
+python tests/run_mock_data_generator_tests.py --comprehensive
+python tests/run_llm_gateway_tests.py --parallel --workers 4
+```
+
+### **Test Coverage Areas**
+- ✅ **Mock Data Generation**: LLM-integrated realistic test data
+- ✅ **Service Integration**: All 8+ services working together
+- ✅ **End-to-End Workflows**: Complete user journey validation
+- ✅ **Performance Testing**: Scalability and load testing
+- ✅ **Parallel Execution**: Multi-worker test execution
+- ✅ **Coverage Reporting**: 85%+ code coverage requirements
+
+### **Quick Test Commands**
+```bash
+# Test service health
+python test_end_to_end_workflow.py
+
+# Run all unit tests in parallel
+python tests/run_llm_gateway_tests.py --parallel
+
+# Run mock data generator tests
+python tests/run_mock_data_generator_tests.py --unit
+
+# Generate coverage reports
+pytest --cov=services --cov-report=html
+```
+
 ## 🔧 Development Environment
 
 ### Prerequisites
