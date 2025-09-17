@@ -1,0 +1,220 @@
+{
+  "workflow_id": "e619e446-ed05-453e-a9aa-dc8001584098",
+  "start_time": "2025-09-16T19:39:34.583197",
+  "steps": [
+    {
+      "step": "generate_pr",
+      "description": "Generating mock PR data",
+      "timestamp": "2025-09-16T19:39:34.583218",
+      "data": {}
+    },
+    {
+      "step": "generate_jira",
+      "description": "Generating mock Jira ticket data",
+      "timestamp": "2025-09-16T19:39:34.583223",
+      "data": {}
+    },
+    {
+      "step": "generate_confluence",
+      "description": "Generating mock Confluence documentation",
+      "timestamp": "2025-09-16T19:39:34.583227",
+      "data": {}
+    },
+    {
+      "step": "analyze_pr",
+      "description": "Analyzing PR context and extracting requirements",
+      "timestamp": "2025-09-16T19:39:34.583234",
+      "data": {}
+    },
+    {
+      "step": "cross_reference_jira",
+      "description": "Cross-referencing PR with Jira requirements",
+      "timestamp": "2025-09-16T19:39:34.583242",
+      "data": {}
+    },
+    {
+      "step": "cross_reference_confluence",
+      "description": "Cross-referencing PR with existing documentation",
+      "timestamp": "2025-09-16T19:39:34.583250",
+      "data": {}
+    },
+    {
+      "step": "calculate_confidence",
+      "description": "Calculating overall PR confidence score",
+      "timestamp": "2025-09-16T19:39:34.583257",
+      "data": {}
+    },
+    {
+      "step": "generate_report",
+      "description": "Generating final PR confidence report",
+      "timestamp": "2025-09-16T19:39:34.583269",
+      "data": {}
+    }
+  ],
+  "mock_data": {
+    "pr": {
+      "id": "PR-12345",
+      "title": "Implement OAuth2 Authentication Service",
+      "description": "\n            This PR implements OAuth2 authentication for the user service.\n            Key changes:\n            - Add OAuth2 client configuration\n            - Implement token validation middleware\n            - Add user authentication endpoints\n            - Update API documentation\n\n            Related Jira: PROJ-456\n            ",
+      "author": "developer@example.com",
+      "files_changed": [
+        "src/auth/oauth2_client.py",
+        "src/auth/middleware.py",
+        "src/api/auth_endpoints.py",
+        "docs/api/authentication.md"
+      ],
+      "diff_summary": "+250 lines, -50 lines",
+      "created_at": "2024-09-15T10:00:00Z"
+    },
+    "jira": {
+      "id": "PROJ-456",
+      "title": "Implement OAuth2 Authentication",
+      "description": "As a user, I want to authenticate using OAuth2 so that I can securely access the API.",
+      "acceptance_criteria": [
+        "User can authenticate with OAuth2 provider",
+        "API validates OAuth2 tokens",
+        "Token refresh mechanism implemented",
+        "Documentation updated with auth flows"
+      ],
+      "story_points": 8,
+      "priority": "High",
+      "status": "In Progress"
+    },
+    "confluence": {
+      "title": "Authentication API Documentation",
+      "content": "\n            # Authentication Service\n\n            ## OAuth2 Flow\n            1. Client requests authorization\n            2. User is redirected to OAuth provider\n            3. Provider returns authorization code\n            4. Client exchanges code for access token\n\n            ## Endpoints\n            - POST /auth/login - User login\n            - POST /auth/token - Token exchange\n            - POST /auth/refresh - Token refresh\n            - GET /auth/user - Get user info\n\n            ## Security Requirements\n            - All endpoints must validate JWT tokens\n            - Tokens must expire within 1 hour\n            - Refresh tokens valid for 30 days\n            ",
+      "last_updated": "2024-09-10T14:30:00Z"
+    }
+  },
+  "analysis_results": {
+    "pr_context": {
+      "intent": "implement_oauth2_authentication",
+      "components_affected": [
+        "auth_service",
+        "api_endpoints",
+        "documentation"
+      ],
+      "changes_type": "feature_implementation",
+      "estimated_complexity": "medium",
+      "test_requirements": [
+        "unit_tests",
+        "integration_tests",
+        "security_tests"
+      ],
+      "documentation_updates": [
+        "api_docs",
+        "user_guide"
+      ]
+    },
+    "jira_alignment": {
+      "requirements_coverage": {
+        "oauth2_flow": {
+          "status": "implemented",
+          "confidence": 0.9
+        },
+        "token_validation": {
+          "status": "implemented",
+          "confidence": 0.8
+        },
+        "token_refresh": {
+          "status": "partially_implemented",
+          "confidence": 0.6
+        },
+        "documentation": {
+          "status": "in_progress",
+          "confidence": 0.7
+        }
+      },
+      "gaps_identified": [
+        "Token refresh endpoint not fully tested",
+        "Error handling for expired tokens missing"
+      ],
+      "overall_alignment_score": 0.75
+    },
+    "confluence_consistency": {
+      "api_endpoints_match": {
+        "status": "consistent",
+        "confidence": 0.85
+      },
+      "security_requirements_met": {
+        "status": "mostly_consistent",
+        "confidence": 0.7
+      },
+      "documentation_updates_needed": [
+        "Add token refresh endpoint documentation",
+        "Update error response examples"
+      ],
+      "consistency_score": 0.78
+    }
+  },
+  "confidence_score": 0.726,
+  "gaps_found": [
+    "Token refresh endpoint not fully tested",
+    "Error handling for expired tokens missing"
+  ],
+  "recommendations": [
+    "Add comprehensive test coverage for token refresh",
+    "Update API documentation for new endpoints",
+    "Add error handling examples"
+  ],
+  "notifications": [
+    {
+      "message": "PR Confidence Analysis Started for PR-12345",
+      "recipient": "developer",
+      "urgency": "normal",
+      "timestamp": "2025-09-16T19:39:34.583230"
+    },
+    {
+      "message": "PR context analysis completed",
+      "recipient": "developer",
+      "urgency": "normal",
+      "timestamp": "2025-09-16T19:39:34.583238"
+    },
+    {
+      "message": "Jira requirements cross-reference completed",
+      "recipient": "developer",
+      "urgency": "normal",
+      "timestamp": "2025-09-16T19:39:34.583246"
+    },
+    {
+      "message": "Confluence documentation cross-reference completed",
+      "recipient": "developer",
+      "urgency": "normal",
+      "timestamp": "2025-09-16T19:39:34.583253"
+    },
+    {
+      "message": "Confidence score calculated: 72.6%",
+      "recipient": "tech_lead",
+      "urgency": "normal",
+      "timestamp": "2025-09-16T19:39:34.583265"
+    },
+    {
+      "message": "PR Confidence Analysis Complete: 72.6% confidence. Recommendation: Review Required",
+      "recipient": "tech_lead",
+      "urgency": "high",
+      "timestamp": "2025-09-16T19:39:34.583276"
+    }
+  ],
+  "final_report": {
+    "workflow_id": "e619e446-ed05-453e-a9aa-dc8001584098",
+    "pr_id": "PR-12345",
+    "jira_ticket": "PROJ-456",
+    "analysis_timestamp": "2025-09-16T19:39:34.583272",
+    "confidence_score": 0.726,
+    "confidence_level": "medium",
+    "key_findings": {
+      "requirements_coverage": "75.0%",
+      "documentation_consistency": "78.0%",
+      "gaps_identified": 2
+    },
+    "recommendations": [
+      "Add comprehensive test coverage for token refresh",
+      "Update API documentation for new endpoints",
+      "Add error handling examples"
+    ],
+    "risk_assessment": "medium",
+    "approval_recommendation": "review_required"
+  },
+  "end_time": "2025-09-16T19:39:34.583278",
+  "success": true
+}

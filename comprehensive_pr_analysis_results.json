@@ -1,0 +1,698 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-09-17T01:03:36.270719+00:00",
+    "report_type": "comprehensive_pr_confidence_analysis",
+    "llm_model": "llama3.2:latest",
+    "analysis_framework": "Real LLM-powered with Ollama"
+  },
+  "executive_summary": {
+    "confidence_score": 82,
+    "confidence_level": "high",
+    "approval_recommendation": "approve",
+    "total_analysis_time": 15.027336,
+    "documents_analyzed": 7,
+    "prompts_used": 3
+  },
+  "document_ecosystem": {
+    "total_documents": 7,
+    "document_types": {
+      "confluence": 2,
+      "pr": 1,
+      "report": 1,
+      "jira": 1,
+      "analysis_result": 2
+    },
+    "document_sources": {
+      "jira": 1,
+      "github": 1,
+      "confluence": 2,
+      "llm_analysis": 3
+    },
+    "document_relationships": {
+      "pr-oauth2-auth-001": {
+        "title": "Implement OAuth2 Authentication Service",
+        "type": "pr",
+        "source": "github",
+        "related_documents": [
+          "jira-proj-456",
+          "confluence-api-auth-docs",
+          "confluence-security-guide"
+        ],
+        "metadata": {
+          "author": "developer@example.com",
+          "branch": "feature/oauth2-auth"
+        },
+        "created_at": "2025-09-17T01:03:21.243516+00:00"
+      },
+      "jira-proj-456": {
+        "title": "Implement OAuth2 Authentication",
+        "type": "jira",
+        "source": "jira",
+        "related_documents": [
+          "pr-oauth2-auth-001",
+          "confluence-api-auth-docs"
+        ],
+        "metadata": {
+          "priority": "High",
+          "story_points": 8,
+          "assignee": "developer@example.com"
+        },
+        "created_at": "2025-09-17T01:03:21.243519+00:00"
+      },
+      "confluence-api-auth-docs": {
+        "title": "Authentication API Documentation",
+        "type": "confluence",
+        "source": "confluence",
+        "related_documents": [
+          "pr-oauth2-auth-001",
+          "jira-proj-456",
+          "confluence-security-guide"
+        ],
+        "metadata": {
+          "space": "API Documentation",
+          "last_updated": "2024-09-10T14:30:00Z"
+        },
+        "created_at": "2025-09-17T01:03:21.243520+00:00"
+      },
+      "confluence-security-guide": {
+        "title": "Security Implementation Guide",
+        "type": "confluence",
+        "source": "confluence",
+        "related_documents": [
+          "pr-oauth2-auth-001",
+          "confluence-api-auth-docs"
+        ],
+        "metadata": {
+          "space": "Security",
+          "last_updated": "2024-09-08T10:15:00Z"
+        },
+        "created_at": "2025-09-17T01:03:21.243521+00:00"
+      },
+      "analysis-req-alignment-3ff7cd1b": {
+        "title": "Requirements Alignment Analysis Result",
+        "type": "analysis_result",
+        "source": "llm_analysis",
+        "related_documents": [
+          "pr-oauth2-auth-001",
+          "jira-proj-456",
+          "confluence-api-auth-docs"
+        ],
+        "metadata": {
+          "analysis_type": "requirements_alignment",
+          "prompt_used": "prompt-req-alignment-v2",
+          "analysis_time": 5.347460031509399,
+          "llm_model": "llama3.2:latest"
+        },
+        "created_at": "2025-09-17T01:03:27.545341+00:00"
+      },
+      "analysis-doc-consistency-882ff372": {
+        "title": "Documentation Consistency Analysis Result",
+        "type": "analysis_result",
+        "source": "llm_analysis",
+        "related_documents": [
+          "pr-oauth2-auth-001",
+          "confluence-api-auth-docs",
+          "confluence-security-guide"
+        ],
+        "metadata": {
+          "analysis_type": "documentation_consistency",
+          "prompt_used": "prompt-doc-consistency-v1",
+          "analysis_time": 5.312832832336426,
+          "llm_model": "llama3.2:latest"
+        },
+        "created_at": "2025-09-17T01:03:32.858230+00:00"
+      },
+      "report-pr-confidence-54bf2499": {
+        "title": "PR Confidence Analysis Report",
+        "type": "report",
+        "source": "llm_analysis",
+        "related_documents": [
+          "pr-oauth2-auth-001",
+          "jira-proj-456",
+          "confluence-api-auth-docs",
+          "confluence-security-guide",
+          "analysis-req-alignment-3ff7cd1b",
+          "analysis-doc-consistency-882ff372"
+        ],
+        "metadata": {
+          "report_type": "pr_confidence_analysis",
+          "confidence_score": 82,
+          "confidence_level": "high",
+          "approval_recommendation": "approve",
+          "analysis_time": 3.412343978881836,
+          "llm_model": "llama3.2:latest",
+          "prompts_used": [
+            "prompt-req-alignment-v2",
+            "prompt-doc-consistency-v1",
+            "prompt-confidence-scoring-v3"
+          ],
+          "documents_used": [
+            "pr-oauth2-auth-001",
+            "jira-proj-456",
+            "confluence-api-auth-docs",
+            "confluence-security-guide",
+            "analysis-req-alignment-3ff7cd1b",
+            "analysis-doc-consistency-882ff372"
+          ]
+        },
+        "created_at": "2025-09-17T01:03:36.270671+00:00"
+      }
+    }
+  },
+  "prompt_ecosystem": {
+    "total_prompts": 3,
+    "prompt_categories": {
+      "requirements_analysis": 1,
+      "consistency_check": 1,
+      "confidence_scoring": 1
+    },
+    "prompt_performance": {
+      "prompt-req-alignment-v2": {
+        "name": "Requirements Alignment Analysis",
+        "category": "requirements_analysis",
+        "version": "2.0",
+        "usage_count": 1,
+        "performance_metrics": {
+          "total_requests": 1,
+          "avg_response_time": 5.347346067428589,
+          "last_used": "2025-09-17T01:03:27.545307+00:00"
+        },
+        "related_analyses": [],
+        "created_at": "2025-09-17T01:03:21.243528+00:00"
+      },
+      "prompt-doc-consistency-v1": {
+        "name": "Documentation Consistency Analysis",
+        "category": "consistency_check",
+        "version": "1.0",
+        "usage_count": 1,
+        "performance_metrics": {
+          "total_requests": 1,
+          "avg_response_time": 5.312719821929932,
+          "last_used": "2025-09-17T01:03:32.858197+00:00"
+        },
+        "related_analyses": [],
+        "created_at": "2025-09-17T01:03:21.243530+00:00"
+      },
+      "prompt-confidence-scoring-v3": {
+        "name": "PR Confidence Assessment",
+        "category": "confidence_scoring",
+        "version": "3.0",
+        "usage_count": 1,
+        "performance_metrics": {
+          "total_requests": 1,
+          "avg_response_time": 3.4122700691223145,
+          "last_used": "2025-09-17T01:03:36.270592+00:00"
+        },
+        "related_analyses": [],
+        "created_at": "2025-09-17T01:03:21.243530+00:00"
+      }
+    }
+  },
+  "analysis_workflow": {
+    "workflow_summary": {
+      "workflow_id": "acdb1aa3-606e-42d3-aa36-478e654451a6",
+      "start_time": "2025-09-17T01:03:21.243357+00:00",
+      "end_time": "2025-09-17T01:03:36.270693+00:00",
+      "total_duration": 15.027336,
+      "steps_completed": 3,
+      "performance_metrics": {
+        "total_analysis_time": 15.027336,
+        "ollama_requests": 4,
+        "documents_created": 7,
+        "prompts_used": 3,
+        "steps_completed": 3
+      }
+    },
+    "analysis_steps": [
+      {
+        "step": "requirements_alignment",
+        "timestamp": "2025-09-17T01:03:27.545343+00:00",
+        "prompt_id": "prompt-req-alignment-v2",
+        "documents_used": [
+          "pr-oauth2-auth-001",
+          "jira-proj-456",
+          "confluence-api-auth-docs"
+        ],
+        "analysis_time": 5.347460031509399,
+        "result_document": "analysis-req-alignment-3ff7cd1b"
+      },
+      {
+        "step": "documentation_consistency",
+        "timestamp": "2025-09-17T01:03:32.858232+00:00",
+        "prompt_id": "prompt-doc-consistency-v1",
+        "documents_used": [
+          "pr-oauth2-auth-001",
+          "confluence-api-auth-docs",
+          "confluence-security-guide"
+        ],
+        "analysis_time": 5.312832832336426,
+        "result_document": "analysis-doc-consistency-882ff372"
+      },
+      {
+        "step": "confidence_assessment",
+        "timestamp": "2025-09-17T01:03:36.270672+00:00",
+        "prompt_id": "prompt-confidence-scoring-v3",
+        "documents_used": [
+          "analysis-req-alignment-3ff7cd1b",
+          "analysis-doc-consistency-882ff372"
+        ],
+        "analysis_time": 3.412343978881836,
+        "result_document": "report-pr-confidence-54bf2499"
+      }
+    ],
+    "step_details": {
+      "requirements_alignment": {
+        "duration": 5.347460031509399,
+        "documents_used": 3,
+        "prompt_used": "prompt-req-alignment-v2",
+        "result_document": "analysis-req-alignment-3ff7cd1b"
+      },
+      "documentation_consistency": {
+        "duration": 5.312832832336426,
+        "documents_used": 3,
+        "prompt_used": "prompt-doc-consistency-v1",
+        "result_document": "analysis-doc-consistency-882ff372"
+      },
+      "confidence_assessment": {
+        "duration": 3.412343978881836,
+        "documents_used": 2,
+        "prompt_used": "prompt-confidence-scoring-v3",
+        "result_document": "report-pr-confidence-54bf2499"
+      }
+    }
+  },
+  "llm_integration": {
+    "model_used": "llama3.2:latest",
+    "total_requests": 4,
+    "requests_per_step": {
+      "requirements_alignment": 1,
+      "documentation_consistency": 1,
+      "confidence_assessment": 1
+    },
+    "average_response_time": 4.690878947575887
+  },
+  "detailed_documents": {
+    "pr-oauth2-auth-001": {
+      "id": "pr-oauth2-auth-001",
+      "title": "Implement OAuth2 Authentication Service",
+      "type": "pr",
+      "source": "github",
+      "content_preview": "\n            # Pull Request: Implement OAuth2 Authentication Service\n\n            ## Summary\n            This PR implements OAuth2 authentication for the user service with the following key changes:\n ...",
+      "related_documents": [
+        "jira-proj-456",
+        "confluence-api-auth-docs",
+        "confluence-security-guide"
+      ],
+      "metadata": {
+        "author": "developer@example.com",
+        "branch": "feature/oauth2-auth"
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:21.243516+00:00"
+    },
+    "jira-proj-456": {
+      "id": "jira-proj-456",
+      "title": "Implement OAuth2 Authentication",
+      "type": "jira",
+      "source": "jira",
+      "content_preview": "\n            # JIRA Ticket: PROJ-456\n\n            ## Issue Summary\n            As a user, I want to authenticate using OAuth2 so that I can securely access the API.\n\n            ## Description\n       ...",
+      "related_documents": [
+        "pr-oauth2-auth-001",
+        "confluence-api-auth-docs"
+      ],
+      "metadata": {
+        "priority": "High",
+        "story_points": 8,
+        "assignee": "developer@example.com"
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:21.243519+00:00"
+    },
+    "confluence-api-auth-docs": {
+      "id": "confluence-api-auth-docs",
+      "title": "Authentication API Documentation",
+      "type": "confluence",
+      "source": "confluence",
+      "content_preview": "\n            # Authentication Service API Documentation\n\n            ## Overview\n            The Authentication Service provides secure user authentication and authorization\n            for all API en...",
+      "related_documents": [
+        "pr-oauth2-auth-001",
+        "jira-proj-456",
+        "confluence-security-guide"
+      ],
+      "metadata": {
+        "space": "API Documentation",
+        "last_updated": "2024-09-10T14:30:00Z"
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:21.243520+00:00"
+    },
+    "confluence-security-guide": {
+      "id": "confluence-security-guide",
+      "title": "Security Implementation Guide",
+      "type": "confluence",
+      "source": "confluence",
+      "content_preview": "\n            # Security Implementation Guide\n\n            ## Authentication Security\n\n            ### OAuth2 Implementation Requirements\n            1. **Secure Token Storage**\n               - Never ...",
+      "related_documents": [
+        "pr-oauth2-auth-001",
+        "confluence-api-auth-docs"
+      ],
+      "metadata": {
+        "space": "Security",
+        "last_updated": "2024-09-08T10:15:00Z"
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:21.243521+00:00"
+    },
+    "analysis-req-alignment-3ff7cd1b": {
+      "id": "analysis-req-alignment-3ff7cd1b",
+      "title": "Requirements Alignment Analysis Result",
+      "type": "analysis_result",
+      "source": "llm_analysis",
+      "content_preview": "**Analysis Report**\n\n**Overall Alignment Score: 8/10**\n\nThe pull request (PR) implements most of the required functionality for OAuth2 authentication. However, there are some minor discrepancies and a...",
+      "related_documents": [
+        "pr-oauth2-auth-001",
+        "jira-proj-456",
+        "confluence-api-auth-docs"
+      ],
+      "metadata": {
+        "analysis_type": "requirements_alignment",
+        "prompt_used": "prompt-req-alignment-v2",
+        "analysis_time": 5.347460031509399,
+        "llm_model": "llama3.2:latest"
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:27.545341+00:00"
+    },
+    "analysis-doc-consistency-882ff372": {
+      "id": "analysis-doc-consistency-882ff372",
+      "title": "Documentation Consistency Analysis Result",
+      "type": "analysis_result",
+      "source": "llm_analysis",
+      "content_preview": "Based on the provided analysis, here are the key findings and recommendations:\n\n**API Consistency**\n\n* The PR implementation generally aligns with the existing API documentation. However, there are a ...",
+      "related_documents": [
+        "pr-oauth2-auth-001",
+        "confluence-api-auth-docs",
+        "confluence-security-guide"
+      ],
+      "metadata": {
+        "analysis_type": "documentation_consistency",
+        "prompt_used": "prompt-doc-consistency-v1",
+        "analysis_time": 5.312832832336426,
+        "llm_model": "llama3.2:latest"
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:32.858230+00:00"
+    },
+    "report-pr-confidence-54bf2499": {
+      "id": "report-pr-confidence-54bf2499",
+      "title": "PR Confidence Analysis Report",
+      "type": "report",
+      "source": "llm_analysis",
+      "content_preview": "\n# PR Confidence Analysis Report\n\n## Executive Summary\n**Confidence Score: 82% (HIGH)**\n**Recommendation: Approve**\n\n## Analysis Overview\n- **PR**: Implement OAuth2 Authentication Service\n- **Jira Tic...",
+      "related_documents": [
+        "pr-oauth2-auth-001",
+        "jira-proj-456",
+        "confluence-api-auth-docs",
+        "confluence-security-guide",
+        "analysis-req-alignment-3ff7cd1b",
+        "analysis-doc-consistency-882ff372"
+      ],
+      "metadata": {
+        "report_type": "pr_confidence_analysis",
+        "confidence_score": 82,
+        "confidence_level": "high",
+        "approval_recommendation": "approve",
+        "analysis_time": 3.412343978881836,
+        "llm_model": "llama3.2:latest",
+        "prompts_used": [
+          "prompt-req-alignment-v2",
+          "prompt-doc-consistency-v1",
+          "prompt-confidence-scoring-v3"
+        ],
+        "documents_used": [
+          "pr-oauth2-auth-001",
+          "jira-proj-456",
+          "confluence-api-auth-docs",
+          "confluence-security-guide",
+          "analysis-req-alignment-3ff7cd1b",
+          "analysis-doc-consistency-882ff372"
+        ]
+      },
+      "version": "1.0",
+      "created_at": "2025-09-17T01:03:36.270671+00:00"
+    }
+  },
+  "detailed_prompts": {
+    "prompt-req-alignment-v2": {
+      "id": "prompt-req-alignment-v2",
+      "name": "Requirements Alignment Analysis",
+      "category": "requirements_analysis",
+      "content": "\nYou are an expert software engineer analyzing a GitHub Pull Request against its requirements from Jira and Confluence documentation.\n\n## Analysis Task\nCompare the PR implementation against the requirements and provide a detailed assessment.\n\n## PR Details\n{pr_content}\n\n## Requirements (Jira)\n{jira_content}\n\n## Documentation (Confluence)\n{confluence_content}\n\n## Analysis Requirements\n1. **Overall Alignment Score**: Rate how well the PR implements the requirements (0-10)\n2. **Requirements Coverage**:\n   - Which requirements are fully implemented\n   - Which are partially implemented\n   - Which are missing or not addressed\n3. **Technical Implementation Quality**:\n   - Code quality and architecture\n   - Security considerations\n   - Performance implications\n4. **Documentation Consistency**:\n   - Alignment with existing API documentation\n   - Updates to documentation required\n5. **Gaps and Issues**:\n   - Missing functionality\n   - Potential problems or risks\n   - Inconsistencies with requirements\n\n## Output Format\nProvide a structured analysis with specific findings, scores, and actionable recommendations.\nBe technical and specific in your assessment.\n",
+      "version": "2.0",
+      "usage_count": 1,
+      "performance_metrics": {
+        "total_requests": 1,
+        "avg_response_time": 5.347346067428589,
+        "last_used": "2025-09-17T01:03:27.545307+00:00"
+      },
+      "related_analyses": [],
+      "created_at": "2025-09-17T01:03:21.243528+00:00"
+    },
+    "prompt-doc-consistency-v1": {
+      "id": "prompt-doc-consistency-v1",
+      "name": "Documentation Consistency Analysis",
+      "category": "consistency_check",
+      "content": "\nYou are analyzing the consistency between code changes and existing documentation.\n\n## Analysis Focus\nEvaluate how well the PR implementation aligns with existing documentation and identify any inconsistencies.\n\n## PR Changes\n{pr_content}\n\n## Existing Documentation\n{confluence_content}\n\n## Security Guidelines\n{security_content}\n\n## Analysis Areas\n1. **API Consistency**:\n   - Do code changes match documented APIs?\n   - Are there breaking changes not reflected in docs?\n   - New endpoints properly documented?\n\n2. **Security Compliance**:\n   - Implementation follows security guidelines?\n   - Security requirements properly addressed?\n   - Potential security vulnerabilities introduced?\n\n3. **Documentation Updates Needed**:\n   - What documentation needs updating?\n   - Missing API documentation?\n   - Outdated examples or guides?\n\n4. **Technical Accuracy**:\n   - Code implementation matches documented behavior?\n   - Configuration changes documented?\n   - Deployment procedures updated?\n\n## Output Requirements\nProvide specific findings about consistency issues or confirm areas of good alignment.\nIdentify any risks or gaps in documentation coverage.\n",
+      "version": "1.0",
+      "usage_count": 1,
+      "performance_metrics": {
+        "total_requests": 1,
+        "avg_response_time": 5.312719821929932,
+        "last_used": "2025-09-17T01:03:32.858197+00:00"
+      },
+      "related_analyses": [],
+      "created_at": "2025-09-17T01:03:21.243530+00:00"
+    },
+    "prompt-confidence-scoring-v3": {
+      "id": "prompt-confidence-scoring-v3",
+      "name": "PR Confidence Assessment",
+      "category": "confidence_scoring",
+      "content": "\nYou are providing a comprehensive confidence assessment for a pull request approval decision.\n\n## Analysis Context\nBased on detailed analysis of requirements alignment and documentation consistency, provide an overall confidence assessment.\n\n## Analysis Results\nRequirements Alignment Score: {req_score}/10\nDocumentation Consistency Score: {doc_score}/10\nIdentified Gaps: {gap_count}\nIdentified Risks: {risk_count}\n\n## Requirements Analysis Summary\n{req_analysis}\n\n## Documentation Analysis Summary\n{doc_analysis}\n\n## Assessment Framework\nProvide:\n1. **Overall Confidence Score** (0-100): Based on all analysis factors\n2. **Confidence Level**: High/Medium/Low/Critical\n3. **Approval Recommendation**: Approve/Review_Required/Hold/Reject\n4. **Key Rationale**: Explain your assessment with specific factors\n5. **Critical Concerns**: Any blocking issues or major risks\n6. **Recommendations**: Specific actions to improve confidence\n\n## Decision Criteria\n- **High Confidence (80-100)**: Requirements fully met, no critical issues, good documentation alignment\n- **Medium Confidence (60-79)**: Most requirements met, minor issues, documentation mostly aligned\n- **Low Confidence (40-59)**: Significant gaps, documentation inconsistencies, needs review\n- **Critical (<40)**: Major requirements missing, security issues, documentation completely out of sync\n\nConsider enterprise software standards, security requirements, and production readiness in your assessment.\n",
+      "version": "3.0",
+      "usage_count": 1,
+      "performance_metrics": {
+        "total_requests": 1,
+        "avg_response_time": 3.4122700691223145,
+        "last_used": "2025-09-17T01:03:36.270592+00:00"
+      },
+      "related_analyses": [],
+      "created_at": "2025-09-17T01:03:21.243530+00:00"
+    }
+  },
+  "analysis_results": {
+    "final_report_id": "report-pr-confidence-54bf2499",
+    "confidence_assessment": {
+      "report_id": "report-pr-confidence-54bf2499",
+      "confidence_score": 82,
+      "confidence_level": "high",
+      "approval_recommendation": "approve",
+      "summary": "## Final Approval Recommendation\n\n**Overall Confidence Score:** 82/100\n\n**Confidence Level:** Medium-High\n\n**Approval Recommendation:** Approve with Review Required\n\n**Key Rationale:**\n\nThe pull reque..."
+    },
+    "analysis_artifacts": [
+      {
+        "document_id": "analysis-req-alignment-3ff7cd1b",
+        "type": "analysis_result",
+        "title": "Requirements Alignment Analysis Result",
+        "analysis_type": "requirements_alignment",
+        "prompt_used": "prompt-req-alignment-v2",
+        "analysis_time": 5.347460031509399
+      },
+      {
+        "document_id": "analysis-doc-consistency-882ff372",
+        "type": "analysis_result",
+        "title": "Documentation Consistency Analysis Result",
+        "analysis_type": "documentation_consistency",
+        "prompt_used": "prompt-doc-consistency-v1",
+        "analysis_time": 5.312832832336426
+      },
+      {
+        "document_id": "report-pr-confidence-54bf2499",
+        "type": "report",
+        "title": "PR Confidence Analysis Report",
+        "analysis_type": null,
+        "prompt_used": null,
+        "analysis_time": 3.412343978881836
+      }
+    ]
+  },
+  "data_lineage": {
+    "document_flow": {
+      "source_documents": [
+        "pr-oauth2-auth-001",
+        "jira-proj-456",
+        "confluence-api-auth-docs",
+        "confluence-security-guide"
+      ],
+      "analysis_documents": [
+        "analysis-req-alignment-3ff7cd1b",
+        "analysis-doc-consistency-882ff372"
+      ],
+      "report_documents": [
+        "report-pr-confidence-54bf2499"
+      ]
+    },
+    "prompt_lineage": {
+      "requirements_analysis": [
+        "prompt-req-alignment-v2"
+      ],
+      "consistency_check": [
+        "prompt-doc-consistency-v1"
+      ],
+      "confidence_scoring": [
+        "prompt-confidence-scoring-v3"
+      ]
+    },
+    "workflow_dependencies": {
+      "requirements_alignment": {
+        "depends_on": [
+          "pr-oauth2-auth-001",
+          "jira-proj-456",
+          "confluence-api-auth-docs"
+        ],
+        "produces": "analysis-req-alignment-3ff7cd1b",
+        "uses_prompt": "prompt-req-alignment-v2"
+      },
+      "documentation_consistency": {
+        "depends_on": [
+          "pr-oauth2-auth-001",
+          "confluence-api-auth-docs",
+          "confluence-security-guide"
+        ],
+        "produces": "analysis-doc-consistency-882ff372",
+        "uses_prompt": "prompt-doc-consistency-v1"
+      },
+      "confidence_assessment": {
+        "depends_on": [
+          "analysis-req-alignment-3ff7cd1b",
+          "analysis-doc-consistency-882ff372"
+        ],
+        "produces": "report-pr-confidence-54bf2499",
+        "uses_prompt": "prompt-confidence-scoring-v3"
+      }
+    }
+  },
+  "human_readable_summary": {
+    "generated_at": "2025-09-17T01:07:36.745451+00:00",
+    "summary_version": "1.0",
+    "confidence_score": 82,
+    "confidence_level": "high",
+    "approval_recommendation": "approve",
+    "developer_perspective": {
+      "overview": "OAuth2 Authentication Service Implementation",
+      "technical_assessment": "HIGH CONFIDENCE - APPROVE",
+      "key_findings": [
+        "\u2705 OAuth2 client configuration implemented correctly",
+        "\u2705 Token validation middleware added to API endpoints",
+        "\u2705 Authentication endpoints created (login, token, refresh)",
+        "\u2705 API documentation updated with OAuth2 flow",
+        "\u26a0\ufe0f  Token refresh mechanism partially implemented - needs completion",
+        "\u26a0\ufe0f  Error handling could be more comprehensive"
+      ],
+      "code_quality_notes": [
+        "Code follows existing patterns and architecture",
+        "Proper separation of concerns between auth logic and API endpoints",
+        "JWT token handling implemented securely",
+        "Rate limiting configured for auth endpoints"
+      ],
+      "security_considerations": [
+        "\u2705 HttpOnly cookies for refresh tokens (good practice)",
+        "\u2705 JWT tokens include proper expiration times",
+        "\u2705 Security headers configured correctly",
+        "\u26a0\ufe0f  Consider implementing token blacklisting for logout",
+        "\u26a0\ufe0f  Add comprehensive audit logging for auth events"
+      ],
+      "testing_recommendations": [
+        "Add unit tests for token refresh mechanism",
+        "Create integration tests for complete OAuth2 flow",
+        "Test error scenarios (invalid tokens, expired tokens)",
+        "Verify security headers are set correctly"
+      ],
+      "implementation_notes": [
+        "The implementation is production-ready for core OAuth2 functionality",
+        "Token refresh needs completion before full deployment",
+        "Documentation updates are comprehensive and accurate",
+        "Security implementation follows best practices"
+      ],
+      "estimated_effort_remaining": "2-3 days for token refresh completion and enhanced error handling",
+      "risk_level": "LOW - Core functionality is solid, minor enhancements needed"
+    },
+    "project_manager_perspective": {
+      "project_status": "ON TRACK - Ready for Approval",
+      "business_impact": "HIGH - Implements critical authentication security upgrade",
+      "timeline_assessment": "The PR delivers 85% of the OAuth2 requirements with high quality",
+      "resource_allocation": "Minimal additional resources needed - 2-3 developer days",
+      "risk_assessment": {
+        "schedule_risk": "LOW - Core functionality complete, minor enhancements remain",
+        "quality_risk": "LOW - Code quality is high, security practices followed",
+        "business_risk": "LOW - Implementation meets security requirements adequately"
+      },
+      "stakeholder_considerations": [
+        "Security Team: Implementation follows documented security guidelines",
+        "DevOps Team: No infrastructure changes required",
+        "QA Team: Standard testing approach, additional auth flow testing needed",
+        "Product Team: Delivers promised OAuth2 functionality"
+      ],
+      "acceptance_criteria_status": {
+        "completed": [
+          "User can authenticate with OAuth2 provider",
+          "API validates OAuth2 tokens",
+          "Documentation updated"
+        ],
+        "partially_completed": [
+          "Token refresh mechanism (core logic present, needs completion)",
+          "Security audit (passes basic requirements, minor enhancements needed)"
+        ],
+        "remaining": [
+          "Multi-provider OAuth2 support (out of scope for this PR)",
+          "Advanced audit logging (nice-to-have enhancement)"
+        ]
+      },
+      "recommendation": {
+        "decision": "APPROVE with minor conditions",
+        "conditions": [
+          "Complete token refresh mechanism implementation",
+          "Add comprehensive error handling for edge cases",
+          "Ensure all acceptance criteria are fully met"
+        ],
+        "rationale": "The PR delivers high-quality OAuth2 authentication that meets 85% of requirements. The remaining 15% consists of minor enhancements that can be completed quickly without significant risk."
+      },
+      "next_steps": [
+        "Approve PR after completion of token refresh mechanism",
+        "Schedule security review for production deployment",
+        "Plan user acceptance testing for OAuth2 flows",
+        "Update release notes with authentication improvements"
+      ],
+      "success_metrics": [
+        "OAuth2 authentication successfully replaces basic auth",
+        "Zero security incidents related to authentication",
+        "Positive user feedback on authentication experience",
+        "Reduced support tickets for login issues"
+      ]
+    },
+    "quick_reference": {
+      "pr_title": "Implement OAuth2 Authentication Service",
+      "jira_ticket": "PROJ-456",
+      "author": "developer@example.com",
+      "analysis_date": "2025-09-17T01:03:36.270719+00:00",
+      "llm_model_used": "llama3.2:latest",
+      "total_analysis_time": "15.03s"
+    },
+    "key_takeaways": [
+      "High-quality OAuth2 implementation ready for production",
+      "Security best practices followed throughout",
+      "Minor enhancements needed for complete feature set",
+      "Documentation is comprehensive and accurate",
+      "Testing coverage adequate with minor gaps"
+    ]
+  }
+}
