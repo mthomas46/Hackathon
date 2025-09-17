@@ -216,12 +216,24 @@ bedrock:
 # Analysis Service Configuration
 analysis_service:
   port: 5020
+  # DDD Architecture indicator
+  ddd_architecture: true
+  # Reference to DDD-specific configuration
+  ddd_config_file: "config/ddd_config.yaml"
+  # Basic thresholds (DDD config has detailed settings)
   thresholds:
     drift_overlap: ${DRIFT_OVERLAP_THRESHOLD:-0.1}
     critical_score: ${CRITICAL_SCORE:-90}
     high_priority_score: ${HIGH_PRIORITY_SCORE:-80}
     medium_priority_score: ${MEDIUM_PRIORITY_SCORE:-50}
   testing: ${TESTING:-false}
+  # DDD-specific features
+  advanced_features:
+    semantic_similarity: true
+    sentiment_analysis: true
+    distributed_processing: true
+    quality_degradation_detection: true
+    automated_remediation: true
 
 # Memory Agent Configuration
 memory_agent:
@@ -550,6 +562,77 @@ production:
   tracing_enabled: ${TRACING_ENABLED:-true}
 
 # ============================================================================
+# DDD ARCHITECTURE CONFIGURATION
+# ============================================================================
+
+ddd_architecture:
+  enabled: true
+  config_file: "config/ddd_config.yaml"
+  # Global DDD settings
+  global_settings:
+    event_sourcing: false
+    cqrs_enabled: true
+    domain_driven_design: true
+    layered_architecture: true
+
+  # DDD Layer configurations
+  layers:
+    domain:
+      validation_enabled: true
+      business_rules_enabled: true
+      domain_events_enabled: true
+    application:
+      use_cases_enabled: true
+      command_query_separation: true
+      application_services: true
+    infrastructure:
+      repository_pattern: true
+      external_services: true
+      caching_enabled: true
+    presentation:
+      api_versioning: true
+      structured_responses: true
+      error_handling: true
+
+  # Service-specific DDD status
+  services:
+    analysis_service:
+      ddd_status: "complete"
+      migration_date: "2025-09-17"
+      features: ["semantic_similarity", "sentiment_analysis", "distributed_processing"]
+    orchestrator:
+      ddd_status: "ready"
+      migration_date: "pending"
+    doc_store:
+      ddd_status: "migration_ready"
+      migration_date: "pending"
+    source_agent:
+      ddd_status: "migration_ready"
+      migration_date: "pending"
+
+# ============================================================================
+# MIGRATION & COMPATIBILITY SETTINGS
+# ============================================================================
+
+migration:
+  ddd_migration:
+    enabled: true
+    current_phase: "analysis_service_complete"
+    next_phase: "orchestrator_migration"
+    compatibility_mode: "gradual"
+
+  backward_compatibility:
+    legacy_endpoints_enabled: true
+    deprecated_api_warnings: true
+    migration_period_days: 90
+
+  feature_flags:
+    ddd_analysis_service: true
+    distributed_processing: true
+    advanced_analytics: true
+    legacy_mode: false
+
+# ============================================================================
 # ENVIRONMENT SPECIFIC OVERRIDES
 # ============================================================================
 
@@ -562,6 +645,11 @@ environments:
       host: http://host.docker.internal:11434
     debug: true
     log_level: DEBUG
+    # DDD-specific development settings
+    ddd:
+      debug_mode: true
+      performance_monitoring: true
+      detailed_logging: true
 
   staging:
     redis:
@@ -570,6 +658,11 @@ environments:
       enabled: true
     debug: false
     log_level: INFO
+    # DDD-specific staging settings
+    ddd:
+      performance_monitoring: true
+      error_reporting: true
+      feature_flags_testing: true
 
   production:
     redis:
@@ -581,3 +674,9 @@ environments:
     ssl_enabled: true
     debug: false
     log_level: WARNING
+    # DDD-specific production settings
+    ddd:
+      high_performance_mode: true
+      advanced_caching: true
+      distributed_processing: true
+      enterprise_monitoring: true
