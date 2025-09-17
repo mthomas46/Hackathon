@@ -4,7 +4,7 @@ Handles loading hub configuration from YAML files and merging provider
 configurations with defaults for consistent service operation.
 """
 from typing import Dict, Any, Optional
-from services.shared.config import load_yaml_config, get_config_value
+from services.shared.core.config.config import load_yaml_config, get_config_value
 
 
 class ConfigManager:

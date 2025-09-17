@@ -3,7 +3,7 @@
 Handles integration events and downstream service notifications.
 """
 from typing import Dict, Any
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 
 
 class EventSystem:

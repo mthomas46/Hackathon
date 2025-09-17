@@ -26,14 +26,24 @@ import time
 import signal
 from contextlib import asynccontextmanager
 
-from services.shared.logging import fire_and_forget  # type: ignore
+from services.shared.monitoring.logging import fire_and_forget  # type: ignore
 from services.shared.utilities import attach_self_register  # type: ignore
-from services.shared.constants_new import EnvVars, ServiceNames  # type: ignore
+from services.shared.core.constants_new import EnvVars, ServiceNames  # type: ignore
 
-from .modules.circuit_breaker import circuit_breaker, operation_timeout_context
-from .modules.content_detector import content_detector
-from .modules.policy_enforcer import policy_enforcer
-from .modules.validation import validate_content, validate_keywords, validate_providers
+try:
+    from .modules.circuit_breaker import circuit_breaker, operation_timeout_context
+    from .modules.content_detector import content_detector
+    from .modules.policy_enforcer import policy_enforcer
+    from .modules.validation import validate_content, validate_keywords, validate_providers
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.circuit_breaker import circuit_breaker, operation_timeout_context
+    from modules.content_detector import content_detector
+    from modules.policy_enforcer import policy_enforcer
+    from modules.validation import validate_content, validate_keywords, validate_providers
 
 # Service configuration constants
 SERVICE_NAME = "secure-analyzer"
@@ -324,7 +334,7 @@ async def summarize(req: SummarizeRequest):
         "providers": providers,
         "use_hub_config": True,
     }
-    from services.shared.clients import ServiceClients  # type: ignore
+    from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
     svc = ServiceClients(timeout=60)
     try:
         return await svc.post_json(f"{hub}/summarize/ensemble", payload)

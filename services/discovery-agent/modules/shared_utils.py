@@ -11,11 +11,11 @@ from typing import Dict, Any, Optional, List
 import httpx
 
 # Import shared utilities
-from services.shared.clients import ServiceClients
-from services.shared.constants_new import ServiceNames, ErrorCodes, EnvVars
-from services.shared.error_handling import ServiceException, ValidationException
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.logging import fire_and_forget
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.core.constants_new import ServiceNames, ErrorCodes, EnvVars
+from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import utc_now
 
 # Global configuration for discovery agent
@@ -40,7 +40,7 @@ def handle_discovery_error(operation: str, error: Exception, **context) -> Dict[
 
     Logs the error and returns a standardized error response.
     """
-    from services.shared.error_handling import ValidationException
+    from services.shared.utilities.error_handling import ValidationException
 
     # Remove 'operation' from context to avoid conflict
     safe_context = {k: v for k, v in context.items() if k != 'operation'}

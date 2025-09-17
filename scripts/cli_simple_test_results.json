@@ -1,0 +1,18 @@
+{
+  "timestamp": "/Users/mykalthomas/Documents/work/Hackathon/cli_test_results.json",
+  "results": {
+    "CLI Help": true,
+    "CLI Commands List": true,
+    "CLI Health Command": true,
+    "CLI Integration Test": true,
+    "CLI Analyze Docs": true,
+    "CLI Analyze Code": true,
+    "CLI List Prompts": true
+  },
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "success_rate": 100.0
+  }
+}

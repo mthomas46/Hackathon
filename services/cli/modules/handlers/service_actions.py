@@ -10,8 +10,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
 
-from services.shared.clients import ServiceClients
-from services.shared.constants_new import ServiceNames
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.core.constants_new import ServiceNames
 
 from ..shared_utils import (
     create_menu_table,
@@ -509,7 +509,7 @@ class ServiceActions:
 
         async def redis_connectivity():
             import socket
-            from services.shared.config import get_config_value as _cfg
+            from services.shared.core.config.config import get_config_value as _cfg
             host = str(_cfg("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")).strip()
             port = 6379
             ok = False

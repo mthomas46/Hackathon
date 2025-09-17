@@ -5,6 +5,7 @@ extracted from the main orchestrator service to improve maintainability.
 """
 
 from typing import Dict, Any, List
+from services.shared.core.constants_new import ServiceNames
 from .shared_utils import (
     get_orchestrator_service_client,
     handle_service_error,
@@ -115,7 +116,7 @@ def _build_service_info(service_name: str, service_config: Dict[str, Any], servi
         }
     except Exception as e:
         # Use shared error handling for warnings
-        from services.shared.logging import fire_and_forget
+        from services.shared.monitoring.logging import fire_and_forget
         fire_and_forget("warning", f"Failed to get URL for service {service_name}: {e}", ServiceNames.ORCHESTRATOR)
         return {
             **service_config,

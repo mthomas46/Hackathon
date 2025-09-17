@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "total_operations": 2,
+    "best_operation": "memory_usage",
+    "worst_operation": "import_performance",
+    "avg_response_time": 1.3777002459391952e-05,
+    "median_response_time": 1.3777002459391952e-05,
+    "avg_memory_mb": 15.602638244628906,
+    "avg_cpu_percent": 49.6,
+    "performance_score": 100
+  },
+  "detailed_results": [
+    {
+      "operation": "semantic_similarity",
+      "error": "Semantic analyzer benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "sentiment_analysis",
+      "error": "Sentiment analyzer benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "risk_assessment",
+      "error": "Risk assessment benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "maintenance_forecast",
+      "error": "Maintenance forecast benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "quality_degradation",
+      "error": "Quality degradation benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "cross_repository",
+      "error": "Cross-repository benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "distributed_processing",
+      "error": "Distributed processing benchmark failed: No module named 'services'",
+      "status": "failed"
+    },
+    {
+      "operation": "memory_usage",
+      "iterations": 1,
+      "total_time": 0.0,
+      "avg_time": 0.0,
+      "median_time": 0.0,
+      "min_time": 0.0,
+      "max_time": 0.0,
+      "memory_usage_mb": 1.4709014892578125,
+      "cpu_percent": 0.0
+    },
+    {
+      "operation": "import_performance",
+      "iterations": 10,
+      "total_time": 0.00027554004918783903,
+      "avg_time": 2.7554004918783904e-05,
+      "median_time": 2.6208508643321693e-05,
+      "min_time": 2.3833010345697403e-05,
+      "max_time": 3.504101186990738e-05,
+      "memory_usage_mb": 29.734375,
+      "cpu_percent": 99.2
+    }
+  ],
+  "system_info": {
+    "python_version": "3.13.7",
+    "platform": "darwin",
+    "cpu_count": 16,
+    "memory_total": 64.0,
+    "memory_available": 28.369049072265625
+  },
+  "benchmark_timestamp": 1758126146.8867872
+}

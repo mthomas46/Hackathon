@@ -5,7 +5,7 @@ analysis functions from analysis_logic.py to eliminate code duplication.
 """
 
 from typing import List, Dict, Any
-from services.shared.models import Finding
+from services.shared.core.models.models import Finding
 
 # Import the optimized functions from analysis_logic to avoid duplication
 from .analysis_logic import generate_summary_report as _generate_summary_report
