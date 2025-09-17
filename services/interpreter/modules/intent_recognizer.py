@@ -7,7 +7,7 @@ extracted from the main interpreter service to improve maintainability.
 import re
 from typing import Dict, Any, List, Tuple, Optional
 
-from services.shared.models import Document, Finding
+from services.shared.core.models.models import Document, Finding
 
 # Import shared utilities for consistent error handling
 from .shared_utils import (

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Tuple, Callable
 from rich.prompt import Prompt
 
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv
 
 

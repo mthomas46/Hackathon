@@ -1,5 +1,5 @@
 from typing import Dict, List
-from services.shared.clients import ServiceClients  # type: ignore
+from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
 
 
 def parse_openapi_to_endpoints(spec: Dict) -> List[dict]:

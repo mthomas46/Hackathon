@@ -25,25 +25,25 @@ from pydantic import BaseModel, field_validator
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ValidationException, ServiceException
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ValidationException, ServiceException
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import utc_now, generate_id, clean_string
 
 
-from services.shared.error_handling import safe_execute_async
+from services.shared.utilities.error_handling import safe_execute_async
 
 try:
     import redis.asyncio as aioredis
 except Exception:
     aioredis = None
 
-from services.shared.models import Document
+from services.shared.core.models.models import Document
 from services.shared.utilities import stable_hash, cached_get
 from services.shared.envelopes import DocumentEnvelope
 from services.shared.owners import derive_github_owners
-from services.shared.clients import ServiceClients  # type: ignore
+from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
 
 # Service configuration constants
 SERVICE_NAME = "source-agent"
@@ -95,8 +95,8 @@ app = FastAPI(
 
 # Use common middleware setup to reduce duplication across services
 from services.shared.utilities import setup_common_middleware, attach_self_register
-from services.shared.error_handling import install_error_handlers
-from services.shared.constants_new import ServiceNames
+from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.core.constants_new import ServiceNames
 setup_common_middleware(app, ServiceNames.SOURCE_AGENT)
 install_error_handlers(app)
 

@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 
-from services.shared.constants_new import ServiceNames
+from services.shared.core.constants_new import ServiceNames
 from ...base.base_manager import BaseManager
 
 

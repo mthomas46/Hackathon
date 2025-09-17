@@ -7,7 +7,7 @@ These functions handle service communication, URL resolution, and request prepar
 import os
 from typing import Dict, Any, Optional
 
-from services.shared.constants_new import EnvVars
+from services.shared.core.constants_new import EnvVars
 
 
 def get_service_url(service_name: str, default_url: str) -> str:

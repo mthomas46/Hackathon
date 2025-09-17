@@ -23,18 +23,27 @@ from pydantic import BaseModel
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import setup_common_middleware, attach_self_register
 
 
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import UserQuery, InterpretedIntent, InterpretedWorkflow, WorkflowStep
-from .modules.query_handlers import query_handlers
-from .modules.list_handlers import list_handlers
+try:
+    from .modules.models import UserQuery, InterpretedIntent, InterpretedWorkflow, WorkflowStep
+    from .modules.query_handlers import query_handlers
+    from .modules.list_handlers import list_handlers
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.models import UserQuery, InterpretedIntent, InterpretedWorkflow, WorkflowStep
+    from modules.query_handlers import query_handlers
+    from modules.list_handlers import list_handlers
 
 # Service configuration constants
 SERVICE_NAME = "interpreter"

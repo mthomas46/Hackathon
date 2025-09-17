@@ -9,7 +9,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from services.shared.utilities import get_service_client
-from services.shared.constants_new import ServiceNames
+from services.shared.core.constants_new import ServiceNames
 
 
 class ServiceTool(BaseTool):

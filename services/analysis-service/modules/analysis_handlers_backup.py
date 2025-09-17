@@ -50,7 +50,7 @@ class AnalysisHandlers:
 
             # Publish findings event
             if aioredis and findings:
-                from services.shared.config import get_config_value
+                from services.shared.core.config.config import get_config_value
                 redis_host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
                 client = aioredis.from_url(f"redis://{redis_host}")
                 try:
@@ -101,7 +101,7 @@ class AnalysisHandlers:
                     type_counts={"drift": 1}
                 )
 
-            from services.shared.error_handling import ServiceException
+            from services.shared.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Analysis failed",
                 error_code="ANALYSIS_FAILED",
@@ -176,7 +176,7 @@ class AnalysisHandlers:
             )
 
         except Exception as e:
-            from services.shared.error_handling import ServiceException
+            from services.shared.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Failed to retrieve findings",
                 error_code="FINDINGS_RETRIEVAL_FAILED",

@@ -22,9 +22,9 @@ import httpx
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import setup_common_middleware, attach_self_register
 
 # ============================================================================

@@ -114,8 +114,8 @@ from rich.prompt import Prompt, Confirm
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
@@ -244,7 +244,7 @@ def get_prompt(ctx, category, name, content):
 
         except Exception as e:
             console = Console()
-            from services.shared.responses import create_error_response
+            from services.shared.core.responses.responses import create_error_response
             error_response = create_error_response(
                 "Failed to retrieve prompt",
                 error_code=ErrorCodes.PROMPT_RETRIEVAL_FAILED,

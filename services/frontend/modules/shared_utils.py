@@ -9,13 +9,13 @@ from typing import Dict, Any, Optional, List
 from fastapi.responses import HTMLResponse
 
 # Import shared utilities
-from services.shared.clients import ServiceClients
-from services.shared.constants_new import EnvVars, ErrorCodes, ServiceNames
-from services.shared.error_handling import ServiceException
-from services.shared.responses import create_error_response
-from services.shared.logging import fire_and_forget
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.core.constants_new import EnvVars, ErrorCodes, ServiceNames
+from services.shared.utilities.error_handling import ServiceException
+from services.shared.core.responses.responses import create_error_response
+from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import utc_now
-from services.shared.config import get_config_value
+from services.shared.core.config.config import get_config_value
 
 # Global configuration for frontend service
 _DEFAULT_TIMEOUT = 30
@@ -196,7 +196,7 @@ def create_frontend_success_response(operation: str, data: Any, **context) -> Di
 
     Returns a consistent success response format.
     """
-    from services.shared.responses import create_success_response
+    from services.shared.core.responses.responses import create_success_response
     return create_success_response(f"Frontend {operation} successful", data, **context)
 
 def build_frontend_context(operation: str, **additional) -> Dict[str, Any]:

@@ -5,8 +5,8 @@ Includes LangGraph workflow integration for advanced orchestration.
 """
 from typing import Dict, Any, List, Optional
 
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.constants_new import ErrorCodes
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.core.constants_new import ErrorCodes
 from .shared_utils import get_orchestrator_service_client
 
 # Import LangGraph components

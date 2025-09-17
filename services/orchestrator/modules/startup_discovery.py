@@ -8,9 +8,9 @@ discovered and their LangGraph tools are registered with the orchestrator.
 import asyncio
 import logging
 from typing import Dict, Any, List, Optional
-from services.shared.clients import ServiceClients
-from services.shared.logging import fire_and_forget
-from services.shared.constants_new import ServiceNames
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.core.constants_new import ServiceNames
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ from .shared_utils import (
     build_prompt_context,
     validate_prompt_data
 )
-from services.shared.constants_new import ErrorCodes
+from services.shared.core.constants_new import ErrorCodes
 
 
 class PromptHandlers:

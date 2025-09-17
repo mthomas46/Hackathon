@@ -5,9 +5,9 @@ extracted from the main prompt store service to improve maintainability.
 """
 
 from typing import Dict, Any
-from services.shared.logging import fire_and_forget
-from services.shared.constants_new import ErrorCodes
-from services.shared.responses import create_error_response
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.core.constants_new import ErrorCodes
+from services.shared.core.responses.responses import create_error_response
 
 # Import shared utilities for consistency
 from .shared_utils import handle_prompt_error, create_prompt_success_response, build_prompt_context

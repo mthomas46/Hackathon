@@ -28,10 +28,10 @@ from typing import Dict, Any, List, Optional
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException, install_error_handlers
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register
 
 # ============================================================================
