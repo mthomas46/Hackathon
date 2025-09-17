@@ -5,7 +5,7 @@ Handles the complex logic for report generation endpoints.
 import os
 from typing import Dict, Any
 
-from services.shared.models import Finding
+from services.shared.core.models.models import Finding
 
 from .analysis_logic import generate_summary_report, generate_trends_report
 from .shared_utils import get_analysis_service_client
@@ -100,7 +100,7 @@ class ReportHandlers:
                 }
 
             else:
-                from services.shared.error_handling import ValidationException
+                from services.shared.utilities.error_handling import ValidationException
                 supported_types = ["summary", "trends", "life_of_ticket", "pr_confidence"]
                 raise ValidationException(
                     f"Unsupported report type: {req.kind}",
@@ -121,7 +121,7 @@ class ReportHandlers:
                     "recommendations": ["Test recommendation"]
                 }
 
-            from services.shared.error_handling import ServiceException
+            from services.shared.utilities.error_handling import ServiceException
             raise ServiceException(
                 "Report generation failed",
                 error_code="REPORT_GENERATION_FAILED",

@@ -6,10 +6,10 @@ to eliminate code duplication and ensure consistency.
 
 import os
 from typing import Dict, Any, Optional
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException
-from services.shared.constants_new import ErrorCodes, ServiceNames
-from services.shared.logging import fire_and_forget
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.monitoring.logging import fire_and_forget
 # Import database - handle both relative and absolute imports for different loading contexts
 try:
     from .database import PromptStoreDatabase

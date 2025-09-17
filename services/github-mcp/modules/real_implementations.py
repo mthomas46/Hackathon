@@ -4,7 +4,7 @@ Handles delegation to actual GitHub services via source-agent.
 """
 from typing import Dict, Any
 from fastapi import HTTPException
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 
 
 class RealImplementations:

@@ -180,8 +180,8 @@ async def discover_tools(req: ToolDiscoveryRequest):
     - auto_register: Automatically register discovered tools
     """
     try:
-        from services.shared.clients import ServiceClients
-        from services.shared.responses import create_success_response
+        from services.shared.integrations.clients.clients import ServiceClients
+        from services.shared.core.responses.responses import create_success_response
 
         client = ServiceClients()
         discovery_agent_url = "http://llm-discovery-agent:5045"

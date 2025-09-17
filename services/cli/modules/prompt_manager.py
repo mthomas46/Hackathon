@@ -9,8 +9,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 
-from services.shared.clients import ServiceClients
-from services.shared.credentials import get_secret
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.auth.credentials import get_secret
 
 from .shared_utils import (
     get_default_timeout,

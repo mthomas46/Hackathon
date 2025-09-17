@@ -57,6 +57,7 @@ services:
   # postgres:
   #   image: postgres:15-alpine
   #   environment:
+      - PYTHONPATH=/app
   #     POSTGRES_DB: doc_consistency
   #     POSTGRES_USER: doc_user
   #     POSTGRES_PASSWORD: doc_password
@@ -88,9 +89,15 @@ services:
       - ./services/orchestrator/config.yaml:/app/services/orchestrator/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis aioredis && python services/orchestrator/main.py"
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /app/docker-requirements.txt &&
+        echo 'Dependencies installed, starting orchestrator...' &&
+        env PYTHONPATH=/app python -m services.orchestrator.main
+      "
     ports:
       - "5099:5099"
     depends_on:
@@ -115,9 +122,15 @@ services:
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
       - doc_store_data:/app/services/doc_store
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc_store/main.py"
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /app/docker-requirements.txt &&
+        echo 'Dependencies installed, starting service...' &&
+        env PYTHONPATH=/app python -m services.doc_store.main
+      "
     ports:
       - "5087:5087"
     depends_on:
@@ -143,12 +156,18 @@ services:
       - ./services/analysis-service/config.yaml:/app/services/analysis-service/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       # DDD-specific environment variables
       - DDD_ARCHITECTURE=true
       - DDD_CONFIG_FILE=config/ddd_config.yaml
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis sentence-transformers faiss-cpu textblob && python services/analysis-service/main_new.py"
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /app/docker-requirements.txt &&
+        echo 'Dependencies installed, starting analysis service...' &&
+        env PYTHONPATH=/app python -m services.analysis_service.main_new
+      "
     ports:
       - "5020:5020"
     depends_on:
@@ -174,9 +193,15 @@ services:
       - ./services/source-agent/config.yaml:/app/services/source-agent/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/source-agent/main.py"
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /app/docker-requirements.txt &&
+        echo 'Dependencies installed, starting source-agent...' &&
+        env PYTHONPATH=/app python -m services.source_agent.main
+      "
     ports:
       - "5000:5000"
     depends_on:
@@ -200,8 +225,14 @@ services:
       - ./services/frontend/config.yaml:/app/services/frontend/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/frontend/main.py"
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /app/docker-requirements.txt &&
+        echo 'Dependencies installed, starting frontend...' &&
+        env PYTHONPATH=/app python -m services.frontend.main
+      "
     ports:
       - "3000:3000"
     depends_on:
@@ -226,6 +257,7 @@ services:
       - ./services/summarizer-hub/config.yaml:/app/services/summarizer-hub/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - OLLAMA_HOST=http://host.docker.internal:11434
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic boto3 botocore && python services/summarizer-hub/main.py"
@@ -249,6 +281,7 @@ services:
       - ./services/architecture-digitizer/config.yaml:/app/services/architecture-digitizer/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/architecture-digitizer/main.py"
     ports:
@@ -271,6 +304,7 @@ services:
       - ./services/bedrock-proxy/config.yaml:/app/services/bedrock-proxy/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/bedrock-proxy/main.py"
     ports:
@@ -293,6 +327,7 @@ services:
       - ./services/github-mcp/config.yaml:/app/services/github-mcp/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/github-mcp/main.py"
     ports:
@@ -319,6 +354,7 @@ services:
       - ./services/memory-agent/config.yaml:/app/services/memory-agent/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/memory-agent/main.py"
@@ -345,6 +381,7 @@ services:
       - ./services/discovery-agent/config.yaml:/app/services/discovery-agent/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/discovery-agent/main.py"
     ports:
@@ -370,6 +407,7 @@ services:
       - ./services/notification-service/config.yaml:/app/services/notification-service/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/notification-service/main.py"
     ports:
@@ -397,6 +435,7 @@ services:
       - ./services/prompt-store/config.yaml:/app/services/prompt-store/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
@@ -422,6 +461,7 @@ services:
       - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     ports:
       - "5120:5120"
@@ -450,6 +490,7 @@ services:
       - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     depends_on:
       prompt-store:
@@ -476,6 +517,7 @@ services:
       - ./services/code-analyzer/config.yaml:/app/services/code-analyzer/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx && python services/code-analyzer/main.py"
     ports:
@@ -501,6 +543,7 @@ services:
       - ./services/secure-analyzer/config.yaml:/app/services/secure-analyzer/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/secure-analyzer/main.py"
     ports:
@@ -523,6 +566,7 @@ services:
       - ./services/log-collector/config.yaml:/app/services/log-collector/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/log-collector/main.py"
     ports:

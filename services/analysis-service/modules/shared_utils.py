@@ -7,7 +7,7 @@ to eliminate redundancy and ensure consistency.
 import os
 from typing import Dict, Any
 try:
-    from services.shared.constants_new import ErrorCodes, EnvVars, ServiceNames
+    from services.shared.core.constants_new import ErrorCodes, EnvVars, ServiceNames
 except ImportError:
     # Fallback for testing or when shared services are not available
     class ErrorCodes:
@@ -23,9 +23,9 @@ except ImportError:
         DOC_STORE = "doc-store"
         ORCHESTRATOR = "orchestrator"
 try:
-    from services.shared.responses import create_success_response, create_error_response
-    from services.shared.logging import fire_and_forget
-    from services.shared.error_handling import ValidationException
+    from services.shared.core.responses.responses import create_success_response, create_error_response
+    from services.shared.monitoring.logging import fire_and_forget
+    from services.shared.utilities.error_handling import ValidationException
 except ImportError:
     # Fallback for testing or when shared services are not available
     def create_success_response(message, data=None, **kwargs):

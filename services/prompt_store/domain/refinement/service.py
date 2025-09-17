@@ -12,7 +12,7 @@ from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.utilities import generate_id, utc_now
 
 # Import LLM service clients
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 
 # Import doc store client
 try:

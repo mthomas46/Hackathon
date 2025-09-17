@@ -3,7 +3,7 @@
 Handles HTTP requests and responses for document operations.
 """
 from typing import Dict, Any, Optional
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.core.responses.responses import create_success_response, create_error_response
 from services.shared.utilities import utc_now
 from ...core.models import (
     DocumentRequest, DocumentResponse, DocumentListResponse,

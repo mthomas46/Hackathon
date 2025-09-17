@@ -18,9 +18,9 @@ from rich.spinner import Spinner
 from rich.progress import Progress, TaskID
 from contextlib import asynccontextmanager
 
-from services.shared.clients import ServiceClients
-from services.shared.constants_new import ServiceNames
-from services.shared.logging import fire_and_forget
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.core.constants_new import ServiceNames
+from services.shared.monitoring.logging import fire_and_forget
 
 from .shared_utils import (
     get_cli_clients,

@@ -23,22 +23,37 @@ from services.shared.utilities.utilities import utc_now, generate_id, setup_comm
 # ============================================================================
 # CONTROLLERS - Clean separation of endpoint responsibilities
 # ============================================================================
-from .presentation.controllers import (
-    AnalysisController,
-    RemediationController,
-    WorkflowController,
-    RepositoryController,
-    DistributedController,
-    ReportsController,
-    FindingsController,
-    IntegrationController,
-    PRConfidenceController
-)
-
-# ============================================================================
-# COMPATIBILITY LAYER - Backward compatibility for existing clients
-# ============================================================================
-from .presentation.compatibility_layer import register_compatibility_endpoints
+# Temporarily using absolute imports for local development
+try:
+    from .presentation.controllers import (
+        AnalysisController,
+        RemediationController,
+        WorkflowController,
+        RepositoryController,
+        DistributedController,
+        ReportsController,
+        FindingsController,
+        IntegrationController,
+        PRConfidenceController
+    )
+    from .presentation.compatibility_layer import register_compatibility_endpoints
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from presentation.controllers import (
+        AnalysisController,
+        RemediationController,
+        WorkflowController,
+        RepositoryController,
+        DistributedController,
+        ReportsController,
+        FindingsController,
+        IntegrationController,
+        PRConfidenceController
+    )
+    from presentation.compatibility_layer import register_compatibility_endpoints
 
 # ============================================================================
 # DEPENDENCY INJECTION - Clean dependency management
@@ -105,31 +120,31 @@ def create_application() -> FastAPI:
         analysis_repository=analysis_repository
     )
 
-           # ============================================================================
-           # CONTROLLER INITIALIZATION
-           # ============================================================================
-           # Initialize controllers with their dependencies
-           analysis_controller = AnalysisController(
-               perform_analysis_use_case=perform_analysis_use_case,
-               document_repository=document_repository,
-               analysis_repository=analysis_repository,
-               analysis_service=analysis_service
-           )
+    # ============================================================================
+    # CONTROLLER INITIALIZATION
+    # ============================================================================
+    # Initialize controllers with their dependencies
+    analysis_controller = AnalysisController(
+        perform_analysis_use_case=perform_analysis_use_case,
+        document_repository=document_repository,
+        analysis_repository=analysis_repository,
+        analysis_service=analysis_service
+    )
 
-           remediation_controller = RemediationController()
-           workflow_controller = WorkflowController()
-           repository_controller = RepositoryController()
-           distributed_controller = DistributedController()
-           reports_controller = ReportsController()
-           findings_controller = FindingsController()
-           integration_controller = IntegrationController()
-           pr_confidence_controller = PRConfidenceController()
+    remediation_controller = RemediationController()
+    workflow_controller = WorkflowController()
+    repository_controller = RepositoryController()
+    distributed_controller = DistributedController()
+    reports_controller = ReportsController()
+    findings_controller = FindingsController()
+    integration_controller = IntegrationController()
+    pr_confidence_controller = PRConfidenceController()
 
-           # ============================================================================
-           # COMPATIBILITY LAYER REGISTRATION
-           # ============================================================================
-           # Register backward compatibility endpoints
-           register_compatibility_endpoints(app)
+    # ============================================================================
+    # COMPATIBILITY LAYER REGISTRATION
+    # ============================================================================
+    # Register backward compatibility endpoints
+    register_compatibility_endpoints(app)
 
     # ============================================================================
     # ROUTER REGISTRATION - Clean endpoint organization

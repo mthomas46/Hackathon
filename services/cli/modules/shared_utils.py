@@ -11,11 +11,11 @@ from rich.table import Table
 from rich.panel import Panel
 
 # Import shared utilities
-from services.shared.clients import ServiceClients
-from services.shared.constants_new import ServiceNames, ErrorCodes
-from services.shared.error_handling import ServiceException, ValidationException
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.logging import fire_and_forget
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
+from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import utc_now
 
 # Import new base classes and utilities
@@ -335,7 +335,7 @@ def is_cache_valid(cache_item: Dict[str, Any], ttl_seconds: int = 300) -> bool:
 # Graceful error handling utilities
 def handle_graceful_error(console: Console, error: Exception, operation: str, show_details: bool = False):
     """Handle errors gracefully with user-friendly messages."""
-    from services.shared.error_handling import ServiceException, ValidationException
+    from services.shared.utilities.error_handling import ServiceException, ValidationException
 
     if isinstance(error, ServiceException):
         create_error_message(console, f"Service error during {operation}: {error.message}")

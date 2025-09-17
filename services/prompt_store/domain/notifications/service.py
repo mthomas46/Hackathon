@@ -15,7 +15,7 @@ from services.prompt_store.domain.notifications.repository import (
 )
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.utilities import generate_id, utc_now
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 
 
 class NotificationsService:

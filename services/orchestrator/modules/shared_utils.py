@@ -22,8 +22,8 @@ def get_orchestrator_service_client():
     try:
         return get_orchestrator_client()
     except Exception as e:
-        from services.shared.logging import fire_and_forget
-        from services.shared.constants_new import ServiceNames
+        from services.shared.monitoring.logging import fire_and_forget
+        from services.shared.core.constants_new import ServiceNames
         fire_and_forget("error", f"Failed to get orchestrator service client: {e}", ServiceNames.ORCHESTRATOR)
         raise
 

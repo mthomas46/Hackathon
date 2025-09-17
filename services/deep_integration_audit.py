@@ -15,8 +15,8 @@ from enum import Enum
 import inspect
 import os
 
-from services.shared.constants_new import ServiceNames
-from services.shared.logging import fire_and_forget
+from services.shared.core.constants_new import ServiceNames
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class IntegrationDepth(Enum):
