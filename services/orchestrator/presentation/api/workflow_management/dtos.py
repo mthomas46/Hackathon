@@ -129,6 +129,38 @@ class ExecutionListResponse(BaseModel):
     offset: int
 
 
+class WorkflowHistoryRequest(BaseModel):
+    """Request for workflow history."""
+    workflow_id: Optional[str] = Field(None, max_length=255)
+    limit: int = Field(50, ge=1, le=1000)
+    status_filter: Optional[str] = Field(None, max_length=50)
+
+
+class WorkflowHistoryEntryResponse(BaseModel):
+    """Response containing workflow execution history entry."""
+    workflow_id: str
+    execution_id: str
+    status: str
+    started_at: str
+    completed_at: Optional[str] = None
+    duration_ms: Optional[float] = None
+    steps_executed: int
+    error_message: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WorkflowHistoryResponse(BaseModel):
+    """Response containing workflow execution history."""
+    entries: List[WorkflowHistoryEntryResponse]
+    total: int
+    limit: int
+
+    class Config:
+        from_attributes = True
+
+
 class ErrorResponse(BaseModel):
     """Standard error response."""
 
