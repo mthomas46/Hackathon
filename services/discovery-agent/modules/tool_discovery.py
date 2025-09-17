@@ -7,7 +7,11 @@ generates appropriate tool wrappers for integration with LangGraph workflows.
 
 import re
 from typing import Dict, Any, List, Optional
-from services.shared.clients import ServiceClients
+try:
+    from services.shared.clients import ServiceClients
+except ImportError:
+    # Fallback for when running in Docker or different environment
+    ServiceClients = None
 from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
 

@@ -6,7 +6,11 @@ using the secure-analyzer service integration.
 
 import re
 from typing import Dict, Any, List, Optional
-from services.shared.clients import ServiceClients
+try:
+    from services.shared.clients import ServiceClients
+except ImportError:
+    # Fallback for when running in Docker or different environment
+    ServiceClients = None
 
 
 class ToolSecurityScanner:
