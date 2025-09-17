@@ -1,6 +1,6 @@
 """Analysis Models - Core analysis request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel as PydanticBaseModel, Field, field_validator
 from datetime import datetime, timezone
 
@@ -124,6 +124,22 @@ class SimilarityPair(BaseModel):
     target: str = Field(..., description="Target document ID")
     similarity: float = Field(..., ge=0.0, le=1.0, description="Similarity score")
     confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Confidence in similarity score")
+
+    @field_validator('similarity')
+    @classmethod
+    def validate_similarity(cls, v: float) -> float:
+        """Validate similarity score is within valid range."""
+        if not (0.0 <= v <= 1.0):
+            raise ValueError('Similarity must be between 0.0 and 1.0')
+        return v
+
+    @field_validator('confidence')
+    @classmethod
+    def validate_confidence(cls, v: Optional[float]) -> Optional[float]:
+        """Validate confidence score if provided."""
+        if v is not None and not (0.0 <= v <= 1.0):
+            raise ValueError('Confidence must be between 0.0 and 1.0')
+        return v
 
 
 class SimilarityMatrix(BaseModel):

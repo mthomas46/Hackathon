@@ -1,6 +1,6 @@
 """Base Models - Common model definitions and utilities."""
 
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, Callable, Type, ClassVar
 from pydantic import BaseModel as PydanticBaseModel, Field, field_validator
 from datetime import datetime, timezone
 
@@ -10,19 +10,19 @@ class BaseModel(PydanticBaseModel):
 
     class Config:
         """Pydantic configuration."""
-        allow_population_by_field_name = True
-        json_encoders = {
+        allow_population_by_field_name: bool = True
+        json_encoders: Dict[Type[Any], Callable[[Any], Any]] = {
             datetime: lambda v: v.isoformat() if v else None
         }
 
-    def dict(self, **kwargs) -> Dict[str, Any]:
+    def dict(self, **kwargs: Any) -> Dict[str, Any]:
         """Convert model to dictionary with enhanced options."""
         # Default to exclude None values and use alias
         kwargs.setdefault('exclude_none', True)
         kwargs.setdefault('by_alias', True)
         return super().dict(**kwargs)
 
-    def json(self, **kwargs) -> str:
+    def json(self, **kwargs: Any) -> str:
         """Convert model to JSON with enhanced options."""
         kwargs.setdefault('exclude_none', True)
         kwargs.setdefault('by_alias', True)
