@@ -40,6 +40,11 @@ Power User Commands:
 - tracing-search --criteria JSON: Search distributed traces
 - interpret-query "QUERY": Interpret a natural language query
 - execute-workflow "QUERY": Interpret and execute a workflow from query
+- execute-e2e-query "QUERY" [--format FORMAT] [--download]: Complete end-to-end query processing with output generation
+- execute-direct-workflow --name WORKFLOW [--params JSON] [--format FORMAT] [--download]: Direct workflow execution with output
+- download-output --file-id FILE_ID [--save-path PATH]: Download generated workflow output files
+- list-workflow-templates: List available workflow templates and descriptions
+- get-supported-formats: Show supported output formats (JSON, PDF, CSV, markdown, ZIP)
 - list-intents: Show all supported query intents
 - discover-service --name NAME --url URL [--spec FILE] [--dry-run]: Discover and register service endpoints
 - store-memory --type TYPE --key KEY --summary TEXT [--data JSON]: Store operational context in memory
@@ -487,6 +492,76 @@ def execute_workflow(ctx, query, user_id, session_id, context):
 
         interpreter_manager = cli_service.interpreter_manager
         asyncio.run(interpreter_manager.execute_workflow_from_cli(query_data))
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.argument("query")
+@click.option("--format", default="json", help="Output format (json, pdf, csv, markdown, zip, txt)")
+@click.option("--download", is_flag=True, help="Automatically download the generated file")
+@click.option("--user-id", help="User ID for tracking")
+@click.option("--filename-prefix", help="Prefix for generated filename")
+@click.pass_context
+def execute_e2e_query(ctx, query, format, download, user_id, filename_prefix):
+    """Complete end-to-end query processing: Natural language → Workflow → Output file"""
+    try:
+        asyncio.run(_execute_e2e_query_async(query, format, download, user_id, filename_prefix))
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.option("--name", required=True, help="Workflow name to execute")
+@click.option("--params", help="JSON parameters for the workflow")
+@click.option("--format", default="json", help="Output format (json, pdf, csv, markdown, zip, txt)")
+@click.option("--download", is_flag=True, help="Automatically download the generated file")
+@click.option("--user-id", help="User ID for tracking")
+@click.option("--filename-prefix", help="Prefix for generated filename")
+@click.pass_context
+def execute_direct_workflow(ctx, name, params, format, download, user_id, filename_prefix):
+    """Direct workflow execution with output generation"""
+    try:
+        import json
+        parameters = json.loads(params) if params else {}
+        asyncio.run(_execute_direct_workflow_async(name, parameters, format, download, user_id, filename_prefix))
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.option("--file-id", required=True, help="File ID of the generated output")
+@click.option("--save-path", help="Local path to save the downloaded file")
+@click.pass_context
+def download_output(ctx, file_id, save_path):
+    """Download generated workflow output files"""
+    try:
+        asyncio.run(_download_output_async(file_id, save_path))
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.pass_context
+def list_workflow_templates(ctx):
+    """List available workflow templates and descriptions"""
+    try:
+        asyncio.run(_list_workflow_templates_async())
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.pass_context
+def get_supported_formats(ctx):
+    """Show supported output formats (JSON, PDF, CSV, markdown, ZIP)"""
+    try:
+        asyncio.run(_get_supported_formats_async())
     except Exception as e:
         console = Console()
         console.print(f"[red]Error: {e}[/red]")
@@ -1485,6 +1560,219 @@ def view_metrics(ctx):
     except Exception as e:
         console = Console()
         console.print(f"[red]Error: {e}[/red]")
+
+# ============================================================================
+# END-TO-END WORKFLOW EXECUTION ASYNC FUNCTIONS
+# ============================================================================
+
+async def _execute_e2e_query_async(query, format, download, user_id, filename_prefix):
+    """Execute end-to-end query processing with output generation."""
+    console = Console()
+    
+    with console.status("[bold green]Processing query..."):
+        try:
+            # Call interpreter's execute-query endpoint
+            request_data = {
+                "query": query,
+                "output_format": format,
+                "user_id": user_id or "cli_user",
+                "filename_prefix": filename_prefix
+            }
+            
+            interpreter_url = "http://interpreter:5000"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{interpreter_url}/execute-query", json=request_data) as response:
+                    result = await response.json()
+            
+            if result.get("status") == "completed":
+                console.print(f"[green]✓[/green] Query executed successfully!")
+                console.print(f"[cyan]Execution ID:[/cyan] {result.get('execution_id')}")
+                console.print(f"[cyan]Workflow:[/cyan] {result.get('workflow_executed')}")
+                
+                output_info = result.get("output", {})
+                if output_info:
+                    console.print(f"[cyan]Output File:[/cyan] {output_info.get('filename')}")
+                    console.print(f"[cyan]Format:[/cyan] {output_info.get('format')}")
+                    console.print(f"[cyan]Size:[/cyan] {output_info.get('size_bytes')} bytes")
+                    console.print(f"[cyan]Download URL:[/cyan] {output_info.get('download_url')}")
+                    
+                    if download and output_info.get('file_id'):
+                        console.print("[yellow]Downloading file...[/yellow]")
+                        await _download_output_async(output_info['file_id'], None)
+                        
+            elif result.get("status") == "failed":
+                console.print(f"[red]✗[/red] Workflow execution failed: {result.get('error')}")
+                
+            elif result.get("status") == "no_workflow":
+                console.print(f"[yellow]⚠[/yellow] {result.get('message')}")
+                suggestions = result.get("suggestions", [])
+                if suggestions:
+                    console.print("[cyan]Suggestions:[/cyan]")
+                    for suggestion in suggestions:
+                        console.print(f"  • {suggestion}")
+            else:
+                console.print(f"[red]✗[/red] Error: {result.get('error', 'Unknown error')}")
+                
+        except Exception as e:
+            console.print(f"[red]✗[/red] Error executing query: {str(e)}")
+
+
+async def _execute_direct_workflow_async(name, parameters, format, download, user_id, filename_prefix):
+    """Execute workflow directly with output generation."""
+    console = Console()
+    
+    with console.status(f"[bold green]Executing {name} workflow..."):
+        try:
+            request_data = {
+                "workflow_name": name,
+                "parameters": parameters,
+                "output_format": format,
+                "user_id": user_id or "cli_user",
+                "filename_prefix": filename_prefix
+            }
+            
+            interpreter_url = "http://interpreter:5000"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{interpreter_url}/workflows/execute-direct", json=request_data) as response:
+                    result = await response.json()
+            
+            if result.get("status") == "completed":
+                console.print(f"[green]✓[/green] Workflow '{name}' executed successfully!")
+                console.print(f"[cyan]Execution ID:[/cyan] {result.get('execution_id')}")
+                
+                output_info = result.get("output", {})
+                if output_info:
+                    console.print(f"[cyan]Output File:[/cyan] {output_info.get('filename')}")
+                    console.print(f"[cyan]Format:[/cyan] {output_info.get('format')}")
+                    console.print(f"[cyan]Size:[/cyan] {output_info.get('size_bytes')} bytes")
+                    
+                    if download and output_info.get('file_id'):
+                        console.print("[yellow]Downloading file...[/yellow]")
+                        await _download_output_async(output_info['file_id'], None)
+                        
+            else:
+                console.print(f"[red]✗[/red] Workflow execution failed: {result.get('error')}")
+                
+        except Exception as e:
+            console.print(f"[red]✗[/red] Error executing workflow: {str(e)}")
+
+
+async def _download_output_async(file_id, save_path):
+    """Download generated output file."""
+    console = Console()
+    
+    try:
+        interpreter_url = "http://interpreter:5000"
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{interpreter_url}/outputs/download/{file_id}") as response:
+                if response.status == 200:
+                    # Get filename from Content-Disposition header or use file_id
+                    filename = file_id
+                    if 'Content-Disposition' in response.headers:
+                        disposition = response.headers['Content-Disposition']
+                        if 'filename=' in disposition:
+                            filename = disposition.split('filename=')[1].strip('"')
+                    
+                    # Determine save path
+                    if save_path:
+                        final_path = save_path
+                    else:
+                        final_path = f"./{filename}"
+                    
+                    # Download file
+                    file_content = await response.read()
+                    
+                    with open(final_path, 'wb') as f:
+                        f.write(file_content)
+                    
+                    console.print(f"[green]✓[/green] File downloaded: {final_path}")
+                    console.print(f"[cyan]Size:[/cyan] {len(file_content)} bytes")
+                    
+                else:
+                    error_text = await response.text()
+                    console.print(f"[red]✗[/red] Download failed: {error_text}")
+                    
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error downloading file: {str(e)}")
+
+
+async def _list_workflow_templates_async():
+    """List available workflow templates."""
+    console = Console()
+    
+    try:
+        interpreter_url = "http://interpreter:5000"
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{interpreter_url}/workflows/templates") as response:
+                result = await response.json()
+        
+        templates = result.get("templates", {})
+        
+        if templates:
+            console.print(f"[green]Available Workflow Templates ({len(templates)})[/green]")
+            console.print()
+            
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Name", style="cyan")
+            table.add_column("Description", style="white")
+            table.add_column("Services", style="yellow")
+            table.add_column("Output Formats", style="green")
+            
+            for name, template in templates.items():
+                services = ", ".join(template.get("services", []))
+                output_types = ", ".join(template.get("output_types", []))
+                table.add_row(
+                    name,
+                    template.get("description", ""),
+                    services,
+                    output_types
+                )
+            
+            console.print(table)
+        else:
+            console.print("[yellow]No workflow templates available[/yellow]")
+            
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error fetching templates: {str(e)}")
+
+
+async def _get_supported_formats_async():
+    """Show supported output formats."""
+    console = Console()
+    
+    try:
+        interpreter_url = "http://interpreter:5000"
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{interpreter_url}/outputs/formats") as response:
+                result = await response.json()
+        
+        formats = result.get("supported_formats", [])
+        descriptions = result.get("format_descriptions", {})
+        
+        if formats:
+            console.print("[green]Supported Output Formats[/green]")
+            console.print()
+            
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Format", style="cyan")
+            table.add_column("Description", style="white")
+            
+            for format_name in formats:
+                description = descriptions.get(format_name, "No description available")
+                table.add_row(format_name, description)
+            
+            console.print(table)
+        else:
+            console.print("[yellow]No supported formats found[/yellow]")
+            
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error fetching formats: {str(e)}")
+
 
 if __name__ == "__main__":
     cli()
