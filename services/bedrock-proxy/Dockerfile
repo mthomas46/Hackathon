@@ -1,18 +1,18 @@
 # =============================================================================
-# Frontend Service Dockerfile
+# Bedrock Proxy Service Dockerfile
 # =============================================================================
-# Web UI dashboard and API aggregation service
+# AWS Bedrock AI model proxy with caching and template management
 
 FROM python:3.12-slim
 
 # Metadata
 LABEL maintainer="LLM Documentation Ecosystem Team"
-LABEL service="frontend"
+LABEL service="bedrock-proxy"
 LABEL version="1.0.0"
-LABEL description="Web UI dashboard and API aggregation service"
-LABEL port="5090"
-LABEL dependencies="redis,orchestrator,doc_store"
-LABEL profile="development"
+LABEL description="AWS Bedrock AI model proxy with caching and template management"
+LABEL port="5050"
+LABEL dependencies="redis"
+LABEL profile="ai_services"
 
 # Set working directory
 WORKDIR /app
@@ -33,15 +33,15 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r shared_requirements.txt
 
 # Copy service code maintaining directory structure
-COPY services/frontend/ ./services/frontend/
+COPY services/bedrock-proxy/ ./services/bedrock-proxy/
 COPY services/shared/ ./services/shared/
 COPY config.yml ./
 COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
-ENV SERVICE_NAME=frontend
-ENV SERVICE_PORT=5090
+ENV SERVICE_NAME=bedrock-proxy
+ENV SERVICE_PORT=5050
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -49,13 +49,13 @@ ENV ENVIRONMENT=development
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5090/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5050/health || exit 1
 
 # Expose port
-EXPOSE 5090
+EXPOSE 5050
 
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "-m", "services.frontend.main"]
+CMD ["python", "-m", "services.bedrock-proxy.main"]

@@ -1,18 +1,18 @@
 # =============================================================================
-# Frontend Service Dockerfile
+# Notification Service Dockerfile
 # =============================================================================
-# Web UI dashboard and API aggregation service
+# Owner resolution and notification delivery service
 
 FROM python:3.12-slim
 
 # Metadata
 LABEL maintainer="LLM Documentation Ecosystem Team"
-LABEL service="frontend"
+LABEL service="notification-service"
 LABEL version="1.0.0"
-LABEL description="Web UI dashboard and API aggregation service"
-LABEL port="5090"
-LABEL dependencies="redis,orchestrator,doc_store"
-LABEL profile="development"
+LABEL description="Owner resolution and notification delivery service"
+LABEL port="5170"
+LABEL dependencies="redis"
+LABEL profile="production"
 
 # Set working directory
 WORKDIR /app
@@ -33,15 +33,15 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r shared_requirements.txt
 
 # Copy service code maintaining directory structure
-COPY services/frontend/ ./services/frontend/
+COPY services/notification-service/ ./services/notification-service/
 COPY services/shared/ ./services/shared/
 COPY config.yml ./
 COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
-ENV SERVICE_NAME=frontend
-ENV SERVICE_PORT=5090
+ENV SERVICE_NAME=notification-service
+ENV SERVICE_PORT=5170
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -49,13 +49,13 @@ ENV ENVIRONMENT=development
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5090/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5170/health || exit 1
 
 # Expose port
-EXPOSE 5090
+EXPOSE 5170
 
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "-m", "services.frontend.main"]
+CMD ["python", "-m", "services.notification-service.main"]

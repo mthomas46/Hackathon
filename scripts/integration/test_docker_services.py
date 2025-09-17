@@ -6,6 +6,7 @@ Tests individual services and all services in Docker containers
 
 import os
 import sys
+import asyncio
 import subprocess
 import time
 import requests
