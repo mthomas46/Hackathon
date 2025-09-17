@@ -46,12 +46,25 @@ except ImportError:
     from modules.list_handlers import list_handlers
 
 # ============================================================================
-# ENHANCED CAPABILITIES - New ecosystem-aware modules
+# ENHANCED CAPABILITIES - Ecosystem-aware modules with orchestrator integration
 # ============================================================================
-from .modules.ecosystem_context import ecosystem_context
-from .modules.orchestrator_integration import orchestrator_integration
-from .modules.prompt_engineering import prompt_engineer
-from .modules.langgraph_discovery import langgraph_discovery
+try:
+    from .modules.ecosystem_context import ecosystem_context
+    from .modules.orchestrator_integration import orchestrator_integration
+    from .modules.workflow_dispatcher import workflow_dispatcher
+    from .modules.conversation_memory import conversation_memory
+    from .modules.query_preprocessor import query_preprocessor
+    from .modules.workflow_execution_engine import workflow_execution_engine
+except ImportError:
+    # Enhanced modules for ecosystem integration
+    from modules.ecosystem_context import ecosystem_context
+    from modules.orchestrator_integration import orchestrator_integration
+    from modules.workflow_dispatcher import workflow_dispatcher
+    from modules.conversation_memory import conversation_memory
+    from modules.query_preprocessor import query_preprocessor
+    from modules.workflow_execution_engine import workflow_execution_engine
+    from modules.prompt_engineering import prompt_engineer
+    from modules.langgraph_discovery import langgraph_discovery
 
 # Service configuration constants
 SERVICE_NAME = "interpreter"
@@ -411,6 +424,242 @@ async def translate_prompt(query: UserQuery):
             error_code=ErrorCodes.INTERNAL_ERROR,
             details={"error": str(e), "query": query.query}
         )
+
+
+# ============================================================================
+# ENHANCED ECOSYSTEM INTEGRATION ENDPOINTS
+# ============================================================================
+
+@app.post("/natural-query")
+async def process_natural_query(query_data: UserQuery):
+    """Enhanced natural language query processing with ecosystem context.
+    
+    This endpoint provides comprehensive natural language processing with:
+    - Advanced query preprocessing and normalization
+    - Ecosystem-aware intent recognition  
+    - Intelligent workflow dispatch
+    - Conversation memory integration
+    - Real-time workflow execution
+    """
+    try:
+        # Preprocess query for enhanced understanding
+        preprocessing_result = await query_preprocessor.preprocess_query(
+            query_data.query, query_data.user_id, query_data.context
+        )
+        
+        # Enhanced intent recognition with ecosystem context
+        intent_result = await query_handlers.handle_query_interpretation(query_data)
+        
+        # Dispatch to appropriate workflow with orchestrator integration
+        dispatch_result = await workflow_dispatcher.dispatch_query(
+            preprocessing_result["processed_query"],
+            intent_result.intent,
+            intent_result.entities,
+            query_data.user_id,
+            query_data.context
+        )
+        
+        return create_success_response({
+            "original_query": query_data.query,
+            "preprocessing": preprocessing_result,
+            "interpretation": {
+                "intent": intent_result.intent,
+                "confidence": intent_result.confidence,
+                "entities": intent_result.entities
+            },
+            "workflow_dispatch": dispatch_result,
+            "ecosystem_context": await ecosystem_context.get_service_capabilities(),
+            "processing_timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        return create_success_response({
+            "error": str(e),
+            "fallback_response": "I encountered an issue processing your query. Please try rephrasing or contact support.",
+            "suggestions": [
+                "Try using simpler language",
+                "Be more specific about what you want to accomplish",
+                "Mention which service you'd like to use"
+            ]
+        })
+
+
+@app.post("/execute-workflow")
+async def execute_workflow_endpoint(execution_request: dict):
+    """Execute a workflow through the enhanced execution engine."""
+    try:
+        user_id = execution_request.get("user_id")
+        execution_plan = execution_request.get("execution_plan", {})
+        priority = execution_request.get("priority", "normal")
+        
+        # Execute workflow through enhanced execution engine
+        execution_result = await workflow_execution_engine.execute_workflow(
+            execution_plan, user_id, None, priority
+        )
+        
+        return create_success_response({
+            "execution_result": execution_result,
+            "execution_metadata": {
+                "engine_version": "2.0",
+                "orchestrator_integrated": True,
+                "monitoring_enabled": True
+            }
+        })
+        
+    except Exception as e:
+        return create_success_response({
+            "error": str(e),
+            "execution_status": "failed",
+            "recovery_suggestions": [
+                "Check that all required parameters are provided",
+                "Verify service availability",
+                "Try again with simplified parameters"
+            ]
+        })
+
+
+@app.get("/ecosystem/capabilities")
+async def get_ecosystem_capabilities():
+    """Get comprehensive ecosystem capabilities and service information."""
+    try:
+        capabilities = await ecosystem_context.get_service_capabilities()
+        workflows = workflow_dispatcher.get_all_workflows()
+        
+        return create_success_response({
+            "services": capabilities,
+            "workflows": workflows,
+            "total_services": len(capabilities),
+            "total_workflows": workflows["total_count"],
+            "workflow_categories": workflows["categories"],
+            "ecosystem_status": "active",
+            "last_updated": datetime.utcnow().isoformat(),
+            "metadata": {
+                "discovery_agent_integrated": True,
+                "orchestrator_connected": True,
+                "conversation_memory_enabled": True,
+                "langgraph_workflows_available": True
+            }
+        })
+        
+    except Exception as e:
+        return create_success_response({
+            "error": str(e),
+            "fallback_capabilities": {
+                "basic_interpretation": True,
+                "workflow_execution": True,
+                "error_handling": True
+            }
+        })
+
+
+@app.post("/workflows/discover")
+async def discover_workflows():
+    """Discover available workflows from orchestrator and LangGraph integration."""
+    try:
+        # Discover traditional workflows
+        traditional_workflows = await orchestrator_integration.discover_available_workflows()
+        
+        # Discover LangGraph workflows
+        langgraph_workflows = await langgraph_discovery.discover_langgraph_workflows()
+        
+        # Get workflow dispatcher information
+        dispatcher_workflows = workflow_dispatcher.get_all_workflows()
+        
+        return create_success_response({
+            "traditional_workflows": traditional_workflows,
+            "langgraph_workflows": langgraph_workflows,
+            "dispatcher_workflows": dispatcher_workflows,
+            "total_discovered": (
+                len(traditional_workflows.get("workflows", {})) +
+                len(langgraph_workflows.get("workflows", {})) +
+                dispatcher_workflows["total_count"]
+            ),
+            "discovery_timestamp": datetime.utcnow().isoformat(),
+            "summary": {
+                "orchestrator_integrated": True,
+                "langgraph_enabled": True,
+                "intelligent_dispatch": True
+            }
+        })
+        
+    except Exception as e:
+        return create_success_response({
+            "error": str(e),
+            "fallback_workflows": workflow_dispatcher.get_all_workflows()
+        })
+
+
+@app.get("/execution/{execution_id}/status")
+async def get_execution_status(execution_id: str):
+    """Get real-time status of workflow execution."""
+    try:
+        status = await workflow_execution_engine.get_execution_status(execution_id)
+        return create_success_response(status)
+        
+    except Exception as e:
+        return create_success_response({
+            "error": str(e),
+            "execution_id": execution_id,
+            "status": "error"
+        })
+
+
+@app.get("/health/ecosystem")
+async def get_ecosystem_health():
+    """Get comprehensive health status of the entire ecosystem."""
+    try:
+        # Check orchestrator health
+        orchestrator_health = await orchestrator_integration.check_orchestrator_health()
+        
+        # Check service capabilities
+        service_capabilities = await ecosystem_context.get_service_capabilities()
+        
+        # Get execution engine status
+        execution_metrics = await workflow_execution_engine.get_execution_metrics()
+        
+        # Calculate overall health score
+        health_score = 1.0
+        if not orchestrator_health.get("healthy", False):
+            health_score -= 0.4
+        if len(service_capabilities) < 5:  # Expect at least 5 services
+            health_score -= 0.3
+        if execution_metrics["success_rate"] < 0.8:
+            health_score -= 0.3
+        
+        health_status = "healthy" if health_score > 0.7 else "degraded" if health_score > 0.4 else "unhealthy"
+        
+        return create_success_response({
+            "ecosystem_health": {
+                "overall_status": health_status,
+                "health_score": max(health_score, 0.0),
+                "orchestrator_health": orchestrator_health,
+                "services_available": len(service_capabilities),
+                "execution_success_rate": execution_metrics["success_rate"],
+                "active_executions": execution_metrics["active_executions"]
+            },
+            "component_status": {
+                "interpreter": "healthy",
+                "orchestrator": "connected" if orchestrator_health.get("healthy") else "disconnected",
+                "workflow_dispatcher": "operational",
+                "conversation_memory": "active",
+                "execution_engine": "operational"
+            },
+            "health_check_timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        return create_success_response({
+            "ecosystem_health": {
+                "overall_status": "error",
+                "health_score": 0.0,
+                "error": str(e)
+            },
+            "component_status": {
+                "interpreter": "healthy",
+                "error_details": str(e)
+            }
+        })
+
 
 if __name__ == "__main__":
     """Run the Interpreter service directly."""
