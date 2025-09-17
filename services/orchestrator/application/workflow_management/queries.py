@@ -32,9 +32,10 @@ class GetWorkflowExecutionQuery:
 @dataclass
 class ListWorkflowExecutionsQuery:
     """Query to list workflow executions with optional filters."""
-    workflow_id_filter: Optional[WorkflowId] = None
+    workflow_id: Optional[WorkflowId] = None
     status_filter: Optional[str] = None
-    correlation_id_filter: Optional[str] = None
+    started_after: Optional[str] = None
+    started_before: Optional[str] = None
     limit: int = 50
     offset: int = 0
 

@@ -91,9 +91,10 @@ class InMemoryWorkflowExecutionRepository(WorkflowExecutionRepositoryInterface):
 
     def list_executions(
         self,
-        workflow_id_filter: Optional[WorkflowId] = None,
+        workflow_id: Optional[WorkflowId] = None,
         status_filter: Optional[str] = None,
-        correlation_id_filter: Optional[str] = None,
+        started_after: Optional[str] = None,
+        started_before: Optional[str] = None,
         limit: int = 50,
         offset: int = 0
     ) -> List[WorkflowExecution]:
@@ -102,14 +103,28 @@ class InMemoryWorkflowExecutionRepository(WorkflowExecutionRepositoryInterface):
             executions = list(self._executions.values())
 
             # Apply filters
-            if workflow_id_filter:
-                executions = [e for e in executions if e.workflow_id == workflow_id_filter]
+            if workflow_id:
+                executions = [e for e in executions if e.workflow_id == workflow_id]
 
             if status_filter:
                 executions = [e for e in executions if e.status.value == status_filter]
 
-            if correlation_id_filter:
-                executions = [e for e in executions if e.correlation_id == correlation_id_filter]
+            if started_after:
+                try:
+                    after_dt = datetime.fromisoformat(started_after.replace('Z', '+00:00'))
+                    executions = [e for e in executions if e.started_at and e.started_at >= after_dt]
+                except ValueError:
+                    pass  # Invalid date format, skip filter
+
+            if started_before:
+                try:
+                    before_dt = datetime.fromisoformat(started_before.replace('Z', '+00:00'))
+                    executions = [e for e in executions if e.started_at and e.started_at <= before_dt]
+                except ValueError:
+                    pass  # Invalid date format, skip filter
+
+            # Sort by started_at descending
+            executions.sort(key=lambda e: e.started_at or datetime.min, reverse=True)
 
             # Apply pagination
             start = offset
