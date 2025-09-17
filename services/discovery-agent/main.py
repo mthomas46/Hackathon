@@ -47,7 +47,7 @@ from .modules.shared_utils import (
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import DiscoverRequest
+from .modules.models import DiscoverRequest, ToolDiscoveryRequest
 from .modules.discovery_handler import discovery_handler
 
 # Service configuration constants
@@ -87,6 +87,21 @@ async def discover(req: DiscoverRequest):
     for testing without actual registration.
     """
     return await discovery_handler.discover_endpoints(req)
+
+
+@app.post("/discover/tools")
+async def discover_tools(req: ToolDiscoveryRequest):
+    """Discover and register LangGraph tools from service OpenAPI specifications.
+
+    Automatically analyzes service OpenAPI specs to identify operations that can be
+    exposed as LangGraph tools. Categorizes tools by functionality and optionally
+    registers them with the orchestrator for use in AI workflows. Supports dry-run
+    mode for testing tool discovery without actual registration.
+
+    Tool categories include: create, read, update, delete, analysis, search,
+    notification, storage, processing, document, prompt, code, workflow, general.
+    """
+    return await discovery_handler.discover_tools(req)
 
 
 if __name__ == "__main__":
