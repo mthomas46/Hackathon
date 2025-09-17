@@ -1,7 +1,10 @@
-"""Perform Analysis Use Case."""
+"""Perform Analysis Use Case with event publishing."""
 
+import time
+import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from uuid import uuid4
 
 from ...domain.entities import Document, Analysis, Finding
 from ...domain.services import AnalysisService, FindingService
@@ -13,6 +16,10 @@ from ...domain.exceptions import (
 )
 from ...infrastructure.repositories import DocumentRepository, AnalysisRepository, FindingRepository
 from ..dto import PerformAnalysisRequest, AnalysisResultResponse, FindingResponse
+from ..events import EventBus, AnalysisRequestedEvent, AnalysisCompletedEvent, AnalysisFailedEvent, FindingCreatedEvent
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -33,27 +40,52 @@ class PerformAnalysisResult:
     execution_time_seconds: Optional[float]
     success: bool
     error_message: Optional[str]
+    events: List[Any]  # Application events generated during execution
 
 
 class PerformAnalysisUseCase:
-    """Use case for performing document analysis."""
+    """Use case for performing document analysis with event publishing."""
 
     def __init__(self,
                  analysis_service: AnalysisService,
                  finding_service: FindingService,
                  document_repository: DocumentRepository,
                  analysis_repository: AnalysisRepository,
-                 finding_repository: FindingRepository):
+                 finding_repository: FindingRepository,
+                 event_bus: Optional[EventBus] = None):
         """Initialize use case with dependencies."""
         self.analysis_service = analysis_service
         self.finding_service = finding_service
         self.document_repository = document_repository
         self.analysis_repository = analysis_repository
         self.finding_repository = finding_repository
+        self.event_bus = event_bus
 
     async def execute(self, command: PerformAnalysisCommand) -> PerformAnalysisResult:
-        """Execute the perform analysis use case."""
+        """Execute the perform analysis use case with event publishing."""
+        start_time = time.time()
+        events = []
+
         try:
+            # Publish analysis requested event
+            if self.event_bus:
+                requested_event = AnalysisRequestedEvent(
+                    event_id=str(uuid4()),
+                    correlation_id=getattr(command, 'command_id', str(uuid4())),
+                    document_id=command.document_id,
+                    analysis_type=command.analysis_type,
+                    requested_by=getattr(command, 'user_id', None),
+                    priority=command.priority,
+                    configuration=command.configuration or {},
+                    metadata={
+                        'user_id': getattr(command, 'user_id', None),
+                        'session_id': getattr(command, 'session_id', None),
+                        'source': getattr(command, 'source', 'api')
+                    }
+                )
+                await self.event_bus.publish(requested_event)
+                events.append(requested_event)
+
             # Get document
             document = await self.document_repository.get_by_id(command.document_id)
             if not document:
@@ -81,6 +113,7 @@ class PerformAnalysisUseCase:
             # Execute analysis
             analysis.start()
             result = self.analysis_service.execute_analysis(analysis)
+            execution_time = time.time() - start_time
 
             # Mark as completed
             analysis.complete(result)
@@ -91,28 +124,110 @@ class PerformAnalysisUseCase:
             if 'findings' in result:
                 findings = await self._process_findings(analysis, result['findings'])
 
+            # Publish analysis completed event
+            if self.event_bus:
+                completed_event = AnalysisCompletedEvent(
+                    event_id=str(uuid4()),
+                    correlation_id=getattr(command, 'command_id', str(uuid4())),
+                    analysis_id=analysis.id.value,
+                    document_id=command.document_id,
+                    analysis_type=command.analysis_type,
+                    result=result,
+                    execution_time_seconds=execution_time,
+                    findings_count=len(findings),
+                    metadata={
+                        'user_id': getattr(command, 'user_id', None),
+                        'session_id': getattr(command, 'session_id', None)
+                    }
+                )
+                await self.event_bus.publish(completed_event)
+                events.append(completed_event)
+
+            # Publish finding events
+            for finding in findings:
+                if self.event_bus:
+                    finding_event = FindingCreatedEvent(
+                        event_id=str(uuid4()),
+                        correlation_id=getattr(command, 'command_id', str(uuid4())),
+                        finding_id=finding.id.value,
+                        document_id=command.document_id,
+                        analysis_id=analysis.id.value,
+                        severity=finding.severity,
+                        category=finding.category,
+                        description=finding.description,
+                        confidence=finding.confidence.value,
+                        metadata={
+                            'user_id': getattr(command, 'user_id', None),
+                            'session_id': getattr(command, 'session_id', None)
+                        }
+                    )
+                    await self.event_bus.publish(finding_event)
+                    events.append(finding_event)
+
             return PerformAnalysisResult(
                 analysis=analysis,
                 findings=findings,
-                execution_time_seconds=analysis.duration,
+                execution_time_seconds=execution_time,
                 success=True,
-                error_message=None
+                error_message=None,
+                events=events
             )
 
         except DocumentNotFoundException:
+            # Publish document not found event
+            if self.event_bus:
+                not_found_event = AnalysisFailedEvent(
+                    event_id=str(uuid4()),
+                    correlation_id=getattr(command, 'command_id', str(uuid4())),
+                    document_id=command.document_id,
+                    analysis_type=command.analysis_type,
+                    error_message="Document not found",
+                    error_code="DOCUMENT_NOT_FOUND",
+                    retry_count=0,
+                    metadata={
+                        'user_id': getattr(command, 'user_id', None),
+                        'session_id': getattr(command, 'session_id', None)
+                    }
+                )
+                await self.event_bus.publish(not_found_event)
+                events.append(not_found_event)
             raise
+
         except Exception as e:
-            # Create failed analysis result
+            execution_time = time.time() - start_time
             error_message = str(e)
-            analysis.fail(error_message)
-            await self.analysis_repository.save(analysis)
+
+            # Create failed analysis result
+            if 'analysis' in locals():
+                analysis.fail(error_message)
+                await self.analysis_repository.save(analysis)
+
+                # Publish analysis failed event
+                if self.event_bus:
+                    failed_event = AnalysisFailedEvent(
+                        event_id=str(uuid4()),
+                        correlation_id=getattr(command, 'command_id', str(uuid4())),
+                        document_id=command.document_id,
+                        analysis_type=command.analysis_type,
+                        error_message=error_message,
+                        error_code=e.__class__.__name__,
+                        retry_count=getattr(command, 'retry_count', 0),
+                        metadata={
+                            'user_id': getattr(command, 'user_id', None),
+                            'session_id': getattr(command, 'session_id', None),
+                            'execution_time_seconds': execution_time
+                        }
+                    )
+                    await self.event_bus.publish(failed_event)
+                    events.append(failed_event)
 
             return PerformAnalysisResult(
-                analysis=analysis,
+                analysis=analysis if 'analysis' in locals() else None,
                 findings=[],
-                execution_time_seconds=analysis.duration,
+                execution_time_seconds=execution_time,
                 success=False,
-                error_message=error_message
+                error_message=error_message,
+                events=events
             )
 
     async def _process_findings(self, analysis: Analysis, findings_data: List[Dict[str, Any]]) -> List[Finding]:
