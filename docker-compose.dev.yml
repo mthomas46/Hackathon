@@ -278,6 +278,88 @@ services:
     profiles:
       - ai_services
 
+  # LLM Gateway - Unified access to all LLM providers
+  llm-gateway:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/llm-gateway/config.yaml:/app/services/llm-gateway/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+      - llm_gateway_cache:/app/cache
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+      # LLM Provider Configuration
+      - OLLAMA_ENDPOINT=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - BEDROCK_ENDPOINT=http://bedrock-proxy:7090/invoke
+      - GROK_API_KEY=${GROK_API_KEY:-}
+      # Security Configuration
+      - SENSITIVE_KEYWORDS=password,secret,token,key,credential,confidential,internal
+      - SENSITIVITY_THRESHOLD=0.7
+      - SECURE_ONLY_MODELS=ollama,bedrock
+      - ALL_PROVIDERS=bedrock,ollama,openai,anthropic,grok
+      # Caching Configuration
+      - CACHE_MAX_SIZE=1000
+      - CACHE_DEFAULT_TTL=3600
+      - CACHE_CLEANUP_INTERVAL=300
+      # Rate Limiting Configuration
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=60
+      - RATE_LIMIT_REQUESTS_PER_HOUR=1000
+      - RATE_LIMIT_TOKENS_PER_MINUTE=50000
+      - RATE_LIMIT_BURST_LIMIT=10
+      - RATE_LIMIT_COOLDOWN_SECONDS=60
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis aioredis && python services/llm-gateway/main.py"
+    ports:
+      - "5055:5055"
+    depends_on:
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      bedrock-proxy:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5055/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Mock Data Generator - LLM-integrated mock data generation
+  mock-data-generator:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+      - ./config.yml:/app/config.yml:ro
+      - ./services/mock-data-generator/config.yaml:/app/services/mock-data-generator/config.yaml:ro
+      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    environment:
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - DOC_STORE_URL=http://doc_store:5087
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/mock-data-generator/main.py"
+    ports:
+      - "5065:5065"
+    depends_on:
+      llm-gateway:
+        condition: service_healthy
+      doc_store:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5065/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
   # GitHub MCP - GitHub Model Context Protocol service
   github-mcp:
     image: python:3.12-slim
@@ -549,6 +631,10 @@ volumes:
 
   # Prompt store data volume
   prompt_store_data:
+    driver: local
+
+  # LLM Gateway cache volume
+  llm_gateway_cache:
     driver: local
 
 # ============================================================================
