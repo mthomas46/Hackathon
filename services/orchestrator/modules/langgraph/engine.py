@@ -13,6 +13,11 @@ from langchain_core.tools import BaseTool
 
 from .state import WorkflowState, create_workflow_state
 from .tools import create_service_tools
+from .service_integrations import (
+    SERVICE_INTEGRATIONS,
+    get_service_integration_tools,
+    initialize_all_service_integrations
+)
 from ..shared_utils import get_orchestrator_service_client
 from ..startup_discovery import startup_discovery
 from services.shared.utilities import utc_now
@@ -40,8 +45,15 @@ class LangGraphWorkflowEngine:
                     # Use discovered tools
                     service_tools = await self._create_tools_from_discovery(service_name, discovered_tools_data)
                     print(f"🔍 Using discovered tools for {service_name}: {len(service_tools)} tools")
+                # 2. Try comprehensive service integrations
+                elif service_name in SERVICE_INTEGRATIONS:
+                    integration_class = SERVICE_INTEGRATIONS[service_name]
+                    integration = integration_class()
+                    service_tools = await integration.initialize_tools()
+                    print(f"🔧 Using service integration for {service_name}: {len(service_tools)} tools")
+
+                # 3. Fallback to manual tool creation
                 else:
-                    # Fallback to manual tool creation
                     service_tools = await create_service_tools(service_name, self.service_client)
                     print(f"⚙️ Created manual tools for {service_name}: {list(service_tools.keys())}")
 
