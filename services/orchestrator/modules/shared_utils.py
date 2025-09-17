@@ -13,7 +13,7 @@ TODO: Remove this file after completing DDD migration.
 # Re-export functions from new locations for backward compatibility
 from ..infrastructure.utils import get_service_url, prepare_correlation_headers
 from ..shared.domain.utils import validate_request_data, sanitize_string_input
-from ..presentation.utils import handle_service_error, create_service_success_response, build_orchestrator_context
+from ..presentation.utils import handle_service_error, create_service_success_response, build_operation_context as build_orchestrator_context
 
 # Keep the old function that depends on local imports
 def get_orchestrator_service_client():
