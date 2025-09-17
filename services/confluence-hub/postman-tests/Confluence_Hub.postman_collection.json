@@ -1,0 +1,153 @@
+{
+	"info": {
+		"_postman_id": "3e487ec0-bb36-492f-8cf3-70855f58df6f",
+		"name": "Avetta: Confluence_Hub",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "847037"
+	},
+	"item": [
+		{
+			"name": "Docs",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5070/confluence-hub/docs",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5070",
+					"path": [
+						"confluence-hub",
+						"docs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5070/confluence-hub/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5070",
+					"path": [
+						"confluence-hub",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ConvertPage",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"session_id\": \"test-collection\",\n    \"page_id\": \"3649962023\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5070/confluence-hub/convert-page",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5070",
+					"path": [
+						"confluence-hub",
+						"convert-page"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Embeddings:GenerateAll",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5070/confluence-hub/embeddings/generate",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5070",
+					"path": [
+						"confluence-hub",
+						"embeddings",
+						"generate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query\": \"snowflake\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5070/confluence-hub/search",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5070",
+					"path": [
+						"confluence-hub",
+						"search"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
