@@ -91,7 +91,7 @@ For each service:
   - ✅ Maintained existing modules: ab_testing.py, shared_utils.py, database.py
 - **Test Results**: Basic functionality verified (CRUD operations working)
 
-### doc-store
+### doc_store
 - **Status**: ✅ Consolidation Complete
 - **Files**: main.py (313 lines, reduced from 732), modules/ (8 files, 5 new)
 - **Tests**: unit/doc_store/ (multiple test files - 82 tests total)
@@ -186,7 +186,7 @@ For each service:
   - ✅ Reduced main.py from 143 lines to 76 lines (47% reduction)
 - **Test Results**: All tests passing (30/30)
 
-### doc-store
+### doc_store
 - **Status**: Pending
 - **Files**: main.py, logic.py, modules/ (2 files), routes/documents.py
 - **Tests**: unit/doc_store/ (5 test files)
@@ -396,7 +396,7 @@ For each service:
 
 ## Metrics
 - **Total Services**: 18 (17 application services + 1 shared utility service)
-- **Services Completed**: 17 (bedrock-proxy, code-analyzer, log-collector, notification-service, secure-analyzer, summarizer-hub, github-mcp, memory-agent, source-agent, discovery-agent, frontend, interpreter, prompt-store, doc-store, analysis-service, orchestrator, cli) + shared utilities
+- **Services Completed**: 17 (bedrock-proxy, code-analyzer, log-collector, notification-service, secure-analyzer, summarizer-hub, github-mcp, memory-agent, source-agent, discovery-agent, frontend, interpreter, prompt-store, doc_store, analysis-service, orchestrator, cli) + shared utilities
 - **Code Reduction**:
   - bedrock-proxy: 60% reduction (257 → 102 lines)
   - code-analyzer: 44% reduction (335 → 186 lines)
@@ -411,7 +411,7 @@ For each service:
   - frontend: 35% reduction (318 → 208 lines)
   - interpreter: 81% reduction (379 → 73 lines)
   - prompt-store: 75% reduction (375 → 95 lines)
-  - doc-store: 57% reduction (732 → 313 lines)
+  - doc_store: 57% reduction (732 → 313 lines)
   - analysis-service: 52% reduction (867 → 418 lines)
   - orchestrator: 16% reduction (754 → 633 lines)
   - cli: 0% reduction (already well-modularized)

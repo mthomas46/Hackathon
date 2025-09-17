@@ -268,7 +268,7 @@ class ServiceMocks:
             "result": {"documents_processed": 5, "findings_generated": 3}
         }
         mock.get_service_health.return_value = {
-            "doc-store": "healthy",
+            "doc_store": "healthy",
             "analysis-service": "healthy",
             "source-agent": "healthy"
         }

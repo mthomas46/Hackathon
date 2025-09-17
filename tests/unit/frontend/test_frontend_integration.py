@@ -33,7 +33,7 @@ class TestFrontendIntegration:
         assert "owner" in response.text.lower() or "coverage" in response.text.lower()
 
     def test_topics_service_integration(self, client):
-        """Test topics page integrates with doc-store service."""
+        """Test topics page integrates with doc_store service."""
         response = client.get("/topics")
         _assert_http_ok(response)
 
@@ -77,7 +77,7 @@ class TestFrontendIntegration:
         assert "duplicate" in response.text.lower() or "cluster" in response.text.lower()
 
     def test_search_service_integration(self, client):
-        """Test search integrates with doc-store service."""
+        """Test search integrates with doc_store service."""
         response = client.get("/search?q=kubernetes")
         _assert_http_ok(response)
 
@@ -88,7 +88,7 @@ class TestFrontendIntegration:
         assert "search" in response.text.lower() or "kubernetes" in response.text.lower()
 
     def test_docs_quality_service_integration(self, client):
-        """Test document quality integrates with doc-store service."""
+        """Test document quality integrates with doc_store service."""
         response = client.get("/docs/quality")
         _assert_http_ok(response)
 
@@ -173,9 +173,9 @@ class TestFrontendIntegration:
         workflow_steps = [
             ("/", "Index page"),
             ("/findings", "Findings from consistency-engine"),
-            ("/search?q=docs", "Search in doc-store"),
+            ("/search?q=docs", "Search in doc_store"),
             ("/report", "Comprehensive report from reporting"),
-            ("/topics", "Topics analysis from doc-store"),
+            ("/topics", "Topics analysis from doc_store"),
         ]
 
         for endpoint, description in workflow_steps:
@@ -206,9 +206,9 @@ class TestFrontendIntegration:
         """Test service data fetching mechanisms."""
         # Test that endpoints can fetch and display data from services
         data_endpoints = [
-            "/topics",  # Should fetch from doc-store
+            "/topics",  # Should fetch from doc_store
             "/findings",  # Should fetch from consistency-engine
-            "/search?q=test",  # Should fetch from doc-store
+            "/search?q=test",  # Should fetch from doc_store
         ]
 
         for endpoint in data_endpoints:

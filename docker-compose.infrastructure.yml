@@ -17,7 +17,7 @@ services:
       - orchestrator
       - reporting
       - consistency-engine
-      - doc-store
+      - doc_store
       - frontend
     networks:
       - doc-consistency
@@ -289,7 +289,7 @@ services:
       timeout: 10s
       retries: 3
 
-  doc-store:
+  doc_store:
     image: python:3.12-slim
     working_dir: /svc
     command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis aioredis psycopg2-binary && uvicorn main:app --host 0.0.0.0 --port 5040"
@@ -304,7 +304,7 @@ services:
       - PROMETHEUS_GATEWAY=prometheus:9090
       - LOG_LEVEL=INFO
     volumes:
-      - ./services/doc-store:/svc
+      - ./services/doc_store:/svc
       - ./services/shared:/svc/shared
     ports:
       - "5040:5040"

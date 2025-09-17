@@ -1,0 +1,14 @@
+# Doc-store-specific configuration
+# Inherits from shared base_config.yaml
+
+# Override server port for doc_store
+server:
+  port: 5010
+
+# Doc-store specific database settings
+database:
+  path: ${DOCSTORE_DB:-services/doc_store/db.sqlite3}
+  connection_pool_size: ${DOCSTORE_CONNECTION_POOL_SIZE:-5}
+
+# Testing configuration
+testing: ${TESTING:-false}

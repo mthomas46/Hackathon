@@ -870,7 +870,7 @@ class TestOrchestratorValidation:
 
     def test_service_traces_invalid_limit(self, client):
         """Test service traces with invalid limit."""
-        response = client.get("/infrastructure/tracing/service/doc-store?limit=15000")
+        response = client.get("/infrastructure/tracing/service/doc_store?limit=15000")
         assert response.status_code == 400
 
     def test_events_clear_event_type_too_long(self, client):
@@ -1291,7 +1291,7 @@ class TestOrchestratorValidation:
         malformed_queries = [
             "/infrastructure/events/history?limit=abc",
             "/infrastructure/events/history?limit=10&invalid=param",
-            "/infrastructure/tracing/service/doc-store?limit=not-a-number",
+            "/infrastructure/tracing/service/doc_store?limit=not-a-number",
             "/workflows/history?invalid=param",
             "/peers?extra=unwanted"
         ]

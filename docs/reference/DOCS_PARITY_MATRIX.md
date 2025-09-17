@@ -9,7 +9,7 @@ Legend: Present = ✓, Missing = ✗, N/A = —
 | cli | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ |
 | code-analyzer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | discovery-agent | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| doc-store | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| doc_store | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | frontend | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | github-mcp | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | interpreter | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

@@ -36,7 +36,7 @@ Config-first via `services/shared/config.get_config_value` with env override.
 
 ## Related
 - Orchestrator: [../orchestrator/README.md](../orchestrator/README.md)
-- Doc Store: [../doc-store/README.md](../doc-store/README.md)
+- Doc Store: [../doc_store/README.md](../doc_store/README.md)
 
 ## Testing
 - Unit tests: [tests/unit/frontend](../../tests/unit/frontend)

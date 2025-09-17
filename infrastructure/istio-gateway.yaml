@@ -105,10 +105,10 @@ spec:
   # Doc Store API
   - match:
     - uri:
-        prefix: /doc-store/
+        prefix: /doc_store/
     route:
     - destination:
-        host: doc-store
+        host: doc_store
         port:
           number: 5040
     timeout: 30s
@@ -222,10 +222,10 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: doc-store-dr
+  name: doc_store-dr
   namespace: doc-consistency
 spec:
-  host: doc-store
+  host: doc_store
   trafficPolicy:
     connectionPool:
       tcp:

@@ -53,7 +53,7 @@ class TestCLIWorkflowIntegration:
             {"status": "healthy"},      # prompt-store
             {"status": "healthy"},      # source-agent
             {"status": "healthy"},      # analysis-service
-            {"status": "healthy"}       # doc-store
+            {"status": "healthy"}       # doc_store
         ]
 
         health_data = await cli_commands.check_service_health()
@@ -63,7 +63,7 @@ class TestCLIWorkflowIntegration:
         assert "prompt-store" in health_data
         assert "source-agent" in health_data
         assert "analysis-service" in health_data
-        assert "doc-store" in health_data
+        assert "doc_store" in health_data
 
     @pytest.mark.asyncio
     async def test_service_integration_workflow(self, cli_commands, mock_clients):
@@ -75,7 +75,7 @@ class TestCLIWorkflowIntegration:
             {"status": "healthy"},      # prompt-store health
             {"status": "healthy"},      # interpreter health
             {"overall_healthy": True},  # orchestrator health
-            {"integrations": ["doc-store"]},  # analysis health
+            {"integrations": ["doc_store"]},  # analysis health
             {"prompts": [{"id": "1"}]}, # prompt-store prompts
         ]
 
@@ -147,19 +147,19 @@ class TestCLIWorkflowIntegration:
     async def test_menu_navigation_workflow(self, cli_commands):
         """Test menu navigation workflow."""
         # Mock the main menu selection and submenu
-        with patch.object(cli_commands, 'get_choice', side_effect=['1', 'q']):
+        with patch.object(cli_commands, 'get_choice', side_effect=['5', 'q']):
             with patch.object(cli_commands, 'print_header'):
                 with patch.object(cli_commands, 'print_menu'):
-                    with patch.object(cli_commands.orchestrator_manager, 'orchestrator_management_menu') as mock_orchestrator_menu:
+                    with patch('services.cli.modules.managers.workflow_manager.WorkflowManager.workflow_orchestration_menu') as mock_workflow_menu:
                         # Mock the orchestrator menu to avoid full execution
                         async def mock_menu():
                             pass
-                        mock_orchestrator_menu.side_effect = mock_menu
+                        mock_workflow_menu.side_effect = mock_menu
 
                         await cli_commands.run()
 
-                        # Should have called orchestrator menu
-                        mock_orchestrator_menu.assert_called_once()
+                        # Should have called workflow orchestration menu
+                        mock_workflow_menu.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_error_recovery_workflow(self, cli_commands, mock_clients):
@@ -274,7 +274,7 @@ class TestEndToEndWorkflow:
             {"status": "healthy", "uptime": "2h"},     # prompt-store
             {"status": "healthy", "version": "1.0"},   # source-agent
             {"status": "healthy", "models": ["gpt-4"]}, # analysis
-            {"status": "healthy", "docs": 1000}        # doc-store
+            {"status": "healthy", "docs": 1000}        # doc_store
         ]
 
         # Execute full health check
@@ -298,7 +298,7 @@ class TestEndToEndWorkflow:
             {"status": "healthy", "connections": 5},    # prompt-store
             {"status": "healthy", "intents": 10},       # interpreter
             {"overall_healthy": True, "workflows": 8},  # orchestrator
-            {"status": "healthy", "integrations": ["doc-store", "source-agent"]}, # analysis
+            {"status": "healthy", "integrations": ["doc_store", "source-agent"]}, # analysis
             {"prompts": [{"id": "1", "content": "test"}]} # prompts
         ]
 

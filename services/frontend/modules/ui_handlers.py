@@ -57,7 +57,7 @@ class UIHandlers:
         """Render topics overview page with document freshness analysis."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("doc-store", "/documents/quality", clients=clients)
+            data = fetch_service_data("doc_store", "/documents/quality", clients=clients)
             items = data.get("items", [])
 
             topics = {
@@ -139,7 +139,7 @@ class UIHandlers:
 
             params = {"q": safe_q}
             clients = get_frontend_clients()
-            data = fetch_service_data("doc-store", "/search", params=params, clients=clients)
+            data = fetch_service_data("doc_store", "/search", params=params, clients=clients)
             items = data.get("items", [])
             html = render_search_results(safe_q, items)
             return create_html_response(html, f"Search Results for '{safe_q}'")
@@ -152,7 +152,7 @@ class UIHandlers:
         """Render document quality analysis page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("doc-store", "/documents/quality", clients=clients)
+            data = fetch_service_data("doc_store", "/documents/quality", clients=clients)
             items = data.get("items", [])
             html = render_docs_quality(items)
             return create_html_response(html, "Document Quality Analysis")
@@ -1484,7 +1484,7 @@ class UIHandlers:
 
     @staticmethod
     def handle_doc_store_browser() -> HTMLResponse:
-        """Render doc-store data browser for document exploration."""
+        """Render doc_store data browser for document exploration."""
         try:
             html = """
 <!DOCTYPE html>
@@ -1827,7 +1827,7 @@ class UIHandlers:
 
         async function loadSummary() {
             try {
-                const response = await fetch('/api/doc-store/status');
+                const response = await fetch('/api/doc_store/status');
                 const data = await response.json();
 
                 if (data.success) {
@@ -1891,7 +1891,7 @@ class UIHandlers:
             document.getElementById('documents-container').innerHTML = 'Loading documents...';
 
             try {
-                const response = await fetch(`/api/doc-store/documents?limit=${limit}&offset=${currentDocOffset}`);
+                const response = await fetch(`/api/doc_store/documents?limit=${limit}&offset=${currentDocOffset}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -1957,7 +1957,7 @@ class UIHandlers:
             const limit = document.getElementById('analysis-limit').value;
             document.getElementById('analyses-container').innerHTML = 'Loading analyses...';
 
-            let url = `/api/doc-store/analyses?limit=${limit}&offset=${currentAnalysisOffset}`;
+            let url = `/api/doc_store/analyses?limit=${limit}&offset=${currentAnalysisOffset}`;
             if (docId) url += `&document_id=${docId}`;
 
             try {
@@ -2011,7 +2011,7 @@ class UIHandlers:
             document.getElementById('quality-container').innerHTML = 'Loading quality metrics...';
 
             try {
-                const response = await fetch('/api/doc-store/quality');
+                const response = await fetch('/api/doc_store/quality');
                 const data = await response.json();
 
                 if (data.success) {
@@ -2065,7 +2065,7 @@ class UIHandlers:
             document.getElementById('style-container').innerHTML = 'Loading style examples...';
 
             try {
-                const response = await fetch('/api/doc-store/style-examples');
+                const response = await fetch('/api/doc_store/style-examples');
                 const data = await response.json();
 
                 if (data.success) {
@@ -2101,7 +2101,7 @@ class UIHandlers:
 
         async function viewDocument(docId) {
             try {
-                const response = await fetch(`/api/doc-store/documents/${docId}`);
+                const response = await fetch(`/api/doc_store/documents/${docId}`);
                 const data = await response.json();
 
                 if (data.success && data.data.document) {
@@ -2176,7 +2176,7 @@ class UIHandlers:
             """
             return create_html_response(html, "Doc Store Data Browser")
         except Exception as e:
-            return handle_frontend_error("render doc-store browser", e, **build_frontend_context("render_doc_store_browser"))
+            return handle_frontend_error("render doc_store browser", e, **build_frontend_context("render_doc_store_browser"))
 
     @staticmethod
     def handle_prompt_store_browser() -> HTMLResponse:
@@ -4426,7 +4426,7 @@ class UIHandlers:
 
         function viewDocument(docId) {
             // This would open the document browser
-            window.open(`/doc-store/browser?doc=${docId}`, '_blank');
+            window.open(`/doc_store/browser?doc=${docId}`, '_blank');
         }
 
         function closeModal() {
@@ -4763,7 +4763,7 @@ class UIHandlers:
             try {
                 // Load multiple service statuses in parallel
                 const servicePromises = [
-                    loadServiceStatus('doc-store', '/api/doc-store/status'),
+                    loadServiceStatus('doc_store', '/api/doc_store/status'),
                     loadServiceStatus('prompt-store', '/api/prompt-store/status'),
                     loadServiceStatus('analysis-service', '/api/analysis/status'),
                     loadServiceStatus('orchestrator', '/api/orchestrator/status'),
@@ -4919,7 +4919,7 @@ class UIHandlers:
 
         function getServiceDashboardUrl(serviceName) {
             const dashboards = {
-                'doc-store': '/doc-store/browser',
+                'doc_store': '/doc_store/browser',
                 'prompt-store': '/prompt-store/browser',
                 'analysis-service': '/analysis/dashboard',
                 'orchestrator': '/orchestrator/monitor',
@@ -4940,7 +4940,7 @@ class UIHandlers:
 
         function getServiceApiEndpoint(serviceName) {
             const endpoints = {
-                'doc-store': '/api/doc-store/status',
+                'doc_store': '/api/doc_store/status',
                 'prompt-store': '/api/prompt-store/status',
                 'analysis-service': '/api/analysis/status',
                 'orchestrator': '/api/orchestrator/status',

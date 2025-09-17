@@ -15,7 +15,7 @@ All services in the LLM Documentation Ecosystem are now fully integrated with se
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ orchestrator_url() → http://orchestrator:5000       │    │
 │  │ analysis_service_url() → http://analysis-service:5020│    │
-│  │ doc_store_url() → http://doc-store:5010              │    │
+│  │ doc_store_url() → http://doc_store:5010              │    │
 │  │ source_agent_url() → http://source-agent:5000        │    │
 │  │ prompt_store_url() → http://prompt-store:5110        │    │
 │  │ interpreter_url() → http://interpreter:5120          │    │
@@ -172,7 +172,7 @@ python services/cli/main.py test-integration
 # Core Services
 ORCHESTRATOR_URL=http://orchestrator:5000
 ANALYSIS_SERVICE_URL=http://analysis-service:5020
-DOC_STORE_URL=http://doc-store:5010
+DOC_STORE_URL=http://doc_store:5010
 SOURCE_AGENT_URL=http://source-agent:5000
 
 # New Services

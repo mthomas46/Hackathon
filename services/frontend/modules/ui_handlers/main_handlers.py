@@ -367,7 +367,7 @@ class MainUIHandlers:
         try:
             q = sanitize_input(q)
             clients = get_frontend_clients()
-            data = fetch_service_data("doc-store", "/search", clients=clients, params={"q": q})
+            data = fetch_service_data("doc_store", "/search", clients=clients, params={"q": q})
             html = render_search_results(data, q)
             return create_html_response(html, f"Search Results: {q}")
         except Exception as e:
@@ -378,7 +378,7 @@ class MainUIHandlers:
         """Render document quality analysis page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("doc-store", "/quality", clients=clients)
+            data = fetch_service_data("doc_store", "/quality", clients=clients)
             html = render_docs_quality(data)
             return create_html_response(html, "Document Quality Analysis")
         except Exception as e:
@@ -423,7 +423,7 @@ class MainUIHandlers:
         try:
             clients = get_frontend_clients()
             findings_data = fetch_service_data("consistency-engine", "/findings", clients=clients)
-            quality_data = fetch_service_data("doc-store", "/quality", clients=clients)
+            quality_data = fetch_service_data("doc_store", "/quality", clients=clients)
             topics_data = fetch_service_data("orchestrator", "/reports/topics", clients=clients)
 
             html = render_report_page(findings_data, quality_data, topics_data)
