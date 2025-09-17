@@ -6,10 +6,39 @@ to eliminate redundancy and ensure consistency.
 
 import os
 from typing import Dict, Any
-from services.shared.constants_new import ErrorCodes, EnvVars, ServiceNames
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.logging import fire_and_forget
-from services.shared.error_handling import ValidationException
+try:
+    from services.shared.constants_new import ErrorCodes, EnvVars, ServiceNames
+except ImportError:
+    # Fallback for testing or when shared services are not available
+    class ErrorCodes:
+        ANALYSIS_FAILED = "ANALYSIS_FAILED"
+        VALIDATION_ERROR = "VALIDATION_ERROR"
+
+    class EnvVars:
+        ANALYSIS_SERVICE_HOST = "ANALYSIS_SERVICE_HOST"
+        ANALYSIS_SERVICE_PORT = "ANALYSIS_SERVICE_PORT"
+
+    class ServiceNames:
+        ANALYSIS_SERVICE = "analysis-service"
+        DOC_STORE = "doc-store"
+        ORCHESTRATOR = "orchestrator"
+try:
+    from services.shared.responses import create_success_response, create_error_response
+    from services.shared.logging import fire_and_forget
+    from services.shared.error_handling import ValidationException
+except ImportError:
+    # Fallback for testing or when shared services are not available
+    def create_success_response(message, data=None, **kwargs):
+        return {"message": message, "data": data, "status": "success"}
+
+    def create_error_response(message, error_code=None, **kwargs):
+        return {"message": message, "error": error_code, "status": "error"}
+
+    def fire_and_forget(level, message, service, data):
+        pass
+
+    class ValidationException(Exception):
+        pass
 
 # Configuration constants for analysis service with secure validation
 def _validate_float_env_var(var_name: str, default: str) -> float:

@@ -4,25 +4,45 @@ Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) 
 Tests: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub)
 
 ## Key Features
-- Ensemble summarization across providers (Ollama, Bedrock, etc.).
-- Rate-limit middleware (toggle via `RATE_LIMIT_ENABLED`).
-- Config-driven provider selection and timeouts.
-- Standardized middleware, `/health`, and simple metrics.
+- **Ensemble Summarization**: Multi-provider summarization across Ollama, Bedrock, OpenAI, Anthropic, etc.
+- **Automated Categorization**: ML-based document classification using zero-shot and traditional approaches
+- **Batch Processing**: Efficient processing of multiple documents with categorization
+- **Rate-limit Middleware**: Configurable rate limiting (toggle via `RATE_LIMIT_ENABLED`)
+- **Config-driven Provider Selection**: Flexible provider configuration and timeouts
+- **Standardized Middleware**: Health checks, metrics, and error handling
 
 ## Goal
-- Stand up multiple summarization providers (Ollama/OpenAI/Anthropic/Grok/etc.) and ensemble their outputs.
-- Analyze consistency/variance across summaries and return agreed content and differences per provider.
+- Provide comprehensive document processing capabilities including summarization and categorization
+- Support multiple AI providers with ensemble analysis for consistency validation
+- Enable automated document organization through ML-based classification
+- Shield the ecosystem from provider-specific SDKs and credentials via unified configuration
 
 ## Overview and role in the ecosystem
-- Central broker for summarization across heterogeneous providers with a common API.
-- Produces consensus (“agreed”) content and flags differences for downstream services like Secure Analyzer and reports.
-- Shields the ecosystem from provider-specific SDKs and credentials via config.
+- **Central Processing Hub**: Unified service for document summarization and categorization
+- **Multi-Provider Support**: Ensemble analysis across heterogeneous AI providers
+- **Automated Organization**: ML-based document classification and tagging for better discoverability
+- **Quality Assurance**: Consistency analysis and categorization confidence scoring
+- **Integration Ready**: Seamless integration with Doc Store, Analysis Service, and other ecosystem components
 
 ## Endpoints
+
+### Core Endpoints
 | Method | Path               | Description |
 |--------|--------------------|-------------|
-| GET    | /health            | Liveness |
-| POST   | /summarize/ensemble | Ensemble summarization |
+| GET    | /health            | Service health and capabilities check |
+| POST   | /summarize         | Single document summarization |
+
+### Categorization Endpoints
+| Method | Path               | Description |
+|--------|--------------------|-------------|
+| POST   | /categorize        | Categorize single document with ML classification |
+| POST   | /categorize/batch  | Batch categorize multiple documents |
+| GET    | /categorize/categories | Get available document categories |
+
+### Legacy Endpoints
+| Method | Path               | Description |
+|--------|--------------------|-------------|
+| POST   | /summarize/ensemble | Ensemble summarization (deprecated) |
 
 ## Configuration
 Config-first via `services/shared/config.get_config_value` with env override; optional `services/summarizer-hub/config.yaml` for provider defaults.
