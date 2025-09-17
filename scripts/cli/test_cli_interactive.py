@@ -278,7 +278,7 @@ def main():
 
         print("\n💡 TIPS:")
         print("   - Run 'python services/cli/main.py interactive' for manual testing")
-        print("   - Use 'python scripts/test/test_cli_comprehensive.py' for automated tests")
+        print("   - Use 'python scripts/cli/test_cli_comprehensive.py' for automated tests")
         print("   - Check service logs for detailed error information")
 
         return 0
