@@ -545,6 +545,124 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
         )
 
 
+@app.post("/pr-confidence/analyze")
+async def analyze_pr_confidence(req: Dict[str, Any]):
+    """Analyze PR confidence with comprehensive cross-reference analysis.
+
+    Performs detailed analysis of a pull request against its requirements
+    and documentation to provide confidence scores and recommendations.
+    """
+    try:
+        from .modules.pr_confidence_analysis import (
+            PRConfidenceAnalysisRequest,
+            pr_confidence_analysis_service
+        )
+
+        # Create request object from dict
+        analysis_request = PRConfidenceAnalysisRequest(
+            pr_data=req.get("pr_data", {}),
+            jira_data=req.get("jira_data"),
+            confluence_docs=req.get("confluence_docs"),
+            analysis_scope=req.get("analysis_scope", "comprehensive"),
+            include_recommendations=req.get("include_recommendations", True),
+            confidence_threshold=req.get("confidence_threshold", 0.7)
+        )
+
+        # Perform the analysis
+        result = await pr_confidence_analysis_service.analyze_pr_confidence(analysis_request)
+
+        # Log the analysis
+        fire_and_forget(
+            "info",
+            f"Completed PR confidence analysis: {result.workflow_id}",
+            SERVICE_NAME,
+            {
+                "workflow_id": result.workflow_id,
+                "confidence_score": result.confidence_score,
+                "confidence_level": result.confidence_level,
+                "approval_recommendation": result.approval_recommendation
+            }
+        )
+
+        return create_success_response(
+            "PR confidence analysis completed successfully",
+            {
+                "workflow_id": result.workflow_id,
+                "analysis_timestamp": result.analysis_timestamp,
+                "confidence_score": result.confidence_score,
+                "confidence_level": result.confidence_level,
+                "approval_recommendation": result.approval_recommendation,
+                "cross_reference_results": result.cross_reference_results,
+                "detected_gaps": result.detected_gaps,
+                "component_scores": result.component_scores,
+                "recommendations": result.recommendations,
+                "critical_concerns": result.critical_concerns,
+                "strengths": result.strengths,
+                "improvement_areas": result.improvement_areas,
+                "risk_assessment": result.risk_assessment,
+                "analysis_duration": result.analysis_duration
+            },
+            workflow_id=result.workflow_id,
+            confidence_score=result.confidence_score,
+            analysis_duration=result.analysis_duration
+        )
+
+    except Exception as e:
+        # Log the error
+        fire_and_forget(
+            "error",
+            f"PR confidence analysis failed",
+            SERVICE_NAME,
+            {"error": str(e), "request": str(req)}
+        )
+
+        return create_error_response(
+            f"PR confidence analysis failed: {str(e)}",
+            error_code=ErrorCodes.ANALYSIS_FAILED
+        )
+
+
+@app.get("/pr-confidence/history/{pr_id}")
+async def get_pr_analysis_history(pr_id: str):
+    """Get analysis history for a specific PR."""
+    try:
+        from .modules.pr_confidence_analysis import pr_confidence_analysis_service
+
+        history = await pr_confidence_analysis_service.get_pr_analysis_history(pr_id)
+
+        return create_success_response(
+            f"Retrieved analysis history for PR {pr_id}",
+            {"pr_id": pr_id, "history": history},
+            history_count=len(history)
+        )
+
+    except Exception as e:
+        return create_error_response(
+            f"Failed to retrieve PR analysis history: {str(e)}",
+            error_code=ErrorCodes.INTERNAL_ERROR
+        )
+
+
+@app.get("/pr-confidence/statistics")
+async def get_analysis_statistics():
+    """Get analysis statistics and metrics."""
+    try:
+        from .modules.pr_confidence_analysis import pr_confidence_analysis_service
+
+        stats = await pr_confidence_analysis_service.get_analysis_statistics()
+
+        return create_success_response(
+            "Retrieved analysis statistics",
+            stats
+        )
+
+    except Exception as e:
+        return create_error_response(
+            f"Failed to retrieve analysis statistics: {str(e)}",
+            error_code=ErrorCodes.INTERNAL_ERROR
+        )
+
+
 if __name__ == "__main__":
     """Run the Analysis Service directly."""
     import uvicorn

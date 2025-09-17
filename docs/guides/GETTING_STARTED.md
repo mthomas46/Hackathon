@@ -37,16 +37,25 @@ python -c "import fastapi, uvicorn, pydantic; print('✅ Dependencies installed 
 ### 3. Run Your First Service
 
 ```bash
-# Start the orchestrator (control plane)
-python services/orchestrator/main.py
+# Start the orchestrator (DDD architecture with 7 bounded contexts)
+python -m uvicorn services.orchestrator.main:app --host 0.0.0.0 --port 5099 --log-level info
 
 # In another terminal, test the service
-curl http://localhost:5099/health/system
+curl http://localhost:5099/health
+curl http://localhost:5099/api/v1/health/system
 ```
 
 **Expected output:**
 ```json
-{"success": true, "data": {"status": "healthy", "services": {...}}}
+{"service": "orchestrator", "status": "healthy", "version": "0.1.0"}
+```
+
+**DDD Architecture Test:**
+```bash
+# Test bounded contexts
+curl http://localhost:5099/api/v1/service-registry/services  # Service Registry
+curl http://localhost:5099/api/v1/workflows                  # Workflow Management
+curl http://localhost:5099/docs                               # API Documentation (Swagger UI)
 ```
 
 ## 🏗️ Development Environment Setup
@@ -55,7 +64,7 @@ curl http://localhost:5099/health/system
 
 ```bash
 # Terminal 1: Core services
-python services/orchestrator/main.py     # Port 5099 - Control plane
+python -m uvicorn services.orchestrator.main:app --host 0.0.0.0 --port 5099 --reload --log-level info  # Control plane (DDD)
 python services/doc_store/main.py        # Port 5087 - Document storage
 
 # Terminal 2: Data ingestion
@@ -65,6 +74,12 @@ python services/source-agent/main.py     # Port 5000 - Multi-source ingestion
 python services/analysis-service/main.py # Port 5020 - AI analysis
 python services/summarizer-hub/main.py   # Port 5060 - LLM providers
 ```
+
+**Orchestrator DDD Architecture:**
+- **7 Bounded Contexts**: Workflow Management, Service Registry, Health Monitoring, Infrastructure, Ingestion, Query Processing, Reporting
+- **55 API Endpoints** across all contexts
+- **Clean Architecture**: Domain → Application → Infrastructure → Presentation layers
+- **Comprehensive Testing**: 60+ test files covering all layers and contexts
 
 ### Option 2: Docker Compose (Recommended for Full Stack)
 
@@ -97,18 +112,40 @@ curl http://localhost:5000/health
 
 ### Run the Test Suite
 
+#### Standard Service Tests
 ```bash
 # Run all tests
 pytest
 
 # Run specific service tests
-pytest tests/unit/orchestrator/ -v
+pytest tests/unit/interpreter/ -v
+pytest tests/unit/doc_store/ -v
 
 # Run with verbose output
 pytest -v --tb=short
 
-# Run tests for a specific service
-pytest tests/unit/doc_store/ -v
+#### Orchestrator DDD Tests
+```bash
+# Run all orchestrator tests (DDD architecture)
+pytest tests/unit/orchestrator/ -v
+
+# Test specific bounded contexts
+pytest tests/unit/orchestrator/bounded_contexts/workflow_management/ -v
+pytest tests/unit/orchestrator/bounded_contexts/health_monitoring/ -v
+
+# Test individual layers
+pytest tests/unit/orchestrator/bounded_contexts/workflow_management/domain/ -v      # Domain logic
+pytest tests/unit/orchestrator/bounded_contexts/workflow_management/application/ -v # Use cases
+pytest tests/unit/orchestrator/bounded_contexts/workflow_management/infrastructure/ -v # Repositories
+
+# Integration tests (cross-context workflows)
+pytest tests/unit/orchestrator/integration/ -v
+
+# Quick validation using run_tests.py
+cd tests/unit/orchestrator && python run_tests.py
+
+# Run with coverage
+pytest tests/unit/orchestrator/ --cov=services.orchestrator --cov-report=html
 ```
 
 ### Test Core Functionality
