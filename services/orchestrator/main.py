@@ -17,10 +17,10 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 # Shared utilities
-from services.shared.health import register_health_endpoints
-from services.shared.error_handling import register_exception_handlers
-from services.shared.constants_new import ServiceNames
-from services.shared.utilities import setup_common_middleware, attach_self_register
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.utilities.error_handling import register_exception_handlers
+from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities.utilities import setup_common_middleware, attach_self_register
 
 # Infrastructure components
 from .infrastructure.persistence.in_memory import InMemoryWorkflowRepository, InMemoryWorkflowExecutionRepository
