@@ -1,21 +1,13 @@
 """Reporting Application Use Cases"""
 
 from typing import Optional, List, Dict, Any
-from abc import ABC, abstractmethod
+
 
 from .commands import GenerateReportCommand
 from .queries import GetReportQuery, ListReportsQuery
 
 
-class UseCase(ABC):
-    """Base use case class."""
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs):
-        """Execute the use case."""
-        pass
-
-
+from ...shared.application import UseCase
 class GenerateReportUseCase(UseCase):
     """Use case for generating reports."""
 

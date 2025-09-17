@@ -1,21 +1,13 @@
 """Ingestion Application Use Cases"""
 
 from typing import Optional, List, Dict, Any
-from abc import ABC, abstractmethod
+
 
 from .commands import StartIngestionCommand, CancelIngestionCommand, RetryIngestionCommand
 from .queries import GetIngestionStatusQuery, ListIngestionsQuery
 
 
-class UseCase(ABC):
-    """Base use case class."""
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs):
-        """Execute the use case."""
-        pass
-
-
+from ...shared.application import UseCase
 class StartIngestionUseCase(UseCase):
     """Use case for starting document ingestion."""
 

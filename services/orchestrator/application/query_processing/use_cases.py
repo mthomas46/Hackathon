@@ -1,21 +1,13 @@
 """Query Processing Application Use Cases"""
 
 from typing import Optional, List, Dict, Any
-from abc import ABC, abstractmethod
+
 
 from .commands import ProcessNaturalLanguageQueryCommand, ExecuteStructuredQueryCommand
 from .queries import GetQueryResultQuery, ListQueriesQuery
 
 
-class UseCase(ABC):
-    """Base use case class."""
-
-    @abstractmethod
-    async def execute(self, *args, **kwargs):
-        """Execute the use case."""
-        pass
-
-
+from ...shared.application import UseCase
 class ProcessNaturalLanguageQueryUseCase(UseCase):
     """Use case for processing natural language queries."""
 

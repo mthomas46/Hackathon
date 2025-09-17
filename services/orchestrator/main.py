@@ -62,36 +62,7 @@ from .application.query_processing.use_cases import (
     ProcessNaturalLanguageQueryUseCase, GetQueryResultUseCase, ListQueriesUseCase
 )
 
-# Presentation layer (API routes) - Optional for now
-try:
-    from .presentation.api.workflow_management.routes import router as workflow_router
-except ImportError:
-    workflow_router = None
-
-try:
-    from .presentation.api.health.routes import router as health_router
-except ImportError:
-    health_router = None
-
-try:
-    from .presentation.api.infrastructure.routes import router as infrastructure_router
-except ImportError:
-    infrastructure_router = None
-
-try:
-    from .presentation.api.ingestion.routes import router as ingestion_router
-except ImportError:
-    ingestion_router = None
-
-try:
-    from .presentation.api.reporting.routes import router as reporting_router
-except ImportError:
-    reporting_router = None
-
-try:
-    from .presentation.api.query_processing.routes import router as query_processing_router
-except ImportError:
-    query_processing_router = None
+# Presentation layer routers are registered dynamically below
 
 # Service configuration
 SERVICE_TITLE = "Orchestrator"
@@ -106,15 +77,25 @@ class OrchestratorContainer:
     """Dependency injection container for orchestrator service."""
 
     def __init__(self):
-        # Infrastructure layer
+        # Initialize all layers following DDD principles
+        self._init_infrastructure()
+        self._init_domain_services()
+        self._init_application_layer()
+
+    def _init_infrastructure(self):
+        """Initialize infrastructure layer components."""
         self.workflow_repository = InMemoryWorkflowRepository()
         self.execution_repository = InMemoryWorkflowExecutionRepository()
         self.service_repository = InMemoryServiceRepository()
         self.service_client = OrchestratorServiceClient()
 
-        # Domain services
+    def _init_domain_services(self):
+        """Initialize domain services for all bounded contexts."""
+        # Service Registry domain services
         self.service_discovery_service = ServiceDiscoveryService(_get_service_definitions())
         self.service_registration_service = ServiceRegistrationService()
+
+        # Health & Monitoring domain services
         self.health_check_service = HealthCheckService()
         self.system_monitoring_service = SystemMonitoringService(self.health_check_service)
 
@@ -124,32 +105,30 @@ class OrchestratorContainer:
         self.tracing_service = TracingService()
         self.event_streaming_service = EventStreamingService()
 
-        # Application layer - Workflow Management
+    def _init_application_layer(self):
+        """Initialize application layer use cases for all bounded contexts."""
+        # Workflow Management use cases
         from .domain.workflow_management.services.workflow_executor import WorkflowExecutor
         self.workflow_executor = WorkflowExecutor()
 
         self.create_workflow_use_case = CreateWorkflowUseCase(self.workflow_repository)
         self.execute_workflow_use_case = ExecuteWorkflowUseCase(
-            self.workflow_repository,
-            self.execution_repository,
-            self.workflow_executor
+            self.workflow_repository, self.execution_repository, self.workflow_executor
         )
         self.get_workflow_use_case = GetWorkflowUseCase(self.workflow_repository)
         self.list_workflows_use_case = ListWorkflowsUseCase(self.workflow_repository)
 
-        # Application layer - Service Registry
+        # Service Registry use cases
         self.register_service_use_case = RegisterServiceUseCase(self.service_registration_service)
         self.unregister_service_use_case = UnregisterServiceUseCase(self.service_registration_service)
         self.get_service_use_case = GetServiceUseCase(
-            self.service_discovery_service,
-            self.service_registration_service
+            self.service_discovery_service, self.service_registration_service
         )
         self.list_services_use_case = ListServicesUseCase(
-            self.service_discovery_service,
-            self.service_registration_service
+            self.service_discovery_service, self.service_registration_service
         )
 
-        # Application layer - Health Monitoring
+        # Health Monitoring use cases
         self.check_system_health_use_case = CheckSystemHealthUseCase(self.system_monitoring_service)
         self.check_service_health_use_case = CheckServiceHealthUseCase(self.health_check_service)
         self.get_system_health_use_case = GetSystemHealthUseCase(self.system_monitoring_service)
@@ -160,7 +139,7 @@ class OrchestratorContainer:
         self.check_system_readiness_use_case = CheckSystemReadinessUseCase(self.system_monitoring_service)
         self.health_list_workflows_use_case = HealthListWorkflowsUseCase()
 
-        # Application layer - Infrastructure
+        # Infrastructure use cases
         self.start_saga_use_case = StartSagaUseCase(self.saga_service)
         self.execute_saga_step_use_case = ExecuteSagaStepUseCase(self.saga_service)
         self.get_saga_use_case = GetSagaUseCase(self.saga_service)
@@ -174,17 +153,17 @@ class OrchestratorContainer:
         self.get_event_stream_stats_use_case = GetEventStreamStatsUseCase(self.event_streaming_service)
         self.publish_event_use_case = PublishEventUseCase(self.event_streaming_service)
 
-        # Application layer - Ingestion
+        # Ingestion use cases
         self.start_ingestion_use_case = StartIngestionUseCase()
         self.get_ingestion_status_use_case = GetIngestionStatusUseCase()
         self.list_ingestions_use_case = ListIngestionsUseCase()
 
-        # Application layer - Reporting
+        # Reporting use cases
         self.generate_report_use_case = GenerateReportUseCase()
         self.get_report_use_case = GetReportUseCase()
         self.list_reports_use_case = ListReportsUseCase()
 
-        # Application layer - Query Processing
+        # Query Processing use cases
         self.process_natural_language_query_use_case = ProcessNaturalLanguageQueryUseCase()
         self.get_query_result_use_case = GetQueryResultUseCase()
         self.list_queries_use_case = ListQueriesUseCase()
@@ -235,42 +214,32 @@ async def shutdown_event():
 # API ROUTE REGISTRATION - Clean separation by bounded contexts
 # ============================================================================
 
+def register_bounded_context_routers(app):
+    """Register API routers for all bounded contexts.
+
+    This function centralizes router registration to keep main.py clean
+    and follows DRY principles by avoiding repetitive try/except blocks.
+    """
+    routers = [
+        ("workflow_management", "/api/v1/workflows", ["Workflow Management"]),
+        ("health_monitoring", "/api/v1/health", ["Health & Monitoring"]),
+        ("infrastructure", "/api/v1/infrastructure", ["Infrastructure"]),
+        ("ingestion", "/api/v1/ingestion", ["Ingestion"]),
+        ("reporting", "/api/v1/reporting", ["Reporting"]),
+        ("query_processing", "/api/v1/queries", ["Query Processing"]),
+    ]
+
+    for module_name, prefix, tags in routers:
+        try:
+            module_path = f".presentation.api.{module_name}"
+            router = __import__(module_path, fromlist=["router"]).router
+            app.include_router(router, prefix=prefix, tags=tags)
+        except ImportError:
+            print(f"⚠️  {module_name.replace('_', ' ').title()} routes not available")
+
+
 # Register API routes by bounded context (DDD-based)
-try:
-    from .presentation.api.workflow_management import router as workflow_router
-    app.include_router(workflow_router, prefix="/api/v1/workflows", tags=["Workflow Management"])
-except ImportError:
-    print("⚠️  Workflow Management routes not available")
-
-try:
-    from .presentation.api.health_monitoring import router as health_router
-    app.include_router(health_router, prefix="/api/v1/health", tags=["Health & Monitoring"])
-except ImportError:
-    print("⚠️  Health Monitoring routes not available")
-
-try:
-    from .presentation.api.infrastructure import router as infrastructure_router
-    app.include_router(infrastructure_router, prefix="/api/v1/infrastructure", tags=["Infrastructure"])
-except ImportError:
-    print("⚠️  Infrastructure routes not available")
-
-try:
-    from .presentation.api.ingestion import router as ingestion_router
-    app.include_router(ingestion_router, prefix="/api/v1/ingestion", tags=["Ingestion"])
-except ImportError:
-    print("⚠️  Ingestion routes not available")
-
-try:
-    from .presentation.api.reporting import router as reporting_router
-    app.include_router(reporting_router, prefix="/api/v1/reporting", tags=["Reporting"])
-except ImportError:
-    print("⚠️  Reporting routes not available")
-
-try:
-    from .presentation.api.query_processing import router as query_processing_router
-    app.include_router(query_processing_router, prefix="/api/v1/queries", tags=["Query Processing"])
-except ImportError:
-    print("⚠️  Query Processing routes not available")
+register_bounded_context_routers(app)
 
 # Legacy route support (to be migrated)
 @app.get("/workflows")
