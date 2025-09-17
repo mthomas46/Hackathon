@@ -1,4 +1,58 @@
-"""Service Interfaces and Contracts - Dependency injection service definitions."""
+"""Service Interfaces and Contracts - Dependency injection service definitions.
+
+This module defines the core service interfaces and contracts used throughout
+the application for dependency injection. These interfaces provide clean
+contracts between service consumers and implementations, enabling loose
+coupling and testability.
+
+## Architecture
+
+The service interfaces follow clean architecture principles:
+
+- **Domain Services**: Core business logic interfaces (IAnalysisService, IDocumentService)
+- **Infrastructure Services**: External system interfaces (ICacheService, IEventPublisher)
+- **Application Services**: Cross-cutting concern interfaces (ILoggerService, IMetricsService)
+- **Repository Interfaces**: Data access abstractions (IAnalysisRepository, IDocumentRepository)
+
+## Interface Categories
+
+### Domain Service Interfaces
+Define contracts for core business operations and domain logic.
+
+### Infrastructure Service Interfaces
+Define contracts for external systems, databases, and third-party services.
+
+### Application Service Interfaces
+Define contracts for cross-cutting concerns like logging, caching, and monitoring.
+
+### Repository Interfaces
+Define contracts for data access patterns and persistence operations.
+
+## Usage
+
+```python
+# Implement interface
+class MyAnalysisService(IAnalysisService):
+    async def analyze_documents(self, targets: List[str], analysis_type: str, **kwargs) -> Dict[str, Any]:
+        # Implementation here
+        pass
+
+# Register with DI container
+container.register_singleton(IAnalysisService, MyAnalysisService)
+
+# Resolve and use
+analyzer = container.resolve(IAnalysisService)
+result = await analyzer.analyze_documents(targets, "consistency")
+```
+
+## Benefits
+
+- **Loose Coupling**: Components depend on interfaces, not implementations
+- **Testability**: Easy to mock interfaces for unit testing
+- **Maintainability**: Clear contracts make code easier to understand
+- **Flexibility**: Implementations can be swapped without changing consumers
+- **Type Safety**: Full type checking and IDE support
+"""
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional, Protocol, TypeVar, Generic, Union
@@ -9,14 +63,67 @@ T = TypeVar('T')
 
 # Domain Service Interfaces
 class IAnalysisService(Protocol):
-    """Analysis service interface."""
+    """Analysis service interface - Core business logic for document analysis.
+
+    This interface defines the contract for services that perform various types
+    of document analysis including consistency checking, quality assessment,
+    semantic similarity analysis, and trend analysis.
+
+    The service handles both synchronous and asynchronous analysis operations,
+    providing status tracking and result retrieval capabilities.
+    """
 
     async def analyze_documents(self, targets: List[str], analysis_type: str, **kwargs) -> Dict[str, Any]:
-        """Analyze documents."""
+        """Analyze documents using specified analysis type.
+
+        Performs comprehensive analysis on the specified documents based on
+        the analysis type requested. Supports various analysis types including
+        consistency checking, semantic similarity, quality assessment, etc.
+
+        Args:
+            targets: List of document IDs or identifiers to analyze
+            analysis_type: Type of analysis to perform (e.g., "consistency", "semantic", "quality")
+            **kwargs: Additional analysis-specific parameters
+
+        Returns:
+            Dictionary containing analysis results with the following structure:
+            {
+                "analysis_id": str,
+                "status": str,
+                "results": Dict[str, Any],
+                "execution_time": float,
+                "error_message": Optional[str]
+            }
+
+        Raises:
+            ValueError: If analysis type is not supported or targets are invalid
+            RuntimeError: If analysis fails due to system errors
+        """
         ...
 
     async def get_analysis_status(self, analysis_id: str) -> Dict[str, Any]:
-        """Get analysis status."""
+        """Get the current status of an analysis operation.
+
+        Retrieves the current state and progress of a running or completed
+        analysis operation. Useful for monitoring long-running analyses.
+
+        Args:
+            analysis_id: Unique identifier of the analysis operation
+
+        Returns:
+            Dictionary containing status information:
+            {
+                "analysis_id": str,
+                "status": str,  # "pending", "running", "completed", "failed"
+                "progress": float,  # 0.0 to 1.0
+                "start_time": datetime,
+                "estimated_completion": Optional[datetime],
+                "error_message": Optional[str]
+            }
+
+        Raises:
+            ValueError: If analysis_id is not found
+        """
         ...
 
 
@@ -54,22 +161,79 @@ class IRepositoryService(Protocol):
 
 # Infrastructure Service Interfaces
 class ICacheService(Protocol):
-    """Cache service interface."""
+    """Cache service interface - High-performance caching abstraction.
+
+    This interface defines the contract for caching services that provide
+    fast access to frequently used data. Implementations may use Redis,
+    in-memory cache, or other caching backends.
+
+    The cache service supports TTL (time-to-live) for automatic expiration
+    and provides both synchronous and asynchronous operations.
+    """
 
     async def get(self, key: str) -> Optional[Any]:
-        """Get value from cache."""
+        """Get value from cache by key.
+
+        Retrieves a cached value if it exists and hasn't expired.
+        Returns None if the key doesn't exist or has expired.
+
+        Args:
+            key: Cache key to retrieve
+
+        Returns:
+            Cached value if found, None otherwise
+
+        Raises:
+            RuntimeError: If cache backend is unavailable
+        """
         ...
 
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
-        """Set value in cache."""
+        """Set value in cache with optional TTL.
+
+        Stores a value in the cache with an optional time-to-live.
+        If TTL is specified, the value will automatically expire after
+        the specified number of seconds.
+
+        Args:
+            key: Cache key to store under
+            value: Value to cache (must be serializable)
+            ttl: Optional time-to-live in seconds
+
+        Raises:
+            RuntimeError: If cache backend is unavailable
+            ValueError: If value cannot be serialized
+        """
         ...
 
     async def delete(self, key: str) -> None:
-        """Delete value from cache."""
+        """Delete value from cache.
+
+        Removes a value from the cache if it exists.
+
+        Args:
+            key: Cache key to delete
+
+        Raises:
+            RuntimeError: If cache backend is unavailable
+        """
         ...
 
     async def exists(self, key: str) -> bool:
-        """Check if key exists in cache."""
+        """Check if key exists in cache.
+
+        Returns True if the key exists and hasn't expired,
+        False otherwise.
+
+        Args:
+            key: Cache key to check
+
+        Returns:
+            True if key exists, False otherwise
+
+        Raises:
+            RuntimeError: If cache backend is unavailable
+        """
         ...
 
 
@@ -86,26 +250,75 @@ class IEventPublisher(Protocol):
 
 
 class ILoggerService(Protocol):
-    """Logger service interface."""
+    """Logger service interface - Structured logging abstraction.
+
+    This interface defines the contract for logging services that provide
+    structured logging capabilities. Implementations may use different
+    logging backends (files, databases, external services) while maintaining
+    a consistent logging API.
+
+    The logger supports different log levels and structured data through
+    keyword arguments, enabling rich contextual information in log entries.
+    """
 
     def debug(self, message: str, **kwargs) -> None:
-        """Log debug message."""
+        """Log debug message with optional structured data.
+
+        Debug messages are typically used for detailed troubleshooting
+        information that's useful during development and debugging.
+
+        Args:
+            message: Log message
+            **kwargs: Structured data to include in the log entry
+        """
         ...
 
     def info(self, message: str, **kwargs) -> None:
-        """Log info message."""
+        """Log info message with optional structured data.
+
+        Info messages are used for general information about application
+        operation, such as startup events, successful operations, etc.
+
+        Args:
+            message: Log message
+            **kwargs: Structured data to include in the log entry
+        """
         ...
 
     def warning(self, message: str, **kwargs) -> None:
-        """Log warning message."""
+        """Log warning message with optional structured data.
+
+        Warning messages indicate potential issues that don't prevent
+        operation but should be investigated.
+
+        Args:
+            message: Log message
+            **kwargs: Structured data to include in the log entry
+        """
         ...
 
     def error(self, message: str, **kwargs) -> None:
-        """Log error message."""
+        """Log error message with optional structured data.
+
+        Error messages indicate failures that affect operation but
+        don't necessarily cause application shutdown.
+
+        Args:
+            message: Log message
+            **kwargs: Structured data to include in the log entry
+        """
         ...
 
     def critical(self, message: str, **kwargs) -> None:
-        """Log critical message."""
+        """Log critical message with optional structured data.
+
+        Critical messages indicate severe failures that may require
+        immediate attention and could cause application instability.
+
+        Args:
+            message: Log message
+            **kwargs: Structured data to include in the log entry
+        """
         ...
 
 
