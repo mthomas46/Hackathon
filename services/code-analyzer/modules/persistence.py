@@ -25,7 +25,7 @@ async def persist_analysis_result(result: Dict[str, Any]) -> None:
     ds = os.environ.get("DOC_STORE_URL")
     if ds:
         try:
-            from services.shared.clients import ServiceClients  # type: ignore
+            from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
             svc = ServiceClients(timeout=10)
             await svc.post_json(f"{ds}/documents/enveloped", result)
         except Exception:

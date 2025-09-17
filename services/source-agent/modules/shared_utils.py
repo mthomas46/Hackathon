@@ -9,13 +9,13 @@ import re
 from typing import Dict, Any, Optional, List
 from fastapi import HTTPException
 from services.shared.utilities import utc_now, generate_id, clean_string, stable_hash
-from services.shared.logging import fire_and_forget
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException
-from services.shared.constants_new import ErrorCodes, ServiceNames
-from services.shared.models import Document
-from services.shared.credentials import get_secret as get_secret
-from services.shared.config import get_config_value
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.models.models import Document
+from services.shared.auth.credentials import get_secret as get_secret
+from services.shared.core.config.config import get_config_value
 
 
 def sanitize_for_response(text: str) -> str:

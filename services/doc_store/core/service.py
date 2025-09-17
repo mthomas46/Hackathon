@@ -5,8 +5,8 @@ Provides common validation, error handling, and business rule patterns.
 import uuid
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, TypeVar, Generic
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException
 from .entities import BaseEntity
 
 T = TypeVar('T', bound=BaseEntity)

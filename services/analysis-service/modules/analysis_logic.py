@@ -6,7 +6,19 @@ extracted from the main analysis service to improve maintainability.
 
 import re
 from typing import List, Dict, Any, Set
-from services.shared.models import Document, Finding
+try:
+    from services.shared.core.models.models import Document, Finding
+except ImportError:
+    # Fallback for testing or when shared services are not available
+    class Document:
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    class Finding:
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
 
 # Import shared utilities for consistency across analysis modules
 from .shared_utils import (

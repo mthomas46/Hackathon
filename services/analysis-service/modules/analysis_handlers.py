@@ -1,221 +1,405 @@
-"""Analysis handlers for Analysis Service.
+"""Analysis Handlers - Refactored handler delegation.
 
-Handles the complex logic for analysis endpoints.
+This module now delegates to the refactored handler system for improved maintainability.
+The original 1969+ line monolithic implementation has been broken down into focused
+handler modules in the handlers/ package.
 """
-import os
-from typing import List, Dict, Any
 
-try:
-    import redis.asyncio as aioredis
-except Exception:
-    aioredis = None
+import logging
+from typing import Any
+from .handlers import handler_registry
 
-from services.shared.models import Document, Finding
-from services.shared.utilities import get_service_client
-
-from .analysis_logic import detect_readme_drift, detect_api_mismatches
-from .models import FindingsResponse
-from .shared_utils import build_analysis_context, handle_analysis_error, get_analysis_service_client
+logger = logging.getLogger(__name__)
 
 
 class AnalysisHandlers:
-    """Handles analysis operations."""
+    """Delegates analysis operations to refactored handlers."""
 
     @staticmethod
-    async def handle_analyze_documents(req) -> FindingsResponse:
-        """Analyze documents for consistency and issues."""
-        findings = []
-
-        try:
-            # Fetch target documents
-            docs = []
-            apis = []
-
-            service_client = get_analysis_service_client()
-
-            for target_id in req.targets:
-                if target_id.startswith("doc:"):
-                    # Fetch from doc_store
-                    doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
-                    if doc_data:
-                        docs.append(Document(**doc_data))
-                elif target_id.startswith("api:"):
-                    # Fetch from swagger-agent or similar
-                    api_data = await service_client.get_json(f"{service_client.source_agent_url()}/specs/{target_id}")
-                    if api_data:
-                        apis.append(api_data)
-
-            # Run analysis based on type
-            if req.analysis_type == "consistency":
-                findings.extend(detect_readme_drift(docs))
-                findings.extend(detect_api_mismatches(docs, apis))
-            elif req.analysis_type == "combined":
-                findings.extend(detect_readme_drift(docs))
-                findings.extend(detect_api_mismatches(docs, apis))
-                # Add more analysis types as needed
-
-            # Publish findings event
-            if aioredis and findings:
-                from services.shared.config import get_config_value
-                redis_host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
-                client = aioredis.from_url(f"redis://{redis_host}")
-                try:
-                    await client.publish("findings.created", {
-                        "correlation_id": getattr(req, 'correlation_id', None),
-                        "count": len(findings),
-                        "severity_counts": {
-                            sev: len([f for f in findings if f.severity == sev])
-                            for sev in ["critical", "high", "medium", "low"]
-                        }
-                    })
-                finally:
-                    await client.aclose()
-
-            return FindingsResponse(
-                findings=findings,
-                count=len(findings),
-                severity_counts={
-                    sev: len([f for f in findings if f.severity == sev])
-                    for sev in ["critical", "high", "medium", "low"]
-                },
-                type_counts={
-                    typ: len([f for f in findings if f.type == typ])
-                    for typ in set(f.type for f in findings)
-                }
-            )
-
-        except Exception as e:
-            # In test mode, return a mock response instead of raising an error
-            if os.environ.get("TESTING", "").lower() == "true":
-                return FindingsResponse(
-                    findings=[
-                        Finding(
-                            id="test-finding",
-                            type="drift",
-                            title="Test Finding",
-                            description="Mock finding for testing",
-                            severity="medium",
-                            source_refs=[{"id": "test", "type": "document"}],
-                            evidence=["Mock evidence"],
-                            suggestion="Test suggestion",
-                            score=50,
-                            rationale="Mock rationale"
-                        )
-                    ],
-                    count=1,
-                    severity_counts={"medium": 1},
-                    type_counts={"drift": 1}
-                )
-
-            from services.shared.error_handling import ServiceException
-            raise ServiceException(
-                "Analysis failed",
-                error_code="ANALYSIS_FAILED",
-                details={"error": str(e), "request": req.model_dump()}
-            )
+    async def handle_analyze_documents(req) -> Any:
+        """Analyze documents for consistency and issues - delegates to semantic similarity handler."""
+        handler = handler_registry.get_handler("semantic_similarity")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No semantic similarity handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
 
     @staticmethod
-    async def handle_get_findings(limit: int = 100, severity: str = None, finding_type_filter: str = None) -> FindingsResponse:
-        """Get findings with optional filtering."""
-        # Validate query parameters
-        if limit < 1 or limit > 1000:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
-
-        if severity is not None and severity not in ["low", "medium", "high", "critical"]:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=400, detail="Severity must be one of: low, medium, high, critical")
-
-        if finding_type_filter is not None and finding_type_filter not in ["drift", "missing_doc", "inconsistency", "quality"]:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=400, detail="Finding type filter must be one of: drift, missing_doc, inconsistency, quality")
-
-        try:
-            # In a real implementation, this would query a database
-            # For now, return mock findings
-            findings = [
-                Finding(
-                    id="drift:readme:api",
-                    type="drift",
-                    title="Documentation Drift Detected",
-                    description="README and API docs are out of sync",
-                    severity="medium",
-                    source_refs=[{"id": "readme:main", "type": "document"}, {"id": "api:docs", "type": "document"}],
-                    evidence=["Content overlap below threshold", "Endpoint descriptions differ"],
-                    suggestion="Review and synchronize documentation",
-                    score=70,
-                    rationale="Documentation drift can lead to confusion and maintenance issues"
-                ),
-                Finding(
-                    id="missing:endpoint",
-                    type="missing_doc",
-                    title="Undocumented Endpoint",
-                    description="POST /orders endpoint is not documented",
-                    severity="high",
-                    source_refs=[{"id": "POST /orders", "type": "endpoint"}],
-                    evidence=["Endpoint exists in API spec", "No corresponding documentation found"],
-                    suggestion="Add documentation for this endpoint",
-                    score=90,
-                    rationale="Undocumented endpoints create usability and maintenance issues"
-                )
-            ]
-
-            # Apply filters
-            if severity:
-                findings = [f for f in findings if f.severity == severity]
-            if finding_type_filter:
-                findings = [f for f in findings if f.type == finding_type_filter]
-
-            findings = findings[:limit]
-
-            return FindingsResponse(
-                findings=findings,
-                count=len(findings),
-                severity_counts={
-                    sev: len([f for f in findings if f.severity == sev])
-                    for sev in ["critical", "high", "medium", "low"]
-                },
-                type_counts={
-                    typ: len([f for f in findings if f.type == typ])
-                    for typ in set(f.type for f in findings)
-                }
-            )
-
-        except Exception as e:
-            from services.shared.error_handling import ServiceException
-            raise ServiceException(
-                "Failed to retrieve findings",
-                error_code="FINDINGS_RETRIEVAL_FAILED",
-                details={"error": str(e), "limit": limit, "type_filter": finding_type_filter}
-            )
+    async def handle_semantic_similarity_analysis(req):
+        """Handle semantic similarity analysis."""
+        handler = handler_registry.get_handler("semantic_similarity")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No semantic similarity handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
 
     @staticmethod
-    def handle_list_detectors() -> Dict[str, Any]:
-        """List available analysis detectors."""
-        return {
-            "detectors": [
-                {
-                    "name": "readme_drift",
-                    "description": "Detect drift between README and other documentation",
-                    "severity_levels": ["low", "medium", "high"],
-                    "confidence_threshold": 0.7
-                },
-                {
-                    "name": "api_mismatch",
-                    "description": "Detect mismatches between API docs and implementation",
-                    "severity_levels": ["medium", "high", "critical"],
-                    "confidence_threshold": 0.8
-                },
-                {
-                    "name": "consistency_check",
-                    "description": "General consistency analysis across documents",
-                    "severity_levels": ["low", "medium", "high"],
-                    "confidence_threshold": 0.6
-                }
-            ],
-            "total_detectors": 3
-        }
+    async def handle_sentiment_analysis(req):
+        """Handle sentiment analysis."""
+        handler = handler_registry.get_handler("sentiment_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No sentiment analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
 
+    @staticmethod
+    async def handle_tone_analysis(req):
+        """Handle tone analysis."""
+        handler = handler_registry.get_handler("sentiment_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No sentiment analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
 
-# Create singleton instance
-analysis_handlers = AnalysisHandlers()
+    @staticmethod
+    async def handle_content_quality_assessment(req):
+        """Handle content quality assessment."""
+        handler = handler_registry.get_handler("quality_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No quality analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_trend_analysis(req):
+        """Handle trend analysis."""
+        handler = handler_registry.get_handler("trend_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No trend analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_portfolio_trend_analysis(req):
+        """Handle portfolio trend analysis."""
+        handler = handler_registry.get_handler("portfolio_trend_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No portfolio trend analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_risk_assessment(req):
+        """Handle risk assessment."""
+        handler = handler_registry.get_handler("risk_assessment")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No risk assessment handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_portfolio_risk_assessment(req):
+        """Handle portfolio risk assessment."""
+        handler = handler_registry.get_handler("portfolio_risk_assessment")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No portfolio risk assessment handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_maintenance_forecast(req):
+        """Handle maintenance forecast."""
+        handler = handler_registry.get_handler("maintenance_forecast")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No maintenance forecast handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_portfolio_maintenance_forecast(req):
+        """Handle portfolio maintenance forecast."""
+        handler = handler_registry.get_handler("portfolio_maintenance_forecast")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No portfolio maintenance forecast handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_quality_degradation_detection(req):
+        """Handle quality degradation detection."""
+        # Use trend analysis for degradation detection
+        handler = handler_registry.get_handler("trend_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No trend analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_portfolio_quality_degradation(req):
+        """Handle portfolio quality degradation detection."""
+        # Use portfolio trend analysis for degradation detection
+        handler = handler_registry.get_handler("portfolio_trend_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No portfolio trend analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_change_impact_analysis(req):
+        """Handle change impact analysis."""
+        handler = handler_registry.get_handler("impact_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No impact analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_portfolio_change_impact_analysis(req):
+        """Handle portfolio change impact analysis."""
+        handler = handler_registry.get_handler("impact_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No impact analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_automated_remediation(req):
+        """Handle automated remediation."""
+        handler = handler_registry.get_handler("remediation")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No remediation handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_remediation_preview(req):
+        """Handle remediation preview."""
+        handler = handler_registry.get_handler("remediation")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No remediation handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_workflow_event(req):
+        """Handle workflow event."""
+        handler = handler_registry.get_handler("workflow_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No workflow analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_workflow_status(req):
+        """Handle workflow status request."""
+        # This could be handled by a dedicated workflow handler
+        handler = handler_registry.get_handler("workflow_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No workflow analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_workflow_queue_status(req):
+        """Handle workflow queue status request."""
+        # This could be handled by a dedicated workflow handler
+        handler = handler_registry.get_handler("workflow_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No workflow analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_webhook_config(req):
+        """Handle webhook configuration."""
+        # This could be handled by a dedicated workflow handler
+        handler = handler_registry.get_handler("workflow_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No workflow analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_cross_repository_analysis(req):
+        """Handle cross-repository analysis."""
+        handler = handler_registry.get_handler("cross_repository_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No cross-repository analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_repository_connectivity(req):
+        """Handle repository connectivity analysis."""
+        # This could be handled by a dedicated repository handler
+        handler = handler_registry.get_handler("cross_repository_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No cross-repository analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_repository_connector_config(req):
+        """Handle repository connector configuration."""
+        # This could be handled by a dedicated repository handler
+        handler = handler_registry.get_handler("cross_repository_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No cross-repository analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
+
+    @staticmethod
+    async def handle_supported_connectors():
+        """Handle supported connectors request."""
+        # This could be handled by a dedicated repository handler
+        handler = handler_registry.get_handler("cross_repository_analysis")
+        if handler:
+            return await handler.handle({"type": "connectors_request"})
+        else:
+            logger.error("No cross-repository analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"connectors-{id({})}"}
+
+    @staticmethod
+    async def handle_analysis_frameworks():
+        """Handle analysis frameworks request."""
+        # This could be handled by a dedicated system handler
+        handler = handler_registry.get_handler("cross_repository_analysis")
+        if handler:
+            return await handler.handle({"type": "frameworks_request"})
+        else:
+            logger.error("No cross-repository analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"frameworks-{id({})}"}
+
+    @staticmethod
+    async def handle_submit_distributed_task(req):
+        """Handle distributed task submission."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"distributed-{id(req)}"}
+
+    @staticmethod
+    async def handle_submit_batch_tasks(req):
+        """Handle batch tasks submission."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"batch-{id(req)}"}
+
+    @staticmethod
+    async def handle_get_task_status(req):
+        """Handle task status request."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"status-{id(req)}"}
+
+    @staticmethod
+    async def handle_cancel_task(req):
+        """Handle task cancellation."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"cancel-{id(req)}"}
+
+    @staticmethod
+    async def handle_get_workers_status():
+        """Handle workers status request."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle({"type": "workers_status"})
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"workers-{id({})}"}
+
+    @staticmethod
+    async def handle_get_processing_stats():
+        """Handle processing statistics request."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle({"type": "processing_stats"})
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"stats-{id({})}"}
+
+    @staticmethod
+    async def handle_scale_workers(req):
+        """Handle worker scaling."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"scale-{id(req)}"}
+
+    @staticmethod
+    async def handle_start_processing():
+        """Handle start processing request."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle({"type": "start_processing"})
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"start-{id({})}"}
+
+    @staticmethod
+    async def handle_set_load_balancing_strategy(req):
+        """Handle load balancing strategy configuration."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"strategy-{id(req)}"}
+
+    @staticmethod
+    async def handle_get_queue_status():
+        """Handle queue status request."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle({"type": "queue_status"})
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"queue-{id({})}"}
+
+    @staticmethod
+    async def handle_configure_load_balancing(req):
+        """Handle load balancing configuration."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle(req)
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"config-{id(req)}"}
+
+    @staticmethod
+    async def handle_get_load_balancing_config():
+        """Handle load balancing configuration retrieval."""
+        handler = handler_registry.get_handler("distributed_analysis")
+        if handler:
+            return await handler.handle({"type": "get_load_balancing_config"})
+        else:
+            logger.error("No distributed analysis handler available")
+            return {"error": "Handler not available", "analysis_id": f"get-config-{id({})}"}

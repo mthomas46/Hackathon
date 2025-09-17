@@ -4,7 +4,7 @@ Consolidated route definitions for all endpoints.
 """
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, Dict, Any, List
-from services.shared.responses import SuccessResponse
+from services.shared.core.responses.responses import SuccessResponse
 
 # Import handlers from domains
 from ..domain.documents.handlers import document_handlers
