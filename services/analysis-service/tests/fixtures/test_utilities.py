@@ -3,7 +3,7 @@
 import asyncio
 import time
 from unittest.mock import Mock, AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional, Callable, TypeVar
+from typing import Dict, Any, List, Optional, Callable, TypeVar, Union, Type, Awaitable, Iterator, AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import json
@@ -228,10 +228,10 @@ class AsyncMockHelper:
 class TestDataBuilder:
     """Builder for creating test data structures."""
 
-    def __init__(self):
-        self.data = {}
+    def __init__(self) -> None:
+        self.data: Dict[str, Any] = {}
 
-    def with_document(self, **kwargs) -> 'TestDataBuilder':
+    def with_document(self, **kwargs: Any) -> 'TestDataBuilder':
         """Add document data to builder."""
         default_doc = {
             'id': 'test-doc-123',
@@ -314,11 +314,11 @@ class TestDataBuilder:
 class PerformanceMonitor:
     """Monitor performance of test operations."""
 
-    def __init__(self):
-        self.start_time = None
-        self.measurements = []
+    def __init__(self) -> None:
+        self.start_time: Optional[float] = None
+        self.measurements: List[float] = []
 
-    def start(self):
+    def start(self) -> None:
         """Start performance measurement."""
         self.start_time = time.time()
 
@@ -327,17 +327,17 @@ class PerformanceMonitor:
         if self.start_time is None:
             return 0.0
 
-        elapsed = time.time() - self.start_time
+        elapsed: float = time.time() - self.start_time
         self.measurements.append(elapsed)
         self.start_time = None
         return elapsed
 
-    def measure_async(self, coro) -> tuple:
+    def measure_async(self, coro: Awaitable[Any]) -> Awaitable[Tuple[Any, float]]:
         """Measure the performance of an async coroutine."""
-        async def _measure():
-            start = time.time()
-            result = await coro
-            elapsed = time.time() - start
+        async def _measure() -> Tuple[Any, float]:
+            start: float = time.time()
+            result: Any = await coro
+            elapsed: float = time.time() - start
             self.measurements.append(elapsed)
             return result, elapsed
 
@@ -356,14 +356,14 @@ class PerformanceMonitor:
             'max': max(self.measurements)
         }
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset measurements."""
         self.measurements = []
         self.start_time = None
 
 
 @asynccontextmanager
-async def mock_database_session():
+async def mock_database_session() -> AsyncIterator[Any]:
     """Context manager for mocking database sessions."""
     mock_session = Mock()
     mock_session.commit = AsyncMock()
@@ -377,7 +377,7 @@ async def mock_database_session():
 
 
 @asynccontextmanager
-async def mock_external_service(service_name: str, response_data: Any = None):
+async def mock_external_service(service_name: str, response_data: Any = None) -> AsyncIterator[Any]:
     """Context manager for mocking external services."""
     if response_data is None:
         response_data = {'status': 'success', 'data': f'mock_{service_name}_response'}
@@ -401,10 +401,12 @@ async def mock_external_service(service_name: str, response_data: Any = None):
 class TestScenarioRunner:
     """Runner for complex test scenarios."""
 
-    def __init__(self):
-        self.scenarios = {}
+    def __init__(self) -> None:
+        self.scenarios: Dict[str, Dict[str, Any]] = {}
 
-    def add_scenario(self, name: str, steps: List[Callable], setup: Callable = None, teardown: Callable = None):
+    def add_scenario(self, name: str, steps: List[Callable[..., Awaitable[Any]]],
+                    setup: Optional[Callable[..., Awaitable[Any]]] = None,
+                    teardown: Optional[Callable[..., Awaitable[Any]]] = None) -> None:
         """Add a test scenario."""
         self.scenarios[name] = {
             'steps': steps,
@@ -412,20 +414,20 @@ class TestScenarioRunner:
             'teardown': teardown
         }
 
-    async def run_scenario(self, name: str, **kwargs) -> Dict[str, Any]:
+    async def run_scenario(self, name: str, **kwargs: Any) -> Dict[str, Any]:
         """Run a test scenario."""
         if name not in self.scenarios:
             raise ValueError(f"Scenario '{name}' not found")
 
         scenario = self.scenarios[name]
-        results = {
+        results: Dict[str, Any] = {
             'scenario': name,
             'steps_executed': [],
             'errors': [],
             'duration': 0.0
         }
 
-        start_time = time.time()
+        start_time: float = time.time()
 
         try:
             # Setup
@@ -434,7 +436,7 @@ class TestScenarioRunner:
 
             # Execute steps
             for i, step in enumerate(scenario['steps']):
-                step_name = f'step_{i}'
+                step_name: str = f'step_{i}'
                 try:
                     await step(**kwargs)
                     results['steps_executed'].append(step_name)
