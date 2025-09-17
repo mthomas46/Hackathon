@@ -36,6 +36,11 @@ from .presentation.controllers import (
 )
 
 # ============================================================================
+# COMPATIBILITY LAYER - Backward compatibility for existing clients
+# ============================================================================
+from .presentation.compatibility_layer import register_compatibility_endpoints
+
+# ============================================================================
 # DEPENDENCY INJECTION - Clean dependency management
 # ============================================================================
 from .infrastructure.repositories import SQLiteDocumentRepository, SQLiteAnalysisRepository, SQLiteFindingRepository
@@ -100,25 +105,31 @@ def create_application() -> FastAPI:
         analysis_repository=analysis_repository
     )
 
-    # ============================================================================
-    # CONTROLLER INITIALIZATION
-    # ============================================================================
-    # Initialize controllers with their dependencies
-    analysis_controller = AnalysisController(
-        perform_analysis_use_case=perform_analysis_use_case,
-        document_repository=document_repository,
-        analysis_repository=analysis_repository,
-        analysis_service=analysis_service
-    )
+           # ============================================================================
+           # CONTROLLER INITIALIZATION
+           # ============================================================================
+           # Initialize controllers with their dependencies
+           analysis_controller = AnalysisController(
+               perform_analysis_use_case=perform_analysis_use_case,
+               document_repository=document_repository,
+               analysis_repository=analysis_repository,
+               analysis_service=analysis_service
+           )
 
-    remediation_controller = RemediationController()
-    workflow_controller = WorkflowController()
-    repository_controller = RepositoryController()
-    distributed_controller = DistributedController()
-    reports_controller = ReportsController()
-    findings_controller = FindingsController()
-    integration_controller = IntegrationController()
-    pr_confidence_controller = PRConfidenceController()
+           remediation_controller = RemediationController()
+           workflow_controller = WorkflowController()
+           repository_controller = RepositoryController()
+           distributed_controller = DistributedController()
+           reports_controller = ReportsController()
+           findings_controller = FindingsController()
+           integration_controller = IntegrationController()
+           pr_confidence_controller = PRConfidenceController()
+
+           # ============================================================================
+           # COMPATIBILITY LAYER REGISTRATION
+           # ============================================================================
+           # Register backward compatibility endpoints
+           register_compatibility_endpoints(app)
 
     # ============================================================================
     # ROUTER REGISTRATION - Clean endpoint organization

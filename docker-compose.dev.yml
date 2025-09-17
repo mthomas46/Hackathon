@@ -138,12 +138,17 @@ services:
     volumes:
       - ./:/app:ro
       - ./config.yml:/app/config.yml:ro
+      - ./config/app.yaml:/app/config/app.yaml:ro
+      - ./config/ddd_config.yaml:/app/config/ddd_config.yaml:ro
       - ./services/analysis-service/config.yaml:/app/services/analysis-service/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/analysis-service/main.py"
+      # DDD-specific environment variables
+      - DDD_ARCHITECTURE=true
+      - DDD_CONFIG_FILE=config/ddd_config.yaml
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis sentence-transformers faiss-cpu textblob && python services/analysis-service/main_new.py"
     ports:
       - "5020:5020"
     depends_on:
