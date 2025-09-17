@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Dict, Any, List, Optional, Callable
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
 from ...infrastructure.cache import prompt_store_cache
 

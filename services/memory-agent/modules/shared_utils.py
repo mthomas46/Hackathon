@@ -11,11 +11,11 @@ from datetime import datetime, timezone, timedelta
 
 # Import shared utilities
 from services.shared.utilities import utc_now, generate_id
-from services.shared.logging import fire_and_forget
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException
-from services.shared.constants_new import ErrorCodes, ServiceNames
-from services.shared.models import MemoryItem
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.models.models import MemoryItem
 
 # Global configuration for memory agent
 _MEMORY_MAX_ITEMS = int(os.environ.get("MEMORY_MAX_ITEMS", "1000"))

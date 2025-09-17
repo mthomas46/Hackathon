@@ -19,10 +19,18 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
-from services.shared.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
-from .modules.log_storage import log_storage
-from .modules.log_stats import calculate_log_statistics
+try:
+    from .modules.log_storage import log_storage
+    from .modules.log_stats import calculate_log_statistics
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.log_storage import log_storage
+    from modules.log_stats import calculate_log_statistics
 
 # Service configuration constants
 SERVICE_NAME = "log-collector"

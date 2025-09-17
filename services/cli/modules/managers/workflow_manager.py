@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional
 from rich.console import Console
 from rich.prompt import Prompt
 
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 
 from ..base.base_manager import BaseManager
 

@@ -5,7 +5,7 @@ extracted from the main source-agent service to improve maintainability.
 """
 
 from typing import List, Optional
-from services.shared.models import Document
+from services.shared.core.models.models import Document
 from services.shared.utilities import utc_now
 
 # Import shared utilities from main service module

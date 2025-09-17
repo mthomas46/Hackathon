@@ -1,0 +1,99 @@
+# Human-Readable Reporting Configuration
+# Configure how analysis results are presented to different audiences
+
+reporting:
+  enabled: true
+  default_preset: "comprehensive"
+
+  # Available presets
+  presets:
+    minimal:
+      description: "JSON results only - no additional reports"
+      generate_human_readable: false
+      perspectives: []
+      output_formats: []
+      output_dir: "reports/minimal"
+
+    developer_focus:
+      description: "Technical details for developers"
+      generate_human_readable: true
+      perspectives: ["developer"]
+      output_formats: ["markdown"]
+      output_dir: "reports/developer"
+
+    management_focus:
+      description: "Business-focused reports for managers"
+      generate_human_readable: true
+      perspectives: ["project_manager"]
+      output_formats: ["markdown"]
+      output_dir: "reports/management"
+
+    comprehensive:
+      description: "Full reports for all stakeholders"
+      generate_human_readable: true
+      perspectives: ["developer", "project_manager"]
+      output_formats: ["markdown", "html"]
+      output_dir: "reports/comprehensive"
+
+    enterprise:
+      description: "Enterprise-grade reporting with all options"
+      generate_human_readable: true
+      perspectives: ["developer", "project_manager", "executive"]
+      output_formats: ["markdown", "html", "json"]
+      output_dir: "reports/enterprise"
+      include_metadata: true
+      include_performance_metrics: true
+
+  # Global settings
+  global:
+    include_timestamp: true
+    include_workflow_id: true
+    include_confidence_metrics: true
+    auto_generate_filename: true
+    filename_pattern: "{workflow_type}_{workflow_id}_{timestamp}"
+
+  # Output customization
+  formatting:
+    markdown:
+      include_toc: true
+      include_executive_summary: true
+      use_emojis: true
+      color_scheme: "professional"
+
+    html:
+      include_css: true
+      responsive_design: true
+      include_charts: false
+      theme: "corporate"
+
+    json:
+      pretty_print: true
+      include_comments: false
+      flatten_structure: false
+
+  # Integration settings
+  integration:
+    auto_attach_to_workflow: true
+    save_with_analysis_results: true
+    notify_stakeholders: false
+    retention_policy: "keep_all"
+
+  # Stakeholder-specific customizations
+  stakeholders:
+    developer:
+      priority_sections: ["technical_assessment", "code_quality", "testing_recommendations"]
+      include_technical_details: true
+      include_implementation_notes: true
+      verbosity_level: "detailed"
+
+    project_manager:
+      priority_sections: ["business_impact", "acceptance_criteria", "risk_assessment"]
+      include_timeline_info: true
+      include_resource_requirements: true
+      verbosity_level: "concise"
+
+    executive:
+      priority_sections: ["executive_summary", "strategic_importance", "key_takeaways"]
+      include_financial_impact: true
+      include_strategic_alignment: true
+      verbosity_level: "high_level"

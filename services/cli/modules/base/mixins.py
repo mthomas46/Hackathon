@@ -11,7 +11,7 @@ from rich.table import Table
 from rich.panel import Panel
 import asyncio
 
-from services.shared.constants_new import ServiceNames
+from services.shared.core.constants_new import ServiceNames
 
 
 class MenuMixin(ABC):
