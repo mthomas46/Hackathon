@@ -1,79 +1,136 @@
-# Scripts Directory
+# Scripts Directory Organization
 
-This directory contains various scripts for development, testing, demonstration, and operations of the LLM Documentation Ecosystem.
+This directory contains all scripts for the LLM Documentation Ecosystem, organized by purpose and functionality.
 
 ## Directory Structure
 
-### Core Scripts
-- `run_*.py` - Service runner scripts for development and testing
-- `start_services.py` - Script to start all services in development mode
-- `init_docstore_db.py` - Database initialization for Doc Store
-- `populate_*_test_data.py` - Test data population scripts
-- `run_sanity_tests.py` - Basic sanity checks for services
-
-### Demo Scripts (`demo/`)
-- `demo_refactored_architecture.py` - Demonstration of refactored architecture
-- `demo_workflow_management.py` - Workflow management demonstrations
-
-### Test Scripts (`test/`)
-- `test_services.py` - Comprehensive service import testing
-- `test_services_direct.py` - Direct service testing script
-- `service_test_results.txt` - Results from service testing
-- Various `test_*.py` files - Individual component tests
-
-### Verification Scripts (`verification/`)
-- `enterprise_features_verification.py` - Enterprise feature verification
-- `enterprise_integration_verification.py` - Integration testing
-- `service_audit_simplified.py` - Simplified service auditing
-- `verify_enterprise_integration.py` - Enterprise integration verification
-
-### Benchmarking and Analysis
-- `benchmark_prompt_store.py` - Performance benchmarking for Prompt Store
-- `generate_timeline.py` - Timeline generation for project tracking
-
-## Usage
-
-### Running Services
-```bash
-# Start all services
-python scripts/start_services.py
-
-# Start individual services
-python scripts/run_docstore.py
-python scripts/run_orchestrator_standalone.py
+```
+scripts/
+├── startup/          # Service startup and management scripts
+├── services/         # Service-specific test and utility scripts
+├── cli/             # CLI-specific test scripts
+├── integration/     # Cross-service integration test scripts
+├── validation/      # Compliance and validation scripts
+├── demo/            # Demonstration and showcase scripts
+├── docs/            # Documentation generation scripts
+├── migration/       # Database migration scripts
+└── README.md        # This file
 ```
 
-### Testing
-```bash
-# Run comprehensive service tests
-python scripts/test/test_services_direct.py
+## Script Categories
 
-# Run individual tests
-python scripts/test/test_enterprise_error_handling.py
+### 🚀 Startup Scripts (`startup/`)
+Scripts for starting and managing services locally
+- Individual service starters (13 services)
+- Master startup script for all services
+- Service dependency management
+- Health monitoring
+
+### 🔧 Service Scripts (`services/`)
+Service-specific testing and utility scripts
+- Service import validation
+- Service-specific tests
+- Test data population
+- Service runner scripts
+
+### 💻 CLI Scripts (`cli/`)
+CLI-specific testing and validation
+- CLI functionality tests
+- Command validation
+- Interactive testing
+- CLI performance validation
+
+### 🔗 Integration Scripts (`integration/`)
+Cross-service integration testing
+- Docker integration testing
+- Service mesh validation
+- Workflow orchestration testing
+- End-to-end integration tests
+
+### ✅ Validation Scripts (`validation/`)
+Compliance and quality validation
+- API compatibility testing
+- Code quality analysis
+- Performance benchmarking
+- Memory usage analysis
+
+### 🎬 Demo Scripts (`demo/`)
+Demonstration and showcase scripts
+- System capability demonstrations
+- Interactive workflow examples
+- Architecture showcase
+- User experience examples
+
+### 📚 Documentation Scripts (`docs/`)
+Documentation generation and management
+- Timeline generation
+- Status reporting
+- Documentation updates
+
+### 🔄 Migration Scripts (`migration/`)
+Database migration and data transformation
+- Schema migration scripts
+- Data transformation utilities
+- Backward compatibility handling
+
+## Test Suite Organization
+
+The test suites are organized by scope to avoid overlap:
+
+1. **Service Tests** (`services/`) - Individual service functionality
+2. **Integration Tests** (`integration/`) - Cross-service interactions
+3. **CLI Tests** (`cli/`) - User interface and CLI functionality
+4. **Validation Tests** (`validation/`) - Compliance and quality checks
+
+## Quick Start
+
+```bash
+# Start all services locally
+python scripts/startup/start_all_services.py --start
+
+# Run service tests
+python scripts/services/test_services.py
+
+# Test CLI functionality
+python scripts/cli/test_cli_simple.py
+
+# Run integration tests
+python scripts/integration/test_full_integration.py
+
+# Validate system
+python scripts/validation/test_api_compatibility.py
 ```
 
-### Demonstrations
-```bash
-# Run architecture demo
-python scripts/demo/demo_refactored_architecture.py
+## Best Practices
 
-# Run workflow demo
-python scripts/demo/demo_workflow_management.py
-```
+### Script Organization
+- Keep scripts focused on single responsibilities
+- Include comprehensive error handling
+- Provide clear usage documentation
+- Include cleanup procedures
 
-## Contributing
+### Test Script Guidelines
+- Service tests should not test integration
+- Integration tests should not test CLI functionality
+- CLI tests should focus on user interface
+- Validation tests should focus on compliance
 
-When adding new scripts:
-
-1. Place scripts in the appropriate subdirectory
-2. Add clear documentation and usage examples
-3. Include error handling and logging
-4. Update this README with the new script information
-5. Test the script in the appropriate environment
+### Naming Conventions
+- Use descriptive names with clear purpose
+- Include test type in filename (test_*, validate_*, demo_*)
+- Use consistent prefixes for related scripts
 
 ## Maintenance
 
-- Clean up old/unused scripts regularly
-- Keep scripts well-documented
-- Ensure scripts handle errors gracefully
-- Update dependencies as needed
+### Adding New Scripts
+1. Determine appropriate category/subdirectory
+2. Follow naming conventions
+3. Update relevant README files
+4. Test script functionality
+5. Update main README if needed
+
+### Updating Existing Scripts
+1. Maintain backward compatibility
+2. Update documentation
+3. Test thoroughly before committing
+4. Update README files as needed

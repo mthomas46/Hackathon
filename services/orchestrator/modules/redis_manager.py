@@ -27,9 +27,9 @@ except ImportError:
     redis = None
     REDIS_AVAILABLE = False
 
-from services.shared.constants_new import ServiceNames
-from services.shared.logging import fire_and_forget
-from services.shared.config import get_config_value
+from services.shared.core.constants_new import ServiceNames
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.core.config.config import get_config_value
 
 
 class RedisConnectionState(Enum):

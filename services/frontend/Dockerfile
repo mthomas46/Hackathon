@@ -1,50 +1,61 @@
-# Multi-stage build for Elm frontend service
-FROM node:18-alpine as elm-builder
+# =============================================================================
+# Frontend Service Dockerfile
+# =============================================================================
+# Web UI dashboard and API aggregation service
+
+FROM python:3.12-slim
+
+# Metadata
+LABEL maintainer="LLM Documentation Ecosystem Team"
+LABEL service="frontend"
+LABEL version="1.0.0"
+LABEL description="Web UI dashboard and API aggregation service"
+LABEL port="5090"
+LABEL dependencies="redis,orchestrator,doc_store"
+LABEL profile="development"
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install npm dependencies (includes elm toolchain)
-RUN npm install
+# Copy requirements files
+COPY services/requirements.base.txt ./
+COPY services/shared/requirements.txt ./shared_requirements.txt
 
-# Copy Elm project files
-COPY elm.json ./
-COPY src/ ./src/
-COPY tests/ ./tests/
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.base.txt && \
+    pip install --no-cache-dir -r shared_requirements.txt
 
-# Build the Elm application
-RUN npm run build
+# Copy service code maintaining directory structure
+COPY services/frontend/ ./services/frontend/
+COPY services/shared/ ./services/shared/
+COPY config.yml ./
+COPY config/ ./config/
 
-# Production stage with Python FastAPI backend
-FROM python:3.12-slim
-
-# Set working directory
-WORKDIR /app/services/frontend
-
-# Install required Python packages
-RUN pip install --no-cache-dir fastapi uvicorn httpx pydantic aiofiles
-
-# Copy Python application files
-COPY *.py ./
-COPY config.yaml ./
-COPY modules/ ./modules/
-
-# Copy built Elm assets from builder stage
-COPY --from=elm-builder /app/static/ ./static/
-
-# Set environment variables
+# Set Python path and environment
 ENV PYTHONPATH=/app
-ENV ENVIRONMENT=production
+ENV SERVICE_NAME=frontend
+ENV SERVICE_PORT=5090
+ENV REDIS_HOST=redis
+ENV ENVIRONMENT=development
 
-# Expose port
-EXPOSE 3000
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:3000/health')"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5090/health || exit 1
 
-# Start the FastAPI application
-CMD ["python", "main.py"]
+# Expose port
+EXPOSE 5090
+
+USER appuser
+
+# Start command - using module path for proper imports
+CMD ["python", "-m", "services.frontend.main"]

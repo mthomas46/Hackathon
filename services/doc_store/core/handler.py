@@ -5,8 +5,8 @@ Provides common HTTP response patterns and error handling.
 import asyncio
 from abc import ABC
 from typing import Dict, Any, Optional
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException
 
 
 class BaseHandler(ABC):

@@ -2,8 +2,8 @@
 
 import asyncio
 from typing import Dict, Any
-from services.shared.error_handling import ServiceException, ValidationException
-from services.shared.logging import fire_and_forget
+from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.monitoring.logging import fire_and_forget
 
 
 def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, Any]:

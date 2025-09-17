@@ -15,8 +15,8 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 import time
 
 from services.shared.utilities import get_service_client
-from services.shared.constants_new import ServiceNames
-from services.shared.logging import fire_and_forget
+from services.shared.core.constants_new import ServiceNames
+from services.shared.monitoring.logging import fire_and_forget
 from services.shared.enterprise_error_handling import (
     enterprise_error_handler, ErrorContext, ErrorSeverity, ErrorCategory,
     with_error_handling, error_context

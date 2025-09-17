@@ -3,11 +3,11 @@
 New architecture with domain-driven design and clean separation of concerns.
 """
 from fastapi import FastAPI
-from services.shared.config import load_yaml_config, get_config_value
-from services.shared.utilities import setup_common_middleware, attach_self_register
-from services.shared.health import register_health_endpoints
-from services.shared.error_handling import install_error_handlers
-from services.shared.constants_new import ServiceNames
+from services.shared.core.config.config import load_yaml_config, get_config_value
+from services.shared.utilities.utilities import setup_common_middleware, attach_self_register
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.core.constants_new import ServiceNames
 
 # Database initialization
 from .db.schema import init_database

@@ -3,7 +3,7 @@
 import re
 from typing import Dict, Any, List, Optional
 from ...core.service import BaseService
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
 from .entities import PromptTestingResult, BiasDetectionResult
 

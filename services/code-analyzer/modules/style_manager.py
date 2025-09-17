@@ -31,7 +31,7 @@ class StyleExamplesManager:
             ds = os.environ.get("DOC_STORE_URL")
             if ds:
                 try:
-                    from services.shared.clients import ServiceClients  # type: ignore
+                    from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
                     svc = ServiceClients(timeout=10)
                     doc_store_examples = svc.get_json(f"{ds}/style/examples", params={"language": language})
                     if doc_store_examples and "items" in doc_store_examples:
@@ -50,7 +50,7 @@ class StyleExamplesManager:
         ds = os.environ.get("DOC_STORE_URL")
         if ds:
             try:
-                from services.shared.clients import ServiceClients  # type: ignore
+                from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
                 svc = ServiceClients(timeout=10)
                 doc_store_summary = svc.get_json(f"{ds}/style/examples")
                 if doc_store_summary and "languages" in doc_store_summary:
@@ -71,7 +71,7 @@ class StyleExamplesManager:
             return
 
         try:
-            from services.shared.clients import ServiceClients  # type: ignore
+            from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
             svc = ServiceClients(timeout=10)
 
             for item in items:

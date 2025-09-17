@@ -6,8 +6,8 @@ import os
 import json as pyjson
 import httpx
 from typing import Optional
-from services.shared.config import get_config_value
-from services.shared.credentials import get_secret
+from services.shared.core.config.config import get_config_value
+from services.shared.auth.credentials import get_secret
 
 
 class ProviderImplementations:

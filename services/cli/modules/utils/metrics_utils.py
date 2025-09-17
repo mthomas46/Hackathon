@@ -1,7 +1,7 @@
 """Metrics utilities for CLI operations."""
 
 from typing import Dict, Any
-from services.shared.logging import fire_and_forget
+from services.shared.monitoring.logging import fire_and_forget
 import time
 
 

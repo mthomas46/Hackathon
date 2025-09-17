@@ -1,7 +1,7 @@
 """Analysis processing logic for code analyzer service."""
 
 from typing import Dict, List, Any, Optional
-from services.shared.models import Document  # type: ignore
+from services.shared.core.models.models import Document  # type: ignore
 from services.shared.envelopes import DocumentEnvelope  # type: ignore
 from services.shared.utilities import stable_hash  # type: ignore
 

@@ -6,7 +6,7 @@ Handles HTTP requests and responses for bulk operations.
 from typing import Dict, Any, Optional, List
 from services.prompt_store.domain.bulk.service import BulkOperationService
 from services.prompt_store.core.models import BulkOperationCreate
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.core.responses.responses import create_success_response, create_error_response
 
 
 class BulkOperationHandlers:

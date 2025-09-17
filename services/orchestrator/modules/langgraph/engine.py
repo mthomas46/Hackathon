@@ -21,7 +21,7 @@ from .service_integrations import (
 from ..shared_utils import get_orchestrator_service_client
 from ..startup_discovery import startup_discovery
 from services.shared.utilities import utc_now
-from services.shared.logging import fire_and_forget
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class LangGraphWorkflowEngine:

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 
 from ...core.service import BaseService
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
 from ...infrastructure.cache import prompt_store_cache
 
