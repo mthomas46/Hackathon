@@ -207,6 +207,57 @@ setup_common_middleware(app, ServiceNames.ORCHESTRATOR)
 register_exception_handlers(app)
 register_health_endpoints(app, ServiceNames.ORCHESTRATOR, SERVICE_VERSION)
 
+# ============================================================================
+# STARTUP TOOL DISCOVERY - Automatic ecosystem tool registration
+# ============================================================================
+
+# Import startup discovery module
+from .modules.startup_discovery import initialize_ecosystem_tools
+
+# Flag to control startup tool discovery
+AUTO_DISCOVER_TOOLS = os.environ.get("AUTO_DISCOVER_TOOLS", "true").lower() == "true"
+DRY_RUN_STARTUP = os.environ.get("DRY_RUN_STARTUP", "false").lower() == "true"
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Handle orchestrator startup events including automatic tool discovery."""
+    print("🚀 Orchestrator service starting up...")
+
+    if AUTO_DISCOVER_TOOLS:
+        try:
+            print("🔍 Auto-discovering ecosystem tools...")
+
+            # Initialize tool discovery for the ecosystem
+            discovery_results = await initialize_ecosystem_tools(dry_run=DRY_RUN_STARTUP)
+
+            if DRY_RUN_STARTUP:
+                print(f"🔍 DRY RUN: Would discover {discovery_results['summary']['total_tools_discovered']} tools from {discovery_results['summary']['successful_discoveries']} services")
+            else:
+                print(f"✅ Ecosystem tools initialized: {discovery_results['summary']['total_tools_discovered']} tools from {discovery_results['summary']['successful_discoveries']} services")
+
+            # Log startup discovery completion
+            fire_and_forget(
+                "orchestrator_startup_tool_discovery_completed",
+                f"Startup tool discovery completed: {discovery_results['summary']['total_tools_discovered']} tools registered",
+                ServiceNames.ORCHESTRATOR,
+                {"discovery_results": discovery_results}
+            )
+
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to auto-discover tools: {str(e)}")
+            # Don't fail startup if tool discovery fails
+            fire_and_forget(
+                "orchestrator_startup_tool_discovery_failed",
+                f"Startup tool discovery failed: {str(e)}",
+                ServiceNames.ORCHESTRATOR,
+                {"error": str(e)}
+            )
+    else:
+        print("ℹ️ Auto tool discovery disabled (AUTO_DISCOVER_TOOLS=false)")
+
+    print("🎉 Orchestrator service startup complete!")
+
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.ORCHESTRATOR)
 

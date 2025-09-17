@@ -1,0 +1,11 @@
+# LangGraph Integration Dependencies
+langgraph>=0.1.15
+langchain-core>=0.2.22
+langchain-openai>=0.1.14
+langchain-community>=0.2.6
+
+# Additional dependencies for advanced features
+pydantic>=2.8.0
+httpx>=0.25.2
+redis>=5.0.1
+aioredis>=2.0.1
