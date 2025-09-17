@@ -58,4 +58,4 @@ EXPOSE 5090
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "-m", "services.frontend.main"]
+CMD ["python", "services/frontend/start.py"]
