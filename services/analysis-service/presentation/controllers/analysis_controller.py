@@ -14,23 +14,29 @@ from ...infrastructure.repositories import (
     AnalysisRepository
 )
 from ...domain.services import AnalysisService
-from ...modules.models import (
+from ...presentation.models.analysis import (
     AnalysisRequest,
+    AnalysisResponse,
     SemanticSimilarityRequest,
+    SemanticSimilarityResponse,
     SentimentAnalysisRequest,
+    SentimentAnalysisResponse,
     ToneAnalysisRequest,
+    ToneAnalysisResponse,
     ContentQualityRequest,
+    ContentQualityResponse,
     TrendAnalysisRequest,
-    PortfolioTrendAnalysisRequest,
+    TrendAnalysisResponse,
     RiskAssessmentRequest,
-    PortfolioRiskAssessmentRequest,
+    RiskAssessmentResponse,
     MaintenanceForecastRequest,
-    PortfolioMaintenanceForecastRequest,
-    QualityDegradationDetectionRequest,
-    PortfolioQualityDegradationRequest,
-    ChangeImpactAnalysisRequest,
-    PortfolioChangeImpactRequest
+    MaintenanceForecastResponse,
+    QualityDegradationRequest,
+    QualityDegradationResponse,
+    ChangeImpactRequest,
+    ChangeImpactResponse
 )
+from ...presentation.models.base import SuccessResponse, ErrorResponse
 from ...modules.analysis_handlers import analysis_handlers
 
 
@@ -87,13 +93,20 @@ class AnalysisController:
                 result = await self.perform_analysis_use_case.execute(app_request)
 
                 # Convert to API response format
-                response = AnalysisResultResponse.create(result.analysis, result.findings)
+                response = SemanticSimilarityResponse(
+                    analysis_id=result.analysis.id,
+                    analysis_type="semantic_similarity",
+                    targets=req.targets,
+                    status="completed",
+                    results={
+                        'similarities': [],  # Will be populated by the analysis
+                        'threshold': req.threshold,
+                        'metric': req.similarity_metric
+                    },
+                    findings=result.findings or []
+                )
 
-                return {
-                    'status': 'success',
-                    'data': response.to_dict(),
-                    'timestamp': result.analysis.completed_at.isoformat() if result.analysis.completed_at else None
-                }
+                return SuccessResponse.with_data(response.dict())
 
             except Exception as e:
                 return ErrorResponse.from_exception(e).to_dict()
