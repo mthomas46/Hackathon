@@ -1,7 +1,7 @@
 """Semantic Analysis Handler - Handles semantic similarity and embedding analysis."""
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timezone
 
 from .base_handler import BaseAnalysisHandler, AnalysisResult
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class SemanticAnalysisHandler(BaseAnalysisHandler):
     """Handler for semantic similarity analysis operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("semantic_similarity")
 
     async def handle(self, request: SemanticSimilarityRequest) -> AnalysisResult:
