@@ -1,0 +1,189 @@
+{
+  "memory_stats": {
+    "total_memory_mb": 0.06391334533691406,
+    "current_memory_mb": 38.703125,
+    "peak_memory_mb": 38.703125,
+    "total_objects": 23,
+    "large_objects_count": 0,
+    "memory_efficiency": 100.0,
+    "top_allocations": [
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 134,
+        "size_mb": 0.04014396667480469,
+        "count": 26,
+        "average_mb": 0.0015439987182617188
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 115,
+        "size_mb": 0.00701904296875,
+        "count": 80,
+        "average_mb": 8.7738037109375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 114,
+        "size_mb": 0.0041656494140625,
+        "count": 78,
+        "average_mb": 5.340576171875e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 112,
+        "size_mb": 0.003509521484375,
+        "count": 40,
+        "average_mb": 8.7738037109375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 109,
+        "size_mb": 0.003509521484375,
+        "count": 40,
+        "average_mb": 8.7738037109375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 113,
+        "size_mb": 0.00226593017578125,
+        "count": 99,
+        "average_mb": 2.288818359375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 136,
+        "size_mb": 0.0016326904296875,
+        "count": 4,
+        "average_mb": 0.000408172607421875
+      },
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/tracemalloc.py",
+        "line": 560,
+        "size_mb": 0.00031280517578125,
+        "count": 1,
+        "average_mb": 0.00031280517578125
+      },
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/tracemalloc.py",
+        "line": 423,
+        "size_mb": 0.00031280517578125,
+        "count": 1,
+        "average_mb": 0.00031280517578125
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 119,
+        "size_mb": 0.0002899169921875,
+        "count": 3,
+        "average_mb": 9.663899739583333e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 167,
+        "size_mb": 0.00017547607421875,
+        "count": 2,
+        "average_mb": 8.7738037109375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 137,
+        "size_mb": 0.0001220703125,
+        "count": 2,
+        "average_mb": 6.103515625e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 166,
+        "size_mb": 8.0108642578125e-05,
+        "count": 2,
+        "average_mb": 4.00543212890625e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 132,
+        "size_mb": 6.103515625e-05,
+        "count": 2,
+        "average_mb": 3.0517578125e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 147,
+        "size_mb": 6.103515625e-05,
+        "count": 1,
+        "average_mb": 6.103515625e-05
+      },
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/tracemalloc.py",
+        "line": 558,
+        "size_mb": 5.340576171875e-05,
+        "count": 1,
+        "average_mb": 5.340576171875e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 170,
+        "size_mb": 4.57763671875e-05,
+        "count": 2,
+        "average_mb": 2.288818359375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 144,
+        "size_mb": 3.0517578125e-05,
+        "count": 1,
+        "average_mb": 3.0517578125e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 155,
+        "size_mb": 2.6702880859375e-05,
+        "count": 1,
+        "average_mb": 2.6702880859375e-05
+      },
+      {
+        "file": "/Users/mykalthomas/Documents/work/Hackathon/scripts/validation/memory_analysis.py",
+        "line": 120,
+        "size_mb": 2.6702880859375e-05,
+        "count": 1,
+        "average_mb": 2.6702880859375e-05
+      }
+    ],
+    "memory_per_object_kb": 2.845533288043478
+  },
+  "leak_analysis": {
+    "potential_leaks_count": 0,
+    "large_allocations": [],
+    "suspicious_objects": {
+      "tuple": 1189
+    },
+    "gc_objects_sampled": 15271,
+    "leak_risk_level": "minimal"
+  },
+  "optimization_recommendations": [
+    "Memory usage is well-optimized - continue monitoring"
+  ],
+  "analysis_results": {
+    "large_data_creation": {
+      "items_created": 10000,
+      "estimated_size_mb": 5000.0
+    },
+    "object_instantiation": {
+      "objects_created": 5000,
+      "creation_time_seconds": 0.07219529151916504,
+      "objects_per_second": 69256.59409066441
+    },
+    "memory_cleanup": {
+      "objects_before_cleanup": 55323,
+      "objects_after_cleanup": 54763,
+      "cleanup_efficiency": 1.0122372250239502
+    }
+  },
+  "system_memory": {
+    "total_gb": 64.0,
+    "available_gb": 28.276290893554688,
+    "used_gb": 31.419219970703125,
+    "percentage": 55.8,
+    "process_memory_mb": 38.703125
+  },
+  "analysis_timestamp": 1758126194.4416819
+}

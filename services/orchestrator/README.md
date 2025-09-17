@@ -432,7 +432,7 @@ workflow_data = {
 ### Environment Variables
 ```bash
 # Database
-ORCHESTRATOR_DB_PATH=./orchestrator_workflows.db
+ORCHESTRATOR_DB_PATH=../../data/orchestrator_workflows.db
 
 # Service Discovery
 ORCHESTRATOR_SERVICE_HOST=localhost
@@ -463,7 +463,7 @@ NOTIFICATION_URL=http://notification-service:5095
 ```yaml
 # config/orchestrator.yaml
 database:
-  path: ./orchestrator_workflows.db
+  path: ../../data/orchestrator_workflows.db
   connection_pool_size: 10
   timeout_seconds: 30
 
