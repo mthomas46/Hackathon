@@ -37,7 +37,7 @@ def get_prompt_store_client():
     global _db
     if _db is None:
         # Use absolute path to ensure it works regardless of current working directory
-        default_db_path = os.path.join(os.path.dirname(__file__), "..", "prompt_store.db")
+        default_db_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "prompt_store.db")
         db_path = os.environ.get("PROMPT_STORE_DB", default_db_path)
         _db = PromptStoreDatabase(db_path)
     return _db

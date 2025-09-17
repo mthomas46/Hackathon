@@ -34,18 +34,18 @@ from pydantic import BaseModel, field_validator
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException, install_error_handlers
-from services.shared.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register, get_service_client
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
+from services.shared.utilities.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register, get_service_client
 
 try:
     import redis.asyncio as aioredis
 except Exception:
     aioredis = None
 
-from services.shared.models import Document, Finding
+from services.shared.core.models import Document, Finding
 
 
 # Create shared client instance for all analysis operations
