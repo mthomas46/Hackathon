@@ -55,6 +55,7 @@ try:
     from .modules.conversation_memory import conversation_memory
     from .modules.query_preprocessor import query_preprocessor
     from .modules.workflow_execution_engine import workflow_execution_engine
+    from .modules.output_generator import output_generator
 except ImportError:
     # Enhanced modules for ecosystem integration
     from modules.ecosystem_context import ecosystem_context
@@ -63,6 +64,7 @@ except ImportError:
     from modules.conversation_memory import conversation_memory
     from modules.query_preprocessor import query_preprocessor
     from modules.workflow_execution_engine import workflow_execution_engine
+    from modules.output_generator import output_generator
     from modules.prompt_engineering import prompt_engineer
     from modules.langgraph_discovery import langgraph_discovery
 
@@ -610,13 +612,13 @@ async def get_ecosystem_health():
     try:
         # Check orchestrator health
         orchestrator_health = await orchestrator_integration.check_orchestrator_health()
-        
+
         # Check service capabilities
         service_capabilities = await ecosystem_context.get_service_capabilities()
-        
+
         # Get execution engine status
         execution_metrics = await workflow_execution_engine.get_execution_metrics()
-        
+
         # Calculate overall health score
         health_score = 1.0
         if not orchestrator_health.get("healthy", False):
@@ -625,9 +627,9 @@ async def get_ecosystem_health():
             health_score -= 0.3
         if execution_metrics["success_rate"] < 0.8:
             health_score -= 0.3
-        
+
         health_status = "healthy" if health_score > 0.7 else "degraded" if health_score > 0.4 else "unhealthy"
-        
+
         return create_success_response({
             "ecosystem_health": {
                 "overall_status": health_status,
@@ -646,7 +648,7 @@ async def get_ecosystem_health():
             },
             "health_check_timestamp": datetime.utcnow().isoformat()
         })
-        
+
     except Exception as e:
         return create_success_response({
             "ecosystem_health": {
@@ -659,6 +661,213 @@ async def get_ecosystem_health():
                 "error_details": str(e)
             }
         })
+
+
+# ============================================================================
+# END-TO-END WORKFLOW EXECUTION ENDPOINTS
+# ============================================================================
+
+@app.post("/execute-query")
+async def execute_query_endpoint(request: dict):
+    """Complete end-to-end query execution: Natural language → Workflow → Output."""
+    try:
+        query = request.get("query", "")
+        user_id = request.get("user_id", "anonymous")
+        output_format = request.get("output_format", "json")
+        filename_prefix = request.get("filename_prefix")
+
+        if not query:
+            return create_success_response({
+                "error": "Query is required",
+                "status": "failed"
+            })
+
+        # Step 1: Process natural language query
+        query_data = UserQuery(
+            query=query,
+            user_id=user_id,
+            context=request.get("context", {})
+        )
+
+        preprocessing_result = await query_preprocessor.preprocess_query(
+            query_data.query, query_data.user_id, query_data.context
+        )
+
+        intent_result = await query_handlers.handle_query_interpretation(query_data)
+
+        # Step 2: Dispatch to appropriate workflow
+        dispatch_result = await workflow_dispatcher.dispatch_query(
+            preprocessing_result["processed_query"],
+            intent_result.intent,
+            intent_result.entities,
+            query_data.user_id,
+            query_data.context
+        )
+
+        # Step 3: Execute workflow through orchestrator
+        if dispatch_result.get("workflow_name"):
+            workflow_result = await orchestrator_integration.execute_workflow(
+                dispatch_result["workflow_name"],
+                dispatch_result.get("parameters", {}),
+                user_id,
+                output_format
+            )
+
+            # Step 4: Generate output file
+            if workflow_result.get("status") == "completed":
+                output_info = await output_generator.generate_output(
+                    workflow_result,
+                    output_format,
+                    filename_prefix
+                )
+
+                # Step 5: Update conversation memory
+                await conversation_memory.update_conversation(
+                    user_id, query, dispatch_result["workflow_name"], workflow_result
+                )
+
+                return create_success_response({
+                    "execution_id": workflow_result["execution_id"],
+                    "query": query,
+                    "workflow_executed": dispatch_result["workflow_name"],
+                    "status": "completed",
+                    "output": output_info,
+                    "workflow_result": workflow_result,
+                    "processing_pipeline": {
+                        "preprocessing": preprocessing_result,
+                        "intent_recognition": {
+                            "intent": intent_result.intent,
+                            "confidence": intent_result.confidence,
+                            "entities": intent_result.entities
+                        },
+                        "workflow_dispatch": dispatch_result
+                    }
+                })
+            else:
+                return create_success_response({
+                    "execution_id": workflow_result.get("execution_id"),
+                    "query": query,
+                    "status": "failed", 
+                    "error": workflow_result.get("error", "Workflow execution failed"),
+                    "workflow_attempted": dispatch_result["workflow_name"]
+                })
+        else:
+            return create_success_response({
+                "query": query,
+                "status": "no_workflow",
+                "message": "Could not determine appropriate workflow for query",
+                "suggestions": dispatch_result.get("suggestions", [])
+            })
+
+    except Exception as e:
+        return create_success_response({
+            "query": request.get("query", ""),
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        })
+
+
+@app.post("/workflows/execute-direct")
+async def execute_workflow_direct(request: dict):
+    """Direct workflow execution with output generation."""
+    try:
+        workflow_name = request.get("workflow_name")
+        parameters = request.get("parameters", {})
+        user_id = request.get("user_id", "anonymous")
+        output_format = request.get("output_format", "json")
+        filename_prefix = request.get("filename_prefix")
+
+        if not workflow_name:
+            return create_success_response({
+                "error": "workflow_name is required",
+                "status": "failed"
+            })
+
+        # Execute workflow
+        workflow_result = await orchestrator_integration.execute_workflow(
+            workflow_name, parameters, user_id, output_format
+        )
+
+        # Generate output if successful
+        if workflow_result.get("status") == "completed":
+            output_info = await output_generator.generate_output(
+                workflow_result, output_format, filename_prefix
+            )
+
+            return create_success_response({
+                "execution_id": workflow_result["execution_id"],
+                "workflow_name": workflow_name,
+                "status": "completed",
+                "output": output_info,
+                "workflow_result": workflow_result
+            })
+        else:
+            return create_success_response({
+                "execution_id": workflow_result.get("execution_id"),
+                "workflow_name": workflow_name,
+                "status": "failed",
+                "error": workflow_result.get("error", "Workflow execution failed")
+            })
+
+    except Exception as e:
+        return create_success_response({
+            "workflow_name": request.get("workflow_name"),
+            "status": "error",
+            "error": str(e)
+        })
+
+
+@app.get("/outputs/download/{file_id}")
+async def download_output_file(file_id: str):
+    """Download generated output file."""
+    try:
+        from fastapi.responses import FileResponse
+        
+        file_info = await output_generator.get_file_info(file_id)
+        
+        if not file_info:
+            return create_success_response({
+                "error": "File not found",
+                "file_id": file_id
+            })
+
+        return FileResponse(
+            path=file_info["filepath"],
+            filename=file_info["filename"],
+            media_type="application/octet-stream"
+        )
+
+    except Exception as e:
+        return create_success_response({
+            "error": str(e),
+            "file_id": file_id
+        })
+
+
+@app.get("/outputs/formats")
+async def get_supported_formats():
+    """Get list of supported output formats."""
+    return create_success_response({
+        "supported_formats": output_generator.get_supported_formats(),
+        "format_descriptions": {
+            "json": "Structured JSON data with complete results",
+            "pdf": "Formatted PDF report with visualizations",
+            "csv": "Comma-separated values for data analysis",
+            "markdown": "Markdown formatted documentation",
+            "zip": "Archive containing multiple format variants",
+            "txt": "Plain text summary report"
+        }
+    })
+
+
+@app.get("/workflows/templates")
+async def get_workflow_templates():
+    """Get available workflow templates."""
+    return create_success_response({
+        "templates": orchestrator_integration.get_workflow_templates(),
+        "total_templates": len(orchestrator_integration.get_workflow_templates())
+    })
 
 
 if __name__ == "__main__":
