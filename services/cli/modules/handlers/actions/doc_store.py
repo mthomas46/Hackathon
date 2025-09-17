@@ -338,38 +338,235 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         except Exception as e:
             console.print(f"[red]Failed to resolve owners: {e}[/red]")
 
+    # ============================================================================
+    # LIFECYCLE MANAGEMENT ENDPOINTS
+    # ============================================================================
+
+    async def create_lifecycle_policy():
+        """Create a new lifecycle policy."""
+        name = Prompt.ask("Policy name")
+        description = Prompt.ask("Policy description")
+        conditions_input = Prompt.ask("Conditions JSON")
+        actions_input = Prompt.ask("Actions JSON")
+        priority = Prompt.ask("Priority", default="1")
+
+        try:
+            conditions = json.loads(conditions_input)
+            actions = json.loads(actions_input)
+        except Exception as e:
+            console.print(f"[red]Invalid JSON: {e}[/red]")
+            return
+
+        url = f"{clients.doc_store_url()}/lifecycle/policies"
+        data = await clients.post_json(url, {
+            "name": name,
+            "description": description,
+            "conditions": conditions,
+            "actions": actions,
+            "priority": int(priority)
+        })
+        print_kv(console, f"Policy Created: {name}", data)
+
+    async def transition_document_phase():
+        """Transition document to new lifecycle phase."""
+        doc_id = Prompt.ask("Document ID")
+        new_phase = Prompt.ask("New phase (draft|review|published|archived)")
+        reason = Prompt.ask("Reason for transition")
+
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/lifecycle/transition"
+        data = await clients.post_json(url, {
+            "new_phase": new_phase,
+            "reason": reason
+        })
+        print_kv(console, f"Phase Transition for {doc_id}", data)
+
+    async def get_document_lifecycle():
+        """Get document lifecycle status."""
+        doc_id = Prompt.ask("Document ID")
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/lifecycle"
+        data = await clients.get_json(url)
+        print_kv(console, f"Lifecycle Status for {doc_id}", data)
+
+    # ============================================================================
+    # CACHE MANAGEMENT ENDPOINTS
+    # ============================================================================
+
+    async def view_cache_stats():
+        """View cache statistics."""
+        url = f"{clients.doc_store_url()}/cache/stats"
+        data = await clients.get_json(url)
+        print_kv(console, "Cache Statistics", data)
+
+    async def invalidate_cache():
+        """Invalidate cache entries."""
+        pattern = Prompt.ask("Cache pattern to invalidate (optional)", default="")
+        scope = Prompt.ask("Scope (all|pattern|service)", default="all")
+
+        if scope == "pattern" and not pattern:
+            console.print("[red]Pattern required for pattern scope[/red]")
+            return
+
+        url = f"{clients.doc_store_url()}/cache/invalidate"
+        payload = {"scope": scope}
+        if pattern:
+            payload["pattern"] = pattern
+
+        data = await clients.post_json(url, payload)
+        print_kv(console, "Cache Invalidation", data)
+
+    async def warmup_cache():
+        """Warm up cache with common operations."""
+        operations_input = Prompt.ask("Operations JSON array", default='[{"type": "search", "query": "*"}]')
+
+        try:
+            operations = json.loads(operations_input)
+        except Exception as e:
+            console.print(f"[red]Invalid JSON: {e}[/red]")
+            return
+
+        url = f"{clients.doc_store_url()}/cache/warmup"
+        data = await clients.post_json(url, {"operations": operations})
+        print_kv(console, "Cache Warmup", data)
+
+    async def optimize_cache():
+        """Optimize cache performance."""
+        url = f"{clients.doc_store_url()}/cache/optimize"
+        data = await clients.post_json(url, {})
+        print_kv(console, "Cache Optimization", data)
+
+    # ============================================================================
+    # ADVANCED RELATIONSHIP QUERIES
+    # ============================================================================
+
+    async def find_relationship_paths():
+        """Find relationship paths between documents."""
+        start_id = Prompt.ask("Start document ID")
+        end_id = Prompt.ask("End document ID")
+        max_depth = Prompt.ask("Maximum path depth", default="3")
+
+        url = f"{clients.doc_store_url()}/relationships/paths"
+        params = {
+            "start_id": start_id,
+            "end_id": end_id,
+            "max_depth": int(max_depth)
+        }
+        data = await clients.get_json(url, params=params)
+        print_kv(console, f"Paths from {start_id} to {end_id}", data)
+
+    async def view_graph_statistics():
+        """View relationship graph statistics."""
+        url = f"{clients.doc_store_url()}/relationships/stats"
+        data = await clients.get_json(url)
+        print_kv(console, "Graph Statistics", data)
+
+    # ============================================================================
+    # BATCH OPERATIONS ENHANCED
+    # ============================================================================
+
+    async def cancel_bulk_operation():
+        """Cancel a bulk operation."""
+        operation_id = Prompt.ask("Bulk operation ID")
+        url = f"{clients.doc_store_url()}/bulk/operations/{operation_id}"
+        data = await clients.delete_json(url)
+        print_kv(console, f"Bulk Operation Cancelled: {operation_id}", data)
+
+    # ============================================================================
+    # METADATA AND UPDATE OPERATIONS
+    # ============================================================================
+
+    async def update_document_metadata():
+        """Update document metadata."""
+        doc_id = Prompt.ask("Document ID")
+        metadata_input = Prompt.ask("New metadata JSON")
+        update_type = Prompt.ask("Update type (replace|merge)", default="merge")
+
+        try:
+            metadata = json.loads(metadata_input)
+        except Exception as e:
+            console.print(f"[red]Invalid JSON: {e}[/red]")
+            return
+
+        url = f"{clients.doc_store_url()}/documents/{doc_id}/metadata"
+        data = await clients.patch_json(url, {
+            "metadata": metadata,
+            "update_type": update_type
+        })
+        print_kv(console, f"Metadata Updated for {doc_id}", data)
+
+    async def delete_document():
+        """Delete a document."""
+        doc_id = Prompt.ask("Document ID")
+        confirm = Prompt.ask(f"Are you sure you want to delete document {doc_id}? (yes/no)", default="no")
+
+        if confirm.lower() not in ["yes", "y"]:
+            console.print("[yellow]Operation cancelled[/yellow]")
+            return
+
+        url = f"{clients.doc_store_url()}/documents/{doc_id}"
+        data = await clients.delete_json(url)
+        print_kv(console, f"Document Deleted: {doc_id}", data)
+
     return [
-        ("Search documents", list_documents),
-        ("Advanced search with filters", advanced_search),
-        ("Get document by ID", get_document),
-        ("Create document", put_document),
-        ("Bulk create documents", bulk_create_documents),
-        ("Monitor bulk operation", monitor_bulk_operation),
-        ("List bulk operations", list_bulk_operations),
-        ("List quality signals", quality),
-        ("View document tags", view_document_tags),
-        ("Tag document", tag_document_cli),
-        ("Search by tags", search_by_tags),
-        ("View tag statistics", tag_statistics),
-        ("View document relationships", view_relationships),
-        ("Find relationship paths", find_paths),
-        ("View graph statistics", graph_stats),
-        ("View document versions", view_document_versions),
-        ("Compare document versions", compare_versions),
-        ("Rollback document to version", rollback_document),
-        ("Register webhook", register_webhook),
-        ("List webhooks", list_webhooks),
-        ("Emit test event", emit_test_event),
-        ("View event history", view_event_history),
-        ("View notification stats", view_notification_stats),
-        ("Test webhook", test_webhook),
-        ("Send notification", send_notification),
-        ("Resolve owners", resolve_owners),
-        ("View analytics (detailed)", view_analytics),
-        ("View analytics summary", view_analytics_summary),
-        ("View config (effective)", config_effective),
-        ("DB probe (write/read)", db_probe),
-        ("Download document", download_document),
+        # Core Document Operations
+        ("🔍 Search documents", list_documents),
+        ("🔎 Advanced search with filters", advanced_search),
+        ("📄 Get document by ID", get_document),
+        ("✏️  Create document", put_document),
+        ("🗑️  Delete document", delete_document),
+        ("🔄 Update document metadata", update_document_metadata),
+
+        # Bulk Operations
+        ("📦 Bulk create documents", bulk_create_documents),
+        ("📊 Monitor bulk operation", monitor_bulk_operation),
+        ("📋 List bulk operations", list_bulk_operations),
+        ("❌ Cancel bulk operation", cancel_bulk_operation),
+
+        # Quality & Analytics
+        ("⭐ List quality signals", quality),
+        ("📈 View analytics (detailed)", view_analytics),
+        ("📊 View analytics summary", view_analytics_summary),
+
+        # Tagging System
+        ("🏷️  View document tags", view_document_tags),
+        ("✨ Tag document", tag_document_cli),
+        ("🔍 Search by tags", search_by_tags),
+        ("📈 View tag statistics", tag_statistics),
+
+        # Versioning
+        ("📚 View document versions", view_document_versions),
+        ("⚖️  Compare document versions", compare_versions),
+        ("⏪ Rollback document to version", rollback_document),
+
+        # Relationships
+        ("🔗 View document relationships", view_relationships),
+        ("🛤️  Find relationship paths", find_relationship_paths),
+        ("📊 View graph statistics", view_graph_statistics),
+
+        # Lifecycle Management
+        ("📋 Create lifecycle policy", create_lifecycle_policy),
+        ("🔄 Transition document phase", transition_document_phase),
+        ("📊 Get document lifecycle", get_document_lifecycle),
+
+        # Cache Management
+        ("📈 View cache stats", view_cache_stats),
+        ("🗑️  Invalidate cache", invalidate_cache),
+        ("🔥 Warmup cache", warmup_cache),
+        ("⚡ Optimize cache", optimize_cache),
+
+        # Notifications & Webhooks
+        ("🔗 Register webhook", register_webhook),
+        ("📋 List webhooks", list_webhooks),
+        ("📡 Emit test event", emit_test_event),
+        ("📜 View event history", view_event_history),
+        ("📊 View notification stats", view_notification_stats),
+        ("🧪 Test webhook", test_webhook),
+        ("📢 Send notification", send_notification),
+        ("👥 Resolve owners", resolve_owners),
+
+        # Utilities
+        ("⚙️  View config (effective)", config_effective),
+        ("🗃️  DB probe (write/read)", db_probe),
+        ("💾 Download document", download_document),
     ]
 
 
