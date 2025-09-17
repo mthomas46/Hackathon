@@ -18,8 +18,7 @@ router = APIRouter()
 def get_workflow_container():
     """Dependency injection for workflow management services."""
     # This will be replaced with actual dependency injection in main.py
-    from ...container import get_container
-    container = get_container()
+    from ....main import container
     return container
 
 

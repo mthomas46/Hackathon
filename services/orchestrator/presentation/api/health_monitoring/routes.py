@@ -13,8 +13,7 @@ router = APIRouter()
 
 def get_health_container():
     """Dependency injection for health monitoring services."""
-    from ...container import get_container
-    container = get_container()
+    from ....main import container
     return container
 
 

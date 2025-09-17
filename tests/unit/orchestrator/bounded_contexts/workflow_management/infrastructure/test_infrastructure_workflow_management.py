@@ -177,7 +177,7 @@ class TestInMemoryWorkflowExecutionRepository:
         self.repo.save_execution(execution2)
         self.repo.save_execution(execution3)
 
-        results = self.repo.list_executions(workflow_id_filter=workflow1.workflow_id)
+        results = self.repo.list_executions(workflow_id=workflow1.workflow_id)
 
         assert len(results) == 2
         assert all(e.workflow_id == workflow1.workflow_id for e in results)

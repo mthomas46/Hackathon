@@ -17,8 +17,8 @@ class OrchestratorTestRunner:
     """Test runner for orchestrator service tests."""
 
     def __init__(self):
-        self.root_dir = Path(__file__).parent
-        self.test_dir = self.root_dir / "bounded_contexts"
+        self.root_dir = Path(__file__).parent.parent.parent  # Go up to project root
+        self.test_dir = Path(__file__).parent  # The directory containing this script
 
     def run_all_tests(self, parallel: bool = True, coverage: bool = True) -> int:
         """Run all orchestrator tests."""
@@ -138,7 +138,8 @@ class OrchestratorTestRunner:
             "-ra",
             "--maxfail=5",
             "--strict-markers",
-            "--disable-warnings"
+            "--disable-warnings",
+            f"--rootdir={self.root_dir}"
         ])
 
         return cmd
@@ -147,7 +148,7 @@ class OrchestratorTestRunner:
         """Execute a command and return the exit code."""
         print(f"Running: {' '.join(cmd)}")
         try:
-            result = subprocess.run(cmd, cwd=self.root_dir, check=False)
+            result = subprocess.run(cmd, cwd=self.test_dir, check=False)
             return result.returncode
         except KeyboardInterrupt:
             print("\nTest execution interrupted by user")

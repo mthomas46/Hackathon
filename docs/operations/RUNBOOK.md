@@ -3,9 +3,10 @@
 ## Health checks
 
 ### Service Health Endpoints
+
+#### Core Services
 - **Prompt Store**: `GET /health` - Database connectivity and basic functionality
 - **Interpreter**: `GET /health` - Service availability and core functionality
-- **Orchestrator**: `GET /health/system` - System-wide health across all services
 - **Doc Store**: `GET /health` - Database connectivity and storage health
 - **Source Agent**: `GET /health` - Multi-source connectivity and API health
 - **Analysis Service**: `GET /integration/health` - Integration health with dependencies
@@ -20,14 +21,37 @@
 - **Bedrock Proxy**: `GET /health` - Proxy service health
 - **CLI**: Health check via orchestrator integration
 
+#### Orchestrator Service (DDD Architecture)
+- **Basic Health**: `GET /health` - Service availability
+- **System Health**: `GET /api/v1/health/system` - Comprehensive system health
+- **Service Health**: `GET /api/v1/health/services/{service_id}` - Individual service health
+- **System Metrics**: `GET /api/v1/health/system/metrics` - Performance metrics
+- **System Info**: `GET /api/v1/health/system/info` - System information
+- **Readiness Check**: `GET /api/v1/health/system/readiness` - Startup readiness
+- **Workflow Health**: `GET /api/v1/health/system/workflows` - Workflow system health
+
 ### Quick Health Check Script
 ```bash
 # Check all services health
 SERVICES=(prompt-store interpreter orchestrator doc_store source-agent analysis-service)
+
+# Orchestrator-specific health checks (DDD architecture)
+echo "Checking orchestrator basic health..."
+curl -f http://localhost:5099/health || echo "Orchestrator basic health failed"
+
+echo "Checking orchestrator system health..."
+curl -f http://localhost:5099/api/v1/health/system || echo "Orchestrator system health failed"
+
+# Standard service health checks
 for service in "${SERVICES[@]}"; do
   echo "Checking $service..."
   curl -f http://localhost:$(get_port $service)/health || echo "$service health check failed"
 done
+
+# Orchestrator bounded context checks
+echo "Checking orchestrator bounded contexts..."
+curl -f http://localhost:5099/api/v1/service-registry/services || echo "Service registry check failed"
+curl -f http://localhost:5099/api/v1/workflows || echo "Workflow management check failed"
 ```
 
 ## Common issues
@@ -93,13 +117,68 @@ done
 | Performance degradation | Large dataset processing | Implement pagination or batch processing |
 | Model timeout errors | AI provider response delays | Increase timeout values or use fallback providers |
 
-### Orchestrator
+### Orchestrator (DDD Architecture)
+
+The orchestrator service follows Domain-Driven Design with 7 bounded contexts. Issues are typically isolated to specific contexts.
+
+#### General Issues
 | Symptom | Checks | Fix |
 |---------|--------|-----|
-| Workflow execution fails | Service registry incomplete | Verify all required services are registered |
-| Event processing stalls | Redis queue issues | Check Redis connectivity and queue configuration |
-| Saga transactions hanging | Distributed transaction conflicts | Implement timeout and retry mechanisms |
-| Peer replication fails | Network connectivity issues | Verify peer-to-peer communication and firewall rules |
+| Service fails to start | Import errors or missing dependencies | Check `python -c "from services.orchestrator.main import app"` |
+| API returns 500 errors | Domain logic errors | Check orchestrator logs for DomainResult failures |
+| High memory usage | In-memory repositories accumulating data | Restart service or implement data cleanup |
+| Slow API responses | Complex cross-context operations | Profile with `/api/v1/health/system/metrics` |
+
+#### Bounded Context Issues
+
+**🎯 Workflow Management**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Workflow creation fails | Validation errors | Check workflow schema and required fields |
+| Execution stalls | Workflow executor issues | Verify LangGraph integration and dependencies |
+| Parameter resolution fails | Missing context data | Ensure workflow parameters are properly defined |
+
+**🔍 Service Registry**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Service discovery fails | Registration incomplete | Check `/api/v1/service-registry/services` endpoint |
+| Health checks failing | Service endpoints unreachable | Verify service URLs and network connectivity |
+| Registration conflicts | Duplicate service IDs | Use unique service identifiers |
+
+**🏥 Health Monitoring**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Metrics collection fails | Service connectivity issues | Check individual service health endpoints |
+| System health shows errors | Multiple service failures | Restart failing services or check dependencies |
+| Readiness probes failing | Startup sequence issues | Verify service startup order and dependencies |
+
+**⚙️ Infrastructure**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Saga transactions hanging | Timeout configuration | Check saga timeout settings and retry logic |
+| DLQ accumulation | Failed event processing | Process DLQ with `/api/v1/infrastructure/dlq/retry` |
+| Event streaming fails | Message broker issues | Verify Redis connectivity and queue configuration |
+
+**📥 Ingestion**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Data ingestion fails | Source connectivity | Check source API credentials and endpoints |
+| Ingestion status stuck | Processing errors | Monitor `/api/v1/ingestion/status/{id}` |
+| Pipeline performance poor | Resource constraints | Scale ingestion workers or optimize processing |
+
+**❓ Query Processing**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Query interpretation fails | NLP model issues | Check model loading and input validation |
+| Results inconsistent | Query parsing errors | Verify query syntax and context parameters |
+| Performance degradation | Complex queries | Implement query optimization or caching |
+
+**📊 Reporting**
+| Symptom | Checks | Fix |
+|---------|--------|-----|
+| Report generation fails | Data source issues | Check data availability and access permissions |
+| Report quality poor | Template or data issues | Update report templates and validate data sources |
+| Scheduled reports missing | Scheduler configuration | Verify cron settings and execution permissions |
 
 ### Log Collector
 | Symptom | Checks | Fix |

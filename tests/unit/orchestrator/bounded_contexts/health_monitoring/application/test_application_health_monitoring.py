@@ -14,6 +14,7 @@ from services.orchestrator.application.health_monitoring.commands import (
 from services.orchestrator.application.health_monitoring.use_cases import (
     CheckSystemHealthUseCase, CheckServiceHealthUseCase
 )
+from tests.unit.orchestrator.conftest import DDDTestHelper
 from tests.unit.orchestrator.test_base import BaseApplicationTest, HealthMonitoringTestMixin
 
 
