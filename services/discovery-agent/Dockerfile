@@ -32,16 +32,16 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.base.txt && \
     pip install --no-cache-dir -r shared_requirements.txt
 
-# Copy service code maintaining directory structure
-COPY services/discovery-agent/ ./services/discovery_agent/
-COPY services/shared/ ./services/shared/
-COPY config.yml ./
-COPY config/ ./config/
+# Skip copying service code - rely on volume mounts for development
+# COPY services/discovery-agent/ ./services/discovery_agent/
+# COPY services/shared/ ./services/shared/
+# COPY config.yml ./
+# COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV SERVICE_NAME=discovery-agent
-ENV SERVICE_PORT=5040
+ENV SERVICE_PORT=5045
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -50,10 +50,10 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5040/health || exit 1
+    CMD curl -f http://localhost:5045/health || exit 1
 
 # Expose port
-EXPOSE 5040
+EXPOSE 5045
 
 USER appuser
 

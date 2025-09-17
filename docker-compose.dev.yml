@@ -305,6 +305,11 @@ services:
       - ENVIRONMENT=development
     ports:
       - "5045:5045"
+    volumes:
+      - ./services/discovery-agent:/app/services/discovery_agent
+      - ./services/shared:/app/services/shared
+      - ./config.yml:/app/config.yml
+      - ./config:/app/config
     depends_on:
       orchestrator:
         condition: service_started
