@@ -13,7 +13,7 @@ pip install -r services/requirements.base.txt
 pytest -q
 
 # 3. Start core services locally
-python services/orchestrator/main.py     # 5099 - Control plane
+python -m uvicorn services.orchestrator.main:app --host 0.0.0.0 --port 5099 --log-level info  # Control plane (DDD Architecture)
 python services/doc_store/main.py        # 5087 - Document storage
 python services/source-agent/main.py     # 5000 - Data ingestion
 ```
@@ -28,11 +28,12 @@ python services/source-agent/main.py     # 5000 - Data ingestion
 
 ## 🏗️ Architecture Overview
 
+### Service Architecture
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Source Agent  │───▶│  Orchestrator   │───▶│ Analysis Service│
 │ (GitHub, Jira,  │    │ (Control Plane) │    │ (AI Analysis)   │
-│  Confluence)    │    │                 │    │                 │
+│  Confluence)    │    │ DDD Architecture │   │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          ▼                       ▼                       ▼
@@ -40,6 +41,25 @@ python services/source-agent/main.py     # 5000 - Data ingestion
 │   Doc Store     │    │  Prompt Store   │    │   Summarizer    │
 │ (Document DB)   │    │ (Prompt Mgmt)   │    │   Hub (LLMs)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Orchestrator Service - Domain Driven Design (DDD)
+
+The orchestrator service follows **Domain-Driven Design** principles with **7 bounded contexts**:
+
+```
+Orchestrator Service (DDD Architecture)
+├── 🎯 Workflow Management (6 endpoints)
+│   ├── Domain: Entities, Value Objects, Domain Services
+│   ├── Application: Use Cases, Commands, Queries
+│   ├── Infrastructure: Repositories, External Services
+│   └── Presentation: FastAPI Routes, DTOs
+├── 🔍 Service Registry (8 endpoints)
+├── 🏥 Health Monitoring (6 endpoints)
+├── ⚙️ Infrastructure (13 endpoints)
+├── 📥 Ingestion (6 endpoints)
+├── ❓ Query Processing (8 endpoints)
+└── 📊 Reporting (8 endpoints)
 ```
 
 ## 🔧 Development Environment
@@ -74,18 +94,22 @@ brew install redis && redis-server
 docker-compose -f docker-compose.dev.yml up -d orchestrator doc_store source-agent
 
 # Or run individually
-python services/orchestrator/main.py &
+python -m uvicorn services.orchestrator.main:app --host 0.0.0.0 --port 5099 --reload &
 python services/doc_store/main.py &
 python services/source-agent/main.py &
 ```
 
 4. **Verify setup**:
 ```bash
-# Run tests
-pytest tests/unit/orchestrator/ -v
+# Run orchestrator tests (DDD architecture)
+pytest tests/unit/orchestrator/ -v --tb=short
 
 # Check service health
-curl http://localhost:5099/health/system
+curl http://localhost:5099/health
+curl http://localhost:5099/api/v1/health/system
+
+# Check orchestrator API docs
+curl http://localhost:5099/docs
 ```
 
 ## 📚 Documentation
@@ -93,7 +117,8 @@ curl http://localhost:5099/health/system
 | Section | Description | Key Files |
 |---------|-------------|-----------|
 | **🚀 Getting Started** | Quick setup and first steps | [`docs/guides/GETTING_STARTED.md`](docs/guides/GETTING_STARTED.md) |
-| **🏗️ Architecture** | System design and patterns | [`docs/architecture/`](docs/architecture/) |
+| **🏗️ Architecture** | System design, DDD patterns | [`docs/architecture/`](docs/architecture/) |
+| **🔄 DDD Migration** | Orchestrator DDD refactoring | [`docs/architecture/DDD_MIGRATION.md`](docs/architecture/DDD_MIGRATION.md) |
 | **🧪 Testing** | Test suite and patterns | [`docs/guides/TESTING_GUIDE.md`](docs/guides/TESTING_GUIDE.md) |
 | **⚙️ Operations** | Deployment and monitoring | [`docs/operations/RUNBOOK.md`](docs/operations/RUNBOOK.md) |
 | **🔧 Development** | Code standards and tools | [`docs/development/`](docs/development/) |
@@ -102,7 +127,7 @@ curl http://localhost:5099/health/system
 
 | Service | Port | Purpose | Documentation |
 |---------|------|---------|---------------|
-| **Orchestrator** | 5099 | Control plane, workflows | [`services/orchestrator/`](services/orchestrator/) |
+| **Orchestrator** | 5099 | Control plane, DDD architecture with 7 bounded contexts | [`services/orchestrator/`](services/orchestrator/) |
 | **Doc Store** | 5087 | Document storage & search | [`services/doc_store/`](services/doc_store/) |
 | **Source Agent** | 5000 | Multi-source data ingestion | [`services/source-agent/`](services/source-agent/) |
 | **Analysis Service** | 5020 | AI-powered analysis | [`services/analysis-service/`](services/analysis-service/) |

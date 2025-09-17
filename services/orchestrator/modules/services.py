@@ -5,6 +5,7 @@ extracted from the main orchestrator service to improve maintainability.
 """
 
 from typing import Dict, Any, List
+from services.shared.constants_new import ServiceNames
 from .shared_utils import (
     get_orchestrator_service_client,
     handle_service_error,
