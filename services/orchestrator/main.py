@@ -169,16 +169,24 @@ async def shutdown_event():
 # API ROUTE REGISTRATION - Clean separation by bounded contexts
 # ============================================================================
 
-# Register API routes by bounded context (placeholders for now)
-# TODO: Implement the actual route files for each bounded context
-if workflow_router:
+# Register API routes by bounded context (DDD-based)
+try:
+    from .presentation.api.workflow_management import router as workflow_router
     app.include_router(workflow_router, prefix="/api/v1/workflows", tags=["Workflow Management"])
+except ImportError:
+    print("⚠️  Workflow Management routes not available")
 
-if health_router:
+try:
+    from .presentation.api.health_monitoring import router as health_router
     app.include_router(health_router, prefix="/api/v1/health", tags=["Health & Monitoring"])
+except ImportError:
+    print("⚠️  Health Monitoring routes not available")
 
-if infrastructure_router:
+try:
+    from .presentation.api.infrastructure import router as infrastructure_router
     app.include_router(infrastructure_router, prefix="/api/v1/infrastructure", tags=["Infrastructure"])
+except ImportError:
+    print("⚠️  Infrastructure routes not available")
 
 # Legacy route support (to be migrated)
 @app.get("/workflows")

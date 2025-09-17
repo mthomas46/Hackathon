@@ -159,3 +159,32 @@ class ListWorkflowsUseCase(UseCase):
             limit=query.limit,
             offset=query.offset
         )
+
+
+class ListWorkflowExecutionsUseCase(UseCase):
+    """Use case for listing workflow executions."""
+
+    def __init__(self, execution_repository):
+        self.execution_repository = execution_repository
+
+    async def execute(self, query: ListWorkflowExecutionsQuery) -> List[WorkflowExecution]:
+        """Execute the list workflow executions use case."""
+        return self.execution_repository.list_executions(
+            workflow_id=query.workflow_id,
+            status_filter=query.status_filter,
+            started_after=query.started_after,
+            started_before=query.started_before,
+            limit=query.limit,
+            offset=query.offset
+        )
+
+
+class GetWorkflowExecutionUseCase(UseCase):
+    """Use case for getting a workflow execution."""
+
+    def __init__(self, execution_repository):
+        self.execution_repository = execution_repository
+
+    async def execute(self, query: GetWorkflowExecutionQuery) -> Optional[WorkflowExecution]:
+        """Execute the get workflow execution use case."""
+        return self.execution_repository.get_execution(query.execution_id)
