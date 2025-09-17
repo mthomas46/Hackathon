@@ -24,3 +24,4 @@ numpy>=1.24.0
 # Additional utilities
 boto3>=1.34.0
 botocore>=1.34.0
+psutil>=5.9.0
