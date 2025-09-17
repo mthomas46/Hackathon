@@ -18,6 +18,7 @@ from .shared_utils import (
     build_discovery_context,
     handle_discovery_error
 )
+from .tool_discovery import tool_discovery_service
 
 
 class DiscoveryHandler:
@@ -92,6 +93,84 @@ class DiscoveryHandler:
             context = build_discovery_context("discover", service_name=getattr(req, 'name', None))
             context = {k: v for k, v in context.items() if k != "operation"}
             return handle_discovery_error("discover endpoints", e, **context)
+
+    @staticmethod
+    async def discover_tools(req) -> Dict[str, Any]:
+        """Discover LangGraph tools for a service."""
+        try:
+            # Discover tools using the tool discovery service
+            discovery_result = await tool_discovery_service.discover_tools(
+                service_name=req.service_name,
+                service_url=req.service_url,
+                openapi_url=req.openapi_url,
+                tool_categories=req.tool_categories
+            )
+
+            # Handle dry run mode
+            if req.dry_run:
+                return create_discovery_success_response(
+                    "tool discovery completed (dry run)",
+                    discovery_result,
+                    **build_discovery_context("discover_tools", service_name=req.service_name, dry_run=True)
+                )
+
+            # Register tools with orchestrator if available
+            orchestrator_url = req.orchestrator_url or get_orchestrator_url()
+            try:
+                await DiscoveryHandler._register_tools_with_orchestrator(
+                    discovery_result, orchestrator_url
+                )
+                discovery_result["registration_status"] = "completed"
+            except Exception as reg_error:
+                discovery_result["registration_status"] = "failed"
+                discovery_result["registration_error"] = str(reg_error)
+
+            return create_discovery_success_response(
+                "tool discovery and registration completed",
+                discovery_result,
+                **build_discovery_context("discover_tools", service_name=req.service_name,
+                                        tool_count=discovery_result.get("tools_discovered", 0))
+            )
+
+        except httpx.HTTPStatusError as e:
+            context = build_discovery_context("discover_tools", service_name=getattr(req, 'service_name', None))
+            context = {k: v for k, v in context.items() if k != "operation"}
+            return handle_discovery_error("discover tools", e, status_code=e.response.status_code, **context)
+
+        except Exception as e:
+            context = build_discovery_context("discover_tools", service_name=getattr(req, 'service_name', None))
+            context = {k: v for k, v in context.items() if k != "operation"}
+            return handle_discovery_error("discover tools", e, **context)
+
+    @staticmethod
+    async def _register_tools_with_orchestrator(discovery_result: Dict[str, Any], orchestrator_url: str):
+        """Register discovered tools with the orchestrator."""
+        try:
+            # Prepare tool registration payload
+            payload = {
+                "service_name": discovery_result["service_name"],
+                "service_url": discovery_result["service_url"],
+                "tools": discovery_result["tools"],
+                "metadata": {
+                    "discovered_at": discovery_result.get("timestamp"),
+                    "tool_count": discovery_result["tools_discovered"],
+                    "spec_url": discovery_result["spec_url"]
+                }
+            }
+
+            # Register with orchestrator (assuming tools endpoint exists)
+            # For now, we'll use the existing registration endpoint
+            registration_payload = {
+                "name": f"{discovery_result['service_name']}_tools",
+                "base_url": discovery_result["service_url"],
+                "endpoints": [],  # Tools don't map directly to endpoints
+                "metadata": payload["metadata"]
+            }
+
+            await register_with_orchestrator(registration_payload, orchestrator_url)
+
+        except Exception as e:
+            raise Exception(f"Failed to register tools with orchestrator: {str(e)}")
 
 
 # Create singleton instance
