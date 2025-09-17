@@ -1262,6 +1262,180 @@ def deploy_service(ctx, service, image, strategy):
 
 
 # ============================================================================
+# DISCOVERY AGENT INTEGRATION COMMANDS
+# ============================================================================
+
+@cli.command()
+@click.argument('service', required=False)
+@click.option('--all-services', is_flag=True, help='Discover tools for all services')
+@click.option('--category', help='Filter tools by category')
+@click.pass_context
+def discover_tools(ctx, service, all_services, category):
+    """Discover LangGraph tools from service OpenAPI specifications"""
+    try:
+        from services.discovery_agent.modules.tool_discovery import ToolDiscoveryService
+        import asyncio
+        
+        console = Console()
+        
+        async def run_discovery():
+            discovery_service = ToolDiscoveryService()
+            
+            if all_services:
+                # Discover tools for all running services
+                services_to_discover = [
+                    {"name": "analysis-service", "url": "http://localhost:5020"},
+                    {"name": "prompt_store", "url": "http://localhost:5110"},
+                    {"name": "memory-agent", "url": "http://localhost:5040"},
+                    {"name": "source-agent", "url": "http://localhost:5000"},
+                    {"name": "doc_store", "url": "http://localhost:5087"},
+                    {"name": "github-mcp", "url": "http://localhost:5072"},
+                    {"name": "interpreter", "url": "http://localhost:5120"},
+                    {"name": "secure-analyzer", "url": "http://localhost:5070"},
+                    {"name": "summarizer-hub", "url": "http://localhost:5160"}
+                ]
+                
+                console.print("\n[bold]🔍 Discovering Tools for All Services[/bold]")
+                console.print("=" * 50)
+                
+                total_tools = 0
+                for svc in services_to_discover:
+                    console.print(f"\n[blue]Discovering tools for {svc['name']}...[/blue]")
+                    try:
+                        result = await discovery_service.discover_tools(
+                            svc['name'], 
+                            svc['url'],
+                            tool_categories=[category] if category else None
+                        )
+                        
+                        if result.get('success'):
+                            tools = result.get('tools', [])
+                            console.print(f"  ✅ Found {len(tools)} tools")
+                            total_tools += len(tools)
+                            
+                            if len(tools) > 0:
+                                for tool in tools[:3]:  # Show first 3 tools
+                                    console.print(f"    📋 {tool.get('name', 'Unknown')}: {tool.get('category', 'uncategorized')}")
+                                if len(tools) > 3:
+                                    console.print(f"    ... and {len(tools) - 3} more tools")
+                        else:
+                            console.print(f"  ❌ Failed: {result.get('error', 'Unknown error')}")
+                    except Exception as e:
+                        console.print(f"  ❌ Error: {str(e)}")
+                
+                console.print(f"\n[bold]📊 Discovery Summary:[/bold]")
+                console.print(f"  Total Tools Discovered: {total_tools}")
+                console.print(f"  Services Scanned: {len(services_to_discover)}")
+                
+            elif service:
+                # Discover tools for specific service
+                console.print(f"\n[bold]🔍 Discovering Tools for {service}[/bold]")
+                console.print("=" * 40)
+                
+                # Map service names to URLs (you may need to adjust these)
+                service_urls = {
+                    "analysis-service": "http://localhost:5020",
+                    "prompt_store": "http://localhost:5110", 
+                    "memory-agent": "http://localhost:5040",
+                    "source-agent": "http://localhost:5000",
+                    "doc_store": "http://localhost:5087",
+                    "github-mcp": "http://localhost:5072",
+                    "interpreter": "http://localhost:5120",
+                    "secure-analyzer": "http://localhost:5070",
+                    "summarizer-hub": "http://localhost:5160"
+                }
+                
+                if service not in service_urls:
+                    console.print(f"[red]❌ Unknown service: {service}[/red]")
+                    console.print(f"Available services: {', '.join(service_urls.keys())}")
+                    return
+                
+                try:
+                    result = await discovery_service.discover_tools(
+                        service, 
+                        service_urls[service],
+                        tool_categories=[category] if category else None
+                    )
+                    
+                    if result.get('success'):
+                        tools = result.get('tools', [])
+                        console.print(f"\n✅ Discovered {len(tools)} tools for {service}")
+                        
+                        if tools:
+                            console.print("\n[bold]📋 Discovered Tools:[/bold]")
+                            for i, tool in enumerate(tools, 1):
+                                console.print(f"  {i}. [cyan]{tool.get('name', 'Unknown')}[/cyan]")
+                                console.print(f"     Category: {tool.get('category', 'uncategorized')}")
+                                console.print(f"     Description: {tool.get('description', 'No description')}")
+                                if tool.get('parameters'):
+                                    console.print(f"     Parameters: {len(tool.get('parameters', []))} params")
+                                console.print()
+                        else:
+                            console.print(f"[yellow]No tools found for {service}[/yellow]")
+                    else:
+                        console.print(f"[red]❌ Discovery failed: {result.get('error', 'Unknown error')}[/red]")
+                        
+                except Exception as e:
+                    console.print(f"[red]❌ Error discovering tools: {str(e)}[/red]")
+            else:
+                console.print("[red]❌ Please specify a service name or use --all-services flag[/red]")
+                console.print("Usage: discover-tools analysis-service")
+                console.print("       discover-tools --all-services")
+        
+        asyncio.run(run_discovery())
+        
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.option('--category', help='Filter tools by category')
+@click.option('--service', help='Filter tools by service')
+@click.pass_context
+def list_discovered_tools(ctx, category, service):
+    """List all previously discovered tools"""
+    try:
+        console = Console()
+        console.print("\n[bold]📋 Discovered Tools Registry[/bold]")
+        console.print("=" * 40)
+        
+        # This would ideally read from a persistent storage
+        # For now, we'll show a placeholder
+        console.print("[yellow]Tool registry not yet implemented.[/yellow]")
+        console.print("Run 'discover-tools --all-services' first to populate the registry.")
+        
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+@cli.command()
+@click.argument('service_name', required=True)
+@click.option('--tool-name', help='Test specific tool')
+@click.pass_context
+def test_discovered_tools(ctx, service_name, tool_name):
+    """Test discovered tools for functionality"""
+    try:
+        console = Console()
+        console.print(f"\n[bold]🧪 Testing Tools for {service_name}[/bold]")
+        console.print("=" * 40)
+        
+        if tool_name:
+            console.print(f"Testing specific tool: {tool_name}")
+        else:
+            console.print("Testing all discovered tools...")
+        
+        # This would test the actual tools
+        console.print("[yellow]Tool testing not yet implemented.[/yellow]")
+        console.print("This feature will validate discovered tools against their services.")
+        
+    except Exception as e:
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+
+
+# ============================================================================
 # ADVANCED MONITORING COMMANDS
 # ============================================================================
 
