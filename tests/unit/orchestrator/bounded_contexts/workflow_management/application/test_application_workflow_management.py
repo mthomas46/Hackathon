@@ -62,11 +62,11 @@ class TestCreateWorkflowUseCase:
             tags=["test", "workflow"]
         )
 
-        success, message, workflow = await self.use_case.execute(command)
+        result = await self.use_case.execute(command)
 
-        assert success is True
-        assert message == "Workflow created successfully"
-        assert workflow is not None
+        assert result.is_success()
+        assert result.data is not None
+        workflow = result.data
         assert workflow.name == "Test Workflow"
         assert workflow.created_by == "test_user"
         assert len(workflow.parameters) == 1
@@ -84,11 +84,11 @@ class TestCreateWorkflowUseCase:
             tags=[]
         )
 
-        success, message, workflow = await self.use_case.execute(command)
+        result = await self.use_case.execute(command)
 
-        assert success is False
-        assert "validation failed" in message.lower()
-        assert workflow is None
+        assert not result.is_success()
+        assert "validation failed" in result.message.lower()
+        assert result.data is None
 
 
 class TestExecuteWorkflowUseCase:
