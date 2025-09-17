@@ -220,22 +220,23 @@ def register_bounded_context_routers(app):
     This function centralizes router registration to keep main.py clean
     and follows DRY principles by avoiding repetitive try/except blocks.
     """
-    routers = [
-        ("workflow_management", "/api/v1/workflows", ["Workflow Management"]),
-        ("health_monitoring", "/api/v1/health", ["Health & Monitoring"]),
-        ("infrastructure", "/api/v1/infrastructure", ["Infrastructure"]),
-        ("ingestion", "/api/v1/ingestion", ["Ingestion"]),
-        ("reporting", "/api/v1/reporting", ["Reporting"]),
-        ("query_processing", "/api/v1/queries", ["Query Processing"]),
+    router_configs = [
+        ("services.orchestrator.presentation.api.workflow_management.routes", "/api/v1/workflows", ["Workflow Management"], "Workflow Management"),
+        ("services.orchestrator.presentation.api.health_monitoring.routes", "/api/v1/health", ["Health & Monitoring"], "Health Monitoring"),
+        ("services.orchestrator.presentation.api.infrastructure.routes", "/api/v1/infrastructure", ["Infrastructure"], "Infrastructure"),
+        ("services.orchestrator.presentation.api.ingestion.routes", "/api/v1/ingestion", ["Ingestion"], "Ingestion"),
+        ("services.orchestrator.presentation.api.service_registry.routes", "/api/v1/service-registry", ["Service Registry"], "Service Registry"),
+        ("services.orchestrator.presentation.api.reporting.routes", "/api/v1/reporting", ["Reporting"], "Reporting"),
+        ("services.orchestrator.presentation.api.query_processing.routes", "/api/v1/queries", ["Query Processing"], "Query Processing"),
     ]
 
-    for module_name, prefix, tags in routers:
+    for module_path, prefix, tags, context_name in router_configs:
         try:
-            module_path = f".presentation.api.{module_name}"
-            router = __import__(module_path, fromlist=["router"]).router
+            module = __import__(module_path, fromlist=["router"])
+            router = getattr(module, "router")
             app.include_router(router, prefix=prefix, tags=tags)
-        except ImportError:
-            print(f"⚠️  {module_name.replace('_', ' ').title()} routes not available")
+        except (ImportError, AttributeError) as e:
+            print(f"⚠️  {context_name} routes not available")
 
 
 # Register API routes by bounded context (DDD-based)
