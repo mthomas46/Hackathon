@@ -123,7 +123,7 @@ from services.shared.core.responses import create_success_response, create_error
 from services.shared.utilities.error_handling import ServiceException, install_error_handlers
 from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register, get_service_client
-from services.shared.logging import fire_and_forget
+from services.shared.monitoring.logging import fire_and_forget
 
 try:
     import redis.asyncio as aioredis

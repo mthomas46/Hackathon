@@ -20,16 +20,27 @@ from typing import Dict, Any, List, Optional, Set
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from services.shared.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 from services.shared.utilities import attach_self_register, setup_common_middleware  # type: ignore
-from services.shared.constants_new import ServiceNames  # type: ignore
-from services.shared.clients import ServiceClients  # type: ignore
+from services.shared.core.constants_new import ServiceNames  # type: ignore
+from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
 
-from .modules.config import config
-from .modules.tool_registry import tool_registry, ToolDescription
-from .modules.mock_implementations import mock_implementations
-from .modules.real_implementations import real_implementations
-from .modules.event_system import event_system
+try:
+    from .modules.config import config
+    from .modules.tool_registry import tool_registry, ToolDescription
+    from .modules.mock_implementations import mock_implementations
+    from .modules.real_implementations import real_implementations
+    from .modules.event_system import event_system
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.config import config
+    from modules.tool_registry import tool_registry, ToolDescription
+    from modules.mock_implementations import mock_implementations
+    from modules.real_implementations import real_implementations
+    from modules.event_system import event_system
 
 # Service configuration constants
 SERVICE_NAME = "github-mcp"

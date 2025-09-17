@@ -40,8 +40,8 @@ class QueryHandlers:
                 try:
                     workflow = await self.workflow_builder.build_workflow(intent, entities)
                 except Exception as e:
-                    from services.shared.logging import fire_and_forget
-                    from services.shared.constants_new import ServiceNames
+                    from services.shared.monitoring.logging import fire_and_forget
+                    from services.shared.core.constants_new import ServiceNames
                     fire_and_forget("error", f"Workflow build error: {e}", ServiceNames.INTERPRETER)
 
             # Generate response text
@@ -166,7 +166,7 @@ class QueryHandlers:
                 return await clients.get_json("prompt-store/prompts", params=query_params)
 
         # Default: return success for unknown services/actions
-        from services.shared.responses import create_success_response
+        from services.shared.core.responses.responses import create_success_response
         return create_success_response(
             "Workflow step executed successfully",
             {"service": service, "action": action, "parameters": parameters}

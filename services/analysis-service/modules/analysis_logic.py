@@ -7,7 +7,7 @@ extracted from the main analysis service to improve maintainability.
 import re
 from typing import List, Dict, Any, Set
 try:
-    from services.shared.models import Document, Finding
+    from services.shared.core.models.models import Document, Finding
 except ImportError:
     # Fallback for testing or when shared services are not available
     class Document:

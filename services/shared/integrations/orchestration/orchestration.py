@@ -14,7 +14,10 @@ import logging
 try:
     import redis.asyncio as aioredis
 except ImportError:
-    aioredis = None
+    try:
+        import aioredis  # Fallback to older aioredis package
+    except ImportError:
+        aioredis = None
 
 logger = logging.getLogger(__name__)
 
@@ -128,9 +131,9 @@ class DeadLetterQueue:
         self.max_retries = max_retries
         self.base_delay = base_delay
         self.max_delay = max_delay
-        self._redis_client: Optional[aioredis.Redis] = None
+        self._redis_client = None
 
-    async def _get_redis(self) -> aioredis.Redis:
+    async def _get_redis(self):
         if not aioredis:
             raise RuntimeError("aioredis not available")
         if not self._redis_client:
@@ -261,10 +264,10 @@ class SagaOrchestrator:
         self.redis_host = redis_host
         self.saga_key = "saga:transactions"
         self.step_key = "saga:steps"
-        self._redis_client: Optional[aioredis.Redis] = None
+        self._redis_client = None
         self._service_clients = {}
 
-    async def _get_redis(self) -> aioredis.Redis:
+    async def _get_redis(self):
         if not aioredis:
             raise RuntimeError("aioredis not available")
         if not self._redis_client:
@@ -338,9 +341,9 @@ class EventReplayManager:
         self.events_key = events_key
         self.max_events = max_events
         self.retention_days = retention_days
-        self._redis_client: Optional[aioredis.Redis] = None
+        self._redis_client = None
 
-    async def _get_redis(self) -> aioredis.Redis:
+    async def _get_redis(self):
         if not aioredis:
             raise RuntimeError("aioredis not available")
         if not self._redis_client:

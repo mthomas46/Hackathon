@@ -28,8 +28,8 @@ class HTTPException(Exception):
         self.detail = detail
         super().__init__(detail)
 
-# from services.shared.constants_new import ServiceNames
-# from services.shared.logging import fire_and_forget
+# from services.shared.core.constants_new import ServiceNames
+# from services.shared.monitoring.logging import fire_and_forget
 
 # Temporary imports for standalone execution
 ServiceNames = type('ServiceNames', (), {

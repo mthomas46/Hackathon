@@ -6,10 +6,10 @@ These functions handle common presentation concerns like response formatting and
 
 from typing import Dict, Any, Optional
 
-from services.shared.constants_new import ErrorCodes
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.logging import fire_and_forget
-from services.shared.constants_new import ServiceNames
+from services.shared.core.constants_new import ErrorCodes
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.core.constants_new import ServiceNames
 
 
 def handle_service_error(operation: str, error: Exception, **context) -> Dict[str, Any]:

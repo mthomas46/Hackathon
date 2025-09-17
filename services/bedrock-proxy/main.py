@@ -15,8 +15,15 @@ from fastapi import FastAPI
 from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Any
 
-from services.shared.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
-from .modules.processor import process_invoke_request
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+try:
+    from .modules.processor import process_invoke_request
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.processor import process_invoke_request
 
 # Service configuration constants
 SERVICE_NAME = "bedrock-proxy"

@@ -2,8 +2,8 @@
 
 import httpx
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
-from services.shared.logging import fire_and_forget
+from typing import Dict, Any, Optional, List
+from services.shared.monitoring.logging import fire_and_forget
 from .models import NormalizedArchitectureData, ArchitectureComponent, ArchitectureConnection
 
 

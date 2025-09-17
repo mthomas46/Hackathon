@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, Optional
 import asyncio
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 
 
 class OrchestratorServiceClient:
