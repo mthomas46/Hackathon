@@ -1,0 +1,451 @@
+# =============================================================================
+# DOMAIN-DRIVEN DESIGN (DDD) CONFIGURATION
+# =============================================================================
+# This file contains DDD-specific configuration settings for the Analysis Service
+# and other services that have been refactored to follow DDD principles
+
+# ============================================================================
+# ANALYSIS SERVICE - DDD CONFIGURATION
+# ============================================================================
+
+analysis_service_ddd:
+  # Domain Layer Configuration
+  domain:
+    # Entities
+    entities:
+      document:
+        validation_rules:
+          - "title_required"
+          - "content_not_empty"
+          - "valid_metadata"
+        business_rules:
+          - "document_uniqueness"
+          - "version_control"
+
+      analysis:
+        validation_rules:
+          - "valid_analysis_type"
+          - "required_parameters"
+        business_rules:
+          - "analysis_workflow"
+          - "result_consistency"
+
+      finding:
+        validation_rules:
+          - "severity_valid"
+          - "evidence_required"
+        business_rules:
+          - "finding_uniqueness"
+          - "severity_calculation"
+
+    # Value Objects
+    value_objects:
+      analysistype:
+        allowed_values: ["consistency", "semantic", "sentiment", "quality", "risk", "trend"]
+        immutable: true
+
+      confidence:
+        range: [0.0, 1.0]
+        precision: 3
+        immutable: true
+
+      location:
+        validation_rules:
+          - "valid_file_path"
+          - "line_number_positive"
+
+    # Domain Services
+    domain_services:
+      analysis_service:
+        enabled_features:
+          - "semantic_similarity"
+          - "sentiment_analysis"
+          - "quality_assessment"
+          - "risk_assessment"
+        performance_limits:
+          max_concurrent_analyses: 10
+          analysis_timeout: 300
+
+      document_service:
+        versioning_enabled: true
+        change_tracking: true
+        metadata_validation: true
+
+    # Domain Events
+    domain_events:
+      analysis_completed:
+        required_fields: ["analysis_id", "result", "timestamp"]
+        subscribers: ["reporting_service", "notification_service"]
+
+      finding_created:
+        required_fields: ["finding_id", "severity", "location"]
+        subscribers: ["analysis_service", "reporting_service"]
+
+  # Application Layer Configuration
+  application:
+    # CQRS Configuration
+    cqrs:
+      enabled: true
+      command_validation: true
+      query_optimization: true
+      event_sourcing: false  # Can be enabled later
+
+    # Use Cases
+    use_cases:
+      perform_analysis:
+        timeout: 300
+        retry_policy:
+          max_attempts: 3
+          backoff_strategy: "exponential"
+        validation_rules:
+          - "input_validation"
+          - "permission_check"
+          - "resource_limits"
+
+      generate_report:
+        timeout: 120
+        output_formats: ["json", "markdown", "html"]
+        stakeholder_customization: true
+
+    # Application Services
+    application_services:
+      analysis_orchestrator:
+        max_concurrent_tasks: 5
+        task_prioritization: true
+        resource_pooling: true
+
+    # DTOs Configuration
+    dtos:
+      request_validation: true
+      response_formatting: "envelope"
+      error_handling: "structured"
+
+    # Validators
+    validators:
+      business_rule_validation: true
+      input_sanitization: true
+      permission_validation: true
+
+  # Infrastructure Layer Configuration
+  infrastructure:
+    # Repository Configuration
+    repositories:
+      document_repository:
+        implementation: "SQLiteDocumentRepository"
+        caching: true
+        connection_pool_size: 5
+        query_optimization: true
+
+      analysis_repository:
+        implementation: "SQLiteAnalysisRepository"
+        indexing_strategy: "composite"
+        performance_monitoring: true
+
+      finding_repository:
+        implementation: "SQLiteFindingRepository"
+        bulk_operations: true
+        transaction_management: true
+
+    # External Services
+    external_services:
+      semantic_analyzer:
+        provider: "sentence-transformers"
+        model: "all-MiniLM-L6-v2"
+        cache_embeddings: true
+        similarity_threshold: 0.7
+
+      sentiment_analyzer:
+        provider: "textblob"
+        fallback_provider: "transformers"
+        confidence_threshold: 0.6
+
+      quality_analyzer:
+        readability_metrics: ["flesch_kincaid", "dale_chall"]
+        structure_analysis: true
+        technical_accuracy_check: true
+
+    # Event Publishing
+    event_publishing:
+      redis_pubsub:
+        enabled: true
+        channel_prefix: "ddd:events:"
+        message_format: "json"
+        retry_policy:
+          max_attempts: 3
+          backoff_ms: 100
+
+    # Caching Configuration
+    caching:
+      redis_cache:
+        enabled: true
+        ttl_seconds: 3600
+        key_prefix: "ddd:cache:"
+        serialization_format: "json"
+        compression: true
+
+  # Presentation Layer Configuration
+  presentation:
+    # Controllers Configuration
+    controllers:
+      analysis_controller:
+        endpoints:
+          - "/analyze"
+          - "/analyze/semantic-similarity"
+          - "/analyze/sentiment"
+          - "/analyze/quality"
+        rate_limiting: true
+        authentication: true
+
+      distributed_controller:
+        endpoints:
+          - "/distributed/tasks"
+          - "/distributed/workers"
+          - "/distributed/stats"
+        admin_only: true
+
+    # Middleware
+    middleware:
+      error_handling:
+        structured_responses: true
+        logging_enabled: true
+        metrics_enabled: true
+
+      logging:
+        correlation_id: true
+        request_logging: true
+        performance_logging: true
+
+      validation:
+        input_validation: true
+        business_rule_validation: true
+
+    # API Documentation
+    api_docs:
+      openapi_version: "3.0.3"
+      title: "Analysis Service API - DDD Architecture"
+      version: "2.0.0"
+      description: "Domain-Driven Design implementation of document analysis"
+      servers:
+        - url: "http://localhost:5020"
+          description: "Development server"
+        - url: "https://api.analysis-service.com"
+          description: "Production server"
+
+    # Response Formatters
+    response_formatters:
+      envelope_format: true
+      metadata_inclusion: true
+      pagination_support: true
+      error_details: true
+
+# ============================================================================
+# DISTRIBUTED PROCESSING CONFIGURATION
+# ============================================================================
+
+distributed_processing:
+  # Worker Management
+  worker_manager:
+    max_workers: 4
+    worker_startup_timeout: 30
+    health_check_interval: 10
+    auto_scaling: true
+    scaling_triggers:
+      queue_depth_threshold: 10
+      cpu_usage_threshold: 80
+      memory_usage_threshold: 85
+
+  # Load Balancing
+  load_balancer:
+    strategies:
+      round_robin:
+        enabled: true
+        weight_calculation: "equal"
+      least_loaded:
+        enabled: true
+        metrics: ["cpu", "memory", "queue_depth"]
+      performance_based:
+        enabled: true
+        performance_window: 300  # 5 minutes
+      adaptive:
+        enabled: true
+        learning_rate: 0.1
+        adjustment_interval: 60
+
+    current_strategy: "round_robin"
+    strategy_switching:
+      enabled: true
+      evaluation_interval: 300
+      performance_threshold: 0.8
+
+  # Task Management
+  task_manager:
+    queue_size: 1000
+    task_timeout: 300
+    retry_policy:
+      max_attempts: 3
+      backoff_strategy: "exponential"
+      base_delay: 1
+    prioritization:
+      enabled: true
+      priority_levels: ["low", "normal", "high", "critical"]
+      default_priority: "normal"
+
+  # Performance Monitoring
+  performance_monitoring:
+    enabled: true
+    metrics_collection:
+      task_completion_time: true
+      worker_utilization: true
+      queue_depth: true
+      error_rates: true
+    alerting:
+      enabled: true
+      thresholds:
+        max_queue_depth: 100
+        max_task_timeout: 600
+        error_rate_threshold: 0.05
+
+# ============================================================================
+# SHARED SERVICES CONFIGURATION
+# ============================================================================
+
+shared_services:
+  # Error Handling
+  error_handling:
+    structured_errors: true
+    error_codes: true
+    stack_trace_inclusion: false  # Production setting
+    logging_level: "ERROR"
+
+  # Logging
+  logging:
+    structured_logging: true
+    correlation_id_tracking: true
+    performance_logging: true
+    log_levels:
+      domain: "INFO"
+      application: "INFO"
+      infrastructure: "WARN"
+      presentation: "INFO"
+
+  # Caching
+  caching:
+    multi_level_cache: true
+    l1_cache_ttl: 300    # 5 minutes
+    l2_cache_ttl: 3600   # 1 hour
+    cache_invalidation: "write_through"
+    cache_warming: true
+
+  # Metrics
+  metrics:
+    prometheus_enabled: true
+    custom_metrics: true
+    ddd_layer_metrics: true
+    performance_metrics: true
+    business_metrics: true
+
+# ============================================================================
+# MIGRATION & COMPATIBILITY SETTINGS
+# ============================================================================
+
+migration:
+  # Backward Compatibility
+  backward_compatibility:
+    legacy_endpoints: true
+    deprecated_warnings: true
+    migration_period_days: 90
+
+  # Feature Flags
+  feature_flags:
+    ddd_analysis_service: true
+    distributed_processing: true
+    advanced_analytics: true
+    legacy_mode: false
+
+  # Gradual Rollout
+  rollout:
+    phase_1_services: ["analysis_service"]
+    phase_2_services: ["doc_store", "orchestrator"]
+    phase_3_services: ["source_agent", "summarizer_hub"]
+    monitoring_enabled: true
+
+# ============================================================================
+# PERFORMANCE OPTIMIZATION SETTINGS
+# ============================================================================
+
+performance:
+  # Database Optimization
+  database:
+    connection_pooling: true
+    query_caching: true
+    index_optimization: true
+    bulk_operations: true
+
+  # Memory Management
+  memory:
+    garbage_collection_tuning: true
+    object_pooling: true
+    memory_limits:
+      max_heap_size: "512MB"
+      cache_memory_limit: "128MB"
+
+  # Concurrency
+  concurrency:
+    async_operations: true
+    thread_pool_size: 4
+    coroutine_limits: 100
+
+  # Caching Strategy
+  caching_strategy:
+    l1_cache: "memory"      # Fast, small
+    l2_cache: "redis"       # Distributed, larger
+    l3_cache: "disk"        # Persistent, largest
+
+# ============================================================================
+# MONITORING & OBSERVABILITY
+# ============================================================================
+
+monitoring:
+  # Health Checks
+  health_checks:
+    detailed_health_endpoints: true
+    dependency_checks: true
+    performance_metrics: true
+    custom_health_indicators: true
+
+  # Tracing
+  tracing:
+    distributed_tracing: true
+    trace_sampling_rate: 0.1
+    trace_export: "jaeger"
+
+  # Alerting
+  alerting:
+    error_rate_alerts: true
+    performance_degradation_alerts: true
+    resource_usage_alerts: true
+    custom_business_alerts: true
+
+# ============================================================================
+# SECURITY SETTINGS
+# ============================================================================
+
+security:
+  # API Security
+  api_security:
+    authentication_required: false  # Can be enabled per environment
+    rate_limiting: true
+    input_validation: true
+    sql_injection_protection: true
+
+  # Data Protection
+  data_protection:
+    sensitive_data_masking: true
+    audit_logging: true
+    encryption_at_rest: false  # Can be enabled for production
+
+  # Access Control
+  access_control:
+    role_based_access: false  # Can be enabled with authentication
+    permission_validation: true
+    resource_ownership: true

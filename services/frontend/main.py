@@ -133,10 +133,10 @@ import os
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.constants_new import ServiceNames, EnvVars
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.constants_new import ServiceNames, EnvVars
 from services.shared.utilities import setup_common_middleware
-from services.shared.error_handling import install_error_handlers
+from services.shared.utilities.error_handling import install_error_handlers
 
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality

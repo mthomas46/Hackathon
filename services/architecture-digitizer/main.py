@@ -22,12 +22,12 @@ from pydantic import BaseModel, field_validator
 # ============================================================================
 # SHARED MODULES - Following ecosystem patterns
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import setup_common_middleware, attach_self_register, get_service_client
-from services.shared.logging import fire_and_forget
-from services.shared.metrics import (
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.monitoring.metrics import (
     get_service_metrics,
     metrics_endpoint,
     record_architecture_digitizer_request,
@@ -38,15 +38,36 @@ from services.shared.metrics import (
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
-from .modules.normalizers import get_normalizer, get_file_normalizer
-from .modules.models import (
-    NormalizeRequest,
-    NormalizeResponse,
-    FileNormalizeRequest,
-    FileNormalizeResponse,
-    SupportedSystemsResponse,
-    SupportedFileFormatsResponse
-)
+try:
+    from .modules.normalizers import get_normalizer, get_file_normalizer
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.normalizers import get_normalizer, get_file_normalizer
+try:
+    from .modules.models import (
+        NormalizeRequest,
+        NormalizeResponse,
+        FileNormalizeRequest,
+        FileNormalizeResponse,
+        SupportedSystemsResponse,
+        SupportedFileFormatsResponse
+    )
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.models import (
+        NormalizeRequest,
+        NormalizeResponse,
+        FileNormalizeRequest,
+        FileNormalizeResponse,
+        SupportedSystemsResponse,
+        SupportedFileFormatsResponse
+    )
 
 # ============================================================================
 # DOC-STORE INTEGRATION FUNCTIONS

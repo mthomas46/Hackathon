@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request
 from typing import Dict, Any, List, Optional
 
-from services.shared.responses import create_error_response, create_success_response
-from services.shared.constants_new import ErrorCodes
-from services.shared.config import get_config_value
-from services.shared.clients import ServiceClients
+from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.constants_new import ErrorCodes
+from services.shared.core.config.config import get_config_value
+from services.shared.integrations.clients.clients import ServiceClients
 
 router = APIRouter()
 

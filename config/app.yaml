@@ -1,28 +1,147 @@
-# Global application configuration
+# =============================================================================
+# GLOBAL APPLICATION CONFIGURATION - UPDATED FOR DDD ARCHITECTURE
+# =============================================================================
+# This file contains service-specific configurations that override the global config.yml
+# Updated for Domain-Driven Design (DDD) implementation
+
+# ============================================================================
+# INFRASTRUCTURE CONFIGURATION
+# ============================================================================
 
 redis:
   host: redis
+  port: 6379
+  # DDD-specific Redis settings
+  ddd_cache_prefix: "ddd:analysis:"
+  ddd_event_channel: "ddd:events"
+
+# ============================================================================
+# SERVICE CONFIGURATIONS - UPDATED PORTS FOR DDD
+# ============================================================================
 
 doc_store:
-  db_path: services/doc_store/db.sqlite3
+  db_path: data/doc_store.db  # Updated for new data directory structure
   connection_pool_size: 5
+  # DDD-specific settings
+  ddd_repositories:
+    document_repository: "services.shared.infrastructure.repositories.SQLiteDocumentRepository"
+    analysis_repository: "services.shared.infrastructure.repositories.SQLiteAnalysisRepository"
+
+analysis_service:
+  port: 5020
+  # DDD Architecture settings
+  ddd_layers:
+    domain: "services.analysis_service.domain"
+    application: "services.analysis_service.application"
+    infrastructure: "services.analysis_service.infrastructure"
+    presentation: "services.analysis_service.presentation"
+  # Advanced analysis settings
+  semantic_similarity:
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    threshold: 0.7
+  distributed_processing:
+    max_workers: 4
+    task_timeout: 300
+    load_balancing_strategy: "round_robin"
+
+# ============================================================================
+# SERVICE URL MAPPINGS - UPDATED FOR DDD PORTS
+# ============================================================================
 
 services:
-  ORCHESTRATOR_URL: http://orchestrator:5000
-  DOC_STORE_URL: http://doc_store:5010
-  ANALYSIS_SERVICE_URL: http://analysis-service:5020
+  ORCHESTRATOR_URL: http://orchestrator:5099          # Updated to correct port
+  DOC_STORE_URL: http://doc_store:5087                # Updated to correct port
+  ANALYSIS_SERVICE_URL: http://analysis-service:5020  # DDD Analysis Service
   REPORTING_URL: http://reporting:5030
   SOURCE_AGENT_URL: http://source-agent:5000
   NOTIFICATION_URL: http://notification-service:5095
   SUMMARIZER_HUB_URL: http://summarizer-hub:5060
+  SECURE_ANALYZER_URL: http://secure-analyzer:5070
+  CODE_ANALYZER_URL: http://code-analyzer:5085
+  PROMPT_STORE_URL: http://prompt-store:5110
+  INTERPRETER_URL: http://interpreter:5120
+  MEMORY_AGENT_URL: http://memory-agent:5040
+  DISCOVERY_AGENT_URL: http://discovery-agent:5045
+  GITHUB_MCP_URL: http://github-mcp:5072
+  BEDROCK_PROXY_URL: http://bedrock-proxy:7090
+  ARCHITECTURE_DIGITIZER_URL: http://architecture-digitizer:5105
+  LOG_COLLECTOR_URL: http://log-collector:5080
+
+# ============================================================================
+# DDD-SPECIFIC CONFIGURATIONS
+# ============================================================================
+
+ddd:
+  # Domain Layer settings
+  domain:
+    event_sourcing: false
+    cqrs_enabled: true
+    value_objects_immutable: true
+
+  # Application Layer settings
+  application:
+    use_cases_timeout: 300
+    command_validation: true
+    event_publishing: true
+
+  # Infrastructure Layer settings
+  infrastructure:
+    repository_pattern: "active_record"
+    caching_strategy: "redis"
+    event_bus: "redis_pubsub"
+
+  # Presentation Layer settings
+  presentation:
+    api_versioning: "header"
+    response_format: "envelope"
+    error_handling: "structured"
 
 orchestrator:
   ORCHESTRATOR_PEERS: ""
+  # DDD-specific settings
+  ddd_workflow_engine: true
+  event_driven_processing: true
+
+# ============================================================================
+# HTTP CLIENT CONFIGURATION - ENHANCED FOR DDD
+# ============================================================================
 
 http_client:
-  timeout: 8
+  timeout: 30  # Increased for complex DDD operations
   retry_attempts: 3
   retry_base_ms: 150
-  circuit_enabled: false
+  circuit_enabled: true
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout: 60
+    expected_exception: "requests.exceptions.RequestException"
+
+# ============================================================================
+# PERFORMANCE & MONITORING - DDD ENHANCED
+# ============================================================================
+
+monitoring:
+  enabled: true
+  ddd_metrics: true
+  metrics:
+    domain_events: true
+    use_case_performance: true
+    repository_operations: true
+    cache_hit_rate: true
+
+logging:
+  level: INFO
+  format: json
+  ddd_correlation_id: true
+  structured_logging: true
+
+# ============================================================================
+# BACKWARD COMPATIBILITY SETTINGS
+# ============================================================================
+
+compatibility:
+  legacy_api_endpoints: true
+  deprecated_warnings: true
+  migration_mode: "gradual"  # Options: immediate, gradual, legacy_first
 
 

@@ -3,9 +3,9 @@ from rich.prompt import Prompt
 import base64
 import httpx
 
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list, save_data
-from services.shared.credentials import get_secret
+from services.shared.auth.credentials import get_secret
 import os
 
 

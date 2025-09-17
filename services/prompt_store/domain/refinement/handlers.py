@@ -5,7 +5,7 @@ Handles HTTP requests and responses for prompt refinement operations.
 
 from typing import Dict, Any, Optional, List
 from services.prompt_store.domain.refinement.service import PromptRefinementService
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.core.responses.responses import create_success_response, create_error_response
 
 
 class PromptRefinementHandlers:

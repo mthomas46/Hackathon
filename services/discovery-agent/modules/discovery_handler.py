@@ -83,7 +83,7 @@ class DiscoveryHandler:
             return handle_discovery_error("discover endpoints", e, status_code=e.response.status_code, **context)
 
         except Exception as e:
-            from services.shared.error_handling import ValidationException
+            from services.shared.utilities.error_handling import ValidationException
             from fastapi import HTTPException
 
             # Handle validation errors with proper HTTP status codes
