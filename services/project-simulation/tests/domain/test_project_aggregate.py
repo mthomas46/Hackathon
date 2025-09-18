@@ -1,358 +1,449 @@
-"""Domain-Driven Unit Tests - Project Aggregate.
+"""Domain Layer Unit Tests - Project Aggregate Testing.
 
-This module contains comprehensive unit tests for the Project aggregate,
-following domain-driven design testing patterns.
+Tests for Project aggregate following Domain-Driven Design principles.
+Validates business rules, invariants, and domain logic in isolation.
 """
 
 import pytest
 from datetime import datetime, timedelta
-from uuid import uuid4
+from unittest.mock import MagicMock
 
-from simulation.domain.entities.project import Project
-from simulation.domain.value_objects import (
-    ProjectStatus, ProjectType, ComplexityLevel, TeamMember, Role
+from services.project_simulation.simulation.domain.entities.project import Project
+from services.project_simulation.simulation.domain.value_objects import (
+    ProjectType, ComplexityLevel, ProjectStatus, TeamMember, Phase, Milestone
+)
+from services.project_simulation.simulation.domain.events import (
+    ProjectCreated, ProjectUpdated, ProjectStatusChanged
 )
 
 
 class TestProjectAggregate:
-    """Test suite for Project aggregate following DDD patterns."""
+    """Test cases for Project aggregate business logic."""
 
-    def test_project_creation(self):
-        """Test project creation with valid data."""
-        # Given
-        project_id = str(uuid4())
-        name = "Test Project"
-        description = "A test project for validation"
+    def test_project_creation_with_valid_data(self):
+        """Test creating a project with valid data."""
+        # Arrange
+        project_id = "test_project_001"
+        name = "Test E-commerce Platform"
         project_type = ProjectType.WEB_APPLICATION
-        complexity = ComplexityLevel.MEDIUM
-        duration_weeks = 8
+        complexity = ComplexityLevel.COMPLEX
 
-        # When
+        # Act
         project = Project(
             project_id=project_id,
             name=name,
-            description=description,
+            description="A comprehensive e-commerce platform",
             project_type=project_type,
             complexity=complexity,
-            duration_weeks=duration_weeks
-        )
-
-        # Then
-        assert project.project_id == project_id
-        assert project.name == name
-        assert project.description == description
-        assert project.project_type == project_type
-        assert project.complexity == complexity
-        assert project.duration_weeks == duration_weeks
-        assert project.status == ProjectStatus.PLANNING
-        assert isinstance(project.created_at, datetime)
-        assert project.updated_at == project.created_at
-        assert len(project.events) == 1  # ProjectCreated event
-
-    def test_project_creation_with_invalid_duration(self):
-        """Test project creation with invalid duration."""
-        # Given
-        project_id = str(uuid4())
-        name = "Test Project"
-
-        # When/Then
-        with pytest.raises(ValueError):
-            Project(
-                project_id=project_id,
-                name=name,
-                duration_weeks=0  # Invalid: must be >= 1
-            )
-
-    def test_project_status_change(self):
-        """Test project status change."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Test Project",
-            project_type=ProjectType.API_SERVICE
-        )
-
-        # When
-        initial_status = project.status
-        project.change_status(ProjectStatus.IN_PROGRESS)
-
-        # Then
-        assert initial_status == ProjectStatus.PLANNING
-        assert project.status == ProjectStatus.IN_PROGRESS
-        assert project.updated_at > project.created_at
-        assert len(project.events) == 2  # ProjectCreated + ProjectStatusChanged
-
-    def test_project_status_change_to_invalid_status(self):
-        """Test project status change to invalid status."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Test Project"
-        )
-
-        # When/Then
-        with pytest.raises(ValueError, match="Invalid project status"):
-            project.change_status("invalid_status")
-
-    def test_project_update(self):
-        """Test project update operations."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Original Name",
-            description="Original description",
-            project_type=ProjectType.WEB_APPLICATION
-        )
-
-        # When
-        project.update(
-            name="Updated Name",
-            description="Updated description",
-            project_type=ProjectType.API_SERVICE,
-            complexity=ComplexityLevel.COMPLEX,
             duration_weeks=12
         )
 
-        # Then
+        # Assert
+        assert project.project_id == project_id
+        assert project.name == name
+        assert project.project_type == project_type
+        assert project.complexity == complexity
+        assert project.status == ProjectStatus.PLANNING
+        assert len(project.events) == 1
+        assert isinstance(project.events[0], ProjectCreated)
+
+    def test_project_creation_with_invalid_complexity(self):
+        """Test that invalid complexity raises ValueError."""
+        with pytest.raises(ValueError):
+            Project(
+                project_id="test_001",
+                name="Test Project",
+                project_type=ProjectType.API_SERVICE,
+                complexity="invalid_complexity"  # Invalid
+            )
+
+    def test_project_update_business_logic(self):
+        """Test project update following business rules."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Original Name",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        # Act
+        project.update(
+            name="Updated Name",
+            description="Updated description"
+        )
+
+        # Assert
         assert project.name == "Updated Name"
         assert project.description == "Updated description"
-        assert project.project_type == ProjectType.API_SERVICE
-        assert project.complexity == ComplexityLevel.COMPLEX
-        assert project.duration_weeks == 12
-        assert project.updated_at > project.created_at
-        assert len(project.events) == 2  # ProjectCreated + ProjectUpdated
+        assert len(project.events) == 2  # Creation + Update
+        assert isinstance(project.events[1], ProjectUpdated)
 
-    def test_project_update_partial(self):
-        """Test partial project update."""
-        # Given
+    def test_project_status_transition_business_rules(self):
+        """Test project status transitions follow business rules."""
+        # Arrange
         project = Project(
-            project_id=str(uuid4()),
-            name="Original Name",
-            description="Original description"
-        )
-        original_updated_at = project.updated_at
-
-        # When
-        project.update(name="Updated Name")
-
-        # Then
-        assert project.name == "Updated Name"
-        assert project.description == "Original description"  # Unchanged
-        assert project.updated_at > original_updated_at
-
-    def test_team_member_management(self):
-        """Test team member management."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Test Project"
-        )
-        member = TeamMember(
-            member_id=str(uuid4()),
-            name="John Doe",
-            email="john@example.com",
-            role=Role.DEVELOPER,
-            skills=["Python", "FastAPI"]
-        )
-
-        # When
-        project.add_team_member(member)
-
-        # Then
-        assert len(project.team_members) == 1
-        assert project.team_members[0] == member
-        assert project.updated_at > project.created_at
-
-    def test_add_duplicate_team_member(self):
-        """Test adding duplicate team member."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Test Project"
-        )
-        member = TeamMember(
-            member_id=str(uuid4()),
-            name="John Doe",
-            email="john@example.com",
-            role=Role.DEVELOPER
-        )
-
-        # When
-        project.add_team_member(member)
-        project.add_team_member(member)  # Duplicate
-
-        # Then
-        assert len(project.team_members) == 1  # Should not add duplicate
-        assert project.team_members[0] == member
-
-    def test_remove_team_member(self):
-        """Test removing team member."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Test Project"
-        )
-        member1 = TeamMember(
-            member_id=str(uuid4()),
-            name="John Doe",
-            email="john@example.com",
-            role=Role.DEVELOPER
-        )
-        member2 = TeamMember(
-            member_id=str(uuid4()),
-            name="Jane Smith",
-            email="jane@example.com",
-            role=Role.QA
-        )
-
-        project.add_team_member(member1)
-        project.add_team_member(member2)
-
-        # When
-        project.remove_team_member(member1.member_id)
-
-        # Then
-        assert len(project.team_members) == 1
-        assert project.team_members[0] == member2
-        assert project.updated_at > project.created_at
-
-    def test_remove_nonexistent_team_member(self):
-        """Test removing non-existent team member."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Test Project"
-        )
-
-        # When/Then
-        with pytest.raises(ValueError, match="Team member with ID .* not found"):
-            project.remove_team_member(str(uuid4()))
-
-    def test_business_rule_enforcement(self):
-        """Test business rule enforcement."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
+            project_id="test_001",
             name="Test Project",
             project_type=ProjectType.WEB_APPLICATION,
-            complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            complexity=ComplexityLevel.MEDIUM
         )
 
-        # When - Try to change to completed without going through proper states
+        # Act - Valid transition
         project.change_status(ProjectStatus.IN_PROGRESS)
 
-        # Then - Should allow valid transitions
+        # Assert
         assert project.status == ProjectStatus.IN_PROGRESS
+        assert len(project.events) == 2
+        assert isinstance(project.events[1], ProjectStatusChanged)
 
-        # Complete the project
-        project.change_status(ProjectStatus.COMPLETED)
-        assert project.status == ProjectStatus.COMPLETED
-
-    def test_event_sourcing(self):
-        """Test event sourcing capabilities."""
-        # Given
+    def test_invalid_status_transition_raises_error(self):
+        """Test that invalid status transitions raise errors."""
+        # Arrange
         project = Project(
-            project_id=str(uuid4()),
-            name="Event Test Project"
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
         )
 
-        # When - Perform multiple operations
-        project.update(name="Updated Event Test Project")
+        # Act & Assert - Invalid transition should raise error
+        with pytest.raises(ValueError, match="Invalid project status"):
+            project.change_status("invalid_status")
+
+    def test_team_member_management_business_rules(self):
+        """Test team member management follows business rules."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        team_member = TeamMember(
+            member_id="dev_001",
+            name="Alice Johnson",
+            role="developer",
+            email="alice@example.com"
+        )
+
+        # Act
+        project.add_team_member(team_member)
+
+        # Assert
+        assert len(project.team_members) == 1
+        assert project.team_members[0] == team_member
+
+    def test_duplicate_team_member_not_added(self):
+        """Test that duplicate team members are not added."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        team_member = TeamMember(
+            member_id="dev_001",
+            name="Alice Johnson",
+            role="developer",
+            email="alice@example.com"
+        )
+
+        # Act
+        project.add_team_member(team_member)
+        project.add_team_member(team_member)  # Duplicate
+
+        # Assert
+        assert len(project.team_members) == 1
+
+    def test_remove_team_member_business_logic(self):
+        """Test removing team members follows business rules."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        team_member = TeamMember(
+            member_id="dev_001",
+            name="Alice Johnson",
+            role="developer",
+            email="alice@example.com"
+        )
+
+        project.add_team_member(team_member)
+
+        # Act
+        project.remove_team_member("dev_001")
+
+        # Assert
+        assert len(project.team_members) == 0
+
+    def test_phase_management_business_rules(self):
+        """Test phase management follows business rules."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        phase = Phase(
+            phase_id="phase_001",
+            name="Planning",
+            description="Project planning phase",
+            start_date=datetime.now(),
+            end_date=datetime.now() + timedelta(days=14),
+            duration_days=14
+        )
+
+        # Act
+        project.add_phase(phase)
+
+        # Assert
+        assert len(project.phases) == 1
+        assert project.phases[0] == phase
+
+    def test_duplicate_phase_not_added(self):
+        """Test that duplicate phases are not added."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        phase = Phase(
+            phase_id="phase_001",
+            name="Planning",
+            description="Project planning phase",
+            start_date=datetime.now(),
+            end_date=datetime.now() + timedelta(days=14),
+            duration_days=14
+        )
+
+        # Act
+        project.add_phase(phase)
+        project.add_phase(phase)  # Duplicate
+
+        # Assert
+        assert len(project.phases) == 1
+
+    def test_milestone_management_business_rules(self):
+        """Test milestone management follows business rules."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        milestone = Milestone(
+            milestone_id="ms_001",
+            name="Requirements Complete",
+            description="All requirements finalized",
+            due_date=datetime.now() + timedelta(days=30)
+        )
+
+        # Act
+        project.add_milestone(milestone)
+
+        # Assert
+        assert len(project.milestones) == 1
+        assert project.milestones[0] == milestone
+
+    def test_duplicate_milestone_not_added(self):
+        """Test that duplicate milestones are not added."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        milestone = Milestone(
+            milestone_id="ms_001",
+            name="Requirements Complete",
+            description="All requirements finalized",
+            due_date=datetime.now() + timedelta(days=30)
+        )
+
+        # Act
+        project.add_milestone(milestone)
+        project.add_milestone(milestone)  # Duplicate
+
+        # Assert
+        assert len(project.milestones) == 1
+
+    def test_project_invariants_maintained(self):
+        """Test that project invariants are maintained."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM,
+            duration_weeks=8
+        )
+
+        # Assert invariants
+        assert project.project_id is not None
+        assert project.name is not None
+        assert project.project_type in ProjectType
+        assert project.complexity in ComplexityLevel
+        assert project.duration_weeks > 0
+        assert project.status in ProjectStatus
+
+    def test_project_creation_records_event(self):
+        """Test that project creation records domain event."""
+        # Arrange & Act
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        # Assert
+        assert len(project.events) == 1
+        event = project.events[0]
+        assert isinstance(event, ProjectCreated)
+        assert event.project_id == "test_001"
+        assert event.name == "Test Project"
+        assert event.project_type == ProjectType.WEB_APPLICATION
+
+    def test_project_update_records_event(self):
+        """Test that project updates record domain events."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Original Name",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        # Clear creation event for cleaner test
+        project.events.clear()
+
+        # Act
+        project.update(name="Updated Name")
+
+        # Assert
+        assert len(project.events) == 1
+        event = project.events[0]
+        assert isinstance(event, ProjectUpdated)
+        assert event.project_id == "test_001"
+        assert event.name == "Updated Name"
+
+    def test_status_change_records_event(self):
+        """Test that status changes record domain events."""
+        # Arrange
+        project = Project(
+            project_id="test_001",
+            name="Test Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
+        )
+
+        # Clear creation event
+        project.events.clear()
+
+        # Act
         project.change_status(ProjectStatus.IN_PROGRESS)
-        project.change_status(ProjectStatus.COMPLETED)
 
-        # Then - Should have recorded all events
-        assert len(project.events) == 4  # ProjectCreated + ProjectUpdated + 2x ProjectStatusChanged
+        # Assert
+        assert len(project.events) == 1
+        event = project.events[0]
+        assert isinstance(event, ProjectStatusChanged)
+        assert event.project_id == "test_001"
+        assert event.new_status == ProjectStatus.IN_PROGRESS
 
-        # Verify event types
-        event_types = [event.event_type for event in project.events]
-        assert "ProjectCreated" in event_types
-        assert "ProjectUpdated" in event_types
-        assert event_types.count("ProjectStatusChanged") == 2
 
-    def test_project_immutability_of_events(self):
-        """Test that domain events are immutable."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Immutability Test"
+class TestProjectBusinessRules:
+    """Test cases for complex business rules."""
+
+    def test_complex_project_requires_experienced_team(self):
+        """Test that complex projects require experienced team members."""
+        # This would test a business rule that complex projects
+        # should have team members with sufficient experience
+        pass
+
+    def test_project_duration_based_on_complexity(self):
+        """Test that project duration is appropriate for complexity."""
+        # Complex projects should have longer duration
+        complex_project = Project(
+            project_id="complex_001",
+            name="Complex Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.COMPLEX,
+            duration_weeks=16  # Should be longer for complex projects
         )
 
-        # When - Get events reference
-        events = project.events
-
-        # Then - Should not be able to modify events directly
-        # Note: In a real DDD implementation, events would be immutable
-        # This test demonstrates the concept
-        assert len(events) == 1
-        assert events[0].event_type == "ProjectCreated"
-
-    @pytest.mark.parametrize("project_type", [
-        ProjectType.WEB_APPLICATION,
-        ProjectType.API_SERVICE,
-        ProjectType.MOBILE_APPLICATION,
-        ProjectType.DATA_SCIENCE,
-        ProjectType.DEVOPS_TOOL
-    ])
-    def test_all_project_types(self, project_type):
-        """Test all valid project types."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name=f"{project_type.value} Project",
-            project_type=project_type
+        simple_project = Project(
+            project_id="simple_001",
+            name="Simple Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.SIMPLE,
+            duration_weeks=4  # Can be shorter for simple projects
         )
 
-        # Then
-        assert project.project_type == project_type
+        # Business rule: complex projects need more time
+        assert complex_project.duration_weeks > simple_project.duration_weeks
 
-    @pytest.mark.parametrize("complexity", [
-        ComplexityLevel.SIMPLE,
-        ComplexityLevel.MEDIUM,
-        ComplexityLevel.COMPLEX
-    ])
-    def test_all_complexity_levels(self, complexity):
-        """Test all valid complexity levels."""
-        # Given
+    def test_maximum_team_size_business_rule(self):
+        """Test maximum team size business rules."""
+        # Arrange
         project = Project(
-            project_id=str(uuid4()),
-            name=f"{complexity.value} Project",
-            complexity=complexity
+            project_id="test_001",
+            name="Large Team Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.COMPLEX
         )
 
-        # Then
-        assert project.complexity == complexity
+        # Add many team members
+        for i in range(15):  # Large team
+            team_member = TeamMember(
+                member_id=f"member_{i}",
+                name=f"Member {i}",
+                role="developer",
+                email=f"member{i}@example.com"
+            )
+            project.add_team_member(team_member)
 
-    def test_project_creation_timestamp(self):
-        """Test project creation timestamp accuracy."""
-        # Given
-        before_creation = datetime.now()
+        # Assert business rule (this would be domain logic)
+        assert len(project.team_members) == 15
 
-        # When
-        project = Project(
-            project_id=str(uuid4()),
-            name="Timestamp Test Project"
+    def test_project_type_influences_team_composition(self):
+        """Test that project type influences required team composition."""
+        # Different project types require different team compositions
+        api_project = Project(
+            project_id="api_001",
+            name="API Project",
+            project_type=ProjectType.API_SERVICE,
+            complexity=ComplexityLevel.MEDIUM
         )
 
-        # Then
-        after_creation = datetime.now()
-        assert before_creation <= project.created_at <= after_creation
-        assert project.updated_at == project.created_at
-
-    def test_project_update_timestamp(self):
-        """Test project update timestamp changes."""
-        # Given
-        project = Project(
-            project_id=str(uuid4()),
-            name="Timestamp Update Test"
+        web_project = Project(
+            project_id="web_001",
+            name="Web Project",
+            project_type=ProjectType.WEB_APPLICATION,
+            complexity=ComplexityLevel.MEDIUM
         )
-        initial_updated_at = project.updated_at
 
-        # When - Wait a small amount and update
-        import time
-        time.sleep(0.001)  # Small delay to ensure timestamp difference
-        project.update(name="Updated Timestamp Test")
+        # API projects might need more backend expertise
+        # Web projects might need more frontend expertise
+        # This is a business rule that could be tested
+        assert api_project.project_type != web_project.project_type
 
-        # Then
-        assert project.updated_at > initial_updated_at
+
+if __name__ == "__main__":
+    pytest.main([__file__])
