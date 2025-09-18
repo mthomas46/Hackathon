@@ -137,6 +137,11 @@ class ExportReportRequest(BaseModel):
     output_path: Optional[str] = Field(None, description="Optional output path for the exported report")
 
 
+class StopUIMonitoringRequest(BaseModel):
+    """Request model for stopping UI monitoring."""
+    success: bool = Field(True, description="Whether the simulation completed successfully")
+
+
 # Load configuration
 config = get_config()
 
@@ -1036,6 +1041,147 @@ async def export_simulation_report(simulation_id: str,
             )
             return create_error_response(
                 message="Internal server error during report export",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+# Terminal UI endpoints
+@app.post("/api/v1/simulations/{simulation_id}/ui/start")
+async def start_simulation_ui(simulation_id: str, req: Request):
+    """Start terminal UI monitoring for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Starting terminal UI monitoring",
+            operation="start_simulation_ui",
+            simulation_id=simulation_id,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.ui.terminal_progress_visualizer import start_simulation_monitoring
+
+            # Start terminal monitoring (this will run in background)
+            start_simulation_monitoring(simulation_id, estimated_duration_minutes=60)
+
+            return create_success_response(
+                message=f"Terminal UI monitoring started for simulation {simulation_id}",
+                data={
+                    "simulation_id": simulation_id,
+                    "monitoring_started": True,
+                    "estimated_duration_minutes": 60
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to start terminal UI monitoring",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during UI monitoring start",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.post("/api/v1/simulations/{simulation_id}/ui/stop")
+async def stop_simulation_ui(simulation_id: str, request: StopUIMonitoringRequest, req: Request):
+    """Stop terminal UI monitoring for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Stopping terminal UI monitoring",
+            operation="stop_simulation_ui",
+            simulation_id=simulation_id,
+            success=request.success,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.ui.terminal_progress_visualizer import stop_simulation_monitoring
+
+            # Stop terminal monitoring
+            stop_simulation_monitoring(simulation_id, request.success)
+
+            return create_success_response(
+                message=f"Terminal UI monitoring stopped for simulation {simulation_id}",
+                data={
+                    "simulation_id": simulation_id,
+                    "monitoring_stopped": True,
+                    "final_status": "success" if request.success else "completed_with_issues"
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to stop terminal UI monitoring",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during UI monitoring stop",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.get("/api/v1/simulations/{simulation_id}/ui/status")
+async def get_simulation_ui_status(simulation_id: str, req: Request):
+    """Get the status of terminal UI monitoring for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting simulation UI status",
+            operation="get_simulation_ui_status",
+            simulation_id=simulation_id,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.ui.terminal_progress_visualizer import get_simulation_terminal_ui
+
+            ui = get_simulation_terminal_ui(simulation_id)
+
+            # Get current state (this is a simplified version)
+            is_monitoring = hasattr(ui, 'visualizer') and ui.visualizer._running
+
+            return create_success_response(
+                message=f"Terminal UI status for simulation {simulation_id}",
+                data={
+                    "simulation_id": simulation_id,
+                    "monitoring_active": is_monitoring,
+                    "overall_progress": getattr(ui.visualizer.state, 'overall_progress', 0.0),
+                    "current_phase": getattr(ui.visualizer.state, 'current_phase', ''),
+                    "documents_generated": getattr(ui.visualizer.state, 'documents_generated', 0),
+                    "workflows_executed": getattr(ui.visualizer.state, 'workflows_executed', 0),
+                    "active_tasks": len(getattr(ui.visualizer.state, 'active_tasks', [])),
+                    "completed_tasks": len(getattr(ui.visualizer.state, 'completed_tasks', []))
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get simulation UI status",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during UI status retrieval",
                 error_code="internal_server_error",
                 details={"error": str(e)},
                 request_id=correlation_id

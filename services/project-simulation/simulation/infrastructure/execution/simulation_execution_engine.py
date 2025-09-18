@@ -120,6 +120,11 @@ class SimulationExecutionEngine:
             simulation.start_simulation()
             await self._save_simulation(simulation)
 
+            # Start terminal UI monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import start_simulation_monitoring
+            estimated_duration_minutes = max(60, int(simulation.configuration.get_max_execution_time().total_seconds() / 60))
+            start_simulation_monitoring(str(simulation.id.value), estimated_duration_minutes)
+
             # Publish simulation started event
             await self._publish_simulation_event(simulation, "simulation_started", {
                 "project_name": "Unknown",  # This would come from project entity
@@ -152,6 +157,10 @@ class SimulationExecutionEngine:
                 "success": True
             })
 
+            # Stop terminal UI monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import stop_simulation_monitoring
+            stop_simulation_monitoring(str(simulation.id.value), success=True)
+
             self.logger.info(f"Simulation completed successfully", simulation_id=simulation_id)
 
             return {
@@ -173,6 +182,10 @@ class SimulationExecutionEngine:
                 "error_message": str(e),
                 "failure_time": datetime.now().isoformat()
             })
+
+            # Stop terminal UI monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import stop_simulation_monitoring
+            stop_simulation_monitoring(str(simulation.id.value), success=False)
 
             return {
                 "success": False,
@@ -611,6 +624,7 @@ class SimulationExecutionEngine:
         try:
             # Publish to WebSocket if available
             from simulation.presentation.websockets.simulation_websocket import notify_simulation_progress
+            from simulation.infrastructure.ui.terminal_progress_visualizer import update_simulation_ui
 
             progress_data = {
                 "simulation_id": str(simulation.id.value),
@@ -624,6 +638,9 @@ class SimulationExecutionEngine:
 
             await notify_simulation_progress(str(simulation.id.value), progress_data)
 
+            # Update terminal UI
+            update_simulation_ui(str(simulation.id.value), progress_data)
+
         except Exception as e:
             self.logger.error(f"Failed to publish progress event", error=str(e))
 
@@ -631,6 +648,7 @@ class SimulationExecutionEngine:
         """Publish simulation-specific event."""
         try:
             from simulation.presentation.websockets.simulation_websocket import notify_simulation_event_dict
+            from simulation.infrastructure.ui.terminal_progress_visualizer import update_simulation_ui
 
             event_payload = {
                 "simulation_id": str(simulation.id.value),
@@ -641,7 +659,11 @@ class SimulationExecutionEngine:
                 "progress_percentage": simulation.get_progress_percentage()
             }
 
+            # Publish to WebSocket
             await notify_simulation_event_dict(str(simulation.id.value), event_payload)
+
+            # Update terminal UI
+            update_simulation_ui(str(simulation.id.value), event_payload)
 
         except Exception as e:
             self.logger.error(f"Failed to publish simulation event", error=str(e), event_type=event_type)
