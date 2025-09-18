@@ -175,15 +175,75 @@ class SimulationExecutionEngine:
 
         self.logger.info(f"Executing phase: {phase_name}", simulation_id=simulation_id)
 
-        # Generate documents for this phase using content pipeline
-        phase_config = {
+        # Generate documents for this phase using timeline-based generation
+        from ..content.timeline_based_generation import TimelineAwareContentGenerator
+
+        timeline_generator = TimelineAwareContentGenerator()
+
+        # Create timeline context for this phase
+        timeline_context = {
             "phase_name": phase_name,
-            "project_config": project.to_dict(),
-            "team_config": team.to_dict() if team else {},
+            "current_phase": phase,
+            "project_timeline": [],  # This would come from the timeline entity
+            "project_config": {
+                "name": project.name,
+                "type": project.type.value,
+                "complexity": project.complexity.value,
+                "technologies": project.technologies
+            },
+            "team_config": {
+                "size": len(team.members) if team else 0,
+                "members": [
+                    {
+                        "id": str(member.id),
+                        "name": member.name,
+                        "role": member.role.value if hasattr(member.role, 'value') else str(member.role),
+                        "expertise_level": member.expertise_level.value if hasattr(member.expertise_level, 'value') else str(member.expertise_level),
+                        "communication_style": member.communication_style.value if hasattr(member.communication_style, 'value') else str(member.communication_style),
+                        "productivity_multiplier": member.productivity_multiplier
+                    } for member in team.members
+                ] if team else []
+            } if team else {},
             "simulation_config": simulation.configuration.__dict__
         }
 
-        documents = await self.content_pipeline.execute_document_generation(phase_config)
+        # Generate timeline-aware content
+        timeline_content = await timeline_generator.generate_timeline_aware_content(
+            document_type="comprehensive",
+            project_config=timeline_context["project_config"],
+            team_members=timeline_context.get("team_config", {}).get("members", []),
+            timeline={"phases": [timeline_context]},
+            current_phase=phase_name
+        )
+
+        # Convert timeline content to document format
+        documents = [{
+            "type": "timeline_aware_document",
+            "title": f"Timeline-Aware Content - {phase_name}",
+            "content": timeline_content.get("content", ""),
+            "metadata": {
+                "document_type": "timeline",
+                "phase": phase_name,
+                "timeline_awareness_score": timeline_content.get("temporal_metadata", {}).get("timeline_awareness_score", 0),
+                "temporal_relationships": timeline_content.get("temporal_metadata", {}).get("temporal_relationships", 0)
+            }
+        }]
+
+        # Also generate using content pipeline for additional documents
+        phase_config = {
+            "phase_name": phase_name,
+            "project_config": {
+                "name": project.name,
+                "type": project.type.value,
+                "complexity": project.complexity.value,
+                "technologies": project.technologies
+            },
+            "team_config": team.__dict__ if team else {},
+            "simulation_config": simulation.configuration.__dict__
+        }
+
+        additional_documents = await self.content_pipeline.execute_document_generation(phase_config)
+        documents.extend(additional_documents)
 
         # Store documents in ecosystem
         for doc in documents:
