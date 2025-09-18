@@ -148,7 +148,7 @@ services:
       doc_store:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -193,6 +193,11 @@ services:
         condition: service_started
       analysis-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     profiles:
       - core
 
