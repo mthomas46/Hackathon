@@ -14,6 +14,9 @@ from ...presentation.websockets.simulation_websocket import (
     notify_simulation_event
 )
 from ...domain.value_objects import SimulationType, SimulationStatus
+from ...infrastructure.config.simulation_config_loader import (
+    load_simulation_config, create_sample_simulation_config, SimulationConfigFile, get_simulation_config_loader
+)
 
 
 class SimulationApplicationService:
@@ -516,6 +519,166 @@ class SimulationApplicationService:
                 "Failed to get health status",
                 error=str(e),
                 correlation_id=correlation_id
+            )
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    async def create_simulation_from_config_file(self, config_file_path: str) -> Dict[str, Any]:
+        """Create a simulation from a configuration file."""
+        try:
+            self._logger.info(
+                "Creating simulation from configuration file",
+                config_file_path=config_file_path
+            )
+
+            # Load configuration from file
+            config = load_simulation_config(config_file_path)
+
+            # Validate configuration
+            issues = get_simulation_config_loader().validate_config(config)
+            if issues:
+                return {
+                    "success": False,
+                    "error": "Configuration validation failed",
+                    "issues": issues,
+                    "config_file_path": config_file_path
+                }
+
+            # Convert configuration to simulation request format
+            simulation_request = self._convert_config_to_simulation_request(config)
+
+            # Create simulation using existing method
+            return await self.create_simulation(simulation_request)
+
+        except Exception as e:
+            self._logger.error(
+                "Failed to create simulation from config file",
+                error=str(e),
+                config_file_path=config_file_path
+            )
+            return {
+                "success": False,
+                "error": str(e),
+                "config_file_path": config_file_path
+            }
+
+    async def create_sample_config_file(self, file_path: str,
+                                      project_name: str = "Sample E-commerce Platform") -> Dict[str, Any]:
+        """Create a sample configuration file."""
+        try:
+            self._logger.info(
+                "Creating sample configuration file",
+                file_path=file_path,
+                project_name=project_name
+            )
+
+            # Create sample configuration
+            config = create_sample_simulation_config(file_path, project_name)
+
+            return {
+                "success": True,
+                "message": "Sample configuration file created successfully",
+                "file_path": file_path,
+                "project_name": config.project_name,
+                "simulation_type": config.simulation_type.value,
+                "team_size": len(config.team_members),
+                "timeline_phases": len(config.timeline_phases),
+                "duration_weeks": config.duration_weeks
+            }
+
+        except Exception as e:
+            self._logger.error(
+                "Failed to create sample configuration file",
+                error=str(e),
+                file_path=file_path
+            )
+            return {
+                "success": False,
+                "error": str(e),
+                "file_path": file_path
+            }
+
+    async def validate_config_file(self, config_file_path: str) -> Dict[str, Any]:
+        """Validate a configuration file without creating a simulation."""
+        try:
+            self._logger.info(
+                "Validating configuration file",
+                config_file_path=config_file_path
+            )
+
+            # Load configuration from file
+            config = load_simulation_config(config_file_path)
+
+            # Validate configuration
+            issues = get_simulation_config_loader().validate_config(config)
+
+            return {
+                "success": True,
+                "valid": len(issues) == 0,
+                "issues": issues,
+                "config_file_path": config_file_path,
+                "project_name": config.project_name,
+                "simulation_type": config.simulation_type.value,
+                "team_size": len(config.team_members),
+                "timeline_phases": len(config.timeline_phases)
+            }
+
+        except Exception as e:
+            self._logger.error(
+                "Failed to validate configuration file",
+                error=str(e),
+                config_file_path=config_file_path
+            )
+            return {
+                "success": False,
+                "error": str(e),
+                "config_file_path": config_file_path
+            }
+
+    def _convert_config_to_simulation_request(self, config: SimulationConfigFile) -> Dict[str, Any]:
+        """Convert a configuration file object to a simulation creation request."""
+        return {
+            "name": config.project_name,
+            "description": config.project_description,
+            "type": config.project_type.value,
+            "complexity": config.complexity_level.value,
+            "duration_weeks": config.duration_weeks,
+            "budget": config.budget,
+            "team_size": len(config.team_members),
+            "simulation_type": config.simulation_type.value,
+            "include_documents": config.include_document_generation,
+            "include_workflows": config.include_workflow_execution,
+            "include_team": config.include_team_dynamics,
+            "real_time": config.real_time_progress,
+            "max_time_minutes": config.max_execution_time_minutes,
+            "realistic_delays": config.generate_realistic_delays,
+            "capture_metrics": config.capture_metrics,
+            "ecosystem_integration": config.enable_ecosystem_integration,
+            "technologies": ["Python", "FastAPI", "React", "PostgreSQL"]  # Default technologies
+        }
+
+    async def get_config_template(self) -> Dict[str, Any]:
+        """Get a configuration template for creating custom simulation configs."""
+        try:
+            template = get_simulation_config_loader().get_config_template()
+
+            return {
+                "success": True,
+                "template": template,
+                "description": "Configuration template for creating custom simulation scenarios",
+                "supported_formats": ["yaml", "yml", "json"],
+                "example_usage": {
+                    "yaml": "config/simulation_config.yaml",
+                    "json": "config/simulation_config.json"
+                }
+            }
+
+        except Exception as e:
+            self._logger.error(
+                "Failed to get configuration template",
+                error=str(e)
             )
             return {
                 "success": False,
