@@ -820,7 +820,7 @@ fi
 ### **Documentation Resources**
 - **[API Documentation Index](API_DOCUMENTATION_INDEX.md)** - Complete API reference
 - **[Developer Onboarding](DEVELOPER_ONBOARDING.md)** - Getting started guide
-- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment
+- **[Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)** - Production deployment
 - **[Service READMEs](services/)** - Individual service documentation
 
 ### **Troubleshooting**
