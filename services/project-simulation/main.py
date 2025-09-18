@@ -106,6 +106,22 @@ class SimulationResponse(BaseModel):
     created_at: Optional[str] = None
 
 
+class CreateSimulationFromConfigRequest(BaseModel):
+    """Request model for creating simulation from configuration file."""
+    config_file_path: str = Field(..., description="Path to configuration file")
+
+
+class CreateSampleConfigRequest(BaseModel):
+    """Request model for creating sample configuration file."""
+    file_path: str = Field(..., description="Path where sample config should be created")
+    project_name: str = Field("Sample E-commerce Platform", description="Project name for sample config")
+
+
+class ValidateConfigRequest(BaseModel):
+    """Request model for validating configuration file."""
+    config_file_path: str = Field(..., description="Path to configuration file to validate")
+
+
 # Load configuration
 config = get_config()
 
@@ -450,6 +466,218 @@ async def get_simulation_status(simulation_id: str):
             return create_error_response(
                 error=str(e),
                 status_code=500
+            )
+
+
+# Configuration file endpoints
+@app.post("/api/v1/simulations/from-config")
+async def create_simulation_from_config(request: CreateSimulationFromConfigRequest, req: Request):
+    """Create a simulation from a configuration file."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Creating simulation from configuration file",
+            operation="create_simulation_from_config",
+            config_file_path=request.config_file_path,
+            correlation_id=correlation_id
+        )
+
+        try:
+            result = await application_service.create_simulation_from_config_file(request.config_file_path)
+
+            if result["success"]:
+                simulation_id = result.get("simulation_id")
+                links = SimulationResource.create_simulation_links(simulation_id)
+
+                response_data = create_crud_response(
+                    operation="create",
+                    resource_id=simulation_id,
+                    message=result.get("message", "Simulation created from config successfully"),
+                    request_id=correlation_id
+                )
+
+                response_data.resource_url = f"/api/v1/simulations/{simulation_id}"
+                response_data.links = links
+
+                return JSONResponse(
+                    content=response_data.dict(),
+                    status_code=HTTP_STATUS_CODES["created"],
+                    headers={"X-Correlation-ID": correlation_id}
+                )
+            else:
+                return create_error_response(
+                    message=result.get("message", "Failed to create simulation from config"),
+                    error_code="config_simulation_creation_failed",
+                    details=result,
+                    request_id=correlation_id,
+                    status_code=400
+                )
+
+        except Exception as e:
+            logger.error(
+                "Failed to create simulation from config file",
+                error=str(e),
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during config-based simulation creation",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.post("/api/v1/config/sample")
+async def create_sample_config(request: CreateSampleConfigRequest, req: Request):
+    """Create a sample configuration file."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Creating sample configuration file",
+            operation="create_sample_config",
+            file_path=request.file_path,
+            project_name=request.project_name,
+            correlation_id=correlation_id
+        )
+
+        try:
+            result = await application_service.create_sample_config_file(
+                request.file_path, request.project_name
+            )
+
+            if result["success"]:
+                return create_success_response(
+                    message=result["message"],
+                    data={
+                        "file_path": result["file_path"],
+                        "project_name": result["project_name"],
+                        "simulation_type": result["simulation_type"],
+                        "team_size": result["team_size"],
+                        "timeline_phases": result["timeline_phases"],
+                        "duration_weeks": result["duration_weeks"]
+                    },
+                    request_id=correlation_id
+                )
+            else:
+                return create_error_response(
+                    message=result.get("message", "Failed to create sample config"),
+                    error_code="sample_config_creation_failed",
+                    details=result,
+                    request_id=correlation_id
+                )
+
+        except Exception as e:
+            logger.error(
+                "Failed to create sample configuration file",
+                error=str(e),
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during sample config creation",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.post("/api/v1/config/validate")
+async def validate_config_file(request: ValidateConfigRequest, req: Request):
+    """Validate a configuration file."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Validating configuration file",
+            operation="validate_config",
+            config_file_path=request.config_file_path,
+            correlation_id=correlation_id
+        )
+
+        try:
+            result = await application_service.validate_config_file(request.config_file_path)
+
+            if result["success"]:
+                return create_success_response(
+                    message=f"Configuration file validation {'passed' if result['valid'] else 'failed'}",
+                    data={
+                        "valid": result["valid"],
+                        "issues": result["issues"],
+                        "config_file_path": result["config_file_path"],
+                        "project_name": result["project_name"],
+                        "simulation_type": result["simulation_type"],
+                        "team_size": result["team_size"],
+                        "timeline_phases": result["timeline_phases"]
+                    },
+                    request_id=correlation_id
+                )
+            else:
+                return create_error_response(
+                    message=result.get("message", "Failed to validate config file"),
+                    error_code="config_validation_failed",
+                    details=result,
+                    request_id=correlation_id
+                )
+
+        except Exception as e:
+            logger.error(
+                "Failed to validate configuration file",
+                error=str(e),
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during config validation",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.get("/api/v1/config/template")
+async def get_config_template(req: Request):
+    """Get a configuration template."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting configuration template",
+            operation="get_config_template",
+            correlation_id=correlation_id
+        )
+
+        try:
+            result = await application_service.get_config_template()
+
+            if result["success"]:
+                return create_success_response(
+                    message=result["description"],
+                    data={
+                        "template": result["template"],
+                        "supported_formats": result["supported_formats"],
+                        "example_usage": result["example_usage"]
+                    },
+                    request_id=correlation_id
+                )
+            else:
+                return create_error_response(
+                    message=result.get("message", "Failed to get config template"),
+                    error_code="template_retrieval_failed",
+                    details=result,
+                    request_id=correlation_id
+                )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get configuration template",
+                error=str(e),
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during template retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
             )
 
 
