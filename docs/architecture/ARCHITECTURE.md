@@ -13,6 +13,45 @@
 All services ─► [Log Collector]
 ```
 
+## Orchestrator Service - Domain Driven Design (DDD)
+
+The orchestrator service has been completely refactored to follow **Domain-Driven Design** principles with **7 bounded contexts**:
+
+```
+Orchestrator Service (DDD Architecture)
+├── 🎯 Workflow Management
+│   ├── Domain Layer: Entities, Value Objects, Domain Services
+│   ├── Application Layer: Use Cases, Commands, Queries
+│   ├── Infrastructure Layer: Repositories, External Services
+│   └── Presentation Layer: FastAPI Routes, DTOs
+├── 🔍 Service Registry
+│   ├── Service discovery and registration
+│   ├── Service health tracking
+│   └── Dynamic service management
+├── 🏥 Health Monitoring
+│   ├── System health checks
+│   ├── Service monitoring
+│   ├── Metrics collection
+│   └── Readiness/liveness probes
+├── ⚙️ Infrastructure
+│   ├── Distributed sagas
+│   ├── Event streaming
+│   ├── Dead Letter Queue (DLQ)
+│   └── Distributed tracing
+├── 📥 Ingestion
+│   ├── Multi-source data ingestion
+│   ├── Ingestion workflows
+│   └── Data pipeline management
+├── ❓ Query Processing
+│   ├── Natural language query interpretation
+│   ├── Query execution
+│   └── Result processing
+└── 📊 Reporting
+    ├── Analytics report generation
+    ├── Performance metrics
+    └── Custom reporting workflows
+```
+
 ## Common patterns
 - FastAPI + shared middleware (request id, metrics)
 - Standard health endpoints and success/error envelopes
@@ -25,20 +64,37 @@ All services ─► [Log Collector]
 - Error envelope: `{ "success": false, "error_code": "...", "details": {...}, "request_id": "..." }`
 
 ## Key responsibilities
+
+### Core Services
 - **CLI Service**: Interactive TUI with 18+ specialized managers for service operations
 - Interpreter: intent recognition and workflow creation
 - Prompt Store: prompt CRUD, A/B testing, analytics
 - Analysis Service: consistency checks, reports
 - Doc Store: content, analyses, search, quality
 - Source Agent: ingest and normalization from GitHub/Jira/Confluence
-- Orchestrator: registry, workflows, jobs
 - Secure Analyzer + Summarizer Hub: policy-aware summarization
 - Code Analyzer: code endpoint detection and examples
 - Log Collector: centralized logs and stats
 
+### Orchestrator Service (DDD Architecture)
+The orchestrator service now follows DDD with specialized bounded contexts:
+
+- **🎯 Workflow Management**: Workflow orchestration, execution tracking, and lifecycle management
+- **🔍 Service Registry**: Dynamic service discovery, registration, and health monitoring
+- **🏥 Health Monitoring**: System health checks, metrics collection, and service monitoring
+- **⚙️ Infrastructure**: Distributed transactions (sagas), event streaming, DLQ management, and tracing
+- **📥 Ingestion**: Multi-source data ingestion pipelines and workflow management
+- **❓ Query Processing**: Natural language query interpretation and execution
+- **📊 Reporting**: Analytics report generation and performance metrics
+
 ## Observability
-- Health: `/health` (and some `/ready`)
-- Metrics/logging: middleware + optional external backends
+- **Health Endpoints**:
+  - `/health` - Basic health check
+  - `/api/v1/health/system` - Comprehensive system health (Orchestrator)
+  - `/api/v1/health/services` - Service registry health (Orchestrator)
+  - `/ready` - Readiness probes (some services)
+- **Metrics/Logging**: middleware + optional external backends
+- **API Documentation**: Swagger UI at `/docs` for all services
 
 ## Data flow examples
 - Analyze query

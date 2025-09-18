@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional, List
 from ...core.handler import BaseHandler
 from .service import IntelligenceService
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.core.responses.responses import create_success_response, create_error_response
 
 
 class IntelligenceHandlers(BaseHandler):

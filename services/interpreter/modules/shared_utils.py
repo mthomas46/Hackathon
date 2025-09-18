@@ -10,11 +10,11 @@ from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 # Import shared utilities
-from services.shared.clients import ServiceClients
-from services.shared.constants_new import ServiceNames, ErrorCodes
-from services.shared.error_handling import ServiceException, ValidationException
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.logging import fire_and_forget
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
+from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import utc_now, generate_id
 
 # Global configuration for interpreter service

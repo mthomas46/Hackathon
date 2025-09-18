@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, field_validator
-from services.shared.models import BaseResponse
+from services.shared.core.responses.responses import BaseResponse
 
 
 class ArchitectureComponent(BaseModel):

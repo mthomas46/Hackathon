@@ -1,0 +1,619 @@
+{
+  "timestamp": "2025-09-17 13:59:24",
+  "summary": {
+    "individual_tests": "9/9",
+    "cross_service_tests": "3/3",
+    "workflow_tests": "1/1",
+    "overall_status": "\ud83c\udf89 ALL TESTS PASSED"
+  },
+  "results": {
+    "individual_tests": [
+      {
+        "service": "code_analyzer",
+        "endpoint": "/health",
+        "method": "GET",
+        "description": "Health check",
+        "success": true,
+        "status_code": 200,
+        "response_time": 6.22,
+        "response_size": 46,
+        "data": {
+          "status": "healthy",
+          "service": "code-analyzer"
+        }
+      },
+      {
+        "service": "code_analyzer",
+        "endpoint": "/analyze",
+        "method": "POST",
+        "description": "Code analysis",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.84,
+        "response_size": 469,
+        "data": {
+          "success": true,
+          "data": {
+            "language": "python",
+            "functions": [
+              {
+                "name": "example_function",
+                "purpose": "Example function for demonstration",
+                "parameters": [
+                  "param1",
+                  "param2"
+                ],
+                "return_type": "str"
+              }
+            ],
+            "classes": [
+              {
+                "name": "ExampleClass",
+                "purpose": "Example class for demonstration",
+                "methods": [
+                  "method1",
+                  "method2"
+                ]
+              }
+            ],
+            "complexity": {
+              "overall": 5,
+              "functions": {
+                "example_function": 3
+              },
+              "classes": {
+                "ExampleClass": 4
+              }
+            },
+            "imports": [
+              "os",
+              "json",
+              "typing"
+            ],
+            "patterns": [
+              "factory",
+              "singleton"
+            ]
+          },
+          "error": ""
+        }
+      },
+      {
+        "service": "secure_analyzer",
+        "endpoint": "/health",
+        "method": "GET",
+        "description": "Health check",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.93,
+        "response_size": 150,
+        "data": {
+          "status": "healthy",
+          "service": "secure-analyzer",
+          "version": "0.1.0",
+          "circuit_breaker_open": false,
+          "description": "Secure analyzer service is operational"
+        }
+      },
+      {
+        "service": "secure_analyzer",
+        "endpoint": "/detect",
+        "method": "POST",
+        "description": "Security detection",
+        "success": true,
+        "status_code": 200,
+        "response_time": 2.26,
+        "response_size": 111,
+        "data": {
+          "sensitive": true,
+          "matches": [
+            "password",
+            "password = 'admin123'"
+          ],
+          "topics": [
+            "secrets",
+            "password",
+            "credentials"
+          ]
+        }
+      },
+      {
+        "service": "log_collector",
+        "endpoint": "/health",
+        "method": "GET",
+        "description": "Health check",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.87,
+        "response_size": 128,
+        "data": {
+          "status": "healthy",
+          "service": "log-collector",
+          "version": "0.1.0",
+          "count": 1,
+          "description": "Log collection service is operational"
+        }
+      },
+      {
+        "service": "log_collector",
+        "endpoint": "/logs",
+        "method": "POST",
+        "description": "Log submission",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.89,
+        "response_size": 25,
+        "data": {
+          "status": "ok",
+          "count": 2
+        }
+      },
+      {
+        "service": "log_collector",
+        "endpoint": "/logs",
+        "method": "GET",
+        "description": "Log retrieval",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.56,
+        "response_size": 277,
+        "data": {
+          "items": [
+            {
+              "service": "test_service",
+              "level": "INFO",
+              "message": "Test log message",
+              "timestamp": "2025-09-17T18:59:10.861509+00:00",
+              "context": null
+            },
+            {
+              "service": "test_service",
+              "level": "INFO",
+              "message": "Test log message",
+              "timestamp": "2025-09-17T18:59:23.959492+00:00",
+              "context": null
+            }
+          ]
+        }
+      },
+      {
+        "service": "summarizer_hub",
+        "endpoint": "/health",
+        "method": "GET",
+        "description": "Health check",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.28,
+        "response_size": 272,
+        "data": {
+          "status": "healthy",
+          "service": "summarizer-hub",
+          "version": "1.0.0",
+          "capabilities": [
+            "document_summarization",
+            "automated_categorization",
+            "batch_processing",
+            "zero_shot_classification",
+            "ai_peer_review",
+            "document_comparison",
+            "quality_assessment",
+            "best_practice_recommendations"
+          ]
+        }
+      },
+      {
+        "service": "summarizer_hub",
+        "endpoint": "/summarize",
+        "method": "POST",
+        "description": "Document summarization",
+        "success": true,
+        "status_code": 200,
+        "response_time": 1.33,
+        "response_size": 374,
+        "data": {
+          "success": true,
+          "data": {
+            "summary": "Summary of 42 characters of content",
+            "key_concepts": [
+              "artificial intelligence",
+              "machine learning",
+              "natural language processing",
+              "prompt engineering"
+            ],
+            "main_topics": [
+              "AI Fundamentals",
+              "Language Models",
+              "Prompt Design",
+              "Best Practices"
+            ],
+            "sentiment": "neutral",
+            "complexity": "intermediate",
+            "estimated_reading_time": 5,
+            "word_count": 7
+          },
+          "error": ""
+        }
+      }
+    ],
+    "cross_service_tests": [
+      {
+        "name": "Code Analysis -> Secure Analysis",
+        "steps": [
+          {
+            "service": "code_analyzer",
+            "endpoint": "/analyze",
+            "method": "POST",
+            "description": "Step 1: code_analyzer /analyze",
+            "success": true,
+            "status_code": 200,
+            "response_time": 1.8,
+            "response_size": 469,
+            "data": {
+              "success": true,
+              "data": {
+                "language": "python",
+                "functions": [
+                  {
+                    "name": "example_function",
+                    "purpose": "Example function for demonstration",
+                    "parameters": [
+                      "param1",
+                      "param2"
+                    ],
+                    "return_type": "str"
+                  }
+                ],
+                "classes": [
+                  {
+                    "name": "ExampleClass",
+                    "purpose": "Example class for demonstration",
+                    "methods": [
+                      "method1",
+                      "method2"
+                    ]
+                  }
+                ],
+                "complexity": {
+                  "overall": 5,
+                  "functions": {
+                    "example_function": 3
+                  },
+                  "classes": {
+                    "ExampleClass": 4
+                  }
+                },
+                "imports": [
+                  "os",
+                  "json",
+                  "typing"
+                ],
+                "patterns": [
+                  "factory",
+                  "singleton"
+                ]
+              },
+              "error": ""
+            }
+          },
+          {
+            "service": "secure_analyzer",
+            "endpoint": "/detect",
+            "method": "POST",
+            "description": "Step 2: secure_analyzer /detect",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.0,
+            "response_size": 129,
+            "data": {
+              "sensitive": true,
+              "matches": [
+                "SECRET",
+                "password",
+                "password = os.getenv('SECRET')"
+              ],
+              "topics": [
+                "secrets",
+                "password",
+                "credentials"
+              ]
+            }
+          }
+        ],
+        "success": true,
+        "total_time": 0.00432276725769043
+      },
+      {
+        "name": "Log Collection Workflow",
+        "steps": [
+          {
+            "service": "log_collector",
+            "endpoint": "/logs",
+            "method": "POST",
+            "description": "Step 1: log_collector /logs",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.18,
+            "response_size": 25,
+            "data": {
+              "status": "ok",
+              "count": 3
+            }
+          },
+          {
+            "service": "log_collector",
+            "endpoint": "/logs",
+            "method": "GET",
+            "description": "Step 2: log_collector /logs",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.12,
+            "response_size": 449,
+            "data": {
+              "items": [
+                {
+                  "service": "test_service",
+                  "level": "INFO",
+                  "message": "Test log message",
+                  "timestamp": "2025-09-17T18:59:10.861509+00:00",
+                  "context": null
+                },
+                {
+                  "service": "test_service",
+                  "level": "INFO",
+                  "message": "Test log message",
+                  "timestamp": "2025-09-17T18:59:23.959492+00:00",
+                  "context": null
+                },
+                {
+                  "service": "auth_service",
+                  "level": "ERROR",
+                  "message": "Security vulnerability detected in user authentication",
+                  "timestamp": "2025-09-17T18:59:23.973443+00:00",
+                  "context": null
+                }
+              ]
+            }
+          },
+          {
+            "service": "log_collector",
+            "endpoint": "/stats",
+            "method": "GET",
+            "description": "Step 3: log_collector /stats",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.13,
+            "response_size": 186,
+            "data": {
+              "count": 3,
+              "by_level": {
+                "info": 2,
+                "error": 1
+              },
+              "by_service": {
+                "test_service": 2,
+                "auth_service": 1
+              },
+              "errors_by_service": {
+                "auth_service": 1
+              },
+              "top_services": [
+                [
+                  "test_service",
+                  2
+                ],
+                [
+                  "auth_service",
+                  1
+                ]
+              ]
+            }
+          }
+        ],
+        "success": true,
+        "total_time": 0.00727081298828125
+      },
+      {
+        "name": "Summarization Pipeline",
+        "steps": [
+          {
+            "service": "summarizer_hub",
+            "endpoint": "/categorize",
+            "method": "POST",
+            "description": "Step 1: summarizer_hub /categorize",
+            "success": true,
+            "status_code": 200,
+            "response_time": 1.72,
+            "response_size": 180,
+            "data": {
+              "success": false,
+              "error": "Categorization models not available",
+              "message": "Required dependencies not installed or model initialization failed",
+              "processing_time": 6.4849853515625e-05
+            }
+          },
+          {
+            "service": "summarizer_hub",
+            "endpoint": "/summarize",
+            "method": "POST",
+            "description": "Step 2: summarizer_hub /summarize",
+            "success": true,
+            "status_code": 200,
+            "response_time": 1.79,
+            "response_size": 375,
+            "data": {
+              "success": true,
+              "data": {
+                "summary": "Summary of 84 characters of content",
+                "key_concepts": [
+                  "artificial intelligence",
+                  "machine learning",
+                  "natural language processing",
+                  "prompt engineering"
+                ],
+                "main_topics": [
+                  "AI Fundamentals",
+                  "Language Models",
+                  "Prompt Design",
+                  "Best Practices"
+                ],
+                "sentiment": "neutral",
+                "complexity": "intermediate",
+                "estimated_reading_time": 5,
+                "word_count": 11
+              },
+              "error": ""
+            }
+          }
+        ],
+        "success": true,
+        "total_time": 0.004133939743041992
+      }
+    ],
+    "workflows": [
+      {
+        "name": "Document Processing Pipeline",
+        "steps": [
+          {
+            "service": "code_analyzer",
+            "endpoint": "/analyze",
+            "method": "POST",
+            "description": "Workflow step 1",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.05,
+            "response_size": 469,
+            "data": {
+              "success": true,
+              "data": {
+                "language": "python",
+                "functions": [
+                  {
+                    "name": "example_function",
+                    "purpose": "Example function for demonstration",
+                    "parameters": [
+                      "param1",
+                      "param2"
+                    ],
+                    "return_type": "str"
+                  }
+                ],
+                "classes": [
+                  {
+                    "name": "ExampleClass",
+                    "purpose": "Example class for demonstration",
+                    "methods": [
+                      "method1",
+                      "method2"
+                    ]
+                  }
+                ],
+                "complexity": {
+                  "overall": 5,
+                  "functions": {
+                    "example_function": 3
+                  },
+                  "classes": {
+                    "ExampleClass": 4
+                  }
+                },
+                "imports": [
+                  "os",
+                  "json",
+                  "typing"
+                ],
+                "patterns": [
+                  "factory",
+                  "singleton"
+                ]
+              },
+              "error": ""
+            }
+          },
+          {
+            "service": "secure_analyzer",
+            "endpoint": "/detect",
+            "method": "POST",
+            "description": "Workflow step 2",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.82,
+            "response_size": 163,
+            "data": {
+              "sensitive": true,
+              "matches": [
+                "secret",
+                "password",
+                "    return username == 'admin' and password == 'secret'"
+              ],
+              "topics": [
+                "secrets",
+                "password",
+                "client",
+                "credentials"
+              ]
+            }
+          },
+          {
+            "service": "log_collector",
+            "endpoint": "/logs",
+            "method": "POST",
+            "description": "Workflow step 3",
+            "success": true,
+            "status_code": 200,
+            "response_time": 2.15,
+            "response_size": 25,
+            "data": {
+              "status": "ok",
+              "count": 4
+            }
+          },
+          {
+            "service": "summarizer_hub",
+            "endpoint": "/summarize",
+            "method": "POST",
+            "description": "Workflow step 4",
+            "success": true,
+            "status_code": 200,
+            "response_time": 1.65,
+            "response_size": 374,
+            "data": {
+              "success": true,
+              "data": {
+                "summary": "Summary of 85 characters of content",
+                "key_concepts": [
+                  "artificial intelligence",
+                  "machine learning",
+                  "natural language processing",
+                  "prompt engineering"
+                ],
+                "main_topics": [
+                  "AI Fundamentals",
+                  "Language Models",
+                  "Prompt Design",
+                  "Best Practices"
+                ],
+                "sentiment": "neutral",
+                "complexity": "intermediate",
+                "estimated_reading_time": 5,
+                "word_count": 9
+              },
+              "error": ""
+            }
+          }
+        ],
+        "success": true,
+        "total_time": 0.0098419189453125
+      }
+    ],
+    "performance": [
+      {
+        "test_type": "concurrent_health_checks",
+        "avg_time": 3.835,
+        "min_time": 3.42,
+        "max_time": 4.07,
+        "requests": 4
+      }
+    ],
+    "errors": []
+  }
+}

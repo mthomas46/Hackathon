@@ -1,0 +1,67 @@
+{
+  "structure_validation": {
+    "score": 10,
+    "issues": [
+      "Missing test directory: presentation/"
+    ],
+    "found_files": [
+      "domain/test_domain_services.py",
+      "domain/test_finding_entity.py",
+      "domain/test_document_entity.py",
+      "domain/test_value_objects.py",
+      "domain/test_domain_repositories.py",
+      "domain/test_analysis_entity.py",
+      "application/test_cqrs.py",
+      "application/test_dtos.py",
+      "application/test_use_cases.py",
+      "application/test_validators.py",
+      "application/test_events.py",
+      "application/test_application_services.py",
+      "infrastructure/test_analysis_repository.py",
+      "infrastructure/test_repositories.py",
+      "infrastructure/test_finding_repository.py",
+      "integration/test_end_to_end_integration.py",
+      "integration/test_application_infrastructure_integration.py",
+      "integration/test_domain_application_integration.py",
+      "performance/test_performance_validation.py",
+      "e2e/test_complete_user_workflows.py"
+    ],
+    "expected_categories": [
+      "domain",
+      "application",
+      "infrastructure",
+      "presentation",
+      "integration",
+      "performance",
+      "e2e"
+    ]
+  },
+  "test_files_validation": {
+    "score": 7.592592592592595,
+    "total_test_files": 27,
+    "issues": [
+      "Low quality test file: test_utilities.py",
+      "Low quality test file: test_data.py",
+      "Low quality test file: test_dtos.py",
+      "Low quality test file: test_events.py",
+      "Low quality test file: test_domain_services.py",
+      "Low quality test file: test_finding_entity.py",
+      "Low quality test file: test_document_entity.py",
+      "Low quality test file: test_value_objects.py",
+      "Low quality test file: test_domain_repositories.py",
+      "Low quality test file: test_analysis_entity.py"
+    ],
+    "average_file_score": 0.76
+  },
+  "coverage_validation": {
+    "score": 4.0,
+    "coverage_percentage": 40.0,
+    "covered_components": 4,
+    "total_components": 10
+  },
+  "overall_score": 7.2,
+  "recommendations": [
+    "Address structural issues in test organization",
+    "Increase test coverage for better reliability"
+  ]
+}

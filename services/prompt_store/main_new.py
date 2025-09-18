@@ -10,12 +10,12 @@ import asyncio
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.error_handling import ServiceException, install_error_handlers
-from services.shared.constants_new import ServiceNames
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.core.constants_new import ServiceNames
 from services.shared.utilities import setup_common_middleware, attach_self_register
-from services.shared.config import get_config_value
+from services.shared.core.config.config import get_config_value
 
 # ============================================================================
 # DOMAIN MODULES - Following domain-driven design

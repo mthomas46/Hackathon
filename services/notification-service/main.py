@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 
-from services.shared.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 from services.shared.utilities import attach_self_register  # type: ignore
 
 from .modules.owner_resolver import owner_resolver
