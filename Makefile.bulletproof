@@ -1,0 +1,185 @@
+# Bulletproof Ecosystem Makefile
+# Advanced commands for bulletproof execution and validation
+
+.PHONY: help validate start start-bulletproof heal check rollback lint-all status clean
+
+# Configuration
+COMPOSE_FILE ?= docker-compose.dev.yml
+ENHANCED_COMPOSE ?= scripts/docker/docker-compose-enhanced.yml
+
+# Colors
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+BLUE := \033[0;34m
+NC := \033[0m # No Color
+
+help: ## Show this help message
+	@echo "🛡️ Bulletproof Ecosystem Commands"
+	@echo "================================="
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BLUE)%-20s$(NC) %s\n", $$1, $$2}'
+
+validate: ## Run comprehensive pre-flight validation
+	@echo "$(YELLOW)🔍 Running Pre-Flight Validation...$(NC)"
+	@./scripts/docker/pre-flight-check.sh
+
+lint-all: ## Lint all service Dockerfiles
+	@echo "$(YELLOW)🔍 Linting All Dockerfiles...$(NC)"
+	@for service in services/*/; do \
+		service_name=$$(basename $$service); \
+		echo "Linting: $$service_name"; \
+		./scripts/docker/dockerfile-linter.sh $$service || exit 1; \
+	done
+	@echo "$(GREEN)✅ All Dockerfiles validated$(NC)"
+
+start: validate ## Standard startup with validation
+	@echo "$(BLUE)🚀 Starting with validation...$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) down > /dev/null 2>&1 || true
+	@docker-compose -f $(COMPOSE_FILE) --profile ai_services --profile development --profile production --profile core up -d
+	@echo "$(GREEN)✅ Standard startup completed$(NC)"
+
+start-bulletproof: ## Bulletproof startup with full protection
+	@echo "$(BLUE)🛡️ Bulletproof Startup Initiated...$(NC)"
+	@./scripts/docker/bulletproof-startup.sh start
+
+start-enhanced: validate ## Start with enhanced compose file and validation services
+	@echo "$(BLUE)🛡️ Starting Enhanced Ecosystem...$(NC)"
+	@docker-compose -f $(ENHANCED_COMPOSE) down > /dev/null 2>&1 || true
+	@docker-compose -f $(ENHANCED_COMPOSE) --profile validation up -d pre-flight-validator dockerfile-validator
+	@echo "Waiting for validation to complete..."
+	@sleep 30
+	@docker-compose -f $(ENHANCED_COMPOSE) --profile core --profile development up -d
+	@docker-compose -f $(ENHANCED_COMPOSE) --profile monitoring --profile healing up -d
+	@echo "$(GREEN)✅ Enhanced startup completed$(NC)"
+
+heal: ## Run self-healing operations
+	@echo "$(YELLOW)🔧 Running Self-Healing...$(NC)"
+	@./scripts/docker/bulletproof-startup.sh heal
+
+check: ## Run comprehensive health check
+	@echo "$(BLUE)🧪 Running Health Check...$(NC)"
+	@./scripts/docker/bulletproof-startup.sh check
+
+health: ## Run ecosystem health check
+	@echo "$(BLUE)🏥 Running Health Check...$(NC)"
+	@./scripts/docker/health-check.sh
+
+rollback: ## Emergency rollback
+	@echo "$(RED)🚨 Emergency Rollback...$(NC)"
+	@./scripts/docker/bulletproof-startup.sh rollback
+
+status: ## Show ecosystem status
+	@echo "$(BLUE)📊 Ecosystem Status$(NC)"
+	@echo "==================="
+	@echo ""
+	@echo "Container Status:"
+	@docker ps --filter "name=hackathon" --format "table {{.Names}}\t{{.Status}}" | head -20
+	@echo ""
+	@echo "Health Summary:"
+	@echo "• Total Containers: $$(docker ps --filter 'name=hackathon' | wc -l | tr -d ' ')"
+	@echo "• Healthy Containers: $$(docker ps --filter 'name=hackathon' --format '{{.Status}}' | grep -c 'healthy' || echo '0')"
+	@echo "• Running Containers: $$(docker ps --filter 'name=hackathon' --format '{{.Status}}' | grep -c 'Up' || echo '0')"
+
+status-detailed: ## Detailed status with health checks
+	@echo "$(BLUE)📊 Detailed Ecosystem Status$(NC)"
+	@echo "============================="
+	@./scripts/docker/health-check.sh
+
+clean: ## Clean up containers, networks, and volumes
+	@echo "$(YELLOW)🧹 Cleaning Up...$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) down -v --remove-orphans > /dev/null 2>&1 || true
+	@docker-compose -f $(ENHANCED_COMPOSE) down -v --remove-orphans > /dev/null 2>&1 || true
+	@docker container prune -f > /dev/null 2>&1 || true
+	@docker network prune -f > /dev/null 2>&1 || true
+	@docker volume prune -f > /dev/null 2>&1 || true
+	@echo "$(GREEN)✅ Cleanup completed$(NC)"
+
+clean-hard: clean ## Hard clean including images
+	@echo "$(RED)🔥 Hard Cleanup (including images)...$(NC)"
+	@docker image prune -a -f > /dev/null 2>&1 || true
+	@echo "$(GREEN)✅ Hard cleanup completed$(NC)"
+
+logs: ## Show logs for all services
+	@docker-compose -f $(COMPOSE_FILE) logs -f --tail=50
+
+logs-errors: ## Show only error logs
+	@echo "$(RED)🚨 Error Logs$(NC)"
+	@echo "============="
+	@docker ps --filter "name=hackathon" --format "{{.Names}}" | while read container; do \
+		echo "--- $$container ---"; \
+		docker logs $$container --tail 10 2>&1 | grep -i error || echo "No errors found"; \
+		echo ""; \
+	done
+
+test-bulletproof: ## Test bulletproof system
+	@echo "$(BLUE)🧪 Testing Bulletproof System$(NC)"
+	@echo "=============================="
+	@echo ""
+	@echo "1. Running validation tests..."
+	@$(MAKE) validate
+	@echo ""
+	@echo "2. Testing linter accuracy..."
+	@$(MAKE) lint-all
+	@echo ""
+	@echo "3. Testing health checks..."
+	@$(MAKE) check
+	@echo ""
+	@echo "$(GREEN)✅ Bulletproof system tests completed$(NC)"
+
+monitor: ## Start continuous monitoring
+	@echo "$(BLUE)📡 Starting Continuous Monitoring...$(NC)"
+	@echo "Press Ctrl+C to stop"
+	@while true; do \
+		clear; \
+		echo "$(BLUE)📊 Live Ecosystem Status - $$(date)$(NC)"; \
+		echo "========================================="; \
+		$(MAKE) status; \
+		echo ""; \
+		echo "Next update in 30 seconds..."; \
+		sleep 30; \
+	done
+
+# Advanced operations
+restart-service: ## Restart specific service (Usage: make restart-service SERVICE=name)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(RED)Error: SERVICE parameter required$(NC)"; \
+		echo "Usage: make restart-service SERVICE=discovery-agent"; \
+		exit 1; \
+	fi
+	@echo "$(YELLOW)🔄 Restarting service: $(SERVICE)$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) restart $(SERVICE)
+	@echo "$(GREEN)✅ Service $(SERVICE) restarted$(NC)"
+
+rebuild-service: ## Rebuild specific service (Usage: make rebuild-service SERVICE=name)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(RED)Error: SERVICE parameter required$(NC)"; \
+		echo "Usage: make rebuild-service SERVICE=discovery-agent"; \
+		exit 1; \
+	fi
+	@echo "$(YELLOW)🔨 Rebuilding service: $(SERVICE)$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) stop $(SERVICE)
+	@docker-compose -f $(COMPOSE_FILE) build $(SERVICE)
+	@docker-compose -f $(COMPOSE_FILE) up -d $(SERVICE)
+	@echo "$(GREEN)✅ Service $(SERVICE) rebuilt$(NC)"
+
+# Emergency operations
+emergency-restart: ## Emergency restart with full validation
+	@echo "$(RED)🚨 EMERGENCY RESTART$(NC)"
+	@echo "==================="
+	@$(MAKE) rollback
+	@echo "Waiting 10 seconds..."
+	@sleep 10
+	@$(MAKE) start-bulletproof
+
+# Information commands
+show-config: ## Show current configuration
+	@echo "$(BLUE)⚙️ Current Configuration$(NC)"
+	@echo "========================"
+	@echo "Compose File: $(COMPOSE_FILE)"
+	@echo "Enhanced Compose: $(ENHANCED_COMPOSE)"
+	@echo "Docker Version: $$(docker --version)"
+	@echo "Docker Compose Version: $$(docker-compose --version)"
+
+# Default target
+.DEFAULT_GOAL := help

@@ -53,7 +53,7 @@ app = FastAPI(
 )
 
 # Setup middleware and health endpoints
-setup_common_middleware(app)
+setup_common_middleware(app, ServiceNames.DISCOVERY_AGENT)
 register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT)
 
 # ============================================================================

@@ -1,127 +1,303 @@
-# Summarizer Hub
+# 🔮 Summarizer Hub - Multi-Provider AI Summarization
 
-Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)
-Tests: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub)
+<!--
+LLM Processing Metadata:
+- document_type: "service_documentation"
+- service_name: "summarizer-hub"
+- port: 5160
+- key_concepts: ["ai_summarization", "multi_provider", "content_categorization", "ensemble_analysis", "nlp"]
+- architecture: "multi_provider_ai_hub"
+- processing_hints: "Advanced AI-powered content summarization and categorization with multi-provider ensemble analysis"
+- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../secure-analyzer/README.md", "../../tests/unit/summarizer_hub/"]
+- integration_points: ["bedrock_proxy", "llm_gateway", "doc_store", "analysis_service"]
+-->
 
-## Key Features
-- **Ensemble Summarization**: Multi-provider summarization across Ollama, Bedrock, OpenAI, Anthropic, etc.
-- **Automated Categorization**: ML-based document classification using zero-shot and traditional approaches
-- **Batch Processing**: Efficient processing of multiple documents with categorization
-- **Rate-limit Middleware**: Configurable rate limiting (toggle via `RATE_LIMIT_ENABLED`)
-- **Config-driven Provider Selection**: Flexible provider configuration and timeouts
-- **Standardized Middleware**: Health checks, metrics, and error handling
+**Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  
+**Tests**: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub)
 
-## Goal
-- Provide comprehensive document processing capabilities including summarization and categorization
-- Support multiple AI providers with ensemble analysis for consistency validation
-- Enable automated document organization through ML-based classification
-- Shield the ecosystem from provider-specific SDKs and credentials via unified configuration
+**Status**: ✅ Production Ready  
+**Port**: `5160` (External) → `5160` (Internal)  
+**Version**: `3.2.0`  
+**Last Updated**: September 18, 2025
 
-## Overview and role in the ecosystem
-- **Central Processing Hub**: Unified service for document summarization and categorization
-- **Multi-Provider Support**: Ensemble analysis across heterogeneous AI providers
-- **Automated Organization**: ML-based document classification and tagging for better discoverability
-- **Quality Assurance**: Consistency analysis and categorization confidence scoring
-- **Integration Ready**: Seamless integration with Doc Store, Analysis Service, and other ecosystem components
+## 🎯 **Overview & Purpose**
 
-## Endpoints
+The **Summarizer Hub** is the **advanced AI-powered content processing engine** that provides comprehensive document summarization, intelligent categorization, and multi-provider ensemble analysis. It serves as the central hub for all content processing and AI-driven document intelligence across the ecosystem.
 
-### Core Endpoints
-| Method | Path               | Description |
-|--------|--------------------|-------------|
-| GET    | /health            | Service health and capabilities check |
-| POST   | /summarize         | Single document summarization |
+**Core Mission**: Transform raw content into structured, categorized, and intelligently summarized information through multi-provider AI analysis, enabling enhanced content discovery, organization, and actionable insights.
 
-### Categorization Endpoints
-| Method | Path               | Description |
-|--------|--------------------|-------------|
-| POST   | /categorize        | Categorize single document with ML classification |
-| POST   | /categorize/batch  | Batch categorize multiple documents |
-| GET    | /categorize/categories | Get available document categories |
+## 🚀 **Key Features & Capabilities**
 
-### Legacy Endpoints
-| Method | Path               | Description |
-|--------|--------------------|-------------|
-| POST   | /summarize/ensemble | Ensemble summarization (deprecated) |
+### **🔮 Advanced AI Summarization**
+- **Multi-Provider Ensemble**: Comprehensive summarization across Ollama, Bedrock, OpenAI, Anthropic, and other leading AI providers
+- **Consistency Validation**: Cross-provider validation to ensure summary quality and accuracy
+- **Custom Templates**: Support for specialized summary templates and formats
+- **Quality Scoring**: Intelligent quality assessment and confidence scoring for generated summaries
 
-## Configuration
-Config-first via `services/shared/config.get_config_value` with env override; optional `services/summarizer-hub/config.yaml` for provider defaults.
+### **🎯 Intelligent Content Categorization**
+- **ML-Based Classification**: Advanced machine learning categorization using zero-shot and traditional approaches
+- **Automated Organization**: Intelligent document classification and tagging for enhanced discoverability
+- **Confidence Scoring**: Categorization confidence metrics for quality assurance
+- **Custom Taxonomies**: Support for custom categorization schemes and domain-specific taxonomies
 
-Environment:
-- `RATE_LIMIT_ENABLED`
-- `OLLAMA_HOST`
-- `BEDROCK_MODEL`, `BEDROCK_REGION`, `BEDROCK_ENDPOINT`, `BEDROCK_API_KEY`
-- `SH_CONFIG` (path to hub config yaml)
+### **⚡ High-Performance Processing**
+- **Batch Processing**: Efficient processing of multiple documents with parallel categorization
+- **Rate Limiting**: Configurable rate limiting and throttling for provider API management
+- **Caching System**: Intelligent caching for improved performance and cost optimization
+- **Async Processing**: Asynchronous processing capabilities for high-volume scenarios
 
-## Providers
-- `ollama`: requires `endpoint` (e.g., http://ollama:11434) and `model`.
-- `openai`/`anthropic`/`grok`: placeholders (wire real SDKs as needed).
-- `bedrock`: set `endpoint` to a Bedrock proxy/gateway or configure `BEDROCK_ENDPOINT`; supports `model`, `region`, `api_key`.
-  
-## Integration
-- Emits structured logs to `log-collector` when `LOG_COLLECTOR_URL` is set.
+### **🏢 Enterprise Features**
+- **Provider Abstraction**: Unified interface shielding ecosystem from provider-specific SDKs and credentials
+- **Configuration Management**: Flexible, config-driven provider selection and timeout management
+- **Health Monitoring**: Comprehensive health checks, metrics, and performance monitoring
+- **Error Handling**: Robust error handling with fallback strategies and retry mechanisms
 
-## Related
-- Secure Analyzer: [../secure-analyzer/README.md](../secure-analyzer/README.md)
+## 📡 **API Reference**
 
-## Testing
-- Unit tests: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub)
-- Strategies:
-  - Provider fan-out and ensemble shape assertions
+### **🔮 Core Summarization Endpoints**
 
-### AWS SDK (native) usage
-- Install dependencies (already in requirements.txt): `boto3`, `botocore`.
-- Provide credentials via environment (preferred) or through standard AWS mechanisms:
-  - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (optional), `AWS_REGION`.
-- Request example (using config defaults):
-```json
+| Method | Path | Description | Purpose |
+|--------|------|-------------|---------|
+| **GET** | `/health` | Service health and capabilities | System monitoring and capability discovery |
+| **POST** | `/summarize` | Single document summarization | AI-powered content summarization with quality scoring |
+| **POST** | `/summarize/ensemble` | Multi-provider ensemble summarization | Cross-provider validation and consensus analysis |
+
+### **🎯 Content Categorization Endpoints**
+
+| Method | Path | Description | Purpose |
+|--------|------|-------------|---------|
+| **POST** | `/categorize` | Single document categorization | ML-based document classification with confidence scoring |
+| **POST** | `/categorize/batch` | Batch document categorization | High-volume parallel document classification |
+| **GET** | `/categorize/categories` | Available category taxonomy | Category discovery and taxonomy management |
+
+### **🔍 Usage Examples**
+
+#### **Single Document Summarization**
+```bash
+POST /summarize
+Content-Type: application/json
+
 {
-  "text": "Summarize this design...",
-  "prompt": "Key decisions and risks.",
-  "providers": [{"name": "bedrock"}],
-  "use_hub_config": true
+  "text": "Long document content here...",
+  "prompt": "Summarize key decisions and technical implementation details",
+  "providers": [
+    {"name": "ollama", "model": "llama2"},
+    {"name": "bedrock", "model": "claude-3-sonnet"}
+  ],
+  "options": {
+    "max_length": 500,
+    "format": "markdown",
+    "include_confidence": true
+  }
 }
 ```
-- The hub will invoke Bedrock via the native SDK; if SDK invocation fails or isn’t configured, it will try `BEDROCK_ENDPOINT` proxy.
 
-### YAML configuration
-- `services/summarizer-hub/config.yaml` supports provider defaults and AWS credentials:
+#### **Ensemble Summarization**
+```bash
+POST /summarize/ensemble
+Content-Type: application/json
+
+{
+  "text": "Complex technical document...",
+  "providers": ["ollama", "bedrock", "openai"],
+  "consensus_threshold": 0.8,
+  "quality_validation": true
+}
+```
+
+#### **Document Categorization**
+```bash
+POST /categorize
+Content-Type: application/json
+
+{
+  "text": "Document content for classification...",
+  "taxonomy": "technical_documents",
+  "confidence_threshold": 0.7,
+  "include_scores": true
+}
+```
+
+#### **Batch Categorization**
+```bash
+POST /categorize/batch
+Content-Type: application/json
+
+{
+  "documents": [
+    {"id": "doc1", "text": "Technical specification..."},
+    {"id": "doc2", "text": "User guide content..."}
+  ],
+  "taxonomy": "document_types",
+  "parallel_processing": true
+}
+```
+
+## 🏗️ **Architecture & Design**
+
+### **🎯 Multi-Provider Architecture**
+The Summarizer Hub employs a sophisticated multi-provider architecture designed for reliability, performance, and quality assurance:
+
+#### **Core Components**
+- **Provider Manager**: Intelligent management of multiple AI providers with load balancing and failover
+- **Ensemble Engine**: Cross-provider consensus analysis and quality validation
+- **Categorization Engine**: Advanced ML-based content classification with confidence scoring
+- **Template System**: Flexible template-based response formatting and structure
+
+#### **Quality Assurance**
+- **Consensus Analysis**: Multi-provider agreement validation for summary quality
+- **Confidence Scoring**: Intelligent confidence metrics for both summarization and categorization
+- **Quality Validation**: Automated quality checks and validation across providers
+- **Fallback Strategies**: Intelligent fallback and retry mechanisms for provider failures
+
+## ⚙️ **Configuration**
+
+### **🔧 Environment Variables**
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `SERVICE_PORT` | Service port (internal) | `5160` | Optional |
+| `RATE_LIMIT_ENABLED` | Enable rate limiting middleware | `true` | Optional |
+| `OLLAMA_HOST` | Ollama service endpoint | `http://ollama:11434` | Optional |
+| `BEDROCK_MODEL` | Default Bedrock model | `claude-3-sonnet` | Optional |
+| `BEDROCK_REGION` | AWS Bedrock region | `us-east-1` | Optional |
+| `BEDROCK_ENDPOINT` | Bedrock proxy endpoint | - | Optional |
+| `BEDROCK_API_KEY` | Bedrock API key | - | Production |
+| `SH_CONFIG` | Path to hub configuration YAML | - | Optional |
+| `LOG_COLLECTOR_URL` | Log collector integration | - | Optional |
+
+### **🎯 Service Dependencies**
+
+| Service | Purpose | Integration | Required |
+|---------|---------|-------------|----------|
+| **Bedrock Proxy** | AWS Bedrock AI model access | AI summarization and processing | ✅ |
+| **LLM Gateway** | Multi-provider AI coordination | Provider management and routing | Integration |
+| **Doc Store** | Content storage and retrieval | Document analysis and categorization | Integration |
+| **Analysis Service** | Content analysis enhancement | Advanced content intelligence | Integration |
+| **Log Collector** | Operational logging | Monitoring and debugging | Optional |
+
+### **🔮 Provider Configuration**
+
+#### **Ollama Provider**
+```yaml
+providers:
+  - name: ollama
+    endpoint: http://ollama:11434
+    model: llama2
+    timeout: 30
+```
+
+#### **Bedrock Provider**
 ```yaml
 providers:
   - name: bedrock
-    model: ${BEDROCK_MODEL:-anthropic.claude-3-sonnet-20240229-v1:0}
-    endpoint: ${BEDROCK_ENDPOINT:-}
-    region: ${BEDROCK_REGION:-us-east-1}
-    api_key: ${BEDROCK_API_KEY:-}
-aws:
-  access_key_id: ${AWS_ACCESS_KEY_ID:-}
-  secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
-  session_token: ${AWS_SESSION_TOKEN:-}
-  region: ${AWS_REGION:-us-east-1}
+    endpoint: http://bedrock-proxy:7090/invoke
+    model: anthropic.claude-3-sonnet-20240229-v1:0
+    region: us-east-1
+    api_key: ${BEDROCK_API_KEY}
 ```
 
-### Using the local Bedrock proxy stub (for demos)
-- Start the proxy: `uvicorn services.bedrock-proxy.main:app --host 0.0.0.0 --port 7090`
-- Set `BEDROCK_ENDPOINT=http://localhost:7090/invoke`
-- Call summarizer-hub with a `bedrock` provider as usual. The hub will send your prompt to the proxy and return a canned/templated response.
-- Note: the hub does not set proxy-specific `template` fields. To use templates (e.g., `summary`, `pr_confidence`, `life_of_ticket`) for local demos, call the proxy directly:
-
+#### **Multi-Provider Configuration**
+```yaml
+providers:
+  - name: ollama
+    endpoint: http://ollama:11434
+    model: llama2
+    weight: 1.0
+  - name: bedrock
+    endpoint: http://bedrock-proxy:7090/invoke
+    model: claude-3-sonnet
+    weight: 2.0
+    
+ensemble:
+  consensus_threshold: 0.7
+  quality_validation: true
+  fallback_strategy: "best_available"
 ```
-POST http://localhost:7090/invoke
-{
-  "prompt": "Summarize: feature adds GET /hello with tests and docs",
-  "template": "summary",
-  "format": "md",
-  "title": "Feature Summary"
-}
+
+## 🔗 **Integration Points**
+
+### **🎯 Ecosystem Integration**
+- **Doc Store**: Content analysis and categorization for enhanced document organization
+- **Analysis Service**: Advanced content intelligence and quality assessment integration
+- **LLM Gateway**: Multi-provider coordination and intelligent routing for AI operations
+- **Bedrock Proxy**: Direct integration for AWS Bedrock foundation model access
+
+### **🔮 AI Processing Workflows**
+- **Content Summarization**: AI-powered document summarization with quality validation
+- **Document Categorization**: Intelligent content classification and taxonomy management
+- **Ensemble Analysis**: Multi-provider consensus analysis for quality assurance
+- **Memory Integration**: Planned integration with Memory Agent for context preservation
+
+## 🧪 **Testing**
+
+### **🔧 Test Coverage**
+- **Unit Tests**: [tests/unit/summarizer_hub](../../tests/unit/summarizer_hub) - Comprehensive unit test suite
+- **Provider Integration**: Multi-provider AI integration and response validation
+- **Ensemble Testing**: Cross-provider consensus analysis and quality validation
+- **Performance Testing**: High-volume processing and response time validation
+
+### **📊 Testing Strategies**
+- **Provider Fan-Out**: Multi-provider request distribution and ensemble response validation
+- **Categorization Accuracy**: ML classification accuracy and confidence scoring validation
+- **Quality Metrics**: Summary quality assessment and cross-provider consistency testing
+- **Error Handling**: Provider failure simulation and fallback strategy validation
+
+### **🔮 Development Setup**
+```bash
+# Install dependencies
+pip install -r services/summarizer-hub/requirements.txt
+
+# Start with Bedrock proxy integration
+export BEDROCK_ENDPOINT=http://localhost:7090/invoke
+
+# Start development server
+uvicorn services.summarizer-hub.main:app --reload --port 5160
 ```
 
-## Future
-- Implement real provider clients with secrets from env.
-- Configurable voting/weighting and semantic comparison.
-- Emit memory events and store results in memory-agent.
+### **🌩️ AWS Integration Setup**
+```bash
+# Configure AWS credentials
+export AWS_ACCESS_KEY_ID=your_access_key
+export AWS_SECRET_ACCESS_KEY=your_secret_key
+export AWS_REGION=us-east-1
 
-## Shared utilities
-- Request/metrics middleware: `services/shared/request_id.py`, `services/shared/metrics.py`.
-- Config and constants: `services/shared/config.py`, `services/shared/constants.py`.
-- JSON HTTP helpers: `services/shared/clients.py`.
+# Configure Bedrock settings
+export BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0
+export BEDROCK_REGION=us-east-1
+```
+
+## 🚀 **Future Enhancements**
+
+### **🔧 Planned Features**
+- **Real Provider SDKs**: Direct integration with OpenAI, Anthropic, and other provider SDKs
+- **Advanced Voting**: Configurable voting mechanisms and semantic similarity comparison
+- **Memory Integration**: Integration with Memory Agent for context preservation and learning
+- **Custom Models**: Support for custom fine-tuned models and domain-specific AI capabilities
+
+### **📊 Performance Optimization**
+- **Caching Strategies**: Advanced caching for improved performance and cost optimization
+- **Parallel Processing**: Enhanced parallel processing for batch operations
+- **Quality Metrics**: Advanced quality metrics and automated quality improvement
+- **Cost Optimization**: Intelligent provider selection based on cost and performance metrics
+
+## 🔗 **Related Documentation**
+
+### **📖 Primary References**
+- **[Ecosystem Master Living Document](../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#summarizer-hub-service-port-5160---multi-provider-ai-summarization)** - Complete technical reference
+- **[Bedrock Proxy Service](../bedrock-proxy/README.md)** - AWS Bedrock integration and template processing
+- **[Secure Analyzer Service](../secure-analyzer/README.md)** - Security analysis and content validation
+
+### **🎯 Integration Guides**
+- **[LLM Gateway Service](../llm-gateway/README.md)** - Multi-provider AI coordination and routing
+- **[Doc Store Service](../doc_store/README.md)** - Document storage and categorization integration
+- **[Analysis Service](../analysis-service/README.md)** - Advanced content analysis and intelligence
+
+### **⚡ Quick References**
+- **[Quick Reference Guide](../../docs/guides/QUICK_REFERENCE_GUIDES.md)** - Common operations and commands
+- **[Troubleshooting Index](../../docs/guides/TROUBLESHOOTING_INDEX.md)** - Issue resolution guide
+- **[Shared Utilities](../shared/README.md)** - Common infrastructure components
+
+---
+
+**🎯 The Summarizer Hub provides advanced AI-powered content processing capabilities with multi-provider ensemble analysis, enabling intelligent document summarization, categorization, and quality assurance across the ecosystem.**

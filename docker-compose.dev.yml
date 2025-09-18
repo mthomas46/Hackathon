@@ -27,7 +27,6 @@
 # - Environment variables override defaults
 # =============================================================================
 
-version: "3.9"
 
 services:
   # ============================================================================
@@ -57,7 +56,7 @@ services:
   # postgres:
   #   image: postgres:15-alpine
   #   environment:
-      - PYTHONPATH=/app
+  #     PYTHONPATH: /app
   #     POSTGRES_DB: doc_consistency
   #     POSTGRES_USER: doc_user
   #     POSTGRES_PASSWORD: doc_password
@@ -100,6 +99,7 @@ services:
       retries: 3
     profiles:
       - core
+      - ai_services
 
   # Document Store - Document storage and retrieval
   doc_store:
@@ -118,12 +118,13 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5087/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5010/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     profiles:
       - core
+      - ai_services
 
   # Analysis Service - Document analysis and consistency checking
   analysis-service:
@@ -134,23 +135,25 @@ services:
       - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
+      - SERVICE_PORT=5080
       # DDD-specific environment variables
       - DDD_ARCHITECTURE=true
       - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
-      - "5020:5020"
+      - "5080:5020"
     depends_on:
       redis:
         condition: service_healthy
       doc_store:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     profiles:
       - core
+      - ai_services
 
   # Source Agent - Data ingestion from various sources
   source-agent:
@@ -162,12 +165,12 @@ services:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
-      - "5000:5000"
+      - "5070:5070"
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -196,6 +199,19 @@ services:
   # AI/ML SERVICES
   # ============================================================================
 
+  # Ollama - Local LLM inference engine
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    profiles:
+      - ai_services
+    restart: unless-stopped
+
   # Summarizer Hub - AI-powered summarization service
   summarizer-hub:
     build:
@@ -206,9 +222,9 @@ services:
       - OLLAMA_HOST=http://host.docker.internal:11434
       - ENVIRONMENT=development
     ports:
-      - "5060:5060"
+      - "5160:5160"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5060/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5160/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -241,10 +257,88 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5060
     ports:
-      - "7090:7090"
+      - "5060:7090"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7090/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5060/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # LLM Gateway - Unified access to all LLM providers
+  llm-gateway:
+    build:
+      context: .
+      dockerfile: services/llm-gateway/Dockerfile
+    volumes:
+      - llm_gateway_cache:/app/cache
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+      # LLM Provider Configuration
+      - OLLAMA_ENDPOINT=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - BEDROCK_ENDPOINT=http://bedrock-proxy:5060/invoke
+      - GROK_API_KEY=${GROK_API_KEY:-}
+      # Security Configuration
+      - SENSITIVE_KEYWORDS=password,secret,token,key,credential,confidential,internal
+      - SENSITIVITY_THRESHOLD=0.7
+      - SECURE_ONLY_MODELS=ollama,bedrock
+      - ALL_PROVIDERS=bedrock,ollama,openai,anthropic,grok
+      # Caching Configuration
+      - CACHE_MAX_SIZE=1000
+      - CACHE_DEFAULT_TTL=3600
+      - CACHE_CLEANUP_INTERVAL=300
+      # Rate Limiting Configuration
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=60
+      - RATE_LIMIT_REQUESTS_PER_HOUR=1000
+      - RATE_LIMIT_TOKENS_PER_MINUTE=50000
+      - RATE_LIMIT_BURST_LIMIT=10
+      - RATE_LIMIT_COOLDOWN_SECONDS=60
+    ports:
+      - "5055:5055"
+    depends_on:
+      redis:
+        condition: service_healthy
+      bedrock-proxy:
+        condition: service_started
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5055/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai_services
+
+  # Mock Data Generator - LLM-integrated mock data generation
+  mock-data-generator:
+    build:
+      context: .
+      dockerfile: services/mock-data-generator/Dockerfile
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - DOC_STORE_URL=http://doc_store:5087
+    ports:
+      - "5065:5065"
+    depends_on:
+      llm-gateway:
+        condition: service_healthy
+      doc_store:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5065/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -259,10 +353,11 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5030
     ports:
-      - "5072:5072"
+      - "5030:5072"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5072/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5030/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -283,12 +378,12 @@ services:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
-      - "5040:5040"
+      - "5090:5040"
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5090/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -330,9 +425,9 @@ services:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
     ports:
-      - "5095:5095"
+      - "5020:5020"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5095/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -435,12 +530,12 @@ services:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
     ports:
-      - "5085:5085"
+      - "5050:5050"
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5085/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -455,10 +550,11 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5100
     ports:
-      - "5070:5070"
+      - "5100:5070"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -473,10 +569,11 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5040
     ports:
-      - "5080:5080"
+      - "5040:5080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -502,6 +599,14 @@ volumes:
 
   # Prompt store data volume
   prompt_store_data:
+    driver: local
+
+  # LLM Gateway cache volume
+  llm_gateway_cache:
+    driver: local
+
+  # Ollama models and data volume
+  ollama_data:
     driver: local
 
 # ============================================================================

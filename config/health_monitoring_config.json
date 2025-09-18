@@ -1,0 +1,199 @@
+{
+  "check_interval_seconds": 30,
+  "timeout_seconds": 10,
+  "max_consecutive_failures": 5,
+  "database_path": "health_monitoring.db",
+  "log_level": "INFO",
+  "services": [
+    {
+      "name": "interpreter",
+      "url": "http://localhost:5120/health",
+      "critical": true,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "orchestrator", 
+      "url": "http://localhost:5099/health",
+      "critical": true,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "doc_store",
+      "url": "http://localhost:5087/health", 
+      "critical": true,
+      "expected_response_time": 1.5
+    },
+    {
+      "name": "prompt_store",
+      "url": "http://localhost:5110/health",
+      "critical": true,
+      "expected_response_time": 1.5
+    },
+    {
+      "name": "analysis_service",
+      "url": "http://localhost:5080/health",
+      "critical": true,
+      "expected_response_time": 3.0
+    },
+    {
+      "name": "llm_gateway",
+      "url": "http://localhost:5055/health",
+      "critical": true,
+      "expected_response_time": 2.5
+    },
+    {
+      "name": "discovery_agent",
+      "url": "http://localhost:5045/health",
+      "critical": false,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "github_mcp",
+      "url": "http://localhost:5030/health",
+      "critical": false,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "source_agent",
+      "url": "http://localhost:5070/health",
+      "critical": false,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "memory_agent",
+      "url": "http://localhost:5090/health",
+      "critical": false,
+      "expected_response_time": 1.5
+    },
+    {
+      "name": "secure_analyzer",
+      "url": "http://localhost:5100/health",
+      "critical": false,
+      "expected_response_time": 2.5
+    },
+    {
+      "name": "summarizer_hub",
+      "url": "http://localhost:5160/health",
+      "critical": false,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "code_analyzer",
+      "url": "http://localhost:5050/health",
+      "critical": false,
+      "expected_response_time": 2.0
+    },
+    {
+      "name": "bedrock_proxy",
+      "url": "http://localhost:5060/health",
+      "critical": false,
+      "expected_response_time": 3.0
+    },
+    {
+      "name": "notification_service",
+      "url": "http://localhost:5020/health",
+      "critical": false,
+      "expected_response_time": 1.5
+    },
+    {
+      "name": "log_collector",
+      "url": "http://localhost:5040/health",
+      "critical": false,
+      "expected_response_time": 1.5
+    },
+    {
+      "name": "frontend",
+      "url": "http://localhost:3000/health",
+      "critical": false,
+      "expected_response_time": 1.0
+    }
+  ],
+  "alerting": {
+    "email_notifications": {
+      "enabled": false,
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "from_email": "health-monitor@company.com",
+      "to_email": "devops@company.com",
+      "username": "health-monitor@company.com",
+      "password": "app_password_here"
+    },
+    "slack_notifications": {
+      "enabled": false,
+      "webhook_url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "channel": "#infrastructure-alerts",
+      "username": "Health Monitor"
+    },
+    "webhook_notifications": {
+      "enabled": false,
+      "url": "https://your-webhook-endpoint.com/health-alerts",
+      "headers": {
+        "Authorization": "Bearer your-token",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "alert_rules": [
+    {
+      "name": "service_down",
+      "condition": "status == 'unhealthy'",
+      "severity": "critical",
+      "threshold": 1,
+      "duration_minutes": 2,
+      "enabled": true
+    },
+    {
+      "name": "high_response_time",
+      "condition": "response_time > expected_response_time * 2",
+      "severity": "warning", 
+      "threshold": 2.0,
+      "duration_minutes": 5,
+      "enabled": true
+    },
+    {
+      "name": "consecutive_failures",
+      "condition": "consecutive_failures >= 3",
+      "severity": "critical",
+      "threshold": 3,
+      "duration_minutes": 1,
+      "enabled": true
+    },
+    {
+      "name": "low_uptime",
+      "condition": "uptime_percentage < 95.0",
+      "severity": "warning",
+      "threshold": 95.0,
+      "duration_minutes": 15,
+      "enabled": true
+    },
+    {
+      "name": "critical_service_down",
+      "condition": "status == 'unhealthy' AND critical == true",
+      "severity": "critical",
+      "threshold": 1,
+      "duration_minutes": 1,
+      "enabled": true
+    },
+    {
+      "name": "service_recovery",
+      "condition": "status == 'healthy' AND previous_status == 'unhealthy'",
+      "severity": "info",
+      "threshold": 1,
+      "duration_minutes": 1,
+      "enabled": true
+    }
+  ],
+  "dashboard": {
+    "refresh_interval_seconds": 10,
+    "retention_days": 30,
+    "show_trends": true,
+    "show_response_times": true,
+    "show_error_rates": true
+  },
+  "self_healing": {
+    "enabled": false,
+    "restart_unhealthy_services": false,
+    "max_restart_attempts": 3,
+    "restart_cooldown_minutes": 5
+  }
+}
