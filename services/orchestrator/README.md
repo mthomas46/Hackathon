@@ -1,5 +1,17 @@
 # 🏢 Orchestrator Service
 
+<!--
+LLM Processing Metadata:
+- document_type: "service_documentation"
+- service_name: "orchestrator"
+- port: 5099
+- key_concepts: ["ddd", "workflow_orchestration", "service_coordination", "langgraph"]
+- architecture: "domain_driven_design"
+- processing_hints: "Core service with DDD implementation, workflow management, and service registry"
+- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../shared/", "../../tests/orchestrator/"]
+- integration_points: ["all_services", "redis", "service_registry", "event_streaming"]
+-->
+
 **Enterprise-Grade Workflow Orchestration Platform**
 
 The Orchestrator service is the central coordination and control plane for the LLM Documentation Ecosystem. It provides comprehensive workflow management, multi-service orchestration, enterprise integration, and real-time monitoring capabilities.
@@ -35,6 +47,26 @@ Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) 
 
 ## 🏗️ Architecture
 
+### 🎨 Domain-Driven Design Implementation
+
+The Orchestrator follows **enterprise-grade Domain-Driven Design (DDD)** principles with clear bounded contexts:
+
+```
+services/orchestrator/
+├── domain/                    # Business logic organized by domain
+│   ├── workflow_management/   # Workflow execution and management
+│   ├── service_registry/      # Service discovery and registration  
+│   ├── health_monitoring/     # System health and monitoring
+│   ├── infrastructure/        # DLQ, saga, tracing, event streaming
+│   ├── ingestion/            # Data ingestion orchestration
+│   └── query_processing/      # Query execution coordination
+├── application/               # Use cases and application services
+├── infrastructure/           # External services and persistence
+└── presentation/             # API controllers and endpoints
+```
+
+### 🔗 Service Interaction Architecture
+
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │  Orchestrator   │    │  Service Mesh   │
@@ -54,6 +86,38 @@ Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) 
 │  │ Interpreter │ │ Doc Store   │ │ Analysis    │ ...      │
 │  └─────────────┘ └─────────────┘ └─────────────┘          │
 └─────────────────────────────────────────────────────────────┘
+```
+
+### 🎯 Key Design Decisions
+
+#### **1. Microservices Orchestration**
+- **Decision**: Adopt orchestration over choreography for complex workflows
+- **Rationale**: Central coordination provides better visibility, debugging, and failure handling
+- **Implementation**: Dependency injection container with clean separation of concerns
+
+#### **2. Event-Driven Architecture**
+- **Decision**: Redis-based event streaming with saga patterns
+- **Rationale**: Asynchronous processing for AI workloads, resilience through event replay
+- **Components**: Event ordering, saga orchestration, circuit breakers, dead letter queues
+
+#### **3. LangGraph Integration**
+- **Decision**: AI-powered workflow orchestration capabilities
+- **Rationale**: Enable intelligent decision making and workflow optimization
+- **Implementation**: Service-to-tool conversion, context-aware execution planning
+
+### 🔄 Service Dependencies
+
+**Primary Dependencies**:
+- **Redis**: Service coordination, event streaming, caching
+- **All Ecosystem Services**: Orchestration targets and health monitoring
+
+**Service Interaction Patterns**:
+```mermaid
+orchestrator --> discovery-agent: Service registration
+orchestrator --> llm-gateway: AI workflow coordination  
+orchestrator --> doc_store: Document orchestration
+orchestrator --> analysis-service: Analysis coordination
+orchestrator --> memory-agent: Context management
 ```
 
 ## 🚀 Quick Start

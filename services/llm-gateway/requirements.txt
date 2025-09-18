@@ -1,0 +1,58 @@
+# LLM Gateway Service Dependencies
+# Core web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# HTTP client for LLM provider APIs
+httpx>=0.25.0
+
+# Data validation and serialization
+pydantic>=2.5.0
+
+# Redis for caching and session management
+redis>=5.0.0
+aioredis>=2.0.0
+
+# Shared service dependencies
+-r ../shared/requirements.txt
+
+# Optional: OpenAI SDK (if using native OpenAI client)
+openai>=1.0.0
+
+# Optional: Anthropic SDK (if using native Anthropic client)
+anthropic>=0.7.0
+
+# Optional: Additional providers
+boto3>=1.34.0  # For AWS Bedrock
+botocore>=1.34.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.12.0
+pytest-xdist>=3.5.0  # For parallel test execution
+pytest-cov>=4.1.0    # For coverage reporting
+
+# Performance monitoring
+psutil>=5.9.0
+
+# Security
+cryptography>=41.0.0
+
+# Caching
+cachetools>=5.3.0
+
+# Metrics and monitoring
+prometheus-client>=0.19.0
+
+# Logging
+structlog>=23.2.0
+
+# Optional: For advanced caching
+diskcache>=5.6.0
+
+# Optional: For embeddings
+sentence-transformers>=2.2.0
+
+# Optional: For streaming responses
+sse-starlette>=1.6.0
