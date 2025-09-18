@@ -72,11 +72,13 @@ class BaseService(Generic[T], ABC):
     def list_entities(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
         """List entities with pagination."""
         entities = self.repository.get_all(limit, offset)
+        total_count = self.repository.count()
+        has_more = (offset + len(entities)) < total_count
 
         return {
             "items": [entity.to_dict() for entity in entities],
-            "total": len(entities),
-            "has_more": len(entities) == limit,
+            "total": total_count,
+            "has_more": has_more,
             "limit": limit,
             "offset": offset
         }

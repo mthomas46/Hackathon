@@ -10,9 +10,9 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="source-agent"
 LABEL version="1.0.0"
 LABEL description="Document fetching, normalization, and code analysis service"
-LABEL port="5100"
-LABEL dependencies="redis"
-LABEL profile="production"
+LABEL port="5070"
+LABEL dependencies="doc_store"
+LABEL profile="core"
 
 # Set working directory
 WORKDIR /app
@@ -34,15 +34,15 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r shared_requirements.txt
 
 # Copy service code maintaining directory structure
-COPY services/source-agent/ ./services/source_agent/
+COPY services/source-agent/ ./services/source-agent/
 COPY services/shared/ ./services/shared/
-COPY config.yml ./
+COPY config/config.yml ./config.yml
 COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV SERVICE_NAME=source-agent
-ENV SERVICE_PORT=5100
+ENV SERVICE_PORT=5070
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -51,12 +51,12 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5100/health || exit 1
+    CMD curl -f http://localhost:5070/health || exit 1
 
 # Expose port
-EXPOSE 5100
+EXPOSE 5070
 
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "-m", "services.source_agent.main"]
+CMD ["python", "-m", "services.source-agent.main"]

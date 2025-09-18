@@ -30,7 +30,7 @@ class BaseResponse(BaseModel):
     """Base response model with common fields."""
     success: bool = Field(..., description="Operation success status")
     message: Optional[str] = Field(None, description="Human-readable message")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Response timestamp")
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Response timestamp")
     request_id: Optional[str] = Field(None, description="Request correlation ID")
 
 
@@ -128,7 +128,7 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Health status")
     service: str = Field(..., description="Service name")
     version: Optional[str] = Field(None, description="Service version")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     uptime_seconds: Optional[float] = None
     environment: Optional[str] = None
     dependencies: Optional[Dict[str, str]] = None
@@ -140,7 +140,7 @@ class SystemHealthResponse(BaseModel):
     services_checked: int
     services_healthy: int
     services_unhealthy: int
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     service_details: Dict[str, Dict[str, Any]]
     environment_info: Dict[str, Any]
 
