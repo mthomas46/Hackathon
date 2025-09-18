@@ -433,6 +433,56 @@ async def batch_summarize(requests: List[SummarizeRequest]):
         "failed": sum(1 for r in results if not r.success)
     }
 
+@app.post("/api/v1/summarize")
+async def summarize_v1(request: SummarizeRequest):
+    """Summarize text content using standardized API v1 interface."""
+    try:
+        summarizer = SimpleSummarizer()
+
+        # Generate summary
+        summary_text = await summarizer.summarize_with_llm(
+            request.content,
+            max_length=request.max_length,
+            style=request.style or "professional"
+        )
+
+        # Get content analysis
+        analysis = summarizer.analyze_content(request.content)
+
+        # Categorize content
+        category_result = await summarizer.categorize_with_llm(request.content)
+
+        response_data = {
+            "summary_id": str(uuid.uuid4()),
+            "original_length": len(request.content),
+            "summary_length": len(summary_text),
+            "compression_ratio": len(summary_text) / len(request.content) if request.content else 0,
+            "summary": summary_text,
+            "format": request.format,
+            "style": request.style,
+            "category": category_result.get("category", "Unknown"),
+            "confidence": category_result.get("confidence", 0.0),
+            "content_analysis": analysis,
+            "processing_time": 0.5,  # Mock processing time
+            "timestamp": time.time(),
+            "metadata": {
+                "llm_model": "llama2",
+                "provider": "ollama",
+                "version": SERVICE_VERSION
+            }
+        }
+
+        return SummarizeResponse(
+            success=True,
+            data=response_data
+        )
+
+    except Exception as e:
+        return SummarizeResponse(
+            success=False,
+            error=f"Summarization failed: {str(e)}"
+        )
+
 @app.get("/test/llm-connection")
 async def test_llm_connection():
     """Test connection to LLM Gateway."""

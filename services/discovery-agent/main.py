@@ -356,6 +356,102 @@ async def get_registry_stats():
             details={"error": str(e)}
         )
 
+@app.post("/api/v1/discover/services")
+async def discover_services_v1(request: BulkDiscoverRequest):
+    """Discover and register services using standardized API v1 interface."""
+    try:
+        discovered_services = []
+        discovery_results = []
+
+        # If auto_detect is enabled, scan for services
+        if request.auto_detect:
+            # Mock auto-detection for demonstration
+            known_services = [
+                {"name": "orchestrator", "port": 5099},
+                {"name": "doc_store", "port": 5087},
+                {"name": "analysis-service", "port": 5080},
+                {"name": "llm-gateway", "port": 5055},
+                {"name": "frontend", "port": 3000}
+            ]
+
+            for service_info in known_services:
+                service_url = f"http://localhost:{service_info['port']}"
+                health_url = f"{service_url}/health"
+
+                try:
+                    # Check service health
+                    async with httpx.AsyncClient(timeout=3.0) as client:
+                        response = await client.get(health_url)
+                        is_healthy = response.status_code == 200
+
+                        if is_healthy:
+                            discovered_services.append({
+                                "name": service_info["name"],
+                                "url": service_url,
+                                "port": service_info["port"],
+                                "status": "healthy",
+                                "last_checked": datetime.now().isoformat()
+                            })
+
+                except Exception:
+                    discovered_services.append({
+                        "name": service_info["name"],
+                        "url": service_url,
+                        "port": service_info["port"],
+                        "status": "unreachable",
+                        "last_checked": datetime.now().isoformat()
+                    })
+
+        # Process explicitly provided services
+        for service_info in request.services:
+            service_name = service_info.get("name", "unknown")
+            service_url = service_info.get("url", "")
+
+            if request.include_health_check:
+                try:
+                    health_url = f"{service_url}/health"
+                    async with httpx.AsyncClient(timeout=3.0) as client:
+                        response = await client.get(health_url)
+                        health_status = "healthy" if response.status_code == 200 else "unhealthy"
+                except Exception:
+                    health_status = "unreachable"
+            else:
+                health_status = "not_checked"
+
+            discovered_services.append({
+                "name": service_name,
+                "url": service_url,
+                "status": health_status,
+                "last_checked": datetime.now().isoformat()
+            })
+
+        discovery_results.append({
+            "discovery_id": f"discovery_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "services_discovered": len(discovered_services),
+            "services_healthy": sum(1 for s in discovered_services if s["status"] == "healthy"),
+            "services_unreachable": sum(1 for s in discovered_services if s["status"] == "unreachable"),
+            "timestamp": datetime.now().isoformat(),
+            "auto_detection_enabled": request.auto_detect,
+            "health_checks_enabled": request.include_health_check
+        })
+
+        return create_success_response({
+            "discovery_results": discovery_results,
+            "discovered_services": discovered_services,
+            "summary": {
+                "total_services": len(discovered_services),
+                "healthy_services": sum(1 for s in discovered_services if s["status"] == "healthy"),
+                "unreachable_services": sum(1 for s in discovered_services if s["status"] == "unreachable"),
+                "discovery_method": "auto_detect" if request.auto_detect else "manual"
+            }
+        })
+
+    except Exception as e:
+        return create_error_response(
+            message=f"Service discovery failed: {str(e)}",
+            error_code=ErrorCodes.INTERNAL_ERROR
+        )
+
 @app.get("/monitoring/dashboard")
 async def get_monitoring_dashboard():
     """Get basic monitoring dashboard"""

@@ -1,5 +1,5 @@
 {
-  "audit_timestamp": 1758221367.680875,
+  "audit_timestamp": 1758224684.32817,
   "total_services": 21,
   "connectivity_tests": {
     "redis": {
@@ -12,36 +12,44 @@
       "service": "doc_store",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 159,
+      "response_size": 110,
       "url": "http://localhost:5087/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "doc_store",
         "version": "1.0.0",
-        "timestamp": "2025-09-18T18:49:27.693303Z",
-        "uptime_seconds": 1747.510424,
-        "environment": "development"
+        "timestamp": 1758224684.3430896,
+        "uptime_seconds": 0
       }
     },
     "orchestrator": {
       "service": "orchestrator",
-      "status": "connection_failed",
-      "error": "HTTP Error 500: Internal Server Error",
-      "url": "http://localhost:5099/health"
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 113,
+      "url": "http://localhost:5099/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "orchestrator",
+        "version": "1.0.0",
+        "timestamp": 1758224684.3461747,
+        "uptime_seconds": 0
+      }
     },
     "llm-gateway": {
       "service": "llm-gateway",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 161,
+      "response_size": 160,
       "url": "http://localhost:5055/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "llm-gateway",
         "version": "1.0.0",
-        "timestamp": 1758221367.7004378,
+        "timestamp": 1758224684.348543,
         "environment": "development",
         "ollama_endpoint": "http://ollama:11434"
       }
@@ -57,7 +65,7 @@
         "status": "healthy",
         "service": "mock-data-generator",
         "version": "1.0.0",
-        "timestamp": 1758221367.7015023,
+        "timestamp": 1758224684.3497443,
         "environment": "development",
         "llm_gateway_url": "http://llm-gateway:5055",
         "doc_store_url": "http://doc_store:5087"
@@ -67,14 +75,14 @@
       "service": "summarizer-hub",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 167,
+      "response_size": 168,
       "url": "http://localhost:5160/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "summarizer-hub",
         "version": "1.0.0",
-        "timestamp": 1758221367.702482,
+        "timestamp": 1758224684.3506033,
         "environment": "development",
         "llm_gateway_url": "http://llm-gateway:5055"
       }
@@ -137,8 +145,8 @@
         "status": "healthy",
         "service": "discovery-agent",
         "version": "1.0.0",
-        "timestamp": "2025-09-18T18:49:27.707660Z",
-        "uptime_seconds": 45165.152323,
+        "timestamp": "2025-09-18T19:44:44.355803Z",
+        "uptime_seconds": 48481.800467,
         "environment": "development"
       }
     },
@@ -146,32 +154,50 @@
       "service": "source-agent",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 162,
+      "response_size": 368,
       "url": "http://localhost:5085/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "source-agent",
         "version": "1.0.0",
-        "timestamp": "2025-09-18T18:49:27.708802Z",
-        "uptime_seconds": 2373.850077,
-        "environment": "development"
+        "timestamp": "2025-09-18T19:44:44.357379+00:00",
+        "uptime_seconds": 770.33341,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
       }
     },
     "analysis-service": {
       "service": "analysis-service",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 166,
+      "response_size": 373,
       "url": "http://localhost:5080/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "analysis-service",
         "version": "1.0.0",
-        "timestamp": "2025-09-18T18:49:27.709947Z",
-        "uptime_seconds": 1673.678691,
-        "environment": "development"
+        "timestamp": "2025-09-18T19:44:44.358748+00:00",
+        "uptime_seconds": 204.983405,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": true,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
       }
     },
     "code-analyzer": {
@@ -220,15 +246,15 @@
       "service": "prompt_store",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 162,
+      "response_size": 163,
       "url": "http://localhost:5110/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "prompt-store",
         "version": "2.0.0",
-        "timestamp": "2025-09-18T18:49:27.714680Z",
-        "uptime_seconds": 49423.97754,
+        "timestamp": "2025-09-18T19:44:44.363543Z",
+        "uptime_seconds": 52740.626401,
         "environment": "development"
       }
     },
@@ -243,7 +269,7 @@
         "status": "healthy",
         "service": "interpreter",
         "version": "1.0.0",
-        "timestamp": "2025-09-18T18:49:27.715706",
+        "timestamp": "2025-09-18T19:44:44.364612",
         "features": [
           "document_persistence",
           "workflow_provenance",
@@ -255,15 +281,15 @@
       "service": "architecture-digitizer",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 172,
+      "response_size": 173,
       "url": "http://localhost:5105/health",
       "response_type": "json",
       "response_data": {
         "status": "healthy",
         "service": "architecture-digitizer",
         "version": "1.0.0",
-        "timestamp": "2025-09-18T18:49:27.716714Z",
-        "uptime_seconds": 49454.64026,
+        "timestamp": "2025-09-18T19:44:44.365581Z",
+        "uptime_seconds": 52771.289128,
         "environment": "development"
       }
     },
@@ -291,17 +317,17 @@
       "service": "ollama",
       "status": "healthy",
       "status_code": 200,
-      "response_size": 1341,
+      "response_size": 660,
       "url": "http://localhost:11434/api/tags",
       "response_type": "json",
       "response_data": {
         "models": [
           {
-            "name": "llama3:latest",
-            "model": "llama3:latest",
-            "modified_at": "2025-07-10T18:15:28.113963605-05:00",
-            "size": 4661224676,
-            "digest": "365c0bd3c000a25d28ddbf732fe1c6add414de7275464c4e4d1c3b5fcb5d8ad1",
+            "name": "llama3.2:1b",
+            "model": "llama3.2:1b",
+            "modified_at": "2025-09-18T05:28:05.240572004Z",
+            "size": 1321098329,
+            "digest": "baf6a787fdffd633537aa2eb51cfd54cb93ff08e28040095462bb63daf552878",
             "details": {
               "parent_model": "",
               "format": "gguf",
@@ -309,57 +335,25 @@
               "families": [
                 "llama"
               ],
-              "parameter_size": "8.0B",
+              "parameter_size": "1.2B",
+              "quantization_level": "Q8_0"
+            }
+          },
+          {
+            "name": "tinyllama:latest",
+            "model": "tinyllama:latest",
+            "modified_at": "2025-09-18T05:27:56.568572Z",
+            "size": 637700138,
+            "digest": "2644915ede352ea7bdfaff0bfac0be74c719d5d5202acb63a6fb095b52f394a4",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "1B",
               "quantization_level": "Q4_0"
-            }
-          },
-          {
-            "name": "llama3.3:latest",
-            "model": "llama3.3:latest",
-            "modified_at": "2025-05-21T18:07:26.459171486-05:00",
-            "size": 42520413916,
-            "digest": "a6eb4748fd2990ad2952b2335a95a7f952d1a06119a0aa6a2df6cd052a93a3fa",
-            "details": {
-              "parent_model": "",
-              "format": "gguf",
-              "family": "llama",
-              "families": [
-                "llama"
-              ],
-              "parameter_size": "70.6B",
-              "quantization_level": "Q4_K_M"
-            }
-          },
-          {
-            "name": "codellama:7b",
-            "model": "codellama:7b",
-            "modified_at": "2025-05-12T03:05:55.687946805-05:00",
-            "size": 3825910662,
-            "digest": "8fdf8f752f6e80de33e82f381aba784c025982752cd1ae9377add66449d2225f",
-            "details": {
-              "parent_model": "",
-              "format": "gguf",
-              "family": "llama",
-              "families": null,
-              "parameter_size": "7B",
-              "quantization_level": "Q4_0"
-            }
-          },
-          {
-            "name": "llama3.2:latest",
-            "model": "llama3.2:latest",
-            "modified_at": "2025-05-12T02:52:23.302719842-05:00",
-            "size": 2019393189,
-            "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
-            "details": {
-              "parent_model": "",
-              "format": "gguf",
-              "family": "llama",
-              "families": [
-                "llama"
-              ],
-              "parameter_size": "3.2B",
-              "quantization_level": "Q4_K_M"
             }
           }
         ]
@@ -379,7 +373,7 @@
     },
     "orchestrator": {
       "service": "orchestrator",
-      "docker_health": "starting",
+      "docker_health": "healthy",
       "container_name": "hackathon-orchestrator-1"
     },
     "llm-gateway": {
@@ -469,7 +463,7 @@
     },
     "ollama": {
       "service": "ollama",
-      "docker_health": "unhealthy",
+      "docker_health": "healthy",
       "container_name": "hackathon-ollama-1"
     }
   },
@@ -582,21 +576,21 @@
       }
     ],
     "overall_status": "failed",
-    "execution_time": 0.005582094192504883
+    "execution_time": 0.006342887878417969
   },
   "summary": {
-    "healthy_services_count": 18,
-    "unhealthy_services_count": 3,
-    "health_percentage": 85.71428571428571,
+    "healthy_services_count": 19,
+    "unhealthy_services_count": 2,
+    "health_percentage": 90.47619047619048,
     "critical_issues": [
-      "Services completely unreachable: redis, orchestrator, frontend",
+      "Services completely unreachable: redis, frontend",
       "End-to-end workflow failed - ecosystem integration broken"
     ],
     "performance_issues": []
   },
   "recommendations": [
     "Address critical connectivity issues immediately",
-    "Resolve health check discrepancies for: redis, bedrock-proxy, github-mcp, memory-agent, analysis-service, secure-analyzer, log-collector, frontend, ollama"
+    "Resolve health check discrepancies for: redis, bedrock-proxy, github-mcp, memory-agent, analysis-service, secure-analyzer, log-collector, frontend"
   ],
   "integration_tests": {
     "redis": {
@@ -686,10 +680,12 @@
       "service": "frontend",
       "integration_test": "success",
       "backend_services_accessible": [
+        "orchestrator",
         "doc_store",
         "llm-gateway"
       ],
       "api_endpoints_tested": [
+        "http://localhost:5099/health",
         "http://localhost:5087/health",
         "http://localhost:5055/health"
       ]
@@ -709,7 +705,7 @@
       "load_test": "success",
       "requests_made": 10,
       "successful_requests": 10,
-      "average_response_time": 0.004732537269592285,
+      "average_response_time": 0.005255460739135742,
       "error_rate": 0.0
     },
     "orchestrator": {

@@ -64,8 +64,10 @@ class DocumentService(BaseService[Document]):
         return {
             "items": results,
             "total": len(results),
+            "has_more": len(results) == limit,  # Simple heuristic
             "query": query,
-            "limit": limit
+            "limit": limit,
+            "search_time": 0.0  # Placeholder
         }
 
     def get_quality_metrics(self, limit: int = 1000) -> Dict[str, Any]:

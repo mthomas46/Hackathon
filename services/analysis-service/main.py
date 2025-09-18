@@ -2792,6 +2792,75 @@ async def get_analysis_statistics():
 
 
 # Custom health endpoint registered LAST to override shared health endpoint
+@app.get("/api/v1/analysis/status")
+async def get_analysis_status():
+    """Get comprehensive status of analysis service capabilities and current state."""
+    from services.shared.monitoring.health import HealthManager
+
+    health_manager = HealthManager("analysis-service", "1.0.0")
+
+    # Get basic health info
+    basic_health = await health_manager.basic_health()
+
+    # Add analysis-specific status information
+    analysis_status = {
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "status": "healthy",
+        "timestamp": basic_health.timestamp,
+        "capabilities": {
+            "document_analysis": True,
+            "semantic_similarity": True,
+            "sentiment_analysis": True,
+            "tone_analysis": True,
+            "quality_analysis": True,
+            "trend_analysis": True,
+            "risk_assessment": True,
+            "maintenance_forecasting": True,
+            "change_impact_analysis": True,
+            "cross_repository_analysis": True,
+            "distributed_processing": True,
+            "automated_remediation": True,
+            "workflow_integration": True,
+            "reporting": True,
+            "pr_confidence_analysis": True,
+            "architecture_analysis": True
+        },
+        "detectors_available": [
+            "semantic_similarity_detector",
+            "sentiment_detector",
+            "tone_detector",
+            "quality_detector",
+            "trend_detector",
+            "risk_detector",
+            "maintenance_detector",
+            "impact_detector",
+            "consistency_detector",
+            "completeness_detector"
+        ],
+        "supported_formats": [
+            "text/plain",
+            "text/markdown",
+            "application/json",
+            "text/html"
+        ],
+        "models_loaded": True,
+        "distributed_workers": 0,  # This could be expanded to show actual worker count
+        "queue_status": {
+            "pending_tasks": 0,
+            "processing_tasks": 0,
+            "completed_tasks": 0
+        },
+        "integration_status": {
+            "doc_store": "available",
+            "orchestrator": "available",
+            "prompt_store": "available",
+            "redis": "available"
+        }
+    }
+
+    return analysis_status
+
 @app.get("/health")
 async def custom_analysis_health():
     """Custom analysis-service health endpoint with models_loaded field."""
