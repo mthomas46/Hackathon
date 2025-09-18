@@ -1,0 +1,258 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main, develop ]
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ========================================
+  # FAST FEEDBACK VALIDATION
+  # ========================================
+  fast-feedback:
+    name: Fast Feedback Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Quick syntax check
+      run: |
+        echo "🔍 Running quick syntax validation..."
+        python3 -m py_compile scripts/hardening/*.py || exit 1
+        python3 -c "import yaml; yaml.safe_load(open('docker-compose.dev.yml'))" || exit 1
+        echo "✅ Syntax validation passed"
+
+    - name: Basic configuration validation
+      run: |
+        echo "⚙️ Checking basic configuration..."
+        # Check if required files exist
+        [ -f "docker-compose.dev.yml" ] || (echo "❌ docker-compose.dev.yml missing" && exit 1)
+        [ -d "scripts/hardening" ] || (echo "❌ scripts/hardening directory missing" && exit 1)
+        echo "✅ Basic configuration validated"
+
+  # ========================================
+  # DEPENDENCY CHANGES DETECTION
+  # ========================================
+  dependency-changes:
+    name: Dependency Changes Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      dockerfile-changed: ${{ steps.dockerfile-check.outputs.changed }}
+      compose-changed: ${{ steps.compose-check.outputs.changed }}
+      env-changed: ${{ steps.env-check.outputs.changed }}
+
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Check for Dockerfile changes
+      id: dockerfile-check
+      run: |
+        if git diff --name-only HEAD~1 | grep -q "Dockerfile"; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "🐳 Dockerfile changes detected"
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check for docker-compose changes
+      id: compose-check
+      run: |
+        if git diff --name-only HEAD~1 | grep -q "docker-compose"; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "🐳 Docker Compose changes detected"
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check for environment changes
+      id: env-check
+      run: |
+        if git diff --name-only HEAD~1 | grep -E "\.(yml|yaml)$" | xargs grep -l "environment\|env\|SERVICE_PORT\|REDIS_HOST" 2>/dev/null | grep -q .; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "🌍 Environment changes detected"
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+  # ========================================
+  # TARGETED VALIDATION BASED ON CHANGES
+  # ========================================
+  targeted-validation:
+    name: Targeted Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: dependency-changes
+
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pydantic PyYAML redis requests
+
+    - name: Validate port configuration
+      if: needs.dependency-changes.outputs.compose-changed == 'true'
+      run: |
+        echo "🔍 Validating port configuration changes..."
+        python3 scripts/hardening/docker_standardization.py
+        echo "✅ Port configuration validated"
+
+    - name: Validate Dockerfiles
+      if: needs.dependency-changes.outputs.dockerfile-changed == 'true'
+      run: |
+        echo "🐳 Validating Dockerfile changes..."
+        python3 scripts/hardening/dockerfile_validator.py
+        echo "✅ Dockerfiles validated"
+
+    - name: Validate environment variables
+      if: needs.dependency-changes.outputs.env-changed == 'true'
+      run: |
+        echo "🌍 Validating environment variable changes..."
+        python3 scripts/hardening/environment_validator.py
+        echo "✅ Environment variables validated"
+
+    - name: Run full validation (fallback)
+      if: |
+        needs.dependency-changes.outputs.dockerfile-changed != 'true' &&
+        needs.dependency-changes.outputs.compose-changed != 'true' &&
+        needs.dependency-changes.outputs.env-changed != 'true'
+      run: |
+        echo "🔍 Running comprehensive validation..."
+        python3 scripts/hardening/docker_standardization.py --check-drift
+        echo "✅ Full validation completed"
+
+  # ========================================
+  # SIZE AND PERFORMANCE CHECKS
+  # ========================================
+  size-check:
+    name: Size and Performance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+
+    - name: Check repository size
+      run: |
+        echo "📊 Repository size check..."
+        repo_size=$(du -sh . | cut -f1)
+        echo "Repository size: $repo_size"
+
+        # Warn if repository is getting large
+        if [[ $repo_size == *G* ]]; then
+          echo "⚠️ Repository size is quite large ($repo_size)"
+        fi
+
+    - name: Check for large files
+      run: |
+        echo "📁 Checking for large files..."
+        find . -type f -size +50M -not -path "./.git/*" | while read file; do
+          echo "⚠️ Large file found: $file ($(du -h "$file" | cut -f1))"
+        done
+
+    - name: Check script performance
+      run: |
+        echo "⚡ Checking script performance..."
+        # Time the validation scripts
+        time python3 -c "import scripts.hardening.docker_standardization" 2>&1 | grep real || echo "Import timing check completed"
+
+  # ========================================
+  # PR COMMENTS AND REPORTING
+  # ========================================
+  pr-feedback:
+    name: PR Feedback
+    runs-on: ubuntu-latest
+    needs: [fast-feedback, targeted-validation, size-check]
+    if: always()
+
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+
+    - name: Generate PR feedback
+      run: |
+        echo "## 🔍 PR Validation Results" > pr_feedback.md
+        echo "" >> pr_feedback.md
+
+        # Overall status
+        if [[ "${{ needs.fast-feedback.result }}" == "success" ]] && \
+           [[ "${{ needs.targeted-validation.result }}" == "success" ]]; then
+          echo "### ✅ Validation Passed" >> pr_feedback.md
+          echo "All automated validations have passed successfully!" >> pr_feedback.md
+        else
+          echo "### ❌ Validation Issues Found" >> pr_feedback.md
+          echo "Some validations failed. Please check the details below." >> pr_feedback.md
+        fi
+
+        echo "" >> pr_feedback.md
+        echo "### Validation Details" >> pr_feedback.md
+        echo "- **Syntax Check**: ${{ needs.fast-feedback.result == 'success' && '✅ PASSED' || '❌ FAILED' }}" >> pr_feedback.md
+        echo "- **Targeted Validation**: ${{ needs.targeted-validation.result == 'success' && '✅ PASSED' || '❌ FAILED' }}" >> pr_feedback.md
+        echo "- **Size Check**: ${{ needs.size-check.result == 'success' && '✅ PASSED' || '❌ FAILED' }}" >> pr_feedback.md
+
+        echo "" >> pr_feedback.md
+        echo "### 🤖 Automated Checks Performed" >> pr_feedback.md
+        echo "- Port configuration validation" >> pr_feedback.md
+        echo "- Dockerfile syntax and security checks" >> pr_feedback.md
+        echo "- Environment variable consistency" >> pr_feedback.md
+        echo "- Repository size and performance checks" >> pr_feedback.md
+
+        echo "" >> pr_feedback.md
+        echo "**Note**: This is an automated validation. For complex changes, additional manual review may be required." >> pr_feedback.md
+
+    - name: Comment on PR
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const fs = require('fs');
+          const feedback = fs.readFileSync('pr_feedback.md', 'utf8');
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: feedback
+          });
+
+  # ========================================
+  # BLOCKING VALIDATION (Required to pass)
+  # ========================================
+  blocking-validation:
+    name: Blocking Validation
+    runs-on: ubuntu-latest
+    needs: [fast-feedback, targeted-validation]
+    if: failure()
+
+    steps:
+    - name: Validation failed - blocking merge
+      run: |
+        echo "❌ Critical validation failed - blocking merge"
+        echo "Please fix the validation errors before merging"
+        exit 1

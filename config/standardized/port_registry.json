@@ -1,0 +1,119 @@
+{
+  "redis": {
+    "external_port": 6379,
+    "internal_port": 6379,
+    "health_endpoint": "/",
+    "dependencies": [],
+    "environment_vars": {}
+  },
+  "doc_store": {
+    "external_port": 5087,
+    "internal_port": 5010,
+    "health_endpoint": "/health",
+    "dependencies": [
+      "redis"
+    ],
+    "environment_vars": {
+      "SERVICE_PORT": "5010",
+      "REDIS_URL": "redis://redis:6379"
+    }
+  },
+  "orchestrator": {
+    "external_port": 5099,
+    "internal_port": 5099,
+    "health_endpoint": "/health",
+    "dependencies": [
+      "redis"
+    ],
+    "environment_vars": {
+      "SERVICE_PORT": "5099",
+      "REDIS_URL": "redis://redis:6379"
+    }
+  },
+  "llm-gateway": {
+    "external_port": 5055,
+    "internal_port": 5055,
+    "health_endpoint": "/health",
+    "dependencies": [
+      "ollama"
+    ],
+    "environment_vars": {
+      "SERVICE_PORT": "5055",
+      "OLLAMA_ENDPOINT": "http://ollama:11434"
+    }
+  },
+  "analysis-service": {
+    "external_port": 5080,
+    "internal_port": 5020,
+    "health_endpoint": "/health",
+    "dependencies": [
+      "doc_store",
+      "llm-gateway"
+    ],
+    "environment_vars": {
+      "SERVICE_PORT": "5020",
+      "DOC_STORE_URL": "http://doc_store:5010",
+      "LLM_GATEWAY_URL": "http://llm-gateway:5055"
+    }
+  },
+  "discovery-agent": {
+    "external_port": 5045,
+    "internal_port": 5045,
+    "health_endpoint": "/health",
+    "dependencies": [
+      "orchestrator"
+    ],
+    "environment_vars": {
+      "SERVICE_PORT": "5045",
+      "ORCHESTRATOR_URL": "http://orchestrator:5099"
+    }
+  },
+  "notification-service": {
+    "external_port": 5130,
+    "internal_port": 5020,
+    "health_endpoint": "/health",
+    "dependencies": [],
+    "environment_vars": {
+      "SERVICE_PORT": "5020"
+    }
+  },
+  "code-analyzer": {
+    "external_port": 5025,
+    "internal_port": 5025,
+    "health_endpoint": "/health",
+    "dependencies": [],
+    "environment_vars": {
+      "SERVICE_PORT": "5025"
+    }
+  },
+  "source-agent": {
+    "external_port": 5085,
+    "internal_port": 5070,
+    "health_endpoint": "/health",
+    "dependencies": [
+      "doc_store"
+    ],
+    "environment_vars": {
+      "SERVICE_PORT": "5070",
+      "DOC_STORE_URL": "http://doc_store:5010"
+    }
+  },
+  "frontend": {
+    "external_port": 3000,
+    "internal_port": 3000,
+    "health_endpoint": "/",
+    "dependencies": [
+      "orchestrator"
+    ],
+    "environment_vars": {
+      "REACT_APP_API_URL": "http://localhost:5099"
+    }
+  },
+  "ollama": {
+    "external_port": 11434,
+    "internal_port": 11434,
+    "health_endpoint": "/api/tags",
+    "dependencies": [],
+    "environment_vars": {}
+  }
+}
