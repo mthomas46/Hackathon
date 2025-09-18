@@ -10,7 +10,7 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="discovery-agent"
 LABEL version="1.0.0"
 LABEL description="Service endpoint discovery and OpenAPI spec analysis service"
-LABEL port="5040"
+LABEL port="5045"
 LABEL dependencies="redis"
 LABEL profile="development"
 

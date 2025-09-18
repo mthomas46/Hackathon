@@ -1,0 +1,146 @@
+# Centralized Service Port Configuration
+# This file defines the standard port mappings for all services in the ecosystem
+# Use this as the single source of truth for port assignments
+
+version: "1.0"
+description: "LLM Documentation Ecosystem - Service Port Registry"
+
+# Core Infrastructure Services
+core_services:
+  redis:
+    internal_port: 6379
+    external_port: 6379
+    description: "Redis cache and storage"
+    
+  doc_store:
+    internal_port: 5010
+    external_port: 5087
+    description: "Document storage service"
+    
+  orchestrator:
+    internal_port: 5099
+    external_port: 5099
+    description: "Service orchestration hub"
+
+# AI/ML Services
+ai_services:
+  llm_gateway:
+    internal_port: 5055
+    external_port: 5055
+    description: "LLM routing and management"
+    
+  ollama:
+    internal_port: 11434
+    external_port: 11434
+    description: "Local LLM inference engine"
+    
+  mock_data_generator:
+    internal_port: 5065
+    external_port: 5065
+    description: "AI-powered mock data generation"
+    
+  summarizer_hub:
+    internal_port: 5160
+    external_port: 5160
+    description: "Content summarization service"
+    
+  bedrock_proxy:
+    internal_port: 5060
+    external_port: 5060
+    description: "AWS Bedrock API proxy"
+    
+  github_mcp:
+    internal_port: 5030
+    external_port: 5030
+    description: "GitHub Model Context Protocol"
+
+# Agent Services
+agent_services:
+  memory_agent:
+    internal_port: 5040
+    external_port: 5090
+    description: "Memory and context management"
+    
+  discovery_agent:
+    internal_port: 5050
+    external_port: 5050
+    description: "Service discovery and registry"
+    
+  source_agent:
+    internal_port: 5085
+    external_port: 5085
+    description: "Source code analysis agent"
+
+# Analysis Services
+analysis_services:
+  analysis_service:
+    internal_port: 5020
+    external_port: 5080
+    description: "Document analysis and consistency"
+    
+  code_analyzer:
+    internal_port: 5025
+    external_port: 5025
+    description: "Code analysis and metrics"
+    
+  secure_analyzer:
+    internal_port: 5070
+    external_port: 5100
+    description: "Security analysis and scanning"
+    
+  log_collector:
+    internal_port: 5080
+    external_port: 5040
+    description: "Centralized logging service"
+
+# Utility Services
+utility_services:
+  prompt_store:
+    internal_port: 5110
+    external_port: 5110
+    description: "Centralized prompt management"
+    
+  interpreter:
+    internal_port: 5120
+    external_port: 5120
+    description: "Document interpretation service"
+    
+  architecture_digitizer:
+    internal_port: 5105
+    external_port: 5105
+    description: "Architecture diagram processing"
+    
+  notification_service:
+    internal_port: 5130
+    external_port: 5130
+    description: "Event notification system"
+
+# Web Services
+web_services:
+  frontend:
+    internal_port: 3000
+    external_port: 3000
+    description: "Web frontend interface"
+
+# Port Ranges Reserved for Future Services
+reserved_ranges:
+  ai_services: "5000-5199"
+  analysis_services: "5020-5099"
+  agent_services: "5040-5089"
+  utility_services: "5100-5149"
+  web_services: "3000-3099"
+  infrastructure: "6000-6999"
+
+# Service Health Check Endpoints
+health_endpoints:
+  default_path: "/health"
+  timeout: "10s"
+  interval: "30s"
+  retries: 3
+
+# Environment Variables Standard
+environment_standards:
+  port_variable: "SERVICE_PORT"
+  host_variable: "SERVICE_HOST"
+  environment_variable: "ENVIRONMENT"
+  log_level_variable: "LOG_LEVEL"

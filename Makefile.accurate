@@ -1,0 +1,56 @@
+# Accurate Health Monitoring Makefile
+# Commands using the new accurate health check system
+
+.PHONY: help status status-accurate health check-accurate
+
+# Colors
+GREEN := \033[0;32m
+BLUE := \033[0;34m
+YELLOW := \033[1;33m
+NC := \033[0m
+
+help: ## Show available commands
+	@echo "🏥 Accurate Health Monitoring Commands"
+	@echo "======================================"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BLUE)%-20s$(NC) %s\n", $$1, $$2}'
+
+status-accurate: ## Accurate health check (no false reporting)
+	@echo "$(BLUE)🏥 Running Accurate Health Check...$(NC)"
+	@./scripts/docker/accurate-health-check.sh
+
+health: status-accurate ## Alias for accurate status
+
+check-accurate: ## Quick accurate check of key services  
+	@echo "$(BLUE)🎯 Quick Accurate Check...$(NC)"
+	@echo ""
+	@echo "Core Services:"
+	@./scripts/docker/accurate-health-check.sh | grep -E "(redis|orchestrator|llm-gateway|discovery-agent)" | head -4
+	@echo ""
+	@./scripts/docker/accurate-health-check.sh | grep -E "Health Percentage|Status:"
+
+compare-health: ## Compare old vs new health checks
+	@echo "$(YELLOW)📊 Comparing Health Check Methods$(NC)"
+	@echo "===================================="
+	@echo ""
+	@echo "$(BLUE)Old Health Check:$(NC)"
+	@./scripts/docker/health-check.sh | grep -E "Health Percentage|Status:" | tail -2
+	@echo ""
+	@echo "$(BLUE)New Accurate Health Check:$(NC)"
+	@./scripts/docker/accurate-health-check.sh | grep -E "Health Percentage|Status:" | tail -2
+
+monitor-accurate: ## Start continuous accurate monitoring
+	@echo "$(BLUE)📡 Starting Accurate Continuous Monitoring...$(NC)"
+	@echo "Press Ctrl+C to stop"
+	@while true; do \
+		clear; \
+		echo "$(BLUE)🏥 Live Accurate Health Status - $$(date)$(NC)"; \
+		echo "=========================================="; \
+		./scripts/docker/accurate-health-check.sh; \
+		echo ""; \
+		echo "Next update in 30 seconds..."; \
+		sleep 30; \
+	done
+
+# Default target
+.DEFAULT_GOAL := help

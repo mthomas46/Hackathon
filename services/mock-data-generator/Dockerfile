@@ -63,4 +63,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5065/health || exit 1
 
 # Default command
-CMD ["python", "-m", "uvicorn", "services.mock_data_generator.main:app", "--host", "0.0.0.0", "--port", "5065"]
+WORKDIR /app
+CMD ["python", "services/mock-data-generator/main.py"]
