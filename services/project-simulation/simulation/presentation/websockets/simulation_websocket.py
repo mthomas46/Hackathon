@@ -290,6 +290,17 @@ class SimulationWebSocketHandler:
 
         await self.connection_manager.broadcast_to_simulation(simulation_id, message)
 
+    async def notify_simulation_event_dict(self, simulation_id: str, event_data: Dict[str, Any]) -> None:
+        """Notify clients about simulation events using dictionary data."""
+        message = SimulationEventNotification(
+            simulation_id=simulation_id,
+            event_type=event_data.get("event_type", "custom_event"),
+            event_description=f"Event: {event_data.get('event_type', 'unknown')}",
+            data=event_data
+        )
+
+        await self.connection_manager.broadcast_to_simulation(simulation_id, message)
+
     async def notify_ecosystem_status(self, service_name: str, status: str, response_time: Optional[float] = None) -> None:
         """Notify clients about ecosystem service status changes."""
         message = EcosystemServiceStatus(
@@ -465,6 +476,12 @@ async def notify_simulation_event(simulation_id: str, event: DomainEvent) -> Non
     await handler.notify_simulation_event(simulation_id, event)
 
 
+async def notify_simulation_event_dict(simulation_id: str, event_data: Dict[str, Any]) -> None:
+    """Notify clients about simulation events using dictionary data."""
+    handler = get_websocket_handler()
+    await handler.notify_simulation_event_dict(simulation_id, event_data)
+
+
 async def notify_ecosystem_status(service_name: str, status: str, response_time: Optional[float] = None) -> None:
     """Notify clients about ecosystem service status changes."""
     handler = get_websocket_handler()
@@ -481,5 +498,6 @@ __all__ = [
     'get_websocket_handler',
     'notify_simulation_progress',
     'notify_simulation_event',
+    'notify_simulation_event_dict',
     'notify_ecosystem_status'
 ]
