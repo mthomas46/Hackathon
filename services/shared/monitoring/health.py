@@ -47,7 +47,7 @@ class DependencyHealth(BaseModel):
     status: str  # healthy, unhealthy, unknown
     response_time_ms: Optional[float] = None
     error: Optional[str] = None
-    last_checked: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_checked: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class SystemHealth(BaseModel):
@@ -56,7 +56,7 @@ class SystemHealth(BaseModel):
     services_checked: int
     services_healthy: int
     services_unhealthy: int
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     service_details: Dict[str, DependencyHealth] = Field(default_factory=dict)
     environment_info: Dict[str, Any] = Field(default_factory=dict)
 

@@ -134,7 +134,7 @@ def handle_service_exception(exc: ServiceException, request: Optional[Request] =
         error_code=exc.error_code,
         details=exc.details,
         request_id=get_request_id(request),
-        timestamp=datetime.now(timezone.utc)
+        timestamp=datetime.now(timezone.utc).isoformat()
     )
 
     return JSONResponse(
@@ -161,7 +161,7 @@ def handle_validation_exception(exc: ValidationError, request: Optional[Request]
         error_code="validation_error",
         field_errors=field_errors,
         request_id=get_request_id(request),
-        timestamp=datetime.now(timezone.utc)
+        timestamp=datetime.now(timezone.utc).isoformat()
     )
 
     return JSONResponse(
@@ -181,7 +181,7 @@ def handle_generic_exception(exc: Exception, request: Optional[Request] = None) 
         error_code="internal_error",
         details=format_error_details(exc) if os.environ.get("DEBUG", "").lower() == "true" else None,
         request_id=get_request_id(request),
-        timestamp=datetime.now(timezone.utc)
+        timestamp=datetime.now(timezone.utc).isoformat()
     )
 
     return JSONResponse(

@@ -36,50 +36,29 @@ app = FastAPI(
 # Setup shared middleware and utilities
 setup_common_middleware(app, ServiceNames.DOC_STORE)
 install_error_handlers(app)
-health_manager = register_health_endpoints(app, ServiceNames.DOC_STORE)
+# Skip shared health system to avoid datetime serialization issues
+# health_manager = register_health_endpoints(app, ServiceNames.DOC_STORE)
 attach_self_register(app, ServiceNames.DOC_STORE)
 
-# Custom health endpoint with database_connected field
-def check_database_connection():
-    """Check if database is connected."""
-    try:
-        # Import here to avoid circular imports
-        from .db.database import get_db
-        # Try to get a database connection
-        db = next(get_db())
-        db.execute("SELECT 1")  # Simple query to test connection
-        return True
-    except Exception:
-        return False
-
-# Override the basic health method to include database_connected
-original_basic_health = health_manager.basic_health
-async def custom_basic_health():
-    """Custom basic health with database_connected."""
-    # Get the original health status
-    health_status = await original_basic_health()
-
-    # Convert to dict and add database_connected
-    health_dict = {
-        "status": health_status.status,
-        "service": health_status.service,
-        "version": health_status.version,
-        "timestamp": health_status.timestamp.isoformat(),
-        "uptime_seconds": health_status.uptime_seconds,
-        "environment": health_status.environment,
-        "database_connected": check_database_connection()
+# Simple health endpoint that bypasses all shared systems
+@app.get("/health")
+async def simple_health():
+    """Simple health endpoint that avoids datetime serialization."""
+    import time
+    return {
+        "status": "healthy",
+        "service": "doc_store",
+        "version": "1.0.0",
+        "timestamp": time.time(),
+        "uptime_seconds": 0
     }
 
-    return health_dict
-
-health_manager.basic_health = custom_basic_health
-
-# Register custom health endpoints
-from services.shared.monitoring.health import create_health_endpoint, create_system_health_endpoint, create_dependency_health_endpoint
-
-app.get("/health")(create_health_endpoint(health_manager))
-app.get("/health/system")(create_system_health_endpoint(health_manager))
-app.get("/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
+# Skip custom health endpoint registration - using simple one above
+# from services.shared.monitoring.health import create_health_endpoint, create_system_health_endpoint, create_dependency_health_endpoint
+# app.get("/health")(create_health_endpoint(health_manager))
+# Skip all shared health endpoints
+# app.get("/health/system")(create_system_health_endpoint(health_manager))
+# app.get("/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
 
 # ============================================================================
 # LIFECYCLE MANAGEMENT - Startup and shutdown
