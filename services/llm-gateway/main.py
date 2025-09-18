@@ -25,13 +25,26 @@ import json
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response, create_error_response
-from services.shared.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import setup_common_middleware, attach_self_register
-from services.shared.clients import ServiceClients
-from services.shared.logging import fire_and_forget
-from services.shared.metrics import increment_counter, record_histogram
+try:
+    from services.shared.monitoring.health import register_health_endpoints
+    from services.shared.core.responses.responses import create_success_response, create_error_response
+    from services.shared.core.constants_new import ServiceNames, ErrorCodes
+    from services.shared.utilities.middleware import setup_common_middleware, attach_self_register
+    from services.shared.integrations.clients.clients import ServiceClients
+    from services.shared.monitoring.logging import fire_and_forget
+    from services.shared.monitoring.metrics import increment_counter, record_histogram
+except ImportError:
+    # Fallback for Docker/module execution
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+    from services.shared.monitoring.health import register_health_endpoints
+    from services.shared.core.responses.responses import create_success_response, create_error_response
+    from services.shared.core.constants_new import ServiceNames, ErrorCodes
+    from services.shared.utilities.middleware import setup_common_middleware, attach_self_register
+    from services.shared.integrations.clients.clients import ServiceClients
+    from services.shared.monitoring.logging import fire_and_forget
+    from services.shared.monitoring.metrics import increment_counter, record_histogram
 
 # ============================================================================
 # LLM GATEWAY MODULES - Specialized LLM management
@@ -48,14 +61,18 @@ try:
         GatewayResponse, MetricsResponse, CacheRequest
     )
 except ImportError:
-    # Fallback for Docker/module execution
-    from services.llm_gateway.modules.provider_router import ProviderRouter
-    from services.llm_gateway.modules.security_filter import SecurityFilter
-    from services.llm_gateway.modules.cache_manager import CacheManager
-    from services.llm_gateway.modules.metrics_collector import MetricsCollector
-    from services.llm_gateway.modules.rate_limiter import RateLimiter
-    from services.llm_gateway.modules.service_integrations import ServiceIntegrations
-    from services.llm_gateway.modules.models import (
+    # Fallback for Docker/module execution - use absolute paths
+    import sys
+    import os
+    current_dir = os.path.dirname(__file__)
+    sys.path.append(current_dir)
+    from modules.provider_router import ProviderRouter
+    from modules.security_filter import SecurityFilter
+    from modules.cache_manager import CacheManager
+    from modules.metrics_collector import MetricsCollector
+    from modules.rate_limiter import RateLimiter
+    from modules.service_integrations import ServiceIntegrations
+    from modules.models import (
         LLMQuery, ChatMessage, EmbeddingRequest, ProviderInfo,
         GatewayResponse, MetricsResponse, CacheRequest
     )

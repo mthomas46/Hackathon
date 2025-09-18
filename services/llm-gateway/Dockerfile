@@ -62,6 +62,9 @@ EXPOSE 5055
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5055/health || exit 1
 
+# Set Python path to include the app directory
+ENV PYTHONPATH=/app
+
 # Default command
 WORKDIR /app
-CMD ["python", "services/llm-gateway/main.py"]
+CMD ["python", "services/llm-gateway/main_simple.py"]
