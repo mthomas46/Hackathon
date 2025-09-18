@@ -1,20 +1,63 @@
-"""Project Simulation Service - Main FastAPI Application.
+"""Project Simulation Service - Enhanced FastAPI Application with Shared Infrastructure.
 
 This is the main entry point for the project-simulation service,
-providing a REST API for project simulation capabilities.
+providing a REST API for project simulation capabilities with comprehensive
+reuse of shared infrastructure patterns for consistency and reliability.
+
+Features:
+- Shared response models and error handling
+- Standardized middleware stack (correlation ID, metrics, rate limiting)
+- Enterprise-grade health monitoring and observability
+- Comprehensive logging with correlation ID tracking
+- Standardized API response formats
+- HATEOAS navigation for REST API maturity
+- Real-time WebSocket communication
+- Circuit breaker resilience patterns
+- Comprehensive testing infrastructure
 """
 
 import sys
+import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from starlette.responses import JSONResponse
 
 # Add shared infrastructure to path
 sys.path.append(str(Path(__file__).parent.parent / "services" / "shared"))
+
+# Import shared utilities and patterns
+from services.shared.core.responses.responses import (
+    create_success_response,
+    create_error_response,
+    create_validation_error_response,
+    create_paginated_response,
+    create_list_response,
+    create_crud_response,
+    SuccessResponse,
+    ErrorResponse,
+    ValidationErrorResponse,
+    PaginatedResponse,
+    ListResponse,
+    CreateResponse,
+    HealthResponse,
+    SystemHealthResponse,
+    HTTP_STATUS_CODES
+)
+from services.shared.utilities.utilities import (
+    setup_common_middleware,
+    attach_self_register,
+    generate_id,
+    clean_string
+)
+from services.shared.utilities.middleware import ServiceMiddleware
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.logging.correlation_middleware import CorrelationIdMiddleware
+from services.shared.utilities.error_handling import register_exception_handlers
 
 # Import local modules
 from simulation.infrastructure.di_container import get_simulation_container
@@ -57,57 +100,152 @@ class SimulationResponse(BaseModel):
     created_at: Optional[str] = None
 
 
-# Initialize FastAPI application
+# Service configuration
+SERVICE_NAME = "project-simulation"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5075
+
+# Rate limiting configuration (can be overridden by environment)
+RATE_LIMITS = {
+    "/api/v1/simulations": (10, 20),  # 10 requests per minute, burst 20
+    "/api/v1/simulations/*/execute": (5, 10),  # 5 requests per minute, burst 10
+}
+
+# Initialize FastAPI application with enhanced configuration
 app = FastAPI(
     title="Project Simulation Service",
-    description="AI-powered project simulation and ecosystem demonstration service",
-    version="1.0.0",
+    description="AI-powered project simulation and ecosystem demonstration service with comprehensive shared infrastructure integration",
+    version=SERVICE_VERSION,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Project Simulation Team",
+        "url": "https://github.com/your-org/project-simulation",
+        "email": "team@project-simulation.com"
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    }
 )
 
-# Configure CORS
+# Configure CORS with security best practices
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    max_age=3600  # Cache preflight for 1 hour
 )
+
+# Setup shared middleware stack
+service_middleware = ServiceMiddleware(
+    service_name=SERVICE_NAME,
+    rate_limits=RATE_LIMITS,
+    enable_rate_limit=os.getenv("RATE_LIMIT_ENABLED", "false").lower() == "true"
+)
+
+# Apply shared middleware
+for middleware_factory in service_middleware.get_middlewares():
+    app.middleware("http")(middleware_factory)
+
+# Register shared exception handlers
+register_exception_handlers(app)
+
+# Setup common middleware (correlation ID, metrics, etc.)
+setup_common_middleware(app, SERVICE_NAME)
+
+# Self-registration with discovery service
+attach_self_register(app, SERVICE_NAME, SERVICE_VERSION)
 
 # Get service instances
 container = get_simulation_container()
 logger = container.logger
 application_service = container.simulation_application_service
 
-# Create health endpoints
+# Create health endpoints using shared patterns
 health_endpoints = create_simulation_health_endpoints()
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
-# Health endpoints
-@app.get("/health")
-async def health():
-    """Basic health check."""
-    return await health_endpoints["health"]()
+# Health endpoints using shared response models
+@app.get("/health", response_model=HealthResponse)
+async def health(request: Request):
+    """Basic health check using shared response models."""
+    try:
+        health_data = await health_endpoints["health"]()
+
+        # Use shared success response
+        return create_success_response(
+            message="Service is healthy",
+            data={
+                "status": health_data.get("status", "healthy"),
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "uptime_seconds": health_data.get("uptime_seconds"),
+                "environment": os.getenv("ENVIRONMENT", "development")
+            },
+            request_id=getattr(request.state, "correlation_id", None)
+        )
+    except Exception as e:
+        logger.error("Health check failed", error=str(e))
+        return create_error_response(
+            message="Health check failed",
+            error_code="health_check_failed",
+            details={"error": str(e)},
+            request_id=getattr(request.state, "correlation_id", None)
+        )
 
 
-@app.get("/health/detailed")
-async def health_detailed():
-    """Detailed health check."""
-    return await health_endpoints["health_detailed"]()
+@app.get("/health/detailed", response_model=SuccessResponse)
+async def health_detailed(request: Request):
+    """Detailed health check with comprehensive status."""
+    try:
+        health_data = await health_endpoints["health_detailed"]()
+
+        return create_success_response(
+            message="Detailed health check completed",
+            data=health_data,
+            request_id=getattr(request.state, "correlation_id", None)
+        )
+    except Exception as e:
+        logger.error("Detailed health check failed", error=str(e))
+        return create_error_response(
+            message="Detailed health check failed",
+            error_code="detailed_health_check_failed",
+            details={"error": str(e)},
+            request_id=getattr(request.state, "correlation_id", None)
+        )
 
 
-@app.get("/health/system")
-async def health_system():
-    """System-wide health check."""
-    return await health_endpoints["health_system"]()
+@app.get("/health/system", response_model=SuccessResponse)
+async def health_system(request: Request):
+    """System-wide health check with ecosystem status."""
+    try:
+        health_data = await health_endpoints["health_system"]()
+
+        return create_success_response(
+            message="System health check completed",
+            data=health_data,
+            request_id=getattr(request.state, "correlation_id", None)
+        )
+    except Exception as e:
+        logger.error("System health check failed", error=str(e))
+        return create_error_response(
+            message="System health check failed",
+            error_code="system_health_check_failed",
+            details={"error": str(e)},
+            request_id=getattr(request.state, "correlation_id", None)
+        )
 
 
-# Simulation endpoints
-@app.post("/api/v1/simulations")
-async def create_simulation(request: CreateSimulationRequest):
-    """Create a new project simulation with HATEOAS navigation."""
-    correlation_id = generate_correlation_id()
+# Simulation endpoints using shared response patterns
+@app.post("/api/v1/simulations", response_model=CreateResponse)
+async def create_simulation(request: CreateSimulationRequest, req: Request):
+    """Create a new project simulation with enhanced response patterns."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
         logger.info(
@@ -118,6 +256,14 @@ async def create_simulation(request: CreateSimulationRequest):
         )
 
         try:
+            # Validate input using shared utilities
+            if not request.name or not clean_string(request.name):
+                return create_validation_error_response(
+                    field_errors={"name": ["Project name cannot be empty"]},
+                    message="Invalid project name provided",
+                    request_id=correlation_id
+                )
+
             result = await application_service.create_simulation(request.dict())
 
             if result["success"]:
@@ -125,18 +271,29 @@ async def create_simulation(request: CreateSimulationRequest):
                 simulation_id = result.get("simulation_id")
                 links = SimulationResource.create_simulation_links(simulation_id)
 
-                return create_hateoas_response(
-                    data={
-                        "simulation_id": simulation_id,
-                        "message": result.get("message", "Simulation created successfully")
-                    },
-                    links=links,
-                    status="created"
+                # Use shared CRUD response
+                response_data = create_crud_response(
+                    operation="create",
+                    resource_id=simulation_id,
+                    message=result.get("message", "Simulation created successfully"),
+                    request_id=correlation_id
+                )
+
+                # Add HATEOAS links
+                response_data.resource_url = f"/api/v1/simulations/{simulation_id}"
+                response_data.links = links
+
+                return JSONResponse(
+                    content=response_data.dict(),
+                    status_code=HTTP_STATUS_CODES["created"],
+                    headers={"X-Correlation-ID": correlation_id}
                 )
             else:
                 return create_error_response(
-                    error=result.get("message", "Failed to create simulation"),
-                    status_code=400
+                    message=result.get("message", "Failed to create simulation"),
+                    error_code="simulation_creation_failed",
+                    details=result,
+                    request_id=correlation_id
                 )
 
         except Exception as e:
@@ -146,8 +303,10 @@ async def create_simulation(request: CreateSimulationRequest):
                 correlation_id=correlation_id
             )
             return create_error_response(
-                error=str(e),
-                status_code=500
+                message="Internal server error during simulation creation",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
             )
 
 
@@ -242,30 +401,70 @@ async def get_simulation_status(simulation_id: str):
             )
 
 
-@app.get("/api/v1/simulations")
-async def list_simulations(status: Optional[str] = None, limit: int = 50):
-    """List simulations with HATEOAS navigation."""
-    correlation_id = generate_correlation_id()
+@app.get("/api/v1/simulations", response_model=PaginatedResponse)
+async def list_simulations(
+    status: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+    req: Request = None
+):
+    """List simulations with shared pagination and response patterns."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
         logger.debug(
             "Listing simulations",
             operation="list_simulations",
             status_filter=status,
-            limit=limit,
+            page=page,
+            page_size=page_size,
             correlation_id=correlation_id
         )
 
         try:
-            result = await application_service.list_simulations(status, limit)
+            # Validate pagination parameters
+            if page < 1:
+                return create_validation_error_response(
+                    field_errors={"page": ["Page number must be greater than 0"]},
+                    message="Invalid pagination parameters",
+                    request_id=correlation_id
+                )
+
+            if page_size < 1 or page_size > 100:
+                return create_validation_error_response(
+                    field_errors={"page_size": ["Page size must be between 1 and 100"]},
+                    message="Invalid pagination parameters",
+                    request_id=correlation_id
+                )
+
+            # Calculate offset for pagination
+            offset = (page - 1) * page_size
+            limit = page_size
+
+            result = await application_service.list_simulations(status, limit, offset)
+
+            # Get total count for pagination metadata
+            total_count = result.get("total_count", len(result.get("simulations", [])))
 
             # Create HATEOAS links for the collection
             links = SimulationResource.create_simulation_collection_links()
 
-            return create_hateoas_response(
-                data=result,
-                links=links,
-                status="ok"
+            # Use shared paginated response
+            paginated_response = create_paginated_response(
+                items=result.get("simulations", []),
+                page=page,
+                page_size=page_size,
+                total_items=total_count,
+                request_id=correlation_id
+            )
+
+            # Add HATEOAS links
+            response_data = paginated_response.dict()
+            response_data["links"] = links
+
+            return JSONResponse(
+                content=response_data,
+                headers={"X-Correlation-ID": correlation_id}
             )
 
         except Exception as e:
@@ -275,8 +474,10 @@ async def list_simulations(status: Optional[str] = None, limit: int = 50):
                 correlation_id=correlation_id
             )
             return create_error_response(
-                error=str(e),
-                status_code=500
+                message="Failed to retrieve simulations",
+                error_code="simulation_list_failed",
+                details={"error": str(e)},
+                request_id=correlation_id
             )
 
 
