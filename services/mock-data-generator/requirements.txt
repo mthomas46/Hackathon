@@ -1,0 +1,16 @@
+# Mock Data Generator Service Dependencies
+# Core web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# HTTP client for LLM Gateway integration
+httpx>=0.25.0
+
+# Data validation and serialization
+pydantic>=2.5.0
+
+# Shared service dependencies
+-r ../shared/requirements.txt
+
+# Additional utilities
+python-dateutil>=2.8.0
