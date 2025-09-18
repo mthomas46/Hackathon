@@ -57,6 +57,7 @@ services:
   # postgres:
   #   image: postgres:15-alpine
   #   environment:
+      - PYTHONPATH=/app
   #     POSTGRES_DB: doc_consistency
   #     POSTGRES_USER: doc_user
   #     POSTGRES_PASSWORD: doc_password
@@ -80,17 +81,13 @@ services:
 
   # Orchestrator - Central coordination service
   orchestrator:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/orchestrator/config.yaml:/app/services/orchestrator/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic redis aioredis && python services/orchestrator/main.py"
     ports:
       - "5099:5099"
     depends_on:
@@ -106,20 +103,17 @@ services:
 
   # Document Store - Document storage and retrieval
   doc_store:
-    image: python:3.12-slim
-    working_dir: /app
+    build:
+      context: .
+      dockerfile: services/doc_store/Dockerfile
     volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/doc_store/config.yaml:/app/services/doc_store/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
-      - doc_store_data:/app/services/doc_store
+      - doc_store_data:/app/data
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/doc_store/main.py"
     ports:
-      - "5087:5087"
+      - "5087:5010"
     depends_on:
       redis:
         condition: service_healthy
@@ -133,17 +127,16 @@ services:
 
   # Analysis Service - Document analysis and consistency checking
   analysis-service:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/analysis-service/config.yaml:/app/services/analysis-service/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/analysis-service/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/analysis-service/main.py"
+      # DDD-specific environment variables
+      - DDD_ARCHITECTURE=true
+      - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
       - "5020:5020"
     depends_on:
@@ -161,17 +154,13 @@ services:
 
   # Source Agent - Data ingestion from various sources
   source-agent:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/source-agent/config.yaml:/app/services/source-agent/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/source-agent/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx redis && python services/source-agent/main.py"
     ports:
       - "5000:5000"
     depends_on:
@@ -187,16 +176,12 @@ services:
 
   # Frontend - Web interface
   frontend:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/frontend/config.yaml:/app/services/frontend/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/frontend/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/frontend/main.py"
     ports:
       - "3000:3000"
     depends_on:
@@ -213,17 +198,13 @@ services:
 
   # Summarizer Hub - AI-powered summarization service
   summarizer-hub:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/summarizer-hub/config.yaml:/app/services/summarizer-hub/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/summarizer-hub/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - OLLAMA_HOST=http://host.docker.internal:11434
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic boto3 botocore && python services/summarizer-hub/main.py"
     ports:
       - "5060:5060"
     healthcheck:
@@ -236,16 +217,12 @@ services:
 
   # Architecture Digitizer - Diagram normalization service
   architecture-digitizer:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/architecture-digitizer/config.yaml:/app/services/architecture-digitizer/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/architecture-digitizer/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/architecture-digitizer/main.py"
     ports:
       - "5105:5105"
     healthcheck:
@@ -258,16 +235,12 @@ services:
 
   # Bedrock Proxy - AWS Bedrock API proxy
   bedrock-proxy:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/bedrock-proxy/config.yaml:/app/services/bedrock-proxy/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/bedrock-proxy/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/bedrock-proxy/main.py"
     ports:
       - "7090:7090"
     healthcheck:
@@ -362,16 +335,12 @@ services:
 
   # GitHub MCP - GitHub Model Context Protocol service
   github-mcp:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/github-mcp/config.yaml:/app/services/github-mcp/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/github-mcp/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/github-mcp/main.py"
     ports:
       - "5072:5072"
     healthcheck:
@@ -388,17 +357,13 @@ services:
 
   # Memory Agent - Conversation memory and context management
   memory-agent:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/memory-agent/config.yaml:/app/services/memory-agent/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/memory-agent/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis && python services/memory-agent/main.py"
     ports:
       - "5040:5040"
     depends_on:
@@ -414,18 +379,19 @@ services:
 
   # Discovery Agent - Service discovery and registration
   discovery-agent:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/discovery-agent/config.yaml:/app/services/discovery-agent/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/discovery-agent/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic httpx && python services/discovery-agent/main.py"
     ports:
       - "5045:5045"
+    volumes:
+      - ./services/discovery-agent:/app/services/discovery_agent
+      - ./services/shared:/app/services/shared
+      - ./config.yml:/app/config.yml
+      - ./config:/app/config
     depends_on:
       orchestrator:
         condition: service_started
@@ -439,16 +405,12 @@ services:
 
   # Notification Service - Notification delivery and management
   notification-service:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/notification-service/config.yaml:/app/services/notification-service/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/notification-service/main.py"
     ports:
       - "5095:5095"
     healthcheck:
@@ -464,16 +426,17 @@ services:
   # ============================================================================
 
   # Prompt Store - Centralized prompt management
-  prompt-store:
+  prompt_store:
     build:
       context: .
-      dockerfile: services/prompt-store/Dockerfile
+      dockerfile: services/prompt_store/Dockerfile
     volumes:
       - prompt_store_data:/app/data
       - ./config.yml:/app/config.yml:ro
-      - ./services/prompt-store/config.yaml:/app/services/prompt-store/config.yaml:ro
+      - ./services/prompt_store/config.yaml:/app/services/prompt_store/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
@@ -499,11 +462,12 @@ services:
       - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     ports:
       - "5120:5120"
     depends_on:
-      prompt-store:
+      prompt_store:
         condition: service_started
       orchestrator:
         condition: service_started
@@ -527,9 +491,10 @@ services:
       - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
     depends_on:
-      prompt-store:
+      prompt_store:
         condition: service_started
       orchestrator:
         condition: service_started
@@ -545,16 +510,12 @@ services:
 
   # Code Analyzer - Code analysis and security scanning
   code-analyzer:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/code-analyzer/config.yaml:/app/services/code-analyzer/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/code-analyzer/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic redis httpx && python services/code-analyzer/main.py"
     ports:
       - "5085:5085"
     depends_on:
@@ -570,16 +531,12 @@ services:
 
   # Secure Analyzer - Content security and policy enforcement
   secure-analyzer:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/secure-analyzer/config.yaml:/app/services/secure-analyzer/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/secure-analyzer/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn httpx pydantic && python services/secure-analyzer/main.py"
     ports:
       - "5070:5070"
     healthcheck:
@@ -592,16 +549,12 @@ services:
 
   # Log Collector - Centralized logging service
   log-collector:
-    image: python:3.12-slim
-    working_dir: /app
-    volumes:
-      - ./:/app:ro
-      - ./config.yml:/app/config.yml:ro
-      - ./services/log-collector/config.yaml:/app/services/log-collector/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    build:
+      context: .
+      dockerfile: services/log-collector/Dockerfile
     environment:
+      - PYTHONPATH=/app
       - ENVIRONMENT=development
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/log-collector/main.py"
     ports:
       - "5080:5080"
     healthcheck:

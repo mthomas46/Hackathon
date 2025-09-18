@@ -4,7 +4,7 @@ Handles the complex logic for normalizing data from different sources.
 """
 from typing import Dict, Any, Optional
 
-from services.shared.models import Document
+from services.shared.core.models.models import Document
 from services.shared.utilities import stable_hash
 from services.shared.envelopes import DocumentEnvelope
 

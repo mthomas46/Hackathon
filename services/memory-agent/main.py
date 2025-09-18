@@ -25,13 +25,13 @@ from datetime import timedelta
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.health import register_health_endpoints
-from services.shared.responses import create_success_response
-from services.shared.error_handling import ServiceException
-from services.shared.constants_new import ServiceNames, ErrorCodes
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.core.responses.responses import create_success_response
+from services.shared.utilities.error_handling import ServiceException
+from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import utc_now, setup_common_middleware, attach_self_register
-from services.shared.models import MemoryItem
-from services.shared.logging import fire_and_forget
+from services.shared.core.models.models import MemoryItem
+from services.shared.monitoring.logging import fire_and_forget
 
 try:
     import redis.asyncio as aioredis  # type: ignore
@@ -41,22 +41,44 @@ except Exception:
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
-from .modules.shared_utils import (
-    get_memory_max_items,
-    get_memory_ttl_seconds,
-    get_redis_url,
-    handle_memory_agent_error,
-    create_memory_agent_success_response,
-    build_memory_agent_context,
-    create_memory_item,
-    serialize_memory_value,
-    deserialize_memory_value,
-    cleanup_expired_memory_items,
-    get_memory_stats_summary,
-    validate_memory_item,
-    extract_endpoint_from_text
-)
-from .modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
+try:
+    from .modules.shared_utils import (
+        get_memory_max_items,
+        get_memory_ttl_seconds,
+        get_redis_url,
+        handle_memory_agent_error,
+        create_memory_agent_success_response,
+        build_memory_agent_context,
+        create_memory_item,
+        serialize_memory_value,
+        deserialize_memory_value,
+        cleanup_expired_memory_items,
+        get_memory_stats_summary,
+        validate_memory_item,
+        extract_endpoint_from_text
+    )
+    from .modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
+except ImportError:
+    # Fallback for when running as script
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.shared_utils import (
+        get_memory_max_items,
+        get_memory_ttl_seconds,
+        get_redis_url,
+        handle_memory_agent_error,
+        create_memory_agent_success_response,
+        build_memory_agent_context,
+        create_memory_item,
+        serialize_memory_value,
+        deserialize_memory_value,
+        cleanup_expired_memory_items,
+        get_memory_stats_summary,
+        validate_memory_item,
+        extract_endpoint_from_text
+    )
+    from modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
 from .modules.event_processor import event_processor
 
 # ============================================================================

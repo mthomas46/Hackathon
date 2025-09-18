@@ -3,7 +3,7 @@
 Handles search-related HTTP requests and responses.
 """
 from typing import Dict, Any
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.core.responses.responses import create_success_response, create_error_response
 from ...core.models import SearchRequest, SearchResponse
 from ...db.queries import search_documents
 

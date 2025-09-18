@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional, List
 from services.prompt_store.core.handler import BaseHandler
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.core.models import PromptCreate, PromptUpdate
-from services.shared.responses import create_success_response, create_error_response
+from services.shared.core.responses.responses import create_success_response, create_error_response
 
 
 class PromptHandlers(BaseHandler):

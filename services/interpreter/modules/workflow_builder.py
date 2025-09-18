@@ -6,7 +6,7 @@ extracted from the main interpreter service to improve maintainability.
 
 from typing import Dict, Any, Optional, Union, TYPE_CHECKING
 
-from services.shared.clients import ServiceClients
+from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import utc_now
 
 # Import shared configuration utilities
