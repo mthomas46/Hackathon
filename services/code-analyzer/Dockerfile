@@ -10,7 +10,7 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="code-analyzer"
 LABEL version="1.0.0"
 LABEL description="Code quality assessment and vulnerability analysis service"
-LABEL port="5030"
+LABEL port="5025"
 LABEL dependencies="redis"
 LABEL profile="development"
 
@@ -41,7 +41,7 @@ COPY config/ ./config/
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV SERVICE_NAME=code-analyzer
-ENV SERVICE_PORT=5030
+ENV SERVICE_PORT=5025
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -50,12 +50,12 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5030/health || exit 1
+    CMD curl -f http://localhost:5025/health || exit 1
 
 # Expose port
-EXPOSE 5030
+EXPOSE 5025
 
 USER appuser
 
-# Start command - using module path for proper imports
-CMD ["python", "-m", "services.code-analyzer.main"]
+# Start command - run script directly to execute __main__ block
+CMD ["python", "services/code-analyzer/main.py"]

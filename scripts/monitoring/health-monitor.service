@@ -1,0 +1,35 @@
+[Unit]
+Description=LLM Ecosystem Automated Health Monitor
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=llm-ecosystem
+Group=llm-ecosystem
+WorkingDirectory=/opt/llm-ecosystem
+ExecStart=/usr/bin/python3 /opt/llm-ecosystem/scripts/monitoring/automated_health_monitoring.py --config /opt/llm-ecosystem/config/health_monitoring_config.json
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=health-monitor
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/llm-ecosystem/logs /opt/llm-ecosystem/data
+ProtectHome=true
+PrivateDevices=true
+
+# Environment
+Environment=PYTHONPATH=/opt/llm-ecosystem
+Environment=LOG_LEVEL=INFO
+
+[Install]
+WantedBy=multi-user.target
