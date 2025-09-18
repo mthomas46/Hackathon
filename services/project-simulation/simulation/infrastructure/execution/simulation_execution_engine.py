@@ -120,6 +120,13 @@ class SimulationExecutionEngine:
             simulation.start_simulation()
             await self._save_simulation(simulation)
 
+            # Publish simulation started event
+            await self._publish_simulation_event(simulation, "simulation_started", {
+                "project_name": "Unknown",  # This would come from project entity
+                "estimated_duration": simulation.configuration.get_max_execution_time().total_seconds(),
+                "simulation_type": simulation.configuration.simulation_type.value
+            })
+
             # Execute simulation phases
             await self._execute_simulation_phases(simulation)
 
@@ -133,6 +140,14 @@ class SimulationExecutionEngine:
             metrics = await self._calculate_simulation_metrics(simulation)
             simulation.complete_simulation(True, 0.0, metrics)
             await self._save_simulation(simulation)
+
+            # Publish simulation completion event
+            await self._publish_simulation_event(simulation, "simulation_completed", {
+                "total_documents": metrics.total_documents,
+                "total_workflows": metrics.total_workflows,
+                "execution_time_seconds": 0.0,
+                "success": True
+            })
 
             self.logger.info(f"Simulation completed successfully", simulation_id=simulation_id)
 
@@ -149,6 +164,12 @@ class SimulationExecutionEngine:
             self.logger.error(f"Simulation execution failed", error=str(e), simulation_id=simulation_id)
             simulation.fail_simulation(str(e))
             await self._save_simulation(simulation)
+
+            # Publish simulation failure event
+            await self._publish_simulation_event(simulation, "simulation_failed", {
+                "error_message": str(e),
+                "failure_time": datetime.now().isoformat()
+            })
 
             return {
                 "success": False,
@@ -248,14 +269,30 @@ class SimulationExecutionEngine:
         additional_documents = await self.content_pipeline.execute_document_generation(phase_config)
         documents.extend(additional_documents)
 
-        # Store documents in ecosystem
+        # Store documents in ecosystem and broadcast events
         for doc in documents:
             doc_id = await self._store_document(doc)
+
+            # Determine document type
+            doc_type = DocumentType.CONFLUENCE_DOC
+            if "jira" in doc.get("type", "").lower():
+                doc_type = DocumentType.JIRA_TICKET
+            elif "github" in doc.get("type", "").lower():
+                doc_type = DocumentType.GITHUB_PR
+
             simulation.record_document_generation(
-                DocumentType.CONFLUENCE_DOC if "confluence" in doc.get("type", "").lower() else DocumentType.JIRA_TICKET,
+                doc_type,
                 doc.get("title", "Untitled"),
                 len(doc.get("content", ""))
             )
+
+            # Publish document generation event
+            await self._publish_simulation_event(simulation, "document_generated", {
+                "document_title": doc.get("title", "Untitled"),
+                "document_type": doc_type.value,
+                "word_count": len(doc.get("content", "")),
+                "phase": phase_name
+            })
 
         # Execute workflows for this phase
         workflow_config = {
@@ -274,12 +311,28 @@ class SimulationExecutionEngine:
             workflow_result.get("success", False)
         )
 
+        # Publish workflow execution event
+        await self._publish_simulation_event(simulation, "workflow_executed", {
+            "workflow_name": f"{phase_name}_workflow",
+            "execution_time": workflow_result.get("execution_time", 0.0),
+            "success": workflow_result.get("success", False),
+            "phase": phase_name
+        })
+
         # Run phase-specific analysis
         if documents and len(documents) > 0:
             await self._run_phase_analysis(simulation, phase_name, documents)
 
         # Update progress
         simulation.update_progress(phase_name, len(documents), 1, True)
+
+        # Publish phase completion event
+        await self._publish_simulation_event(simulation, "phase_completed", {
+            "phase_name": phase_name,
+            "documents_generated": len(documents),
+            "workflows_executed": 1,
+            "phase_duration_seconds": 0  # This would be calculated
+        })
 
         # Publish progress event
         await self._publish_progress_event(simulation)
@@ -392,6 +445,14 @@ class SimulationExecutionEngine:
                     quality_analysis.get("success", True)
                 )
 
+                # Publish analysis completion event
+                await self._publish_simulation_event(simulation, "analysis_completed", {
+                    "analysis_type": "document_quality",
+                    "documents_analyzed": len(documents),
+                    "quality_score": quality_analysis.get("analysis_result", {}).get("quality_score", 0),
+                    "issues_found": len(quality_analysis.get("analysis_result", {}).get("issues", []))
+                })
+
                 self.logger.info(f"Document quality analysis completed", simulation_id=simulation_id)
 
         except Exception as e:
@@ -470,13 +531,33 @@ class SimulationExecutionEngine:
                 "current_phase": simulation.progress.current_phase if hasattr(simulation.progress, 'current_phase') else None,
                 "status": simulation.status.value,
                 "documents_generated": getattr(simulation.progress, 'documents_generated', 0),
-                "workflows_executed": getattr(simulation.progress, 'workflows_executed', 0)
+                "workflows_executed": getattr(simulation.progress, 'workflows_executed', 0),
+                "timestamp": datetime.now().isoformat()
             }
 
             await notify_simulation_progress(str(simulation.id.value), progress_data)
 
         except Exception as e:
             self.logger.error(f"Failed to publish progress event", error=str(e))
+
+    async def _publish_simulation_event(self, simulation: Simulation, event_type: str, event_data: Dict[str, Any] = None) -> None:
+        """Publish simulation-specific event."""
+        try:
+            from simulation.presentation.websockets.simulation_websocket import notify_simulation_event_dict
+
+            event_payload = {
+                "simulation_id": str(simulation.id.value),
+                "event_type": event_type,
+                "timestamp": datetime.now().isoformat(),
+                "data": event_data or {},
+                "simulation_status": simulation.status.value,
+                "progress_percentage": simulation.get_progress_percentage()
+            }
+
+            await notify_simulation_event_dict(str(simulation.id.value), event_payload)
+
+        except Exception as e:
+            self.logger.error(f"Failed to publish simulation event", error=str(e), event_type=event_type)
 
     async def get_simulation_status(self, simulation_id: str) -> Optional[Dict[str, Any]]:
         """Get current simulation status."""
