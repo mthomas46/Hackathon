@@ -24,28 +24,75 @@ class SimulationApplicationService:
     """
 
     def __init__(self,
-                 project_simulation_service: ProjectSimulationService,
-                 logger: SimulationLogger):
+                 domain_service,
+                 project_repository,
+                 timeline_repository,
+                 team_repository,
+                 simulation_repository,
+                 monitoring_service,
+                 logger):
         """Initialize application service."""
-        self._domain_service = project_simulation_service
+        self._domain_service = domain_service
+        self._project_repository = project_repository
+        self._timeline_repository = timeline_repository
+        self._team_repository = team_repository
+        self._simulation_repository = simulation_repository
+        self._monitoring_service = monitoring_service
         self._logger = logger
 
     async def create_simulation(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new project simulation."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
-
         try:
             self._logger.info(
                 "Creating new simulation",
                 operation="create_simulation",
-                project_name=request.get("name", "unknown"),
-                correlation_id=correlation_id
+                project_name=request.get("name", "unknown")
             )
 
             start_time = datetime.now()
 
-            # Create simulation through domain service
-            simulation_id = await self._domain_service.create_project_simulation(request)
+            # Create project first
+            from ...domain.entities.project import Project, ProjectId
+            from ...domain.entities.simulation import Simulation, SimulationId, SimulationConfiguration
+            from ...domain.value_objects import ProjectType, ComplexityLevel
+
+            project = Project(
+                id=ProjectId(),
+                name=request["name"],
+                description=request.get("description", ""),
+                type=ProjectType(request.get("type", "web_application")),
+                complexity=ComplexityLevel(request.get("complexity", "medium")),
+                duration_weeks=request.get("duration_weeks", 8),
+                budget=request.get("budget"),
+                technologies=request.get("technologies", [])
+            )
+
+            # Save project
+            await self._project_repository.save(project)
+
+            # Create simulation
+            simulation_config = SimulationConfiguration(
+                simulation_type=request.get("simulation_type", "full_project"),
+                include_document_generation=request.get("include_documents", True),
+                include_workflow_execution=request.get("include_workflows", True),
+                include_team_dynamics=request.get("include_team", True),
+                real_time_progress=request.get("real_time", False),
+                max_execution_time_minutes=request.get("max_time_minutes", 60),
+                generate_realistic_delays=request.get("realistic_delays", True),
+                capture_metrics=request.get("capture_metrics", True),
+                enable_ecosystem_integration=request.get("ecosystem_integration", True)
+            )
+
+            simulation = Simulation(
+                id=SimulationId(),
+                project_id=str(project.id.value),
+                configuration=simulation_config
+            )
+
+            # Save simulation
+            await self._simulation_repository.save(simulation)
+
+            simulation_id = str(simulation.id.value)
 
             duration = (datetime.now() - start_time).total_seconds()
 
@@ -102,8 +149,27 @@ class SimulationApplicationService:
                 correlation_id=correlation_id
             )
 
-            # Execute simulation through domain service
-            result = await self._domain_service.execute_simulation(simulation_id)
+            # Execute simulation using execution engine
+            from ...infrastructure.execution.simulation_execution_engine import SimulationExecutionEngine
+            from ...infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+            from ...infrastructure.clients.ecosystem_clients import get_ecosystem_service_registry
+            from ...infrastructure.workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
+
+            # Create execution engine
+            execution_engine = SimulationExecutionEngine(
+                content_pipeline=ContentGenerationPipeline(),
+                ecosystem_clients=get_ecosystem_service_registry(),
+                workflow_orchestrator=SimulationWorkflowOrchestrator(),
+                logger=self._logger,
+                monitoring_service=self._monitoring_service,
+                simulation_repository=self._simulation_repository,
+                project_repository=self._project_repository,
+                timeline_repository=self._timeline_repository,
+                team_repository=self._team_repository
+            )
+
+            # Execute simulation
+            result = await execution_engine.execute_simulation(simulation_id)
 
             self._logger.info(
                 "Simulation execution completed",
@@ -159,9 +225,7 @@ class SimulationApplicationService:
             )
 
             # Get simulation from repository
-            from ...infrastructure.di_container import get_simulation_container
-            simulation_repo = get_simulation_container().simulation_repository
-            simulation = simulation_repo.find_by_id(simulation_id)
+            simulation = await self._simulation_repository.find_by_id(simulation_id)
 
             if not simulation:
                 return {
