@@ -67,4 +67,4 @@ ENV PYTHONPATH=/app
 
 # Default command
 WORKDIR /app
-CMD ["python", "services/llm-gateway/main.py"]
+CMD ["python", "services/llm-gateway/main_simple.py"]
