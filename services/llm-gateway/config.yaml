@@ -1,0 +1,164 @@
+# LLM Gateway Service Configuration
+# Inherits from shared base_config.yaml
+
+# Server configuration
+server:
+  port: 5055
+  host: 0.0.0.0
+
+# LLM Provider configurations
+providers:
+  ollama:
+    name: ollama
+    type: local
+    model: ${OLLAMA_MODEL:-llama3}
+    endpoint: ${OLLAMA_ENDPOINT:-http://ollama:11434}
+    timeout: 60
+    cost_per_token: 0.0
+    security_level: high
+    enabled: true
+
+  openai:
+    name: openai
+    type: cloud
+    model: ${OPENAI_MODEL:-gpt-4o}
+    api_key: ${OPENAI_API_KEY:-}
+    endpoint: https://api.openai.com/v1/chat/completions
+    timeout: 30
+    cost_per_token: 0.00003
+    security_level: medium
+    enabled: ${OPENAI_ENABLED:-true}
+
+  anthropic:
+    name: anthropic
+    type: cloud
+    model: ${ANTHROPIC_MODEL:-claude-3.5-sonnet}
+    api_key: ${ANTHROPIC_API_KEY:-}
+    endpoint: https://api.anthropic.com/v1/messages
+    timeout: 30
+    cost_per_token: 0.000015
+    security_level: medium
+    enabled: ${ANTHROPIC_ENABLED:-true}
+
+  bedrock:
+    name: bedrock
+    type: cloud
+    model: ${BEDROCK_MODEL:-anthropic.claude-3-sonnet-20240229-v1:0}
+    endpoint: ${BEDROCK_ENDPOINT:-http://bedrock-proxy:7090/invoke}
+    api_key: ${BEDROCK_API_KEY:-}
+    timeout: 60
+    cost_per_token: 0.000015
+    security_level: high
+    enabled: ${BEDROCK_ENABLED:-true}
+
+  grok:
+    name: grok
+    type: cloud
+    model: ${GROK_MODEL:-grok-1}
+    api_key: ${GROK_API_KEY:-}
+    endpoint: https://api.x.ai/v1/chat/completions
+    timeout: 30
+    cost_per_token: 0.00001
+    security_level: medium
+    enabled: ${GROK_ENABLED:-true}
+
+# Security configuration
+security:
+  sensitive_keywords:
+    - password
+    - passwd
+    - secret
+    - token
+    - key
+    - credential
+    - auth
+    - api_key
+    - private
+    - confidential
+    - internal
+    - proprietary
+    - ssn
+    - social security
+    - credit card
+    - ccv
+    - cvv
+    - bank account
+    - routing number
+    - medical
+    - health
+    - patient
+
+  sensitivity_threshold: ${SENSITIVITY_THRESHOLD:-0.7}
+  secure_only_models: ${SECURE_ONLY_MODELS:-ollama,bedrock}
+  all_providers: ${ALL_PROVIDERS:-bedrock,ollama,openai,anthropic,grok}
+  auto_classification: ${AUTO_CLASSIFY_SENSITIVE:-true}
+
+# Cache configuration
+cache:
+  max_size: ${CACHE_MAX_SIZE:-1000}
+  default_ttl: ${CACHE_DEFAULT_TTL:-3600}
+  cleanup_interval: ${CACHE_CLEANUP_INTERVAL:-300}
+  enable_compression: ${CACHE_COMPRESSION:-true}
+  redis_enabled: ${CACHE_REDIS_ENABLED:-false}
+  redis_prefix: llm_gateway_cache
+
+# Rate limiting configuration
+rate_limiting:
+  default:
+    requests_per_minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:-60}
+    requests_per_hour: ${RATE_LIMIT_REQUESTS_PER_HOUR:-1000}
+    tokens_per_minute: ${RATE_LIMIT_TOKENS_PER_MINUTE:-50000}
+    burst_limit: ${RATE_LIMIT_BURST_LIMIT:-10}
+    cooldown_seconds: ${RATE_LIMIT_COOLDOWN_SECONDS:-60}
+
+  premium:
+    requests_per_minute: 120
+    requests_per_hour: 5000
+    tokens_per_minute: 200000
+    burst_limit: 20
+    cooldown_seconds: 30
+
+  enterprise:
+    requests_per_minute: 300
+    requests_per_hour: 20000
+    tokens_per_minute: 1000000
+    burst_limit: 50
+    cooldown_seconds: 15
+
+# Metrics configuration
+metrics:
+  enable_detailed_logging: ${METRICS_DETAILED_LOGGING:-true}
+  retention_days: ${METRICS_RETENTION_DAYS:-30}
+  enable_cost_tracking: ${METRICS_COST_TRACKING:-true}
+  enable_performance_tracking: ${METRICS_PERFORMANCE_TRACKING:-true}
+  enable_error_tracking: ${METRICS_ERROR_TRACKING:-true}
+
+# Logging configuration
+logging:
+  level: ${LOG_LEVEL:-INFO}
+  format: ${LOG_FORMAT:-json}
+  enable_request_logging: ${REQUEST_LOGGING:-true}
+  enable_response_logging: ${RESPONSE_LOGGING:-false}
+  enable_metrics_logging: ${METRICS_LOGGING:-true}
+
+# Health check configuration
+health:
+  check_interval: ${HEALTH_CHECK_INTERVAL:-30}
+  timeout: ${HEALTH_TIMEOUT:-10}
+  retries: ${HEALTH_RETRIES:-3}
+  enable_provider_health_checks: ${PROVIDER_HEALTH_CHECKS:-true}
+
+# Development settings
+development:
+  debug_mode: ${DEBUG_MODE:-false}
+  mock_providers: ${MOCK_PROVIDERS:-false}
+  enable_cors: ${ENABLE_CORS:-true}
+  cors_origins: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
+
+# Production settings
+production:
+  enable_ssl: ${SSL_ENABLED:-false}
+  ssl_cert_path: ${SSL_CERT_PATH:-}
+  ssl_key_path: ${SSL_KEY_PATH:-}
+  enable_request_validation: ${REQUEST_VALIDATION:-true}
+  enable_response_validation: ${RESPONSE_VALIDATION:-true}

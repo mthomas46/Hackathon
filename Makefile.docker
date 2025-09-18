@@ -1,0 +1,117 @@
+# Docker Management Makefile
+# Includes standardized port management and service orchestration
+
+include scripts/docker/service-targets.mk
+
+.PHONY: help validate-ports generate-configs docker-clean docker-reset
+
+# Default target
+help:
+	@echo "🐳 Docker Management Commands"
+	@echo ""
+	@echo "📋 Configuration Management:"
+	@echo "  validate-ports     - Check for port conflicts and configuration issues"
+	@echo "  generate-configs   - Generate standardized configuration files"
+	@echo "  docker-config      - Validate docker-compose configuration"
+	@echo ""
+	@echo "🚀 Service Management:"
+	@echo "  start-all          - Start all services"
+	@echo "  start-core         - Start core infrastructure services"
+	@echo "  start-ai           - Start AI/ML services"
+	@echo "  start-analysis     - Start analysis services"
+	@echo "  start-agents       - Start agent services"
+	@echo "  start-utility      - Start utility services"
+	@echo ""
+	@echo "🔄 Service Operations:"
+	@echo "  restart-all        - Restart all services"
+	@echo "  stop-all           - Stop all services"
+	@echo "  logs-all           - Show logs for all services"
+	@echo "  status             - Show status of all services"
+	@echo ""
+	@echo "🧹 Maintenance:"
+	@echo "  docker-clean       - Clean up unused containers and images"
+	@echo "  docker-reset       - Reset entire Docker environment"
+	@echo "  health-check       - Check health of all services"
+
+# Configuration Management
+validate-ports:
+	@echo "🔍 Validating port configurations..."
+	@chmod +x scripts/docker/validate-ports.sh
+	@scripts/docker/validate-ports.sh
+
+generate-configs:
+	@echo "⚙️ Generating standardized configurations..."
+	@python3 scripts/docker/generate-compose.py
+
+docker-config:
+	@echo "✅ Validating Docker Compose configuration..."
+	@docker-compose -f docker-compose.dev.yml config --quiet
+	@echo "✅ Configuration is valid!"
+
+# Service Management
+start-all: validate-ports
+	@echo "🚀 Starting all services..."
+	@docker-compose -f docker-compose.dev.yml --profile ai_services --profile development --profile production --profile core up -d
+
+stop-all:
+	@echo "🛑 Stopping all services..."
+	@docker-compose -f docker-compose.dev.yml down
+
+restart-all: stop-all start-all
+
+# Monitoring and Status
+status:
+	@echo "📊 Service Status:"
+	@docker ps --filter "name=hackathon" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -20
+
+logs-all:
+	@echo "📝 Service Logs:"
+	@docker-compose -f docker-compose.dev.yml logs --tail=50
+
+health-check:
+	@echo "🏥 Health Check Results:"
+	@echo ""
+	@chmod +x scripts/docker/health-check.sh
+	@scripts/docker/health-check.sh || true
+
+# Maintenance
+docker-clean:
+	@echo "🧹 Cleaning up Docker resources..."
+	@docker container prune -f
+	@docker image prune -f
+	@docker volume prune -f
+	@docker network prune -f
+
+docker-reset: stop-all docker-clean
+	@echo "🔄 Resetting Docker environment..."
+	@docker-compose -f docker-compose.dev.yml down --volumes --remove-orphans
+	@docker system prune -a -f
+
+# Development helpers
+dev-setup: generate-configs validate-ports start-core
+	@echo "💻 Development environment setup complete!"
+
+quick-start: validate-ports start-core start-ai
+	@echo "⚡ Quick start complete - core and AI services running!"
+
+# Testing
+test-ecosystem: start-all
+	@echo "🧪 Testing ecosystem connectivity..."
+	@sleep 10
+	@scripts/docker/test-connectivity.sh
+
+# Port and service information
+port-info:
+	@echo "📋 Port Assignments:"
+	@python3 -c "import yaml; config=yaml.safe_load(open('config/service-ports.yaml')); [print(f'{cat}: {list(services.keys())}') for cat, services in config.items() if isinstance(services, dict) and 'port' in str(services)]"
+
+service-info:
+	@echo "🔍 Service Information:"
+	@docker-compose -f docker-compose.dev.yml ps
+
+# CI/CD Integration
+ci-validate: validate-ports docker-config
+	@echo "✅ CI validation passed!"
+
+ci-test: ci-validate test-ecosystem
+	@echo "✅ CI testing passed!"

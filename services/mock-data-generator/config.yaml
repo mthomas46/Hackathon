@@ -1,0 +1,46 @@
+# Mock Data Generator Service Configuration
+service:
+  name: "mock-data-generator"
+  title: "Mock Data Generator"
+  version: "1.0.0"
+  port: 5065
+
+# LLM Gateway Integration
+llm_gateway:
+  url: "http://llm-gateway:5055"
+  default_provider: "ollama"
+  generation_timeout: 30
+  max_tokens: 2000
+
+# Document Store Integration
+doc_store:
+  url: "http://doc_store:5087"
+  auto_persist: true
+  retention_days: 7
+
+# Generation Settings
+generation:
+  max_items_per_request: 50
+  default_complexity: "medium"
+  supported_types:
+    - confluence_page
+    - github_repo
+    - github_pr
+    - jira_issue
+    - jira_epic
+    - api_docs
+    - code_sample
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  file: "logs/mock_data_generator.log"
+
+# Health Check Configuration
+health:
+  check_interval: 30
+  timeout: 10
+  dependencies:
+    - llm_gateway
+    - doc_store

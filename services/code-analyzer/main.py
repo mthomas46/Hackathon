@@ -73,3 +73,11 @@ async def analyze_code(request: CodeAnalysisRequest) -> Dict[str, Any]:
 async def health() -> Dict[str, Any]:
     """Health check endpoint."""
     return {"status": "healthy", "service": "code-analyzer"}
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    port = int(os.environ.get('SERVICE_PORT', 5025))
+    print(f"Starting Code Analyzer service on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
