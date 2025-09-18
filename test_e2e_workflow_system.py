@@ -34,8 +34,8 @@ class E2EWorkflowSystemTest:
     """Test the complete end-to-end workflow system."""
 
     def __init__(self):
-        self.interpreter_url = "http://interpreter:5000"  # Docker network URL
-        self.localhost_interpreter_url = "http://localhost:5000"  # Fallback to localhost
+        self.interpreter_url = "http://interpreter:5120"  # Docker network URL
+        self.localhost_interpreter_url = "http://localhost:5120"  # Fallback to localhost
         self.test_results = []
         self.downloaded_files = []
 
