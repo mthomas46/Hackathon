@@ -1,20 +1,38 @@
 # 🚀 Production Deployment Guide - LLM Documentation Ecosystem
 
+<!--
+LLM Processing Metadata:
+- document_type: "deployment_and_operations_guide"
+- content_focus: "production_deployment_with_docker_orchestration"
+- key_concepts: ["docker", "microservices", "production_deployment", "infrastructure"]
+- processing_hints: "Complete deployment instructions with infrastructure requirements"
+- cross_references: ["README.md", "ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "docs/README.md", "docs/operations/"]
+- deployment_targets: ["development", "staging", "production", "kubernetes"]
+-->
+
 **Target Environments**: Production, Staging, Development  
 **Infrastructure**: Docker, Kubernetes, Cloud-Native  
-**Architecture**: 17 Microservices, Enterprise-Grade  
+**Architecture**: 23 Microservices, Enterprise-Grade  
 **Last Updated**: September 18, 2025
+
+### 🔗 **Related Documentation**
+- 📖 **[Master Living Document](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md)** - Complete technical architecture and service details
+- 📊 **[System Architecture](docs/architecture/ECOSYSTEM_ARCHITECTURE.md)** - Detailed architectural patterns and design decisions
+- 🏗️ **[Infrastructure Setup](docs/guides/INFRASTRUCTURE_SETUP.md)** - Detailed infrastructure configuration guide
+- ⚙️ **[Operations Runbook](docs/operations/RUNBOOK.md)** - Operational procedures and troubleshooting
+- 📚 **[Documentation Index](docs/README.md)** - Complete documentation catalog
 
 ---
 
 ## 📋 **Deployment Overview**
 
 ### **🎯 What You're Deploying**
-- **17 Microservices** with enterprise architecture
-- **350+ API Endpoints** across all services
-- **Complete AI Infrastructure** with LLM Gateway
-- **Domain-Driven Design** with CQRS and Event Sourcing
-- **Production-Ready** monitoring and health checks
+- **21+ Specialized Services** with enterprise AI-first architecture
+- **300+ API Endpoints** across all services (90+ in Doc Store alone)
+- **Complete AI Infrastructure** with intelligent LLM Gateway and provider routing
+- **Domain-Driven Design** with CQRS, Event Sourcing, and bounded contexts
+- **Bulletproof Operations** with self-healing deployment and comprehensive monitoring
+- **AI Orchestration** with LangGraph workflows and natural language interfaces
 
 ### **🏗️ Infrastructure Requirements**
 

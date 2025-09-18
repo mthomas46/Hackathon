@@ -604,7 +604,7 @@ alerts:
 ### **Documentation**
 - **[API Reference](API_DOCUMENTATION_INDEX.md)** - Complete API documentation
 - **[Developer Guide](DEVELOPER_ONBOARDING.md)** - Getting started with development
-- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+- **[Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
 - **[Integration Patterns](ECOSYSTEM_INTEGRATION_PATTERNS.md)** - Integration best practices
 
 ### **Support Channels**

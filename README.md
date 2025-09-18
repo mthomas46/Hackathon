@@ -1,8 +1,75 @@
 # LLM Documentation Ecosystem
 
+<!--
+LLM Processing Metadata:
+- document_type: "project_overview_and_index"
+- content_focus: "enterprise_architecture_showcase"
+- key_concepts: ["microservices", "ddd", "ai_orchestration", "documentation_platform"]
+- processing_hints: "Complete service catalog with ports and capabilities"
+- cross_references: ["ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "docs/README.md", "docs/deployment/DEPLOYMENT_GUIDE.md"]
+-->
+
 ## 🎯 **MISSION ACCOMPLISHED: Enterprise-Grade DDD Architecture Transformation**
 
 A **production-ready, enterprise-grade** documentation analysis platform built with **Domain-Driven Design (DDD)**, **Clean Architecture**, and **CQRS patterns**. This project represents a complete architectural transformation from monolithic complexity to scalable, maintainable microservices.
+
+### 📋 **Quick Navigation & Key Documents**
+- 📖 **[Master Living Document](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md)** - Complete technical documentation with function summaries
+- 🗺️ **[Documentation Hierarchy](DOCUMENTATION_HIERARCHY.md)** - **NEW**: Complete documentation map and navigation guide
+- 🏗️ **[Architecture Overview](docs/architecture/ECOSYSTEM_ARCHITECTURE.md)** - System design and patterns
+- 📚 **[Documentation Index](docs/README.md)** - Complete documentation catalog
+- 🚀 **[Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+
+## 🌟 **Ecosystem Overview: 21+ Intelligent Services**
+
+The LLM Documentation Ecosystem is a **sophisticated AI-powered platform** featuring:
+
+- **21+ Specialized Services**: From AI orchestration to document analysis
+- **AI-First Architecture**: LangGraph workflows with intelligent provider routing
+- **Enterprise-Grade Security**: Content-aware routing to secure LLM providers
+- **Bulletproof Operations**: Self-healing deployment with 100% health monitoring
+- **Advanced Analytics**: ML-powered document quality assessment and prediction
+
+### 🏗️ **Complete Service Catalog: 23 Microservices**
+
+#### **🏢 Core Infrastructure Services** (Ports 5000-5099)
+| Service | Port | Role | Key Capabilities |
+|---------|------|------|------------------|
+| **[Orchestrator](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#orchestrator-service-port-5099---central-coordination-hub)** | 5099 | Central Coordination | DDD architecture, workflow orchestration, service registry |
+| **[LLM Gateway](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#llm-gateway-service-port-5055---intelligent-ai-orchestration)** | 5055 | AI Provider Routing | Multi-provider support, security-aware routing, cost optimization |
+| **[Discovery Agent](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#discovery-agent-service-port-5045---service-discovery-engine)** | 5045 | Service Discovery | OpenAPI analysis, LangGraph tool generation, dynamic discovery |
+| **[Doc Store](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#doc-store-service-port-5087---comprehensive-document-management)** | 5087 | Document Management | 90+ endpoints, full-text search, advanced analytics |
+| **[Prompt Store](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#prompt-store-service-port-5110---enterprise-prompt-management)** | 5110 | Prompt Management | A/B testing, optimization, enterprise lifecycle management |
+
+#### **🔍 Analysis & Intelligence Services** (Ports 5020-5120)
+| Service | Port | Role | Key Capabilities |
+|---------|------|------|------------------|
+| **[Analysis Service](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#analysis-service-port-5020---comprehensive-document-intelligence)** | 5020 | Document Analysis | ML-powered analysis, distributed processing, 40+ endpoints |
+| **[Code Analyzer](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#code-analyzer-service-port-5025---intelligent-code-analysis)** | 5025 | Code Analysis | API discovery, security scanning, AI-enhanced analysis |
+| **[Secure Analyzer](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#secure-analyzer-service-port-5100---security-focused-analysis)** | 5100 | Security Analysis | Content sensitivity, policy enforcement, secure routing |
+| **[Memory Agent](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#memory-agent-service-port-5090---context-memory-management)** | 5090 | Context Memory | AI workflow context, TTL management, event processing |
+| **[Source Agent](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#source-agent-service-port-5085---unified-data-ingestion)** | 5085 | Data Ingestion | GitHub/Jira/Confluence integration, intelligent processing |
+| **[Interpreter](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#interpreter-service-port-5120---natural-language-interface)** | 5120 | Natural Language Interface | Ecosystem-wide NLP, workflow building, conversation management |
+
+#### **🌐 Integration & Operations Services** (Ports 3000, 5030-5160)
+| Service | Port | Role | Key Capabilities |
+|---------|------|------|------------------|
+| **[Frontend](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#frontend-service-port-3000---modern-web-interface)** | 3000 | Web Interface | Real-time dashboards, service monitoring, data exploration |
+| **[GitHub MCP](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#github-mcp-service-port-5030---github-integration)** | 5030 | GitHub Integration | Model Context Protocol, repository analysis, PR processing |
+| **[Log Collector](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#log-collector-service-port-5040---centralized-logging--observability)** | 5040 | Centralized Logging | Real-time analytics, structured storage, observability |
+| **[Bedrock Proxy](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#bedrock-proxy-service-port-5060---aws-bedrock-integration)** | 5060 | AWS Bedrock Integration | Template processing, structured responses, enterprise AI |
+| **[Mock Data Generator](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#mock-data-generator-service-port-5065---test-data-generation)** | 5065 | Test Data Generation | AI-powered mocking, template management, realistic content |
+| **[Architecture Digitizer](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#architecture-digitizer-service-port-5105---system-analysis--digitization)** | 5105 | System Digitization | Multi-platform diagrams, architecture analysis, normalization |
+| **[Notification Service](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#notification-service-port-5130---multi-channel-notification-delivery)** | 5130 | Multi-channel Notifications | Owner resolution, deduplication, delivery management |
+| **[Summarizer Hub](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#summarizer-hub-service-port-5160---content-summarization)** | 5160 | Content Summarization | AI-powered summarization, categorization, peer review |
+| **[CLI Service](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#cli-service---command-line-interface)** | - | Command Line Interface | Interactive mode, service management, workflow execution |
+
+#### **🛠️ Infrastructure Services** 
+| Service | Port | Role | Key Capabilities |
+|---------|------|------|------------------|
+| **[Redis](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#redis-service-port-6379---caching--coordination)** | 6379 | Caching & Coordination | High-performance caching, pub/sub messaging, event coordination |
+| **[Ollama](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#ollama-service-port-11434---local-llm-inference)** | 11434 | Local LLM Inference | Secure local AI, model management, privacy-first processing |
+| **[PostgreSQL](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md#postgresql-service---enterprise-database)** | 5432 | Enterprise Database | ACID compliance, vector extensions, production-grade storage |
 
 ### 🏆 **Key Achievements - September 2025**
 
