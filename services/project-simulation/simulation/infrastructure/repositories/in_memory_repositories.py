@@ -59,11 +59,11 @@ class InMemoryTimelineRepository(ITimelineRepository):
     def __init__(self):
         self._timelines: Dict[str, Timeline] = {}
 
-    def save(self, timeline: Timeline) -> None:
+    async def save(self, timeline: Timeline) -> None:
         """Save a timeline."""
         self._timelines[str(timeline.id.value)] = timeline
 
-    def find_by_id(self, timeline_id: str) -> Optional[Timeline]:
+    async def find_by_id(self, timeline_id: str) -> Optional[Timeline]:
         """Find timeline by ID."""
         return self._timelines.get(timeline_id)
 
@@ -92,11 +92,11 @@ class InMemoryTeamRepository(ITeamRepository):
     def __init__(self):
         self._teams: Dict[str, Team] = {}
 
-    def save(self, team: Team) -> None:
+    async def save(self, team: Team) -> None:
         """Save a team."""
         self._teams[str(team.id.value)] = team
 
-    def find_by_id(self, team_id: str) -> Optional[Team]:
+    async def find_by_id(self, team_id: str) -> Optional[Team]:
         """Find team by ID."""
         return self._teams.get(team_id)
 

@@ -89,6 +89,68 @@ class SimulationApplicationService:
                 configuration=simulation_config
             )
 
+            # Create default timeline
+            from ...domain.entities.timeline import Timeline, TimelineId, Phase
+            from datetime import datetime, timedelta
+
+            phases = []
+            start_date = datetime.now()
+            for i, phase_name in enumerate(["Planning", "Design", "Development", "Testing", "Deployment"]):
+                phase_start = start_date + timedelta(weeks=i*2)
+                phase_end = phase_start + timedelta(weeks=2)
+                phases.append(Phase(
+                    id=f"phase_{i+1}",
+                    name=phase_name,
+                    description=f"{phase_name} phase of the project",
+                    start_date=phase_start,
+                    end_date=phase_end,
+                    status="pending" if i > 0 else "in_progress"
+                ))
+
+            timeline = Timeline(
+                id=TimelineId(),
+                project_id=str(project.id.value),
+                name=f"Timeline for {project.name}",
+                phases=phases,
+                total_duration_weeks=10
+            )
+
+            # Save timeline
+            await self._timeline_repository.save(timeline)
+
+            # Create default team
+            from ...domain.entities.team import Team, TeamId, TeamMemberEntity, TeamRole, ExpertiseLevel, CommunicationStyle, WorkStyle, MoraleLevel, BurnoutRisk
+
+            team_members = []
+            roles = [TeamRole.PRODUCT_MANAGER, TeamRole.TECHNICAL_LEAD, TeamRole.SENIOR_DEVELOPER, TeamRole.QA_ENGINEER]
+            for i, role in enumerate(roles):
+                member = TeamMemberEntity(
+                    id=f"member_{i+1}",
+                    name=f"Team Member {i+1}",
+                    email=f"member{i+1}@project.com",
+                    role=role,
+                    expertise_level=ExpertiseLevel.SENIOR,
+                    communication_style=CommunicationStyle.COLLABORATIVE,
+                    work_style=WorkStyle.TEAM_PLAYER,
+                    productivity_multiplier=1.0 + (i * 0.1),
+                    morale_level=MoraleLevel.HIGH,
+                    burnout_risk=BurnoutRisk.LOW,
+                    join_date=datetime.now() - timedelta(days=30),
+                    skills=["Python", "FastAPI", "Testing"][:i+1] + ["Communication"]
+                )
+                team_members.append(member)
+
+            team = Team(
+                id=TeamId(),
+                project_id=str(project.id.value),
+                name=f"Team for {project.name}",
+                members=team_members,
+                max_size=6
+            )
+
+            # Save team
+            await self._team_repository.save(team)
+
             # Save simulation
             await self._simulation_repository.save(simulation)
 
