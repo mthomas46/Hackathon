@@ -23,6 +23,16 @@ import time
 import json
 import os
 import httpx
+import hashlib
+from datetime import datetime, timedelta
+
+# Redis import with fallback
+try:
+    import aioredis
+    REDIS_AVAILABLE = True
+except ImportError:
+    print("aioredis not available, Redis features disabled")
+    REDIS_AVAILABLE = False
 
 # ============================================================================
 # SIMPLIFIED SHARED UTILITIES - Core functionality without complex dependencies
@@ -70,6 +80,12 @@ class LLMQuery(BaseModel):
     temperature: Optional[float] = 0.7
     stream: Optional[bool] = False
     context: Optional[str] = None
+    user_id: Optional[str] = "anonymous"
+    use_cache: Optional[bool] = True
+    use_memory: Optional[bool] = False
+    enhance_prompt: Optional[bool] = False
+    store_interaction: Optional[bool] = False
+    force_refresh: Optional[bool] = False
 
 class ChatMessage(BaseModel):
     role: str
@@ -114,6 +130,186 @@ class MetricsResponse(BaseModel):
 class CacheRequest(BaseModel):
     key: Optional[str] = None
     clear_all: Optional[bool] = False
+
+# ============================================================================
+# ENHANCED ECOSYSTEM INTEGRATIONS - Leveraging existing services
+# ============================================================================
+
+class EcosystemIntegrator:
+    """Enhanced integrations with existing ecosystem services."""
+    
+    def __init__(self):
+        self.redis_client = None
+        self.service_endpoints = {
+            "doc_store": "http://doc_store:5010",
+            "prompt_store": "http://prompt_store:5110", 
+            "memory_agent": "http://memory-agent:5040",
+            "interpreter": "http://interpreter:5120",
+            "orchestrator": "http://orchestrator:5099",
+            "secure_analyzer": "http://secure-analyzer:5070",
+            "analysis_service": "http://analysis-service:5080"
+        }
+        
+    async def get_redis_client(self):
+        """Get Redis client for caching and rate limiting."""
+        if not REDIS_AVAILABLE:
+            return None
+            
+        if not self.redis_client:
+            try:
+                self.redis_client = aioredis.from_url(
+                    f"redis://{os.getenv('REDIS_HOST', 'redis')}:6379"
+                )
+            except Exception as e:
+                print(f"Redis connection failed: {e}")
+                self.redis_client = None
+        return self.redis_client
+    
+    async def security_filter(self, content: str) -> Dict[str, Any]:
+        """Use secure-analyzer for content security filtering."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    f"{self.service_endpoints['secure_analyzer']}/analyze",
+                    json={"content": content}
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    return {
+                        "is_sensitive": result.get("sensitive", False),
+                        "risk_level": result.get("risk_level", "low"),
+                        "issues": result.get("issues", [])
+                    }
+        except Exception as e:
+            print(f"Security filtering failed: {e}")
+        
+        # Fallback local security check
+        sensitive_keywords = ["password", "secret", "token", "key", "credential"]
+        is_sensitive = any(keyword in content.lower() for keyword in sensitive_keywords)
+        return {
+            "is_sensitive": is_sensitive,
+            "risk_level": "high" if is_sensitive else "low", 
+            "issues": ["Contains sensitive keywords"] if is_sensitive else []
+        }
+    
+    async def rate_limit_check(self, user_id: str = "anonymous") -> bool:
+        """Redis-based rate limiting."""
+        redis = await self.get_redis_client()
+        if not redis:
+            return True  # Allow if Redis unavailable
+        
+        try:
+            key = f"rate_limit:{user_id}"
+            current = await redis.get(key)
+            
+            if current is None:
+                await redis.setex(key, 60, 1)  # 1 request in 60 seconds window
+                return True
+            
+            count = int(current)
+            if count >= 60:  # 60 requests per minute limit
+                return False
+            
+            await redis.incr(key)
+            return True
+        except Exception as e:
+            print(f"Rate limiting check failed: {e}")
+            return True
+    
+    async def cache_get(self, cache_key: str) -> Optional[Any]:
+        """Get cached response."""
+        redis = await self.get_redis_client()
+        if not redis:
+            return None
+        
+        try:
+            cached = await redis.get(f"cache:{cache_key}")
+            if cached:
+                return json.loads(cached)
+        except Exception as e:
+            print(f"Cache get failed: {e}")
+        return None
+    
+    async def cache_set(self, cache_key: str, data: Any, ttl: int = 3600):
+        """Set cached response."""
+        redis = await self.get_redis_client()
+        if not redis:
+            return
+        
+        try:
+            await redis.setex(f"cache:{cache_key}", ttl, json.dumps(data))
+        except Exception as e:
+            print(f"Cache set failed: {e}")
+    
+    def generate_cache_key(self, query: 'LLMQuery') -> str:
+        """Generate cache key for query."""
+        content = f"{query.prompt}:{query.model}:{query.provider}:{query.temperature}:{query.max_tokens}"
+        return hashlib.md5(content.encode()).hexdigest()
+    
+    async def store_interaction(self, user_id: str, prompt: str, response: str, provider: str, metadata: Dict[str, Any]):
+        """Store interaction in memory-agent."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(
+                    f"{self.service_endpoints['memory_agent']}/store",
+                    json={
+                        "user_id": user_id,
+                        "interaction": {
+                            "prompt": prompt,
+                            "response": response,
+                            "provider": provider,
+                            "timestamp": time.time(),
+                            **metadata
+                        }
+                    }
+                )
+        except Exception as e:
+            print(f"Memory storage failed: {e}")
+    
+    async def get_context(self, user_id: str, query: str) -> Optional[str]:
+        """Get relevant context from memory-agent."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    f"{self.service_endpoints['memory_agent']}/retrieve",
+                    json={"user_id": user_id, "query": query}
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    return result.get("context")
+        except Exception as e:
+            print(f"Context retrieval failed: {e}")
+        return None
+    
+    async def enhance_prompt(self, prompt: str, context: Optional[str] = None) -> str:
+        """Enhance prompt using prompt-store."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    f"{self.service_endpoints['prompt_store']}/enhance",
+                    json={"prompt": prompt, "context": context}
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    return result.get("enhanced_prompt", prompt)
+        except Exception as e:
+            print(f"Prompt enhancement failed: {e}")
+        return prompt
+    
+    async def store_document(self, title: str, content: str, metadata: Dict[str, Any]):
+        """Store document in doc-store."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(
+                    f"{self.service_endpoints['doc_store']}/documents",
+                    json={
+                        "title": title,
+                        "content": content,
+                        "metadata": metadata
+                    }
+                )
+        except Exception as e:
+            print(f"Document storage failed: {e}")
 
 # ============================================================================
 # SIMPLIFIED PROVIDER ROUTER - Core LLM routing functionality
@@ -352,6 +548,7 @@ app = FastAPI(
 
 # Initialize LLM Gateway components
 provider_router = ProviderRouter()
+ecosystem = EcosystemIntegrator()
 
 # ============================================================================
 # SIMPLIFIED METRICS AND CACHING
@@ -404,15 +601,35 @@ async def root():
         "title": SERVICE_TITLE,
         "version": SERVICE_VERSION,
         "status": "running",
+        "ecosystem_integration": True,
         "endpoints": {
             "health": "/health",
             "providers": "/providers",
             "query": "/query",
+            "enhanced_query": "/enhanced-query",
             "chat": "/chat",
             "stream": "/stream",
             "embeddings": "/embeddings",
             "metrics": "/metrics",
-            "cache": "/cache/clear"
+            "cache": {
+                "clear": "/cache/clear",
+                "stats": "/cache/stats"
+            },
+            "security": "/security/analyze",
+            "memory": "/user/{user_id}/context",
+            "workflow": "/workflow/execute",
+            "ecosystem_health": "/ecosystem/health",
+            "ollama_models": "/ollama/models"
+        },
+        "features": {
+            "redis_caching": True,
+            "rate_limiting": True,
+            "security_filtering": True,
+            "memory_integration": True,
+            "prompt_enhancement": True,
+            "interaction_storage": True,
+            "workflow_execution": True,
+            "multi_provider_support": True
         }
     }
 
@@ -431,13 +648,90 @@ async def query_llm(request: LLMQuery):
     """
     Submit a query to the LLM Gateway for processing by the specified provider.
     
-    The gateway will route to the appropriate LLM provider and return structured response with metadata.
+    Enhanced features:
+    - Security filtering using secure-analyzer
+    - Redis-based caching and rate limiting
+    - Memory context integration
+    - Prompt enhancement from prompt-store
+    - Interaction storage in memory-agent
     """
     start_time = time.time()
     
     try:
+        # Rate limiting check
+        if not await ecosystem.rate_limit_check(request.user_id):
+            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        
+        # Security filtering
+        security_result = await ecosystem.security_filter(request.prompt + (request.context or ""))
+        if security_result["is_sensitive"] and request.provider not in ["ollama"]:
+            # Force secure provider for sensitive content
+            request.provider = "ollama"
+            fire_and_forget("security_route_override", {
+                "user_id": request.user_id,
+                "original_provider": request.provider,
+                "security_issues": security_result["issues"]
+            })
+        
+        # Get context from memory if requested
+        if request.use_memory:
+            context = await ecosystem.get_context(request.user_id, request.prompt)
+            if context:
+                request.context = context
+        
+        # Enhance prompt if requested
+        if request.enhance_prompt:
+            enhanced_prompt = await ecosystem.enhance_prompt(request.prompt, request.context)
+            request.prompt = enhanced_prompt
+        
+        # Check cache
+        cache_key = ecosystem.generate_cache_key(request)
+        if request.use_cache and not request.force_refresh:
+            cached_response = await ecosystem.cache_get(cache_key)
+            if cached_response:
+                processing_time = time.time() - start_time
+                update_metrics(request.provider, processing_time, cached=True)
+                increment_counter("cache_hits", {"provider": request.provider})
+                
+                # Store cached interaction if requested
+                if request.store_interaction:
+                    await ecosystem.store_interaction(
+                        request.user_id,
+                        request.prompt,
+                        cached_response.get("data", {}).get("response", ""),
+                        "cache",
+                        {"cached": True, "processing_time": processing_time}
+                    )
+                
+                return GatewayResponse(
+                    success=True,
+                    data=cached_response.get("data", {}),
+                    provider="cache",
+                    model=request.model,
+                    processing_time=processing_time,
+                    cached=True
+                )
+        
         # Route to provider
         response = await provider_router.route_query(request)
+        
+        # Cache successful response
+        if request.use_cache and response.success:
+            await ecosystem.cache_set(cache_key, response.dict(), ttl=3600)
+        
+        # Store interaction if requested
+        if request.store_interaction:
+            await ecosystem.store_interaction(
+                request.user_id,
+                request.prompt,
+                response.data.get("response", ""),
+                response.provider,
+                {
+                    "model": response.model,
+                    "processing_time": response.processing_time,
+                    "tokens_used": response.tokens_used
+                }
+            )
         
         # Record metrics
         processing_time = time.time() - start_time
@@ -650,6 +944,118 @@ async def list_ollama_models():
             status_code=500,
             detail=f"Error fetching Ollama models: {str(e)}"
         )
+
+# ============================================================================
+# ENHANCED ECOSYSTEM ENDPOINTS
+# ============================================================================
+
+@app.post("/enhanced-query", response_model=GatewayResponse, tags=["queries"])
+async def enhanced_query(request: LLMQuery):
+    """
+    Enhanced query with full ecosystem integration.
+    Automatically enables memory, caching, prompt enhancement, and interaction storage.
+    """
+    request.use_memory = True
+    request.enhance_prompt = True
+    request.store_interaction = True
+    return await query_llm(request)
+
+@app.get("/user/{user_id}/context", tags=["memory"])
+async def get_user_context(user_id: str, query: str):
+    """Get user context from memory-agent."""
+    context = await ecosystem.get_context(user_id, query)
+    return {"user_id": user_id, "context": context}
+
+@app.post("/security/analyze", tags=["security"])
+async def analyze_content_security(content: str):
+    """Analyze content security using secure-analyzer."""
+    result = await ecosystem.security_filter(content)
+    return result
+
+@app.get("/cache/stats", tags=["cache"])
+async def get_cache_stats():
+    """Get Redis cache statistics."""
+    redis = await ecosystem.get_redis_client()
+    if not redis:
+        return {"error": "Redis not available"}
+    
+    try:
+        info = await redis.info()
+        return {
+            "connected_clients": info.get("connected_clients", 0),
+            "used_memory": info.get("used_memory_human", "0B"),
+            "total_commands_processed": info.get("total_commands_processed", 0),
+            "cache_hit_rate": metrics_data["cache_hits"] / (metrics_data["cache_hits"] + metrics_data["cache_misses"]) if (metrics_data["cache_hits"] + metrics_data["cache_misses"]) > 0 else 0
+        }
+    except Exception as e:
+        return {"error": f"Failed to get cache stats: {e}"}
+
+@app.post("/workflow/execute", tags=["orchestrator"])
+async def execute_workflow(workflow_name: str, parameters: Dict[str, Any]):
+    """Execute a workflow through the orchestrator."""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{ecosystem.service_endpoints['orchestrator']}/execute",
+                json={"workflow": workflow_name, "parameters": parameters}
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Workflow execution failed: {response.text}"
+                )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error executing workflow: {str(e)}"
+        )
+
+@app.get("/ecosystem/health", tags=["health"])
+async def get_ecosystem_health():
+    """Get health status of all ecosystem services."""
+    health_results = {}
+    
+    for service_name, endpoint in ecosystem.service_endpoints.items():
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{endpoint}/health")
+                if response.status_code == 200:
+                    health_results[service_name] = {
+                        "status": "healthy",
+                        "response_time": response.elapsed.total_seconds(),
+                        "data": response.json()
+                    }
+                else:
+                    health_results[service_name] = {
+                        "status": "unhealthy",
+                        "error": f"HTTP {response.status_code}"
+                    }
+        except Exception as e:
+            health_results[service_name] = {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    # Add Redis health
+    redis = await ecosystem.get_redis_client()
+    if redis:
+        try:
+            await redis.ping()
+            health_results["redis"] = {"status": "healthy"}
+        except Exception as e:
+            health_results["redis"] = {"status": "error", "error": str(e)}
+    else:
+        health_results["redis"] = {"status": "unavailable"}
+    
+    return {
+        "ecosystem_health": health_results,
+        "overall_status": "healthy" if all(
+            result.get("status") == "healthy" 
+            for result in health_results.values()
+        ) else "degraded"
+    }
 
 if __name__ == "__main__":
     """Run the LLM Gateway service directly."""
