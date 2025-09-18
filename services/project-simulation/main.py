@@ -122,6 +122,21 @@ class ValidateConfigRequest(BaseModel):
     config_file_path: str = Field(..., description="Path to configuration file to validate")
 
 
+class GenerateReportsRequest(BaseModel):
+    """Request model for generating simulation reports."""
+    report_types: List[str] = Field(
+        default_factory=lambda: ["executive_summary", "technical_report", "workflow_analysis"],
+        description="Types of reports to generate"
+    )
+
+
+class ExportReportRequest(BaseModel):
+    """Request model for exporting simulation reports."""
+    report_type: str = Field(..., description="Type of report to export")
+    format: str = Field("json", description="Export format (json, html, markdown, pdf)")
+    output_path: Optional[str] = Field(None, description="Optional output path for the exported report")
+
+
 # Load configuration
 config = get_config()
 
@@ -675,6 +690,352 @@ async def get_config_template(req: Request):
             )
             return create_error_response(
                 message="Internal server error during template retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+# Reporting endpoints
+@app.post("/api/v1/simulations/{simulation_id}/reports/generate")
+async def generate_simulation_reports(simulation_id: str,
+                                   request: GenerateReportsRequest,
+                                   req: Request):
+    """Generate comprehensive reports for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Generating simulation reports",
+            operation="generate_simulation_reports",
+            simulation_id=simulation_id,
+            report_types=request.report_types,
+            correlation_id=correlation_id
+        )
+
+        try:
+            # Import reporting system
+            from simulation.infrastructure.reporting.comprehensive_reporting_system import get_comprehensive_reporting_system
+
+            reporting_system = get_comprehensive_reporting_system()
+
+            # Mock data for demonstration - in real implementation this would come from the simulation
+            analysis_results = {
+                "execution_time": 120.0,
+                "quality_score": 0.85,
+                "consistency_score": 0.78,
+                "cost_efficiency": 0.82,
+                "timeline_adherence": 0.91,
+                "risk_level": "low",
+                "recommendations": [
+                    "Implement automated testing workflows",
+                    "Enhance documentation standards",
+                    "Optimize resource allocation"
+                ],
+                "insights": [
+                    "Strong correlation between documentation quality and project success",
+                    "Workflow automation provides significant time savings"
+                ],
+                "issues": [
+                    {"type": "consistency", "severity": "medium", "description": "Inconsistent naming conventions"}
+                ],
+                "benefits": {"time_saved": 24.5, "cost_savings": 1250.00}
+            }
+
+            workflow_data = [
+                {"type": "document_generation", "success": True, "execution_time": 2.5},
+                {"type": "analysis", "success": True, "execution_time": 1.8}
+            ]
+
+            document_data = [
+                {"type": "requirements", "title": "Project Requirements", "quality_score": 0.88},
+                {"type": "architecture", "title": "System Architecture", "quality_score": 0.92}
+            ]
+
+            # Generate reports
+            result = await reporting_system.generate_comprehensive_report(
+                simulation_id=simulation_id,
+                analysis_results=analysis_results,
+                workflow_data=workflow_data,
+                document_data=document_data,
+                report_types=request.report_types
+            )
+
+            if result["success"]:
+                return create_success_response(
+                    message=f"Generated {len(result['reports'])} comprehensive reports for simulation {simulation_id}",
+                    data={
+                        "simulation_id": simulation_id,
+                        "reports_generated": len(result["reports"]),
+                        "report_types": list(result["reports"].keys()),
+                        "comprehensive_analysis": result["comprehensive_analysis"],
+                        "generated_at": result["generated_at"]
+                    },
+                    request_id=correlation_id
+                )
+            else:
+                return create_error_response(
+                    message=result.get("message", "Failed to generate reports"),
+                    error_code="report_generation_failed",
+                    details=result,
+                    request_id=correlation_id
+                )
+
+        except Exception as e:
+            logger.error(
+                "Failed to generate simulation reports",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during report generation",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.get("/api/v1/simulations/{simulation_id}/reports")
+async def get_simulation_reports(simulation_id: str, req: Request):
+    """Get available reports for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting simulation reports",
+            operation="get_simulation_reports",
+            simulation_id=simulation_id,
+            correlation_id=correlation_id
+        )
+
+        try:
+            # Import reporting system
+            from simulation.infrastructure.reporting.comprehensive_reporting_system import get_comprehensive_reporting_system
+
+            reporting_system = get_comprehensive_reporting_system()
+
+            # In a real implementation, this would retrieve stored reports
+            # For now, return mock report structure
+            available_reports = {
+                "executive_summary": {
+                    "available": True,
+                    "title": "Executive Summary",
+                    "description": "High-level overview of simulation results"
+                },
+                "technical_report": {
+                    "available": True,
+                    "title": "Technical Report",
+                    "description": "Detailed technical analysis and findings"
+                },
+                "workflow_analysis": {
+                    "available": True,
+                    "title": "Workflow Analysis",
+                    "description": "Analysis of workflow execution and performance"
+                },
+                "quality_report": {
+                    "available": True,
+                    "title": "Quality Assessment Report",
+                    "description": "Document quality and consistency analysis"
+                },
+                "performance_report": {
+                    "available": True,
+                    "title": "Performance Report",
+                    "description": "Performance metrics and optimization recommendations"
+                },
+                "financial_report": {
+                    "available": True,
+                    "title": "Financial Impact Report",
+                    "description": "Cost savings and ROI analysis"
+                },
+                "comprehensive_analysis": {
+                    "available": True,
+                    "title": "Comprehensive Analysis",
+                    "description": "Complete analysis across all dimensions"
+                }
+            }
+
+            return create_success_response(
+                message=f"Found {len(available_reports)} available reports for simulation {simulation_id}",
+                data={
+                    "simulation_id": simulation_id,
+                    "available_reports": available_reports,
+                    "total_reports": len(available_reports),
+                    "last_updated": datetime.now().isoformat()
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get simulation reports",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during report retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.get("/api/v1/simulations/{simulation_id}/reports/{report_type}")
+async def get_simulation_report(simulation_id: str, report_type: str, req: Request):
+    """Get a specific report for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting specific simulation report",
+            operation="get_simulation_report",
+            simulation_id=simulation_id,
+            report_type=report_type,
+            correlation_id=correlation_id
+        )
+
+        try:
+            # Import reporting system
+            from simulation.infrastructure.reporting.comprehensive_reporting_system import get_comprehensive_reporting_system
+
+            reporting_system = get_comprehensive_reporting_system()
+
+            # In a real implementation, this would retrieve the specific report
+            # For now, generate a sample report based on type
+            if report_type == "executive_summary":
+                report_data = {
+                    "title": "Executive Summary - Project Simulation Results",
+                    "simulation_id": simulation_id,
+                    "generated_at": datetime.now().isoformat(),
+                    "key_findings": {
+                        "overall_success": True,
+                        "execution_efficiency": 0.82,
+                        "timeline_performance": 0.91,
+                        "risk_assessment": "low"
+                    },
+                    "quantitative_results": {
+                        "execution_time": "2 minutes 15 seconds",
+                        "documents_generated": 12,
+                        "workflows_executed": 8,
+                        "quality_score": "85%",
+                        "consistency_score": "78%"
+                    },
+                    "recommendations": [
+                        "Implement automated testing workflows",
+                        "Enhance documentation standards",
+                        "Optimize resource allocation based on workflow analysis"
+                    ]
+                }
+            elif report_type == "workflow_analysis":
+                report_data = {
+                    "title": "Workflow Analysis Report",
+                    "simulation_id": simulation_id,
+                    "execution_summary": {
+                        "total_workflows": 8,
+                        "success_rate": "100%",
+                        "average_execution_time": "1.8 seconds",
+                        "failed_workflows": 0
+                    },
+                    "performance_analysis": {
+                        "bottlenecks": ["Document generation workflow"],
+                        "optimization_opportunities": [
+                            "Parallel processing for independent workflows",
+                            "Caching for repeated operations"
+                        ]
+                    }
+                }
+            else:
+                report_data = {
+                    "title": f"{report_type.replace('_', ' ').title()} Report",
+                    "simulation_id": simulation_id,
+                    "message": f"Detailed {report_type} report for simulation {simulation_id}",
+                    "generated_at": datetime.now().isoformat()
+                }
+
+            return create_success_response(
+                message=f"Retrieved {report_type} report for simulation {simulation_id}",
+                data=report_data,
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get simulation report",
+                error=str(e),
+                simulation_id=simulation_id,
+                report_type=report_type,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during report retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.post("/api/v1/simulations/{simulation_id}/reports/export")
+async def export_simulation_report(simulation_id: str,
+                                request: ExportReportRequest,
+                                req: Request):
+    """Export a simulation report in specified format."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Exporting simulation report",
+            operation="export_simulation_report",
+            simulation_id=simulation_id,
+            format=request.format,
+            report_type=request.report_type,
+            correlation_id=correlation_id
+        )
+
+        try:
+            # Import reporting system
+            from simulation.infrastructure.reporting.comprehensive_reporting_system import get_comprehensive_reporting_system
+
+            reporting_system = get_comprehensive_reporting_system()
+
+            # Generate sample report data for export
+            report_data = {
+                "title": f"Simulation Report - {simulation_id}",
+                "simulation_id": simulation_id,
+                "exported_at": datetime.now().isoformat(),
+                "format": request.format,
+                "content": f"Comprehensive report content for simulation {simulation_id} in {request.format} format"
+            }
+
+            # Export the report
+            export_path = await reporting_system.export_report(
+                report_data=report_data,
+                format=request.format,
+                output_path=request.output_path
+            )
+
+            return create_success_response(
+                message=f"Report exported successfully in {request.format} format",
+                data={
+                    "simulation_id": simulation_id,
+                    "report_type": request.report_type,
+                    "export_format": request.format,
+                    "export_path": export_path,
+                    "file_size": "N/A",  # Would be calculated in real implementation
+                    "exported_at": datetime.now().isoformat()
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to export simulation report",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during report export",
                 error_code="internal_server_error",
                 details={"error": str(e)},
                 request_id=correlation_id
