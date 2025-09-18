@@ -81,12 +81,11 @@ class DocumentHandlers:
         try:
             result = self.service.list_documents(limit, offset)
 
-            return create_success_response(
-                "Documents listed successfully",
-                result
-            )
+            # Return the raw result for FastAPI to validate against DocumentListResponse
+            return result
 
         except Exception as e:
+            # For errors, still use the shared response system
             return create_error_response(f"Failed to list documents: {str(e)}", "INTERNAL_ERROR")
 
     async def handle_update_metadata(self, document_id: str, request: MetadataUpdateRequest) -> Dict[str, Any]:

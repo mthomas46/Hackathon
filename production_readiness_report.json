@@ -1,0 +1,289 @@
+{
+  "validation_timestamp": 1758221374.064148,
+  "overall_assessment": {
+    "readiness_level": "not_ready",
+    "production_ready": false,
+    "readiness_score": 72.22222222222221,
+    "total_checks": 18,
+    "passed_checks": 13,
+    "critical_failures": [
+      "docker_containers_health",
+      "service_connectivity",
+      "cross_service_workflows"
+    ],
+    "high_failures": [
+      "api_error_handling",
+      "health_check_accuracy"
+    ],
+    "medium_failures": [],
+    "production_required_failures": [
+      "docker_containers_health",
+      "service_connectivity",
+      "api_error_handling",
+      "cross_service_workflows",
+      "health_check_accuracy"
+    ],
+    "critical_issues": [
+      "docker_containers_health",
+      "service_connectivity",
+      "cross_service_workflows",
+      "docker_containers_health",
+      "service_connectivity",
+      "api_error_handling",
+      "cross_service_workflows",
+      "health_check_accuracy"
+    ],
+    "recommendations": [
+      "CRITICAL: Fix 3 critical issues before any deployment",
+      "HIGH: Resolve 5 production-required issues",
+      "MEDIUM: Address 2 high-priority issues for production deployment"
+    ]
+  },
+  "validation_results": {
+    "docker_containers_health": {
+      "check": "ReadinessCheck(check_name='docker_containers_health', category='infrastructure', severity='critical', description='All Docker containers must be healthy', validation_function='validate_docker_health', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "healthy_containers": 0,
+        "total_containers": 0,
+        "health_percentage": 0,
+        "containers": {},
+        "threshold": 90
+      },
+      "passed": false
+    },
+    "service_connectivity": {
+      "check": "ReadinessCheck(check_name='service_connectivity', category='infrastructure', severity='critical', description='All services must be reachable and responsive', validation_function='validate_service_connectivity', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "reachable_services": 5,
+        "total_services": 6,
+        "connectivity_percentage": 83.33333333333334,
+        "service_results": {
+          "doc_store": {
+            "reachable": true,
+            "response_time_ms": 10.625839233398438,
+            "status_code": 200
+          },
+          "orchestrator": {
+            "reachable": false,
+            "error": "HTTP Error 500: Internal Server Error",
+            "response_time_ms": 0
+          },
+          "llm-gateway": {
+            "reachable": true,
+            "response_time_ms": 1.0688304901123047,
+            "status_code": 200
+          },
+          "discovery-agent": {
+            "reachable": true,
+            "response_time_ms": 1.5490055084228516,
+            "status_code": 200
+          },
+          "analysis-service": {
+            "reachable": true,
+            "response_time_ms": 0.9949207305908203,
+            "status_code": 200
+          },
+          "prompt_store": {
+            "reachable": true,
+            "response_time_ms": 1.1692047119140625,
+            "status_code": 200
+          }
+        },
+        "threshold": 95
+      },
+      "passed": false
+    },
+    "port_mappings": {
+      "check": "ReadinessCheck(check_name='port_mappings', category='infrastructure', severity='high', description='Port mappings must be consistent and conflict-free', validation_function='validate_port_mappings', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "port_conflicts": [],
+        "port_mappings": {
+          "hackathon-ollama-1": "",
+          "hackathon-orchestrator-1": "0.0.0.0:5099->5099/tcp, :::5099->5099/tcp",
+          "hackathon-redis-1": "0.0.0.0:6379->6379/tcp, :::6379->6379/tcp",
+          "hackathon-source-agent-1": "0.0.0.0:5085->5070/tcp, [::]:5085->5070/tcp",
+          "hackathon-mock-data-generator-1": "0.0.0.0:5065->5065/tcp, :::5065->5065/tcp",
+          "hackathon-llm-gateway-1": "0.0.0.0:5055->5055/tcp, :::5055->5055/tcp",
+          "hackathon-analysis-service-1": "0.0.0.0:5080->5020/tcp, [::]:5080->5020/tcp",
+          "hackathon-frontend-1": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
+          "hackathon-notification-service-1": "0.0.0.0:5130->5020/tcp, [::]:5130->5020/tcp",
+          "hackathon-code-analyzer-1": "0.0.0.0:5025->5025/tcp, :::5025->5025/tcp",
+          "hackathon-doc_store-1": "0.0.0.0:5087->5010/tcp, [::]:5087->5010/tcp",
+          "hackathon-discovery-agent-1": "0.0.0.0:5045->5045/tcp, :::5045->5045/tcp",
+          "hackathon-summarizer-hub-1": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
+          "hackathon-github-mcp-1": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
+          "hackathon-bedrock-proxy-1": "0.0.0.0:5060->7090/tcp, [::]:5060->7090/tcp",
+          "hackathon-log-collector-1": "0.0.0.0:5040->5080/tcp, [::]:5040->5080/tcp",
+          "hackathon-secure-analyzer-1": "0.0.0.0:5100->5070/tcp, [::]:5100->5070/tcp",
+          "hackathon-memory-agent-1": "0.0.0.0:5090->5040/tcp, [::]:5090->5040/tcp",
+          "hackathon-architecture-digitizer-1": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
+          "hackathon-prompt_store-1": "0.0.0.0:5110->5110/tcp, :::5110->5110/tcp",
+          "hackathon-interpreter-1": "0.0.0.0:5120->5120/tcp, :::5120->5120/tcp",
+          "hackathon-cli-1": ""
+        },
+        "conflicts_found": 0
+      },
+      "passed": true
+    },
+    "api_schema_compliance": {
+      "check": "ReadinessCheck(check_name='api_schema_compliance', category='api', severity='critical', description='All API responses must comply with defined schemas', validation_function='validate_api_schemas', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "schema_issues": [],
+        "issues_found": 0
+      },
+      "passed": true
+    },
+    "api_error_handling": {
+      "check": "ReadinessCheck(check_name='api_error_handling', category='api', severity='high', description='APIs must handle errors gracefully with proper status codes', validation_function='validate_error_handling', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "error_handling_issues": [
+          {
+            "service": "doc_store",
+            "issue": "Error handling returned 500 instead of 404/400"
+          }
+        ],
+        "issues_found": 1
+      },
+      "passed": false
+    },
+    "api_authentication": {
+      "check": "ReadinessCheck(check_name='api_authentication', category='api', severity='medium', description='Authentication mechanisms should be consistent', validation_function='validate_authentication', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Authentication validation not implemented"
+      },
+      "passed": true
+    },
+    "cross_service_workflows": {
+      "check": "ReadinessCheck(check_name='cross_service_workflows', category='integration', severity='critical', description='End-to-end workflows must function correctly', validation_function='validate_workflows', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "workflow_issues": [
+          {
+            "workflow": "document_creation",
+            "issue": "Document creation workflow failed: HTTP Error 500: Internal Server Error"
+          }
+        ],
+        "issues_found": 1
+      },
+      "passed": false
+    },
+    "service_dependencies": {
+      "check": "ReadinessCheck(check_name='service_dependencies', category='integration', severity='critical', description='Service dependencies must be satisfied', validation_function='validate_dependencies', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "dependency_issues": [],
+        "issues_found": 0
+      },
+      "passed": true
+    },
+    "data_consistency": {
+      "check": "ReadinessCheck(check_name='data_consistency', category='integration', severity='high', description='Data consistency across services must be maintained', validation_function='validate_data_consistency', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "notes": "Data consistency validation not implemented"
+      },
+      "passed": true
+    },
+    "health_check_accuracy": {
+      "check": "ReadinessCheck(check_name='health_check_accuracy', category='monitoring', severity='high', description='Health checks must accurately reflect service status', validation_function='validate_health_checks', required_for_production=True)",
+      "result": {
+        "passed": false,
+        "health_discrepancies": [
+          {
+            "issue": "Health check script reports different results than Docker health status",
+            "impact": "Monitoring reliability compromised"
+          }
+        ],
+        "issues_found": 1
+      },
+      "passed": false
+    },
+    "logging_configuration": {
+      "check": "ReadinessCheck(check_name='logging_configuration', category='monitoring', severity='medium', description='Services should have proper logging configuration', validation_function='validate_logging', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Logging validation not implemented"
+      },
+      "passed": true
+    },
+    "metrics_collection": {
+      "check": "ReadinessCheck(check_name='metrics_collection', category='monitoring', severity='low', description='Basic metrics collection should be available', validation_function='validate_metrics', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Metrics validation not implemented"
+      },
+      "passed": true
+    },
+    "environment_security": {
+      "check": "ReadinessCheck(check_name='environment_security', category='security', severity='high', description='Environment-specific security configurations', validation_function='validate_security', required_for_production=True)",
+      "result": {
+        "passed": true,
+        "notes": "Security validation not implemented"
+      },
+      "passed": true
+    },
+    "secrets_management": {
+      "check": "ReadinessCheck(check_name='secrets_management', category='security', severity='medium', description='Secrets should not be hardcoded in containers', validation_function='validate_secrets', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Secrets validation not implemented"
+      },
+      "passed": true
+    },
+    "response_times": {
+      "check": "ReadinessCheck(check_name='response_times', category='performance', severity='medium', description='API response times should be within acceptable limits', validation_function='validate_performance', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Performance validation not implemented"
+      },
+      "passed": true
+    },
+    "resource_utilization": {
+      "check": "ReadinessCheck(check_name='resource_utilization', category='performance', severity='low', description='Resource utilization should be optimized', validation_function='validate_resources', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Resource validation not implemented"
+      },
+      "passed": true
+    },
+    "api_documentation": {
+      "check": "ReadinessCheck(check_name='api_documentation', category='documentation', severity='medium', description='API endpoints should be documented', validation_function='validate_documentation', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Documentation validation not implemented"
+      },
+      "passed": true
+    },
+    "deployment_documentation": {
+      "check": "ReadinessCheck(check_name='deployment_documentation', category='documentation', severity='low', description='Deployment procedures should be documented', validation_function='validate_deployment_docs', required_for_production=False)",
+      "result": {
+        "passed": true,
+        "notes": "Deployment docs validation not implemented"
+      },
+      "passed": true
+    }
+  },
+  "readiness_level": "not_ready",
+  "production_ready": false,
+  "critical_issues": [
+    "docker_containers_health",
+    "service_connectivity",
+    "cross_service_workflows",
+    "docker_containers_health",
+    "service_connectivity",
+    "api_error_handling",
+    "cross_service_workflows",
+    "health_check_accuracy"
+  ],
+  "recommendations": [
+    "CRITICAL: Fix 3 critical issues before any deployment",
+    "HIGH: Resolve 5 production-required issues",
+    "MEDIUM: Address 2 high-priority issues for production deployment"
+  ]
+}

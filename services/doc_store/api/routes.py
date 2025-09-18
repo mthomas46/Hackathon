@@ -60,7 +60,20 @@ async def list_documents(
     offset: int = Query(0, ge=0)
 ):
     """List documents with pagination."""
-    return await document_handlers.handle_list_documents(limit, offset)
+    result = await document_handlers.handle_list_documents(limit, offset)
+
+    # Extract the data from the success response wrapper
+    if isinstance(result, dict) and "data" in result:
+        data = result["data"]
+        if isinstance(data, dict):
+            return DocumentListResponse(
+                items=data.get("items", []),
+                total=data.get("total", 0),
+                has_more=data.get("has_more", False)
+            )
+
+    # Fallback: return result as-is if it doesn't match expected structure
+    return result
 
 
 @router.patch("/documents/{document_id}/metadata")

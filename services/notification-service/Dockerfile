@@ -10,9 +10,9 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="notification-service"
 LABEL version="1.0.0"
 LABEL description="Owner resolution and notification delivery service"
-LABEL port="5170"
-LABEL dependencies="redis"
-LABEL profile="production"
+LABEL port="5020"
+LABEL dependencies=""
+LABEL profile="core"
 
 # Set working directory
 WORKDIR /app
@@ -41,7 +41,6 @@ COPY config/ ./config/
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV SERVICE_NAME=notification-service
-ENV SERVICE_PORT=5170
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -50,10 +49,10 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5170/health || exit 1
+    CMD curl -f http://localhost:5020/health || exit 1
 
 # Expose port
-EXPOSE 5170
+EXPOSE 5020
 
 USER appuser
 

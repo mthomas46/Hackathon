@@ -1,0 +1,275 @@
+version: '3.8'
+services:
+  redis:
+    container_name: hackathon-redis-1
+    build: ./services/redis
+    networks:
+    - hackathon
+    ports:
+    - 6379:6379
+    environment: {}
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - core
+    - development
+    - production
+    restart: unless-stopped
+  doc_store:
+    container_name: hackathon-doc_store-1
+    build: ./services/doc_store
+    networks:
+    - hackathon
+    ports:
+    - 5087:5010
+    environment:
+      SERVICE_PORT: '5010'
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5010/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - core
+    - development
+    - production
+    restart: unless-stopped
+    depends_on:
+    - redis
+  orchestrator:
+    container_name: hackathon-orchestrator-1
+    build: ./services/orchestrator
+    networks:
+    - hackathon
+    ports:
+    - 5099:5099
+    environment:
+      SERVICE_PORT: '5099'
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5099/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - core
+    - development
+    - production
+    restart: unless-stopped
+    depends_on:
+    - redis
+  llm-gateway:
+    container_name: hackathon-llm-gateway-1
+    build: ./services/llm-gateway
+    networks:
+    - hackathon
+    ports:
+    - 5055:5055
+    environment:
+      SERVICE_PORT: '5055'
+      OLLAMA_ENDPOINT: http://ollama:11434
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5055/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - ai_services
+    - development
+    - production
+    restart: unless-stopped
+    depends_on:
+    - ollama
+  analysis-service:
+    container_name: hackathon-analysis-service-1
+    build: ./services/analysis-service
+    networks:
+    - hackathon
+    ports:
+    - 5080:5020
+    environment:
+      SERVICE_PORT: '5020'
+      DOC_STORE_URL: http://doc_store:5010
+      LLM_GATEWAY_URL: http://llm-gateway:5055
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5020/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - ai_services
+    - development
+    - production
+    restart: unless-stopped
+    depends_on:
+    - doc_store
+    - llm-gateway
+  discovery-agent:
+    container_name: hackathon-discovery-agent-1
+    build: ./services/discovery-agent
+    networks:
+    - hackathon
+    ports:
+    - 5045:5045
+    environment:
+      SERVICE_PORT: '5045'
+      ORCHESTRATOR_URL: http://orchestrator:5099
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5045/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - ai_services
+    - development
+    - production
+    restart: unless-stopped
+    depends_on:
+    - orchestrator
+  notification-service:
+    container_name: hackathon-notification-service-1
+    build: ./services/notification-service
+    networks:
+    - hackathon
+    ports:
+    - 5130:5020
+    environment:
+      SERVICE_PORT: '5020'
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5020/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - core
+    - development
+    - production
+    restart: unless-stopped
+  code-analyzer:
+    container_name: hackathon-code-analyzer-1
+    build: ./services/code-analyzer
+    networks:
+    - hackathon
+    ports:
+    - 5025:5025
+    environment:
+      SERVICE_PORT: '5025'
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5025/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - ai_services
+    - development
+    restart: unless-stopped
+  source-agent:
+    container_name: hackathon-source-agent-1
+    build: ./services/source-agent
+    networks:
+    - hackathon
+    ports:
+    - 5085:5070
+    environment:
+      SERVICE_PORT: '5070'
+      DOC_STORE_URL: http://doc_store:5010
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5070/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - ai_services
+    - development
+    restart: unless-stopped
+    depends_on:
+    - doc_store
+  frontend:
+    container_name: hackathon-frontend-1
+    build: ./services/frontend
+    networks:
+    - hackathon
+    ports:
+    - 3000:3000
+    environment:
+      REACT_APP_API_URL: http://localhost:5099
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:3000
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+    - development
+    - production
+    restart: unless-stopped
+    depends_on:
+    - orchestrator
+  ollama:
+    container_name: hackathon-ollama-1
+    build: ./services/ollama
+    networks:
+    - hackathon
+    ports:
+    - 11434:11434
+    environment: {}
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:11434/api/tags
+      interval: 60s
+      timeout: 30s
+      retries: 3
+    profiles:
+    - ai_services
+    - development
+    - production
+    restart: unless-stopped
+networks:
+  hackathon:
+    driver: bridge
+profiles: {}

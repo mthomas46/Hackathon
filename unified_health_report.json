@@ -1,0 +1,78 @@
+{
+  "timestamp": 1758221269.750689,
+  "total_services": 11,
+  "healthy_services": 10,
+  "unhealthy_services": 0,
+  "degraded_services": 0,
+  "unreachable_services": 1,
+  "health_percentage": 90.9090909090909,
+  "overall_status": "EXCELLENT",
+  "service_details": {
+    "redis": {
+      "status": "healthy",
+      "method_used": "redis_ping",
+      "response_time_ms": 8.785724639892578,
+      "error_message": null
+    },
+    "llm-gateway": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 19.474029541015625,
+      "error_message": null
+    },
+    "code-analyzer": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 16.8609619140625,
+      "error_message": null
+    },
+    "analysis-service": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 21.906137466430664,
+      "error_message": null
+    },
+    "notification-service": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 20.5230712890625,
+      "error_message": null
+    },
+    "doc_store": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 22.804975509643555,
+      "error_message": null
+    },
+    "source-agent": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 14.399290084838867,
+      "error_message": null
+    },
+    "discovery-agent": {
+      "status": "healthy",
+      "method_used": "http_endpoint",
+      "response_time_ms": 22.832155227661133,
+      "error_message": null
+    },
+    "ollama": {
+      "status": "healthy",
+      "method_used": "ollama_api",
+      "response_time_ms": 22.794246673583984,
+      "error_message": null
+    },
+    "frontend": {
+      "status": "healthy",
+      "method_used": "docker_health",
+      "response_time_ms": 80.47008514404297,
+      "error_message": null
+    },
+    "orchestrator": {
+      "status": "unreachable",
+      "method_used": "http_endpoint",
+      "response_time_ms": 23.681163787841797,
+      "error_message": "HTTP Error 500: Internal Server Error"
+    }
+  }
+}

@@ -15,29 +15,29 @@ help: ## Show available commands
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BLUE)%-20s$(NC) %s\n", $$1, $$2}'
 
-status-accurate: ## Accurate health check (no false reporting)
+PYTHON ?= python3
+VENV ?= venv_hardening
+
+status-accurate: ## Accurate health check using unified monitoring
 	@echo "$(BLUE)🏥 Running Accurate Health Check...$(NC)"
-	@./scripts/docker/accurate-health-check.sh
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py
 
 health: status-accurate ## Alias for accurate status
 
-check-accurate: ## Quick accurate check of key services  
+check-accurate: ## Quick accurate check of key services
 	@echo "$(BLUE)🎯 Quick Accurate Check...$(NC)"
 	@echo ""
 	@echo "Core Services:"
-	@./scripts/docker/accurate-health-check.sh | grep -E "(redis|orchestrator|llm-gateway|discovery-agent)" | head -4
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py | grep -E "(redis|orchestrator|llm-gateway|discovery-agent)" | head -4
 	@echo ""
-	@./scripts/docker/accurate-health-check.sh | grep -E "Health Percentage|Status:"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py | grep -E "Health Percentage|Status:"
 
-compare-health: ## Compare old vs new health checks
+compare-health: ## Compare health monitoring methods
 	@echo "$(YELLOW)📊 Comparing Health Check Methods$(NC)"
 	@echo "===================================="
 	@echo ""
-	@echo "$(BLUE)Old Health Check:$(NC)"
-	@./scripts/docker/health-check.sh | grep -E "Health Percentage|Status:" | tail -2
-	@echo ""
-	@echo "$(BLUE)New Accurate Health Check:$(NC)"
-	@./scripts/docker/accurate-health-check.sh | grep -E "Health Percentage|Status:" | tail -2
+	@echo "$(BLUE)Unified Health Monitor:$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py | grep -E "Health Percentage|Status:" | tail -2
 
 monitor-accurate: ## Start continuous accurate monitoring
 	@echo "$(BLUE)📡 Starting Accurate Continuous Monitoring...$(NC)"
@@ -46,7 +46,7 @@ monitor-accurate: ## Start continuous accurate monitoring
 		clear; \
 		echo "$(BLUE)🏥 Live Accurate Health Status - $$(date)$(NC)"; \
 		echo "=========================================="; \
-		./scripts/docker/accurate-health-check.sh; \
+		source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py; \
 		echo ""; \
 		echo "Next update in 30 seconds..."; \
 		sleep 30; \

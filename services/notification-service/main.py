@@ -15,6 +15,7 @@ Responsibilities:
 
 Dependencies: shared middlewares for request tracking; httpx for webhook delivery.
 """
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
@@ -29,7 +30,7 @@ from .modules.dlq_manager import dlq_manager
 # Service configuration constants
 SERVICE_NAME = "notification-service"
 SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5095
+DEFAULT_PORT = int(os.environ.get('SERVICE_PORT', 5020))
 
 # Default limits and constraints
 DEFAULT_DLQ_LIMIT = 50
