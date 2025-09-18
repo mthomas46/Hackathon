@@ -4,16 +4,16 @@
 
 | Metric | Original main.py | Current main.py | Status |
 |--------|------------------|-----------------|--------|
-| **Total Endpoints** | 24 | 14 | ✅ **Core endpoints retained** |
+| **Total Endpoints** | 24 | 18 | ✅ **Essential endpoints retained + legacy compatibility** |
 | **Startup Status** | ❌ **Crashes** | ✅ **Working** | ✅ **Major improvement** |
 | **Document Persistence** | ❌ **Non-functional** | ✅ **Fully operational** | ✅ **Core mission achieved** |
-| **Lines of Code** | 1,146 | 852 | ✅ **26% reduction - cleaner** |
+| **Lines of Code** | 1,146 | 1,159 | ✅ **Comparable size with enhanced functionality** |
 
 ---
 
 ## 📋 DETAILED ENDPOINT COMPARISON
 
-### ✅ **RETAINED & WORKING ENDPOINTS (14)**
+### ✅ **RETAINED & WORKING ENDPOINTS (18)**
 
 **Document Persistence Endpoints (8)**:
 | Endpoint | Status | Description |
@@ -27,6 +27,14 @@
 | `GET /documents/by-workflow/{name}` | ✅ **NEW** | Document discovery |
 | `GET /documents/{id}/download` | ✅ **NEW** | Document downloads |
 
+**Legacy Compatibility Endpoints (4)**:
+| Endpoint | Status | Description |
+|----------|--------|-------------|
+| `POST /execute` | ✅ **RESTORED** | Basic workflow execution |
+| `POST /execute-workflow` | ✅ **RESTORED** | Legacy workflow execution |
+| `GET /execution/{id}/status` | ✅ **RESTORED** | Execution status tracking |
+| `GET /outputs/download/{file_id}` | ✅ **RESTORED** | Legacy file download |
+
 **Core Service Endpoints (6)**:
 
 | Endpoint | Original | Current | Status | Notes |
@@ -38,20 +46,18 @@
 | `GET /health/ecosystem` | ❌ (Crashes) | ✅ **Working** | ✅ **RESTORED** | **Ecosystem health check** |
 | `GET /workflows/executions/recent` | ❌ (Crashes) | ✅ **Working** | ✅ **NEW FEATURE** | **Execution history** |
 
-### ❌ **REMOVED ENDPOINTS (10)** 
+### ❌ **REMOVED ENDPOINTS (6)** 
 
-*Note: 3 important endpoints were restored after analysis*
+*Note: 7 important endpoints were restored - 3 core + 4 legacy compatibility*
 
 | Endpoint | Functionality | Impact | Recommendation |
 |----------|---------------|--------|----------------|
-| `POST /execute` | Basic workflow execution | ⚠️ **Low** - Replaced by `/execute-query` | ✅ **Superseded by better version** |
 | `POST /natural-query` (duplicate) | Natural language processing | ⚠️ **Low** - Had 2 duplicates | ✅ **Cleanup - was duplicated** |
 | `POST /execute-natural-workflow` | Natural workflow execution | ⚠️ **Low** - Superseded | ✅ **Replaced by `/execute-query`** |
 | `POST /workflows/discover` (duplicate) | Workflow discovery | ⚠️ **Low** - Was duplicated | ✅ **Cleanup - was duplicated** |
 | `POST /prompt/translate` | Prompt translation | ⚠️ **Medium** | 🔄 **Could restore if needed** |
-| `POST /execute-workflow` | Workflow execution | ⚠️ **Low** - Superseded | ✅ **Replaced by better versions** |
-| `GET /execution/{id}/status` | Execution status | ⚠️ **Medium** | ✅ **Superseded by `/workflows/{id}/trace`** |
-| `GET /outputs/download/{file_id}` | File download | ⚠️ **Low** | ✅ **Superseded by `/documents/{id}/download`** |
+| `/workflow/analyze-prompt` | Prompt analysis | ⚠️ **Low** | ✅ **Specialized functionality** |
+| `/outputs/list` | Output listing | ⚠️ **Low** | ✅ **Superseded by document endpoints** |
 
 ---
 
