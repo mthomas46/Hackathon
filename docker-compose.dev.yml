@@ -100,6 +100,7 @@ services:
       retries: 3
     profiles:
       - core
+      - ai_services
 
   # Document Store - Document storage and retrieval
   doc_store:
@@ -124,6 +125,7 @@ services:
       retries: 3
     profiles:
       - core
+      - ai_services
 
   # Analysis Service - Document analysis and consistency checking
   analysis-service:
@@ -151,6 +153,7 @@ services:
       retries: 3
     profiles:
       - core
+      - ai_services
 
   # Source Agent - Data ingestion from various sources
   source-agent:
@@ -312,8 +315,6 @@ services:
       retries: 3
     profiles:
       - ai_services
-    networks:
-      - doc-ecosystem-dev
 
   # Mock Data Generator - LLM-integrated mock data generation
   mock-data-generator:
@@ -342,8 +343,6 @@ services:
       retries: 3
     profiles:
       - ai_services
-    networks:
-      - doc-ecosystem-dev
 
   # GitHub MCP - GitHub Model Context Protocol service
   github-mcp:
