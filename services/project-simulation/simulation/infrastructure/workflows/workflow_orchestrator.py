@@ -133,6 +133,24 @@ class SimulationWorkflowOrchestrator:
                     "simulation_id": simulation_id
                 })
 
+                # Run additional analysis types if requested
+                additional_analysis = {}
+                analysis_types = analysis_config.get("analysis_types", [])
+
+                if "patterns" in analysis_types:
+                    # Analyze patterns in documents
+                    pattern_analysis = await self._analyze_document_patterns(
+                        analysis_config["documents"], simulation_id
+                    )
+                    additional_analysis["patterns"] = pattern_analysis
+
+                if "consistency" in analysis_types:
+                    # Analyze document consistency
+                    consistency_analysis = await self._analyze_document_consistency(
+                        analysis_config["documents"], simulation_id
+                    )
+                    additional_analysis["consistency"] = consistency_analysis
+
                 execution_time = (datetime.now() - start_time).total_seconds()
 
                 return {
@@ -140,6 +158,7 @@ class SimulationWorkflowOrchestrator:
                     "execution_time": execution_time,
                     "analysis_result": analysis_result,
                     "insights": insights_result,
+                    "additional_analysis": additional_analysis,
                     "simulation_id": simulation_id
                 }
 
@@ -150,6 +169,7 @@ class SimulationWorkflowOrchestrator:
                 "execution_time": execution_time,
                 "analysis_result": {"quality_score": 0.85, "issues": []},
                 "insights": ["Analysis completed successfully"],
+                "additional_analysis": {},
                 "simulation_id": simulation_id
             }
 
@@ -165,6 +185,88 @@ class SimulationWorkflowOrchestrator:
                 "error": str(e),
                 "simulation_id": simulation_id
             }
+
+    async def _analyze_document_patterns(self, documents: List[Dict[str, Any]], simulation_id: str) -> Dict[str, Any]:
+        """Analyze patterns in documents for insights and trends."""
+        try:
+            # Extract document types and content
+            doc_types = {}
+            content_patterns = []
+
+            for doc in documents:
+                doc_type = doc.get("type", "unknown")
+                doc_types[doc_type] = doc_types.get(doc_type, 0) + 1
+
+                # Analyze content patterns
+                content = doc.get("content", "").lower()
+                if "error" in content or "issue" in content:
+                    content_patterns.append("error_handling")
+                if "test" in content or "testing" in content:
+                    content_patterns.append("testing_patterns")
+                if "security" in content or "auth" in content:
+                    content_patterns.append("security_focus")
+                if "performance" in content or "optimization" in content:
+                    content_patterns.append("performance_focus")
+
+            # Analyze pattern distribution
+            pattern_distribution = {}
+            for pattern in content_patterns:
+                pattern_distribution[pattern] = pattern_distribution.get(pattern, 0) + 1
+
+            return {
+                "document_type_distribution": doc_types,
+                "content_pattern_distribution": pattern_distribution,
+                "total_documents_analyzed": len(documents),
+                "unique_patterns_identified": len(set(content_patterns)),
+                "insights": [
+                    f"Most common document type: {max(doc_types, key=doc_types.get) if doc_types else 'None'}",
+                    f"Primary focus area: {max(pattern_distribution, key=pattern_distribution.get) if pattern_distribution else 'General'}"
+                ]
+            }
+
+        except Exception as e:
+            self.logger.error(f"Pattern analysis failed", error=str(e), simulation_id=simulation_id)
+            return {"error": str(e), "patterns": []}
+
+    async def _analyze_document_consistency(self, documents: List[Dict[str, Any]], simulation_id: str) -> Dict[str, Any]:
+        """Analyze document consistency and identify potential issues."""
+        try:
+            consistency_issues = []
+            naming_consistency = {}
+            content_references = {}
+
+            for doc in documents:
+                title = doc.get("title", "")
+                content = doc.get("content", "")
+
+                # Check naming consistency
+                if "api" in title.lower() and "endpoint" not in title.lower():
+                    consistency_issues.append(f"Inconsistent API naming in: {title}")
+
+                # Check for broken references
+                import re
+                references = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', content)
+                for ref in references:
+                    content_references[ref] = content_references.get(ref, 0) + 1
+
+            # Identify potential duplicate references
+            duplicate_refs = [ref for ref, count in content_references.items() if count > 2]
+
+            return {
+                "consistency_score": max(0, 100 - len(consistency_issues) * 10),
+                "issues_found": consistency_issues,
+                "potential_duplicates": duplicate_refs,
+                "reference_distribution": content_references,
+                "recommendations": [
+                    "Standardize naming conventions across documents",
+                    "Review and consolidate duplicate references" if duplicate_refs else "Reference usage is consistent",
+                    "Ensure consistent terminology throughout documentation"
+                ]
+            }
+
+        except Exception as e:
+            self.logger.error(f"Consistency analysis failed", error=str(e), simulation_id=simulation_id)
+            return {"error": str(e), "consistency_score": 0, "issues": []}
 
     async def orchestrate_document_generation_workflow(
         self, simulation_id: str, project_config: Dict[str, Any]
