@@ -175,7 +175,8 @@ if not is_development():
 # Get service instances
 container = get_simulation_container()
 logger = container.logger
-application_service = container.simulation_application_service
+application_service = container.get_service("simulation_application_service")
+simulation_execution_engine = container.get_service("simulation_execution_engine")
 
 # Create health endpoints using shared patterns
 health_endpoints = create_simulation_health_endpoints()
@@ -422,7 +423,7 @@ async def get_simulation_status(simulation_id: str):
         )
 
         try:
-            result = await application_service.get_simulation_status(simulation_id)
+            result = await simulation_execution_engine.get_simulation_status(simulation_id)
 
             if not result["success"]:
                 return create_error_response(
@@ -631,7 +632,7 @@ async def _execute_simulation_background(simulation_id: str, correlation_id: str
                 correlation_id=correlation_id
             )
 
-            result = await application_service.execute_simulation(simulation_id)
+            result = await simulation_execution_engine.execute_simulation(simulation_id)
 
             logger.info(
                 "Background simulation execution completed",

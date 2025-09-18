@@ -22,11 +22,11 @@ class InMemoryProjectRepository(IProjectRepository):
     def __init__(self):
         self._projects: Dict[str, Project] = {}
 
-    def save(self, project: Project) -> None:
+    async def save(self, project: Project) -> None:
         """Save a project."""
         self._projects[str(project.id.value)] = project
 
-    def find_by_id(self, project_id: str) -> Optional[Project]:
+    async def find_by_id(self, project_id: str) -> Optional[Project]:
         """Find project by ID."""
         return self._projects.get(project_id)
 
@@ -67,7 +67,7 @@ class InMemoryTimelineRepository(ITimelineRepository):
         """Find timeline by ID."""
         return self._timelines.get(timeline_id)
 
-    def find_by_project_id(self, project_id: str) -> Optional[Timeline]:
+    async def find_by_project_id(self, project_id: str) -> Optional[Timeline]:
         """Find timeline by project ID."""
         for timeline in self._timelines.values():
             if timeline.project_id == project_id:
@@ -100,7 +100,7 @@ class InMemoryTeamRepository(ITeamRepository):
         """Find team by ID."""
         return self._teams.get(team_id)
 
-    def find_by_project_id(self, project_id: str) -> Optional[Team]:
+    async def find_by_project_id(self, project_id: str) -> Optional[Team]:
         """Find team by project ID."""
         for team in self._teams.values():
             if team.project_id == project_id:
@@ -132,11 +132,11 @@ class InMemorySimulationRepository(ISimulationRepository):
     def __init__(self):
         self._simulations: Dict[str, Simulation] = {}
 
-    def save(self, simulation: Simulation) -> None:
+    async def save(self, simulation: Simulation) -> None:
         """Save a simulation."""
         self._simulations[str(simulation.id.value)] = simulation
 
-    def find_by_id(self, simulation_id: str) -> Optional[Simulation]:
+    async def find_by_id(self, simulation_id: str) -> Optional[Simulation]:
         """Find simulation by ID."""
         return self._simulations.get(simulation_id)
 

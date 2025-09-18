@@ -28,6 +28,7 @@ except ImportError:
         def resolve(self, service_name: str) -> Any: pass
 
 from simulation.infrastructure.logging import get_simulation_logger
+from simulation.infrastructure.execution.simulation_execution_engine import SimulationExecutionEngine
 from simulation.infrastructure.health.simulation_health import (
     get_simulation_health_checker,
     get_simulation_health_endpoint
@@ -138,6 +139,27 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
 
         self._factories["simulation_application_service"] = create_simulation_app_service
         self._service_metadata["simulation_application_service"] = {"type": "application", "tags": ["application", "orchestration", "core"]}
+
+        # Core Simulation Execution Engine
+        def create_simulation_execution_engine():
+            from ..content.content_generation_pipeline import ContentGenerationPipeline
+            from ..clients.ecosystem_clients import get_ecosystem_service_registry
+            from ..workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
+
+            return SimulationExecutionEngine(
+                content_pipeline=ContentGenerationPipeline(),
+                ecosystem_clients=get_ecosystem_service_registry(),
+                workflow_orchestrator=SimulationWorkflowOrchestrator(),
+                logger=self.get_service("logger"),
+                monitoring_service=self.get_service("monitoring_service"),
+                simulation_repository=self.get_service("simulation_repository"),
+                project_repository=self.get_service("project_repository"),
+                timeline_repository=self.get_service("timeline_repository"),
+                team_repository=self.get_service("team_repository")
+            )
+
+        self._factories["simulation_execution_engine"] = create_simulation_execution_engine
+        self._service_metadata["simulation_execution_engine"] = {"type": "infrastructure", "tags": ["execution", "simulation", "core"]}
 
     def _register_utility_services(self) -> None:
         """Register utility services for validation, formatting, and resilience."""

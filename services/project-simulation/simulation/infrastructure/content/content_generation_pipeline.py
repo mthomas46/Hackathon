@@ -41,6 +41,179 @@ class ContentGenerationPipeline:
         self.llm_client = get_llm_gateway_client()
         self.summarizer_client = get_summarizer_hub_client()
 
+    async def execute_document_generation(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Execute document generation for a simulation phase."""
+        try:
+            # Generate different types of documents based on phase
+            documents = []
+
+            # Generate Confluence-style documents
+            confluence_docs = await self._generate_confluence_documents(phase_config)
+            documents.extend(confluence_docs)
+
+            # Generate JIRA tickets
+            jira_tickets = await self._generate_jira_tickets(phase_config)
+            documents.extend(jira_tickets)
+
+            # Generate GitHub PRs
+            github_prs = await self._generate_github_prs(phase_config)
+            documents.extend(github_prs)
+
+            return documents
+
+        except Exception as e:
+            self.logger.error(f"Document generation failed", error=str(e))
+            return []
+
+    async def _generate_confluence_documents(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate Confluence-style documents."""
+        phase_name = phase_config.get("phase_name", "unknown")
+        project_config = phase_config.get("project_config", {})
+
+        documents = []
+
+        # Generate project requirements document
+        if phase_name.lower() in ["planning", "requirements"]:
+            doc = await self.mock_data_client.generate_project_documents({
+                "type": "requirements",
+                "project_name": project_config.get("name", "Unknown Project"),
+                "complexity": project_config.get("complexity", "medium")
+            })
+            if doc:
+                documents.append({
+                    "type": "confluence_requirements",
+                    "title": f"Project Requirements - {project_config.get('name', 'Unknown')}",
+                    "content": doc.get("content", ""),
+                    "metadata": {
+                        "document_type": "confluence",
+                        "phase": phase_name,
+                        "category": "requirements"
+                    }
+                })
+
+        # Generate architecture document
+        if phase_name.lower() in ["design", "architecture"]:
+            doc = await self.mock_data_client.generate_project_documents({
+                "type": "architecture",
+                "project_name": project_config.get("name", "Unknown Project"),
+                "technologies": project_config.get("technologies", [])
+            })
+            if doc:
+                documents.append({
+                    "type": "confluence_architecture",
+                    "title": f"System Architecture - {project_config.get('name', 'Unknown')}",
+                    "content": doc.get("content", ""),
+                    "metadata": {
+                        "document_type": "confluence",
+                        "phase": phase_name,
+                        "category": "architecture"
+                    }
+                })
+
+        return documents
+
+    async def _generate_jira_tickets(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate JIRA-style tickets."""
+        phase_name = phase_config.get("phase_name", "unknown")
+        project_config = phase_config.get("project_config", {})
+        team_config = phase_config.get("team_config", {})
+
+        tickets = []
+
+        # Generate planning tickets
+        if phase_name.lower() == "planning":
+            ticket = await self.mock_data_client.generate_team_activities({
+                "type": "planning",
+                "project_name": project_config.get("name", "Unknown Project"),
+                "team_size": len(team_config.get("members", []))
+            })
+            if ticket:
+                tickets.append({
+                    "type": "jira_ticket",
+                    "title": f"PLANN-001: Complete project planning phase",
+                    "content": ticket.get("content", ""),
+                    "metadata": {
+                        "document_type": "jira",
+                        "phase": phase_name,
+                        "ticket_type": "task",
+                        "priority": "high",
+                        "assignee": team_config.get("members", [{}])[0].get("name", "Unassigned")
+                    }
+                })
+
+        # Generate development tickets
+        if phase_name.lower() == "development":
+            ticket = await self.mock_data_client.generate_team_activities({
+                "type": "development",
+                "project_name": project_config.get("name", "Unknown Project"),
+                "technologies": project_config.get("technologies", [])
+            })
+            if ticket:
+                tickets.append({
+                    "type": "jira_ticket",
+                    "title": f"DEV-001: Implement core features",
+                    "content": ticket.get("content", ""),
+                    "metadata": {
+                        "document_type": "jira",
+                        "phase": phase_name,
+                        "ticket_type": "story",
+                        "priority": "medium",
+                        "assignee": team_config.get("members", [{}])[0].get("name", "Unassigned")
+                    }
+                })
+
+        return tickets
+
+    async def _generate_github_prs(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate GitHub PR-style documents."""
+        phase_name = phase_config.get("phase_name", "unknown")
+        project_config = phase_config.get("project_config", {})
+
+        prs = []
+
+        # Generate PR for development phase
+        if phase_name.lower() == "development":
+            pr_content = f"""
+# Feature Implementation
+
+## Description
+Implementation of core features for {project_config.get('name', 'Unknown Project')}
+
+## Changes Made
+- Added new feature modules
+- Updated existing components
+- Added comprehensive tests
+
+## Testing
+- Unit tests: ✅ Passed
+- Integration tests: ✅ Passed
+- E2E tests: ✅ Passed
+
+## Review Checklist
+- [x] Code follows style guidelines
+- [x] Tests are included
+- [x] Documentation updated
+- [x] Breaking changes documented
+
+/cc @{phase_config.get('team_config', {}).get('members', [{}])[0].get('name', 'reviewer').lower().replace(' ', '')}
+"""
+
+            prs.append({
+                "type": "github_pr",
+                "title": f"feat: Implement core functionality",
+                "content": pr_content,
+                "metadata": {
+                    "document_type": "github",
+                    "phase": phase_name,
+                    "pr_number": 123,
+                    "status": "open",
+                    "author": phase_config.get("team_config", {}).get("members", [{}])[0].get("name", "developer"),
+                    "reviewers": ["reviewer1", "reviewer2"]
+                }
+            })
+
+        return prs
+
     async def execute_full_pipeline(self,
                                   simulation_id: str,
                                   project_config: Dict[str, Any],
