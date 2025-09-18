@@ -123,8 +123,11 @@ class SimulationExecutionEngine:
             # Execute simulation phases
             await self._execute_simulation_phases(simulation)
 
-            # Run final analysis
-            await self._run_final_analysis(simulation)
+        # Run final analysis
+        await self._run_final_analysis(simulation)
+
+        # Run document quality analysis
+        await self._run_document_quality_analysis(simulation)
 
             # Complete simulation
             metrics = await self._calculate_simulation_metrics(simulation)
@@ -271,11 +274,60 @@ class SimulationExecutionEngine:
             workflow_result.get("success", False)
         )
 
+        # Run phase-specific analysis
+        if documents and len(documents) > 0:
+            await self._run_phase_analysis(simulation, phase_name, documents)
+
         # Update progress
         simulation.update_progress(phase_name, len(documents), 1, True)
 
         # Publish progress event
         await self._publish_progress_event(simulation)
+
+    async def _run_phase_analysis(self, simulation: Simulation, phase_name: str, documents: List[Dict[str, Any]]) -> None:
+        """Run analysis on documents generated in a specific phase."""
+        simulation_id = str(simulation.id.value)
+
+        try:
+            self.logger.info(f"Running phase analysis for {phase_name}", simulation_id=simulation_id)
+
+            # Analyze phase documents for quality and consistency
+            if self.workflow_orchestrator:
+                phase_analysis = await self.workflow_orchestrator.run_analysis_workflow({
+                    "simulation_id": simulation_id,
+                    "documents": documents,
+                    "analysis_types": ["quality", "consistency"],
+                    "phase_context": phase_name
+                })
+
+                # Store phase analysis results
+                phase_analysis_doc = {
+                    "type": "phase_analysis_report",
+                    "title": f"Phase Analysis - {phase_name} - {simulation_id}",
+                    "content": json.dumps(phase_analysis, indent=2),
+                    "metadata": {
+                        "document_type": "analysis",
+                        "simulation_id": simulation_id,
+                        "phase": phase_name,
+                        "analysis_type": "phase_assessment",
+                        "documents_analyzed": len(documents),
+                        "analysis_timestamp": datetime.now().isoformat()
+                    }
+                }
+
+                await self._store_document(phase_analysis_doc)
+
+                # Record phase analysis workflow
+                simulation.record_workflow_execution(
+                    f"{phase_name}_analysis",
+                    phase_analysis.get("execution_time", 0.0),
+                    phase_analysis.get("success", True)
+                )
+
+                self.logger.info(f"Phase analysis completed for {phase_name}", simulation_id=simulation_id)
+
+        except Exception as e:
+            self.logger.error(f"Phase analysis failed for {phase_name}", error=str(e), simulation_id=simulation_id)
 
     async def _run_final_analysis(self, simulation: Simulation) -> Dict[str, Any]:
         """Run final analysis on the completed simulation."""
@@ -293,7 +345,57 @@ class SimulationExecutionEngine:
             "analysis_types": ["consistency", "quality", "insights"]
         })
 
-        return analysis_result
+            return analysis_result
+
+    async def _run_document_quality_analysis(self, simulation: Simulation) -> None:
+        """Run comprehensive document quality analysis on generated content."""
+        simulation_id = str(simulation.id.value)
+
+        try:
+            self.logger.info(f"Running document quality analysis", simulation_id=simulation_id)
+
+            # Get all simulation documents
+            documents = await self._get_all_simulation_documents(simulation_id)
+
+            if not documents:
+                self.logger.warning(f"No documents found for quality analysis", simulation_id=simulation_id)
+                return
+
+            # Analyze document quality using analysis service
+            if self.workflow_orchestrator:
+                quality_analysis = await self.workflow_orchestrator.run_analysis_workflow({
+                    "simulation_id": simulation_id,
+                    "documents": documents,
+                    "analysis_types": ["quality", "consistency", "insights", "patterns"]
+                })
+
+                # Store analysis results
+                analysis_doc = {
+                    "type": "analysis_report",
+                    "title": f"Document Quality Analysis - {simulation_id}",
+                    "content": json.dumps(quality_analysis, indent=2),
+                    "metadata": {
+                        "document_type": "analysis",
+                        "simulation_id": simulation_id,
+                        "analysis_type": "quality_assessment",
+                        "documents_analyzed": len(documents),
+                        "analysis_timestamp": datetime.now().isoformat()
+                    }
+                }
+
+                await self._store_document(analysis_doc)
+
+                # Record analysis workflow execution
+                simulation.record_workflow_execution(
+                    "document_quality_analysis",
+                    quality_analysis.get("execution_time", 0.0),
+                    quality_analysis.get("success", True)
+                )
+
+                self.logger.info(f"Document quality analysis completed", simulation_id=simulation_id)
+
+        except Exception as e:
+            self.logger.error(f"Document quality analysis failed", error=str(e), simulation_id=simulation_id)
 
     async def _calculate_simulation_metrics(self, simulation: Simulation) -> SimulationMetrics:
         """Calculate comprehensive simulation metrics."""
