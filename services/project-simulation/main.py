@@ -27,6 +27,12 @@ from simulation.presentation.api.hateoas import (
     create_hateoas_response,
     create_error_response
 )
+from simulation.presentation.websockets.simulation_websocket import (
+    get_websocket_handler,
+    notify_simulation_progress,
+    notify_simulation_event,
+    notify_ecosystem_status
+)
 
 
 # Pydantic models for API requests/responses
@@ -391,13 +397,19 @@ async def _execute_simulation_background(simulation_id: str, correlation_id: str
             )
 
 
-# WebSocket endpoint for real-time updates (placeholder)
+# WebSocket endpoints for real-time updates
+websocket_handler = get_websocket_handler()
+
 @app.websocket("/ws/simulations/{simulation_id}")
-async def simulation_websocket(simulation_id: str):
+async def simulation_websocket(websocket: WebSocket, simulation_id: str):
     """WebSocket endpoint for real-time simulation updates."""
-    # Placeholder for WebSocket implementation
-    # This would be implemented with proper WebSocket handling
-    pass
+    await websocket_handler.handle_simulation_connection(websocket, simulation_id)
+
+
+@app.websocket("/ws/system")
+async def system_websocket(websocket: WebSocket):
+    """WebSocket endpoint for system-wide real-time updates."""
+    await websocket_handler.handle_general_connection(websocket)
 
 
 @app.get("/")
