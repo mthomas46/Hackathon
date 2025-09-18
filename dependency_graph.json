@@ -1,0 +1,218 @@
+{
+  "services": {
+    "redis": {
+      "dependencies": [],
+      "dependents": [
+        "orchestrator",
+        "doc_store",
+        "analysis-service",
+        "llm-gateway",
+        "mock-data-generator",
+        "memory-agent",
+        "prompt_store",
+        "code-analyzer"
+      ],
+      "health_status": "unknown"
+    },
+    "orchestrator": {
+      "dependencies": [
+        "redis"
+      ],
+      "dependents": [
+        "frontend",
+        "discovery-agent",
+        "interpreter",
+        "cli"
+      ],
+      "health_status": "unknown"
+    },
+    "doc_store": {
+      "dependencies": [
+        "redis"
+      ],
+      "dependents": [
+        "analysis-service",
+        "source-agent",
+        "mock-data-generator"
+      ],
+      "health_status": "unknown"
+    },
+    "analysis-service": {
+      "dependencies": [
+        "redis",
+        "doc_store",
+        "llm-gateway"
+      ],
+      "dependents": [
+        "frontend",
+        "interpreter",
+        "cli"
+      ],
+      "health_status": "unknown"
+    },
+    "source-agent": {
+      "dependencies": [
+        "doc_store"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "frontend": {
+      "dependencies": [
+        "analysis-service",
+        "orchestrator"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "ollama": {
+      "dependencies": [],
+      "dependents": [
+        "llm-gateway"
+      ],
+      "health_status": "unknown"
+    },
+    "summarizer-hub": {
+      "dependencies": [],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "architecture-digitizer": {
+      "dependencies": [],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "bedrock-proxy": {
+      "dependencies": [],
+      "dependents": [
+        "llm-gateway"
+      ],
+      "health_status": "unknown"
+    },
+    "llm-gateway": {
+      "dependencies": [
+        "bedrock-proxy",
+        "ollama",
+        "redis"
+      ],
+      "dependents": [
+        "analysis-service",
+        "mock-data-generator"
+      ],
+      "health_status": "unknown"
+    },
+    "mock-data-generator": {
+      "dependencies": [
+        "llm-gateway",
+        "doc_store",
+        "redis"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "github-mcp": {
+      "dependencies": [],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "memory-agent": {
+      "dependencies": [
+        "redis"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "discovery-agent": {
+      "dependencies": [
+        "orchestrator"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "notification-service": {
+      "dependencies": [],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "prompt_store": {
+      "dependencies": [
+        "redis"
+      ],
+      "dependents": [
+        "interpreter",
+        "cli"
+      ],
+      "health_status": "unknown"
+    },
+    "interpreter": {
+      "dependencies": [
+        "prompt_store",
+        "orchestrator",
+        "analysis-service"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "cli": {
+      "dependencies": [
+        "prompt_store",
+        "orchestrator",
+        "analysis-service"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "code-analyzer": {
+      "dependencies": [
+        "redis"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "secure-analyzer": {
+      "dependencies": [],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "log-collector": {
+      "dependencies": [],
+      "dependents": [],
+      "health_status": "unknown"
+    }
+  },
+  "startup_order": [
+    "redis",
+    "ollama",
+    "summarizer-hub",
+    "architecture-digitizer",
+    "bedrock-proxy",
+    "github-mcp",
+    "notification-service",
+    "secure-analyzer",
+    "log-collector",
+    "orchestrator",
+    "doc_store",
+    "memory-agent",
+    "prompt_store",
+    "code-analyzer",
+    "llm-gateway",
+    "discovery-agent",
+    "source-agent",
+    "analysis-service",
+    "mock-data-generator",
+    "frontend",
+    "interpreter",
+    "cli"
+  ],
+  "circular_dependencies": [],
+  "issues": [
+    {
+      "severity": "info",
+      "category": "bottleneck",
+      "service": "redis",
+      "dependency": "",
+      "message": "Service 'redis' has 8 dependents but no dependencies",
+      "suggestion": "Consider if this service should have infrastructure dependencies"
+    }
+  ]
+}

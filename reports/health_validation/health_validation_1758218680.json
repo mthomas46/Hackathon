@@ -1,0 +1,459 @@
+{
+  "total_endpoints": 21,
+  "successful_checks": 9,
+  "failed_checks": 12,
+  "total_response_time": 0.21529078483581543,
+  "average_response_time": 0.01025194213503883,
+  "min_response_time": 0.005957841873168945,
+  "max_response_time": 0.013721227645874023,
+  "availability_percentage": 42.857142857142854,
+  "validation_timestamp": 1758218680.916605,
+  "detailed_results": [
+    {
+      "service_name": "redis",
+      "url": "http://localhost:6379/health",
+      "success": false,
+      "response_time": 0.013721227645874023,
+      "status_code": null,
+      "response_body": null,
+      "error_message": "Connection error: Server disconnected",
+      "timestamp": 1758218680.916492,
+      "attempts": 1
+    },
+    {
+      "service_name": "orchestrator",
+      "url": "http://localhost:5099/health",
+      "success": false,
+      "response_time": 0.00835108757019043,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "orchestrator",
+        "version": "0.1.0",
+        "timestamp": "2025-09-18T18:04:40.910231Z",
+        "uptime_seconds": 46737.192204,
+        "environment": "development"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.911385,
+      "attempts": 1
+    },
+    {
+      "service_name": "doc_store",
+      "url": "http://localhost:5087/health",
+      "success": false,
+      "response_time": 0.011834859848022461,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "doc_store",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:04:40.911838Z",
+        "uptime_seconds": 5440.465109,
+        "environment": "development"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.915017,
+      "attempts": 1
+    },
+    {
+      "service_name": "analysis-service",
+      "url": "http://localhost:5080/health",
+      "success": false,
+      "response_time": 0.011507987976074219,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:04:40.911141Z",
+        "uptime_seconds": 765.214532,
+        "environment": "development"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.914825,
+      "attempts": 1
+    },
+    {
+      "service_name": "source-agent",
+      "url": "http://localhost:5085/health",
+      "success": false,
+      "response_time": 0.012276887893676758,
+      "status_code": null,
+      "response_body": null,
+      "error_message": "Connection error: [Errno 54] Connection reset by peer",
+      "timestamp": 1758218680.915657,
+      "attempts": 1
+    },
+    {
+      "service_name": "frontend",
+      "url": "http://localhost:3000/health",
+      "success": false,
+      "response_time": 0.011453866958618164,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "frontend",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:04:40.911371Z",
+        "uptime_seconds": 4314.756961,
+        "environment": "development"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.9149399,
+      "attempts": 1
+    },
+    {
+      "service_name": "ollama",
+      "url": "http://localhost:11434/health",
+      "success": false,
+      "response_time": 0.0073451995849609375,
+      "status_code": 404,
+      "response_body": {
+        "raw_response": "404 page not found"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.9109771,
+      "attempts": 1
+    },
+    {
+      "service_name": "summarizer-hub",
+      "url": "http://localhost:5160/health",
+      "success": false,
+      "response_time": 0.010921001434326172,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "summarizer-hub",
+        "version": "1.0.0",
+        "timestamp": 1758218680.9111254,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.914725,
+      "attempts": 1
+    },
+    {
+      "service_name": "architecture-digitizer",
+      "url": "http://localhost:5105/health",
+      "success": true,
+      "response_time": 0.011030197143554688,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "architecture-digitizer",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:04:40.910843Z",
+        "uptime_seconds": 46767.834386,
+        "environment": "development"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.914907,
+      "attempts": 1
+    },
+    {
+      "service_name": "bedrock-proxy",
+      "url": "http://localhost:5060/health",
+      "success": true,
+      "response_time": 0.011543750762939453,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "bedrock-proxy",
+        "version": "0.1.0",
+        "description": "Bedrock proxy stub service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.915513,
+      "attempts": 1
+    },
+    {
+      "service_name": "llm-gateway",
+      "url": "http://localhost:5055/health",
+      "success": false,
+      "response_time": 0.010780811309814453,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "llm-gateway",
+        "version": "1.0.0",
+        "timestamp": 1758218680.9113493,
+        "environment": "development",
+        "ollama_endpoint": "http://ollama:11434"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.914879,
+      "attempts": 1
+    },
+    {
+      "service_name": "mock-data-generator",
+      "url": "http://localhost:5065/health",
+      "success": false,
+      "response_time": 0.011182069778442383,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "mock-data-generator",
+        "version": "1.0.0",
+        "timestamp": 1758218680.9137385,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055",
+        "doc_store_url": "http://doc_store:5087"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.915395,
+      "attempts": 1
+    },
+    {
+      "service_name": "github-mcp",
+      "url": "http://localhost:5030/health",
+      "success": true,
+      "response_time": 0.011079072952270508,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "github-mcp",
+        "version": "0.1.0",
+        "description": "GitHub MCP service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.915612,
+      "attempts": 1
+    },
+    {
+      "service_name": "memory-agent",
+      "url": "http://localhost:5090/health",
+      "success": true,
+      "response_time": 0.008337974548339844,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "memory-agent",
+        "version": "1.0.0",
+        "environment": "development",
+        "memory_count": 0,
+        "memory_capacity": 0,
+        "memory_usage_percent": 0,
+        "ttl_seconds": 3600,
+        "description": "Memory agent operational with active memory management"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.913033,
+      "attempts": 1
+    },
+    {
+      "service_name": "discovery-agent",
+      "url": "http://localhost:5045/health",
+      "success": true,
+      "response_time": 0.010714054107666016,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "discovery-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:04:40.911974Z",
+        "uptime_seconds": 42478.356637,
+        "environment": "development"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.915483,
+      "attempts": 1
+    },
+    {
+      "service_name": "notification-service",
+      "url": "http://localhost:5130/health",
+      "success": false,
+      "response_time": 0.010117769241333008,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "notification-service",
+        "version": "0.1.0",
+        "description": "Notification service is operational"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.9149811,
+      "attempts": 1
+    },
+    {
+      "service_name": "prompt_store",
+      "url": "http://localhost:5110/health",
+      "success": true,
+      "response_time": 0.010481119155883789,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "prompt-store",
+        "version": "2.0.0",
+        "timestamp": "2025-09-18T18:04:40.913339Z",
+        "uptime_seconds": 46737.176197,
+        "environment": "development"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.91545,
+      "attempts": 1
+    },
+    {
+      "service_name": "interpreter",
+      "url": "http://localhost:5120/health",
+      "success": true,
+      "response_time": 0.006006002426147461,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "interpreter",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:04:40.909756",
+        "features": [
+          "document_persistence",
+          "workflow_provenance",
+          "doc_store_integration"
+        ]
+      },
+      "error_message": null,
+      "timestamp": 1758218680.911075,
+      "attempts": 1
+    },
+    {
+      "service_name": "code-analyzer",
+      "url": "http://localhost:5025/health",
+      "success": false,
+      "response_time": 0.010418176651000977,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "code-analyzer"
+      },
+      "error_message": "Validation failed",
+      "timestamp": 1758218680.915555,
+      "attempts": 1
+    },
+    {
+      "service_name": "secure-analyzer",
+      "url": "http://localhost:5100/health",
+      "success": true,
+      "response_time": 0.005957841873168945,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "secure-analyzer",
+        "version": "0.1.0",
+        "circuit_breaker_open": false,
+        "description": "Secure analyzer service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.911223,
+      "attempts": 1
+    },
+    {
+      "service_name": "log-collector",
+      "url": "http://localhost:5040/health",
+      "success": true,
+      "response_time": 0.010229825973510742,
+      "status_code": 200,
+      "response_body": {
+        "status": "healthy",
+        "service": "log-collector",
+        "version": "0.1.0",
+        "count": 0,
+        "description": "Log collection service is operational"
+      },
+      "error_message": null,
+      "timestamp": 1758218680.915586,
+      "attempts": 1
+    }
+  ],
+  "critical_failures": [
+    {
+      "service_name": "redis",
+      "url": "http://localhost:6379/health",
+      "error_message": "Connection error: Server disconnected",
+      "response_time": 0.013721227645874023
+    },
+    {
+      "service_name": "orchestrator",
+      "url": "http://localhost:5099/health",
+      "error_message": "Validation failed",
+      "response_time": 0.00835108757019043
+    },
+    {
+      "service_name": "doc_store",
+      "url": "http://localhost:5087/health",
+      "error_message": "Validation failed",
+      "response_time": 0.011834859848022461
+    },
+    {
+      "service_name": "analysis-service",
+      "url": "http://localhost:5080/health",
+      "error_message": "Validation failed",
+      "response_time": 0.011507987976074219
+    },
+    {
+      "service_name": "source-agent",
+      "url": "http://localhost:5085/health",
+      "error_message": "Connection error: [Errno 54] Connection reset by peer",
+      "response_time": 0.012276887893676758
+    },
+    {
+      "service_name": "frontend",
+      "url": "http://localhost:3000/health",
+      "error_message": "Validation failed",
+      "response_time": 0.011453866958618164
+    },
+    {
+      "service_name": "ollama",
+      "url": "http://localhost:11434/health",
+      "error_message": "Validation failed",
+      "response_time": 0.0073451995849609375
+    },
+    {
+      "service_name": "summarizer-hub",
+      "url": "http://localhost:5160/health",
+      "error_message": "Validation failed",
+      "response_time": 0.010921001434326172
+    },
+    {
+      "service_name": "llm-gateway",
+      "url": "http://localhost:5055/health",
+      "error_message": "Validation failed",
+      "response_time": 0.010780811309814453
+    },
+    {
+      "service_name": "mock-data-generator",
+      "url": "http://localhost:5065/health",
+      "error_message": "Validation failed",
+      "response_time": 0.011182069778442383
+    },
+    {
+      "service_name": "notification-service",
+      "url": "http://localhost:5130/health",
+      "error_message": "Validation failed",
+      "response_time": 0.010117769241333008
+    },
+    {
+      "service_name": "code-analyzer",
+      "url": "http://localhost:5025/health",
+      "error_message": "Validation failed",
+      "response_time": 0.010418176651000977
+    }
+  ],
+  "recommendations": [
+    "\ud83d\udd34 CRITICAL: Service availability is below 95% - investigate failed services immediately",
+    "\ud83d\udfe1 WARNING: redis health check failed - review logs",
+    "\ud83d\udfe1 WARNING: orchestrator health check failed - review logs",
+    "\ud83d\udfe1 WARNING: doc_store health check failed - review logs",
+    "\ud83d\udfe1 WARNING: analysis-service health check failed - review logs",
+    "\ud83d\udfe1 WARNING: source-agent health check failed - review logs",
+    "\ud83d\udfe1 WARNING: frontend health check failed - review logs",
+    "\ud83d\udfe1 WARNING: ollama health check failed - review logs",
+    "\ud83d\udfe1 WARNING: summarizer-hub health check failed - review logs",
+    "\ud83d\udfe1 WARNING: llm-gateway health check failed - review logs",
+    "\ud83d\udfe1 WARNING: mock-data-generator health check failed - review logs",
+    "\ud83d\udfe1 WARNING: notification-service health check failed - review logs",
+    "\ud83d\udfe1 WARNING: code-analyzer health check failed - review logs",
+    "\u2139\ufe0f INFO: Consider implementing circuit breakers for dependent services",
+    "\u2139\ufe0f INFO: Add health check monitoring to alerting systems",
+    "\u2139\ufe0f INFO: Implement health check caching to reduce load"
+  ]
+}

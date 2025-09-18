@@ -49,7 +49,7 @@ from services.shared.integrations.clients.clients import ServiceClients  # type:
 SERVICE_NAME = "source-agent"
 SERVICE_TITLE = "Source Agent"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5000
+DEFAULT_PORT = int(os.environ.get('SERVICE_PORT', 5070))
 
 # Supported sources and their capabilities
 SUPPORTED_SOURCES = ["github", "jira", "confluence"]

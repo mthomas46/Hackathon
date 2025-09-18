@@ -1,0 +1,798 @@
+{
+  "audit_timestamp": 1758221367.680875,
+  "total_services": 21,
+  "connectivity_tests": {
+    "redis": {
+      "service": "redis",
+      "status": "error",
+      "error": "Remote end closed connection without response",
+      "url": "http://localhost:6379/"
+    },
+    "doc_store": {
+      "service": "doc_store",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 159,
+      "url": "http://localhost:5087/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "doc_store",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:49:27.693303Z",
+        "uptime_seconds": 1747.510424,
+        "environment": "development"
+      }
+    },
+    "orchestrator": {
+      "service": "orchestrator",
+      "status": "connection_failed",
+      "error": "HTTP Error 500: Internal Server Error",
+      "url": "http://localhost:5099/health"
+    },
+    "llm-gateway": {
+      "service": "llm-gateway",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 161,
+      "url": "http://localhost:5055/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "llm-gateway",
+        "version": "1.0.0",
+        "timestamp": 1758221367.7004378,
+        "environment": "development",
+        "ollama_endpoint": "http://ollama:11434"
+      }
+    },
+    "mock-data-generator": {
+      "service": "mock-data-generator",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 213,
+      "url": "http://localhost:5065/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "mock-data-generator",
+        "version": "1.0.0",
+        "timestamp": 1758221367.7015023,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055",
+        "doc_store_url": "http://doc_store:5087"
+      }
+    },
+    "summarizer-hub": {
+      "service": "summarizer-hub",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 167,
+      "url": "http://localhost:5160/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "summarizer-hub",
+        "version": "1.0.0",
+        "timestamp": 1758221367.702482,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055"
+      }
+    },
+    "bedrock-proxy": {
+      "service": "bedrock-proxy",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 122,
+      "url": "http://localhost:5060/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "bedrock-proxy",
+        "version": "0.1.0",
+        "description": "Bedrock proxy stub service is operational"
+      }
+    },
+    "github-mcp": {
+      "service": "github-mcp",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 111,
+      "url": "http://localhost:5030/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "github-mcp",
+        "version": "0.1.0",
+        "description": "GitHub MCP service is operational"
+      }
+    },
+    "memory-agent": {
+      "service": "memory-agent",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 243,
+      "url": "http://localhost:5090/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "memory-agent",
+        "version": "1.0.0",
+        "environment": "development",
+        "memory_count": 0,
+        "memory_capacity": 0,
+        "memory_usage_percent": 0,
+        "ttl_seconds": 3600,
+        "description": "Memory agent operational with active memory management"
+      }
+    },
+    "discovery-agent": {
+      "service": "discovery-agent",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 166,
+      "url": "http://localhost:5045/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "discovery-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:49:27.707660Z",
+        "uptime_seconds": 45165.152323,
+        "environment": "development"
+      }
+    },
+    "source-agent": {
+      "service": "source-agent",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 162,
+      "url": "http://localhost:5085/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "source-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:49:27.708802Z",
+        "uptime_seconds": 2373.850077,
+        "environment": "development"
+      }
+    },
+    "analysis-service": {
+      "service": "analysis-service",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 166,
+      "url": "http://localhost:5080/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:49:27.709947Z",
+        "uptime_seconds": 1673.678691,
+        "environment": "development"
+      }
+    },
+    "code-analyzer": {
+      "service": "code-analyzer",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 46,
+      "url": "http://localhost:5025/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "code-analyzer"
+      }
+    },
+    "secure-analyzer": {
+      "service": "secure-analyzer",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 150,
+      "url": "http://localhost:5100/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "secure-analyzer",
+        "version": "0.1.0",
+        "circuit_breaker_open": false,
+        "description": "Secure analyzer service is operational"
+      }
+    },
+    "log-collector": {
+      "service": "log-collector",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 128,
+      "url": "http://localhost:5040/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "log-collector",
+        "version": "0.1.0",
+        "count": 0,
+        "description": "Log collection service is operational"
+      }
+    },
+    "prompt_store": {
+      "service": "prompt_store",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 162,
+      "url": "http://localhost:5110/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "prompt-store",
+        "version": "2.0.0",
+        "timestamp": "2025-09-18T18:49:27.714680Z",
+        "uptime_seconds": 49423.97754,
+        "environment": "development"
+      }
+    },
+    "interpreter": {
+      "service": "interpreter",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 185,
+      "url": "http://localhost:5120/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "interpreter",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:49:27.715706",
+        "features": [
+          "document_persistence",
+          "workflow_provenance",
+          "doc_store_integration"
+        ]
+      }
+    },
+    "architecture-digitizer": {
+      "service": "architecture-digitizer",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 172,
+      "url": "http://localhost:5105/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "architecture-digitizer",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T18:49:27.716714Z",
+        "uptime_seconds": 49454.64026,
+        "environment": "development"
+      }
+    },
+    "notification-service": {
+      "service": "notification-service",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 123,
+      "url": "http://localhost:5130/health",
+      "response_type": "json",
+      "response_data": {
+        "status": "healthy",
+        "service": "notification-service",
+        "version": "0.1.0",
+        "description": "Notification service is operational"
+      }
+    },
+    "frontend": {
+      "service": "frontend",
+      "status": "connection_failed",
+      "error": "HTTP Error 404: Not Found",
+      "url": "http://localhost:3000/"
+    },
+    "ollama": {
+      "service": "ollama",
+      "status": "healthy",
+      "status_code": 200,
+      "response_size": 1341,
+      "url": "http://localhost:11434/api/tags",
+      "response_type": "json",
+      "response_data": {
+        "models": [
+          {
+            "name": "llama3:latest",
+            "model": "llama3:latest",
+            "modified_at": "2025-07-10T18:15:28.113963605-05:00",
+            "size": 4661224676,
+            "digest": "365c0bd3c000a25d28ddbf732fe1c6add414de7275464c4e4d1c3b5fcb5d8ad1",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "8.0B",
+              "quantization_level": "Q4_0"
+            }
+          },
+          {
+            "name": "llama3.3:latest",
+            "model": "llama3.3:latest",
+            "modified_at": "2025-05-21T18:07:26.459171486-05:00",
+            "size": 42520413916,
+            "digest": "a6eb4748fd2990ad2952b2335a95a7f952d1a06119a0aa6a2df6cd052a93a3fa",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "70.6B",
+              "quantization_level": "Q4_K_M"
+            }
+          },
+          {
+            "name": "codellama:7b",
+            "model": "codellama:7b",
+            "modified_at": "2025-05-12T03:05:55.687946805-05:00",
+            "size": 3825910662,
+            "digest": "8fdf8f752f6e80de33e82f381aba784c025982752cd1ae9377add66449d2225f",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": null,
+              "parameter_size": "7B",
+              "quantization_level": "Q4_0"
+            }
+          },
+          {
+            "name": "llama3.2:latest",
+            "model": "llama3.2:latest",
+            "modified_at": "2025-05-12T02:52:23.302719842-05:00",
+            "size": 2019393189,
+            "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "3.2B",
+              "quantization_level": "Q4_K_M"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "docker_health_tests": {
+    "redis": {
+      "service": "redis",
+      "docker_health": "healthy",
+      "container_name": "hackathon-redis-1"
+    },
+    "doc_store": {
+      "service": "doc_store",
+      "docker_health": "healthy",
+      "container_name": "hackathon-doc_store-1"
+    },
+    "orchestrator": {
+      "service": "orchestrator",
+      "docker_health": "starting",
+      "container_name": "hackathon-orchestrator-1"
+    },
+    "llm-gateway": {
+      "service": "llm-gateway",
+      "docker_health": "healthy",
+      "container_name": "hackathon-llm-gateway-1"
+    },
+    "mock-data-generator": {
+      "service": "mock-data-generator",
+      "docker_health": "healthy",
+      "container_name": "hackathon-mock-data-generator-1"
+    },
+    "summarizer-hub": {
+      "service": "summarizer-hub",
+      "docker_health": "healthy",
+      "container_name": "hackathon-summarizer-hub-1"
+    },
+    "bedrock-proxy": {
+      "service": "bedrock-proxy",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-bedrock-proxy-1"
+    },
+    "github-mcp": {
+      "service": "github-mcp",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-github-mcp-1"
+    },
+    "memory-agent": {
+      "service": "memory-agent",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-memory-agent-1"
+    },
+    "discovery-agent": {
+      "service": "discovery-agent",
+      "docker_health": "healthy",
+      "container_name": "hackathon-discovery-agent-1"
+    },
+    "source-agent": {
+      "service": "source-agent",
+      "docker_health": "healthy",
+      "container_name": "hackathon-source-agent-1"
+    },
+    "analysis-service": {
+      "service": "analysis-service",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-analysis-service-1"
+    },
+    "code-analyzer": {
+      "service": "code-analyzer",
+      "docker_health": "healthy",
+      "container_name": "hackathon-code-analyzer-1"
+    },
+    "secure-analyzer": {
+      "service": "secure-analyzer",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-secure-analyzer-1"
+    },
+    "log-collector": {
+      "service": "log-collector",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-log-collector-1"
+    },
+    "prompt_store": {
+      "service": "prompt_store",
+      "docker_health": "healthy",
+      "container_name": "hackathon-prompt_store-1"
+    },
+    "interpreter": {
+      "service": "interpreter",
+      "docker_health": "healthy",
+      "container_name": "hackathon-interpreter-1"
+    },
+    "architecture-digitizer": {
+      "service": "architecture-digitizer",
+      "docker_health": "healthy",
+      "container_name": "hackathon-architecture-digitizer-1"
+    },
+    "notification-service": {
+      "service": "notification-service",
+      "docker_health": "healthy",
+      "container_name": "hackathon-notification-service-1"
+    },
+    "frontend": {
+      "service": "frontend",
+      "docker_health": "healthy",
+      "container_name": "hackathon-frontend-1"
+    },
+    "ollama": {
+      "service": "ollama",
+      "docker_health": "unhealthy",
+      "container_name": "hackathon-ollama-1"
+    }
+  },
+  "functional_tests": {
+    "redis": {
+      "service": "redis",
+      "functional_test": "not_implemented"
+    },
+    "doc_store": {
+      "service": "doc_store",
+      "functional_test": "success",
+      "documents_count": 0,
+      "api_accessible": true
+    },
+    "orchestrator": {
+      "service": "orchestrator",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "llm-gateway": {
+      "service": "llm-gateway",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "mock-data-generator": {
+      "service": "mock-data-generator",
+      "functional_test": "not_implemented"
+    },
+    "summarizer-hub": {
+      "service": "summarizer-hub",
+      "functional_test": "not_implemented"
+    },
+    "bedrock-proxy": {
+      "service": "bedrock-proxy",
+      "functional_test": "not_implemented"
+    },
+    "github-mcp": {
+      "service": "github-mcp",
+      "functional_test": "not_implemented"
+    },
+    "memory-agent": {
+      "service": "memory-agent",
+      "functional_test": "not_implemented"
+    },
+    "discovery-agent": {
+      "service": "discovery-agent",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "source-agent": {
+      "service": "source-agent",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "analysis-service": {
+      "service": "analysis-service",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "code-analyzer": {
+      "service": "code-analyzer",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "secure-analyzer": {
+      "service": "secure-analyzer",
+      "functional_test": "not_implemented"
+    },
+    "log-collector": {
+      "service": "log-collector",
+      "functional_test": "not_implemented"
+    },
+    "prompt_store": {
+      "service": "prompt_store",
+      "functional_test": "not_implemented"
+    },
+    "interpreter": {
+      "service": "interpreter",
+      "functional_test": "not_implemented"
+    },
+    "architecture-digitizer": {
+      "service": "architecture-digitizer",
+      "functional_test": "not_implemented"
+    },
+    "notification-service": {
+      "service": "notification-service",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "frontend": {
+      "service": "frontend",
+      "functional_test": "failed",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "ollama": {
+      "service": "ollama",
+      "functional_test": "not_implemented"
+    }
+  },
+  "end_to_end_workflow": {
+    "workflow_name": "document_processing",
+    "steps": [
+      {
+        "step": "document_creation",
+        "status": "failed",
+        "details": {
+          "success": false,
+          "error": "HTTP Error 500: Internal Server Error"
+        }
+      }
+    ],
+    "overall_status": "failed",
+    "execution_time": 0.005582094192504883
+  },
+  "summary": {
+    "healthy_services_count": 18,
+    "unhealthy_services_count": 3,
+    "health_percentage": 85.71428571428571,
+    "critical_issues": [
+      "Services completely unreachable: redis, orchestrator, frontend",
+      "End-to-end workflow failed - ecosystem integration broken"
+    ],
+    "performance_issues": []
+  },
+  "recommendations": [
+    "Address critical connectivity issues immediately",
+    "Resolve health check discrepancies for: redis, bedrock-proxy, github-mcp, memory-agent, analysis-service, secure-analyzer, log-collector, frontend, ollama"
+  ],
+  "integration_tests": {
+    "redis": {
+      "service": "redis",
+      "integration_test": "not_implemented"
+    },
+    "doc_store": {
+      "service": "doc_store",
+      "integration_test": "success",
+      "dependencies_tested": [],
+      "integration_points": []
+    },
+    "orchestrator": {
+      "service": "orchestrator",
+      "integration_test": "not_implemented"
+    },
+    "llm-gateway": {
+      "service": "llm-gateway",
+      "integration_test": "not_implemented"
+    },
+    "mock-data-generator": {
+      "service": "mock-data-generator",
+      "integration_test": "not_implemented"
+    },
+    "summarizer-hub": {
+      "service": "summarizer-hub",
+      "integration_test": "not_implemented"
+    },
+    "bedrock-proxy": {
+      "service": "bedrock-proxy",
+      "integration_test": "not_implemented"
+    },
+    "github-mcp": {
+      "service": "github-mcp",
+      "integration_test": "not_implemented"
+    },
+    "memory-agent": {
+      "service": "memory-agent",
+      "integration_test": "not_implemented"
+    },
+    "discovery-agent": {
+      "service": "discovery-agent",
+      "integration_test": "not_implemented"
+    },
+    "source-agent": {
+      "service": "source-agent",
+      "integration_test": "success",
+      "doc_store_integration": true
+    },
+    "analysis-service": {
+      "service": "analysis-service",
+      "integration_test": "success",
+      "dependencies_tested": [
+        "doc_store"
+      ],
+      "data_flow_verified": false
+    },
+    "code-analyzer": {
+      "service": "code-analyzer",
+      "integration_test": "not_implemented"
+    },
+    "secure-analyzer": {
+      "service": "secure-analyzer",
+      "integration_test": "not_implemented"
+    },
+    "log-collector": {
+      "service": "log-collector",
+      "integration_test": "not_implemented"
+    },
+    "prompt_store": {
+      "service": "prompt_store",
+      "integration_test": "not_implemented"
+    },
+    "interpreter": {
+      "service": "interpreter",
+      "integration_test": "not_implemented"
+    },
+    "architecture-digitizer": {
+      "service": "architecture-digitizer",
+      "integration_test": "not_implemented"
+    },
+    "notification-service": {
+      "service": "notification-service",
+      "integration_test": "not_implemented"
+    },
+    "frontend": {
+      "service": "frontend",
+      "integration_test": "success",
+      "backend_services_accessible": [
+        "doc_store",
+        "llm-gateway"
+      ],
+      "api_endpoints_tested": [
+        "http://localhost:5087/health",
+        "http://localhost:5055/health"
+      ]
+    },
+    "ollama": {
+      "service": "ollama",
+      "integration_test": "not_implemented"
+    }
+  },
+  "load_tests": {
+    "redis": {
+      "service": "redis",
+      "load_test": "not_implemented"
+    },
+    "doc_store": {
+      "service": "doc_store",
+      "load_test": "success",
+      "requests_made": 10,
+      "successful_requests": 10,
+      "average_response_time": 0.004732537269592285,
+      "error_rate": 0.0
+    },
+    "orchestrator": {
+      "service": "orchestrator",
+      "load_test": "success",
+      "service_registry_calls": 8,
+      "successful_calls": 0,
+      "average_response_time": 0
+    },
+    "llm-gateway": {
+      "service": "llm-gateway",
+      "load_test": "success",
+      "concurrent_requests": 6,
+      "successful_requests": 0,
+      "average_response_time": 0
+    },
+    "mock-data-generator": {
+      "service": "mock-data-generator",
+      "load_test": "not_implemented"
+    },
+    "summarizer-hub": {
+      "service": "summarizer-hub",
+      "load_test": "not_implemented"
+    },
+    "bedrock-proxy": {
+      "service": "bedrock-proxy",
+      "load_test": "not_implemented"
+    },
+    "github-mcp": {
+      "service": "github-mcp",
+      "load_test": "not_implemented"
+    },
+    "memory-agent": {
+      "service": "memory-agent",
+      "load_test": "not_implemented"
+    },
+    "discovery-agent": {
+      "service": "discovery-agent",
+      "load_test": "not_implemented"
+    },
+    "source-agent": {
+      "service": "source-agent",
+      "load_test": "not_implemented"
+    },
+    "analysis-service": {
+      "service": "analysis-service",
+      "load_test": "not_implemented"
+    },
+    "code-analyzer": {
+      "service": "code-analyzer",
+      "load_test": "not_implemented"
+    },
+    "secure-analyzer": {
+      "service": "secure-analyzer",
+      "load_test": "not_implemented"
+    },
+    "log-collector": {
+      "service": "log-collector",
+      "load_test": "not_implemented"
+    },
+    "prompt_store": {
+      "service": "prompt_store",
+      "load_test": "not_implemented"
+    },
+    "interpreter": {
+      "service": "interpreter",
+      "load_test": "not_implemented"
+    },
+    "architecture-digitizer": {
+      "service": "architecture-digitizer",
+      "load_test": "not_implemented"
+    },
+    "notification-service": {
+      "service": "notification-service",
+      "load_test": "not_implemented"
+    },
+    "frontend": {
+      "service": "frontend",
+      "load_test": "not_implemented"
+    },
+    "ollama": {
+      "service": "ollama",
+      "load_test": "not_implemented"
+    }
+  }
+}

@@ -10,9 +10,9 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="frontend"
 LABEL version="1.0.0"
 LABEL description="Web UI dashboard and API aggregation service"
-LABEL port="5090"
-LABEL dependencies="redis,orchestrator,doc_store"
-LABEL profile="development"
+LABEL port="3000"
+LABEL dependencies="orchestrator"
+LABEL profile="core"
 
 # Set working directory
 WORKDIR /app
@@ -41,7 +41,7 @@ COPY config/ ./config/
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV SERVICE_NAME=frontend
-ENV SERVICE_PORT=5090
+ENV SERVICE_PORT=3000
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -50,12 +50,12 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5090/health || exit 1
+    CMD curl -f http://localhost:3000/health || exit 1
 
 # Expose port
-EXPOSE 5090
+EXPOSE 3000
 
 USER appuser
 
 # Start command - using module path for proper imports
-CMD ["python", "services/frontend/start.py"]
+CMD ["python", "-m", "services.frontend.start"]

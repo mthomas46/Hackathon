@@ -1,0 +1,875 @@
+{
+  "interpreter": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "interpreter",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5120",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "log-collector": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "log-collector",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5040",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "source-agent": {
+    "score": 100,
+    "variables_count": 6,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "source-agent",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5070",
+        "source": "port-registry"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "dockerfile"
+      },
+      {
+        "name": "DOC_STORE_URL",
+        "value": "http://doc_store:5010",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "frontend": {
+    "score": 100,
+    "variables_count": 6,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "frontend",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "3000",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REACT_APP_API_URL",
+        "value": "http://localhost:5099",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "notification-service": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "notification-service",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5020",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "redis": {
+    "score": 100,
+    "variables_count": 1,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "SERVICE_NAME",
+        "value": "redis",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "code-analyzer": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "code-analyzer",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5025",
+        "source": "port-registry"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "prompt_store": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "prompt_store",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5110",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "summarizer-hub": {
+    "score": 100,
+    "variables_count": 6,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "summarizer-hub",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5080",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "OLLAMA_HOST",
+        "value": "http://host.docker.internal:11434",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "llm-gateway": {
+    "score": 94,
+    "variables_count": 23,
+    "issues_count": 2,
+    "conflicts_count": 0,
+    "issues": [
+      {
+        "severity": "warning",
+        "category": "security",
+        "variable": "SENSITIVE_KEYWORDS",
+        "message": "Security-sensitive variable 'SENSITIVE_KEYWORDS' may contain sensitive data",
+        "suggestion": "Use secret management or environment variable references"
+      },
+      {
+        "severity": "warning",
+        "category": "security",
+        "variable": "RATE_LIMIT_TOKENS_PER_MINUTE",
+        "message": "Security-sensitive variable 'RATE_LIMIT_TOKENS_PER_MINUTE' may contain sensitive data",
+        "suggestion": "Use secret management or environment variable references"
+      }
+    ],
+    "variables": [
+      {
+        "name": "PYTHONUNBUFFERED",
+        "value": "1 \\",
+        "source": "dockerfile"
+      },
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "llm-gateway",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "OLLAMA_ENDPOINT",
+        "value": "http://ollama:11434",
+        "source": "port-registry"
+      },
+      {
+        "name": "OPENAI_API_KEY",
+        "value": "${OPENAI_API_KEY:-}",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ANTHROPIC_API_KEY",
+        "value": "${ANTHROPIC_API_KEY:-}",
+        "source": "docker-compose"
+      },
+      {
+        "name": "BEDROCK_ENDPOINT",
+        "value": "http://bedrock-proxy:5060/invoke",
+        "source": "docker-compose"
+      },
+      {
+        "name": "GROK_API_KEY",
+        "value": "${GROK_API_KEY:-}",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SENSITIVE_KEYWORDS",
+        "value": "password,secret,token,key,credential,confidential,internal",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SENSITIVITY_THRESHOLD",
+        "value": "0.7",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SECURE_ONLY_MODELS",
+        "value": "ollama,bedrock",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ALL_PROVIDERS",
+        "value": "bedrock,ollama,openai,anthropic,grok",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CACHE_MAX_SIZE",
+        "value": "1000",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CACHE_DEFAULT_TTL",
+        "value": "3600",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CACHE_CLEANUP_INTERVAL",
+        "value": "300",
+        "source": "docker-compose"
+      },
+      {
+        "name": "RATE_LIMIT_REQUESTS_PER_MINUTE",
+        "value": "60",
+        "source": "docker-compose"
+      },
+      {
+        "name": "RATE_LIMIT_REQUESTS_PER_HOUR",
+        "value": "1000",
+        "source": "docker-compose"
+      },
+      {
+        "name": "RATE_LIMIT_TOKENS_PER_MINUTE",
+        "value": "50000",
+        "source": "docker-compose"
+      },
+      {
+        "name": "RATE_LIMIT_BURST_LIMIT",
+        "value": "10",
+        "source": "docker-compose"
+      },
+      {
+        "name": "RATE_LIMIT_COOLDOWN_SECONDS",
+        "value": "60",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5055",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "secure-analyzer": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "secure-analyzer",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5100",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "cli": {
+    "score": 100,
+    "variables_count": 3,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "cli",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "architecture-digitizer": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "architecture-digitizer",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5022",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "analysis-service": {
+    "score": 100,
+    "variables_count": 9,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "analysis-service",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5020",
+        "source": "port-registry"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DDD_ARCHITECTURE",
+        "value": "true",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DDD_CONFIG_FILE",
+        "value": "config/ddd_config.yaml",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DOC_STORE_URL",
+        "value": "http://doc_store:5010",
+        "source": "port-registry"
+      },
+      {
+        "name": "LLM_GATEWAY_URL",
+        "value": "http://llm-gateway:5055",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "memory-agent": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "memory-agent",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5160",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "discovery-agent": {
+    "score": 100,
+    "variables_count": 6,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "discovery-agent",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5045",
+        "source": "port-registry"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ORCHESTRATOR_URL",
+        "value": "http://orchestrator:5099",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "github-mcp": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "github-mcp",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5030",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "mock-data-generator": {
+    "score": 100,
+    "variables_count": 7,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONUNBUFFERED",
+        "value": "1 \\",
+        "source": "dockerfile"
+      },
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "mock-data-generator",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "LLM_GATEWAY_URL",
+        "value": "http://llm-gateway:5055",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DOC_STORE_URL",
+        "value": "http://doc_store:5087",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "ollama": {
+    "score": 100,
+    "variables_count": 2,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "OLLAMA_HOST",
+        "value": "0.0.0.0",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "ollama",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "doc_store": {
+    "score": 100,
+    "variables_count": 7,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "doc_store",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5010",
+        "source": "port-registry"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DOCSTORE_PORT",
+        "value": "5010",
+        "source": "dockerfile"
+      },
+      {
+        "name": "REDIS_URL",
+        "value": "redis://redis:6379",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "orchestrator": {
+    "score": 100,
+    "variables_count": 6,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "orchestrator",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5099",
+        "source": "port-registry"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_URL",
+        "value": "redis://redis:6379",
+        "source": "port-registry"
+      }
+    ]
+  },
+  "bedrock-proxy": {
+    "score": 100,
+    "variables_count": 5,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "bedrock-proxy",
+        "source": "dockerfile"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5060",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "dockerfile"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  }
+}

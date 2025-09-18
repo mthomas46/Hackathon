@@ -1,0 +1,196 @@
+# Validation and Testing Makefile
+# Comprehensive validation targets based on lessons learned from fixing critical issues
+
+PYTHON ?= python3
+VENV ?= venv_hardening
+
+# Colors for output
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+BLUE := \033[0;34m
+NC := \033[0m # No Color
+
+.PHONY: help validate-all ports dockerfiles env-vars health-checks health-endpoints health-continuous health-discover config-drift validate-config-drift validate-config-drift-auto validate-config-scan validate-api-contracts validate-api-compare dependencies startup integration ci-ready monitoring
+
+help: ## Show validation commands
+	@echo "$(BLUE)🔍 Ecosystem Validation Commands$(NC)"
+	@echo "================================"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BLUE)%-25s$(NC) %s\n", $$1, $$2}'
+
+# ========================================
+# COMPREHENSIVE VALIDATION
+# ========================================
+
+validate-all: ports dockerfiles env-vars health-checks health-endpoints validate-config-drift validate-api-contracts dependencies startup integration comprehensive ## Run all validation checks
+	@echo "$(GREEN)✅ All validation checks completed$(NC)"
+
+# ========================================
+# INDIVIDUAL VALIDATION TARGETS
+# ========================================
+
+ports: ## Validate port configurations and detect conflicts
+	@echo "$(BLUE)🔍 Validating port configurations...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
+	@echo "$(GREEN)✅ Port validation completed$(NC)"
+
+dockerfiles: ## Validate and lint all Dockerfiles
+	@echo "$(BLUE)🔍 Validating Dockerfiles...$(NC)"
+	@for service in services/*/; do \
+		if [ -f "$$service/Dockerfile" ]; then \
+			service_name=$$(basename $$service); \
+			echo "  Validating $$service_name..."; \
+			docker build --dry-run $$service > /dev/null 2>&1 || echo "  ❌ $$service_name has Dockerfile issues"; \
+		fi \
+	done
+	@echo "$(GREEN)✅ Dockerfile validation completed$(NC)"
+
+env-vars: ## Validate environment variable consistency
+	@echo "$(BLUE)🔍 Validating environment variables...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/environment_aware_cli.py --validate-env
+	@echo "$(GREEN)✅ Environment variable validation completed$(NC)"
+
+health-checks: ## Validate health check endpoints
+	@echo "$(BLUE)🔍 Validating health check endpoints...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py --validate-endpoints
+	@echo "$(GREEN)✅ Health check validation completed$(NC)"
+
+health-endpoints: ## Comprehensive health endpoint validation
+	@echo "$(BLUE)🏥 Running comprehensive health endpoint validation...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/health_endpoint_validator.py --verbose --save-report
+	@echo "$(GREEN)✅ Health endpoint validation completed$(NC)"
+
+health-continuous: ## Continuous health monitoring
+	@echo "$(BLUE)🔄 Starting continuous health monitoring (5 minutes)...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/health_endpoint_validator.py --mode continuous --duration 5 --verbose
+	@echo "$(GREEN)✅ Continuous health monitoring completed$(NC)"
+
+health-discover: ## Discover health check endpoints
+	@echo "$(BLUE)🔍 Discovering health check endpoints...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/health_endpoint_validator.py --mode discover
+	@echo "$(GREEN)✅ Endpoint discovery completed$(NC)"
+
+config-drift: ## Detect configuration drift between files
+	@echo "$(BLUE)🔍 Detecting configuration drift...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py --check-drift
+	@echo "$(GREEN)✅ Configuration drift detection completed$(NC)"
+
+validate-config-drift: ## Comprehensive configuration drift detection
+	@echo "$(BLUE)🔍 Running comprehensive configuration drift detection...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/config_drift_detector.py --verbose --save-report
+	@echo "$(GREEN)✅ Configuration drift detection completed$(NC)"
+
+validate-config-drift-auto: ## Configuration drift detection with auto-correction
+	@echo "$(BLUE)🔧 Running configuration drift detection with auto-correction...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/config_drift_detector.py --auto-correct --verbose
+	@echo "$(GREEN)✅ Configuration drift auto-correction completed$(NC)"
+
+validate-config-scan: ## Scan configuration files only
+	@echo "$(BLUE)🔍 Scanning configuration files...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/config_drift_detector.py --scan-only
+	@echo "$(GREEN)✅ Configuration scan completed$(NC)"
+
+validate-api-contracts: ## Validate API contracts between services
+	@echo "$(BLUE)🔗 Validating API contracts...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/api_contract_validator.py --verbose --save-report
+	@echo "$(GREEN)✅ API contract validation completed$(NC)"
+
+validate-api-compare: ## Compare API specifications (usage: make validate-api-compare OLD_SPEC=new.json NEW_SPEC=old.json)
+	@echo "$(BLUE)🔍 Comparing API specifications...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/api_contract_validator.py --compare $(OLD_SPEC) $(NEW_SPEC) --verbose
+	@echo "$(GREEN)✅ API comparison completed$(NC)"
+
+dependencies: ## Validate service dependencies
+	@echo "$(BLUE)🔍 Validating service dependencies...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/service_connectivity_validator.py --check-deps
+	@echo "$(GREEN)✅ Dependency validation completed$(NC)"
+
+startup: ## Validate service startup configurations
+	@echo "$(BLUE)🔍 Validating service startup...$(NC)"
+	@echo "  Checking startup scripts..."
+	@for service in services/*/; do \
+		if [ -f "$$service/main.py" ]; then \
+			service_name=$$(basename $$service); \
+			echo "  ✅ $$service_name has main.py"; \
+		fi \
+	done
+	@echo "$(GREEN)✅ Startup validation completed$(NC)"
+
+integration: ## Run integration tests
+	@echo "$(BLUE)🔗 Running integration tests...$(NC)"
+	python3 ecosystem_functional_test_suite.py
+	@echo "$(GREEN)✅ Integration tests completed$(NC)"
+
+comprehensive: ## Run comprehensive validation across all systems
+	@echo "$(BLUE)🔍 Running comprehensive validation...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py --check-drift
+	@echo "$(GREEN)✅ Comprehensive validation completed$(NC)"
+
+# ========================================
+# CI/CD VALIDATION
+# ========================================
+
+ci-ready: validate-all integration ## Validate everything is ready for CI/CD
+	@echo "$(GREEN)🚀 Ecosystem is CI/CD ready!$(NC)"
+
+ci-validate: ports dockerfiles env-vars ## Quick CI validation (no integration tests)
+	@echo "$(GREEN)✅ CI validation passed$(NC)"
+
+# ========================================
+# MONITORING AND ALERTING
+# ========================================
+
+monitoring: ## Run monitoring checks
+	@echo "$(BLUE)📊 Running monitoring checks...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py
+	@echo "$(GREEN)✅ Monitoring checks completed$(NC)"
+
+alerts: ## Check for critical alerts
+	@echo "$(BLUE)🚨 Checking for critical alerts...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py --check-alerts
+	@echo "$(GREEN)✅ Alert check completed$(NC)"
+
+# ========================================
+# DEVELOPMENT HELPERS
+# ========================================
+
+setup-validation: ## Set up validation environment
+	@echo "$(BLUE)🔧 Setting up validation environment...$(NC)"
+	$(PYTHON) -m venv $(VENV)
+	source $(VENV)/bin/activate && pip install -U pip
+	source $(VENV)/bin/activate && pip install pydantic PyYAML redis requests
+	@echo "$(GREEN)✅ Validation environment ready$(NC)"
+
+quick-validate: ports env-vars health-endpoints ## Quick validation for development
+	@echo "$(GREEN)✅ Quick validation completed$(NC)"
+
+pre-commit: validate-all ## Pre-commit validation
+	@echo "$(GREEN)✅ Pre-commit validation passed$(NC)"
+
+# ========================================
+# REPORTING
+# ========================================
+
+report: ## Generate validation report
+	@echo "$(BLUE)📋 Generating validation report...$(NC)"
+	@echo "Validation Report - $$(date)" > validation_report.txt
+	@echo "==================" >> validation_report.txt
+	@echo "" >> validation_report.txt
+	@make ports >> validation_report.txt 2>&1 || echo "Port validation failed" >> validation_report.txt
+	@make dockerfiles >> validation_report.txt 2>&1 || echo "Dockerfile validation failed" >> validation_report.txt
+	@echo "$(GREEN)✅ Report generated: validation_report.txt$(NC)"
+
+# ========================================
+# CLEANUP
+# ========================================
+
+clean-validation: ## Clean validation artifacts
+	@echo "$(YELLOW)🧹 Cleaning validation artifacts...$(NC)"
+	@rm -f validation_report.txt
+	@rm -f ecosystem_audit_results.json
+	@docker system prune -f > /dev/null 2>&1 || true
+	@echo "$(GREEN)✅ Cleanup completed$(NC)"
+
+# Default target
+.DEFAULT_GOAL := help

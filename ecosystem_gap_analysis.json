@@ -1,0 +1,103 @@
+{
+  "analysis_timestamp": 1758212246.918999,
+  "total_issues_found": 8,
+  "issues_by_severity": {
+    "critical": 1,
+    "high": 5,
+    "medium": 2,
+    "low": 0
+  },
+  "issues_by_type": {
+    "connectivity": 1,
+    "networking_configuration": 1,
+    "monitoring_inconsistency": 1,
+    "network_error": 3,
+    "api_test_error": 1,
+    "workflow_failure": 1
+  },
+  "critical_issues": [
+    {
+      "service": "doc_store",
+      "issue_type": "connectivity",
+      "severity": "critical",
+      "description": "Cannot connect to doc_store API",
+      "evidence": "HTTP Error 500: Internal Server Error",
+      "recommended_fix": "Check service startup and port configuration"
+    }
+  ],
+  "high_issues": [
+    {
+      "service": "ecosystem_cli_executable",
+      "issue_type": "networking_configuration",
+      "severity": "high",
+      "description": "CLI tool using Docker internal hostnames instead of localhost ports",
+      "evidence": "CLI tool tries to connect to 'hackathon-*-1' hostnames which fail from host",
+      "recommended_fix": "Update CLI to detect environment and use appropriate URLs (localhost:port vs internal hostname)"
+    },
+    {
+      "service": "orchestrator",
+      "issue_type": "network_error",
+      "severity": "high",
+      "description": "Network error accessing Service registry endpoint",
+      "evidence": "HTTP Error 404: Not Found",
+      "recommended_fix": "Check network connectivity to orchestrator"
+    },
+    {
+      "service": "llm-gateway",
+      "issue_type": "network_error",
+      "severity": "high",
+      "description": "Network error accessing Provider status endpoint",
+      "evidence": "HTTP Error 404: Not Found",
+      "recommended_fix": "Check network connectivity to llm-gateway"
+    },
+    {
+      "service": "discovery-agent",
+      "issue_type": "network_error",
+      "severity": "high",
+      "description": "Network error accessing Service discovery endpoint",
+      "evidence": "HTTP Error 404: Not Found",
+      "recommended_fix": "Check network connectivity to discovery-agent"
+    },
+    {
+      "service": "integration_workflow",
+      "issue_type": "workflow_failure",
+      "severity": "high",
+      "description": "End-to-end integration workflow failed",
+      "evidence": "HTTP Error 500: Internal Server Error",
+      "recommended_fix": "Debug cross-service communication and data flow"
+    }
+  ],
+  "medium_issues": [
+    {
+      "service": "health_monitoring",
+      "issue_type": "monitoring_inconsistency",
+      "severity": "medium",
+      "description": "Health check script and Docker health status report different results",
+      "evidence": "Script reports 100% healthy, Docker shows multiple unhealthy services",
+      "recommended_fix": "Standardize health check methods and ensure they test the same endpoints"
+    },
+    {
+      "service": "analysis-service",
+      "issue_type": "api_test_error",
+      "severity": "medium",
+      "description": "Error testing Basic health endpoint",
+      "evidence": "[Errno 54] Connection reset by peer",
+      "recommended_fix": "Debug API testing for analysis-service"
+    }
+  ],
+  "low_issues": [],
+  "recommendations": [
+    "URGENT: Address critical issues immediately - ecosystem stability at risk",
+    "HIGH: Fix service connectivity issues to restore full functionality",
+    "MEDIUM: Resolve API validation and response format issues",
+    "MEDIUM: Standardize health check methods for accurate monitoring",
+    "LOW: Update CLI tools for proper environment detection and networking"
+  ],
+  "stability_assessment": {
+    "stability_level": "POOR",
+    "stability_score": 30,
+    "critical_issues_count": 1,
+    "blocking_issues_count": 6,
+    "production_ready": false
+  }
+}

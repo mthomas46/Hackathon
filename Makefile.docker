@@ -1,78 +1,74 @@
 # Docker Management Makefile
 # Includes standardized port management and service orchestration
 
-include scripts/docker/service-targets.mk
+PYTHON ?= python3
+VENV ?= venv_hardening
+
+# Colors for output
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+BLUE := \033[0;34m
+NC := \033[0m # No Color
 
 .PHONY: help validate-ports generate-configs docker-clean docker-reset
 
 # Default target
 help:
 	@echo "🐳 Docker Management Commands"
+	@echo "=============================="
 	@echo ""
-	@echo "📋 Configuration Management:"
-	@echo "  validate-ports     - Check for port conflicts and configuration issues"
-	@echo "  generate-configs   - Generate standardized configuration files"
-	@echo "  docker-config      - Validate docker-compose configuration"
-	@echo ""
-	@echo "🚀 Service Management:"
-	@echo "  start-all          - Start all services"
-	@echo "  start-core         - Start core infrastructure services"
-	@echo "  start-ai           - Start AI/ML services"
-	@echo "  start-analysis     - Start analysis services"
-	@echo "  start-agents       - Start agent services"
-	@echo "  start-utility      - Start utility services"
-	@echo ""
-	@echo "🔄 Service Operations:"
-	@echo "  restart-all        - Restart all services"
-	@echo "  stop-all           - Stop all services"
-	@echo "  logs-all           - Show logs for all services"
-	@echo "  status             - Show status of all services"
-	@echo ""
-	@echo "🧹 Maintenance:"
-	@echo "  docker-clean       - Clean up unused containers and images"
-	@echo "  docker-reset       - Reset entire Docker environment"
-	@echo "  health-check       - Check health of all services"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BLUE)%-25s$(NC) %s\n", $$1, $$2}'
 
 # Configuration Management
-validate-ports:
-	@echo "🔍 Validating port configurations..."
-	@chmod +x scripts/docker/validate-ports.sh
-	@scripts/docker/validate-ports.sh
+validate-ports: ## Check for port conflicts and configuration issues
+	@echo "$(BLUE)🔍 Validating port configurations...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
 
-generate-configs:
-	@echo "⚙️ Generating standardized configurations..."
-	@python3 scripts/docker/generate-compose.py
+generate-configs: ## Generate standardized configuration files
+	@echo "$(BLUE)⚙️ Generating standardized configurations...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
 
-docker-config:
-	@echo "✅ Validating Docker Compose configuration..."
+docker-config: ## Validate docker-compose configuration
+	@echo "$(BLUE)✅ Validating Docker Compose configuration...$(NC)"
 	@docker-compose -f docker-compose.dev.yml config --quiet
-	@echo "✅ Configuration is valid!"
+	@echo "$(GREEN)✅ Configuration is valid!$(NC)"
 
 # Service Management
-start-all: validate-ports
-	@echo "🚀 Starting all services..."
+start-all: validate-ports ## Start all services with validation
+	@echo "$(BLUE)🚀 Starting all services...$(NC)"
 	@docker-compose -f docker-compose.dev.yml --profile ai_services --profile development --profile production --profile core up -d
+	@echo "$(GREEN)✅ Services starting...$(NC)"
 
-stop-all:
-	@echo "🛑 Stopping all services..."
+start-core: ## Start core infrastructure services
+	@echo "$(BLUE)🏗️ Starting core services...$(NC)"
+	@docker-compose -f docker-compose.dev.yml --profile core up -d
+	@echo "$(GREEN)✅ Core services started$(NC)"
+
+start-ai: ## Start AI/ML services
+	@echo "$(BLUE)🤖 Starting AI services...$(NC)"
+	@docker-compose -f docker-compose.dev.yml --profile ai_services up -d
+	@echo "$(GREEN)✅ AI services started$(NC)"
+
+stop-all: ## Stop all services
+	@echo "$(BLUE)🛑 Stopping all services...$(NC)"
 	@docker-compose -f docker-compose.dev.yml down
+	@echo "$(GREEN)✅ Services stopped$(NC)"
 
-restart-all: stop-all start-all
+restart-all: stop-all start-all ## Restart all services
 
 # Monitoring and Status
-status:
-	@echo "📊 Service Status:"
+status: ## Show status of all services
+	@echo "$(BLUE)📊 Service Status$(NC)"
 	@docker ps --filter "name=hackathon" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -20
 
-logs-all:
-	@echo "📝 Service Logs:"
+logs-all: ## Show logs for all services
+	@echo "$(BLUE)📝 Service Logs$(NC)"
 	@docker-compose -f docker-compose.dev.yml logs --tail=50
 
-health-check:
-	@echo "🏥 Health Check Results:"
-	@echo ""
-	@chmod +x scripts/docker/health-check.sh
-	@scripts/docker/health-check.sh || true
+health-check: ## Check health of all services using unified monitoring
+	@echo "$(BLUE)🏥 Health Check Results$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py
 
 # Maintenance
 docker-clean:

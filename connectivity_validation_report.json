@@ -1,0 +1,210 @@
+{
+  "validation_timestamp": 1758217856.8261619,
+  "connectivity_score": 62.5,
+  "overall_status": "DEGRADED",
+  "dependency_validation": {
+    "dependency_validation": {
+      "doc_store": {
+        "service": "doc_store",
+        "required_dependencies": [
+          "redis"
+        ],
+        "dependency_status": {
+          "redis": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": true
+      },
+      "orchestrator": {
+        "service": "orchestrator",
+        "required_dependencies": [
+          "redis"
+        ],
+        "dependency_status": {
+          "redis": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": true
+      },
+      "llm-gateway": {
+        "service": "llm-gateway",
+        "required_dependencies": [
+          "ollama"
+        ],
+        "dependency_status": {
+          "ollama": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": false
+      },
+      "analysis-service": {
+        "service": "analysis-service",
+        "required_dependencies": [
+          "doc_store",
+          "llm-gateway"
+        ],
+        "dependency_status": {
+          "doc_store": true,
+          "llm-gateway": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": true
+      },
+      "discovery-agent": {
+        "service": "discovery-agent",
+        "required_dependencies": [
+          "orchestrator"
+        ],
+        "dependency_status": {
+          "orchestrator": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": true
+      },
+      "mock-data-generator": {
+        "service": "mock-data-generator",
+        "required_dependencies": [
+          "llm-gateway",
+          "doc_store"
+        ],
+        "dependency_status": {
+          "llm-gateway": true,
+          "doc_store": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": true
+      },
+      "summarizer-hub": {
+        "service": "summarizer-hub",
+        "required_dependencies": [
+          "llm-gateway"
+        ],
+        "dependency_status": {
+          "llm-gateway": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": true
+      },
+      "notification-service": {
+        "service": "notification-service",
+        "required_dependencies": [],
+        "dependency_status": {},
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": false
+      },
+      "prompt_store": {
+        "service": "prompt_store",
+        "required_dependencies": [
+          "doc_store"
+        ],
+        "dependency_status": {
+          "doc_store": true
+        },
+        "missing_dependencies": [],
+        "dependencies_met": true,
+        "critical": false
+      }
+    },
+    "critical_failures": [],
+    "total_dependencies": 9,
+    "healthy_dependencies": 9
+  },
+  "integration_testing": {
+    "integration_tests": {
+      "document_creation_workflow": {
+        "test_name": "document_creation_workflow",
+        "passed": false,
+        "error": "HTTP Error 500: Internal Server Error",
+        "execution_time": 0.0027887821197509766,
+        "url": "http://localhost:5087/api/v1/documents"
+      },
+      "document_analysis_workflow": {
+        "test_name": "document_analysis_workflow",
+        "passed": false,
+        "error": "[Errno 54] Connection reset by peer",
+        "execution_time": 0.0009479522705078125,
+        "url": "http://localhost:5080/api/v1/analysis/analyze"
+      },
+      "llm_provider_check": {
+        "test_name": "llm_provider_check",
+        "passed": false,
+        "error": "HTTP Error 404: Not Found",
+        "execution_time": 0.0013020038604736328,
+        "url": "http://localhost:5055/api/v1/providers"
+      },
+      "service_discovery_check": {
+        "test_name": "service_discovery_check",
+        "passed": false,
+        "error": "HTTP Error 404: Not Found",
+        "execution_time": 0.0015459060668945312,
+        "url": "http://localhost:5045/api/v1/discovery/services"
+      },
+      "orchestrator_services_check": {
+        "test_name": "orchestrator_services_check",
+        "passed": false,
+        "error": "HTTP Error 404: Not Found",
+        "execution_time": 0.0014910697937011719,
+        "url": "http://localhost:5099/api/v1/services"
+      },
+      "doc_store_to_analysis_integration": {
+        "test_name": "doc_store_to_analysis_integration",
+        "passed": false,
+        "error": "[Errno 54] Connection reset by peer",
+        "execution_time": 0.0007598400115966797,
+        "url": "http://localhost:5080/api/v1/analysis/capabilities"
+      }
+    },
+    "total_tests": 6,
+    "passed_tests": 0,
+    "failed_tests": [
+      "document_creation_workflow",
+      "document_analysis_workflow",
+      "llm_provider_check",
+      "service_discovery_check",
+      "orchestrator_services_check",
+      "doc_store_to_analysis_integration"
+    ]
+  },
+  "port_validation": {
+    "port_validation": {
+      "frontend": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
+      "notification-service": "0.0.0.0:5130->5020/tcp, [::]:5130->5020/tcp",
+      "code-analyzer": "0.0.0.0:5025->5025/tcp, :::5025->5025/tcp",
+      "doc_store": "0.0.0.0:5087->5010/tcp, [::]:5087->5010/tcp",
+      "discovery-agent": "0.0.0.0:5045->5045/tcp, :::5045->5045/tcp",
+      "summarizer-hub": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
+      "analysis-service": "0.0.0.0:5080->5020/tcp, [::]:5080->5020/tcp",
+      "github-mcp": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
+      "bedrock-proxy": "0.0.0.0:5060->7090/tcp, [::]:5060->7090/tcp",
+      "log-collector": "0.0.0.0:5040->5080/tcp, [::]:5040->5080/tcp",
+      "secure-analyzer": "0.0.0.0:5100->5070/tcp, [::]:5100->5070/tcp",
+      "memory-agent": "0.0.0.0:5090->5040/tcp, [::]:5090->5040/tcp",
+      "mock-data-generator": "0.0.0.0:5065->5065/tcp, :::5065->5065/tcp",
+      "redis": "0.0.0.0:6379->6379/tcp, :::6379->6379/tcp",
+      "llm-gateway": "0.0.0.0:5055->5055/tcp, :::5055->5055/tcp",
+      "ollama": "0.0.0.0:11434->11434/tcp, :::11434->11434/tcp",
+      "architecture-digitizer": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
+      "prompt_store": "0.0.0.0:5110->5110/tcp, :::5110->5110/tcp",
+      "interpreter": "0.0.0.0:5120->5120/tcp, :::5120->5120/tcp",
+      "cli": "",
+      "orchestrator": "0.0.0.0:5099->5099/tcp, :::5099->5099/tcp"
+    },
+    "port_conflicts": [],
+    "total_containers": 21,
+    "conflicts_found": 0
+  },
+  "critical_issues": [
+    "Integration tests failing: document_creation_workflow, document_analysis_workflow, llm_provider_check, service_discovery_check, orchestrator_services_check, doc_store_to_analysis_integration"
+  ],
+  "recommendations": [
+    "Fix API endpoints and response formats for failing integration tests"
+  ]
+}

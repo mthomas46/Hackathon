@@ -35,12 +35,13 @@ services:
 
   # Redis - In-memory data store and cache
   redis:
-    image: redis:7-alpine
+    build: ./services/redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    environment:
+      SERVICE_NAME: redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -135,7 +136,7 @@ services:
       - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-      - SERVICE_PORT=5080
+      - SERVICE_PORT=5020
       # DDD-specific environment variables
       - DDD_ARCHITECTURE=true
       - DDD_CONFIG_FILE=config/ddd_config.yaml
@@ -157,18 +158,15 @@ services:
 
   # Source Agent - Data ingestion from various sources
   source-agent:
+    container_name: hackathon-source-agent-1
     build:
       context: .
       dockerfile: services/source-agent/Dockerfile
-    environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
     ports:
-      - "5070:5070"
-    depends_on:
-      redis:
-        condition: service_healthy
+      - "5085:5070"
+    environment:
+      SERVICE_PORT: '5070'
+      DOC_STORE_URL: http://doc_store:5010
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
       interval: 30s
@@ -176,6 +174,9 @@ services:
       retries: 3
     profiles:
       - core
+      - development
+      - production
+    restart: unless-stopped
 
   # Frontend - Web interface
   frontend:
@@ -201,13 +202,14 @@ services:
 
   # Ollama - Local LLM inference engine
   ollama:
-    image: ollama/ollama:latest
+    build: ./services/ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
+      - SERVICE_NAME=ollama
     profiles:
       - ai_services
     restart: unless-stopped
@@ -277,6 +279,7 @@ services:
       - llm_gateway_cache:/app/cache
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=llm-gateway
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       # LLM Provider Configuration
@@ -324,6 +327,7 @@ services:
       dockerfile: services/mock-data-generator/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=mock-data-generator
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       - LLM_GATEWAY_URL=http://llm-gateway:5055
@@ -424,15 +428,19 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5020
     ports:
-      - "5020:5020"
+      - "5130:5020"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     profiles:
+      - core
+      - development
       - production
+    restart: unless-stopped
 
   # ============================================================================
   # UTILITY SERVICES
@@ -527,15 +535,16 @@ services:
       context: .
       dockerfile: services/code-analyzer/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+      SERVICE_PORT: '5025'
+      PYTHONPATH: '/app'
+      ENVIRONMENT: 'development'
     ports:
-      - "5050:5050"
+      - "5025:5025"
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5025/health"]
       interval: 30s
       timeout: 10s
       retries: 3

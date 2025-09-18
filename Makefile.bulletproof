@@ -22,16 +22,12 @@ help: ## Show this help message
 
 validate: ## Run comprehensive pre-flight validation
 	@echo "$(YELLOW)🔍 Running Pre-Flight Validation...$(NC)"
-	@./scripts/docker/pre-flight-check.sh
+	source $(VENV)/bin/activate && python3 scripts/hardening/production_readiness_validator.py
 
-lint-all: ## Lint all service Dockerfiles
-	@echo "$(YELLOW)🔍 Linting All Dockerfiles...$(NC)"
-	@for service in services/*/; do \
-		service_name=$$(basename $$service); \
-		echo "Linting: $$service_name"; \
-		./scripts/docker/dockerfile-linter.sh $$service || exit 1; \
-	done
-	@echo "$(GREEN)✅ All Dockerfiles validated$(NC)"
+lint-all: ## Lint all service Dockerfiles using standardization
+	@echo "$(YELLOW)🔍 Running Standardization Validation...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/hardening/docker_standardization.py
+	@echo "$(GREEN)✅ Standardization validation complete$(NC)"
 
 start: validate ## Standard startup with validation
 	@echo "$(BLUE)🚀 Starting with validation...$(NC)"
@@ -39,9 +35,11 @@ start: validate ## Standard startup with validation
 	@docker-compose -f $(COMPOSE_FILE) --profile ai_services --profile development --profile production --profile core up -d
 	@echo "$(GREEN)✅ Standard startup completed$(NC)"
 
-start-bulletproof: ## Bulletproof startup with full protection
+start-bulletproof: validate ## Bulletproof startup with full protection
 	@echo "$(BLUE)🛡️ Bulletproof Startup Initiated...$(NC)"
-	@./scripts/docker/bulletproof-startup.sh start
+	source $(VENV)/bin/activate && python3 scripts/hardening/production_readiness_validator.py
+	@docker-compose -f $(COMPOSE_FILE) --profile ai_services --profile development --profile production --profile core up -d
+	@echo "$(GREEN)✅ Bulletproof startup completed$(NC)"
 
 start-enhanced: validate ## Start with enhanced compose file and validation services
 	@echo "$(BLUE)🛡️ Starting Enhanced Ecosystem...$(NC)"
@@ -53,17 +51,15 @@ start-enhanced: validate ## Start with enhanced compose file and validation serv
 	@docker-compose -f $(ENHANCED_COMPOSE) --profile monitoring --profile healing up -d
 	@echo "$(GREEN)✅ Enhanced startup completed$(NC)"
 
-heal: ## Run self-healing operations
+heal: ## Run self-healing operations using connectivity validator
 	@echo "$(YELLOW)🔧 Running Self-Healing...$(NC)"
-	@./scripts/docker/bulletproof-startup.sh heal
+	source $(VENV)/bin/activate && python3 scripts/hardening/service_connectivity_validator.py
 
 check: ## Run comprehensive health check
 	@echo "$(BLUE)🧪 Running Health Check...$(NC)"
-	@./scripts/docker/bulletproof-startup.sh check
+	source $(VENV)/bin/activate && python3 scripts/safeguards/unified_health_monitor.py
 
-health: ## Run ecosystem health check
-	@echo "$(BLUE)🏥 Running Health Check...$(NC)"
-	@./scripts/docker/health-check.sh
+health: check ## Run ecosystem health check (alias for check)
 
 rollback: ## Emergency rollback
 	@echo "$(RED)🚨 Emergency Rollback...$(NC)"
@@ -81,10 +77,7 @@ status: ## Show ecosystem status
 	@echo "• Healthy Containers: $$(docker ps --filter 'name=hackathon' --format '{{.Status}}' | grep -c 'healthy' || echo '0')"
 	@echo "• Running Containers: $$(docker ps --filter 'name=hackathon' --format '{{.Status}}' | grep -c 'Up' || echo '0')"
 
-status-detailed: ## Detailed status with health checks
-	@echo "$(BLUE)📊 Detailed Ecosystem Status$(NC)"
-	@echo "============================="
-	@./scripts/docker/health-check.sh
+status-detailed: check ## Detailed status with health checks
 
 clean: ## Clean up containers, networks, and volumes
 	@echo "$(YELLOW)🧹 Cleaning Up...$(NC)"
