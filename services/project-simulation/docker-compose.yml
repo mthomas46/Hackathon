@@ -1,0 +1,341 @@
+# ============================================================================
+# Project Simulation Service - Docker Compose Configuration
+# ============================================================================
+# This docker-compose configuration provides complete orchestration for the
+# project-simulation service with ecosystem integration, monitoring, and scaling.
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Project Simulation Service
+  # ============================================================================
+  project-simulation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: hackathon-project-simulation
+    image: hackathon/project-simulation:latest
+
+    # Environment Configuration
+    environment:
+      - ENVIRONMENT=production
+      - SERVICE_NAME=project-simulation
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPATH=/app
+
+      # Service Discovery & Ecosystem Integration
+      - DOC_STORE_URL=http://hackathon-doc-store:5001
+      - MOCK_DATA_GENERATOR_URL=http://hackathon-mock-data-generator:5002
+      - ORCHESTRATOR_URL=http://hackathon-orchestrator:5003
+      - ANALYSIS_SERVICE_URL=http://hackathon-analysis-service:5004
+      - LLM_GATEWAY_URL=http://hackathon-llm-gateway:5005
+      - PROMPT_STORE_URL=http://hackathon-prompt-store:5006
+      - SUMMARIZER_HUB_URL=http://hackathon-summarizer-hub:5007
+      - NOTIFICATION_SERVICE_URL=http://hackathon-notification-service:5008
+      - SOURCE_AGENT_URL=http://hackathon-source-agent:5009
+      - CODE_ANALYZER_URL=http://hackathon-code-analyzer:5010
+      - LOG_COLLECTOR_URL=http://hackathon-log-collector:5011
+      - DISCOVERY_AGENT_URL=http://hackathon-discovery-agent:5012
+      - INTERPRETER_URL=http://hackathon-interpreter:5013
+      - REDIS_URL=redis://hackathon-redis:6379
+      - HEALTH_CHECK_INTERVAL=30s
+
+      # Database Configuration (PostgreSQL)
+      - DATABASE_URL=postgresql://simulation_user:simulation_pass@hackathon-postgres:5432/simulation_db
+      - DATABASE_POOL_SIZE=10
+      - DATABASE_MAX_OVERFLOW=20
+
+      # Monitoring & Observability
+      - PROMETHEUS_METRICS_PORT=9090
+      - HEALTH_CHECK_ENABLED=true
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # Security Configuration
+      - SECRET_KEY=${PROJECT_SIMULATION_SECRET_KEY:-change-this-in-production}
+      - ALLOWED_HOSTS=*
+      - CORS_ORIGINS=*
+
+      # Performance Tuning
+      - MAX_WORKERS=4
+      - WORKER_TIMEOUT=300
+      - MAX_REQUEST_SIZE=104857600  # 100MB
+
+    # Networking
+    ports:
+      - "5075:5075"
+    networks:
+      - hackathon-network
+
+    # Health Checks
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5075/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Resource Limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+    # Volumes for persistent data
+    volumes:
+      - project-simulation-logs:/app/logs
+      - project-simulation-data:/app/data
+
+    # Dependencies
+    depends_on:
+      hackathon-postgres:
+        condition: service_healthy
+      hackathon-redis:
+        condition: service_healthy
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Labels for container management
+    labels:
+      - "com.hackathon.service=project-simulation"
+      - "com.hackathon.version=1.0.0"
+      - "com.hackathon.maintainer=Hackathon Team"
+      - "com.hackathon.description=AI-powered project simulation service"
+      - "traefik.enable=true"
+      - "traefik.http.routers.project-simulation.rule=Host(`simulation.hackathon.local`)"
+      - "traefik.http.routers.project-simulation.entrypoints=websecure"
+      - "traefik.http.routers.project-simulation.tls.certresolver=letsencrypt"
+      - "traefik.http.services.project-simulation.loadbalancer.server.port=5075"
+
+  # ============================================================================
+  # Development Service (for local development)
+  # ============================================================================
+  project-simulation-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: hackathon-project-simulation-dev
+    profiles: ["development"]
+
+    environment:
+      - ENVIRONMENT=development
+      - SERVICE_NAME=project-simulation-dev
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+      # Development overrides
+      - LOG_LEVEL=DEBUG
+      - DEBUG=true
+      - RELOAD=true
+
+    ports:
+      - "5076:5075"  # Different port for development
+    networks:
+      - hackathon-network
+
+    volumes:
+      - .:/app
+      - /app/__pycache__  # Exclude cache
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5075/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # Testing Service (for CI/CD pipelines)
+  # ============================================================================
+  project-simulation-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: testing
+    container_name: hackathon-project-simulation-test
+    profiles: ["testing"]
+
+    environment:
+      - ENVIRONMENT=testing
+      - SERVICE_NAME=project-simulation-test
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+    networks:
+      - hackathon-network
+
+    volumes:
+      - .:/app
+      - project-simulation-test-results:/app/test-results
+
+    command: ["pytest", "--cov=.", "--cov-report=html:/app/test-results/coverage", "tests/"]
+
+  # ============================================================================
+  # Database Services
+  # ============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: hackathon-postgres
+    environment:
+      - POSTGRES_DB=simulation_db
+      - POSTGRES_USER=simulation_user
+      - POSTGRES_PASSWORD=simulation_pass
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    ports:
+      - "5432:5432"
+    networks:
+      - hackathon-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simulation_user -d simulation_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: hackathon-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - hackathon-network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # ============================================================================
+  # Monitoring & Observability
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hackathon-prometheus
+    profiles: ["monitoring"]
+    ports:
+      - "9090:9090"
+    networks:
+      - hackathon-network
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hackathon-grafana
+    profiles: ["monitoring"]
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    networks:
+      - hackathon-network
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    restart: unless-stopped
+
+  # ============================================================================
+  # Load Balancing & Reverse Proxy
+  # ============================================================================
+  traefik:
+    image: traefik:v2.10
+    container_name: hackathon-traefik
+    profiles: ["production"]
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@hackathon.local"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    networks:
+      - hackathon-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    restart: unless-stopped
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  hackathon-network:
+    driver: bridge
+    name: hackathon-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  traefik-letsencrypt:
+    driver: local
+  project-simulation-logs:
+    driver: local
+  project-simulation-data:
+    driver: local
+  project-simulation-test-results:
+    driver: local
+
+# ============================================================================
+# Configs
+# ============================================================================
+configs:
+  prometheus-config:
+    file: ./monitoring/prometheus.yml

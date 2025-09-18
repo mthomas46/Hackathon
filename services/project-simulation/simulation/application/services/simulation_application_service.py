@@ -9,6 +9,10 @@ from datetime import datetime
 
 from ...domain.services.project_simulation_service import ProjectSimulationService
 from ...infrastructure.logging import SimulationLogger
+from ...presentation.websockets.simulation_websocket import (
+    notify_simulation_progress,
+    notify_simulation_event
+)
 from ...domain.value_objects import SimulationType, SimulationStatus
 
 
@@ -52,6 +56,21 @@ class SimulationApplicationService:
                 correlation_id=correlation_id
             )
 
+            # Notify WebSocket clients about new simulation
+            try:
+                await notify_simulation_progress(simulation_id, {
+                    "progress_percentage": 0.0,
+                    "current_phase": "Initialization",
+                    "status": "created",
+                    "message": "Simulation created successfully"
+                })
+            except Exception as ws_error:
+                self._logger.warning(
+                    "Failed to send WebSocket notification for simulation creation",
+                    error=str(ws_error),
+                    simulation_id=simulation_id
+                )
+
             return {
                 "success": True,
                 "simulation_id": simulation_id,
@@ -94,6 +113,22 @@ class SimulationApplicationService:
                 duration=result.get("execution_time_seconds", 0),
                 correlation_id=correlation_id
             )
+
+            # Notify WebSocket clients about execution start
+            try:
+                await notify_simulation_progress(simulation_id, {
+                    "progress_percentage": 10.0,
+                    "current_phase": "Execution",
+                    "status": "running",
+                    "message": "Simulation execution started",
+                    "execution_time_seconds": result.get("execution_time_seconds", 0)
+                })
+            except Exception as ws_error:
+                self._logger.warning(
+                    "Failed to send WebSocket notification for simulation execution",
+                    error=str(ws_error),
+                    simulation_id=simulation_id
+                )
 
             return result
 
