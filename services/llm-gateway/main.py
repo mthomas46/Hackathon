@@ -36,16 +36,29 @@ from services.shared.metrics import increment_counter, record_histogram
 # ============================================================================
 # LLM GATEWAY MODULES - Specialized LLM management
 # ============================================================================
-from .modules.provider_router import ProviderRouter
-from .modules.security_filter import SecurityFilter
-from .modules.cache_manager import CacheManager
-from .modules.metrics_collector import MetricsCollector
-from .modules.rate_limiter import RateLimiter
-from .modules.service_integrations import ServiceIntegrations
-from .modules.models import (
-    LLMQuery, ChatMessage, EmbeddingRequest, ProviderInfo,
-    GatewayResponse, MetricsResponse, CacheRequest
-)
+try:
+    from .modules.provider_router import ProviderRouter
+    from .modules.security_filter import SecurityFilter
+    from .modules.cache_manager import CacheManager
+    from .modules.metrics_collector import MetricsCollector
+    from .modules.rate_limiter import RateLimiter
+    from .modules.service_integrations import ServiceIntegrations
+    from .modules.models import (
+        LLMQuery, ChatMessage, EmbeddingRequest, ProviderInfo,
+        GatewayResponse, MetricsResponse, CacheRequest
+    )
+except ImportError:
+    # Fallback for Docker/module execution
+    from services.llm_gateway.modules.provider_router import ProviderRouter
+    from services.llm_gateway.modules.security_filter import SecurityFilter
+    from services.llm_gateway.modules.cache_manager import CacheManager
+    from services.llm_gateway.modules.metrics_collector import MetricsCollector
+    from services.llm_gateway.modules.rate_limiter import RateLimiter
+    from services.llm_gateway.modules.service_integrations import ServiceIntegrations
+    from services.llm_gateway.modules.models import (
+        LLMQuery, ChatMessage, EmbeddingRequest, ProviderInfo,
+        GatewayResponse, MetricsResponse, CacheRequest
+    )
 
 # Service configuration
 SERVICE_NAME = "llm-gateway"
