@@ -27,7 +27,6 @@
 # - Environment variables override defaults
 # =============================================================================
 
-version: "3.9"
 
 services:
   # ============================================================================
@@ -136,11 +135,12 @@ services:
       - PYTHONPATH=/app
       - REDIS_HOST=redis
       - ENVIRONMENT=development
+      - SERVICE_PORT=5080
       # DDD-specific environment variables
       - DDD_ARCHITECTURE=true
       - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
-      - "5080:5080"
+      - "5080:5020"
     depends_on:
       redis:
         condition: service_healthy
@@ -257,8 +257,9 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5060
     ports:
-      - "5060:5060"
+      - "5060:7090"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5060/health"]
       interval: 30s
@@ -352,8 +353,9 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5030
     ports:
-      - "5030:5030"
+      - "5030:5072"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5030/health"]
       interval: 30s
@@ -376,7 +378,7 @@ services:
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
-      - "5090:5090"
+      - "5090:5040"
     depends_on:
       redis:
         condition: service_healthy
@@ -548,8 +550,9 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5100
     ports:
-      - "5100:5100"
+      - "5100:5070"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
       interval: 30s
@@ -566,8 +569,9 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - SERVICE_PORT=5040
     ports:
-      - "5040:5040"
+      - "5040:5080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
       interval: 30s

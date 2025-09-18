@@ -1,0 +1,62 @@
+# Docker Compose Template with Standardized Port Management
+# This template demonstrates how to use the centralized port configuration
+
+version: '3.8'
+
+# Template for a standardized service configuration
+x-service-template: &service-template
+  environment: &standard-env
+    - PYTHONPATH=/app
+    - ENVIRONMENT=${ENVIRONMENT:-development}
+    - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  networks:
+    - doc-ecosystem-dev
+  restart: unless-stopped
+  
+# Template for AI services with specific configurations  
+x-ai-service-template: &ai-service-template
+  <<: *service-template
+  environment:
+    <<: *standard-env
+    - REDIS_HOST=redis
+    - LLM_GATEWAY_URL=http://llm-gateway:5055
+    
+# Template for analysis services
+x-analysis-service-template: &analysis-service-template
+  <<: *service-template
+  environment:
+    <<: *standard-env
+    - REDIS_HOST=redis
+    - DOC_STORE_URL=http://doc_store:5010
+
+services:
+  # Example service using the template and centralized ports
+  example-service:
+    <<: *ai-service-template
+    build:
+      context: .
+      dockerfile: services/example-service/Dockerfile
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_PORT=5XXX  # This would be populated from service-ports.yaml
+      - ENVIRONMENT=development
+    ports:
+      - "5XXX:5XXX"  # External:Internal from service-ports.yaml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5XXX/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles:
+      - ai_services
+
+networks:
+  doc-ecosystem-dev:
+    driver: bridge
+    name: doc-ecosystem-dev
+
+# Include additional compose files for modular configuration
+# This allows you to override or extend configurations per environment
