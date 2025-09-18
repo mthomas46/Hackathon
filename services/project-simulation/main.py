@@ -63,6 +63,12 @@ from services.shared.utilities.error_handling import register_exception_handlers
 from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.logging import with_correlation_id, generate_correlation_id
 from simulation.infrastructure.health import create_simulation_health_endpoints
+from simulation.infrastructure.config import get_config, is_development
+from simulation.infrastructure.config.discovery import (
+    get_service_discovery,
+    start_service_discovery,
+    stop_service_discovery
+)
 from simulation.presentation.api.hateoas import (
     SimulationResource,
     RootResource,
@@ -100,24 +106,27 @@ class SimulationResponse(BaseModel):
     created_at: Optional[str] = None
 
 
-# Service configuration
-SERVICE_NAME = "project-simulation"
-SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5075
+# Load configuration
+config = get_config()
 
-# Rate limiting configuration (can be overridden by environment)
+# Service configuration from config
+SERVICE_NAME = config.service.name
+SERVICE_VERSION = config.service.version
+DEFAULT_PORT = config.service.port
+
+# Rate limiting configuration from config
 RATE_LIMITS = {
     "/api/v1/simulations": (10, 20),  # 10 requests per minute, burst 20
     "/api/v1/simulations/*/execute": (5, 10),  # 5 requests per minute, burst 10
 }
 
-# Initialize FastAPI application with enhanced configuration
+# Initialize FastAPI application with configuration-driven setup
 app = FastAPI(
-    title="Project Simulation Service",
+    title=f"{SERVICE_NAME.replace('-', ' ').title()} Service",
     description="AI-powered project simulation and ecosystem demonstration service with comprehensive shared infrastructure integration",
     version=SERVICE_VERSION,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if config.development.enable_swagger else None,
+    redoc_url="/redoc" if config.development.enable_redoc else None,
     openapi_url="/openapi.json",
     contact={
         "name": "Project Simulation Team",
@@ -127,24 +136,26 @@ app = FastAPI(
     license_info={
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT"
-    }
+    },
+    debug=config.service.debug
 )
 
 # Configure CORS with security best practices
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
-    max_age=3600  # Cache preflight for 1 hour
-)
+if config.development.enable_cors:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.development.cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],
+        max_age=3600  # Cache preflight for 1 hour
+    )
 
 # Setup shared middleware stack
 service_middleware = ServiceMiddleware(
     service_name=SERVICE_NAME,
     rate_limits=RATE_LIMITS,
-    enable_rate_limit=os.getenv("RATE_LIMIT_ENABLED", "false").lower() == "true"
+    enable_rate_limit=config.security.rate_limit_enabled
 )
 
 # Apply shared middleware
@@ -157,8 +168,9 @@ register_exception_handlers(app)
 # Setup common middleware (correlation ID, metrics, etc.)
 setup_common_middleware(app, SERVICE_NAME)
 
-# Self-registration with discovery service
-attach_self_register(app, SERVICE_NAME, SERVICE_VERSION)
+# Self-registration with discovery service (only in non-development)
+if not is_development():
+    attach_self_register(app, SERVICE_NAME, SERVICE_VERSION)
 
 # Get service instances
 container = get_simulation_container()
@@ -168,6 +180,45 @@ application_service = container.simulation_application_service
 # Create health endpoints using shared patterns
 health_endpoints = create_simulation_health_endpoints()
 register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
+
+# Service discovery instance
+service_discovery = get_service_discovery()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Application startup event handler."""
+    logger.info("Starting Project Simulation Service", version=SERVICE_VERSION, environment=config.service.environment)
+
+    # Start service discovery
+    if is_development():
+        await start_service_discovery()
+        logger.info("Service discovery started for development environment")
+
+    # Log service information
+    logger.info("Service configuration",
+               port=config.service.port,
+               debug=config.service.debug,
+               database=config.database.url)
+
+    # Log ecosystem service status
+    if is_development():
+        discovery_summary = service_discovery.get_service_discovery_summary()
+        logger.info("Ecosystem service discovery initialized",
+                   total_services=discovery_summary["total_services"])
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Application shutdown event handler."""
+    logger.info("Shutting down Project Simulation Service")
+
+    # Stop service discovery
+    if is_development():
+        await stop_service_discovery()
+        logger.info("Service discovery stopped")
+
+    logger.info("Shutdown completed")
 
 
 # Health endpoints using shared response models
