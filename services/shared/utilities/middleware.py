@@ -104,13 +104,13 @@ class ServiceMiddleware:
         self.enable_rate_limit = enable_rate_limit
 
     def get_middlewares(self):
-        """Get list of middleware classes for FastAPI app."""
+        """Get list of middleware instances for FastAPI app."""
         middlewares = [
-            RequestIdMiddleware,
-            RequestMetricsMiddleware
+            lambda app: RequestIdMiddleware(app),
+            lambda app: RequestMetricsMiddleware(app, self.service_name)
         ]
 
         if self.enable_rate_limit and self.rate_limits:
-            middlewares.append(RateLimitMiddleware)
+            middlewares.append(lambda app: RateLimitMiddleware(app, self.rate_limits))
 
         return middlewares

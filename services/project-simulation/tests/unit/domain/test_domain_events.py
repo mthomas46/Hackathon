@@ -547,6 +547,8 @@ class TestEventRegistry:
 
 
 # Helper class for testing
+from dataclasses import dataclass
+
 @dataclass(frozen=True)
 class TestEvent(DomainEvent):
     """Test event for domain event base class testing."""

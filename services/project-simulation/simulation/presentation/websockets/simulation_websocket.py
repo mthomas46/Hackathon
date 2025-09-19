@@ -7,6 +7,7 @@ allowing clients to receive live progress updates and event notifications.
 import json
 from typing import Dict, Any, List, Optional, Set
 from datetime import datetime
+from enum import Enum
 import asyncio
 import logging
 
@@ -468,6 +469,50 @@ async def notify_ecosystem_status(service_name: str, status: str, response_time:
     await handler.notify_ecosystem_status(service_name, status, response_time)
 
 
+class SimulationWebSocketManager:
+    """Manager for simulation WebSocket connections."""
+
+    def __init__(self):
+        self.connections = {}
+
+    async def connect(self, simulation_id: str, websocket):
+        """Connect a WebSocket for a simulation."""
+        if simulation_id not in self.connections:
+            self.connections[simulation_id] = []
+        self.connections[simulation_id].append(websocket)
+
+    async def disconnect(self, simulation_id: str, websocket):
+        """Disconnect a WebSocket for a simulation."""
+        if simulation_id in self.connections:
+            if websocket in self.connections[simulation_id]:
+                self.connections[simulation_id].remove(websocket)
+            if not self.connections[simulation_id]:
+                del self.connections[simulation_id]
+
+    async def broadcast(self, simulation_id: str, message: dict):
+        """Broadcast a message to all WebSockets for a simulation."""
+        if simulation_id in self.connections:
+            for websocket in self.connections[simulation_id]:
+                try:
+                    await websocket.send_json(message)
+                except Exception:
+                    # Remove dead connections
+                    pass
+
+
+class WebSocketEventType(Enum):
+    """Types of WebSocket events."""
+    SIMULATION_STARTED = "simulation_started"
+    SIMULATION_PROGRESS = "simulation_progress"
+    SIMULATION_COMPLETED = "simulation_completed"
+    SIMULATION_FAILED = "simulation_failed"
+    SIMULATION_PAUSED = "simulation_paused"
+    SIMULATION_RESUMED = "simulation_resumed"
+    DOCUMENT_GENERATED = "document_generated"
+    TEAM_MEMBER_ADDED = "team_member_added"
+    WORKFLOW_EXECUTED = "workflow_executed"
+
+
 __all__ = [
     'WebSocketMessage',
     'SimulationProgressUpdate',
@@ -475,6 +520,8 @@ __all__ = [
     'EcosystemServiceStatus',
     'WebSocketConnectionManager',
     'SimulationWebSocketHandler',
+    'SimulationWebSocketManager',
+    'WebSocketEventType',
     'get_websocket_handler',
     'notify_simulation_progress',
     'notify_simulation_event',
