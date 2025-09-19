@@ -10,6 +10,9 @@ import time
 import os
 import httpx
 import uuid
+import json
+import base64
+import re
 from datetime import datetime, timedelta
 
 # Service configuration
@@ -21,6 +24,12 @@ DEFAULT_PORT = 5160
 # Environment configuration
 LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Jira configuration
+JIRA_BASE_URL = os.getenv("JIRA_BASE_URL", "https://your-domain.atlassian.net")
+JIRA_USERNAME = os.getenv("JIRA_USERNAME", "")
+JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN", "")
+JIRA_DEFAULT_PROJECT = os.getenv("JIRA_DEFAULT_PROJECT", "DOC")
 
 app = FastAPI(
     title=SERVICE_TITLE,
@@ -86,11 +95,33 @@ class RecommendationType(str):
     OUTDATED = "outdated"
     QUALITY = "quality"
 
+
+class JiraTicketRequest(BaseModel):
+    """Request model for creating Jira tickets from recommendations."""
+    recommendations: List[Dict[str, Any]]
+    project_key: str
+    issue_type: str = JiraIssueType.TASK
+    assignee: Optional[str] = None
+    labels: List[str] = []
+    components: List[str] = []
+    custom_fields: Dict[str, Any] = {}
+
+class JiraTicketResponse(BaseModel):
+    """Response model for Jira ticket creation."""
+    success: bool
+    tickets_created: List[Dict[str, Any]] = []
+    tickets_failed: List[Dict[str, Any]] = []
+    total_created: int
+    total_failed: int
+    jira_project: str
+
 class RecommendationRequest(BaseModel):
     """Request model for document recommendations."""
     documents: List[Dict[str, Any]]
     recommendation_types: Optional[List[str]] = None  # consolidation, duplicate, outdated, quality
     confidence_threshold: float = 0.4
+    include_jira_suggestions: bool = False
+    timeline: Optional[Dict[str, Any]] = None
 
     @field_validator('documents')
     @classmethod
@@ -113,6 +144,11 @@ class RecommendationResponse(BaseModel):
     processing_time: float
     metadata: Dict[str, Any] = {}
     error: str = ""
+    suggested_jira_tickets: List[Dict[str, Any]] = []
+    drift_analysis: Dict[str, Any] = {}
+    alignment_analysis: Dict[str, Any] = {}
+    inconclusive_analysis: Dict[str, Any] = {}
+    timeline_analysis: Dict[str, Any] = {}
 
 class SimpleSummarizer:
     """Core summarization logic."""
@@ -315,7 +351,7 @@ class SimpleSummarizer:
             "review_text": "Automated review completed with basic analysis"
         }
 
-    async def generate_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: List[str] = None, confidence_threshold: float = 0.4) -> Dict[str, Any]:
+    async def generate_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: List[str] = None, confidence_threshold: float = 0.4, include_jira_suggestions: bool = False, timeline: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Generate comprehensive document recommendations."""
         start_time = time.time()
 
@@ -350,7 +386,7 @@ class SimpleSummarizer:
 
         processing_time = time.time() - start_time
 
-        return {
+        result = {
             "recommendations": all_recommendations,
             "total_documents": len(documents),
             "recommendations_count": len(all_recommendations),
@@ -358,6 +394,30 @@ class SimpleSummarizer:
             "recommendation_types": recommendation_types,
             "confidence_threshold": confidence_threshold
         }
+
+        # Generate Jira ticket suggestions if requested
+        if include_jira_suggestions and all_recommendations:
+            jira_suggestions = self._generate_jira_ticket_suggestions(all_recommendations, documents)
+            result["suggested_jira_tickets"] = jira_suggestions
+
+        # Add drift detection and alerts
+        drift_analysis = self._detect_drift_and_alerts(documents, all_recommendations)
+        result["drift_analysis"] = drift_analysis
+
+        # Add documentation alignment analysis
+        alignment_analysis = self._check_documentation_alignment(documents)
+        result["alignment_analysis"] = alignment_analysis
+
+        # Add inconclusive recommendation handling
+        inconclusive_handling = self._handle_inconclusive_recommendations(documents, all_recommendations, confidence_threshold)
+        result["inconclusive_analysis"] = inconclusive_handling
+
+        # Add timeline analysis if timeline is provided
+        if timeline:
+            timeline_analysis = self._analyze_timeline_and_documents(documents, timeline)
+            result["timeline_analysis"] = timeline_analysis
+
+        return result
 
     async def _generate_consolidation_recommendations(self, documents: List[Dict[str, Any]], confidence_threshold: float) -> List[Dict[str, Any]]:
         """Generate consolidation recommendations."""
@@ -964,8 +1024,901 @@ class SimpleSummarizer:
 
         return None
 
-# Initialize summarizer
+class JiraClient:
+    """Jira API client for creating and managing tickets."""
+
+    def __init__(self, base_url: str = None, username: str = None, api_token: str = None):
+        self.base_url = base_url or JIRA_BASE_URL
+        self.username = username or JIRA_USERNAME
+        self.api_token = api_token or JIRA_API_TOKEN
+        self.auth_header = self._create_auth_header()
+
+    def _create_auth_header(self) -> str:
+        """Create Basic Auth header for Jira API."""
+        if not self.username or not self.api_token:
+            return ""
+
+        credentials = f"{self.username}:{self.api_token}"
+        encoded_credentials = base64.b64encode(credentials.encode()).decode()
+        return f"Basic {encoded_credentials}"
+
+    def is_configured(self) -> bool:
+        """Check if Jira client is properly configured."""
+        return bool(self.base_url and self.username and self.api_token and self.auth_header)
+
+    async def create_issue(self, project_key: str, summary: str, description: str,
+                          issue_type: str = JiraIssueType.TASK,
+                          priority: str = JiraPriority.MEDIUM,
+                          assignee: str = None,
+                          labels: List[str] = None,
+                          components: List[str] = None,
+                          custom_fields: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Create a Jira issue."""
+        if not self.is_configured():
+            raise HTTPException(status_code=500, detail="Jira client not properly configured")
+
+        url = f"{self.base_url}/rest/api/2/issue"
+
+        # Build issue payload
+        issue_data = {
+            "fields": {
+                "project": {"key": project_key},
+                "summary": summary,
+                "description": description,
+                "issuetype": {"name": issue_type},
+                "priority": {"name": priority}
+            }
+        }
+
+        # Add optional fields
+        if assignee:
+            issue_data["fields"]["assignee"] = {"name": assignee}
+
+        if labels:
+            issue_data["fields"]["labels"] = labels
+
+        if components:
+            issue_data["fields"]["components"] = [{"name": comp} for comp in components]
+
+        if custom_fields:
+            issue_data["fields"].update(custom_fields)
+
+        headers = {
+            "Authorization": self.auth_header,
+            "Content-Type": "application/json"
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=issue_data, headers=headers)
+
+                if response.status_code == 201:
+                    issue_data = response.json()
+                    return {
+                        "success": True,
+                        "issue_key": issue_data["key"],
+                        "issue_id": issue_data["id"],
+                        "self": issue_data["self"]
+                    }
+                else:
+                    error_detail = response.text
+                    try:
+                        error_json = response.json()
+                        error_detail = error_json.get("errors", {}).get("summary", [error_detail])[0]
+                    except:
+                        pass
+
+                    return {
+                        "success": False,
+                        "error": f"Jira API error: {error_detail}",
+                        "status_code": response.status_code
+                    }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Failed to create Jira issue: {str(e)}"
+            }
+
+    async def get_project(self, project_key: str) -> Dict[str, Any]:
+        """Get Jira project details."""
+        if not self.is_configured():
+            return {"success": False, "error": "Jira client not configured"}
+
+        url = f"{self.base_url}/rest/api/2/project/{project_key}"
+        headers = {"Authorization": self.auth_header}
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url, headers=headers)
+
+                if response.status_code == 200:
+                    project_data = response.json()
+                    return {
+                        "success": True,
+                        "project": {
+                            "key": project_data["key"],
+                            "name": project_data["name"],
+                            "id": project_data["id"]
+                        }
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Project not found: {response.status_code}"
+                    }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Failed to get project: {str(e)}"
+            }
+
+    def map_recommendation_to_jira(self, recommendation: Dict[str, Any]) -> Dict[str, Any]:
+        """Map a recommendation to Jira ticket parameters."""
+        rec_type = recommendation.get("type", "general")
+        priority = recommendation.get("priority", "medium")
+
+        # Map recommendation type to issue type
+        issue_type_map = {
+            "consolidation": JiraIssueType.TASK,
+            "duplicate": JiraIssueType.TASK,
+            "outdated": JiraIssueType.TASK,
+            "quality": JiraIssueType.BUG
+        }
+
+        # Map priority
+        priority_map = {
+            "critical": JiraPriority.HIGHEST,
+            "high": JiraPriority.HIGH,
+            "medium": JiraPriority.MEDIUM,
+            "low": JiraPriority.LOW
+        }
+
+        # Create summary based on recommendation type
+        summary_map = {
+            "consolidation": "📋 Consolidate Similar Documentation",
+            "duplicate": "🔄 Remove Duplicate Documentation",
+            "outdated": "⏰ Update Outdated Documentation",
+            "quality": "✨ Improve Documentation Quality"
+        }
+
+        return {
+            "issue_type": issue_type_map.get(rec_type, JiraIssueType.TASK),
+            "priority": priority_map.get(priority, JiraPriority.MEDIUM),
+            "summary_prefix": summary_map.get(rec_type, "📝 Documentation Task"),
+            "labels": ["documentation", rec_type, f"priority-{priority}"]
+        }
+
+    def _generate_jira_ticket_suggestions(self, recommendations: List[Dict[str, Any]], documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Generate suggested Jira tickets based on recommendations."""
+        suggested_tickets = []
+
+        # Analyze recommendations to determine what types of tickets to suggest
+        rec_types = {}
+        priorities = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+        total_recommendations = len(recommendations)
+
+        for rec in recommendations:
+            rec_type = rec.get("type", "general")
+            priority = rec.get("priority", "medium")
+
+            rec_types[rec_type] = rec_types.get(rec_type, 0) + 1
+            priorities[priority] += 1
+
+        # High-priority ticket for critical issues
+        if priorities["critical"] > 0 or priorities["high"] > 0:
+            suggested_tickets.append({
+                "priority": "Critical" if priorities["critical"] > 0 else "High",
+                "issue_type": "Task",
+                "summary": f"🔴 CRITICAL: Address Documentation Issues ({total_recommendations} recommendations)",
+                "description": f"""**Urgent Documentation Issues Identified**
+
+**Analysis Summary:**
+- Total Recommendations: {total_recommendations}
+- Critical Issues: {priorities['critical']}
+- High Priority Issues: {priorities['high']}
+- Documents Analyzed: {len(documents)}
+
+**Key Issues:**
+{chr(10).join([f"- {count} {rec_type} recommendations" for rec_type, count in rec_types.items()])}
+
+**Immediate Actions Required:**
+1. Review all critical and high-priority recommendations
+2. Assess impact on user experience and system functionality
+3. Prioritize fixes based on business impact
+4. Schedule stakeholder review and approval
+5. Allocate resources for urgent documentation improvements
+
+**Success Criteria:**
+- All critical issues resolved within 48 hours
+- High-priority issues addressed within 1 week
+- Documentation quality improved by minimum 20%
+- Stakeholder sign-off obtained
+
+**Labels:** documentation, critical, urgent, quality-improvement
+**Components:** Technical Writing, Documentation
+**Assignee:** Senior Technical Writer
+**Epic:** Documentation Quality Initiative""",
+                "story_points": 13,
+                "epic_link": "Documentation Quality Initiative"
+            })
+
+        # Documentation consolidation ticket
+        consolidation_count = rec_types.get("consolidation", 0)
+        duplicate_count = rec_types.get("duplicate", 0)
+        if consolidation_count > 2 or duplicate_count > 2:
+            suggested_tickets.append({
+                "priority": "High",
+                "issue_type": "Task",
+                "summary": "📋 Documentation Consolidation & Cleanup Initiative",
+                "description": f"""**Documentation Consolidation Required**
+
+**Consolidation Analysis:**
+- Consolidation Opportunities: {consolidation_count}
+- Duplicate Content Issues: {duplicate_count}
+- Total Documents: {len(documents)}
+
+**Objectives:**
+1. **Identify Redundancy:** Locate duplicate and overlapping content across documents
+2. **Content Consolidation:** Merge similar information into comprehensive guides
+3. **Navigation Improvement:** Enhance cross-references and linking between documents
+4. **Content Audit:** Remove outdated or redundant information
+
+**Implementation Plan:**
+- Phase 1: Content analysis and duplicate identification (1-2 weeks)
+- Phase 2: Consolidation planning and stakeholder alignment (1 week)
+- Phase 3: Content consolidation and updates (3-4 weeks)
+- Phase 4: Navigation improvements and validation (1-2 weeks)
+
+**Success Metrics:**
+- Reduce documentation redundancy by 30%
+- Improve user navigation efficiency by 40%
+- Consolidate at least {min(consolidation_count + duplicate_count, 5)} document sections
+- Maintain or improve content freshness scores
+
+**Related Recommendations:**
+{chr(10).join([f"- {rec.get('description', '')[:100]}..." for rec in recommendations if rec.get('type') in ['consolidation', 'duplicate']][:3])}
+
+**Labels:** documentation, consolidation, cleanup, maintenance
+**Components:** Technical Writing, Information Architecture
+**Assignee:** Documentation Architect
+**Epic:** Documentation Quality Initiative""",
+                "story_points": 21,
+                "epic_link": "Documentation Quality Initiative"
+            })
+
+        # Quality improvement ticket
+        quality_count = rec_types.get("quality", 0)
+        if quality_count > 3 or priorities["medium"] > 5:
+            suggested_tickets.append({
+                "priority": "Medium",
+                "issue_type": "Task",
+                "summary": "✨ Documentation Quality Enhancement Program",
+                "description": f"""**Documentation Quality Improvement Initiative**
+
+**Quality Analysis Results:**
+- Quality Recommendations: {quality_count}
+- Medium Priority Issues: {priorities['medium']}
+- Documents Requiring Attention: {len([r for r in recommendations if r.get('priority') in ['medium', 'high']])}
+
+**Quality Dimensions to Address:**
+1. **Content Clarity:** Improve readability and comprehension
+2. **Technical Accuracy:** Ensure all technical information is correct and current
+3. **Structure & Organization:** Enhance document navigation and flow
+4. **Completeness:** Fill identified content gaps
+5. **Consistency:** Standardize formatting, terminology, and style
+
+**Implementation Strategy:**
+- **Week 1-2:** Quality assessment and priority matrix creation
+- **Week 3-6:** High-impact improvements (clarity, structure, consistency)
+- **Week 7-10:** Technical accuracy validation and updates
+- **Week 11-12:** Completeness review and gap filling
+
+**Quality Gates:**
+- Achieve 80% quality score across all documents
+- Reduce readability issues by 60%
+- Improve technical accuracy by 25%
+- Standardize formatting across 100% of documents
+
+**Training & Support:**
+- Technical writing best practices workshop
+- Quality assessment tools training
+- Style guide development and adoption
+- Peer review process implementation
+
+**Success Metrics:**
+- Average documentation quality score > 0.8
+- User satisfaction with documentation > 4.2/5
+- Reduction in support tickets related to documentation by 30%
+- Time to find information reduced by 40%
+
+**Related Quality Issues:**
+{chr(10).join([f"- {rec.get('description', '')[:100]}..." for rec in recommendations if rec.get('type') == 'quality'][:3])}
+
+**Labels:** documentation, quality, enhancement, training
+**Components:** Technical Writing, Quality Assurance
+**Assignee:** Quality Assurance Lead
+**Epic:** Documentation Quality Initiative""",
+                "story_points": 34,
+                "epic_link": "Documentation Quality Initiative"
+            })
+
+        # Outdated content management ticket
+        outdated_count = rec_types.get("outdated", 0)
+        if outdated_count > 2:
+            suggested_tickets.append({
+                "priority": "Medium",
+                "issue_type": "Task",
+                "summary": "⏰ Outdated Documentation Review & Update Program",
+                "description": f"""**Outdated Documentation Management Initiative**
+
+**Outdated Content Analysis:**
+- Outdated Documents Identified: {outdated_count}
+- Documents Requiring Updates: {len([r for r in recommendations if r.get('type') == 'outdated'])}
+- Total Document Inventory: {len(documents)}
+
+**Objectives:**
+1. **Freshness Assessment:** Evaluate all documents for currency and relevance
+2. **Update Planning:** Prioritize updates based on business impact and usage
+3. **Content Refresh:** Update technical information, examples, and references
+4. **Maintenance Process:** Establish ongoing freshness monitoring
+
+**Implementation Approach:**
+- **Phase 1:** Content freshness audit and impact assessment (2 weeks)
+- **Phase 2:** Priority matrix creation and update planning (1 week)
+- **Phase 3:** Content updates and technical validation (4-6 weeks)
+- **Phase 4:** Review process and stakeholder approval (2 weeks)
+
+**Update Categories:**
+- **Critical Updates:** Security, API changes, breaking changes
+- **Important Updates:** Feature changes, best practices, examples
+- **Minor Updates:** Formatting, links, references, style
+
+**Success Criteria:**
+- All documents updated within acceptable freshness windows
+- Technical accuracy maintained at 95%+
+- User feedback on documentation freshness > 4.0/5
+- Automated freshness monitoring implemented
+
+**Maintenance Strategy:**
+- Quarterly freshness reviews for high-traffic documents
+- Monthly reviews for medium-traffic content
+- Automated alerts for documents approaching freshness thresholds
+- Integration with product release cycle
+
+**Related Outdated Content:**
+{chr(10).join([f"- {rec.get('description', '')[:100]}..." for rec in recommendations if rec.get('type') == 'outdated'][:3])}
+
+**Labels:** documentation, outdated, maintenance, updates
+**Components:** Technical Writing, Product Management
+**Assignee:** Content Maintenance Lead
+**Epic:** Documentation Quality Initiative""",
+                "story_points": 21,
+                "epic_link": "Documentation Quality Initiative"
+            })
+
+        # Sort tickets by priority
+        priority_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+        suggested_tickets.sort(key=lambda x: priority_order.get(x["priority"], 4))
+
+        return suggested_tickets
+
+    def _detect_drift_and_alerts(self, documents: List[Dict[str, Any]], recommendations: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Detect documentation and API drift and generate alerts."""
+        drift_alerts = []
+        api_drift_issues = []
+        documentation_drift_issues = []
+
+        # Analyze documents for drift indicators
+        for doc in documents:
+            content = doc.get("content", "")
+            title = doc.get("title", "")
+            last_updated = doc.get("last_updated", doc.get("dateUpdated"))
+
+            # API drift detection
+            if content:
+                # Check for outdated API references
+                api_patterns = [
+                    r"api/v\d+",  # API version patterns
+                    r"endpoint.*deprecated",  # Deprecated endpoint mentions
+                    r"breaking.*change",  # Breaking change references
+                    r"migration.*required",  # Migration requirements
+                ]
+
+                for pattern in api_patterns:
+                    if re.search(pattern, content, re.IGNORECASE):
+                        api_drift_issues.append({
+                            "document_id": doc.get("id", title),
+                            "document_title": title,
+                            "drift_type": "api_reference",
+                            "pattern": pattern,
+                            "severity": "medium",
+                            "recommendation": "Review API references for currency and update if necessary"
+                        })
+
+                # Check for version mismatches
+                version_refs = re.findall(r"v\d+\.\d+", content)
+                if len(set(version_refs)) > 2:  # Multiple different versions
+                    api_drift_issues.append({
+                        "document_id": doc.get("id", title),
+                        "document_title": title,
+                        "drift_type": "version_conflict",
+                        "versions_found": list(set(version_refs)),
+                        "severity": "high",
+                        "recommendation": "Consolidate version references to ensure consistency"
+                    })
+
+            # Documentation drift detection
+            if last_updated:
+                try:
+                    # Parse last updated date
+                    if isinstance(last_updated, str):
+                        if "T" in last_updated:
+                            last_updated_date = datetime.fromisoformat(last_updated.replace("Z", "+00:00"))
+                        else:
+                            last_updated_date = datetime.strptime(last_updated, "%Y-%m-%d")
+                    else:
+                        last_updated_date = last_updated
+
+                    days_since_update = (datetime.now() - last_updated_date.replace(tzinfo=None)).days
+
+                    if days_since_update > 365:  # Over a year old
+                        documentation_drift_issues.append({
+                            "document_id": doc.get("id", title),
+                            "document_title": title,
+                            "drift_type": "outdated_content",
+                            "days_since_update": days_since_update,
+                            "severity": "high" if days_since_update > 730 else "medium",
+                            "recommendation": "Review and update documentation content for currency"
+                        })
+                    elif days_since_update > 180:  # Over 6 months old
+                        documentation_drift_issues.append({
+                            "document_id": doc.get("id", title),
+                            "document_title": title,
+                            "drift_type": "aging_content",
+                            "days_since_update": days_since_update,
+                            "severity": "low",
+                            "recommendation": "Consider updating documentation for best practices and current standards"
+                        })
+
+                except (ValueError, AttributeError) as e:
+                    documentation_drift_issues.append({
+                        "document_id": doc.get("id", title),
+                        "document_title": title,
+                        "drift_type": "date_parsing_error",
+                        "error": str(e),
+                        "severity": "low",
+                        "recommendation": "Fix date format in document metadata"
+                    })
+
+        # Combine all drift alerts
+        drift_alerts.extend(api_drift_issues)
+        drift_alerts.extend(documentation_drift_issues)
+
+        # Generate summary statistics
+        severity_counts = {"high": 0, "medium": 0, "low": 0}
+        drift_types = {}
+
+        for alert in drift_alerts:
+            severity = alert.get("severity", "low")
+            severity_counts[severity] += 1
+            drift_type = alert.get("drift_type", "unknown")
+            drift_types[drift_type] = drift_types.get(drift_type, 0) + 1
+
+        return {
+            "drift_alerts": drift_alerts,
+            "summary": {
+                "total_alerts": len(drift_alerts),
+                "severity_breakdown": severity_counts,
+                "drift_type_breakdown": drift_types,
+                "api_drift_count": len(api_drift_issues),
+                "documentation_drift_count": len(documentation_drift_issues)
+            },
+            "critical_alerts": [alert for alert in drift_alerts if alert.get("severity") == "high"]
+        }
+
+    def _check_documentation_alignment(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Check documentation alignment across the document set."""
+        alignment_issues = []
+        alignment_score = 1.0
+        penalty_factors = []
+
+        if len(documents) < 2:
+            return {
+                "alignment_score": 1.0,
+                "issues": [],
+                "recommendations": ["Need multiple documents to assess alignment"]
+            }
+
+        # Check for consistency in terminology
+        all_terms = []
+        term_frequency = {}
+
+        for doc in documents:
+            content = doc.get("content", "").lower()
+            # Extract potential technical terms (capitalized words, API endpoints, etc.)
+            terms = re.findall(r'\b[A-Z][a-zA-Z]*\b|\bapi/[a-zA-Z_]+\b|\b[A-Z_][A-Z_]+\b', content)
+            all_terms.extend(terms)
+
+        # Count term frequencies
+        for term in all_terms:
+            term_frequency[term] = term_frequency.get(term, 0) + 1
+
+        # Check for inconsistent terminology usage
+        inconsistent_terms = []
+        for term, count in term_frequency.items():
+            if count == 1 and len(term) > 3:  # Terms used only once might indicate inconsistency
+                inconsistent_terms.append(term)
+
+        if inconsistent_terms:
+            alignment_issues.append({
+                "type": "terminology_inconsistency",
+                "severity": "medium",
+                "description": f"Found {len(inconsistent_terms)} terms used only once across documents",
+                "examples": inconsistent_terms[:5],
+                "recommendation": "Standardize terminology usage across documentation"
+            })
+            penalty_factors.append(0.1)
+
+        # Check for structural alignment
+        structure_patterns = []
+        for doc in documents:
+            content = doc.get("content", "")
+            # Look for common structural elements
+            has_intro = bool(re.search(r'\b(intro|overview|summary)\b', content, re.IGNORECASE))
+            has_examples = bool(re.search(r'\b(example|sample|code)\b', content, re.IGNORECASE))
+            has_prerequisites = bool(re.search(r'\b(prereq|requirement|before|needed)\b', content, re.IGNORECASE))
+
+            structure_patterns.append({
+                "document": doc.get("title", "Unknown"),
+                "has_intro": has_intro,
+                "has_examples": has_examples,
+                "has_prerequisites": has_prerequisites
+            })
+
+        # Check consistency in structure
+        intro_consistency = len([p for p in structure_patterns if p["has_intro"]]) / len(structure_patterns)
+        if intro_consistency < 0.7:
+            alignment_issues.append({
+                "type": "structural_inconsistency",
+                "severity": "medium",
+                "description": f"Only {intro_consistency:.1%} of documents have introduction sections",
+                "recommendation": "Ensure consistent document structure across all documentation"
+            })
+            penalty_factors.append(0.15)
+
+        # Check for cross-references
+        cross_ref_count = 0
+        for doc in documents:
+            content = doc.get("content", "")
+            # Look for see also, refer to, etc.
+            cross_refs = re.findall(r'\b(see also|refer to|see|reference|link)\b', content, re.IGNORECASE)
+            cross_ref_count += len(cross_refs)
+
+        if cross_ref_count < len(documents) * 0.5:  # Less than 0.5 cross-refs per document
+            alignment_issues.append({
+                "type": "poor_cross_referencing",
+                "severity": "low",
+                "description": f"Low cross-referencing between documents ({cross_ref_count} total references)",
+                "recommendation": "Add cross-references to improve document navigation and coherence"
+            })
+            penalty_factors.append(0.05)
+
+        # Calculate alignment score
+        for penalty in penalty_factors:
+            alignment_score -= penalty
+        alignment_score = max(0.0, alignment_score)
+
+        return {
+            "alignment_score": alignment_score,
+            "issues": alignment_issues,
+            "structure_analysis": structure_patterns,
+            "terminology_consistency": 1.0 - (len(inconsistent_terms) / max(len(term_frequency), 1)),
+            "cross_reference_density": cross_ref_count / len(documents),
+            "recommendations": [issue["recommendation"] for issue in alignment_issues]
+        }
+
+    def _handle_inconclusive_recommendations(self, documents: List[Dict[str, Any]], recommendations: List[Dict[str, Any]], confidence_threshold: float) -> Dict[str, Any]:
+        """Handle cases where information is insufficient for confident recommendations."""
+        inconclusive_handling = {
+            "insufficient_data_warnings": [],
+            "data_quality_assessment": {},
+            "confidence_analysis": {},
+            "suggested_improvements": []
+        }
+
+        # Analyze data sufficiency for each recommendation type
+        rec_types = ["consolidation", "duplicate", "outdated", "quality"]
+        data_sufficiency = {}
+
+        for rec_type in rec_types:
+            type_recs = [r for r in recommendations if r.get("type") == rec_type]
+            confidence_scores = [r.get("confidence_score", 0) for r in type_recs]
+
+            if confidence_scores:
+                avg_confidence = sum(confidence_scores) / len(confidence_scores)
+                low_confidence_count = len([c for c in confidence_scores if c < confidence_threshold])
+
+                data_sufficiency[rec_type] = {
+                    "recommendations_count": len(type_recs),
+                    "average_confidence": avg_confidence,
+                    "low_confidence_count": low_confidence_count,
+                    "data_sufficient": avg_confidence >= confidence_threshold * 0.8
+                }
+
+                if not data_sufficiency[rec_type]["data_sufficient"]:
+                    inconclusive_handling["insufficient_data_warnings"].append({
+                        "recommendation_type": rec_type,
+                        "issue": "Low confidence in recommendations",
+                        "average_confidence": avg_confidence,
+                        "low_confidence_recommendations": low_confidence_count,
+                        "reason": "Insufficient data or inconsistent document patterns"
+                    })
+
+        # Assess overall data quality
+        total_docs = len(documents)
+        avg_doc_length = sum(len(doc.get("content", "")) for doc in documents) / max(total_docs, 1)
+        docs_with_dates = len([d for d in documents if d.get("last_updated") or d.get("dateUpdated")])
+
+        inconclusive_handling["data_quality_assessment"] = {
+            "total_documents": total_docs,
+            "average_document_length": avg_doc_length,
+            "documents_with_dates": docs_with_dates,
+            "date_coverage": docs_with_dates / max(total_docs, 1),
+            "data_quality_score": min(1.0, (avg_doc_length / 1000) * (docs_with_dates / max(total_docs, 1)))
+        }
+
+        # Generate confidence analysis
+        inconclusive_handling["confidence_analysis"] = {
+            "overall_confidence_threshold": confidence_threshold,
+            "recommendation_types_analysis": data_sufficiency,
+            "confidence_distribution": {
+                "high": len([r for r in recommendations if r.get("confidence_score", 0) >= 0.8]),
+                "medium": len([r for r in recommendations if 0.5 <= r.get("confidence_score", 0) < 0.8]),
+                "low": len([r for r in recommendations if r.get("confidence_score", 0) < 0.5])
+            }
+        }
+
+        # Generate suggested improvements for inconclusive cases
+        if inconclusive_handling["insufficient_data_warnings"]:
+            for warning in inconclusive_handling["insufficient_data_warnings"]:
+                rec_type = warning["recommendation_type"]
+
+                if rec_type == "consolidation":
+                    inconclusive_handling["suggested_improvements"].append({
+                        "type": "data_collection",
+                        "recommendation_type": rec_type,
+                        "improvement": "Add more documents or improve document categorization",
+                        "expected_impact": "Better consolidation recommendations with higher confidence"
+                    })
+                elif rec_type == "duplicate":
+                    inconclusive_handling["suggested_improvements"].append({
+                        "type": "content_analysis",
+                        "recommendation_type": rec_type,
+                        "improvement": "Enhance content similarity analysis with better text processing",
+                        "expected_impact": "More accurate duplicate detection with improved confidence"
+                    })
+                elif rec_type == "outdated":
+                    inconclusive_handling["suggested_improvements"].append({
+                        "type": "metadata_enhancement",
+                        "recommendation_type": rec_type,
+                        "improvement": "Ensure all documents have proper dateCreated/dateUpdated metadata",
+                        "expected_impact": "More reliable outdated content detection"
+                    })
+                elif rec_type == "quality":
+                    inconclusive_handling["suggested_improvements"].append({
+                        "type": "quality_metrics",
+                        "recommendation_type": rec_type,
+                        "improvement": "Expand quality assessment criteria and improve scoring algorithms",
+                        "expected_impact": "More comprehensive and confident quality recommendations"
+                    })
+
+        return inconclusive_handling
+
+    def _analyze_timeline_and_documents(self, documents: List[Dict[str, Any]], timeline: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Analyze timeline and document placement for coherence and completeness."""
+        timeline_analysis = {
+            "timeline_structure": {},
+            "document_placement": {},
+            "timeline_recommendations": [],
+            "placement_score": 0.0,
+            "gaps_identified": []
+        }
+
+        if not timeline:
+            timeline_analysis["timeline_structure"]["status"] = "No timeline provided"
+            return timeline_analysis
+
+        # Extract timeline phases
+        timeline_phases = timeline.get("phases", [])
+        if not timeline_phases:
+            timeline_analysis["timeline_structure"]["status"] = "No phases defined"
+            return timeline_analysis
+
+        # Analyze timeline structure
+        total_duration = sum(phase.get("duration_weeks", 0) for phase in timeline_phases)
+        timeline_analysis["timeline_structure"] = {
+            "phase_count": len(timeline_phases),
+            "total_duration_weeks": total_duration,
+            "phases": timeline_phases,
+            "structure_assessment": "good" if total_duration >= 4 else "too_short"
+        }
+
+        # Analyze document placement on timeline
+        document_placements = self._analyze_document_timeline_placement(documents, timeline_phases)
+        timeline_analysis["document_placement"] = document_placements
+
+        # Calculate placement score
+        total_docs = len(documents)
+        placed_docs = len([p for p in document_placements if p.get("placement_reason") != "unplaced"])
+        placement_score = placed_docs / total_docs if total_docs > 0 else 0.0
+        timeline_analysis["placement_score"] = placement_score
+
+        # Generate timeline recommendations
+        timeline_analysis["timeline_recommendations"] = self._generate_timeline_recommendations(
+            document_placements, timeline_phases, placement_score
+        )
+
+        # Identify gaps
+        timeline_analysis["gaps_identified"] = self._identify_timeline_gaps(
+            document_placements, timeline_phases
+        )
+
+        return timeline_analysis
+
+    def _analyze_document_timeline_placement(self, documents: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Analyze how documents fit into the timeline."""
+        placements = []
+
+        for doc in documents:
+            placement = {
+                "document_id": doc.get("id", "unknown"),
+                "document_title": doc.get("title", "Unknown"),
+                "placement_phase": None,
+                "placement_reason": "unplaced",
+                "relevance_score": 0.0,
+                "timeline_context": {}
+            }
+
+            # Try to determine placement based on timestamps
+            last_updated = doc.get("last_updated") or doc.get("dateUpdated")
+            if last_updated:
+                try:
+                    if isinstance(last_updated, str):
+                        if "T" in last_updated:
+                            doc_date = datetime.fromisoformat(last_updated.replace("Z", "+00:00"))
+                        else:
+                            doc_date = datetime.strptime(last_updated, "%Y-%m-%d")
+                    else:
+                        doc_date = last_updated
+
+                    # Find the most relevant phase for this document
+                    relevant_phase = self._find_relevant_timeline_phase(doc_date, timeline_phases)
+                    if relevant_phase:
+                        placement["placement_phase"] = relevant_phase["name"]
+                        placement["placement_reason"] = "timestamp_match"
+                        placement["relevance_score"] = self._calculate_timeline_relevance(doc_date, relevant_phase)
+                        placement["timeline_context"] = {
+                            "phase_start": relevant_phase.get("start_week", 0),
+                            "phase_duration": relevant_phase.get("duration_weeks", 0),
+                            "document_date": doc_date.isoformat()
+                        }
+                except (ValueError, AttributeError):
+                    placement["placement_reason"] = "date_parse_error"
+
+            # If no timestamp match, try content-based placement
+            if placement["placement_reason"] == "unplaced":
+                content_placement = self._analyze_content_based_placement(doc, timeline_phases)
+                if content_placement:
+                    placement.update(content_placement)
+
+            placements.append(placement)
+
+        return placements
+
+    def _find_relevant_timeline_phase(self, doc_date: datetime, timeline_phases: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Find the most relevant timeline phase for a document based on date."""
+        # This is a simplified version - in practice you'd need to know the project start date
+        # For now, we'll assume phases are in chronological order
+        for phase in timeline_phases:
+            # This is a placeholder - you'd need actual date mapping logic
+            if phase.get("start_week", 0) >= 0:  # Basic check
+                return phase
+        return None
+
+    def _calculate_timeline_relevance(self, doc_date: datetime, phase: Dict[str, Any]) -> float:
+        """Calculate how relevant a document is to a timeline phase."""
+        # Placeholder relevance calculation
+        # In practice, this would consider phase duration, document recency, etc.
+        return 0.8  # High relevance for matched documents
+
+    def _analyze_content_based_placement(self, document: Dict[str, Any], timeline_phases: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Analyze document content to determine timeline placement."""
+        content = document.get("content", "").lower()
+
+        # Simple keyword-based phase detection
+        phase_keywords = {
+            "planning": ["plan", "design", "architecture", "requirements"],
+            "development": ["implement", "code", "build", "develop"],
+            "testing": ["test", "qa", "quality", "validate"],
+            "deployment": ["deploy", "release", "production", "launch"]
+        }
+
+        for phase in timeline_phases:
+            phase_name = phase.get("name", "").lower()
+            for keyword_phase, keywords in phase_keywords.items():
+                if keyword_phase in phase_name:
+                    if any(keyword in content for keyword in keywords):
+                        return {
+                            "placement_phase": phase["name"],
+                            "placement_reason": "content_match",
+                            "relevance_score": 0.6,
+                            "timeline_context": {"matched_keywords": keywords}
+                        }
+
+        return None
+
+    def _generate_timeline_recommendations(self, placements: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]], placement_score: float) -> List[str]:
+        """Generate recommendations based on timeline analysis."""
+        recommendations = []
+
+        if placement_score < 0.5:
+            recommendations.append("Low document-timeline alignment detected. Consider adding more phase-specific documentation.")
+
+        if placement_score > 0.8:
+            recommendations.append("Excellent document-timeline alignment. Documentation appears well-structured.")
+
+        # Check for phase coverage
+        phase_coverage = {}
+        for placement in placements:
+            phase = placement.get("placement_phase")
+            if phase:
+                phase_coverage[phase] = phase_coverage.get(phase, 0) + 1
+
+        for phase in timeline_phases:
+            phase_name = phase.get("name", "")
+            doc_count = phase_coverage.get(phase_name, 0)
+            if doc_count == 0:
+                recommendations.append(f"No documents found for phase '{phase_name}'. Consider adding documentation.")
+
+        return recommendations
+
+    def _identify_timeline_gaps(self, placements: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Identify gaps in timeline coverage."""
+        gaps = []
+
+        phase_coverage = {}
+        for placement in placements:
+            phase = placement.get("placement_phase")
+            if phase:
+                if phase not in phase_coverage:
+                    phase_coverage[phase] = []
+                phase_coverage[phase].append(placement)
+
+        for phase in timeline_phases:
+            phase_name = phase.get("name", "")
+            if phase_name not in phase_coverage:
+                gaps.append({
+                    "gap_type": "no_documents",
+                    "phase": phase_name,
+                    "severity": "high",
+                    "description": f"No documents found for phase '{phase_name}'"
+                })
+            elif len(phase_coverage[phase_name]) < 2:
+                gaps.append({
+                    "gap_type": "insufficient_coverage",
+                    "phase": phase_name,
+                    "severity": "medium",
+                    "description": f"Limited documentation coverage for phase '{phase_name}'"
+                })
+
+        return gaps
+
+
+# Initialize clients
 summarizer = SimpleSummarizer()
+jira_client = JiraClient()
 
 @app.get("/health")
 async def health():
@@ -1115,7 +2068,9 @@ async def generate_recommendations(request: RecommendationRequest):
         result = await summarizer.generate_recommendations(
             request.documents,
             request.recommendation_types,
-            request.confidence_threshold
+            request.confidence_threshold,
+            request.include_jira_suggestions,
+            request.timeline
         )
 
         return RecommendationResponse(
@@ -1128,7 +2083,12 @@ async def generate_recommendations(request: RecommendationRequest):
                 "recommendation_types": result["recommendation_types"],
                 "confidence_threshold": result["confidence_threshold"],
                 "timestamp": time.time()
-            }
+            },
+            suggested_jira_tickets=result.get("suggested_jira_tickets", []),
+            drift_analysis=result.get("drift_analysis", {}),
+            alignment_analysis=result.get("alignment_analysis", {}),
+            inconclusive_analysis=result.get("inconclusive_analysis", {}),
+            timeline_analysis=result.get("timeline_analysis", {})
         )
 
     except Exception as e:
@@ -1137,7 +2097,12 @@ async def generate_recommendations(request: RecommendationRequest):
             total_documents=len(request.documents),
             recommendations_count=0,
             processing_time=0.0,
-            error=f"Recommendation generation failed: {str(e)}"
+            error=f"Recommendation generation failed: {str(e)}",
+            suggested_jira_tickets=[],
+            drift_analysis={},
+            alignment_analysis={},
+            inconclusive_analysis={},
+            timeline_analysis={}
         )
 
 @app.post("/api/v1/recommendations")
@@ -1147,7 +2112,9 @@ async def recommendations_v1(request: RecommendationRequest):
         result = await summarizer.generate_recommendations(
             request.documents,
             request.recommendation_types,
-            request.confidence_threshold
+            request.confidence_threshold,
+            request.include_jira_suggestions,
+            request.timeline
         )
 
         return {
@@ -1156,6 +2123,11 @@ async def recommendations_v1(request: RecommendationRequest):
             "total_documents": result["total_documents"],
             "recommendations_count": result["recommendations_count"],
             "processing_time": result["processing_time"],
+            "suggested_jira_tickets": result.get("suggested_jira_tickets", []),
+            "drift_analysis": result.get("drift_analysis", {}),
+            "alignment_analysis": result.get("alignment_analysis", {}),
+            "inconclusive_analysis": result.get("inconclusive_analysis", {}),
+            "timeline_analysis": result.get("timeline_analysis", {}),
             "metadata": {
                 "recommendation_types": result["recommendation_types"],
                 "confidence_threshold": result["confidence_threshold"],
@@ -1170,7 +2142,12 @@ async def recommendations_v1(request: RecommendationRequest):
             "error": f"Recommendation generation failed: {str(e)}",
             "total_documents": len(request.documents),
             "recommendations_count": 0,
-            "processing_time": 0.0
+            "processing_time": 0.0,
+            "suggested_jira_tickets": [],
+            "drift_analysis": {},
+            "alignment_analysis": {},
+            "inconclusive_analysis": {},
+            "timeline_analysis": {}
         }
 
 @app.post("/batch/summarize")
