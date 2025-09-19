@@ -33,7 +33,7 @@ from components.header import render_header
 from components.footer import render_footer
 from pages.overview import render_overview_page
 from pages.create import render_create_page
-from pages.monitor import render_monitor_page
+from pages.simulation_monitor import render_simulation_monitor_page
 from pages.reports import render_reports_page
 from pages.config import render_config_page
 from pages.analytics import render_analytics_page
@@ -150,10 +150,10 @@ PAGES = {
         "function": render_audit_page,
         "description": "Comprehensive audit trail and compliance"
     },
-    "monitor": {
-        "name": "📊 Monitor",
-        "function": render_monitor_page,
-        "description": "Real-time monitoring and progress tracking"
+    "simulation_monitor": {
+        "name": "📊 Simulation Monitor",
+        "function": render_simulation_monitor_page,
+        "description": "Real-time simulation monitoring and workflow visualization"
     },
     "events": {
         "name": "📅 Events",
