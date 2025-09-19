@@ -52,14 +52,24 @@ class TestDomainEventBase:
 
     def test_domain_event_immutability(self):
         """Test that domain events are immutable after creation."""
-        event = TestEvent(event_data="test")
+        # Test with the frozen DomainEvent base class
+        from simulation.domain.events import ProjectCreated
+        event = ProjectCreated(
+            project_id="test-123",
+            project_name="Test Project",
+            project_type="web_application",
+            complexity="medium"
+        )
 
-        # Should not be able to modify attributes
+        # Should not be able to modify attributes due to frozen=True
         with pytest.raises(AttributeError):
-            event.event_data = "modified"
+            event.project_id = "modified"
 
         with pytest.raises(AttributeError):
             event.occurred_at = datetime.now()
+
+        with pytest.raises(AttributeError):
+            event.event_version = 2
 
     def test_abstract_method_enforcement(self):
         """Test that abstract methods must be implemented."""
@@ -171,20 +181,20 @@ class TestSimulationEvents:
 
     def test_simulation_completed_event(self):
         """Test SimulationCompleted event."""
-        end_time = datetime(2024, 1, 1, 12, 0, 0)
         metrics = {"documents": 10, "workflows": 5}
 
         event = SimulationCompleted(
             simulation_id="sim-123",
             project_id="proj-456",
-            end_time=end_time,
-            success=True,
-            metrics=metrics
+            status="completed",
+            metrics=metrics,
+            total_duration_hours=2.5
         )
 
         assert event.get_aggregate_id() == "sim-123"
-        assert event.success == True
+        assert event.status == "completed"
         assert event.metrics == metrics
+        assert event.total_duration_hours == 2.5
 
     def test_simulation_failed_event(self):
         """Test SimulationFailed event."""
@@ -203,32 +213,37 @@ class TestSimulationEvents:
     def test_document_generated_event(self):
         """Test DocumentGenerated event."""
         event = DocumentGenerated(
-            simulation_id="sim-123",
             document_id="doc-456",
+            project_id="proj-123",
+            simulation_id="sim-123",
             document_type="technical_design",
             title="API Design Document",
-            word_count=1500
+            content_hash="abc123def456",
+            metadata={"word_count": 1500, "format": "pdf"}
         )
 
         assert event.get_aggregate_id() == "sim-123"
         assert event.document_id == "doc-456"
         assert event.document_type == "technical_design"
-        assert event.word_count == 1500
+        assert event.content_hash == "abc123def456"
+        assert event.metadata["word_count"] == 1500
 
     def test_workflow_executed_event(self):
         """Test WorkflowExecuted event."""
         event = WorkflowExecuted(
-            simulation_id="sim-123",
             workflow_id="wf-456",
+            simulation_id="sim-123",
             workflow_type="document_generation",
-            execution_time_seconds=45.5,
-            success=True
+            parameters={"input_files": ["doc1.pdf", "doc2.pdf"]},
+            results={"processed_files": 2, "output_format": "json"},
+            execution_time_seconds=45.5
         )
 
         assert event.get_aggregate_id() == "sim-123"
         assert event.workflow_type == "document_generation"
         assert event.execution_time_seconds == 45.5
-        assert event.success == True
+        assert event.parameters["input_files"] == ["doc1.pdf", "doc2.pdf"]
+        assert event.results["processed_files"] == 2
 
 
 class TestTimelineEvents:
@@ -388,7 +403,8 @@ class TestEventSerialization:
         original_event = ProjectCreated(
             project_id="proj-123",
             project_name="Test Project",
-            project_type="web_application"
+            project_type="web_application",
+            complexity="medium"
         )
 
         # Serialize
@@ -439,35 +455,38 @@ class TestEventSerialization:
             simulation_id="sim-123",
             project_id="proj-456",
             scenario_type="full_project",
-            start_time=datetime(2024, 1, 1, 10, 0, 0)
+            estimated_duration_hours=8
         )
 
         data = event.to_dict()
 
-        # Should serialize datetime to ISO format
-        assert "start_time" in data
-        assert isinstance(data["start_time"], str)
+        # Should serialize datetime to ISO format (occurred_at field)
+        assert "occurred_at" in data
+        assert isinstance(data["occurred_at"], str)
 
         # Should be able to deserialize back
         restored = event_from_dict(data)
-        assert isinstance(restored.start_time, datetime)
-        assert restored.start_time == event.start_time
+        assert isinstance(restored.estimated_duration_hours, int)
+        assert restored.estimated_duration_hours == event.estimated_duration_hours
 
     def test_event_serialization_with_optional_fields(self):
         """Test event serialization with optional fields."""
         event = ProjectPhaseCompleted(
             project_id="proj-123",
             phase_name="planning",
-            completed_at=None
+            phase_number=1,
+            completion_percentage=100.0,
+            duration_days=5
         )
 
         data = event.to_dict()
-        assert "completed_at" in data
-        assert data["completed_at"] is None
+        assert "occurred_at" in data  # Should have occurred_at field
+        assert isinstance(data["occurred_at"], str)
 
         # Should deserialize correctly
         restored = event_from_dict(data)
-        assert restored.completed_at is None
+        assert restored.phase_name == "planning"
+        assert restored.phase_number == 1
 
 
 class TestEventRegistry:
@@ -503,50 +522,57 @@ class TestEventRegistry:
                     event = event_class(
                         project_id="test-123",
                         project_name="Test",
-                        project_type="test"
+                        project_type="test",
+                        complexity="medium"
                     )
                 elif event_name == "ProjectStatusChanged":
                     event = event_class(
                         project_id="test-123",
                         old_status="created",
-                        new_status="in_progress"
+                        new_status="in_progress",
+                        changed_by="test-user"
                     )
                 elif event_name == "ProjectPhaseCompleted":
                     event = event_class(
                         project_id="test-123",
                         phase_name="planning",
-                        completed_at=None
+                        phase_number=1,
+                        completion_percentage=100.0,
+                        duration_days=5
                     )
                 elif event_name == "SimulationStarted":
                     event = event_class(
                         simulation_id="test-123",
                         project_id="proj-456",
                         scenario_type="test",
-                        start_time=datetime.now()
+                        estimated_duration_hours=8
                     )
                 elif event_name == "SimulationCompleted":
                     event = event_class(
                         simulation_id="test-123",
                         project_id="proj-456",
-                        end_time=datetime.now(),
-                        success=True,
-                        metrics={}
+                        status="completed",
+                        metrics={"docs": 5, "workflows": 3},
+                        total_duration_hours=2.5
                     )
                 elif event_name == "DocumentGenerated":
                     event = event_class(
-                        simulation_id="test-123",
                         document_id="doc-456",
+                        project_id="proj-123",
+                        simulation_id="test-123",
                         document_type="test",
                         title="Test Doc",
-                        word_count=100
+                        content_hash="abc123",
+                        metadata={"word_count": 100, "format": "pdf"}
                     )
                 elif event_name == "WorkflowExecuted":
                     event = event_class(
-                        simulation_id="test-123",
                         workflow_id="wf-456",
+                        simulation_id="test-123",
                         workflow_type="test",
-                        execution_time_seconds=10.0,
-                        success=True
+                        parameters={"input": "test"},
+                        results={"output": "success"},
+                        execution_time_seconds=10.0
                     )
                 else:
                     # For other events, skip detailed instantiation test
@@ -560,12 +586,11 @@ class TestEventRegistry:
 
 
 # Helper class for testing
-from dataclasses import dataclass
-
-@dataclass(frozen=True)
 class TestEvent(DomainEvent):
     """Test event for domain event base class testing."""
-    event_data: str
+    def __init__(self, event_data: str):
+        super().__init__()
+        self.event_data = event_data
 
     def get_aggregate_id(self) -> str:
         return "test-aggregate"

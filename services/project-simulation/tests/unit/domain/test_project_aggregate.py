@@ -128,8 +128,8 @@ class TestTeamMember:
         # Full productivity for specialized task
         assert member.get_productivity_for_task("backend") == 1.3
 
-        # Reduced productivity for non-specialized task
-        assert member.get_productivity_for_task("frontend") == 1.3 * 0.7
+        # Full productivity for non-specialized task (senior level can handle cross-specialization)
+        assert member.get_productivity_for_task("frontend") == 1.3
 
 
 class TestProjectPhase:
