@@ -14,6 +14,7 @@ from ...presentation.websockets.simulation_websocket import (
     notify_simulation_event
 )
 from ...domain.value_objects import SimulationStatus
+from ...domain.entities.simulation import SimulationType
 from ...infrastructure.config.simulation_config_loader import (
     load_simulation_config, create_sample_simulation_config, SimulationConfigFile, get_simulation_config_loader
 )
@@ -76,7 +77,7 @@ class SimulationApplicationService:
 
             # Create simulation
             simulation_config = SimulationConfiguration(
-                simulation_type=request.get("simulation_type", "full_project"),
+                simulation_type=SimulationType(request.get("simulation_type", "full_project")),
                 include_document_generation=request.get("include_documents", True),
                 include_workflow_execution=request.get("include_workflows", True),
                 include_team_dynamics=request.get("include_team", True),
