@@ -1573,6 +1573,88 @@ async def get_comprehensive_summary_report(simulation_id: str, req: Request, for
             logger.error("Failed to get comprehensive summary report", error=str(e), simulation_id=simulation_id)
             raise HTTPException(status_code=500, detail="Failed to retrieve comprehensive summary report")
 
+@app.post("/api/v1/simulations/{simulation_id}/analysis/pull-request")
+async def analyze_pull_request(simulation_id: str, request: Dict[str, Any], req: Request):
+    """Analyze a pull request and provide refactoring suggestions."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            pr_data = request.get("pull_request", {})
+
+            if not pr_data:
+                return create_error_response("Pull request data is required")
+
+            # Use the simulation analyzer to analyze the PR
+            analyzer = application_service._simulation_analyzer if hasattr(application_service, '_simulation_analyzer') else None
+
+            if not analyzer:
+                # Fallback: create analyzer directly
+                from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+                analyzer = SimulationAnalyzer()
+
+            analysis_result = await analyzer.analyze_pull_request(simulation_id, pr_data)
+
+            if analysis_result.get("analysis_completed"):
+                return create_success_response(
+                    data=analysis_result,
+                    message=f"Pull request analysis completed with health score {analysis_result.get('pr_health_score', 0):.2f}"
+                )
+            else:
+                return create_error_response(
+                    analysis_result.get("error", "Failed to analyze pull request"),
+                    error_code="PR_ANALYSIS_FAILED"
+                )
+
+        except Exception as e:
+            logger.error("Failed to analyze pull request", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to analyze pull request")
+
+@app.get("/api/v1/simulations/{simulation_id}/analysis/pull-request")
+async def get_pull_request_analysis(simulation_id: str, req: Request, format: str = "json"):
+    """Get the pull request analysis report for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            # Get simulation to check for PR analysis data
+            simulation_repo = application_service._simulation_repository if hasattr(application_service, '_simulation_repository') else None
+
+            if not simulation_repo:
+                # Fallback: try to get from direct repository access
+                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                simulation_repo = SQLiteSimulationRepository()
+
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if not simulation:
+                raise HTTPException(status_code=404, detail="Simulation not found")
+
+            # For now, return a placeholder response
+            # In a full implementation, this would retrieve stored PR analysis report
+            return create_success_response(
+                data={
+                    "simulation_id": simulation_id,
+                    "pr_analysis_available": False,
+                    "message": "Pull request analysis available via POST /analysis/pull-request",
+                    "supported_formats": ["json", "markdown"],
+                    "capabilities": [
+                        "code_quality_analysis",
+                        "commit_message_review",
+                        "structural_change_analysis",
+                        "refactoring_suggestions",
+                        "health_score_calculation"
+                    ],
+                    "requested_format": format
+                },
+                message="Pull request analysis endpoint ready"
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to get pull request analysis", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to retrieve pull request analysis")
+
 # ============================================================================
 # INTERPRETER SERVICE INTEGRATION ENDPOINTS
 # ============================================================================
