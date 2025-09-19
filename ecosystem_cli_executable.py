@@ -303,7 +303,7 @@ class EcosystemCLI:
             print(f"⚠️  Some ecosystem workflows need attention")
         
         return test_results
-
+    
     async def list_containers(self):
         """List all Docker containers in the ecosystem"""
         print("🐳 ECOSYSTEM CONTAINER STATUS")
@@ -812,7 +812,7 @@ class EcosystemCLI:
             else:
                 print(f"❌ Unknown workflow type: {workflow_type}")
                 print("Available types: mock-data")
-
+        
         elif command == "execute":
             # Execute a workflow by ID or definition
             workflow_id = kwargs.get("id", "")
@@ -1234,7 +1234,7 @@ class EcosystemCLI:
                 print(json.dumps(metadata_dict, indent=2))
             else:
                 print("❌ Failed to update document metadata")
-
+        
         else:
             print(f"❌ Unknown doc_store command: {command}")
             print("Available commands: health, config, list, create, search, delete, update")
@@ -1820,7 +1820,7 @@ class EcosystemCLI:
                     print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to get frontend routes")
-
+        
         else:
             print(f"❌ Unknown frontend command: {command}")
             print("Available commands: health, config, status, logs, restart, metrics, routes")

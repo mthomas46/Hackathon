@@ -9,8 +9,31 @@ import sys
 from pathlib import Path
 
 # Import from shared infrastructure
+import sys
+from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
-from core.logging.logger import LoggerService, get_logger, with_correlation_id, generate_correlation_id
+try:
+    from core.logging.logger import LoggerService, get_logger, with_correlation_id, generate_correlation_id
+except ImportError:
+    # Fallback for testing - create simple implementations
+    class LoggerService:
+        def __init__(self, name="project-simulation", level="INFO", enable_json=True, enable_console=True):
+            pass
+        def debug(self, message, **kwargs): pass
+        def info(self, message, **kwargs): pass
+        def warning(self, message, **kwargs): pass
+        def error(self, message, **kwargs): pass
+        def critical(self, message, **kwargs): pass
+
+    def get_logger(name=None):
+        return LoggerService()
+
+    def with_correlation_id(correlation_id=None):
+        return lambda func: func
+
+    def generate_correlation_id():
+        import uuid
+        return str(uuid.uuid4())
 
 
 class SimulationLogger:
