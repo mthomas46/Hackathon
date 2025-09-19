@@ -755,6 +755,848 @@ class SimulationAnalyzer:
         return SQLiteSimulationRepository()
 
     # ============================================================================
+    # TIMELINE-BASED DOCUMENT PLACEMENT
+    # ============================================================================
+
+    async def place_documents_on_timeline(self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any]) -> Dict[str, Any]:
+        """Place documents on the simulation timeline based on timestamps and relevance.
+
+        This method organizes documents chronologically within the simulation timeline,
+        associating them with relevant phases and milestones based on their creation/update dates
+        and content analysis.
+        """
+        try:
+            # Parse timeline phases
+            timeline_phases = []
+            if "phases" in timeline:
+                for phase_data in timeline["phases"]:
+                    phase = {
+                        "id": phase_data.get("id", ""),
+                        "name": phase_data.get("name", ""),
+                        "start_date": phase_data.get("start_date"),
+                        "end_date": phase_data.get("end_date"),
+                        "planned_end_date": phase_data.get("planned_end_date"),
+                        "status": phase_data.get("status", "pending")
+                    }
+                    timeline_phases.append(phase)
+
+            # Analyze document timestamps and place on timeline
+            document_placements = await self._analyze_document_timestamps(documents, timeline_phases)
+
+            # Group documents by timeline phases
+            phase_documents = self._group_documents_by_phases(document_placements, timeline_phases)
+
+            # Generate timeline placement report
+            placement_report = await self._generate_timeline_placement_report(simulation_id, phase_documents, timeline_phases)
+
+            return {
+                "simulation_id": simulation_id,
+                "timeline_phases": len(timeline_phases),
+                "total_documents": len(documents),
+                "placed_documents": len(document_placements),
+                "phase_breakdown": phase_documents,
+                "placement_report": placement_report
+            }
+
+        except Exception as e:
+            print(f"Error placing documents on timeline: {e}")
+            return {
+                "simulation_id": simulation_id,
+                "error": str(e),
+                "timeline_phases": 0,
+                "total_documents": len(documents),
+                "placed_documents": 0
+            }
+
+    async def _analyze_document_timestamps(self, documents: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Analyze document timestamps and determine timeline placement."""
+
+        placements = []
+
+        for doc in documents:
+            try:
+                # Extract timestamp information
+                created_date = None
+                updated_date = None
+
+                # Try to parse dateCreated and dateUpdated fields
+                if "dateCreated" in doc:
+                    created_date = self._parse_timestamp(doc["dateCreated"])
+                if "dateUpdated" in doc:
+                    updated_date = self._parse_timestamp(doc["dateUpdated"])
+
+                # Use updated_date if available, otherwise created_date
+                primary_date = updated_date or created_date
+
+                if not primary_date:
+                    # Skip documents without timestamp information
+                    continue
+
+                # Find the most relevant timeline phase
+                relevant_phase = self._find_relevant_timeline_phase(primary_date, timeline_phases)
+
+                if relevant_phase:
+                    placement = {
+                        "document_id": doc.get("id", ""),
+                        "title": doc.get("title", ""),
+                        "type": doc.get("type", ""),
+                        "primary_date": primary_date.isoformat(),
+                        "created_date": created_date.isoformat() if created_date else None,
+                        "updated_date": updated_date.isoformat() if updated_date else None,
+                        "timeline_phase": relevant_phase["id"],
+                        "phase_name": relevant_phase["name"],
+                        "placement_reason": self._determine_placement_reason(primary_date, relevant_phase),
+                        "relevance_score": self._calculate_timeline_relevance(primary_date, relevant_phase)
+                    }
+                    placements.append(placement)
+
+            except Exception as e:
+                print(f"Error analyzing timestamps for document {doc.get('id', 'unknown')}: {e}")
+                continue
+
+        return placements
+
+    def _parse_timestamp(self, timestamp_str: str) -> Optional[datetime]:
+        """Parse timestamp string into datetime object."""
+        from datetime import datetime
+
+        if not timestamp_str:
+            return None
+
+        try:
+            # Try ISO format first
+            return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            pass
+
+        # Try common timestamp formats
+        formats = [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d",
+            "%m/%d/%Y %H:%M:%S",
+            "%m/%d/%Y"
+        ]
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(timestamp_str, fmt)
+            except ValueError:
+                continue
+
+        print(f"Could not parse timestamp: {timestamp_str}")
+        return None
+
+    def _find_relevant_timeline_phase(self, doc_date: datetime, timeline_phases: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Find the most relevant timeline phase for a document date."""
+        if not timeline_phases:
+            return None
+
+        # Find phases that overlap with the document date
+        relevant_phases = []
+
+        for phase in timeline_phases:
+            start_date = self._parse_timestamp(phase.get("start_date"))
+            end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(phase.get("planned_end_date"))
+
+            if start_date and end_date:
+                if start_date <= doc_date <= end_date:
+                    relevant_phases.append(phase)
+
+        # If no overlapping phases, find the closest phase
+        if not relevant_phases:
+            closest_phase = None
+            min_distance = float('inf')
+
+            for phase in timeline_phases:
+                start_date = self._parse_timestamp(phase.get("start_date"))
+                if start_date:
+                    distance = abs((doc_date - start_date).days)
+                    if distance < min_distance:
+                        min_distance = distance
+                        closest_phase = phase
+
+            if closest_phase and min_distance <= 30:  # Within 30 days
+                relevant_phases.append(closest_phase)
+
+        # Return the most relevant phase (prefer in-progress phases)
+        for phase in relevant_phases:
+            if phase.get("status") == "in_progress":
+                return phase
+
+        return relevant_phases[0] if relevant_phases else None
+
+    def _determine_placement_reason(self, doc_date: datetime, phase: Dict[str, Any]) -> str:
+        """Determine why a document was placed in a particular timeline phase."""
+        start_date = self._parse_timestamp(phase.get("start_date"))
+        end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(phase.get("planned_end_date"))
+
+        if start_date and end_date:
+            if start_date <= doc_date <= end_date:
+                return "within_phase_dates"
+            elif doc_date < start_date:
+                days_before = (start_date - doc_date).days
+                return f"before_phase_start_{days_before}_days"
+            else:
+                days_after = (doc_date - end_date).days
+                return f"after_phase_end_{days_after}_days"
+
+        return "closest_phase_match"
+
+    def _calculate_timeline_relevance(self, doc_date: datetime, phase: Dict[str, Any]) -> float:
+        """Calculate how relevant a document is to a timeline phase."""
+        start_date = self._parse_timestamp(phase.get("start_date"))
+        end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(phase.get("planned_end_date"))
+
+        if not start_date:
+            return 0.0
+
+        # Perfect match if within phase dates
+        if end_date and start_date <= doc_date <= end_date:
+            return 1.0
+
+        # Calculate distance-based relevance
+        if doc_date < start_date:
+            days_before = (start_date - doc_date).days
+            return max(0.0, 1.0 - (days_before / 30.0))  # Decrease relevance with distance
+        elif end_date:
+            days_after = (doc_date - end_date).days
+            return max(0.0, 1.0 - (days_after / 30.0))  # Decrease relevance with distance
+
+        return 0.5  # Default relevance
+
+    def _group_documents_by_phases(self, document_placements: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        """Group documents by timeline phases."""
+        phase_groups = {}
+
+        # Initialize phase groups
+        for phase in timeline_phases:
+            phase_groups[phase["id"]] = {
+                "phase_name": phase["name"],
+                "documents": [],
+                "document_count": 0,
+                "avg_relevance": 0.0,
+                "date_range": {
+                    "start": phase.get("start_date"),
+                    "end": phase.get("end_date") or phase.get("planned_end_date")
+                }
+            }
+
+        # Group documents
+        for placement in document_placements:
+            phase_id = placement["timeline_phase"]
+            if phase_id in phase_groups:
+                phase_groups[phase_id]["documents"].append(placement)
+                phase_groups[phase_id]["document_count"] += 1
+
+        # Calculate average relevance for each phase
+        for phase_id, phase_data in phase_groups.items():
+            if phase_data["documents"]:
+                total_relevance = sum(doc["relevance_score"] for doc in phase_data["documents"])
+                phase_data["avg_relevance"] = total_relevance / len(phase_data["documents"])
+
+        return phase_groups
+
+    async def _generate_timeline_placement_report(self, simulation_id: str, phase_documents: Dict[str, Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate a comprehensive timeline placement report."""
+        try:
+            # Calculate summary statistics
+            total_documents = sum(phase["document_count"] for phase in phase_documents.values())
+            phases_with_documents = sum(1 for phase in phase_documents.values() if phase["document_count"] > 0)
+
+            # Find best and worst performing phases
+            phase_performance = []
+            for phase_id, phase_data in phase_documents.items():
+                if phase_data["document_count"] > 0:
+                    performance = {
+                        "phase_id": phase_id,
+                        "phase_name": phase_data["phase_name"],
+                        "document_count": phase_data["document_count"],
+                        "avg_relevance": phase_data["avg_relevance"]
+                    }
+                    phase_performance.append(performance)
+
+            # Sort by relevance
+            phase_performance.sort(key=lambda x: x["avg_relevance"], reverse=True)
+
+            report = {
+                "simulation_id": simulation_id,
+                "total_phases": len(timeline_phases),
+                "phases_with_documents": phases_with_documents,
+                "total_documents_placed": total_documents,
+                "phase_performance": phase_performance,
+                "timeline_coverage": phases_with_documents / len(timeline_phases) if timeline_phases else 0,
+                "recommendations": self._generate_timeline_recommendations(phase_documents, timeline_phases)
+            }
+
+            return report
+
+        except Exception as e:
+            print(f"Error generating timeline placement report: {e}")
+            return {
+                "simulation_id": simulation_id,
+                "error": str(e),
+                "total_documents_placed": 0
+            }
+
+    def _generate_timeline_recommendations(self, phase_documents: Dict[str, Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> List[str]:
+        """Generate recommendations based on timeline document placement."""
+        recommendations = []
+
+        # Check for phases with no documents
+        empty_phases = []
+        for phase_id, phase_data in phase_documents.items():
+            if phase_data["document_count"] == 0:
+                phase = next((p for p in timeline_phases if p["id"] == phase_id), None)
+                if phase:
+                    empty_phases.append(phase["name"])
+
+        if empty_phases:
+            recommendations.append(f"Consider adding documentation for phases: {', '.join(empty_phases[:3])}")
+
+        # Check for phases with low relevance scores
+        low_relevance_phases = []
+        for phase_id, phase_data in phase_documents.items():
+            if phase_data["document_count"] > 0 and phase_data["avg_relevance"] < 0.5:
+                low_relevance_phases.append(phase_data["phase_name"])
+
+        if low_relevance_phases:
+            recommendations.append(f"Review document placement for phases with low relevance: {', '.join(low_relevance_phases[:3])}")
+
+        # Check timeline coverage
+        coverage = sum(1 for phase in phase_documents.values() if phase["document_count"] > 0) / len(phase_documents) if phase_documents else 0
+
+        if coverage < 0.5:
+            recommendations.append("Timeline coverage is low. Consider expanding documentation across more phases.")
+
+        if not recommendations:
+            recommendations.append("Timeline document placement looks good with adequate coverage and relevance.")
+
+        return recommendations
+
+    # ============================================================================
+    # COMPREHENSIVE SUMMARY REPORT GENERATION
+    # ============================================================================
+
+    async def generate_comprehensive_summary_report(self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate a comprehensive summary report combining recommendations and analysis.
+
+        This method creates a unified report that combines:
+        - Recommendations from summarizer-hub
+        - Analysis reports from analysis-service
+        - Timeline placement analysis
+        - Executive summary and actionable insights
+
+        This keeps the simulation service pure by orchestrating report generation
+        across multiple specialized services.
+        """
+        try:
+            print(f"Generating comprehensive summary report for simulation {simulation_id}")
+
+            # Step 1: Get recommendations from summarizer-hub
+            recommendations_report = await self._get_recommendations_report_from_summarizer_hub(simulation_id, documents)
+
+            # Step 2: Get analysis report from analysis-service
+            analysis_report = await self._get_analysis_report_from_analysis_service(simulation_id, documents)
+
+            # Step 3: Generate timeline placement if timeline provided
+            timeline_placement = None
+            if timeline:
+                timeline_placement = await self.place_documents_on_timeline(simulation_id, documents, timeline)
+
+            # Step 4: Combine all reports into comprehensive summary
+            comprehensive_report = await self._combine_reports_into_summary(
+                simulation_id,
+                recommendations_report,
+                analysis_report,
+                timeline_placement,
+                documents
+            )
+
+            # Step 5: Store the comprehensive report
+            await self._store_comprehensive_summary_report(simulation_id, comprehensive_report)
+
+            return {
+                "simulation_id": simulation_id,
+                "report_generated": True,
+                "comprehensive_report_id": comprehensive_report.get("report_id"),
+                "sections_included": list(comprehensive_report.keys()),
+                "total_documents": len(documents),
+                "processing_timestamp": datetime.now().isoformat()
+            }
+
+        except Exception as e:
+            print(f"Error generating comprehensive summary report: {e}")
+            return {
+                "simulation_id": simulation_id,
+                "error": str(e),
+                "report_generated": False
+            }
+
+    async def _get_recommendations_report_from_summarizer_hub(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Get recommendations report from summarizer-hub service."""
+        try:
+            # Prepare documents for summarizer-hub
+            docs_for_analysis = []
+            for doc in documents:
+                if "content" in doc and doc["content"]:
+                    docs_for_analysis.append({
+                        "id": doc.get("id", ""),
+                        "content": doc["content"],
+                        "title": doc.get("title", ""),
+                        "type": doc.get("type", "document")
+                    })
+
+            if not docs_for_analysis:
+                return None
+
+            # Request recommendations from summarizer-hub
+            recommendations_result = await self._request_recommendations_from_summarizer_hub(simulation_id, docs_for_analysis)
+
+            if recommendations_result:
+                return {
+                    "source": "summarizer-hub",
+                    "recommendations": recommendations_result.get("recommendations", []),
+                    "consolidation_suggestions": recommendations_result.get("consolidation_suggestions", []),
+                    "duplicate_analysis": recommendations_result.get("duplicate_analysis", []),
+                    "outdated_analysis": recommendations_result.get("outdated_analysis", []),
+                    "quality_improvements": recommendations_result.get("quality_improvements", [])
+                }
+
+            return None
+
+        except Exception as e:
+            print(f"Error getting recommendations from summarizer-hub: {e}")
+            return None
+
+    async def _get_analysis_report_from_analysis_service(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Get analysis report from analysis-service."""
+        try:
+            # Prepare documents for analysis-service
+            docs_for_analysis = []
+            for doc in documents:
+                if "content" in doc and doc["content"]:
+                    docs_for_analysis.append({
+                        "id": doc.get("id", ""),
+                        "content": doc["content"],
+                        "title": doc.get("title", ""),
+                        "type": doc.get("type", "document")
+                    })
+
+            if not docs_for_analysis:
+                return None
+
+            # Request analysis from analysis-service
+            analysis_result = await self._request_analysis_report_from_service(simulation_id, docs_for_analysis)
+
+            if analysis_result:
+                return {
+                    "source": "analysis-service",
+                    "quality_analysis": analysis_result.get("report", {}).get("analysis_results", []),
+                    "summary_statistics": analysis_result.get("report", {}).get("summary", {}),
+                    "processing_metadata": {
+                        "documents_processed": analysis_result.get("documents_processed", 0),
+                        "processing_time": analysis_result.get("processing_time", "completed")
+                    }
+                }
+
+            return None
+
+        except Exception as e:
+            print(f"Error getting analysis from analysis-service: {e}")
+            return None
+
+    async def _combine_reports_into_summary(self, simulation_id: str, recommendations: Optional[Dict], analysis: Optional[Dict], timeline: Optional[Dict], documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Combine all reports into a comprehensive summary."""
+        try:
+            # Generate unique report ID
+            report_id = f"comprehensive_summary_{simulation_id}_{int(datetime.now().timestamp())}"
+
+            # Executive Summary
+            executive_summary = self._generate_executive_summary(recommendations, analysis, timeline, documents)
+
+            # Detailed Sections
+            summary_report = {
+                "report_id": report_id,
+                "simulation_id": simulation_id,
+                "generated_at": datetime.now().isoformat(),
+                "executive_summary": executive_summary,
+                "sections": {}
+            }
+
+            # Add recommendations section
+            if recommendations:
+                summary_report["sections"]["recommendations"] = {
+                    "source": recommendations["source"],
+                    "total_recommendations": len(recommendations.get("recommendations", [])),
+                    "consolidation_opportunities": len(recommendations.get("consolidation_suggestions", [])),
+                    "duplicate_issues": len(recommendations.get("duplicate_analysis", [])),
+                    "outdated_documents": len(recommendations.get("outdated_analysis", [])),
+                    "quality_improvements": len(recommendations.get("quality_improvements", [])),
+                    "details": recommendations
+                }
+
+            # Add analysis section
+            if analysis:
+                summary_report["sections"]["analysis"] = {
+                    "source": analysis["source"],
+                    "documents_analyzed": analysis["processing_metadata"]["documents_processed"],
+                    "average_quality_score": analysis["summary_statistics"].get("average_quality_score", 0),
+                    "documents_with_issues": analysis["summary_statistics"].get("documents_with_issues", 0),
+                    "total_issues_found": analysis["summary_statistics"].get("total_issues_found", 0),
+                    "details": analysis
+                }
+
+            # Add timeline section
+            if timeline:
+                summary_report["sections"]["timeline"] = {
+                    "total_phases": timeline.get("timeline_phases", 0),
+                    "documents_placed": timeline.get("placed_documents", 0),
+                    "timeline_coverage": timeline.get("placement_report", {}).get("timeline_coverage", 0),
+                    "phase_breakdown": timeline.get("phase_breakdown", {}),
+                    "recommendations": timeline.get("placement_report", {}).get("recommendations", []),
+                    "details": timeline
+                }
+
+            # Overall Assessment
+            summary_report["overall_assessment"] = self._generate_overall_assessment(summary_report["sections"])
+
+            # Action Items
+            summary_report["action_items"] = self._generate_action_items(summary_report["sections"])
+
+            return summary_report
+
+        except Exception as e:
+            print(f"Error combining reports into summary: {e}")
+            return {
+                "report_id": f"error_{simulation_id}_{int(datetime.now().timestamp())}",
+                "simulation_id": simulation_id,
+                "error": str(e),
+                "sections": {}
+            }
+
+    def _generate_executive_summary(self, recommendations: Optional[Dict], analysis: Optional[Dict], timeline: Optional[Dict], documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate executive summary from all report data."""
+        summary = {
+            "total_documents": len(documents),
+            "processing_completed": datetime.now().isoformat(),
+            "key_findings": [],
+            "critical_issues": 0,
+            "improvement_opportunities": 0
+        }
+
+        # Analyze recommendations
+        if recommendations:
+            rec_count = len(recommendations.get("recommendations", []))
+            summary["improvement_opportunities"] += rec_count
+            summary["key_findings"].append(f"Found {rec_count} recommendation opportunities")
+
+            # Check for critical recommendations
+            for rec in recommendations.get("recommendations", []):
+                if rec.get("priority", "").lower() in ["critical", "high"]:
+                    summary["critical_issues"] += 1
+
+        # Analyze quality metrics
+        if analysis:
+            avg_quality = analysis["summary_statistics"].get("average_quality_score", 0)
+            issues_count = analysis["summary_statistics"].get("total_issues_found", 0)
+
+            if avg_quality < 0.6:
+                summary["key_findings"].append(f"Low average quality score: {avg_quality:.2f}")
+                summary["critical_issues"] += 1
+            elif avg_quality < 0.8:
+                summary["key_findings"].append(f"Moderate quality score: {avg_quality:.2f}")
+
+            if issues_count > 0:
+                summary["key_findings"].append(f"Identified {issues_count} quality issues")
+
+        # Analyze timeline coverage
+        if timeline:
+            coverage = timeline.get("placement_report", {}).get("timeline_coverage", 0)
+            placed_docs = timeline.get("placed_documents", 0)
+
+            if coverage < 0.5:
+                summary["key_findings"].append(f"Poor timeline coverage: {coverage:.1%}")
+            elif coverage < 0.8:
+                summary["key_findings"].append(f"Moderate timeline coverage: {coverage:.1%}")
+            else:
+                summary["key_findings"].append(f"Good timeline coverage: {coverage:.1%}")
+
+            summary["key_findings"].append(f"Placed {placed_docs} documents on timeline")
+
+        # Default findings if no data
+        if not summary["key_findings"]:
+            summary["key_findings"].append("Analysis completed - no significant issues found")
+
+        return summary
+
+    def _generate_overall_assessment(self, sections: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate overall assessment from all sections."""
+        assessment = {
+            "overall_health_score": 0.0,
+            "risk_level": "unknown",
+            "strengths": [],
+            "weaknesses": [],
+            "recommendations": []
+        }
+
+        scores = []
+        risk_factors = 0
+
+        # Assess recommendations section
+        if "recommendations" in sections:
+            rec_section = sections["recommendations"]
+            rec_score = max(0, 1.0 - (rec_section["total_recommendations"] / 20.0))  # Normalize
+            scores.append(rec_score)
+
+            if rec_section["total_recommendations"] > 10:
+                risk_factors += 1
+                assessment["weaknesses"].append("High number of recommendations indicates significant improvement needs")
+            else:
+                assessment["strengths"].append("Manageable number of recommendations")
+
+        # Assess analysis section
+        if "analysis" in sections:
+            analysis_section = sections["analysis"]
+            quality_score = analysis_section["average_quality_score"]
+            scores.append(quality_score)
+
+            if quality_score < 0.6:
+                risk_factors += 1
+                assessment["weaknesses"].append("Low document quality scores")
+            elif quality_score > 0.8:
+                assessment["strengths"].append("High document quality standards")
+
+            if analysis_section["documents_with_issues"] > 0:
+                assessment["recommendations"].append("Address identified quality issues")
+
+        # Assess timeline section
+        if "timeline" in sections:
+            timeline_section = sections["timeline"]
+            coverage = timeline_section["timeline_coverage"]
+            scores.append(coverage)
+
+            if coverage < 0.5:
+                risk_factors += 1
+                assessment["weaknesses"].append("Poor timeline coverage")
+            elif coverage > 0.8:
+                assessment["strengths"].append("Good timeline coverage")
+
+        # Calculate overall score
+        if scores:
+            assessment["overall_health_score"] = sum(scores) / len(scores)
+
+            # Determine risk level
+            if assessment["overall_health_score"] > 0.8:
+                assessment["risk_level"] = "low"
+            elif assessment["overall_health_score"] > 0.6:
+                assessment["risk_level"] = "medium"
+            else:
+                assessment["risk_level"] = "high"
+
+        return assessment
+
+    def _generate_action_items(self, sections: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate prioritized action items from all sections."""
+        action_items = []
+
+        # Extract from recommendations
+        if "recommendations" in sections:
+            rec_section = sections["recommendations"]
+            for rec in rec_section["details"].get("recommendations", []):
+                action_items.append({
+                    "type": "recommendation",
+                    "priority": rec.get("priority", "medium"),
+                    "description": rec.get("description", ""),
+                    "category": rec.get("type", "general"),
+                    "estimated_effort": rec.get("estimated_effort", "medium")
+                })
+
+        # Extract from analysis issues
+        if "analysis" in sections:
+            analysis_section = sections["analysis"]
+            for result in analysis_section["details"].get("quality_analysis", []):
+                if result.get("issues_found", 0) > 0:
+                    action_items.append({
+                        "type": "quality_fix",
+                        "priority": "high" if result.get("quality_score", 0) < 0.5 else "medium",
+                        "description": f"Fix quality issues in document {result.get('document_id', '')}",
+                        "category": "quality",
+                        "estimated_effort": "low" if len(result.get("issues", [])) <= 2 else "medium"
+                    })
+
+        # Extract from timeline recommendations
+        if "timeline" in sections:
+            timeline_section = sections["timeline"]
+            for rec in timeline_section.get("recommendations", []):
+                action_items.append({
+                    "type": "timeline_optimization",
+                    "priority": "medium",
+                    "description": rec,
+                    "category": "organization",
+                    "estimated_effort": "low"
+                })
+
+        # Sort by priority
+        priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        action_items.sort(key=lambda x: priority_order.get(x["priority"], 4))
+
+        return action_items[:10]  # Return top 10 action items
+
+    async def _store_comprehensive_summary_report(self, simulation_id: str, report: Dict[str, Any]) -> None:
+        """Store the comprehensive summary report in doc-store."""
+        try:
+            # Generate JSON report content
+            json_content = json.dumps(report, indent=2, default=str)
+
+            # Generate Markdown report content
+            markdown_content = self._generate_comprehensive_markdown_report(report)
+
+            # Store JSON version
+            json_doc_id = f"{report['report_id']}_json"
+            await self._store_document_in_doc_store(json_doc_id, json_content, "json", "comprehensive_summary")
+
+            # Store Markdown version
+            md_doc_id = f"{report['report_id']}_md"
+            await self._store_document_in_doc_store(md_doc_id, markdown_content, "markdown", "comprehensive_summary")
+
+            # Link reports to simulation
+            await self._link_report_to_simulation(simulation_id, report['report_id'], "comprehensive_summary")
+
+            print(f"Stored comprehensive summary report for simulation {simulation_id}")
+
+        except Exception as e:
+            print(f"Error storing comprehensive summary report: {e}")
+
+    def _generate_comprehensive_markdown_report(self, report: Dict[str, Any]) -> str:
+        """Generate comprehensive Markdown report."""
+        md_lines = []
+
+        # Header
+        md_lines.append("# 📊 Comprehensive Simulation Summary Report")
+        md_lines.append("")
+        md_lines.append(f"**Simulation ID:** {report['simulation_id']}")
+        md_lines.append(f"**Report ID:** {report['report_id']}")
+        md_lines.append(f"**Generated:** {report['generated_at']}")
+        md_lines.append("")
+
+        # Executive Summary
+        exec_summary = report.get("executive_summary", {})
+        md_lines.append("## 📈 Executive Summary")
+        md_lines.append("")
+        md_lines.append(f"- **Total Documents:** {exec_summary.get('total_documents', 0)}")
+        md_lines.append(f"- **Critical Issues:** {exec_summary.get('critical_issues', 0)}")
+        md_lines.append(f"- **Improvement Opportunities:** {exec_summary.get('improvement_opportunities', 0)}")
+        md_lines.append("")
+
+        if exec_summary.get("key_findings"):
+            md_lines.append("### Key Findings")
+            md_lines.append("")
+            for finding in exec_summary["key_findings"]:
+                md_lines.append(f"- {finding}")
+            md_lines.append("")
+
+        # Overall Assessment
+        assessment = report.get("overall_assessment", {})
+        md_lines.append("## 🎯 Overall Assessment")
+        md_lines.append("")
+        health_score = assessment.get("overall_health_score", 0)
+        risk_level = assessment.get("risk_level", "unknown")
+
+        # Health score indicator
+        if health_score >= 0.8:
+            health_indicator = "🟢 **Excellent**"
+        elif health_score >= 0.6:
+            health_indicator = "🟡 **Good**"
+        else:
+            health_indicator = "🔴 **Needs Attention**"
+
+        md_lines.append(f"**Health Score:** {health_indicator} ({health_score:.2f})")
+        md_lines.append(f"**Risk Level:** {risk_level.title()}")
+        md_lines.append("")
+
+        if assessment.get("strengths"):
+            md_lines.append("### Strengths")
+            for strength in assessment["strengths"]:
+                md_lines.append(f"- ✅ {strength}")
+            md_lines.append("")
+
+        if assessment.get("weaknesses"):
+            md_lines.append("### Areas for Improvement")
+            for weakness in assessment["weaknesses"]:
+                md_lines.append(f"- ⚠️ {weakness}")
+            md_lines.append("")
+
+        # Detailed Sections
+        sections = report.get("sections", {})
+
+        # Recommendations Section
+        if "recommendations" in sections:
+            rec_section = sections["recommendations"]
+            md_lines.append("## 💡 Recommendations")
+            md_lines.append("")
+            md_lines.append(f"**Total Recommendations:** {rec_section['total_recommendations']}")
+            md_lines.append(f"**Consolidation Opportunities:** {rec_section['consolidation_opportunities']}")
+            md_lines.append(f"**Duplicate Issues:** {rec_section['duplicate_issues']}")
+            md_lines.append(f"**Outdated Documents:** {rec_section['outdated_documents']}")
+            md_lines.append(f"**Quality Improvements:** {rec_section['quality_improvements']}")
+            md_lines.append("")
+
+        # Analysis Section
+        if "analysis" in sections:
+            analysis_section = sections["analysis"]
+            md_lines.append("## 🔍 Quality Analysis")
+            md_lines.append("")
+            md_lines.append(f"**Documents Analyzed:** {analysis_section['documents_analyzed']}")
+            md_lines.append(f"**Average Quality Score:** {analysis_section['average_quality_score']:.2f}")
+            md_lines.append(f"**Documents with Issues:** {analysis_section['documents_with_issues']}")
+            md_lines.append(f"**Total Issues Found:** {analysis_section['total_issues_found']}")
+            md_lines.append("")
+
+        # Timeline Section
+        if "timeline" in sections:
+            timeline_section = sections["timeline"]
+            md_lines.append("## 📅 Timeline Analysis")
+            md_lines.append("")
+            md_lines.append(f"**Total Phases:** {timeline_section['total_phases']}")
+            md_lines.append(f"**Documents Placed:** {timeline_section['documents_placed']}")
+            md_lines.append(f"**Timeline Coverage:** {timeline_section['timeline_coverage']:.1%}")
+            md_lines.append("")
+
+            if timeline_section.get("recommendations"):
+                md_lines.append("### Timeline Recommendations")
+                for rec in timeline_section["recommendations"]:
+                    md_lines.append(f"- {rec}")
+                md_lines.append("")
+
+        # Action Items
+        action_items = report.get("action_items", [])
+        if action_items:
+            md_lines.append("## ✅ Action Items")
+            md_lines.append("")
+
+            for i, item in enumerate(action_items[:10], 1):  # Top 10
+                priority_emoji = {
+                    "critical": "🚨",
+                    "high": "🔴",
+                    "medium": "🟡",
+                    "low": "🟢"
+                }.get(item.get("priority", "medium"), "🟡")
+
+                md_lines.append(f"{i}. {priority_emoji} **{item.get('priority', 'medium').title()}** - {item.get('description', '')}")
+                md_lines.append(f"   - Category: {item.get('category', 'general')}")
+                md_lines.append(f"   - Effort: {item.get('estimated_effort', 'medium')}")
+                md_lines.append("")
+
+        # Footer
+        md_lines.append("---")
+        md_lines.append("")
+        md_lines.append("*Report generated by Simulation Service - Comprehensive Analysis*")
+        md_lines.append(f"*Processing completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
+
+        return "\n".join(md_lines)
+
+    # ============================================================================
     # ECOSYSTEM SERVICE INTEGRATION METHODS
     # ============================================================================
 
