@@ -57,6 +57,19 @@ class ReportRequest(BaseModel):
         return v
 
 
+class DocumentDumpRequest(BaseModel):
+    """Input for document dump report generation."""
+    documents: List[Dict[str, Any]] = Field(..., description="List of documents to include in the dump report")
+    format: str = Field("markdown", description="Output format (markdown, html, json)")
+    include_metadata: bool = Field(True, description="Whether to include document metadata")
+    include_content: bool = Field(True, description="Whether to include document content")
+    group_by_type: bool = Field(True, description="Whether to group documents by type (confluence, jira, pull_request)")
+    sort_by: str = Field("dateCreated", description="Field to sort documents by (dateCreated, dateUpdated, title)")
+    sort_order: str = Field("desc", description="Sort order (asc, desc)")
+    filter_by_type: Optional[List[str]] = Field(None, description="Filter documents by type (confluence, jira, pull_request)")
+    filter_by_category: Optional[List[str]] = Field(None, description="Filter documents by category")
+
+
 class NotifyOwnersRequest(BaseModel):
     """Input for notification operations."""
     findings: List[Dict[str, Any]] = Field(..., description="Findings to notify owners about")

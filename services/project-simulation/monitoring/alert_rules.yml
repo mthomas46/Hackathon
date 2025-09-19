@@ -1,0 +1,257 @@
+# ============================================================================
+# Prometheus Alert Rules - Project Simulation Service
+# ============================================================================
+# This file contains alerting rules for monitoring the project-simulation service
+# and ecosystem health, performance, and availability.
+# ============================================================================
+
+groups:
+  # ============================================================================
+  # Service Health Alerts
+  # ============================================================================
+  - name: service_health
+    rules:
+      - alert: ProjectSimulationServiceDown
+        expr: up{job="project-simulation"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: project-simulation
+        annotations:
+          summary: "Project Simulation service is down"
+          description: "Project Simulation service has been down for more than 5 minutes."
+          runbook_url: "https://hackathon.local/runbooks/project-simulation-down"
+
+      - alert: ProjectSimulationHighErrorRate
+        expr: rate(http_requests_total{job="project-simulation", status=~"5.."}[5m]) / rate(http_requests_total{job="project-simulation"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: project-simulation
+        annotations:
+          summary: "High error rate on Project Simulation service"
+          description: "Project Simulation service error rate is {{ $value | printf \"%.2f\" }} (10% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/high-error-rate"
+
+      - alert: ProjectSimulationHighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="project-simulation"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: project-simulation
+        annotations:
+          summary: "High latency on Project Simulation service"
+          description: "95th percentile latency is {{ $value | printf \"%.2f\" }}s (5s threshold)."
+          runbook_url: "https://hackathon.local/runbooks/high-latency"
+
+      - alert: ProjectSimulationHealthCheckFailed
+        expr: probe_success{job="project-simulation"} == 0
+        for: 3m
+        labels:
+          severity: critical
+          service: project-simulation
+        annotations:
+          summary: "Project Simulation health check failed"
+          description: "Health check for Project Simulation service is failing."
+          runbook_url: "https://hackathon.local/runbooks/health-check-failed"
+
+  # ============================================================================
+  # Database Alerts
+  # ============================================================================
+  - name: database_health
+    rules:
+      - alert: DatabaseConnectionFailed
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "PostgreSQL database connection failed"
+          description: "Cannot connect to PostgreSQL database."
+          runbook_url: "https://hackathon.local/runbooks/database-down"
+
+      - alert: DatabaseHighConnections
+        expr: pg_stat_activity_count{datname="simulation_db"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "High database connection count"
+          description: "Database has {{ $value }} active connections (80% of max)."
+          runbook_url: "https://hackathon.local/runbooks/high-db-connections"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(pg_stat_activity_max_tx_duration{datname="simulation_db"}[5m]) > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Long-running transactions detected in database."
+          runbook_url: "https://hackathon.local/runbooks/slow-queries"
+
+  # ============================================================================
+  # Redis Cache Alerts
+  # ============================================================================
+  - name: redis_health
+    rules:
+      - alert: RedisConnectionFailed
+        expr: redis_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis connection failed"
+          description: "Cannot connect to Redis cache."
+          runbook_url: "https://hackathon.local/runbooks/redis-down"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value | printf \"%.1f\" }}% (90% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/redis-memory"
+
+      - alert: RedisHighConnectionCount
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis connection count"
+          description: "Redis has {{ $value }} connected clients (100 threshold)."
+          runbook_url: "https://hackathon.local/runbooks/redis-connections"
+
+  # ============================================================================
+  # Ecosystem Service Alerts
+  # ============================================================================
+  - name: ecosystem_health
+    rules:
+      - alert: EcosystemServiceDown
+        expr: up{job="ecosystem-services"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: ecosystem
+        annotations:
+          summary: "Ecosystem service is down"
+          description: "{{ $labels.service }} service is unavailable."
+          runbook_url: "https://hackathon.local/runbooks/ecosystem-service-down"
+
+      - alert: EcosystemServiceHighErrorRate
+        expr: rate(http_requests_total{job="ecosystem-services", status=~"5.."}[5m]) / rate(http_requests_total{job="ecosystem-services"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: ecosystem
+        annotations:
+          summary: "High error rate on ecosystem service"
+          description: "{{ $labels.service }} error rate is {{ $value | printf \"%.2f\" }}% (5% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/ecosystem-high-errors"
+
+  # ============================================================================
+  # Resource Usage Alerts
+  # ============================================================================
+  - name: resource_usage
+    rules:
+      - alert: HighCPUUsage
+        expr: rate(cpu_usage_percent[5m]) > 85
+        for: 10m
+        labels:
+          severity: warning
+          resource: cpu
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | printf \"%.1f\" }}% (85% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/high-cpu"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          resource: memory
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | printf \"%.1f\" }}% (85% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/high-memory"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          resource: disk
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is {{ $value | printf \"%.1f\" }}% (85% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/high-disk"
+
+      - alert: ContainerRestarted
+        expr: rate(container_last_seen{container_state="running"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: info
+          resource: container
+        annotations:
+          summary: "Container restarted"
+          description: "{{ $labels.container_name }} container was restarted."
+          runbook_url: "https://hackathon.local/runbooks/container-restart"
+
+  # ============================================================================
+  # Business Logic Alerts
+  # ============================================================================
+  - name: business_logic
+    rules:
+      - alert: SimulationTimeout
+        expr: increase(simulation_timeout_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          type: business
+        annotations:
+          summary: "Simulation timeout occurred"
+          description: "{{ $value }} simulations timed out in the last 5 minutes."
+          runbook_url: "https://hackathon.local/runbooks/simulation-timeout"
+
+      - alert: HighSimulationFailureRate
+        expr: rate(simulation_failures_total[5m]) / rate(simulation_started_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          type: business
+        annotations:
+          summary: "High simulation failure rate"
+          description: "Simulation failure rate is {{ $value | printf \"%.1f\" }}% (10% threshold)."
+          runbook_url: "https://hackathon.local/runbooks/high-simulation-failures"
+
+      - alert: EcosystemServiceCircuitBreakerOpen
+        expr: circuit_breaker_state{state="open"} == 1
+        for: 2m
+        labels:
+          severity: warning
+          type: resilience
+        annotations:
+          summary: "Circuit breaker opened"
+          description: "Circuit breaker for {{ $labels.service }} is in OPEN state."
+          runbook_url: "https://hackathon.local/runbooks/circuit-breaker-open"
+
+      - alert: HighWorkflowExecutionTime
+        expr: histogram_quantile(0.95, rate(workflow_execution_duration_seconds_bucket[10m])) > 300
+        for: 5m
+        labels:
+          severity: warning
+          type: performance
+        annotations:
+          summary: "Slow workflow execution"
+          description: "95th percentile workflow execution time is {{ $value | printf \"%.0f\" }}s (300s threshold)."
+          runbook_url: "https://hackathon.local/runbooks/slow-workflows"

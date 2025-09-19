@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
+import time
 
 # Shared modules (these work with absolute imports)
 from services.shared.monitoring.health import register_health_endpoints
@@ -55,6 +56,75 @@ async def analysis_status():
         },
         message="Analysis service status"
     )
+
+@app.get("/api/v1/analysis/status")
+async def get_analysis_status_v1():
+    """Get comprehensive status of analysis service capabilities and current state."""
+
+    # Get basic health info
+    basic_health = {
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "status": "healthy",
+        "timestamp": time.time(),
+        "environment": os.environ.get("ENVIRONMENT", "development")
+    }
+
+    # Add analysis-specific status information
+    analysis_status = {
+        **basic_health,
+        "capabilities": {
+            "document_analysis": True,
+            "semantic_similarity": True,
+            "sentiment_analysis": True,
+            "tone_analysis": True,
+            "quality_analysis": True,
+            "trend_analysis": True,
+            "risk_assessment": True,
+            "maintenance_forecasting": True,
+            "change_impact_analysis": True,
+            "cross_repository_analysis": True,
+            "distributed_processing": True,
+            "automated_remediation": True,
+            "workflow_integration": True,
+            "reporting": True,
+            "pr_confidence_analysis": True,
+            "architecture_analysis": True
+        },
+        "detectors_available": [
+            "semantic_similarity_detector",
+            "sentiment_detector",
+            "tone_detector",
+            "quality_detector",
+            "trend_detector",
+            "risk_detector",
+            "maintenance_detector",
+            "impact_detector",
+            "consistency_detector",
+            "completeness_detector"
+        ],
+        "supported_formats": [
+            "text/plain",
+            "text/markdown",
+            "application/json",
+            "text/html"
+        ],
+        "models_loaded": True,
+        "distributed_workers": 0,
+        "queue_status": {
+            "pending_tasks": 0,
+            "processing_tasks": 0,
+            "completed_tasks": 0
+        },
+        "integration_status": {
+            "doc_store": "available",
+            "orchestrator": "available",
+            "prompt_store": "available",
+            "redis": "available"
+        }
+    }
+
+    return analysis_status
 
 @app.post("/api/analysis/analyze")
 async def analyze_code():

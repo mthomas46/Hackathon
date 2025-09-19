@@ -9,6 +9,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+# Add Optional to imports if not already there
+try:
+    Optional
+except NameError:
+    from typing import Optional
+
 from .utilities import TokenBucket
 
 
@@ -29,9 +35,9 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 class RequestMetricsMiddleware(BaseHTTPMiddleware):
     """Middleware for request metrics collection."""
 
-    def __init__(self, app, service_name: str):
+    def __init__(self, app, service_name: Optional[str] = None):
         super().__init__(app)
-        self.service_name = service_name
+        self.service_name = service_name or "unknown-service"
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start = time.perf_counter()
@@ -98,7 +104,7 @@ class ServiceMiddleware:
         self.enable_rate_limit = enable_rate_limit
 
     def get_middlewares(self):
-        """Get list of middleware classes for FastAPI app."""
+        """Get list of middleware instances for FastAPI app."""
         middlewares = [
             lambda app: RequestIdMiddleware(app),
             lambda app: RequestMetricsMiddleware(app, self.service_name)

@@ -1,0 +1,120 @@
+# ============================================================================
+# Prometheus Configuration - Project Simulation Service
+# ============================================================================
+# This configuration file sets up Prometheus monitoring for the project-simulation
+# service with comprehensive metrics collection and alerting rules.
+# ============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# ============================================================================
+# Scrape Configurations
+# ============================================================================
+scrape_configs:
+  # Project Simulation Service
+  - job_name: 'project-simulation'
+    static_configs:
+      - targets: ['project-simulation:5075']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: '/metrics'
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'project-simulation:5075'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'project-simulation'
+
+  # PostgreSQL Database
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Docker Containers
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['docker-exporter:9323']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Ecosystem Services
+  - job_name: 'ecosystem-services'
+    static_configs:
+      - targets:
+          - 'hackathon-doc-store:5001'
+          - 'hackathon-mock-data-generator:5002'
+          - 'hackathon-orchestrator:5003'
+          - 'hackathon-analysis-service:5004'
+          - 'hackathon-llm-gateway:5005'
+          - 'hackathon-prompt-store:5006'
+          - 'hackathon-summarizer-hub:5007'
+          - 'hackathon-notification-service:5008'
+          - 'hackathon-source-agent:5009'
+          - 'hackathon-code-analyzer:5010'
+          - 'hackathon-log-collector:5011'
+          - 'hackathon-discovery-agent:5012'
+          - 'hackathon-interpreter:5013'
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    metrics_path: '/metrics'
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):(\d+)'
+        target_label: service
+        replacement: '$1'
+      - source_labels: [__address__]
+        regex: '([^:]+):(\d+)'
+        target_label: port
+        replacement: '$2'
+
+# ============================================================================
+# Remote Write Configuration (Optional)
+# ============================================================================
+# remote_write:
+#   - url: "https://prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push"
+#     basic_auth:
+#       username: "${GRAFANA_CLOUD_USERNAME}"
+#       password: "${GRAFANA_CLOUD_PASSWORD}"
+
+# ============================================================================
+# Remote Read Configuration (Optional)
+# ============================================================================
+# remote_read:
+#   - url: "https://prometheus-prod-10-prod-us-central-0.grafana.net/api/prom"
+#     basic_auth:
+#       username: "${GRAFANA_CLOUD_USERNAME}"
+#       password: "${GRAFANA_CLOUD_PASSWORD}"

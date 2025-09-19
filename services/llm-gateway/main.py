@@ -274,6 +274,43 @@ async def stream_llm(request: LLMQuery):
         )
 
 # Ollama models endpoint
+@app.get("/api/v1/models")
+async def get_available_models():
+    """Get comprehensive list of available models across all providers."""
+    try:
+        # Get Ollama models
+        ollama_models = []
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{OLLAMA_ENDPOINT}/api/tags")
+                if response.status_code == 200:
+                    models_data = response.json()
+                    ollama_models = [
+                        {
+                            "name": model["name"],
+                            "provider": "ollama",
+                            "size": model.get("size", 0),
+                            "modified_at": model.get("modified_at", ""),
+                            "digest": model.get("digest", "")
+                        }
+                        for model in models_data.get("models", [])
+                    ]
+        except Exception as e:
+            print(f"Ollama models fetch failed: {e}")
+
+        # For now, return only Ollama models
+        # In a full implementation, this would aggregate models from all providers
+        return {
+            "success": True,
+            "models": ollama_models,
+            "total_count": len(ollama_models),
+            "providers": ["ollama"],
+            "timestamp": time.time()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch models: {str(e)}")
+
 @app.get("/ollama/models")
 async def list_ollama_models():
     """List available Ollama models."""

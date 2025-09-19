@@ -1,0 +1,200 @@
+# Sample Project Simulation Configuration
+# This file demonstrates how to configure a comprehensive project simulation
+# using the Project Simulation Service.
+
+# Basic project information
+project_name: "AI-Powered E-commerce Platform"
+project_description: "A modern e-commerce platform with AI-driven recommendations, microservices architecture, and advanced analytics"
+project_type: "web_application"
+complexity_level: "complex"
+
+# Simulation parameters
+simulation_type: "full_project"
+duration_weeks: 16
+budget: 350000.0
+
+# Timeline configuration - defines project phases
+timeline_phases:
+  - name: "Discovery & Planning"
+    description: "Requirements gathering, stakeholder interviews, and project planning"
+    duration_days: 20
+    deliverables:
+      - "Business Requirements Document"
+      - "Technical Specifications"
+      - "Project Roadmap"
+      - "Risk Assessment"
+    dependencies: []
+
+  - name: "System Architecture Design"
+    description: "High-level and detailed system architecture design"
+    duration_days: 25
+    deliverables:
+      - "System Architecture Diagram"
+      - "API Specifications"
+      - "Database Design"
+      - "Security Architecture"
+    dependencies: ["Discovery & Planning"]
+
+  - name: "Core Development"
+    description: "Implementation of core business logic and services"
+    duration_days: 50
+    deliverables:
+      - "User Management Service"
+      - "Product Catalog Service"
+      - "Order Processing Service"
+      - "Payment Integration"
+      - "Inventory Management"
+    dependencies: ["System Architecture Design"]
+
+  - name: "Frontend Development"
+    description: "User interface and customer-facing application development"
+    duration_days: 40
+    deliverables:
+      - "React-based Frontend"
+      - "Admin Dashboard"
+      - "Mobile-Responsive Design"
+      - "Progressive Web App (PWA)"
+    dependencies: ["System Architecture Design"]
+
+  - name: "AI Integration"
+    description: "Integration of AI/ML services for recommendations and analytics"
+    duration_days: 30
+    deliverables:
+      - "Recommendation Engine"
+      - "Personalization Service"
+      - "Analytics Dashboard"
+      - "Machine Learning Models"
+    dependencies: ["Core Development"]
+
+  - name: "Testing & QA"
+    description: "Comprehensive testing, quality assurance, and performance optimization"
+    duration_days: 25
+    deliverables:
+      - "Unit Test Suite"
+      - "Integration Tests"
+      - "End-to-End Tests"
+      - "Performance Test Results"
+      - "Security Audit Report"
+    dependencies: ["Core Development", "Frontend Development", "AI Integration"]
+
+  - name: "Deployment & Launch"
+    description: "Production deployment, monitoring setup, and go-live activities"
+    duration_days: 15
+    deliverables:
+      - "Production Deployment"
+      - "Monitoring & Alerting Setup"
+      - "Documentation & Training Materials"
+      - "Go-Live Checklist"
+    dependencies: ["Testing & QA"]
+
+# Team configuration
+team_members:
+  - name: "Sarah Chen"
+    role: "product_manager"
+    expertise_level: "expert"
+    productivity_multiplier: 0.95
+    skills:
+      - "Product Strategy"
+      - "Agile Methodologies"
+      - "Stakeholder Management"
+      - "Requirements Analysis"
+    cost_per_hour: 75.0
+
+  - name: "Marcus Rodriguez"
+    role: "technical_lead"
+    expertise_level: "expert"
+    productivity_multiplier: 1.2
+    skills:
+      - "System Architecture"
+      - "Python"
+      - "Microservices"
+      - "AWS"
+      - "Kubernetes"
+    cost_per_hour: 85.0
+
+  - name: "Emily Johnson"
+    role: "senior_developer"
+    expertise_level: "senior"
+    productivity_multiplier: 1.1
+    skills:
+      - "Python"
+      - "FastAPI"
+      - "PostgreSQL"
+      - "Docker"
+      - "React"
+    cost_per_hour: 65.0
+
+  - name: "David Kim"
+    role: "senior_developer"
+    expertise_level: "senior"
+    productivity_multiplier: 1.1
+    skills:
+      - "JavaScript"
+      - "React"
+      - "TypeScript"
+      - "GraphQL"
+      - "Node.js"
+    cost_per_hour: 65.0
+
+  - name: "Lisa Wong"
+    role: "senior_developer"
+    expertise_level: "senior"
+    productivity_multiplier: 1.05
+    skills:
+      - "Python"
+      - "Machine Learning"
+      - "TensorFlow"
+      - "Data Analysis"
+      - "AI Integration"
+    cost_per_hour: 70.0
+
+  - name: "James Park"
+    role: "qa_engineer"
+    expertise_level: "senior"
+    productivity_multiplier: 1.0
+    skills:
+      - "Test Automation"
+      - "Selenium"
+      - "pytest"
+      - "Performance Testing"
+      - "CI/CD"
+    cost_per_hour: 55.0
+
+  - name: "Anna Schmidt"
+    role: "devops_engineer"
+    expertise_level: "senior"
+    productivity_multiplier: 1.0
+    skills:
+      - "Docker"
+      - "Kubernetes"
+      - "AWS"
+      - "Terraform"
+      - "Monitoring"
+    cost_per_hour: 70.0
+
+max_team_size: 10
+
+# Content generation settings
+include_document_generation: true
+include_workflow_execution: true
+include_team_dynamics: true
+
+# Analysis settings
+enable_analysis: true
+analysis_types:
+  - "quality"
+  - "consistency"
+  - "patterns"
+  - "performance"
+
+# Real-time settings
+real_time_progress: true
+websocket_enabled: true
+
+# Performance settings
+max_execution_time_minutes: 180
+generate_realistic_delays: true
+capture_metrics: true
+
+# Ecosystem integration
+enable_ecosystem_integration: true

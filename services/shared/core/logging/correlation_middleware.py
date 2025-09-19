@@ -3,11 +3,12 @@
 import uuid
 from typing import Callable, Any, Optional
 from contextlib import asynccontextmanager
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .logger import set_correlation_id, get_correlation_id, generate_correlation_id
 
 
-class CorrelationMiddleware:
+class CorrelationMiddleware(BaseHTTPMiddleware):
     """Middleware for automatic correlation ID management.
 
     This middleware automatically:
@@ -17,12 +18,14 @@ class CorrelationMiddleware:
     - Cleans up correlation IDs after request completion
     """
 
-    def __init__(self, header_name: str = "X-Correlation-ID") -> None:
+    def __init__(self, app, header_name: str = "X-Correlation-ID") -> None:
         """Initialize correlation middleware.
 
         Args:
+            app: FastAPI app instance
             header_name: HTTP header name for correlation ID
         """
+        self.app = app
         self.header_name = header_name
 
     def extract_correlation_id(self, headers: dict) -> Optional[str]:
@@ -71,6 +74,34 @@ class CorrelationMiddleware:
             self.set_response_header(response_headers, correlation_id)
 
             yield correlation_id
+        finally:
+            # Restore previous correlation ID
+            set_correlation_id(previous_id)
+
+    async def dispatch(self, request, call_next):
+        """Async dispatch method for BaseHTTPMiddleware.
+
+        Args:
+            request: FastAPI request object
+            call_next: Next middleware callable
+
+        Returns:
+            Response from next middleware
+        """
+        # Extract or generate correlation ID
+        correlation_id = self.extract_correlation_id(request.headers)
+        if not correlation_id:
+            correlation_id = generate_correlation_id()
+
+        # Set correlation ID in context
+        previous_id = get_correlation_id()
+        set_correlation_id(correlation_id)
+
+        try:
+            # Set correlation ID in response headers
+            response = await call_next(request)
+            response.headers[self.header_name] = correlation_id
+            return response
         finally:
             # Restore previous correlation ID
             set_correlation_id(previous_id)

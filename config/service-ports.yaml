@@ -115,6 +115,18 @@ utility_services:
     external_port: 5130
     description: "Event notification system"
 
+# Simulation Services
+simulation_services:
+  project_simulation:
+    internal_port: 5075
+    external_port: 5075
+    description: "AI-powered project simulation engine"
+
+  simulation_dashboard:
+    internal_port: 8501
+    external_port: 8501
+    description: "Interactive simulation dashboard"
+
 # Web Services
 web_services:
   frontend:
@@ -127,6 +139,7 @@ reserved_ranges:
   ai_services: "5000-5199"
   analysis_services: "5020-5099"
   agent_services: "5040-5089"
+  simulation_services: "8500-8599"
   utility_services: "5100-5149"
   web_services: "3000-3099"
   infrastructure: "6000-6999"

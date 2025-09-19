@@ -1,13 +1,14 @@
+"""Shared Utilities Package.
+
+This package contains utility functions and helpers used across all services
+in the LLM Documentation Ecosystem.
+
+Modules:
+- utilities: Core utility functions
+- middleware: HTTP middleware components
+- error_handling: Standardized error handling
+- helpers: Additional helper functions
+- validation: Input validation utilities
+- observability: Monitoring and observability helpers
+- resilience: Circuit breaker and retry logic
 """
-Utility Functions and Helpers
-
-Common utility functions used across all services for consistent behavior.
-"""
-
-from .utilities import *
-from .error_handling import *
-from .middleware import *
-from .resilience import *
-from .observability import *
-
-__all__ = ["utilities", "error_handling", "middleware", "resilience", "observability"]
