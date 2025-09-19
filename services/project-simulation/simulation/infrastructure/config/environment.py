@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 
 from .config_manager import ConfigManager, get_config
-from services.project_simulation.simulation.infrastructure.logging import get_simulation_logger
+from ..logging import get_simulation_logger
 
 
 class EnvironmentDetector:
@@ -365,8 +365,7 @@ class EnvironmentConfig:
         info = self.get_environment_info()
         issues = self.validate_environment()
 
-        print("
-=== Environment Configuration ===")
+        print("=== Environment Configuration ===")
         print(f"Environment: {info['environment']}")
         print(f"Detected: {info['detected']}")
         print(f"Platform: {info['platform']}")
@@ -376,19 +375,16 @@ class EnvironmentConfig:
         print(f"Overrides Applied: {info['overrides_applied']}")
 
         if issues:
-            print("
-⚠️  Configuration Issues:")
+            print("⚠️  Configuration Issues:")
             for issue in issues:
                 print(f"  - {issue}")
 
         if info['config_overrides']:
-            print("
-🔧 Applied Overrides:")
+            print("🔧 Applied Overrides:")
             for key, value in info['config_overrides'].items():
                 print(f"  - {key}: {value}")
 
-        print("
-✅ Environment setup complete\n")
+        print("✅ Environment setup complete\n")
 
 
 def get_environment_config() -> EnvironmentConfig:

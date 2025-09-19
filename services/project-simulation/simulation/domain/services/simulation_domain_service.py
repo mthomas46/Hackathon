@@ -17,16 +17,20 @@ sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "service
 
 from simulation.infrastructure.logging import get_simulation_logger
 from simulation.domain.entities.project import Project
-from simulation.domain.entities.timeline import Timeline, TimelineEvent
-from simulation.domain.entities.team import Team, TeamMember
+from simulation.domain.entities.timeline import Timeline
+from simulation.domain.entities.team import Team, TeamMemberEntity, TeamRole
 from simulation.domain.value_objects import (
     ProjectType, ComplexityLevel, ProjectStatus,
-    SimulationStatus, PhaseStatus, TeamMemberRole
+    SimulationStatus
 )
 from simulation.domain.events import (
-    SimulationStarted, SimulationFinished, PhaseCompleted,
-    ProjectCreated, ProjectUpdated, DocumentGenerated
+    SimulationStarted, SimulationCompleted, ProjectPhaseCompleted,
+    ProjectCreated, ProjectStatusChanged, DocumentGenerated
 )
+from typing import Any, Dict, List
+
+# Define TimelineEvent as a simple type alias for now
+TimelineEvent = Dict[str, Any]
 
 
 class SimulationDomainService:
@@ -535,7 +539,7 @@ class SimulationDomainService:
 
         # Check for key roles
         roles = {member.role for member in team.members}
-        required_roles = {TeamMemberRole.DEVELOPER, TeamMemberRole.QA}
+        required_roles = {TeamRole.DEVELOPER, TeamRole.QA}
 
         missing_roles = required_roles - roles
         if missing_roles:

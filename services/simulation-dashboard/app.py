@@ -37,6 +37,7 @@ from pages.monitor import render_monitor_page
 from pages.reports import render_reports_page
 from pages.config import render_config_page
 from pages.analytics import render_analytics_page
+from pages.events import render_events_page
 
 # Configure page
 st.set_page_config(
@@ -117,6 +118,11 @@ PAGES = {
         "name": "📊 Monitor",
         "function": render_monitor_page,
         "description": "Real-time monitoring and progress tracking"
+    },
+    "events": {
+        "name": "📅 Events",
+        "function": render_events_page,
+        "description": "Event timeline and replay visualization"
     },
     "reports": {
         "name": "📋 Reports",

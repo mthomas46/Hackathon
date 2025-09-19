@@ -595,14 +595,6 @@ class TestContentValidationPipeline:
 
             documents = await pipeline.execute_document_generation(phase_config)
 
-            # Debug information
-            print(f"Documents generated: {len(documents)}")
-            print(f"Mock client called: {mock_client.generate_project_documents.called}")
-            if mock_client.generate_project_documents.called:
-                print(f"Mock call args: {mock_client.generate_project_documents.call_args}")
-                print(f"Mock return value: {mock_client.generate_project_documents.return_value}")
-            else:
-                print("Mock client was never called - checking pipeline logic")
 
             # For now, let's just check that the pipeline runs without errors
             # The full end-to-end test needs more work on the pipeline logic

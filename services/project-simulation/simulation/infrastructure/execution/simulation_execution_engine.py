@@ -35,7 +35,7 @@ from simulation.domain.entities.timeline import Timeline
 from simulation.domain.entities.team import Team
 from simulation.domain.value_objects import SimulationStatus, SimulationMetrics, DocumentType
 from simulation.domain.events import SimulationStarted, SimulationCompleted, SimulationFailed, DocumentGenerated, WorkflowExecuted
-from simulation.domain.repositories import SimulationRepository, ProjectRepository, TimelineRepository, TeamRepository
+from simulation.domain.repositories import ISimulationRepository, IProjectRepository, ITimelineRepository, ITeamRepository
 from simulation.domain.services.project_simulation_service import ProjectSimulationService
 
 
@@ -48,10 +48,10 @@ class SimulationExecutionEngine:
                  workflow_orchestrator: SimulationWorkflowOrchestrator,
                  logger,
                  monitoring_service: SimulationMonitoringService,
-                 simulation_repository: Optional[SimulationRepository] = None,
-                 project_repository: Optional[ProjectRepository] = None,
-                 timeline_repository: Optional[TimelineRepository] = None,
-                 team_repository: Optional[TeamRepository] = None):
+                 simulation_repository: Optional[ISimulationRepository] = None,
+                 project_repository: Optional[IProjectRepository] = None,
+                 timeline_repository: Optional[ITimelineRepository] = None,
+                 team_repository: Optional[ITeamRepository] = None):
         """Initialize the simulation execution engine."""
         self.content_pipeline = content_pipeline
         self.ecosystem_clients = ecosystem_clients
@@ -135,14 +135,14 @@ class SimulationExecutionEngine:
             # Execute simulation phases
             await self._execute_simulation_phases(simulation)
 
-        # Run final analysis
-        await self._run_final_analysis(simulation)
+            # Run final analysis
+            await self._run_final_analysis(simulation)
 
-        # Run document quality analysis
-        await self._run_document_quality_analysis(simulation)
+            # Run document quality analysis
+            await self._run_document_quality_analysis(simulation)
 
-        # Generate comprehensive reports
-        await self._generate_simulation_reports(simulation)
+            # Generate comprehensive reports
+            await self._generate_simulation_reports(simulation)
 
             # Complete simulation
             metrics = await self._calculate_simulation_metrics(simulation)
@@ -414,7 +414,7 @@ class SimulationExecutionEngine:
             "analysis_types": ["consistency", "quality", "insights"]
         })
 
-            return analysis_result
+        return analysis_result
 
     async def _run_document_quality_analysis(self, simulation: Simulation) -> None:
         """Run comprehensive document quality analysis on generated content."""

@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from urllib.parse import urlparse
 
 from .config_manager import get_config
-from services.project_simulation.simulation.infrastructure.logging import get_simulation_logger
+from ..logging import get_simulation_logger
 
 
 class ServiceDiscoveryError(Exception):

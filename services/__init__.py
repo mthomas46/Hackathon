@@ -18,6 +18,7 @@ _service_mappings = {
     'memory_agent': 'memory-agent',
     'notification_service': 'notification-service',
     'prompt_store': 'prompt-store',
+    'project_simulation': 'project-simulation',
     'secure_analyzer': 'secure-analyzer',
     'source_agent': 'source-agent',
     'summarizer_hub': 'summarizer-hub',

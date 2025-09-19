@@ -13,16 +13,31 @@ import asyncio
 import httpx
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+shared_path = Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"
+sys.path.insert(0, str(shared_path))
 
 from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 
 # Import shared health patterns (with fallbacks)
 try:
-    from shared.health.checks import HealthCheck, HealthStatus, HealthChecker
-    from shared.health.indicators import ServiceHealthIndicator, DatabaseHealthIndicator
-    from shared.health.endpoints import HealthEndpoint
+    from monitoring.health import HealthStatus, register_health_endpoints
+    # Create simple mock implementations for missing classes
+    class HealthCheck:
+        pass
+
+    class HealthChecker:
+        pass
+
+    class ServiceHealthIndicator:
+        pass
+
+    class DatabaseHealthIndicator:
+        pass
+
+    class HealthEndpoint:
+        pass
+
 except ImportError:
     # Fallback implementations
     from enum import Enum
