@@ -13,14 +13,11 @@ from typing import Dict, Any, List
 
 from simulation.domain.entities.project import Project
 from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus, TeamMember
+    ProjectType, ComplexityLevel, ProjectStatus, TeamMember, Role, ExpertiseLevel
 )
 from simulation.domain.services.simulation_domain_service import SimulationDomainService
 
 from simulation.application.services.simulation_application_service import SimulationApplicationService
-from simulation.application.use_cases.create_simulation_use_case import CreateSimulationUseCase
-from simulation.application.use_cases.execute_simulation_use_case import ExecuteSimulationUseCase
-from simulation.application.use_cases.get_simulation_status_use_case import GetSimulationStatusUseCase
 
 from simulation.infrastructure.repositories.in_memory_repositories import InMemoryProjectRepository, InMemorySimulationRepository, InMemoryTimelineRepository, InMemoryTeamRepository
 
@@ -29,7 +26,7 @@ class TestDomainApplicationIntegration:
     """Test integration between Domain and Application layers."""
 
     @pytest.fixture
-    async def repositories(self):
+    def repositories(self):
         """Create test repositories."""
         return {
             'project': InMemoryProjectRepository(),
@@ -37,35 +34,6 @@ class TestDomainApplicationIntegration:
             'timeline': InMemoryTimelineRepository(),
             'team': InMemoryTeamRepository()
         }
-
-    @pytest.fixture
-    async def domain_services(self, repositories):
-        """Create domain services with test repositories."""
-        return {
-            'simulation_domain_service': SimulationDomainService(
-                project_repository=repositories['project'],
-                simulation_repository=repositories['simulation'],
-                timeline_repository=repositories['timeline'],
-                team_repository=repositories['team']
-            )
-        }
-
-    @pytest.fixture
-    async def application_service(self, repositories, domain_services):
-        """Create application service with dependencies."""
-        # Mock external dependencies
-        mock_logger = MagicMock()
-        mock_monitoring = MagicMock()
-
-        return SimulationApplicationService(
-            project_repository=repositories['project'],
-            simulation_repository=repositories['simulation'],
-            timeline_repository=repositories['timeline'],
-            team_repository=repositories['team'],
-            domain_service=domain_services['simulation_domain_service'],
-            logger=mock_logger,
-            monitoring=mock_monitoring
-        )
 
     @pytest.fixture
     def sample_project_data(self):
@@ -84,59 +52,85 @@ class TestDomainApplicationIntegration:
     def sample_team_data(self):
         """Sample team data for testing."""
         return [
-            TeamMember(
-                member_id='dev_001',
-                name='Alice Johnson',
-                role='developer',
-                email='alice@example.com',
-                experience_years=5
-            ),
-            TeamMember(
-                member_id='qa_001',
-                name='Bob Smith',
-                role='qa_engineer',
-                email='bob@example.com',
-                experience_years=3
-            )
+            {
+                'name': 'Alice Johnson',
+                'role': Role.DEVELOPER,
+                'expertise_level': ExpertiseLevel.SENIOR
+            },
+            {
+                'name': 'Bob Smith',
+                'role': Role.QA,
+                'expertise_level': ExpertiseLevel.INTERMEDIATE
+            }
         ]
 
     @pytest.mark.asyncio
-    async def test_create_simulation_use_case_integration(self,
-                                                        application_service,
+    async def test_create_simulation_integration(self,
+                                                        repositories,
                                                         sample_project_data,
                                                         sample_team_data):
-        """Test CreateSimulationUseCase integration with domain layer."""
+        """Test create_simulation integration with domain layer."""
         # Arrange
-        use_case = CreateSimulationUseCase(
-            project_repository=application_service.project_repository,
-            simulation_repository=application_service.simulation_repository,
-            domain_service=application_service.domain_service
-        )
-
         command_data = {
             **sample_project_data,
             'team_members': sample_team_data
         }
 
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
+
         # Act
-        result = await use_case.execute(command_data)
+        result = await application_service.create_simulation(command_data)
 
         # Assert
         assert result['success'] is True
         assert 'simulation_id' in result
         assert result['message'] == 'Simulation created successfully'
 
-        # Verify domain objects were created
-        created_simulation = await application_service.simulation_repository.get(result['simulation_id'])
+        # Verify simulation was created successfully
+        created_simulation = await application_service._simulation_repository.find_by_id(result['simulation_id'])
         assert created_simulation is not None
-        assert created_simulation.project.name == sample_project_data['name']
+        assert created_simulation.status.value == 'created'  # Should be in created state
 
     @pytest.mark.asyncio
-    async def test_execute_simulation_use_case_integration(self,
-                                                         application_service,
+    async def test_execute_simulation_integration(self,
+                                                         repositories,
                                                          sample_project_data,
                                                          sample_team_data):
-        """Test ExecuteSimulationUseCase integration with domain layer."""
+        """Test execute_simulation integration with domain layer."""
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
+
         # Arrange - Create simulation first
         create_result = await application_service.create_simulation({
             **sample_project_data,
@@ -144,28 +138,41 @@ class TestDomainApplicationIntegration:
         })
         simulation_id = create_result['simulation_id']
 
-        use_case = ExecuteSimulationUseCase(
-            simulation_repository=application_service.simulation_repository,
-            domain_service=application_service.domain_service
-        )
-
         # Act
-        result = await use_case.execute({'simulation_id': simulation_id})
+        result = await application_service.execute_simulation(simulation_id)
 
         # Assert
         assert result['success'] is True
         assert result['simulation_id'] == simulation_id
 
         # Verify simulation status changed
-        updated_simulation = await application_service.simulation_repository.get(simulation_id)
+        updated_simulation = await application_service._simulation_repository.find_by_id(simulation_id)
         assert updated_simulation.status == 'running'
 
     @pytest.mark.asyncio
-    async def test_get_simulation_status_use_case_integration(self,
-                                                            application_service,
+    async def test_get_simulation_status_integration(self,
+                                                            repositories,
                                                             sample_project_data,
                                                             sample_team_data):
-        """Test GetSimulationStatusUseCase integration with domain layer."""
+        """Test get_simulation_status integration with domain layer."""
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
+
         # Arrange - Create and execute simulation
         create_result = await application_service.create_simulation({
             **sample_project_data,
@@ -175,12 +182,8 @@ class TestDomainApplicationIntegration:
 
         await application_service.execute_simulation(simulation_id)
 
-        use_case = GetSimulationStatusUseCase(
-            simulation_repository=application_service.simulation_repository
-        )
-
         # Act
-        result = await use_case.execute({'simulation_id': simulation_id})
+        result = await application_service.get_simulation_status(simulation_id)
 
         # Assert
         assert result['success'] is True
@@ -192,11 +195,16 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_domain_service_project_creation_integration(self,
-                                                             domain_services,
+                                                             repositories,
                                                              sample_project_data):
         """Test domain service integration with project creation."""
         # Arrange
-        domain_service = domain_services['simulation_domain_service']
+        domain_service = SimulationDomainService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team']
+        )
         project_data = sample_project_data.copy()
 
         # Act
@@ -234,11 +242,16 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_domain_service_timeline_generation_integration(self,
-                                                               domain_services,
+                                                               repositories,
                                                                sample_project_data):
         """Test domain service integration with timeline generation."""
         # Arrange
-        domain_service = domain_services['simulation_domain_service']
+        domain_service = SimulationDomainService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team']
+        )
 
         # Create project first
         project = await domain_service.create_project(sample_project_data)
@@ -256,11 +269,29 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_application_service_repository_integration(self,
-                                                           application_service,
+                                                           repositories,
                                                            sample_project_data):
         """Test application service integration with repositories."""
         # Arrange
         project_data = sample_project_data.copy()
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act - Create project
         result = await application_service.create_simulation(project_data)
@@ -269,7 +300,7 @@ class TestDomainApplicationIntegration:
         assert result['success'] is True
 
         # Verify repository integration
-        created_project = await application_service.project_repository.get(result['simulation_id'])
+        created_project = await application_service._project_repository.find_by_id(result['simulation_id'])
         assert created_project is not None
         assert created_project.name == sample_project_data['name']
 
@@ -292,25 +323,43 @@ class TestDomainApplicationIntegration:
         simulation_id = result['simulation_id']
 
         # Check project repository
-        project = await application_service.project_repository.get(simulation_id)
+        project = await application_service._project_repository.find_by_id(simulation_id)
         assert project is not None
 
-        # Check team repository
-        team = await application_service.team_repository.get(simulation_id)
+        # Check team repository (teams are linked to projects)
+        team = await application_service._team_repository.find_by_project_id(simulation_id)
         assert team is not None
         assert len(team.members) == len(sample_team_data)
 
-        # Check timeline repository
-        timeline = await application_service.timeline_repository.get(simulation_id)
+        # Check timeline repository (timelines are linked to projects)
+        timeline = await application_service._timeline_repository.find_by_project_id(simulation_id)
         assert timeline is not None
 
     @pytest.mark.asyncio
     async def test_domain_event_handling_integration(self,
-                                                   application_service,
+                                                   repositories,
                                                    sample_project_data):
         """Test domain event handling across layers."""
         # Arrange
         project_data = sample_project_data.copy()
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act - Create simulation (should trigger domain events)
         result = await application_service.create_simulation(project_data)
@@ -321,12 +370,12 @@ class TestDomainApplicationIntegration:
         # Check if events were properly handled
         # This would typically involve checking event storage or message queues
         # For this test, we verify the operation completed successfully
-        created_simulation = await application_service.simulation_repository.get(result['simulation_id'])
+        created_simulation = await application_service._simulation_repository.find_by_id(result['simulation_id'])
         assert created_simulation is not None
 
     @pytest.mark.asyncio
     async def test_business_rule_enforcement_integration(self,
-                                                      application_service,
+                                                      repositories,
                                                       sample_project_data):
         """Test business rule enforcement across layers."""
         # Arrange - Create project with invalid data
@@ -334,6 +383,24 @@ class TestDomainApplicationIntegration:
             **sample_project_data,
             'duration_weeks': -1  # Invalid: negative duration
         }
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act & Assert - Should fail due to business rule violation
         with pytest.raises(ValueError):
@@ -357,19 +424,37 @@ class TestDomainApplicationIntegration:
         # Assert - Either all repositories have the data or none do
         simulation_id = result['simulation_id']
 
-        project_exists = await application_service.project_repository.get(simulation_id) is not None
-        team_exists = await application_service.team_repository.get(simulation_id) is not None
-        timeline_exists = await application_service.timeline_repository.get(simulation_id) is not None
+        project_exists = await application_service._project_repository.find_by_id(simulation_id) is not None
+        team_exists = await application_service._team_repository.find_by_project_id(simulation_id) is not None
+        timeline_exists = await application_service._timeline_repository.find_by_project_id(simulation_id) is not None
 
         # All should exist or none should (atomicity)
         assert project_exists == team_exists == timeline_exists
 
     @pytest.mark.asyncio
     async def test_error_handling_across_layers(self,
-                                              application_service):
+                                              repositories):
         """Test error handling propagation across layers."""
         # Arrange - Try to get non-existent simulation
         non_existent_id = 'non_existent_simulation_123'
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act
         result = await application_service.get_simulation_status(non_existent_id)
@@ -380,11 +465,29 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_performance_monitoring_integration(self,
-                                                    application_service,
+                                                    repositories,
                                                     sample_project_data):
         """Test performance monitoring integration across layers."""
         # Arrange
         project_data = sample_project_data.copy()
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act - Create simulation with monitoring
         result = await application_service.create_simulation(project_data)
@@ -395,11 +498,29 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_caching_integration(self,
-                                     application_service,
+                                     repositories,
                                      sample_project_data):
         """Test caching integration across layers."""
         # Arrange
         project_data = sample_project_data.copy()
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act - Create simulation
         result1 = await application_service.create_simulation(project_data)
@@ -416,11 +537,29 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_logging_integration(self,
-                                     application_service,
+                                     repositories,
                                      sample_project_data):
         """Test logging integration across layers."""
         # Arrange
         project_data = sample_project_data.copy()
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act - Create simulation (should generate logs)
         result = await application_service.create_simulation(project_data)
@@ -431,11 +570,29 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_concurrent_operation_handling(self,
-                                               application_service,
+                                               repositories,
                                                sample_project_data):
         """Test concurrent operation handling across layers."""
         # Arrange
         project_data = sample_project_data.copy()
+
+        # Create mock logger and monitoring
+        mock_logger = MagicMock()
+        mock_monitoring_service = MagicMock()
+
+        # Create domain service
+        domain_service = SimulationDomainService()
+
+        # Create application service
+        application_service = SimulationApplicationService(
+            project_repository=repositories['project'],
+            simulation_repository=repositories['simulation'],
+            timeline_repository=repositories['timeline'],
+            team_repository=repositories['team'],
+            domain_service=domain_service,
+            logger=mock_logger,
+            monitoring_service=mock_monitoring_service
+        )
 
         # Act - Create multiple simulations concurrently
         tasks = []
@@ -452,7 +609,7 @@ class TestDomainApplicationIntegration:
 
         # Verify all simulations were created
         for result in results:
-            simulation = await application_service.simulation_repository.get(result['simulation_id'])
+            simulation = await application_service._simulation_repository.find_by_id(result['simulation_id'])
             assert simulation is not None
 
 
