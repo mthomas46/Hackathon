@@ -25,30 +25,50 @@ class TestDomainEventBase:
 
     def test_domain_event_creation(self):
         """Test creating a domain event."""
-        event = TestEvent(event_data="test")
-        assert event.event_data == "test"
+        event = ProjectCreated(
+            project_id="test-project-123",
+            project_name="Test Project",
+            project_type="web_application",
+            complexity="medium"
+        )
+        assert event.project_name == "Test Project"
         assert event.event_version == 1
         assert isinstance(event.occurred_at, datetime)
         assert event.event_id is not None
-        assert event.event_type == "TestEvent"
+        assert event.event_type == "ProjectCreated"
 
     def test_domain_event_id_uniqueness(self):
         """Test that domain events have unique IDs."""
-        event1 = TestEvent(event_data="test1")
-        event2 = TestEvent(event_data="test2")
+        event1 = ProjectCreated(
+            project_id="test-project-123",
+            project_name="Test Project 1",
+            project_type="web_application",
+            complexity="medium"
+        )
+        event2 = ProjectCreated(
+            project_id="test-project-456",
+            project_name="Test Project 2",
+            project_type="web_application",
+            complexity="medium"
+        )
 
         assert event1.event_id != event2.event_id
 
     def test_domain_event_serialization(self):
         """Test domain event serialization."""
-        event = TestEvent(event_data="test")
+        event = ProjectCreated(
+            project_id="test-project-123",
+            project_name="Test Project",
+            project_type="web_application",
+            complexity="medium"
+        )
         data = event.to_dict()
 
         assert data["event_id"] == event.event_id
-        assert data["event_type"] == "TestEvent"
+        assert data["event_type"] == "ProjectCreated"
         assert "occurred_at" in data
         assert data["event_version"] == 1
-        assert data["event_data"] == "test"
+        assert data["project_name"] == "Test Project"
 
     def test_domain_event_immutability(self):
         """Test that domain events are immutable after creation."""
@@ -585,12 +605,5 @@ class TestEventRegistry:
                 pytest.fail(f"Failed to create {event_name}: {e}")
 
 
-# Helper class for testing
-class TestEvent(DomainEvent):
-    """Test event for domain event base class testing."""
-    def __init__(self, event_data: str):
-        super().__init__()
-        self.event_data = event_data
-
-    def get_aggregate_id(self) -> str:
-        return "test-aggregate"
+# Removed helper class to avoid pytest collection issues
+# Tests will use existing domain events instead
