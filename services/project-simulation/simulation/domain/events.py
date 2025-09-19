@@ -12,7 +12,7 @@ from typing import List, Dict, Optional, Any
 from abc import ABC, abstractmethod
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DomainEvent(ABC):
     """Base class for all domain events."""
     event_id: str = field(init=False)
@@ -24,6 +24,11 @@ class DomainEvent(ABC):
         # Set event_id and event_type based on class name
         object.__setattr__(self, 'event_id', f"{self.__class__.__name__}_{datetime.now().timestamp()}")
         object.__setattr__(self, 'event_type', self.__class__.__name__)
+        # Set default values for optional fields
+        if not hasattr(self, 'event_version'):
+            object.__setattr__(self, 'event_version', 1)
+        if not hasattr(self, 'occurred_at'):
+            object.__setattr__(self, 'occurred_at', datetime.now())
 
     @abstractmethod
     def get_aggregate_id(self) -> str:
@@ -59,8 +64,6 @@ class ProjectCreated(DomainEvent):
     project_name: str
     project_type: str
     complexity: str
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.project_id
@@ -73,8 +76,6 @@ class ProjectStatusChanged(DomainEvent):
     old_status: str
     new_status: str
     changed_by: str
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.project_id
@@ -88,8 +89,6 @@ class ProjectPhaseCompleted(DomainEvent):
     phase_number: int
     completion_percentage: float
     duration_days: int
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.project_id
@@ -106,8 +105,6 @@ class TeamMemberAdded(DomainEvent):
     skills: List[str]
     experience_years: int
     productivity_factor: float
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.project_id
@@ -123,8 +120,6 @@ class TeamMemberRemoved(DomainEvent):
     removal_reason: str
     removal_date: datetime
     replacement_planned: bool
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.project_id
@@ -139,8 +134,6 @@ class SimulationStarted(DomainEvent):
     project_id: str
     scenario_type: str
     estimated_duration_hours: int
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.simulation_id
@@ -154,8 +147,6 @@ class SimulationCompleted(DomainEvent):
     status: str
     metrics: Dict[str, Any]
     total_duration_hours: float
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.simulation_id
@@ -168,8 +159,6 @@ class SimulationFailed(DomainEvent):
     project_id: str
     failure_reason: str
     failure_time: datetime
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.simulation_id
@@ -185,8 +174,6 @@ class DocumentGenerated(DomainEvent):
     title: str
     content_hash: str
     metadata: Dict[str, Any]
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.simulation_id
@@ -201,8 +188,6 @@ class WorkflowExecuted(DomainEvent):
     parameters: Dict[str, Any]
     results: Dict[str, Any]
     execution_time_seconds: float
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.simulation_id
@@ -217,8 +202,6 @@ class PhaseStarted(DomainEvent):
     project_id: str
     phase_name: str
     start_date: datetime
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.timeline_id
@@ -233,8 +216,6 @@ class PhaseDelayed(DomainEvent):
     original_end_date: datetime
     new_end_date: datetime
     delay_reason: str
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.timeline_id
@@ -247,8 +228,6 @@ class MilestoneAchieved(DomainEvent):
     project_id: str
     milestone_name: str
     achieved_date: datetime
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.timeline_id
@@ -264,8 +243,6 @@ class EcosystemServiceHealthChanged(DomainEvent):
     new_status: str
     response_time_ms: Optional[float]
     affected_simulations: List[str]
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.service_name
@@ -279,8 +256,6 @@ class DocumentAnalysisCompleted(DomainEvent):
     confidence_score: float
     insights_found: int
     processing_time_seconds: float
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.document_id
@@ -294,8 +269,6 @@ class WorkflowOrchestrationCompleted(DomainEvent):
     services_involved: List[str]
     total_execution_time_seconds: float
     success: bool
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.workflow_id
@@ -309,8 +282,6 @@ class NotificationSent(DomainEvent):
     notification_type: str
     priority: str
     sent_at: datetime
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.notification_id
@@ -324,8 +295,6 @@ class AnalyticsDataGenerated(DomainEvent):
     records_generated: int
     time_range_days: int
     processing_time_seconds: float
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.analytics_id
