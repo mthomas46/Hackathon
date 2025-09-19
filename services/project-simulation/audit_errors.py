@@ -30,6 +30,7 @@ class CodebaseAuditor:
             'circular_imports': [],
             'missing_dependencies': [],
             'syntax_errors': [],
+            'indentation_errors': [],
             'missing_init_files': [],
             'attribute_access': [],
             'path_config': []
@@ -40,14 +41,69 @@ class CodebaseAuditor:
         print("🔍 Starting comprehensive codebase audit...")
 
         self.check_import_paths()
+        self.check_import_errors()
+        self.check_shared_module_imports()
+        self.check_fallback_patterns()
         self.check_circular_imports()
         self.check_missing_dependencies()
         self.check_syntax_errors()
+        self.check_indentation_errors()
         self.check_missing_init_files()
         self.check_attribute_access_issues()
         self.check_path_configuration()
 
         return self.issues
+
+    def generate_import_fixes(self) -> Dict[str, str]:
+        """Generate suggested fixes for import issues."""
+        print("🔧 Generating import fixes...")
+
+        fixes = {}
+
+        # Generate fixes for missing shared module imports
+        for issue in self.issues.get('missing_dependencies', []):
+            if 'Imports from non-existent shared module:' in issue:
+                # Extract the import line
+                parts = issue.split(': Imports from non-existent shared module: ')
+                if len(parts) == 2:
+                    file_path = parts[0]
+                    import_line = parts[1]
+
+                    # Generate a try-except fallback
+                    fix = f"""
+# Original import (commented out):
+# {import_line}
+
+# Fallback implementation:
+try:
+    {import_line}
+except ImportError:
+    # Fallback implementation for missing shared module
+    pass  # Add appropriate fallback logic here
+"""
+                    fixes[file_path] = fix
+
+        # Generate fixes for imports without try-except
+        for issue in self.issues.get('import_paths', []):
+            if 'Shared import without try-except fallback:' in issue:
+                parts = issue.split(': Shared import without try-except fallback: ')
+                if len(parts) == 2:
+                    file_path = parts[0]
+                    import_line = parts[1]
+
+                    fix = f"""
+# Add try-except around this import:
+try:
+    {import_line}
+except ImportError:
+    # Fallback implementation
+    pass
+"""
+                    if file_path not in fixes:
+                        fixes[file_path] = ""
+                    fixes[file_path] += fix
+
+        return fixes
 
     def check_import_paths(self):
         """Check for problematic import paths."""
@@ -122,6 +178,150 @@ class CodebaseAuditor:
             except ImportError:
                 self.issues['missing_dependencies'].append(f"{dep} not available")
 
+    def check_import_errors(self):
+        """Check for actual import errors by attempting to import modules."""
+        print("  🔍 Checking for actual import errors...")
+
+        python_files = self.find_python_files()
+
+        # Special check for main.py
+        main_py = self.root_path / "main.py"
+        if main_py.exists():
+            try:
+                print("    Testing main.py imports...")
+                # Try to import main.py in a subprocess to avoid affecting current process
+                import subprocess
+                import sys
+                result = subprocess.run([
+                    sys.executable, "-c",
+                    "import sys; sys.path.insert(0, '.'); import main"
+                ], cwd=str(self.root_path), capture_output=True, text=True, timeout=10)
+
+                if result.returncode != 0:
+                    self.issues['import_paths'].append(
+                        f"main.py: Import failed - {result.stderr.strip()}"
+                    )
+            except subprocess.TimeoutExpired:
+                self.issues['import_paths'].append(
+                    "main.py: Import timed out - possible circular import"
+                )
+            except Exception as e:
+                self.issues['import_paths'].append(
+                    f"main.py: Error testing imports - {e}"
+                )
+
+        for file_path in python_files:
+            try:
+                # Get the module name for this file
+                module_name = self.get_module_name(file_path)
+
+                # Try to import the module to see if it has import errors
+                try:
+                    # Only try to import if it's not the main entry point
+                    if 'main.py' not in str(file_path) and '__init__.py' not in str(file_path):
+                        # Use importlib to try importing
+                        import importlib.util
+                        spec = importlib.util.spec_from_file_location(module_name, file_path)
+                        if spec and spec.loader:
+                            module = importlib.util.module_from_spec(spec)
+                            spec.loader.exec_module(module)
+                except ImportError as e:
+                    self.issues['import_paths'].append(
+                        f"{file_path}: Import error - {e}"
+                    )
+                except Exception as e:
+                    # Other execution errors during import
+                    if 'ImportError' in str(e) or 'ModuleNotFoundError' in str(e):
+                        self.issues['import_paths'].append(
+                            f"{file_path}: Module import failed - {e}"
+                        )
+
+            except Exception as e:
+                self.issues['import_paths'].append(f"{file_path}: Error checking imports - {e}")
+
+    def check_shared_module_imports(self):
+        """Check for imports from shared modules that might not exist."""
+        print("  🔗 Checking shared module imports...")
+
+        python_files = self.find_python_files()
+
+        shared_import_patterns = [
+            r'from services\.shared\.',
+            r'import services\.shared\.',
+            r'from \.\..*\.shared\.',
+            r'import \.\..*\.shared\.'
+        ]
+
+        for file_path in python_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                for pattern in shared_import_patterns:
+                    matches = re.findall(pattern, content)
+                    for match in matches:
+                        # Check if this shared module actually exists
+                        module_path = match.replace('from ', '').replace('import ', '').strip()
+                        if '.' in module_path:
+                            # Try to resolve the module path
+                            module_parts = module_path.split('.')
+                            potential_paths = [
+                                self.root_path / 'services' / 'shared' / f"{'/'.join(module_parts[2:])}.py",
+                                self.root_path / 'services' / 'shared' / f"{'/'.join(module_parts[2:])}/__init__.py"
+                            ]
+
+                            exists = any(path.exists() for path in potential_paths)
+                            if not exists:
+                                self.issues['missing_dependencies'].append(
+                                    f"{file_path}: Imports from non-existent shared module: {match}"
+                                )
+
+            except Exception as e:
+                self.issues['import_paths'].append(f"{file_path}: Error checking shared imports - {e}")
+
+    def check_fallback_patterns(self):
+        """Check for missing try-except fallback patterns around shared imports."""
+        print("  🛡️  Checking fallback patterns for shared imports...")
+
+        python_files = self.find_python_files()
+
+        for file_path in python_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Look for shared imports without try-except blocks
+                shared_imports = re.findall(r'from services\.shared\.[^\n]+', content)
+
+                for import_line in shared_imports:
+                    # Check if there's a try-except around this import
+                    lines = content.split('\n')
+                    import_line_num = None
+
+                    for i, line in enumerate(lines):
+                        if import_line in line:
+                            import_line_num = i
+                            break
+
+                    if import_line_num is not None:
+                        # Look for try-except pattern around this line
+                        start_check = max(0, import_line_num - 5)
+                        end_check = min(len(lines), import_line_num + 10)
+
+                        has_try_except = False
+                        for i in range(start_check, end_check):
+                            if 'try:' in lines[i]:
+                                has_try_except = True
+                                break
+
+                        if not has_try_except:
+                            self.issues['import_paths'].append(
+                                f"{file_path}:{import_line_num + 1}: Shared import without try-except fallback: {import_line.strip()}"
+                            )
+
+            except Exception as e:
+                self.issues['import_paths'].append(f"{file_path}: Error checking fallback patterns - {e}")
+
     def check_syntax_errors(self):
         """Check for syntax errors in Python files."""
         print("  ⚠️  Checking for syntax errors...")
@@ -150,6 +350,171 @@ class CodebaseAuditor:
                 self.issues['syntax_errors'].append(f"{file_path}: Syntax error - {e}")
             except Exception as e:
                 self.issues['syntax_errors'].append(f"{file_path}: Error parsing - {e}")
+
+    def check_indentation_errors(self):
+        """Check for indentation errors and inconsistencies in Python files."""
+        print("  📏 Checking for indentation errors...")
+
+        python_files = self.find_python_files()
+
+        for file_path in python_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+
+                self._check_indentation_consistency(file_path, lines)
+                self._check_indentation_levels(file_path, lines)
+                self._check_block_alignment(file_path, lines)
+
+            except Exception as e:
+                self.issues['syntax_errors'].append(f"{file_path}: Error checking indentation - {e}")
+
+    def _check_indentation_consistency(self, file_path, lines):
+        """Check for consistent use of tabs vs spaces."""
+        has_tabs = False
+        has_spaces = False
+        mixed_lines = []
+
+        for i, line in enumerate(lines):
+            # Skip empty lines and comments for this check
+            stripped = line.strip()
+            if not stripped or stripped.startswith('#'):
+                continue
+
+            # Check for tabs and spaces in indentation
+            indent_part = line[:len(line) - len(line.lstrip())]
+            if '\t' in indent_part:
+                has_tabs = True
+            if ' ' in indent_part:
+                has_spaces = True
+
+            if has_tabs and has_spaces:
+                mixed_lines.append(i + 1)
+
+        if has_tabs and has_spaces:
+            self.issues['indentation_errors'].append(
+                f"{file_path}: Mixed tabs and spaces detected on lines: {mixed_lines[:10]}{'...' if len(mixed_lines) > 10 else ''}"
+            )
+        elif has_tabs:
+            self.issues['indentation_errors'].append(
+                f"{file_path}: Uses tabs for indentation (should use 4 spaces)"
+            )
+
+    def _check_indentation_levels(self, file_path, lines):
+        """Check for proper indentation levels."""
+        expected_indent = 0
+        indent_stack = []
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            # Skip empty lines, comments, and docstrings
+            if not stripped or stripped.startswith('#'):
+                continue
+            if stripped.startswith('"""') or stripped.startswith("'''"):
+                continue
+            if stripped.endswith('"""') or stripped.endswith("'''"):
+                continue
+
+            # Calculate actual indentation
+            actual_indent = len(line) - len(line.lstrip())
+
+            # Track block starts
+            if stripped.endswith(':') and not stripped.startswith(('return', 'yield', 'break', 'continue', 'pass', 'raise')):
+                # This is likely the start of a block
+                indent_stack.append(expected_indent)
+                expected_indent += 4
+            elif stripped in ['pass', 'continue', 'break', '...', 'raise']:
+                # These can be at any indentation level but shouldn't cause issues
+                pass
+            elif actual_indent != expected_indent and stripped:
+                # Check for indentation mismatches
+                if actual_indent > expected_indent:
+                    if actual_indent - expected_indent != 4:
+                        self.issues['indentation_errors'].append(
+                            f"{file_path}:{i+1}: Incorrect indentation (expected {expected_indent}, got {actual_indent})"
+                        )
+                elif actual_indent < expected_indent:
+                    # Check if we're ending a block properly
+                    if indent_stack and actual_indent == indent_stack[-1]:
+                        expected_indent = indent_stack.pop()
+                    elif actual_indent < expected_indent:
+                        self.issues['indentation_errors'].append(
+                            f"{file_path}:{i+1}: Unexpected dedentation (expected {expected_indent}, got {actual_indent})"
+                        )
+
+    def _check_block_alignment(self, file_path, lines):
+        """Check for proper alignment of code blocks."""
+        block_keywords = ['def', 'class', 'if', 'elif', 'else', 'for', 'while', 'try', 'except', 'finally', 'with']
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            # Skip empty lines and comments
+            if not stripped or stripped.startswith('#'):
+                continue
+
+            # Check for function/class definitions and control structures
+            for keyword in block_keywords:
+                if stripped.startswith(keyword + ' ') or stripped == keyword or \
+                   (keyword in ['else', 'finally', 'except'] and stripped.startswith(keyword)):
+                    # Check if the line ends with :
+                    if not stripped.endswith(':') and not any(char in stripped for char in ['(', '[', '{']):
+                        if keyword in ['else', 'finally'] and ':' in stripped:
+                            continue  # These can be on same line
+                        if not stripped.endswith(':'):
+                            self.issues['indentation_errors'].append(
+                                f"{file_path}:{i+1}: {keyword} statement should end with ':'"
+                            )
+                    break
+
+            # Check for hanging indentation (line continuations)
+            if line.rstrip().endswith('\\'):
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1]
+                    if next_line.strip() and not next_line.startswith((' ', '\t')):
+                        self.issues['indentation_errors'].append(
+                            f"{file_path}:{i+1}: Line continuation should be indented"
+                        )
+
+    def generate_indentation_fixes(self) -> Dict[str, str]:
+        """Generate suggested fixes for indentation issues."""
+        print("🔧 Generating indentation fixes...")
+
+        fixes = {}
+
+        for issue in self.issues.get('indentation_errors', []):
+            if 'indentation' in issue.lower() or 'indent' in issue.lower() or 'mixed tabs' in issue.lower() or 'tabs for indentation' in issue.lower():
+                # Parse the issue to extract file path and line number
+                parts = issue.split(':')
+                if len(parts) >= 2:
+                    file_path = parts[0]
+                    if len(parts) >= 3:
+                        try:
+                            line_num = int(parts[1])
+                        except ValueError:
+                            line_num = None
+
+                        fix = f"""
+# Fix indentation issue{f' at line {line_num}' if line_num else ''}
+# Common indentation fixes:
+# 1. Use 4 spaces per indentation level (not tabs)
+# 2. Ensure consistent indentation within blocks
+# 3. Check that control statements end with ':'
+# 4. Verify line continuations are properly indented
+
+# Example of correct indentation:
+# def function():
+#     if condition:
+#         return True
+#     else:
+#         return False
+"""
+                        if file_path not in fixes:
+                            fixes[file_path] = ""
+                        fixes[file_path] += fix
+
+        return fixes
 
     def check_missing_init_files(self):
         """Check for missing __init__.py files."""
@@ -289,11 +654,52 @@ class CodebaseAuditor:
 
 def main():
     """Main audit function."""
-    auditor = CodebaseAuditor("services/project-simulation")
+    # Use current directory if running from project-simulation directory
+    import os
+    current_dir = os.getcwd()
+    if current_dir.endswith('project-simulation'):
+        audit_path = "."
+    else:
+        audit_path = "services/project-simulation"
+
+    print(f"🔍 Auditing directory: {audit_path}")
+    auditor = CodebaseAuditor(audit_path)
 
     try:
         issues = auditor.audit()
         auditor.print_report()
+
+        # Generate fixes for various issue types
+        import_issues = issues.get('import_paths', []) + issues.get('missing_dependencies', [])
+        syntax_issues = issues.get('syntax_errors', [])
+
+        if import_issues or syntax_issues:
+            print("\n🔧 CODE ISSUE ANALYSIS:")
+            print("-" * 50)
+
+            import_fixes = {}
+            indent_fixes = {}
+
+            # Import fixes
+            if import_issues:
+                import_fixes = auditor.generate_import_fixes()
+                if import_fixes:
+                    print("📝 Import Issue Fixes:")
+                    for file_path, fix in import_fixes.items():
+                        print(f"\n📄 {file_path}:")
+                        print(fix)
+
+            # Indentation fixes
+            indent_issues = issues.get('indentation_errors', [])
+            if indent_issues:
+                print("\n📏 Indentation Issue Fixes:")
+                indent_fixes = auditor.generate_indentation_fixes()
+                for file_path, fix in indent_fixes.items():
+                    print(f"\n📄 {file_path}:")
+                    print(fix)
+
+            if not import_fixes and not indent_fixes:
+                print("No automated fixes available for the detected issues.")
 
         # Summary
         total_issues = sum(len(issue_list) for issue_list in issues.values())
@@ -304,6 +710,8 @@ def main():
         else:
             print(f"⚠️  AUDIT COMPLETE: {total_issues} potential issues identified")
             print("   Review the issues above and fix them systematically.")
+            if import_issues:
+                print("   💡 Import issues detected - see suggested fixes above.")
         print("="*80)
 
     except Exception as e:
