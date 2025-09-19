@@ -251,6 +251,14 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Failed to initialize event persistence: {e}")
 
+    # Initialize environment management
+    try:
+        from simulation.infrastructure.config.environment_manager import initialize_environment_management
+        await initialize_environment_management()
+        logger.info("Environment management system initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize environment management: {e}")
+
     # Start service discovery
     if is_development():
         await start_service_discovery()
