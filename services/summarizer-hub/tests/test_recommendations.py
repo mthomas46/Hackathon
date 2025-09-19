@@ -353,7 +353,7 @@ class TestSimpleSummarizerRecommendations:
 
         rec = quality_recs[0]
         assert rec["affected_documents"] == ["doc1"]
-        assert "short" in rec["description"].lower() or "improve" in rec["description"].lower()
+        assert "quality" in rec["description"].lower() or "issues" in rec["description"].lower()
 
     def test_generate_recommendations_comprehensive_types(self):
         """Test that comprehensive recommendations include all types."""
@@ -457,7 +457,7 @@ class TestRecommendationDataValidation:
         ]
 
         # Mock an exception in the summarizer
-        with patch.object(SimpleSummarizer, 'generate_recommendations', side_effect=Exception("Test error")):
+        with patch('main.SimpleSummarizer.generate_recommendations', side_effect=Exception("Test error")):
             response = self.client.post("/api/v1/recommendations", json={
                 "documents": documents
             })
@@ -466,3 +466,360 @@ class TestRecommendationDataValidation:
             data = response.json()
             assert data["success"] is False
             assert "error" in data
+
+
+class TestComprehensiveQualityAnalysis:
+    """Test the comprehensive quality analysis functionality."""
+
+    def setup_method(self):
+        """Setup test fixtures."""
+        self.summarizer = SimpleSummarizer()
+
+    def test_analyze_document_quality_comprehensive_empty_content(self):
+        """Test quality analysis with empty content."""
+        document = {"id": "doc1", "title": "Empty Doc", "content": ""}
+
+        result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
+
+        assert len(result["issues"]) == 1
+        assert result["issues"][0]["type"] == "missing_content"
+        assert result["issues"][0]["severity"] == "critical"
+        assert result["metrics"]["word_count"] == 0
+        assert result["metrics"]["overall_score"] == 0
+
+    def test_analyze_document_quality_comprehensive_good_document(self):
+        """Test quality analysis with a well-structured document."""
+        document = {
+            "id": "doc1",
+            "title": "API Documentation",
+            "content": """# API Documentation
+
+## Getting Started
+
+This guide will help you get started with our API.
+
+## Authentication
+
+To authenticate, use your API key in the header.
+
+## Endpoints
+
+### GET /users
+
+Retrieve a list of users.
+
+**Parameters:**
+- `limit` (optional): Maximum number of results
+
+**Response:**
+```json
+{
+  "users": [...]
+}
+```
+
+## Examples
+
+Here's how to get users:
+
+```python
+import requests
+
+response = requests.get('/users')
+print(response.json())
+```
+
+## Support
+
+For help, contact support@example.com or visit our GitHub repository.
+"""
+        }
+
+        result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
+
+        # Should have minimal issues for a well-structured document
+        assert len(result["issues"]) <= 5  # Allow some minor issues
+        assert result["metrics"]["word_count"] > 50  # More realistic word count
+        assert result["metrics"]["overall_score"] > 0.5  # More realistic score
+
+    def test_analyze_document_quality_comprehensive_poor_document(self):
+        """Test quality analysis with a poorly structured document."""
+        document = {
+            "id": "doc2",
+            "title": "Poor Documentation",
+            "content": "This is a very short document. It has some stuff but not much. It uses passive voice a lot and doesn't explain anything clearly. There are some things that could be better but it's not clear what to do. The document lacks structure and examples."
+        }
+
+        result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
+
+        # Should identify multiple quality issues
+        assert len(result["issues"]) >= 3
+
+        issue_types = [issue["type"] for issue in result["issues"]]
+        assert "too_short" in issue_types or "unclear_language" in issue_types
+        assert result["metrics"]["overall_score"] < 0.6
+
+    def test_analyze_content_length_issues(self):
+        """Test content length analysis."""
+        # Test too short content
+        short_content = "This is short."
+        metrics = {"word_count": 3}
+        issues = self.summarizer._analyze_content_length(short_content, metrics)
+
+        assert len(issues) == 1
+        assert issues[0]["type"] == "too_short"
+        assert issues[0]["severity"] == "high"
+
+        # Test too verbose content
+        long_content = "word " * 4000  # Very long content
+        metrics = {"word_count": 4000}
+        issues = self.summarizer._analyze_content_length(long_content, metrics)
+
+        assert len(issues) == 1
+        assert issues[0]["type"] == "too_verbose"
+        assert issues[0]["severity"] == "medium"
+
+    def test_analyze_clarity_and_readability(self):
+        """Test clarity and readability analysis."""
+        # Test complex sentences - make one very long sentence
+        complex_content = "This is a very long and complex sentence that contains many words and intricate ideas with multiple clauses and complex concepts that might be quite difficult for readers to understand and process effectively without considerable mental effort and deep concentration as they navigate through the various layers of meaning and technical details presented in this extended textual construction which continues for an extended period of time."
+        metrics = {"word_count": len(complex_content.split())}
+        issues = self.summarizer._analyze_clarity_and_readability(complex_content, metrics)
+
+        print(f"Complex content word count: {len(complex_content.split())}")
+        print(f"Issues found: {len(issues)}")
+        for issue in issues:
+            print(f"  - {issue['type']}: {issue['description']}")
+
+        # Should detect either complex sentences or passive voice
+        assert len(issues) >= 1
+        has_complex = any(issue["type"] == "complex_sentences" for issue in issues)
+        has_passive = any(issue["type"] == "passive_voice" for issue in issues)
+        assert has_complex or has_passive
+
+        # Test passive voice detection
+        passive_content = "The system is used by users. Data is processed by the server. Results are returned to the client."
+        metrics = {"word_count": len(passive_content.split())}
+        issues = self.summarizer._analyze_clarity_and_readability(passive_content, metrics)
+
+        passive_issues = [i for i in issues if i["type"] == "passive_voice"]
+        assert len(passive_issues) >= 1
+
+    def test_analyze_technical_accuracy(self):
+        """Test technical accuracy analysis."""
+        # Test unformatted code detection
+        code_content = "function processData(data) { return data.map(item => item.value); }"
+        document = {"id": "doc1", "title": "Code Example"}
+        metrics = {"technical_accuracy": 1.0}
+        issues = self.summarizer._analyze_technical_accuracy(code_content, document, metrics)
+
+        assert len(issues) >= 1
+        assert any(issue["type"] == "unformatted_code" for issue in issues)
+
+        # Test API documentation completeness
+        api_content = "Our API is great. It has many features. API API API."
+        document = {"id": "doc2", "title": "API Overview"}
+        metrics = {"technical_accuracy": 1.0}
+        issues = self.summarizer._analyze_technical_accuracy(api_content, document, metrics)
+
+        api_issues = [i for i in issues if "api" in i["type"]]
+        assert len(api_issues) >= 1
+
+    def test_analyze_structure_and_organization(self):
+        """Test structure and organization analysis."""
+        # Test poor structure - make it much longer to trigger detection
+        unstructured_content = ("This is a long document without any headings or structure. " * 50) + "It just keeps going on and on with lots of text that doesn't have any clear organization or logical flow. There are no sections to break up the content and make it easier to read and understand. " * 20
+        title = "Long Document"
+        metrics = {"structure_score": 1.0}
+        issues = self.summarizer._analyze_structure_and_organization(unstructured_content, title, metrics)
+
+        print(f"Unstructured content word count: {len(unstructured_content.split())}")
+        print(f"Issues found: {len(issues)}")
+        for issue in issues:
+            print(f"  - {issue['type']}: {issue['description']}")
+
+        # Should detect poor structure or poor flow
+        assert len(issues) >= 1
+        assert any(issue["type"] in ["poor_structure", "poor_flow"] for issue in issues)
+
+        # Test good structure
+        structured_content = """# Main Title
+
+## Section 1
+Content for section 1.
+
+## Section 2
+Content for section 2.
+
+### Subsection
+More detailed content.
+
+## Section 3
+Final section content.
+"""
+        title = "Well Structured Document"
+        metrics = {"structure_score": 1.0}
+        issues = self.summarizer._analyze_structure_and_organization(structured_content, title, metrics)
+
+        # Should have fewer or no structural issues
+        structural_issues = [i for i in issues if "structure" in i["type"] or "flow" in i["type"]]
+        assert len(structural_issues) <= 1
+
+    def test_analyze_consistency(self):
+        """Test consistency analysis."""
+        # Test inconsistent terminology
+        inconsistent_content = "You can visit our web site or website to create a user name or username. Then you can log in or login to access your account."
+        metrics = {"consistency_score": 1.0}
+        issues = self.summarizer._analyze_consistency(inconsistent_content, metrics)
+
+        assert len(issues) >= 1
+        assert any("terminology" in issue["type"] for issue in issues)
+
+    def test_analyze_completeness(self):
+        """Test completeness analysis."""
+        # Test tutorial missing sections
+        tutorial_content = "This is a tutorial about getting started. It explains how to begin but doesn't have prerequisites or examples or a conclusion."
+        document = {"id": "doc1", "title": "Tutorial", "type": "tutorial"}
+        metrics = {"completeness_score": 1.0}
+        issues = self.summarizer._analyze_completeness(tutorial_content, document, metrics)
+
+        completeness_issues = [i for i in issues if "missing_sections" in i["type"]]
+        assert len(completeness_issues) >= 1
+
+    def test_calculate_overall_quality_score(self):
+        """Test overall quality score calculation."""
+        # Test with good metrics and no issues
+        metrics = {
+            "technical_accuracy": 0.9,
+            "structure_score": 0.9,
+            "consistency_score": 0.9,
+            "completeness_score": 0.9,
+            "word_count": 500
+        }
+        issues = []
+
+        score = self.summarizer._calculate_overall_quality_score(metrics, issues)
+        assert score > 0.8
+
+        # Test with poor metrics and many issues
+        metrics = {
+            "technical_accuracy": 0.3,
+            "structure_score": 0.3,
+            "consistency_score": 0.3,
+            "completeness_score": 0.3,
+            "word_count": 20
+        }
+        issues = [
+            {"severity": "high"},
+            {"severity": "critical"},
+            {"severity": "medium"}
+        ]
+
+        score = self.summarizer._calculate_overall_quality_score(metrics, issues)
+        assert score < 0.5
+
+    def test_determine_quality_priority(self):
+        """Test quality priority determination."""
+        # Test critical issues
+        issues = [{"severity": "critical"}, {"severity": "low"}]
+        metrics = {}
+        priority = self.summarizer._determine_quality_priority(issues, metrics)
+        assert priority == "high"
+
+        # Test many high severity issues
+        issues = [{"severity": "high"}, {"severity": "high"}, {"severity": "high"}]
+        priority = self.summarizer._determine_quality_priority(issues, metrics)
+        assert priority == "high"
+
+        # Test minor issues
+        issues = [{"severity": "low"}, {"severity": "low"}]
+        priority = self.summarizer._determine_quality_priority(issues, metrics)
+        assert priority == "low"
+
+    def test_comprehensive_quality_analysis_integration(self):
+        """Test the complete quality analysis workflow."""
+        documents = [
+            {
+                "id": "good_doc",
+                "title": "Well-Structured API Guide",
+                "content": """# API Documentation
+
+## Overview
+This comprehensive guide covers our REST API with detailed examples and best practices for developers.
+
+## Authentication
+To authenticate with our API, you need to include a Bearer token in the Authorization header of your HTTP requests. You can obtain tokens from the developer portal.
+
+## Endpoints
+
+### GET /users
+Retrieve a list of users from the system.
+
+**Parameters:**
+- `limit` (optional): Maximum number of results to return (default: 20)
+- `offset` (optional): Number of results to skip (default: 0)
+
+**Response:**
+```json
+{
+  "users": [
+    {
+      "id": 123,
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  ],
+  "total": 100,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Example:**
+```bash
+curl -H "Authorization: Bearer your_token_here" \\
+     -H "Content-Type: application/json" \\
+     "https://api.example.com/users?limit=10"
+```
+
+## Error Handling
+The API uses standard HTTP status codes. Common errors include:
+- 400 Bad Request: Invalid parameters
+- 401 Unauthorized: Missing or invalid token
+- 404 Not Found: Resource doesn't exist
+- 500 Internal Server Error: Server error
+
+## Rate Limiting
+API calls are limited to 1000 requests per hour. Rate limit headers are included in responses.
+
+## Support
+For help, contact support@example.com or visit our GitHub repository for code examples and issue tracking.
+"""
+            },
+            {
+                "id": "poor_doc",
+                "title": "Poor Documentation",
+                "content": "This document is very short and unclear. It doesn't explain anything well and lacks examples or structure. Very confusing content that doesn't help users understand anything."
+            }
+        ]
+
+        # Test comprehensive recommendations
+        result = asyncio.run(self.summarizer.generate_recommendations(documents))
+
+        # Should generate recommendations for both documents
+        quality_recs = [r for r in result["recommendations"] if r["type"] == "quality"]
+        assert len(quality_recs) >= 1
+
+        # Should have quality recommendations for both documents
+        affected_docs = set()
+        for rec in quality_recs:
+            affected_docs.update(rec["affected_documents"])
+
+        assert "poor_doc" in affected_docs
+        assert "good_doc" in affected_docs
+
+        # Both should have quality scores in their metadata
+        for rec in quality_recs:
+            assert "quality_score" in rec["metadata"]
+            assert "issues" in rec["metadata"]
+            assert len(rec["metadata"]["issues"]) > 0

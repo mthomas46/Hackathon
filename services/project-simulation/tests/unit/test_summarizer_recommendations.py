@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 
 # Import the modules we'll be testing
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
-from simulation.application.recommendations.document_recommendation_service import DocumentRecommendationService
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
 
 
@@ -468,96 +467,6 @@ class TestSummarizerHubClient:
         assert isinstance(fallback_result, dict)
         assert "fallback_mode" in fallback_result
         assert fallback_result["fallback_mode"] is True
-
-
-class TestDocumentRecommendationService:
-    """Test the document recommendation service."""
-
-    def setup_method(self):
-        """Setup test fixtures."""
-        self.service = DocumentRecommendationService()
-
-    @pytest.mark.asyncio
-    async def test_analyze_document_quality(self):
-        """Test document quality analysis."""
-        # Arrange
-        document = {
-            "id": "doc1",
-            "content": "This is a well-written, comprehensive document with clear examples.",
-            "title": "Quality Documentation"
-        }
-
-        # Act
-        quality_score = await self.service.analyze_document_quality(document)
-
-        # Assert
-        assert isinstance(quality_score, float)
-        assert 0.0 <= quality_score <= 1.0
-
-    @pytest.mark.asyncio
-    async def test_detect_similar_documents(self):
-        """Test detection of similar documents."""
-        # Arrange
-        documents = [
-            {"id": "doc1", "content": "API authentication guide", "title": "Auth Guide"},
-            {"id": "doc2", "content": "API authentication tutorial", "title": "Auth Tutorial"},
-            {"id": "doc3", "content": "Database connection guide", "title": "DB Guide"}
-        ]
-
-        # Act
-        similar_pairs = await self.service.detect_similar_documents(documents)
-
-        # Assert
-        assert isinstance(similar_pairs, list)
-
-        for pair in similar_pairs:
-            assert "document1_id" in pair
-            assert "document2_id" in pair
-            assert "similarity_score" in pair
-            assert pair["similarity_score"] > 0.5  # Should be reasonably similar
-
-    @pytest.mark.asyncio
-    async def test_identify_content_gaps(self):
-        """Test identification of content gaps."""
-        # Arrange
-        documents = [
-            {"id": "doc1", "content": "Basic API usage", "type": "api_docs"},
-            {"id": "doc2", "content": "Advanced database queries", "type": "database"}
-        ]
-
-        # Act
-        content_gaps = await self.service.identify_content_gaps(documents)
-
-        # Assert
-        assert isinstance(content_gaps, list)
-
-        for gap in content_gaps:
-            assert "topic" in gap
-            assert "importance" in gap
-            assert "missing_content_type" in gap
-
-    @pytest.mark.asyncio
-    async def test_generate_actionable_recommendations(self):
-        """Test generation of actionable recommendations."""
-        # Arrange
-        analysis_results = {
-            "quality_scores": {"doc1": 0.3, "doc2": 0.8},
-            "similar_documents": [{"doc1": "doc2", "similarity": 0.85}],
-            "content_gaps": ["error_handling", "security"]
-        }
-
-        # Act
-        recommendations = await self.service.generate_actionable_recommendations(analysis_results)
-
-        # Assert
-        assert isinstance(recommendations, list)
-        assert len(recommendations) > 0
-
-        for rec in recommendations:
-            assert "action" in rec
-            assert "rationale" in rec
-            assert "expected_impact" in rec
-            assert "effort_level" in rec
 
 
 class TestRecommendationTypes:

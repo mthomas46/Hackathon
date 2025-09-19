@@ -7,6 +7,7 @@ Integrates with ecosystem services for comprehensive analysis.
 import time
 import httpx
 import os
+import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -109,20 +110,20 @@ class SimulationAnalyzer:
 
         if len(documents) == 0:
             result.add_finding("No documents found in simulation")
-            result.add_recommendation("Consider adding documentation to the simulation")
         else:
-            # Use summarizer-hub for document analysis
-            summarizer_analysis = await self._analyze_with_summarizer_hub(documents)
-            if summarizer_analysis:
-                result.findings.extend(summarizer_analysis.get("findings", []))
-                result.recommendations.extend(summarizer_analysis.get("recommendations", []))
-                result.add_metric("summarizer_analysis", summarizer_analysis)
+            # Get recommendations report from summarizer-hub
+            recommendations_report = await self._get_recommendations_report_from_summarizer_hub(simulation_id, documents)
+            if recommendations_report:
+                result.add_metric("recommendations_report_id", recommendations_report["report_id"])
+                result.add_metric("recommendations_summary", recommendations_report["summary"])
+                result.add_finding("Recommendations report generated and stored")
+            else:
+                result.add_finding("No recommendations report generated")
 
-            # Use doc-store for document quality analysis
+            # Use doc-store for document quality analysis (without local recommendations)
             doc_store_analysis = await self._analyze_with_doc_store(documents)
             if doc_store_analysis:
                 result.findings.extend(doc_store_analysis.get("findings", []))
-                result.recommendations.extend(doc_store_analysis.get("recommendations", []))
                 result.add_metric("doc_store_analysis", doc_store_analysis)
 
             # Analyze document types and quality
@@ -144,12 +145,10 @@ class SimulationAnalyzer:
             # Enhanced quality checks using ecosystem insights
             if len(doc_types) < 3:
                 result.add_finding("Limited variety in document types")
-                result.add_recommendation("Consider adding API documentation, user manuals, and architecture diagrams")
 
             avg_quality = result.metrics.get("average_quality_score", 0)
             if avg_quality < 0.5:
                 result.add_finding("Low document quality detected")
-                result.add_recommendation("Improve document completeness and detail")
 
         result.processing_time_seconds = time.time() - start_time
         result.confidence_score = result.calculate_confidence()
@@ -167,7 +166,6 @@ class SimulationAnalyzer:
 
         if len(timeline) == 0:
             result.add_finding("No timeline defined")
-            result.add_recommendation("Define project phases and timeline")
         else:
             # Calculate total duration
             total_duration = sum(phase.get("duration_weeks", 0) for phase in timeline)
@@ -177,11 +175,9 @@ class SimulationAnalyzer:
             # Analyze timeline structure
             if total_duration < 4:
                 result.add_finding("Timeline too short for realistic project")
-                result.add_recommendation("Consider extending timeline for more realistic simulation")
 
             if total_duration > 24:
                 result.add_finding("Timeline very long")
-                result.add_recommendation("Review if all phases are necessary")
 
             # Check for overlapping phases
             sorted_phases = sorted(timeline, key=lambda x: x.get("start_week", 0))
@@ -191,7 +187,6 @@ class SimulationAnalyzer:
 
                 if current_end > next_start:
                     result.add_finding("Potential phase overlap detected")
-                    result.add_recommendation("Review phase scheduling to avoid overlaps")
 
         result.processing_time_seconds = time.time() - start_time
         result.confidence_score = result.calculate_confidence()
@@ -211,7 +206,6 @@ class SimulationAnalyzer:
 
         if len(team_members) == 0:
             result.add_finding("No team members defined")
-            result.add_recommendation("Define team members for realistic simulation")
         else:
             # Analyze roles
             roles = {}
@@ -389,6 +383,246 @@ class SimulationAnalyzer:
             results.append(cost_result)
 
         return results
+
+    # ============================================================================
+    # RECOMMENDATIONS REPORT MANAGEMENT
+    # ============================================================================
+
+    async def _get_recommendations_report_from_summarizer_hub(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Get recommendations report from summarizer-hub and store it."""
+        try:
+            # Get recommendations from summarizer-hub
+            recommendations = await self._get_recommendations_from_summarizer_hub(documents)
+
+            if not recommendations:
+                return None
+
+            # Generate report data
+            report_data = {
+                "simulation_id": simulation_id,
+                "timestamp": datetime.now().isoformat(),
+                "documents_analyzed": len(documents),
+                "recommendations": recommendations,
+                "summary": {
+                    "total_recommendations": len(recommendations),
+                    "recommendation_types": list(set(r.get("type", "unknown") for r in recommendations)),
+                    "priority_breakdown": {
+                        "high": len([r for r in recommendations if r.get("priority") == "high"]),
+                        "medium": len([r for r in recommendations if r.get("priority") == "medium"]),
+                        "low": len([r for r in recommendations if r.get("priority") == "low"])
+                    }
+                }
+            }
+
+            # Store report in doc-store
+            report_id = await self._store_recommendations_report(report_data)
+
+            return {
+                "report_id": report_id,
+                "summary": report_data["summary"]
+            }
+
+        except Exception as e:
+            print(f"Error getting recommendations report: {e}")
+            return None
+
+    async def _get_recommendations_from_summarizer_hub(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Get recommendations from summarizer-hub service."""
+        try:
+            summarizer_url = self.service_urls.get('summarizer_hub', 'http://localhost:5160')
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{summarizer_url}/api/v1/recommendations",
+                    json={
+                        "documents": documents,
+                        "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"]
+                    }
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("success"):
+                        return result.get("recommendations", [])
+                    else:
+                        print(f"Summarizer Hub error: {result.get('error', 'Unknown error')}")
+                        return []
+                else:
+                    print(f"Summarizer Hub request failed: {response.status_code}")
+                    return []
+
+        except Exception as e:
+            print(f"Error communicating with Summarizer Hub: {e}")
+            return []
+
+    async def _store_recommendations_report(self, report_data: Dict[str, Any]) -> str:
+        """Store recommendations report in doc-store and generate files."""
+        try:
+            # Generate unique report ID
+            report_id = f"rec_report_{report_data['simulation_id']}_{int(datetime.now().timestamp())}"
+
+            # Store JSON version in doc-store
+            json_content = {
+                "id": report_id,
+                "type": "recommendations_report",
+                "simulation_id": report_data["simulation_id"],
+                "title": f"Recommendations Report - {report_data['simulation_id']}",
+                "content": json.dumps(report_data, indent=2),
+                "format": "json",
+                "timestamp": report_data["timestamp"],
+                "metadata": {
+                    "document_count": report_data["documents_analyzed"],
+                    "recommendations_count": report_data["summary"]["total_recommendations"],
+                    "report_type": "simulation_recommendations"
+                }
+            }
+
+            # Store in doc-store
+            await self._save_to_doc_store(json_content)
+
+            # Generate and store Markdown version
+            md_content = self._generate_markdown_report(report_data)
+            await self._save_markdown_report(md_content, report_id)
+
+            # Link to simulation run data
+            await self._link_report_to_simulation(report_id, report_data["simulation_id"])
+
+            return report_id
+
+        except Exception as e:
+            print(f"Error storing recommendations report: {e}")
+            raise
+
+    def _generate_markdown_report(self, report_data: Dict[str, Any]) -> str:
+        """Generate Markdown version of the recommendations report."""
+        md_lines = []
+
+        md_lines.append("# 📋 Simulation Recommendations Report")
+        md_lines.append("")
+        md_lines.append(f"**Simulation ID:** {report_data['simulation_id']}")
+        md_lines.append(f"**Generated:** {report_data['timestamp']}")
+        md_lines.append(f"**Documents Analyzed:** {report_data['documents_analyzed']}")
+        md_lines.append("")
+
+        # Summary section
+        summary = report_data["summary"]
+        md_lines.append("## 📊 Summary")
+        md_lines.append("")
+        md_lines.append(f"- **Total Recommendations:** {summary['total_recommendations']}")
+        md_lines.append(f"- **Recommendation Types:** {', '.join(summary['recommendation_types'])}")
+        md_lines.append("")
+
+        # Priority breakdown
+        priority = summary["priority_breakdown"]
+        md_lines.append("### Priority Breakdown")
+        md_lines.append("")
+        md_lines.append(f"- 🔴 **High Priority:** {priority['high']}")
+        md_lines.append(f"- 🟡 **Medium Priority:** {priority['medium']}")
+        md_lines.append(f"- 🟢 **Low Priority:** {priority['low']}")
+        md_lines.append("")
+
+        # Recommendations section
+        md_lines.append("## 💡 Recommendations")
+        md_lines.append("")
+
+        for i, rec in enumerate(report_data["recommendations"], 1):
+            priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(rec.get("priority", "medium"), "🟡")
+            md_lines.append(f"### {i}. {priority_emoji} {rec['description']}")
+            md_lines.append("")
+            md_lines.append(f"**Type:** {rec.get('type', 'unknown').title()}")
+            md_lines.append(f"**Priority:** {rec.get('priority', 'medium').title()}")
+            md_lines.append(f"**Rationale:** {rec.get('rationale', 'N/A')}")
+            md_lines.append(f"**Impact:** {rec.get('expected_impact', 'N/A')}")
+            md_lines.append(f"**Effort:** {rec.get('effort_level', 'medium').title()}")
+            md_lines.append("")
+
+            if rec.get("affected_documents"):
+                md_lines.append("**Affected Documents:**")
+                for doc_id in rec["affected_documents"]:
+                    md_lines.append(f"- {doc_id}")
+                md_lines.append("")
+
+            if rec.get("tags"):
+                md_lines.append(f"**Tags:** {', '.join(rec['tags'])}")
+                md_lines.append("")
+
+            md_lines.append("---")
+            md_lines.append("")
+
+        return "\n".join(md_lines)
+
+    async def _save_to_doc_store(self, document: Dict[str, Any]) -> None:
+        """Save document to doc-store."""
+        try:
+            doc_store_url = self.service_urls.get("doc_store", "http://localhost:5000")
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{doc_store_url}/api/documents",
+                    json=document,
+                    headers={"Content-Type": "application/json"}
+                )
+
+                if response.status_code not in [200, 201]:
+                    print(f"Failed to save to doc-store: {response.status_code} - {response.text}")
+
+        except Exception as e:
+            print(f"Error saving to doc-store: {e}")
+
+    async def _save_markdown_report(self, md_content: str, report_id: str) -> None:
+        """Save Markdown report to reports directory."""
+        try:
+            # Save to doc-store as markdown document
+            md_document = {
+                "id": f"{report_id}_md",
+                "type": "recommendations_report_md",
+                "title": f"Recommendations Report (Markdown) - {report_id}",
+                "content": md_content,
+                "format": "markdown",
+                "timestamp": datetime.now().isoformat(),
+                "metadata": {
+                    "parent_report_id": report_id,
+                    "format": "markdown",
+                    "report_type": "simulation_recommendations"
+                }
+            }
+
+            await self._save_to_doc_store(md_document)
+
+        except Exception as e:
+            print(f"Error saving markdown report: {e}")
+
+    async def _link_report_to_simulation(self, report_id: str, simulation_id: str) -> None:
+        """Link the recommendations report to the simulation run data."""
+        try:
+            # Update simulation run data with report linkage
+            simulation_repo = self._get_simulation_repository()
+
+            # Get the simulation run
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if simulation:
+                # Add report linkage to simulation metadata
+                if not hasattr(simulation, 'metadata') or simulation.metadata is None:
+                    simulation.metadata = {}
+
+                simulation.metadata['recommendations_report_id'] = report_id
+                simulation.metadata['recommendations_report_timestamp'] = datetime.now().isoformat()
+
+                # Save updated simulation
+                await simulation_repo.save(simulation)
+
+                print(f"Linked recommendations report {report_id} to simulation {simulation_id}")
+            else:
+                print(f"Simulation {simulation_id} not found for linking report")
+
+        except Exception as e:
+            print(f"Error linking report to simulation: {e}")
+
+    def _get_simulation_repository(self):
+        """Get simulation repository instance."""
+        # This would be injected via DI in a real implementation
+        from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+        return SQLiteSimulationRepository()
 
     # ============================================================================
     # ECOSYSTEM SERVICE INTEGRATION METHODS

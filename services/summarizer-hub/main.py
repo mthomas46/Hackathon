@@ -478,44 +478,431 @@ class SimpleSummarizer:
         return recommendations
 
     async def _generate_quality_recommendations(self, documents: List[Dict[str, Any]], confidence_threshold: float) -> List[Dict[str, Any]]:
-        """Generate quality improvement recommendations."""
+        """Generate comprehensive quality improvement recommendations."""
         recommendations = []
 
         for doc in documents:
-            content = doc.get("content", "")
-            word_count = len(content.split()) if content else 0
-
-            issues = []
-
-            if word_count < 50:
-                issues.append("content too short")
-            elif word_count > 2000:
-                issues.append("content may be too verbose")
-
-            if not any(word in content.lower() for word in ["example", "usage", "guide"]):
-                issues.append("missing practical examples")
-
-            if "?" not in content and not any(word in content.lower() for word in ["how to", "guide", "tutorial"]):
-                issues.append("may lack instructional content")
+            quality_analysis = await self._analyze_document_quality_comprehensive(doc)
+            issues = quality_analysis["issues"]
+            metrics = quality_analysis["metrics"]
 
             if issues:
-                confidence = min(len(issues) / 5.0, 0.8)
+                confidence = min(len(issues) / 4.0, 0.9)  # More reasonable confidence scaling
                 if confidence >= confidence_threshold:
+                    priority = self._determine_quality_priority(issues, metrics)
+
                     recommendations.append({
                         "id": str(uuid.uuid4()),
                         "type": "quality",
-                        "description": f"Improve quality of '{doc.get('title', 'Unknown')}' - {', '.join(issues)}",
+                        "description": self._build_quality_description(doc, issues),
                         "affected_documents": [doc["id"]],
                         "confidence_score": confidence,
-                        "priority": "medium",
-                        "rationale": f"Quality analysis identified {len(issues)} potential improvements",
-                        "expected_impact": "Enhanced user understanding and satisfaction",
-                        "effort_level": "low" if len(issues) <= 2 else "medium",
-                        "tags": ["quality", "improvement"],
-                        "metadata": {"issues": issues, "word_count": word_count}
+                        "priority": priority,
+                        "rationale": f"Comprehensive quality analysis identified {len(issues)} issues with {metrics['overall_score']:.1f} quality score",
+                        "expected_impact": self._calculate_quality_impact(issues, metrics),
+                        "effort_level": self._estimate_quality_effort(issues, metrics),
+                        "tags": ["quality", "improvement"] + [issue["type"] for issue in issues[:3]],
+                        "metadata": {
+                            "issues": issues,
+                            "metrics": metrics,
+                            "quality_score": metrics["overall_score"],
+                            "severity_breakdown": self._categorize_issue_severity(issues)
+                        }
                     })
 
         return recommendations
+
+    async def _analyze_document_quality_comprehensive(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform comprehensive quality analysis on a document."""
+        content = document.get("content", "")
+        title = document.get("title", "")
+
+        issues = []
+        metrics = {
+            "word_count": len(content.split()) if content else 0,
+            "sentence_count": 0,
+            "avg_sentence_length": 0,
+            "readability_score": 0,
+            "technical_accuracy": 0,
+            "structure_score": 0,
+            "consistency_score": 0,
+            "completeness_score": 0,
+            "overall_score": 0
+        }
+
+        if not content:
+            issues.append({
+                "type": "missing_content",
+                "severity": "critical",
+                "description": "Document has no content",
+                "suggestion": "Add comprehensive content to the document"
+            })
+            return {"issues": issues, "metrics": metrics}
+
+        # 1. Content Length Analysis
+        length_issues = self._analyze_content_length(content, metrics)
+        issues.extend(length_issues)
+
+        # 2. Clarity and Readability Analysis
+        clarity_issues = self._analyze_clarity_and_readability(content, metrics)
+        issues.extend(clarity_issues)
+
+        # 3. Technical Accuracy Analysis
+        accuracy_issues = self._analyze_technical_accuracy(content, document, metrics)
+        issues.extend(accuracy_issues)
+
+        # 4. Structure and Organization Analysis
+        structure_issues = self._analyze_structure_and_organization(content, title, metrics)
+        issues.extend(structure_issues)
+
+        # 5. Consistency Analysis
+        consistency_issues = self._analyze_consistency(content, metrics)
+        issues.extend(consistency_issues)
+
+        # 6. Completeness Analysis
+        completeness_issues = self._analyze_completeness(content, document, metrics)
+        issues.extend(completeness_issues)
+
+        # Calculate overall quality score
+        metrics["overall_score"] = self._calculate_overall_quality_score(metrics, issues)
+
+        return {"issues": issues, "metrics": metrics}
+
+    def _analyze_content_length(self, content: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Analyze content length for quality issues."""
+        issues = []
+        word_count = metrics["word_count"]
+
+        if word_count < 50:
+            issues.append({
+                "type": "too_short",
+                "severity": "high",
+                "description": f"Content is too short ({word_count} words)",
+                "suggestion": "Expand content with more detailed explanations and examples"
+            })
+        elif word_count > 3000:
+            issues.append({
+                "type": "too_verbose",
+                "severity": "medium",
+                "description": f"Content may be too verbose ({word_count} words)",
+                "suggestion": "Consider breaking into multiple documents or condensing information"
+            })
+
+        return issues
+
+    def _analyze_clarity_and_readability(self, content: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Analyze clarity and readability issues."""
+        issues = []
+        sentences = [s.strip() for s in content.split('.') if s.strip()]
+        metrics["sentence_count"] = len(sentences)
+
+        if sentences:
+            avg_length = sum(len(s.split()) for s in sentences) / len(sentences)
+            metrics["avg_sentence_length"] = avg_length
+
+            # Check for overly complex sentences
+            complex_sentences = [s for s in sentences if len(s.split()) > 40]
+            if complex_sentences:
+                issues.append({
+                    "type": "complex_sentences",
+                    "severity": "medium",
+                    "description": f"Found {len(complex_sentences)} overly complex sentences (avg {avg_length:.1f} words)",
+                    "suggestion": "Break down complex sentences into simpler, clearer statements"
+                })
+
+        # Check for passive voice (simplified)
+        passive_indicators = ["is", "are", "was", "were", "be", "been", "being"]
+        passive_count = sum(1 for word in content.lower().split() if word in passive_indicators)
+        passive_ratio = passive_count / max(1, len(content.split()))
+
+        if passive_ratio > 0.15:  # More than 15% passive voice
+            issues.append({
+                "type": "passive_voice",
+                "severity": "low",
+                "description": f"High use of passive voice ({passive_ratio:.1%})",
+                "suggestion": "Use active voice for better clarity and engagement"
+            })
+
+        # Check for unclear language
+        unclear_terms = ["thing", "stuff", "something", "anything", "etc."]
+        unclear_count = sum(1 for term in unclear_terms if term in content.lower())
+
+        if unclear_count > 0:
+            issues.append({
+                "type": "unclear_language",
+                "severity": "medium",
+                "description": f"Found {unclear_count} unclear terms that reduce specificity",
+                "suggestion": "Replace vague terms with specific, clear language"
+            })
+
+        return issues
+
+    def _analyze_technical_accuracy(self, content: str, document: Dict[str, Any], metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Analyze technical accuracy issues."""
+        issues = []
+        content_lower = content.lower()
+
+        # Check for code-like content without proper formatting
+        if any(keyword in content_lower for keyword in ["function", "class", "import", "def ", "return "]):
+            if "```" not in content or content.count("```") < 2:
+                issues.append({
+                    "type": "unformatted_code",
+                    "severity": "high",
+                    "description": "Contains code-like content without proper formatting",
+                    "suggestion": "Format code blocks using markdown code fences (```)"
+                })
+
+        # Check for API references without proper documentation
+        if "api" in content_lower:
+            api_references = content_lower.count("api")
+            if api_references > 3 and not any(term in content_lower for term in ["endpoint", "method", "request", "response"]):
+                issues.append({
+                    "type": "incomplete_api_docs",
+                    "severity": "high",
+                    "description": "Mentions APIs but lacks proper API documentation",
+                    "suggestion": "Add detailed API documentation with endpoints, methods, and examples"
+                })
+
+        # Check for outdated technology references (simplified)
+        outdated_terms = ["jquery", "angularjs", "old version"]
+        outdated_found = [term for term in outdated_terms if term in content_lower]
+
+        if outdated_found:
+            issues.append({
+                "type": "outdated_technology",
+                "severity": "high",
+                "description": f"References potentially outdated technologies: {', '.join(outdated_found)}",
+                "suggestion": "Update references to current technology versions"
+            })
+
+        metrics["technical_accuracy"] = 1.0 - (len(issues) * 0.2)  # Reduce score for each issue
+
+        return issues
+
+    def _analyze_structure_and_organization(self, content: str, title: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Analyze document structure and organization."""
+        issues = []
+
+        # Check for proper heading structure
+        lines = content.split('\n')
+        headings = [line for line in lines if line.strip().startswith('#')]
+
+        if len(headings) < 2 and len(content.split()) > 200:
+            issues.append({
+                "type": "poor_structure",
+                "severity": "high",
+                "description": "Long document lacks proper heading structure",
+                "suggestion": "Add headings (# ## ###) to organize content into logical sections"
+            })
+
+        # Check heading hierarchy
+        if headings:
+            heading_levels = []
+            for heading in headings:
+                level = len(heading) - len(heading.lstrip('#'))
+                heading_levels.append(level)
+
+            # Check for proper hierarchy (no skipping levels)
+            for i in range(1, len(heading_levels)):
+                if heading_levels[i] > heading_levels[i-1] + 1:
+                    issues.append({
+                        "type": "heading_hierarchy",
+                        "severity": "medium",
+                        "description": "Heading hierarchy skips levels (e.g., # directly to ###)",
+                        "suggestion": "Use proper heading hierarchy without skipping levels"
+                    })
+                    break
+
+        # Check for logical flow
+        transition_words = ["however", "therefore", "additionally", "furthermore", "consequently"]
+        transition_count = sum(1 for word in transition_words if word in content.lower())
+
+        if len(content.split()) > 300 and transition_count < 2:
+            issues.append({
+                "type": "poor_flow",
+                "severity": "medium",
+                "description": "Document lacks transition words for logical flow",
+                "suggestion": "Add transition words to improve content flow and readability"
+            })
+
+        metrics["structure_score"] = 1.0 - (len(issues) * 0.15)
+
+        return issues
+
+    def _analyze_consistency(self, content: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Analyze consistency issues in the document."""
+        issues = []
+
+        # Check for inconsistent terminology
+        content_lower = content.lower()
+
+        # Common inconsistent term pairs
+        term_pairs = [
+            (["web site", "website"], "website"),
+            (["e-mail", "email"], "email"),
+            (["user name", "username"], "username"),
+            (["log in", "login"], "login")
+        ]
+
+        for variants, preferred in term_pairs:
+            found_variants = [v for v in variants if v in content_lower]
+            if len(found_variants) > 1:
+                issues.append({
+                    "type": "inconsistent_terminology",
+                    "severity": "low",
+                    "description": f"Uses multiple variants of '{preferred}': {', '.join(found_variants)}",
+                    "suggestion": f"Use consistent terminology: prefer '{preferred}'"
+                })
+
+        # Check for formatting consistency
+        lines = content.split('\n')
+        bullet_points = [line for line in lines if line.strip().startswith(('- ', '* ', '+ '))]
+
+        if len(bullet_points) > 5:
+            bullet_styles = set(line.strip()[0] for line in bullet_points)
+            if len(bullet_styles) > 1:
+                issues.append({
+                    "type": "inconsistent_formatting",
+                    "severity": "low",
+                    "description": f"Mixed bullet point styles: {', '.join(bullet_styles)}",
+                    "suggestion": "Use consistent bullet point style throughout"
+                })
+
+        metrics["consistency_score"] = 1.0 - (len(issues) * 0.1)
+
+        return issues
+
+    def _analyze_completeness(self, content: str, document: Dict[str, Any], metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Analyze completeness issues."""
+        issues = []
+        content_lower = content.lower()
+
+        # Check for tutorial-like content missing key sections
+        if any(word in content_lower for word in ["tutorial", "guide", "how to", "learn"]):
+            required_sections = ["prerequisites", "requirements", "example", "conclusion"]
+            missing_sections = []
+
+            for section in required_sections:
+                if section not in content_lower:
+                    missing_sections.append(section)
+
+            if missing_sections:
+                issues.append({
+                    "type": "missing_sections",
+                    "severity": "medium",
+                    "description": f"Tutorial missing key sections: {', '.join(missing_sections)}",
+                    "suggestion": f"Add missing sections: {', '.join(missing_sections)}"
+                })
+
+        # Check for API documentation completeness
+        if "api" in content_lower:
+            api_elements = ["endpoint", "method", "parameter", "response", "example"]
+            missing_elements = [elem for elem in api_elements if elem not in content_lower]
+
+            if len(missing_elements) > 2:
+                issues.append({
+                    "type": "incomplete_api_docs",
+                    "severity": "high",
+                    "description": f"API documentation missing key elements: {', '.join(missing_elements[:3])}",
+                    "suggestion": "Add comprehensive API documentation with all required elements"
+                })
+
+        # Check for contact/support information
+        if not any(term in content_lower for term in ["contact", "support", "help", "email", "github"]):
+            issues.append({
+                "type": "missing_support_info",
+                "severity": "low",
+                "description": "Document lacks contact or support information",
+                "suggestion": "Add contact information or support resources"
+            })
+
+        metrics["completeness_score"] = 1.0 - (len(issues) * 0.15)
+
+        return issues
+
+    def _calculate_overall_quality_score(self, metrics: Dict[str, Any], issues: List[Dict[str, Any]]) -> float:
+        """Calculate overall quality score based on metrics and issues."""
+        # Base score from individual metrics
+        base_score = (
+            metrics.get("technical_accuracy", 0.8) * 0.25 +
+            metrics.get("structure_score", 0.8) * 0.20 +
+            metrics.get("consistency_score", 0.8) * 0.15 +
+            metrics.get("completeness_score", 0.8) * 0.25 +
+            (1.0 if metrics.get("word_count", 0) > 100 else 0.5) * 0.15
+        )
+
+        # Reduce score based on issue severity
+        severity_penalty = {
+            "critical": 0.3,
+            "high": 0.2,
+            "medium": 0.1,
+            "low": 0.05
+        }
+
+        total_penalty = sum(severity_penalty.get(issue.get("severity", "low"), 0.05) for issue in issues)
+
+        return max(0.0, min(1.0, base_score - total_penalty))
+
+    def _determine_quality_priority(self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]) -> str:
+        """Determine priority for quality recommendations."""
+        severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+
+        for issue in issues:
+            severity_counts[issue.get("severity", "low")] += 1
+
+        if severity_counts["critical"] > 0 or severity_counts["high"] > 2:
+            return "high"
+        elif severity_counts["high"] > 0 or severity_counts["medium"] > 3:
+            return "medium"
+        else:
+            return "low"
+
+    def _build_quality_description(self, document: Dict[str, Any], issues: List[Dict[str, Any]]) -> str:
+        """Build human-readable quality description."""
+        title = document.get("title", "Unknown Document")
+        critical_issues = [i for i in issues if i.get("severity") == "critical"]
+        high_issues = [i for i in issues if i.get("severity") == "high"]
+
+        if critical_issues:
+            return f"Critical quality issues in '{title}' - immediate attention required"
+        elif high_issues:
+            return f"Multiple quality issues in '{title}' - {len(issues)} issues identified"
+        else:
+            return f"Quality improvements needed for '{title}' - {len(issues)} issues to address"
+
+    def _calculate_quality_impact(self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]) -> str:
+        """Calculate expected impact of quality improvements."""
+        quality_score = metrics.get("overall_score", 0.5)
+        issue_count = len(issues)
+
+        if quality_score < 0.3:
+            return "Major improvement in user experience and comprehension"
+        elif issue_count > 5:
+            return "Significant enhancement of document clarity and usefulness"
+        else:
+            return "Moderate improvement in document quality and readability"
+
+    def _estimate_quality_effort(self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]) -> str:
+        """Estimate effort level for quality improvements."""
+        issue_count = len(issues)
+        word_count = metrics.get("word_count", 0)
+
+        if issue_count > 8 or word_count > 2000:
+            return "high"
+        elif issue_count > 4 or word_count > 1000:
+            return "medium"
+        else:
+            return "low"
+
+    def _categorize_issue_severity(self, issues: List[Dict[str, Any]]) -> Dict[str, int]:
+        """Categorize issues by severity."""
+        severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+
+        for issue in issues:
+            severity = issue.get("severity", "low")
+            severity_counts[severity] += 1
+
+        return severity_counts
 
     def _calculate_group_similarity(self, documents: List[Dict[str, Any]]) -> float:
         """Calculate average similarity within a group of documents."""
