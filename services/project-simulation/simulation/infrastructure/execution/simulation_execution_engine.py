@@ -690,12 +690,20 @@ class SimulationExecutionEngine:
         """Get current simulation status."""
         simulation = self.active_simulations.get(simulation_id)
         if simulation:
-            return simulation.get_simulation_summary()
+            summary = simulation.get_simulation_summary()
+            return {
+                "success": True,
+                "simulation": summary
+            }
 
         # Try to load from repository
         simulation = await self._load_simulation(simulation_id)
         if simulation:
-            return simulation.get_simulation_summary()
+            summary = simulation.get_simulation_summary()
+            return {
+                "success": True,
+                "simulation": summary
+            }
 
         return None
 
