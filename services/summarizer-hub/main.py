@@ -96,6 +96,23 @@ class RecommendationType(str):
     QUALITY = "quality"
 
 
+class JiraIssueType(str):
+    """Enumeration of Jira issue types."""
+    TASK = "Task"
+    BUG = "Bug"
+    STORY = "Story"
+    EPIC = "Epic"
+
+
+class JiraPriority(str):
+    """Enumeration of Jira priority levels."""
+    HIGHEST = "Highest"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+    LOWEST = "Lowest"
+
+
 class JiraTicketRequest(BaseModel):
     """Request model for creating Jira tickets from recommendations."""
     recommendations: List[Dict[str, Any]]
