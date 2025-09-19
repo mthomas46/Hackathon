@@ -1443,6 +1443,7 @@ class SimulationAnalyzer:
 
         return action_items[:10]  # Return top 10 action items
 
+
     async def _store_comprehensive_summary_report(self, simulation_id: str, report: Dict[str, Any]) -> None:
         """Store the comprehensive summary report in doc-store."""
         try:
@@ -1587,6 +1588,62 @@ class SimulationAnalyzer:
                 md_lines.append(f"   - Category: {item.get('category', 'general')}")
                 md_lines.append(f"   - Effort: {item.get('estimated_effort', 'medium')}")
                 md_lines.append("")
+
+        # Suggested Jira Tickets
+        suggested_tickets = report.get("suggested_jira_tickets", [])
+        if suggested_tickets:
+            md_lines.append("## 🎫 Suggested Jira Tickets")
+            md_lines.append("")
+            md_lines.append("Based on the analysis findings, the following Jira tickets are recommended to address identified issues:")
+            md_lines.append("")
+
+            for i, ticket in enumerate(suggested_tickets, 1):
+                priority_emoji = {
+                    "Critical": "🚨",
+                    "High": "🔴",
+                    "Medium": "🟡",
+                    "Low": "🟢"
+                }.get(ticket.get("priority", "Medium"), "🟡")
+
+                md_lines.append(f"### {i}. {priority_emoji} {ticket.get('summary', '')}")
+                md_lines.append("")
+                md_lines.append(f"**Priority:** {ticket.get('priority', 'Medium')}")
+                md_lines.append(f"**Issue Type:** {ticket.get('issue_type', 'Task')}")
+                md_lines.append(f"**Story Points:** {ticket.get('story_points', 'TBD')}")
+                md_lines.append(f"**Epic:** {ticket.get('epic_link', 'Documentation Quality Initiative')}")
+                md_lines.append("")
+
+                # Truncate description for readability in the report
+                description = ticket.get("description", "")
+                if len(description) > 500:
+                    description = description[:500] + "...\n\n*[Full description truncated for report readability]*"
+
+                md_lines.append("**Description:**")
+                md_lines.append(description)
+                md_lines.append("")
+
+                md_lines.append("---")
+                md_lines.append("")
+
+        # Implementation Notes
+        md_lines.append("## 📋 Implementation Notes")
+        md_lines.append("")
+        md_lines.append("### Suggested Jira Ticket Creation Process:")
+        md_lines.append("")
+        md_lines.append("1. **Review Priority:** Start with Critical and High priority tickets")
+        md_lines.append("2. **Epic Creation:** Create 'Documentation Quality Initiative' epic first")
+        md_lines.append("3. **Ticket Assignment:** Assign based on recommended roles and expertise")
+        md_lines.append("4. **Story Point Estimation:** Use suggested story points as starting estimates")
+        md_lines.append("5. **Label Application:** Apply recommended labels for proper categorization")
+        md_lines.append("6. **Component Assignment:** Set appropriate components for team routing")
+        md_lines.append("")
+        md_lines.append("### Success Metrics Tracking:")
+        md_lines.append("")
+        md_lines.append("- **Quality Score Improvement:** Track average documentation quality over time")
+        md_lines.append("- **Issue Resolution Rate:** Monitor completion of identified issues")
+        md_lines.append("- **Timeline Coverage:** Measure documentation coverage across project phases")
+        md_lines.append("- **Process Efficiency:** Track time to complete documentation tasks")
+        md_lines.append("")
 
         # Footer
         md_lines.append("---")
