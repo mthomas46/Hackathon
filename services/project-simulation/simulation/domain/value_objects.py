@@ -189,6 +189,15 @@ class EmailAddress:
         if len(self.value) > 254:
             raise ValueError("Email address too long")
 
+        # Validate that both local and domain parts are non-empty
+        local_part, domain_part = self.value.split('@', 1)
+        if not local_part or not domain_part:
+            raise ValueError("Invalid email address")
+
+        # Basic domain validation (must contain at least one dot)
+        if '.' not in domain_part:
+            raise ValueError("Invalid email address")
+
     @property
     def domain(self) -> str:
         """Get email domain."""
@@ -221,7 +230,7 @@ class ProjectName:
 
     def slug(self) -> str:
         """Convert to URL-friendly slug."""
-        return self.value.lower().replace(' ', '-').replace('_', '-')
+        return self.value.lower().replace(' ', '-')
 
 
 @dataclass(frozen=True)

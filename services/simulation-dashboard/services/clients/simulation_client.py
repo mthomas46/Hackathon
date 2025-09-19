@@ -1,21 +1,21 @@
-"""HTTP Client for Project Simulation Service.
+"""Simulation Service Client - HTTP Client for Project Simulation Service.
 
-This module provides a comprehensive HTTP client for communicating with the
-project-simulation service, handling all REST API interactions with proper
-error handling, retries, and response caching.
+This module provides a comprehensive HTTP client for interacting with the
+project-simulation service, including REST API calls, WebSocket connections,
+and real-time data streaming.
 """
 
+import httpx
 import asyncio
+import websockets
 import json
-from typing import Dict, Any, List, Optional, Union
-from datetime import datetime
+from typing import Dict, Any, Optional, List, Callable, AsyncGenerator
+from datetime import datetime, timedelta
+import logging
+from urllib.parse import urljoin
 import time
 
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-
-from infrastructure.config.config import SimulationServiceConfig, get_config
-from infrastructure.logging.logger import get_dashboard_logger
+from infrastructure.config.config import get_config
 
 
 class SimulationClientError(Exception):
@@ -23,24 +23,73 @@ class SimulationClientError(Exception):
     pass
 
 
+class SimulationServiceConnectionError(SimulationClientError):
+    """Exception raised when connection to simulation service fails."""
+    pass
+
+
+class SimulationAPIError(SimulationClientError):
+    """Exception raised when simulation API returns an error."""
+    pass
+
+
 class SimulationClient:
-    """HTTP client for the project-simulation service."""
+    """HTTP client for interacting with the project-simulation service."""
 
-    def __init__(self, config: SimulationServiceConfig):
-        """Initialize the simulation client."""
-        self.config = config
-        self.logger = get_dashboard_logger("simulation_client")
+    def __init__(self,
+                 base_url: Optional[str] = None,
+                 timeout: float = 30.0,
+                 max_retries: int = 3):
+        """Initialize the simulation client.
 
-        # Create HTTP client with configuration
+        Args:
+            base_url: Base URL of the simulation service. If None, uses config.
+            timeout: Request timeout in seconds.
+            max_retries: Maximum number of retries for failed requests.
+        """
+        self.config = get_config()
+        self.base_url = base_url or self._get_service_url()
+        self.timeout = timeout
+        self.max_retries = max_retries
+
+        # HTTP client setup
         self.client = httpx.AsyncClient(
-            base_url=config.base_url,
-            timeout=config.timeout,
-            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10)
+            base_url=self.base_url,
+            timeout=timeout,
+            headers={
+                'Content-Type': 'application/json',
+                'User-Agent': 'SimulationDashboard/1.0'
+            }
         )
 
-        # Cache for responses
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._cache_timestamps: Dict[str, float] = {}
+        # WebSocket connection
+        self.ws_url = self._get_websocket_url()
+        self.websocket = None
+        self.ws_connected = False
+
+        # Event handlers
+        self.event_handlers: Dict[str, List[Callable]] = {}
+
+        # Logging
+        self.logger = logging.getLogger(__name__)
+
+    def _get_service_url(self) -> str:
+        """Get the simulation service URL from configuration."""
+        # Try to get from service discovery first
+        try:
+            from services.shared.utilities.discovery import get_service_url
+            return get_service_url('project-simulation')
+        except:
+            # Fallback to direct configuration
+            host = self.config.get('simulation_service', {}).get('host', 'localhost')
+            port = self.config.get('simulation_service', {}).get('port', 5075)
+            return f"http://{host}:{port}"
+
+    def _get_websocket_url(self) -> str:
+        """Get the WebSocket URL for the simulation service."""
+        http_url = self._get_service_url()
+        ws_url = http_url.replace('http://', 'ws://').replace('https://', 'wss://')
+        return ws_url
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -51,393 +100,468 @@ class SimulationClient:
         await self.close()
 
     async def close(self):
-        """Close the HTTP client."""
+        """Close the client and cleanup resources."""
+        if self.websocket:
+            await self.websocket.close()
+            self.websocket = None
+            self.ws_connected = False
+
         await self.client.aclose()
 
-    def _get_cache_key(self, method: str, url: str, params: Optional[Dict[str, Any]] = None) -> str:
-        """Generate cache key for request."""
-        key_parts = [method.upper(), url]
-        if params:
-            key_parts.append(json.dumps(params, sort_keys=True))
-        return "|".join(key_parts)
+    async def _make_request(self,
+                           method: str,
+                           endpoint: str,
+                           **kwargs) -> Dict[str, Any]:
+        """Make an HTTP request with retry logic.
 
-    def _is_cache_valid(self, cache_key: str, ttl: int = 300) -> bool:
-        """Check if cached response is still valid."""
-        if cache_key not in self._cache_timestamps:
-            return False
-        return time.time() - self._cache_timestamps[cache_key] < ttl
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            endpoint: API endpoint
+            **kwargs: Additional arguments for the request
 
-    def _get_cached_response(self, cache_key: str) -> Optional[Dict[str, Any]]:
-        """Get cached response if valid."""
-        if self._is_cache_valid(cache_key):
-            return self._cache.get(cache_key)
-        return None
+        Returns:
+            Dict containing the response data
 
-    def _cache_response(self, cache_key: str, response: Dict[str, Any]) -> None:
-        """Cache response with timestamp."""
-        self._cache[cache_key] = response
-        self._cache_timestamps[cache_key] = time.time()
+        Raises:
+            SimulationAPIError: If the API returns an error
+            SimulationServiceConnectionError: If connection fails
+        """
+        url = urljoin(self.base_url + '/', endpoint.lstrip('/'))
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type((httpx.TimeoutException, httpx.ConnectError))
-    )
-    async def _make_request(
-        self,
-        method: str,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        json_data: Optional[Dict[str, Any]] = None,
-        use_cache: bool = True
-    ) -> Dict[str, Any]:
-        """Make HTTP request with retry logic and caching."""
-        url = f"/api/v1/{endpoint.lstrip('/')}"
-        cache_key = self._get_cache_key(method, url, params)
+        for attempt in range(self.max_retries):
+            try:
+                response = await self.client.request(method, url, **kwargs)
 
-        # Check cache for GET requests
-        if method.upper() == "GET" and use_cache:
-            cached = self._get_cached_response(cache_key)
-            if cached:
-                self.logger.debug(f"Cache hit for {method} {url}")
-                return cached
+                if response.status_code >= 500:
+                    if attempt < self.max_retries - 1:
+                        await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                        continue
+                    raise SimulationServiceConnectionError(
+                        f"Server error: {response.status_code}"
+                    )
 
-        start_time = time.time()
+                if response.status_code >= 400:
+                    try:
+                        error_data = response.json()
+                        error_message = error_data.get('message', 'Unknown error')
+                        raise SimulationAPIError(
+                            f"API error {response.status_code}: {error_message}"
+                        )
+                    except json.JSONDecodeError:
+                        raise SimulationAPIError(
+                            f"API error {response.status_code}: {response.text}"
+                        )
 
-        try:
-            # Make request
-            response = await self.client.request(
-                method=method.upper(),
-                url=url,
-                params=params,
-                json=json_data
-            )
+                # Success
+                try:
+                    return response.json()
+                except json.JSONDecodeError:
+                    return {'success': True, 'data': response.text}
 
-            duration = time.time() - start_time
+            except (httpx.ConnectError, httpx.TimeoutException) as e:
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)
+                    continue
+                raise SimulationServiceConnectionError(
+                    f"Connection failed after {self.max_retries} attempts: {e}"
+                )
 
-            # Log request
-            self.logger.log_request(
-                method=method.upper(),
-                url=url,
-                status_code=response.status_code,
-                duration=duration
-            )
+        raise SimulationServiceConnectionError("Max retries exceeded")
 
-            # Handle response
-            if response.status_code >= 400:
-                error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {"error": response.text}
-                raise SimulationClientError(f"HTTP {response.status_code}: {error_data}")
+    # Health and Status Endpoints
 
-            # Parse response
-            if response.headers.get('content-type', '').startswith('application/json'):
-                result = response.json()
-            else:
-                result = {"data": response.text}
+    async def get_health(self) -> Dict[str, Any]:
+        """Get service health status."""
+        return await self._make_request('GET', '/health')
 
-            # Cache successful GET responses
-            if method.upper() == "GET" and use_cache:
-                self._cache_response(cache_key, result)
+    async def get_detailed_health(self) -> Dict[str, Any]:
+        """Get detailed service health information."""
+        return await self._make_request('GET', '/health/detailed')
 
-            return result
-
-        except httpx.TimeoutException as e:
-            self.logger.error(f"Request timeout for {method} {url}: {str(e)}")
-            raise SimulationClientError(f"Request timeout: {str(e)}")
-        except httpx.ConnectError as e:
-            self.logger.error(f"Connection error for {method} {url}: {str(e)}")
-            raise SimulationClientError(f"Connection error: {str(e)}")
-        except Exception as e:
-            self.logger.error(f"Request error for {method} {url}: {str(e)}")
-            raise SimulationClientError(f"Request error: {str(e)}")
+    async def get_system_health(self) -> Dict[str, Any]:
+        """Get system-wide health information."""
+        return await self._make_request('GET', '/health/system')
 
     # Simulation Management Endpoints
 
     async def create_simulation(self, simulation_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new simulation."""
-        return await self._make_request(
-            "POST",
-            "simulations",
-            json_data=simulation_data,
-            use_cache=False
-        )
+        return await self._make_request('POST', '/api/v1/simulations', json=simulation_data)
 
-    async def get_simulation(self, simulation_id: str) -> Dict[str, Any]:
-        """Get simulation details."""
-        return await self._make_request(
-            "GET",
-            f"simulations/{simulation_id}"
-        )
-
-    async def list_simulations(
-        self,
-        status: Optional[str] = None,
-        page: int = 1,
-        page_size: int = 20
-    ) -> Dict[str, Any]:
-        """List simulations with pagination."""
-        params = {"page": page, "page_size": page_size}
+    async def list_simulations(self,
+                              status: Optional[str] = None,
+                              page: int = 1,
+                              page_size: int = 20) -> Dict[str, Any]:
+        """List simulations with optional filtering and pagination."""
+        params = {'page': page, 'page_size': page_size}
         if status:
-            params["status"] = status
+            params['status'] = status
 
-        return await self._make_request(
-            "GET",
-            "simulations",
-            params=params
-        )
+        return await self._make_request('GET', '/api/v1/simulations', params=params)
 
-    async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
-        """Execute a simulation."""
-        return await self._make_request(
-            "POST",
-            f"simulations/{simulation_id}/execute",
-            use_cache=False
-        )
-
-    async def cancel_simulation(self, simulation_id: str) -> Dict[str, Any]:
-        """Cancel a simulation."""
-        return await self._make_request(
-            "DELETE",
-            f"simulations/{simulation_id}",
-            use_cache=False
-        )
+    async def get_simulation_status(self, simulation_id: str) -> Dict[str, Any]:
+        """Get the status of a specific simulation."""
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}')
 
     async def get_simulation_results(self, simulation_id: str) -> Dict[str, Any]:
-        """Get simulation results."""
-        return await self._make_request(
-            "GET",
-            f"simulations/{simulation_id}/results"
-        )
+        """Get the results of a completed simulation."""
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}/results')
 
-    # Configuration Endpoints
+    async def cancel_simulation(self, simulation_id: str) -> Dict[str, Any]:
+        """Cancel a running simulation."""
+        return await self._make_request('DELETE', f'/api/v1/simulations/{simulation_id}')
 
-    async def create_sample_config(self, file_path: str, project_name: str) -> Dict[str, Any]:
-        """Create a sample configuration file."""
-        return await self._make_request(
-            "POST",
-            "config/sample",
-            json_data={"file_path": file_path, "project_name": project_name},
-            use_cache=False
-        )
+    # Simulation Execution Endpoints
 
-    async def validate_config(self, config_file_path: str) -> Dict[str, Any]:
-        """Validate a configuration file."""
-        return await self._make_request(
-            "POST",
-            "config/validate",
-            json_data={"config_file_path": config_file_path},
-            use_cache=False
-        )
+    async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
+        """Execute a simulation asynchronously."""
+        return await self._make_request('POST', f'/api/v1/simulations/{simulation_id}/execute')
 
-    async def get_config_template(self) -> Dict[str, Any]:
-        """Get configuration template."""
-        return await self._make_request(
-            "GET",
-            "config/template"
-        )
-
-    async def create_simulation_from_config(self, config_file_path: str) -> Dict[str, Any]:
-        """Create simulation from configuration file."""
-        return await self._make_request(
-            "POST",
-            "simulations/from-config",
-            json_data={"config_file_path": config_file_path},
-            use_cache=False
-        )
-
-    # Reporting Endpoints
-
-    async def generate_reports(self, simulation_id: str, report_types: List[str]) -> Dict[str, Any]:
-        """Generate reports for a simulation."""
-        return await self._make_request(
-            "POST",
-            f"simulations/{simulation_id}/reports/generate",
-            json_data={"report_types": report_types},
-            use_cache=False
-        )
-
-    async def get_simulation_reports(self, simulation_id: str) -> Dict[str, Any]:
-        """Get available reports for a simulation."""
-        return await self._make_request(
-            "GET",
-            f"simulations/{simulation_id}/reports"
-        )
-
-    async def get_simulation_report(self, simulation_id: str, report_type: str) -> Dict[str, Any]:
-        """Get a specific report for a simulation."""
-        return await self._make_request(
-            "GET",
-            f"simulations/{simulation_id}/reports/{report_type}"
-        )
-
-    async def export_report(self, simulation_id: str, report_type: str, format: str, output_path: Optional[str] = None) -> Dict[str, Any]:
-        """Export a simulation report."""
-        return await self._make_request(
-            "POST",
-            f"simulations/{simulation_id}/reports/export",
-            json_data={
-                "report_type": report_type,
-                "format": format,
-                "output_path": output_path
-            },
-            use_cache=False
-        )
-
-    # Event Endpoints
-
-    async def get_simulation_events(
-        self,
-        simulation_id: Optional[str] = None,
-        event_types: Optional[List[str]] = None,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        limit: int = 50,
-        offset: int = 0
-    ) -> Dict[str, Any]:
-        """Get simulation events with filtering."""
-        params = {
-            "limit": limit,
-            "offset": offset
-        }
-
-        if simulation_id:
-            params["simulation_id"] = simulation_id
-
-        if event_types:
-            params["event_types"] = ",".join(event_types)
-
-        if start_time:
-            params["start_time"] = start_time
-
-        if end_time:
-            params["end_time"] = end_time
-
-        if tags:
-            params["tags"] = ",".join(tags)
-
-        return await self._make_request(
-            "GET",
-            "simulations/events" if simulation_id else "events",
-            params=params
-        )
-
-    async def get_simulation_timeline(self, simulation_id: str) -> Dict[str, Any]:
-        """Get timeline of events for a simulation."""
-        return await self._make_request(
-            "GET",
-            f"simulations/{simulation_id}/timeline"
-        )
-
-    async def replay_events(
-        self,
-        simulation_id: str,
-        event_types: Optional[List[str]] = None,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        speed_multiplier: float = 1.0,
-        include_system_events: bool = False,
-        max_events: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """Replay simulation events."""
-        return await self._make_request(
-            "POST",
-            f"simulations/{simulation_id}/events/replay",
-            json_data={
-                "event_types": event_types,
-                "start_time": start_time,
-                "end_time": end_time,
-                "tags": tags,
-                "speed_multiplier": speed_multiplier,
-                "include_system_events": include_system_events,
-                "max_events": max_events
-            },
-            use_cache=False
-        )
-
-    async def get_event_statistics(
-        self,
-        simulation_id: Optional[str] = None,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """Get event statistics."""
-        params = {}
-        if simulation_id:
-            params["simulation_id"] = simulation_id
-        if start_time:
-            params["start_time"] = start_time
-        if end_time:
-            params["end_time"] = end_time
-
-        return await self._make_request(
-            "GET",
-            "events/statistics",
-            params=params
-        )
-
-    # UI Monitoring Endpoints
-
-    async def start_ui_monitoring(self, simulation_id: str, estimated_duration: int = 60) -> Dict[str, Any]:
+    async def start_ui_monitoring(self, simulation_id: str) -> Dict[str, Any]:
         """Start UI monitoring for a simulation."""
-        return await self._make_request(
-            "POST",
-            f"simulations/{simulation_id}/ui/start",
-            json_data={"estimated_duration_minutes": estimated_duration},
-            use_cache=False
-        )
+        return await self._make_request('POST', f'/api/v1/simulations/{simulation_id}/ui/start')
 
     async def stop_ui_monitoring(self, simulation_id: str, success: bool = True) -> Dict[str, Any]:
         """Stop UI monitoring for a simulation."""
-        return await self._make_request(
-            "POST",
-            f"simulations/{simulation_id}/ui/stop",
-            json_data={"success": success},
-            use_cache=False
-        )
+        data = {'success': success}
+        return await self._make_request('POST', f'/api/v1/simulations/{simulation_id}/ui/stop', json=data)
 
-    async def get_ui_monitoring_status(self, simulation_id: str) -> Dict[str, Any]:
-        """Get UI monitoring status for a simulation."""
-        return await self._make_request(
-            "GET",
-            f"simulations/{simulation_id}/ui/status"
-        )
+    async def get_ui_status(self, simulation_id: str) -> Dict[str, Any]:
+        """Get the UI monitoring status for a simulation."""
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}/ui/status')
 
-    # Health Endpoints
+    # Configuration Endpoints
 
-    async def get_health(self) -> Dict[str, Any]:
-        """Get basic health status."""
-        return await self._make_request(
-            "GET",
-            "health"
-        )
+    async def create_simulation_from_config(self, config_file_path: str) -> Dict[str, Any]:
+        """Create a simulation from a configuration file."""
+        data = {'config_file_path': config_file_path}
+        return await self._make_request('POST', '/api/v1/simulations/from-config', json=data)
 
-    async def get_detailed_health(self) -> Dict[str, Any]:
-        """Get detailed health status."""
-        return await self._make_request(
-            "GET",
-            "health/detailed"
-        )
+    async def create_sample_config(self,
+                                  file_path: str,
+                                  project_name: str = "Sample E-commerce Platform") -> Dict[str, Any]:
+        """Create a sample configuration file."""
+        data = {
+            'file_path': file_path,
+            'project_name': project_name
+        }
+        return await self._make_request('POST', '/api/v1/config/sample', json=data)
 
-    async def get_system_health(self) -> Dict[str, Any]:
-        """Get system-wide health status."""
-        return await self._make_request(
-            "GET",
-            "health/system"
-        )
+    async def validate_config(self, config_file_path: str) -> Dict[str, Any]:
+        """Validate a configuration file."""
+        data = {'config_file_path': config_file_path}
+        return await self._make_request('POST', '/api/v1/config/validate', json=data)
 
-    # Clear cache methods
-    def clear_cache(self) -> None:
-        """Clear all cached responses."""
-        self._cache.clear()
-        self._cache_timestamps.clear()
+    async def get_config_template(self) -> Dict[str, Any]:
+        """Get a configuration template."""
+        return await self._make_request('GET', '/api/v1/config/template')
 
-    def clear_simulation_cache(self, simulation_id: str) -> None:
-        """Clear cache for a specific simulation."""
-        keys_to_remove = [
-            key for key in self._cache.keys()
-            if simulation_id in key
-        ]
-        for key in keys_to_remove:
-            self._cache.pop(key, None)
-            self._cache_timestamps.pop(key, None)
+    # Reporting Endpoints
+
+    async def generate_reports(self,
+                              simulation_id: str,
+                              report_types: List[str]) -> Dict[str, Any]:
+        """Generate reports for a simulation."""
+        data = {'report_types': report_types}
+        return await self._make_request('POST', f'/api/v1/simulations/{simulation_id}/reports/generate', json=data)
+
+    async def get_simulation_reports(self, simulation_id: str) -> Dict[str, Any]:
+        """Get available reports for a simulation."""
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}/reports')
+
+    async def get_simulation_report(self,
+                                   simulation_id: str,
+                                   report_type: str) -> Dict[str, Any]:
+        """Get a specific report for a simulation."""
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}/reports/{report_type}')
+
+    async def export_report(self,
+                           simulation_id: str,
+                           report_type: str,
+                           format: str = 'json',
+                           output_path: Optional[str] = None) -> Dict[str, Any]:
+        """Export a simulation report."""
+        data = {
+            'report_type': report_type,
+            'format': format,
+            'output_path': output_path
+        }
+        return await self._make_request('POST', f'/api/v1/simulations/{simulation_id}/reports/export', json=data)
+
+    # Event Endpoints
+
+    async def get_simulation_events(self,
+                                   simulation_id: str,
+                                   event_types: Optional[List[str]] = None,
+                                   start_time: Optional[str] = None,
+                                   end_time: Optional[str] = None,
+                                   tags: Optional[List[str]] = None,
+                                   limit: int = 50,
+                                   offset: int = 0) -> Dict[str, Any]:
+        """Get events for a simulation."""
+        params = {
+            'limit': limit,
+            'offset': offset
+        }
+
+        if event_types:
+            params['event_types'] = ','.join(event_types)
+        if start_time:
+            params['start_time'] = start_time
+        if end_time:
+            params['end_time'] = end_time
+        if tags:
+            params['tags'] = ','.join(tags)
+
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}/events', params=params)
+
+    async def get_simulation_timeline(self, simulation_id: str) -> Dict[str, Any]:
+        """Get timeline of events for a simulation."""
+        return await self._make_request('GET', f'/api/v1/simulations/{simulation_id}/timeline')
+
+    async def replay_events(self,
+                           simulation_id: str,
+                           event_types: Optional[List[str]] = None,
+                           start_time: Optional[str] = None,
+                           end_time: Optional[str] = None,
+                           tags: Optional[List[str]] = None,
+                           speed_multiplier: float = 1.0,
+                           include_system_events: bool = False,
+                           max_events: Optional[int] = None) -> Dict[str, Any]:
+        """Replay events for a simulation."""
+        data = {
+            'speed_multiplier': speed_multiplier,
+            'include_system_events': include_system_events
+        }
+
+        if event_types:
+            data['event_types'] = event_types
+        if start_time:
+            data['start_time'] = start_time
+        if end_time:
+            data['end_time'] = end_time
+        if tags:
+            data['tags'] = tags
+        if max_events:
+            data['max_events'] = max_events
+
+        return await self._make_request('POST', f'/api/v1/simulations/{simulation_id}/events/replay', json=data)
+
+    async def get_event_statistics(self,
+                                  simulation_id: Optional[str] = None,
+                                  start_time: Optional[str] = None,
+                                  end_time: Optional[str] = None) -> Dict[str, Any]:
+        """Get statistics about stored events."""
+        params = {}
+        if simulation_id:
+            params['simulation_id'] = simulation_id
+        if start_time:
+            params['start_time'] = start_time
+        if end_time:
+            params['end_time'] = end_time
+
+        return await self._make_request('GET', '/api/v1/events/statistics', params=params)
+
+    # WebSocket Methods
+
+    async def connect_websocket(self, simulation_id: Optional[str] = None) -> None:
+        """Connect to the simulation service WebSocket.
+
+        Args:
+            simulation_id: Optional simulation ID to subscribe to specific updates
+        """
+        try:
+            if simulation_id:
+                ws_url = f"{self.ws_url}/ws/simulations/{simulation_id}"
+            else:
+                ws_url = f"{self.ws_url}/ws/system"
+
+            self.websocket = await websockets.connect(ws_url)
+            self.ws_connected = True
+            self.logger.info(f"Connected to WebSocket: {ws_url}")
+
+        except Exception as e:
+            self.logger.error(f"Failed to connect to WebSocket: {e}")
+            raise SimulationServiceConnectionError(f"WebSocket connection failed: {e}")
+
+    async def disconnect_websocket(self) -> None:
+        """Disconnect from the WebSocket."""
+        if self.websocket:
+            await self.websocket.close()
+            self.websocket = None
+            self.ws_connected = False
+            self.logger.info("Disconnected from WebSocket")
+
+    async def listen_for_events(self) -> AsyncGenerator[Dict[str, Any], None]:
+        """Listen for real-time events from the WebSocket.
+
+        Yields:
+            Dict containing event data
+        """
+        if not self.ws_connected:
+            raise SimulationServiceConnectionError("WebSocket not connected")
+
+        try:
+            async for message in self.websocket:
+                try:
+                    event_data = json.loads(message)
+                    yield event_data
+                except json.JSONDecodeError:
+                    self.logger.warning(f"Received non-JSON message: {message}")
+                    continue
+
+        except websockets.exceptions.ConnectionClosed:
+            self.logger.info("WebSocket connection closed")
+            self.ws_connected = False
+        except Exception as e:
+            self.logger.error(f"Error listening for WebSocket events: {e}")
+            self.ws_connected = False
+            raise
+
+    def add_event_handler(self, event_type: str, handler: Callable) -> None:
+        """Add an event handler for a specific event type.
+
+        Args:
+            event_type: Type of event to handle
+            handler: Callable that takes event data as parameter
+        """
+        if event_type not in self.event_handlers:
+            self.event_handlers[event_type] = []
+        self.event_handlers[event_type].append(handler)
+
+    def remove_event_handler(self, event_type: str, handler: Callable) -> None:
+        """Remove an event handler.
+
+        Args:
+            event_type: Type of event
+            handler: Handler to remove
+        """
+        if event_type in self.event_handlers:
+            try:
+                self.event_handlers[event_type].remove(handler)
+            except ValueError:
+                pass  # Handler not found
+
+    async def start_event_listener(self) -> None:
+        """Start listening for events and dispatching to handlers."""
+        try:
+            async for event in self.listen_for_events():
+                event_type = event.get('event_type', 'unknown')
+
+                # Call specific handlers
+                if event_type in self.event_handlers:
+                    for handler in self.event_handlers[event_type]:
+                        try:
+                            await handler(event)
+                        except Exception as e:
+                            self.logger.error(f"Error in event handler for {event_type}: {e}")
+
+                # Call general handlers
+                if '*' in self.event_handlers:
+                    for handler in self.event_handlers['*']:
+                        try:
+                            await handler(event)
+                        except Exception as e:
+                            self.logger.error(f"Error in general event handler: {e}")
+
+        except Exception as e:
+            self.logger.error(f"Event listener failed: {e}")
+            raise
+
+    # Utility Methods
+
+    async def wait_for_simulation_completion(self,
+                                           simulation_id: str,
+                                           timeout_seconds: int = 3600,
+                                           poll_interval: float = 5.0) -> Dict[str, Any]:
+        """Wait for a simulation to complete.
+
+        Args:
+            simulation_id: ID of the simulation to wait for
+            timeout_seconds: Maximum time to wait
+            poll_interval: How often to check status
+
+        Returns:
+            Final simulation status
+        """
+        start_time = time.time()
+
+        while time.time() - start_time < timeout_seconds:
+            try:
+                status = await self.get_simulation_status(simulation_id)
+                sim_status = status.get('data', {}).get('status', '')
+
+                if sim_status in ['completed', 'failed', 'cancelled']:
+                    return status
+
+                await asyncio.sleep(poll_interval)
+
+            except Exception as e:
+                self.logger.warning(f"Error checking simulation status: {e}")
+                await asyncio.sleep(poll_interval)
+
+        # Timeout
+        raise SimulationClientError(f"Simulation {simulation_id} did not complete within {timeout_seconds} seconds")
+
+    async def get_simulation_progress_stream(self,
+                                           simulation_id: str) -> AsyncGenerator[Dict[str, Any], None]:
+        """Get a stream of simulation progress updates.
+
+        Args:
+            simulation_id: ID of the simulation to monitor
+
+        Yields:
+            Progress update data
+        """
+        try:
+            # Connect to WebSocket for real-time updates
+            await self.connect_websocket(simulation_id)
+
+            async for event in self.listen_for_events():
+                if event.get('simulation_id') == simulation_id:
+                    event_type = event.get('event_type', '')
+
+                    if event_type in ['simulation_started', 'phase_completed',
+                                    'document_generated', 'workflow_executed',
+                                    'simulation_completed', 'simulation_failed']:
+                        yield event
+
+        except Exception as e:
+            self.logger.error(f"Error in progress stream: {e}")
+            raise
+        finally:
+            await self.disconnect_websocket()
+
+    # Helper Methods for Dashboard Integration
+
+    def get_simulation_summary(self, simulation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract simulation summary information for dashboard display."""
+        data = simulation_data.get('data', {})
+
+        return {
+            'id': data.get('simulation_id', ''),
+            'name': data.get('name', 'Unknown'),
+            'status': data.get('status', 'unknown'),
+            'progress_percentage': data.get('progress_percentage', 0),
+            'current_phase': data.get('current_phase', ''),
+            'documents_generated': data.get('documents_generated', 0),
+            'workflows_executed': data.get('workflows_executed', 0),
+            'start_time': data.get('start_time'),
+            'estimated_completion': data.get('estimated_completion'),
+            'active_tasks': data.get('active_tasks', []),
+            'completed_tasks': data.get('completed_tasks', []),
+            'failed_tasks': data.get('failed_tasks', [])
+        }
+
+    def format_simulation_status_for_display(self, status: str) -> Dict[str, str]:
+        """Format simulation status for dashboard display."""
+        status_config = {
+            'created': {'text': 'Created', 'color': 'gray', 'icon': '📝'},
+            'running': {'text': 'Running', 'color': 'green', 'icon': '🚀'},
+            'completed': {'text': 'Completed', 'color': 'blue', 'icon': '✅'},
+            'failed': {'text': 'Failed', 'color': 'red', 'icon': '❌'},
+            'cancelled': {'text': 'Cancelled', 'color': 'orange', 'icon': '⏹️'},
+            'paused': {'text': 'Paused', 'color': 'yellow', 'icon': '⏸️'}
+        }
+
+        return status_config.get(status.lower(), {'text': status.title(), 'color': 'gray', 'icon': '❓'})
