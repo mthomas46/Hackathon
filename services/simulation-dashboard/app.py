@@ -38,6 +38,11 @@ from pages.reports import render_reports_page
 from pages.config import render_config_page
 from pages.analytics import render_analytics_page
 from pages.events import render_events_page
+from pages.controls import render_controls_page
+from pages.audit import render_audit_page
+from pages.ai_insights import render_ai_insights_page
+from pages.autonomous import render_autonomous_page
+from pages.advanced_analytics import render_advanced_analytics_page
 
 # Configure page
 st.set_page_config(
@@ -113,6 +118,31 @@ PAGES = {
         "name": "➕ Create",
         "function": render_create_page,
         "description": "Create new project simulations"
+    },
+    "controls": {
+        "name": "🎮 Controls",
+        "function": render_controls_page,
+        "description": "Advanced simulation lifecycle controls"
+    },
+    "ai_insights": {
+        "name": "🤖 AI Insights",
+        "function": render_ai_insights_page,
+        "description": "AI-powered pattern recognition and optimization"
+    },
+    "autonomous": {
+        "name": "🚀 Autonomous",
+        "function": render_autonomous_page,
+        "description": "Self-managing autonomous operation system"
+    },
+    "advanced_analytics": {
+        "name": "📊 Advanced Analytics",
+        "function": render_advanced_analytics_page,
+        "description": "Real-time analytics pipeline and predictive modeling"
+    },
+    "audit": {
+        "name": "🔍 Audit",
+        "function": render_audit_page,
+        "description": "Comprehensive audit trail and compliance"
     },
     "monitor": {
         "name": "📊 Monitor",

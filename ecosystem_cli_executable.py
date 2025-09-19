@@ -508,7 +508,7 @@ class EcosystemCLI:
 
         except Exception as e:
             print(f"❌ Error starting container: {str(e)}")
-
+    
     async def create_mock_data(self):
         """Create mock documents and prompts to test ecosystem data flow"""
         print("📝 CREATING MOCK ECOSYSTEM DATA")
@@ -979,7 +979,7 @@ class EcosystemCLI:
                     print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to create workflow from template")
-
+        
         else:
             print(f"❌ Unknown orchestrator command: {command}")
             print("Available commands: peers, sync, health, config, create-workflow, execute, list-executions, execution-status, cancel-execution, workflow-templates, create-template")
