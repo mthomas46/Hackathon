@@ -20,6 +20,8 @@ class ProjectType(Enum):
     MICROSERVICES = "microservices"
     DATA_PIPELINE = "data_pipeline"
     MACHINE_LEARNING = "machine_learning"
+    DATA_SCIENCE = "data_science"
+    DEVOPS_TOOL = "devops_tool"
 
 
 class ComplexityLevel(Enum):
@@ -34,6 +36,7 @@ class ProjectStatus(Enum):
     CREATED = "created"
     PLANNING = "planning"
     IN_PROGRESS = "in_progress"
+    PAUSED = "paused"
     ON_HOLD = "on_hold"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
@@ -42,12 +45,29 @@ class ProjectStatus(Enum):
 class SimulationStatus(Enum):
     """Simulation execution status."""
     CREATED = "created"
+    INITIALIZED = "initialized"
     STARTING = "starting"
     RUNNING = "running"
     PAUSED = "paused"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class MilestoneStatus(Enum):
+    """Milestone status value object."""
+    UPCOMING = "upcoming"
+    ACHIEVED = "achieved"
+    MISSED = "missed"
+
+
+@dataclass(frozen=True)
+class DocumentReference:
+    """Document reference value object."""
+    document_id: str
+    document_type: str
+    relationship: str
+    description: Optional[str] = None
 
 
 class ExpertiseLevel(Enum):
@@ -81,7 +101,10 @@ class Role(Enum):
     DEVELOPER = "developer"
     QA = "qa"
     DESIGNER = "designer"
+    UX_DESIGNER = "ux_designer"
     PRODUCT_MANAGER = "product_manager"
+    PRODUCT_OWNER = "product_owner"
+    SCRUM_MASTER = "scrum_master"
     ARCHITECT = "architect"
     DEVOPS = "devops"
 
