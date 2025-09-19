@@ -1172,6 +1172,720 @@ async def generate_analysis_report_endpoint(req: dict):
         )
 
 
+@app.post("/analyze/pull-request")
+async def analyze_pull_request_endpoint(req: dict):
+    """Analyze pull request changes and provide refactoring suggestions.
+
+    This endpoint provides comprehensive analysis of pull request data including:
+    - Code quality assessment
+    - Commit message quality review
+    - Structural change analysis
+    - Refactoring suggestions
+    - Health score calculation with risk assessment
+    """
+    try:
+        # Extract PR data
+        pr_data = req.get("pull_request", {})
+        simulation_id = req.get("simulation_id", "")
+
+        if not pr_data:
+            return create_error_response(
+                "Pull request data is required",
+                error_code=ErrorCodes.VALIDATION_ERROR
+            )
+
+        # Use the PR analysis handler
+        analysis_result = await analyze_pull_request_handler(pr_data, simulation_id)
+
+        return create_success_response(
+            data=analysis_result,
+            message=f"Pull request analysis completed with health score {analysis_result.get('health_score', 0):.2f}"
+        )
+
+    except Exception as e:
+        fire_and_forget(
+            "error",
+            "Pull request analysis failed",
+            SERVICE_NAME,
+            {"error": str(e)}
+        )
+
+        return create_error_response(
+            f"Pull request analysis failed: {str(e)}",
+            error_code=ErrorCodes.ANALYSIS_FAILED
+        )
+
+
+# Test endpoint for PR analysis
+@app.post("/analyze/test-pr-analysis")
+async def test_pr_analysis_endpoint():
+    """Test endpoint to demonstrate PR analysis capabilities."""
+    # Sample PR data for testing
+    test_pr_data = {
+        "title": "feat: Add user authentication system",
+        "author": "developer@example.com",
+        "description": "This PR adds a comprehensive user authentication system with JWT tokens and password hashing.",
+        "changed_files": [
+            {
+                "filename": "src/auth/auth_service.py",
+                "status": "added",
+                "additions": 150,
+                "deletions": 0,
+                "changes": 150,
+                "patch": "@@ -0,0 +1,50 @@\ndef authenticate_user(username: str, password: str) -> bool:\n    # Complex authentication logic\n    if len(username) < 3 or len(password) < 8:\n        return False\n    \n    # Hash password\n    hashed = hash_password(password)\n    \n    # Check against database\n    user = get_user_from_db(username)\n    if not user:\n        return False\n    \n    return verify_password(password, user.hashed_password)"
+            },
+            {
+                "filename": "tests/test_auth.py",
+                "status": "added",
+                "additions": 80,
+                "deletions": 0,
+                "changes": 80
+            }
+        ],
+        "commits": [
+            {
+                "message": "feat: Add user authentication service",
+                "author": "developer@example.com"
+            },
+            {
+                "message": "test: Add authentication tests",
+                "author": "developer@example.com"
+            }
+        ]
+    }
+
+    result = await analyze_pull_request_handler(test_pr_data, "test_sim_123")
+    return create_success_response(
+        data=result,
+        message="PR analysis test completed successfully"
+    )
+
+
+async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -> dict:
+    """Handle pull request analysis logic."""
+    from datetime import datetime
+
+    # Extract PR components
+    changed_files = pr_data.get("changed_files", [])
+    commits = pr_data.get("commits", [])
+    pr_title = pr_data.get("title", "")
+    pr_description = pr_data.get("description", "")
+    pr_author = pr_data.get("author", "")
+
+    # Analyze different aspects of the PR
+    code_analysis = await analyze_pr_code_changes(changed_files)
+    commit_analysis = analyze_commit_messages(commits)
+    structural_analysis = analyze_code_structure(changed_files)
+    quality_analysis = await analyze_code_quality(changed_files)
+
+    # Generate refactoring suggestions
+    refactoring_suggestions = generate_refactoring_suggestions(
+        code_analysis, structural_analysis, quality_analysis
+    )
+
+    # Calculate PR health score
+    pr_health_score = calculate_pr_health_score(
+        code_analysis, commit_analysis, structural_analysis, quality_analysis
+    )
+
+    # Generate comprehensive report
+    pr_report = {
+        "simulation_id": simulation_id,
+        "pr_title": pr_title,
+        "pr_author": pr_author,
+        "analysis_timestamp": datetime.now().isoformat(),
+        "health_score": pr_health_score,
+        "risk_level": determine_pr_risk_level(pr_health_score),
+        "files_analyzed": len(changed_files),
+        "commits_analyzed": len(commits),
+        "code_analysis": code_analysis,
+        "commit_analysis": commit_analysis,
+        "structural_analysis": structural_analysis,
+        "quality_analysis": quality_analysis,
+        "refactoring_suggestions": refactoring_suggestions,
+        "recommendations": generate_pr_recommendations({
+            "health_score": pr_health_score,
+            "risk_level": determine_pr_risk_level(pr_health_score),
+            "code_analysis": code_analysis,
+            "commit_analysis": commit_analysis,
+            "quality_analysis": quality_analysis
+        })
+    }
+
+    return pr_report
+
+
+async def analyze_pr_code_changes(changed_files: list) -> dict:
+    """Analyze the actual code changes in the pull request."""
+    analysis = {
+        "total_files_changed": len(changed_files),
+        "file_types": {},
+        "change_metrics": {
+            "lines_added": 0,
+            "lines_removed": 0,
+            "files_modified": 0,
+            "files_added": 0,
+            "files_deleted": 0
+        },
+        "code_patterns": {
+            "complex_functions": [],
+            "long_methods": [],
+            "duplicate_code": [],
+            "unused_imports": [],
+            "code_smells": []
+        }
+    }
+
+    for file_data in changed_files:
+        file_path = file_data.get("filename", "")
+        file_type = get_file_type(file_path)
+
+        # Count file types
+        analysis["file_types"][file_type] = analysis["file_types"].get(file_type, 0) + 1
+
+        # Analyze changes
+        additions = file_data.get("additions", 0)
+        deletions = file_data.get("deletions", 0)
+        changes = file_data.get("changes", 0)
+
+        analysis["change_metrics"]["lines_added"] += additions
+        analysis["change_metrics"]["lines_removed"] += deletions
+
+        if file_data.get("status") == "added":
+            analysis["change_metrics"]["files_added"] += 1
+        elif file_data.get("status") == "removed":
+            analysis["change_metrics"]["files_deleted"] += 1
+        elif file_data.get("status") == "modified":
+            analysis["change_metrics"]["files_modified"] += 1
+
+        # Basic code analysis
+        if file_type in ["python", "javascript", "typescript", "java"]:
+            code_issues = analyze_file_content(file_data, file_type)
+            for issue_type, issues in code_issues.items():
+                if issue_type in analysis["code_patterns"]:
+                    analysis["code_patterns"][issue_type].extend(issues)
+
+    return analysis
+
+
+def analyze_commit_messages(commits: list) -> dict:
+    """Analyze commit messages for quality and consistency."""
+    analysis = {
+        "total_commits": len(commits),
+        "message_quality": {
+            "good_messages": 0,
+            "needs_improvement": 0,
+            "poor_messages": 0
+        },
+        "patterns": {
+            "descriptive": 0,
+            "concise": 0,
+            "conventional_commits": 0,
+            "has_issue_references": 0
+        },
+        "issues": []
+    }
+
+    for commit in commits:
+        message = commit.get("message", "").strip()
+
+        # Analyze message quality
+        if len(message) < 10:
+            analysis["message_quality"]["poor_messages"] += 1
+            analysis["issues"].append(f"Commit message too short: '{message[:50]}...'")
+        elif len(message) > 100:
+            analysis["message_quality"]["needs_improvement"] += 1
+            analysis["issues"].append(f"Commit message too long: '{message[:50]}...'")
+        elif is_good_commit_message(message):
+            analysis["message_quality"]["good_messages"] += 1
+        else:
+            analysis["message_quality"]["needs_improvement"] += 1
+
+        # Check for conventional commits
+        if is_conventional_commit(message):
+            analysis["patterns"]["conventional_commits"] += 1
+
+        # Check for issue references
+        if "#" in message or "issue" in message.lower():
+            analysis["patterns"]["has_issue_references"] += 1
+
+    return analysis
+
+
+def analyze_code_structure(changed_files: list) -> dict:
+    """Analyze the structural changes in the codebase."""
+    analysis = {
+        "architecture_changes": [],
+        "dependency_changes": [],
+        "configuration_changes": [],
+        "test_coverage_changes": [],
+        "documentation_changes": [],
+        "structural_risks": []
+    }
+
+    for file_data in changed_files:
+        file_path = file_data.get("filename", "").lower()
+
+        # Categorize files by type and impact
+        if any(pattern in file_path for pattern in ["architecture", "design", "structure"]):
+            analysis["architecture_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]):
+            analysis["dependency_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["config", ".env", ".yaml", ".yml", ".json"]):
+            analysis["configuration_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["test", "spec", "_test"]):
+            analysis["test_coverage_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["readme", "docs", ".md", ".rst"]):
+            analysis["documentation_changes"].append(file_path)
+
+    # Identify structural risks
+    if len(analysis["architecture_changes"]) > 3:
+        analysis["structural_risks"].append("Multiple architecture files changed - high risk")
+
+    if len(analysis["dependency_changes"]) > 0 and len(analysis["test_coverage_changes"]) == 0:
+        analysis["structural_risks"].append("Dependencies changed without corresponding tests")
+
+    return analysis
+
+
+async def analyze_code_quality(changed_files: list) -> dict:
+    """Analyze code quality using external analysis service."""
+    try:
+        # Prepare code content for analysis
+        code_files = []
+        for file_data in changed_files:
+            if file_data.get("patch") or file_data.get("content"):
+                content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
+                if content:
+                    code_files.append({
+                        "filename": file_data.get("filename", ""),
+                        "content": content,
+                        "type": get_file_type(file_data.get("filename", ""))
+                    })
+
+        if not code_files:
+            return {"quality_score": 0.0, "issues": ["No analyzable code content found"]}
+
+        # Use existing quality analysis endpoint
+        quality_results = []
+        for file_info in code_files:
+            quality_req = ContentQualityRequest(
+                content=file_info["content"],
+                document_id=file_info["filename"],
+                document_type=file_info["type"],
+                title=file_info["filename"]
+            )
+
+            quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
+            if quality_result:
+                quality_results.append(quality_result)
+
+        if quality_results:
+            avg_quality = sum(r.quality_score for r in quality_results) / len(quality_results)
+            total_issues = sum(len(getattr(r, 'issues', [])) for r in quality_results)
+
+            return {
+                "quality_score": avg_quality,
+                "issues_found": total_issues,
+                "files_analyzed": len(code_files),
+                "detailed_results": [{"file": f, "result": str(r)} for f, r in zip(code_files, quality_results)]
+            }
+
+        return {
+            "quality_score": 0.5,
+            "issues_found": 0,
+            "files_analyzed": len(code_files),
+            "detailed_results": []
+        }
+
+    except Exception as e:
+        return {
+            "quality_score": 0.0,
+            "issues_found": 1,
+            "error": str(e)
+        }
+
+
+def analyze_file_content(file_data: dict, file_type: str) -> dict:
+    """Perform basic static analysis on file content."""
+    issues = {
+        "complex_functions": [],
+        "long_methods": [],
+        "duplicate_code": [],
+        "unused_imports": [],
+        "code_smells": []
+    }
+
+    try:
+        content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
+
+        if not content:
+            return issues
+
+        lines = content.split('\n')
+
+        # Basic complexity analysis
+        if file_type == "python":
+            issues.update(analyze_python_file(lines))
+        elif file_type in ["javascript", "typescript"]:
+            issues.update(analyze_js_file(lines))
+        elif file_type == "java":
+            issues.update(analyze_java_file(lines))
+
+    except Exception as e:
+        pass
+
+    return issues
+
+
+def analyze_python_file(lines: list) -> dict:
+    """Analyze Python file for common issues."""
+    issues = {"complex_functions": [], "long_methods": []}
+
+    current_function = None
+    function_lines = 0
+
+    for i, line in enumerate(lines):
+        # Track function definitions
+        if line.strip().startswith("def "):
+            if current_function and function_lines > 50:
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+
+            current_function = line.split("def ")[1].split("(")[0]
+            function_lines = 0
+        elif current_function:
+            function_lines += 1
+
+            # Check for complexity indicators
+            if any(keyword in line.lower() for keyword in ["if", "elif", "for", "while"]) and line.count("and") + line.count("or") > 2:
+                issues["complex_functions"].append(f"{current_function} (line {i+1})")
+
+    # Check last function
+    if current_function and function_lines > 50:
+        issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+
+    return issues
+
+
+def analyze_js_file(lines: list) -> dict:
+    """Analyze JavaScript/TypeScript file for common issues."""
+    issues = {"complex_functions": [], "long_methods": []}
+
+    current_function = None
+    function_lines = 0
+    brace_count = 0
+
+    for i, line in enumerate(lines):
+        # Track function definitions
+        if "function " in line or "=> " in line or "const " in line and " = (" in line:
+            if current_function and function_lines > 40:
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+
+            # Extract function name
+            if "function " in line:
+                current_function = line.split("function ")[1].split("(")[0]
+            else:
+                current_function = f"anonymous_function_{i}"
+            function_lines = 0
+
+        if current_function:
+            function_lines += 1
+            brace_count += line.count("{") - line.count("}")
+
+            # Check for complexity
+            if any(keyword in line for keyword in ["if", "for", "while"]) and line.count("&&") + line.count("||") > 2:
+                issues["complex_functions"].append(f"{current_function} (line {i+1})")
+
+            # End of function
+            if brace_count == 0 and function_lines > 5:
+                if function_lines > 40:
+                    issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+                current_function = None
+                function_lines = 0
+
+    return issues
+
+
+def analyze_java_file(lines: list) -> dict:
+    """Analyze Java file for common issues."""
+    issues = {"complex_functions": [], "long_methods": []}
+
+    current_method = None
+    method_lines = 0
+    brace_count = 0
+
+    for i, line in enumerate(lines):
+        # Track method definitions
+        if any(modifier in line for modifier in ["public ", "private ", "protected "]) and "(" in line and ")" in line:
+            if current_method and method_lines > 50:
+                issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
+
+            # Extract method name
+            method_start = line.find("(")
+            method_name_start = line.rfind(" ", 0, method_start)
+            if method_name_start != -1:
+                current_method = line[method_name_start:method_start].strip()
+            else:
+                current_method = f"method_{i}"
+            method_lines = 0
+            brace_count = 0
+
+        if current_method:
+            method_lines += 1
+            brace_count += line.count("{") - line.count("}")
+
+            # Check for complexity
+            if any(keyword in line for keyword in ["if", "for", "while", "switch"]) and line.count("&&") + line.count("||") > 2:
+                issues["complex_functions"].append(f"{current_method} (line {i+1})")
+
+            # End of method
+            if brace_count == 0 and method_lines > 5:
+                if method_lines > 50:
+                    issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
+                current_method = None
+                method_lines = 0
+
+    return issues
+
+
+def extract_content_from_patch(patch: str) -> str:
+    """Extract actual content from git diff patch."""
+    if not patch:
+        return ""
+
+    lines = patch.split('\n')
+    content_lines = []
+
+    for line in lines:
+        if line.startswith('+') and not line.startswith('+++'):
+            content_lines.append(line[1:])  # Remove the + prefix
+        elif line.startswith(' ') and not line.startswith('@@'):
+            content_lines.append(line[1:])  # Remove the space prefix for context
+
+    return '\n'.join(content_lines)
+
+
+def get_file_type(filename: str) -> str:
+    """Determine file type from filename."""
+    if filename.endswith(('.py', '.pyc')):
+        return 'python'
+    elif filename.endswith(('.js', '.jsx')):
+        return 'javascript'
+    elif filename.endswith(('.ts', '.tsx')):
+        return 'typescript'
+    elif filename.endswith(('.java',)):
+        return 'java'
+    elif filename.endswith(('.cpp', '.c++', '.cc', '.cxx', '.hpp', '.h')):
+        return 'cpp'
+    elif filename.endswith(('.cs',)):
+        return 'csharp'
+    elif filename.endswith(('.php',)):
+        return 'php'
+    elif filename.endswith(('.rb',)):
+        return 'ruby'
+    elif filename.endswith(('.go',)):
+        return 'go'
+    elif filename.endswith(('.rs',)):
+        return 'rust'
+    elif filename.endswith(('.html', '.htm')):
+        return 'html'
+    elif filename.endswith(('.css',)):
+        return 'css'
+    elif filename.endswith(('.md', '.markdown')):
+        return 'markdown'
+    elif filename.endswith(('.json',)):
+        return 'json'
+    elif filename.endswith(('.xml', '.yml', '.yaml')):
+        return 'config'
+    else:
+        return 'other'
+
+
+def is_good_commit_message(message: str) -> bool:
+    """Check if a commit message follows good practices."""
+    # Basic checks for good commit messages
+    if len(message) < 10:
+        return False
+
+    # Should start with capital letter
+    if not message[0].isupper():
+        return False
+
+    # Should not end with period
+    if message.endswith('.'):
+        return False
+
+    # Should be descriptive but not too long
+    if len(message) > 100:
+        return False
+
+    return True
+
+
+def is_conventional_commit(message: str) -> bool:
+    """Check if commit follows conventional commit format."""
+    conventional_types = ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'perf', 'ci', 'build', 'revert']
+    first_word = message.split(':')[0].strip().lower()
+    return first_word in conventional_types
+
+
+def generate_refactoring_suggestions(code_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> list:
+    """Generate refactoring suggestions based on analysis."""
+    suggestions = []
+
+    # Code complexity suggestions
+    if "code_patterns" in code_analysis:
+        patterns = code_analysis["code_patterns"]
+
+        if patterns.get("complex_functions"):
+            suggestions.append({
+                "type": "complexity_reduction",
+                "priority": "high",
+                "description": f"Simplify {len(patterns['complex_functions'])} complex functions",
+                "affected_items": patterns["complex_functions"][:5],  # Top 5
+                "estimated_effort": "medium"
+            })
+
+        if patterns.get("long_methods"):
+            suggestions.append({
+                "type": "method_extraction",
+                "priority": "medium",
+                "description": f"Extract {len(patterns['long_methods'])} long methods into smaller functions",
+                "affected_items": patterns["long_methods"][:5],
+                "estimated_effort": "medium"
+            })
+
+    # Structural suggestions
+    if structural_analysis.get("structural_risks"):
+        suggestions.append({
+            "type": "structural_improvement",
+            "priority": "high",
+            "description": "Address structural risks identified in the changes",
+            "affected_items": structural_analysis["structural_risks"],
+            "estimated_effort": "high"
+        })
+
+    # Quality suggestions
+    if quality_analysis.get("quality_score", 0) < 0.6:
+        suggestions.append({
+            "type": "quality_improvement",
+            "priority": "high",
+            "description": f"Improve code quality (current score: {quality_analysis.get('quality_score', 0):.2f})",
+            "affected_items": [f"{quality_analysis.get('issues_found', 0)} quality issues found"],
+            "estimated_effort": "medium"
+        })
+
+    # Testing suggestions
+    if (code_analysis.get("change_metrics", {}).get("files_modified", 0) > 0 and
+        len(structural_analysis.get("test_coverage_changes", [])) == 0):
+        suggestions.append({
+            "type": "test_coverage",
+            "priority": "medium",
+            "description": "Add tests for modified functionality",
+            "affected_items": ["Modified files without corresponding tests"],
+            "estimated_effort": "medium"
+        })
+
+    return suggestions
+
+
+def calculate_pr_health_score(code_analysis: dict, commit_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> float:
+    """Calculate overall health score for the pull request."""
+    scores = []
+
+    # Code analysis score (40% weight)
+    if "change_metrics" in code_analysis:
+        metrics = code_analysis["change_metrics"]
+        total_changes = metrics.get("lines_added", 0) + metrics.get("lines_removed", 0)
+
+        # Prefer balanced changes over large additions/deletions
+        if total_changes > 0:
+            balance_ratio = min(metrics.get("lines_added", 0), metrics.get("lines_removed", 0)) / total_changes
+            code_score = min(1.0, balance_ratio * 2)  # Reward balanced changes
+            scores.append((code_score, 0.4))
+
+    # Commit quality score (20% weight)
+    if "message_quality" in commit_analysis:
+        quality = commit_analysis["message_quality"]
+        total_messages = sum(quality.values())
+        if total_messages > 0:
+            good_ratio = quality.get("good_messages", 0) / total_messages
+            commit_score = good_ratio
+            scores.append((commit_score, 0.2))
+
+    # Quality score (30% weight)
+    quality_score = quality_analysis.get("quality_score", 0.5)
+    scores.append((quality_score, 0.3))
+
+    # Structural risk penalty (10% weight)
+    structural_score = 1.0
+    if structural_analysis.get("structural_risks"):
+        structural_score = max(0.0, 1.0 - (len(structural_analysis["structural_risks"]) * 0.2))
+    scores.append((structural_score, 0.1))
+
+    # Calculate weighted average
+    if not scores:
+        return 0.5
+
+    total_weight = sum(weight for _, weight in scores)
+    if total_weight == 0:
+        return 0.5
+
+    weighted_sum = sum(score * weight for score, weight in scores)
+    return min(1.0, max(0.0, weighted_sum / total_weight))
+
+
+def determine_pr_risk_level(health_score: float) -> str:
+    """Determine risk level based on health score."""
+    if health_score >= 0.8:
+        return "low"
+    elif health_score >= 0.6:
+        return "medium"
+    else:
+        return "high"
+
+
+def generate_pr_recommendations(pr_report: dict) -> list:
+    """Generate high-level recommendations for the pull request."""
+    recommendations = []
+
+    health_score = pr_report.get("health_score", 0.5)
+    risk_level = pr_report.get("risk_level", "medium")
+
+    if risk_level == "high":
+        recommendations.append("🚨 High-risk changes detected - consider breaking into smaller PRs")
+        recommendations.append("📋 Schedule thorough code review with senior developers")
+
+    elif risk_level == "medium":
+        recommendations.append("⚠️ Medium-risk changes - ensure adequate test coverage")
+        recommendations.append("👥 Consider pair programming for complex sections")
+
+    # Specific recommendations based on analysis
+    code_analysis = pr_report.get("code_analysis", {})
+
+    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > 1000:
+        recommendations.append("📊 Large PR detected - consider splitting into smaller, focused changes")
+
+    if code_analysis.get("file_types", {}).get("test", 0) == 0:
+        recommendations.append("🧪 Consider adding tests for the changes introduced")
+
+    # Commit analysis recommendations
+    commit_analysis = pr_report.get("commit_analysis", {})
+    if commit_analysis.get("message_quality", {}).get("poor_messages", 0) > 0:
+        recommendations.append("✍️ Improve commit message quality for better project history")
+
+    # Quality recommendations
+    quality_analysis = pr_report.get("quality_analysis", {})
+    if quality_analysis.get("quality_score", 1.0) < 0.7:
+        recommendations.append("🔧 Address code quality issues before merging")
+
+    return recommendations
+
+
 def generate_analysis_markdown_report(report_data: dict) -> str:
     """Generate comprehensive Markdown report from analysis data."""
     md_lines = []
@@ -3140,6 +3854,113 @@ async def custom_analysis_health():
         uptime_seconds=uptime,
         models_loaded=models_loaded
     )
+
+
+# ============================================================================
+# PR ANALYSIS TESTS
+# ============================================================================
+
+async def test_pr_analysis_components():
+    """Test individual components of PR analysis."""
+    print("Testing PR Analysis Components...")
+
+    # Test commit message analysis
+    commits = [
+        {"message": "feat: Add user authentication service"},
+        {"message": "fix: Resolve login issue"},
+        {"message": "test: Add authentication tests"},
+        {"message": "chore: Update dependencies"},
+        {"message": "docs: Update API documentation"},
+        {"message": "refactor: Simplify auth logic"},
+        {"message": "style: Format code consistently"},
+        {"message": "perf: Optimize database queries"},
+        {"message": "ci: Update build configuration"},
+        {"message": "build: Update package version"},
+        {"message": "revert: Revert previous changes"}
+    ]
+
+    commit_analysis = analyze_commit_messages(commits)
+    print(f"✅ Commit Analysis: {commit_analysis['patterns']['conventional_commits']} conventional commits")
+
+    # Test file type detection
+    test_files = [
+        "src/auth/service.py",
+        "tests/test_auth.py",
+        "docs/api.md",
+        "config/settings.json",
+        "requirements.txt",
+        "Dockerfile"
+    ]
+
+    file_types = {}
+    for file in test_files:
+        ftype = get_file_type(file)
+        file_types[ftype] = file_types.get(ftype, 0) + 1
+
+    print(f"✅ File Type Detection: {file_types}")
+
+    # Test code structure analysis
+    changed_files = [
+        {"filename": "src/auth/service.py", "status": "modified"},
+        {"filename": "tests/test_auth.py", "status": "added"},
+        {"filename": "requirements.txt", "status": "modified"},
+        {"filename": "docs/api.md", "status": "added"}
+    ]
+
+    structure_analysis = analyze_code_structure(changed_files)
+    print(f"✅ Structural Analysis: {len(structure_analysis['dependency_changes'])} dependency changes")
+
+    # Test health score calculation
+    code_analysis = {
+        "change_metrics": {
+            "lines_added": 200,
+            "lines_removed": 50,
+            "files_modified": 3,
+            "files_added": 2
+        }
+    }
+
+    commit_analysis = {
+        "message_quality": {
+            "good_messages": 8,
+            "needs_improvement": 2,
+            "poor_messages": 1
+        }
+    }
+
+    structural_analysis = {"structural_risks": ["Dependencies changed without corresponding tests"]}
+    quality_analysis = {"quality_score": 0.75}
+
+    health_score = calculate_pr_health_score(code_analysis, commit_analysis, structural_analysis, quality_analysis)
+    risk_level = determine_pr_risk_level(health_score)
+
+    print(f"✅ Health Score: {health_score:.2f} ({risk_level} risk)")
+
+    # Test refactoring suggestions
+    suggestions = generate_refactoring_suggestions(code_analysis, structural_analysis, quality_analysis)
+    print(f"✅ Refactoring Suggestions: {len(suggestions)} suggestions generated")
+
+    # Test PR recommendations
+    pr_report = {
+        "health_score": health_score,
+        "risk_level": risk_level,
+        "code_analysis": code_analysis,
+        "commit_analysis": commit_analysis,
+        "quality_analysis": quality_analysis
+    }
+
+    recommendations = generate_pr_recommendations(pr_report)
+    print(f"✅ PR Recommendations: {len(recommendations)} recommendations generated")
+
+    return {
+        "commit_analysis": commit_analysis,
+        "file_types": file_types,
+        "structure_analysis": structure_analysis,
+        "health_score": health_score,
+        "risk_level": risk_level,
+        "suggestions": suggestions,
+        "recommendations": recommendations
+    }
 
 
 if __name__ == "__main__":

@@ -1597,6 +1597,171 @@ class SimulationAnalyzer:
         return "\n".join(md_lines)
 
     # ============================================================================
+    # PULL REQUEST ANALYSIS VIA ANALYSIS SERVICE
+    # ============================================================================
+
+    async def analyze_pull_request(self, simulation_id: str, pr_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze pull request changes via the analysis service.
+
+        This method delegates PR analysis to the specialized analysis service,
+        maintaining clean separation of concerns and leveraging the analysis
+        service's comprehensive PR analysis capabilities.
+
+        Args:
+            simulation_id: Unique identifier for the simulation
+            pr_data: Pull request data including files, commits, and metadata
+
+        Returns:
+            Comprehensive analysis report from analysis service
+        """
+        try:
+            print(f"Delegating PR analysis to analysis service for simulation {simulation_id}")
+
+            # Prepare request for analysis service
+            analysis_request = {
+                "simulation_id": simulation_id,
+                "pull_request": pr_data
+            }
+
+            # Call analysis service PR analysis endpoint
+            analysis_result = await self._request_pr_analysis_from_service(simulation_id, analysis_request)
+
+            if analysis_result:
+                # Store the PR analysis report in doc-store
+                await self._store_pr_analysis_report_from_service(simulation_id, analysis_result)
+
+                return {
+                    "simulation_id": simulation_id,
+                    "analysis_completed": True,
+                    "pr_health_score": analysis_result.get("health_score", 0),
+                    "risk_level": analysis_result.get("risk_level", "unknown"),
+                    "refactoring_suggestions_count": len(analysis_result.get("refactoring_suggestions", [])),
+                    "recommendations_count": len(analysis_result.get("recommendations", []))
+                }
+            else:
+                return {
+                    "simulation_id": simulation_id,
+                    "analysis_completed": False,
+                    "error": "Failed to get analysis from analysis service"
+                }
+
+        except Exception as e:
+            print(f"Error analyzing pull request: {e}")
+            return {
+                "simulation_id": simulation_id,
+                "analysis_completed": False,
+                "error": str(e)
+            }
+
+    async def _request_pr_analysis_from_service(self, simulation_id: str, analysis_request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Request PR analysis from the analysis service."""
+        try:
+            analysis_service_url = self.service_urls.get('analysis_service', 'http://localhost:5020')
+
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{analysis_service_url}/analyze/pull-request",
+                    json=analysis_request,
+                    headers={"Content-Type": "application/json"}
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("success"):
+                        return result.get("data")
+                    else:
+                        print(f"Analysis service returned error: {result}")
+                        return None
+                else:
+                    print(f"Analysis service request failed with status {response.status_code}: {response.text}")
+                    return None
+
+        except Exception as e:
+            print(f"Error calling analysis service for PR analysis: {e}")
+            return None
+
+    async def _store_pr_analysis_report_from_service(self, simulation_id: str, analysis_result: Dict[str, Any]) -> None:
+        """Store PR analysis report received from analysis service."""
+        try:
+            # Store the analysis result in doc-store
+            json_content = json.dumps(analysis_result, indent=2, default=str)
+
+            # Generate a simple markdown summary
+            markdown_content = self._generate_pr_analysis_summary_markdown(analysis_result)
+
+            # Store JSON version
+            json_doc_id = f"pr_analysis_{simulation_id}_{int(datetime.now().timestamp())}_json"
+            await self._store_document_in_doc_store(json_doc_id, json_content, "json", "pr_analysis")
+
+            # Store Markdown version
+            md_doc_id = f"pr_analysis_{simulation_id}_{int(datetime.now().timestamp())}_md"
+            await self._store_document_in_doc_store(md_doc_id, markdown_content, "markdown", "pr_analysis")
+
+            # Link reports to simulation
+            await self._link_report_to_simulation(simulation_id, json_doc_id, "pr_analysis")
+
+            print(f"Stored PR analysis report from analysis service for simulation {simulation_id}")
+
+        except Exception as e:
+            print(f"Error storing PR analysis report from service: {e}")
+
+    def _generate_pr_analysis_summary_markdown(self, analysis_result: Dict[str, Any]) -> str:
+        """Generate a summary markdown report for PR analysis."""
+        md_lines = []
+
+        # Header
+        md_lines.append("# 🔍 Pull Request Analysis Summary")
+        md_lines.append("")
+        md_lines.append(f"**Simulation ID:** {analysis_result.get('simulation_id', 'N/A')}")
+        md_lines.append(f"**PR Title:** {analysis_result.get('pr_title', 'N/A')}")
+        md_lines.append(f"**Author:** {analysis_result.get('pr_author', 'N/A')}")
+        md_lines.append(f"**Analysis Date:** {analysis_result.get('analysis_timestamp', 'N/A')}")
+        md_lines.append("")
+
+        # Health Score
+        health_score = analysis_result.get("health_score", 0)
+        risk_level = analysis_result.get("risk_level", "unknown")
+
+        if health_score >= 0.8:
+            health_indicator = "🟢 **Good**"
+        elif health_score >= 0.6:
+            health_indicator = "🟡 **Needs Attention**"
+        else:
+            health_indicator = "🔴 **High Risk**"
+
+        md_lines.append("## 📊 Health Assessment")
+        md_lines.append("")
+        md_lines.append(f"**Overall Health Score:** {health_indicator} ({health_score:.2f})")
+        md_lines.append(f"**Risk Level:** {risk_level.title()}")
+        md_lines.append(f"**Files Analyzed:** {analysis_result.get('files_analyzed', 0)}")
+        md_lines.append(f"**Commits Analyzed:** {analysis_result.get('commits_analyzed', 0)}")
+        md_lines.append("")
+
+        # Refactoring Suggestions Count
+        refactoring_count = len(analysis_result.get("refactoring_suggestions", []))
+        if refactoring_count > 0:
+            md_lines.append(f"**Refactoring Suggestions:** {refactoring_count}")
+            md_lines.append("")
+
+        # Recommendations
+        recommendations = analysis_result.get("recommendations", [])
+        if recommendations:
+            md_lines.append("## 💡 Key Recommendations")
+            md_lines.append("")
+            for recommendation in recommendations[:5]:  # Top 5
+                md_lines.append(f"- {recommendation}")
+            md_lines.append("")
+
+        # Footer
+        md_lines.append("---")
+        md_lines.append("")
+        md_lines.append("*Pull request analysis performed by Analysis Service*")
+        md_lines.append(f"*Processed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
+
+        return "\n".join(md_lines)
+
+
+    # ============================================================================
     # ECOSYSTEM SERVICE INTEGRATION METHODS
     # ============================================================================
 
