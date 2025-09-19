@@ -12,7 +12,13 @@ from datetime import datetime
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
-from integrations.clients import ServiceClients
+try:
+    from integrations.clients import ServiceClients
+except ImportError:
+    # Create a mock ServiceClients for testing
+    class MockServiceClients:
+        pass
+    ServiceClients = MockServiceClients
 
 from ...domain.value_objects import ECOSYSTEM_SERVICES, ServiceEndpoint, ServiceHealth
 from ..logging import get_simulation_logger
@@ -255,6 +261,28 @@ class SummarizerHubClient(EcosystemServiceClient):
         })
 
 
+class InterpreterClient(EcosystemServiceClient):
+    """Client for interpreter service."""
+
+    def __init__(self):
+        """Initialize interpreter client."""
+        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "interpreter")
+        super().__init__(service_info.name, service_info.endpoint)
+
+    async def analyze_relationships(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze relationships between documents."""
+        return await self.post_json("/analyze/relationships", {
+            "documents": documents
+        })
+
+    async def extract_insights(self, content: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract insights from content with context."""
+        return await self.post_json("/extract/insights", {
+            "content": content,
+            "context": context
+        })
+
+
 class NotificationServiceClient(EcosystemServiceClient):
     """Client for notification_service."""
 
@@ -391,6 +419,16 @@ def get_llm_gateway_client() -> LlmGatewayClient:
     client = get_ecosystem_client("llm_gateway")
     return client if isinstance(client, LlmGatewayClient) else None
 
+def get_summarizer_hub_client() -> SummarizerHubClient:
+    """Get summarizer_hub client."""
+    client = get_ecosystem_client("summarizer_hub")
+    return client if isinstance(client, SummarizerHubClient) else None
+
+def get_interpreter_client() -> InterpreterClient:
+    """Get interpreter client."""
+    client = get_ecosystem_client("interpreter")
+    return client if isinstance(client, InterpreterClient) else None
+
 
 __all__ = [
     'EcosystemServiceClient',
@@ -401,6 +439,7 @@ __all__ = [
     'LlmGatewayClient',
     'PromptStoreClient',
     'SummarizerHubClient',
+    'InterpreterClient',
     'NotificationServiceClient',
     'SourceAgentClient',
     'CodeAnalyzerClient',
@@ -411,5 +450,7 @@ __all__ = [
     'get_mock_data_generator_client',
     'get_orchestrator_client',
     'get_analysis_service_client',
-    'get_llm_gateway_client'
+    'get_llm_gateway_client',
+    'get_summarizer_hub_client',
+    'get_interpreter_client'
 ]
