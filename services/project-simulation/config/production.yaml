@@ -1,0 +1,381 @@
+# ============================================================================
+# Project Simulation Service - Production Configuration
+# ============================================================================
+# This configuration file contains production-specific settings for the
+# project-simulation service with security hardening and performance optimization.
+# ============================================================================
+
+# ============================================================================
+# Service Configuration
+# ============================================================================
+service:
+  name: "project-simulation"
+  version: "1.0.0"
+  environment: "production"
+  debug: false
+  testing: false
+
+# ============================================================================
+# Server Configuration
+# ============================================================================
+server:
+  host: "0.0.0.0"
+  port: 5075
+  workers: 4
+  worker_timeout: 300
+  max_requests: 1000
+  max_requests_jitter: 50
+  reload: false
+  log_level: "INFO"
+  access_log: true
+
+# ============================================================================
+# Security Configuration
+# ============================================================================
+security:
+  secret_key: "${PROJECT_SIMULATION_SECRET_KEY}"  # Must be set via environment
+  allowed_hosts:
+    - "simulation.hackathon.local"
+    - "api.simulation.hackathon.local"
+  cors_origins:
+    - "https://simulation.hackathon.local"
+    - "https://app.hackathon.local"
+  cors_credentials: true
+  cors_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  cors_headers:
+    - "Content-Type"
+    - "Authorization"
+    - "X-Requested-With"
+  session_cookie_secure: true
+  session_cookie_httponly: true
+  session_cookie_samesite: "strict"
+
+# ============================================================================
+# Database Configuration
+# ============================================================================
+database:
+  url: "${DATABASE_URL}"  # Must be set via environment
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  pool_recycle: 3600
+  echo: false
+  track_modifications: false
+
+# ============================================================================
+# Redis Configuration
+# ============================================================================
+redis:
+  url: "${REDIS_URL}"  # Must be set via environment
+  db: 0
+  max_connections: 20
+  socket_timeout: 5
+  socket_connect_timeout: 5
+  socket_keepalive: true
+  socket_keepalive_options:
+    TCP_KEEPIDLE: 300
+    TCP_KEEPINTVL: 60
+    TCP_KEEPCNT: 3
+  decode_responses: true
+
+# ============================================================================
+# Ecosystem Service Configuration
+# ============================================================================
+ecosystem:
+  services:
+    doc_store:
+      url: "${DOC_STORE_URL}"
+      timeout: 30
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout: 60
+        success_threshold: 3
+
+    mock_data_generator:
+      url: "${MOCK_DATA_GENERATOR_URL}"
+      timeout: 60  # Longer timeout for content generation
+      retry_attempts: 2
+      circuit_breaker:
+        failure_threshold: 3
+        recovery_timeout: 30
+        success_threshold: 2
+
+    orchestrator:
+      url: "${ORCHESTRATOR_URL}"
+      timeout: 120  # Long timeout for complex workflows
+      retry_attempts: 2
+      circuit_breaker:
+        failure_threshold: 3
+        recovery_timeout: 45
+        success_threshold: 2
+
+    analysis_service:
+      url: "${ANALYSIS_SERVICE_URL}"
+      timeout: 90
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 4
+        recovery_timeout: 50
+        success_threshold: 3
+
+    llm_gateway:
+      url: "${LLM_GATEWAY_URL}"
+      timeout: 180  # Long timeout for LLM inference
+      retry_attempts: 2
+      circuit_breaker:
+        failure_threshold: 3
+        recovery_timeout: 60
+        success_threshold: 2
+
+    prompt_store:
+      url: "${PROMPT_STORE_URL}"
+      timeout: 15
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout: 30
+        success_threshold: 3
+
+    summarizer_hub:
+      url: "${SUMMARIZER_HUB_URL}"
+      timeout: 60
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 4
+        recovery_timeout: 40
+        success_threshold: 3
+
+    notification_service:
+      url: "${NOTIFICATION_SERVICE_URL}"
+      timeout: 10
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout: 25
+        success_threshold: 3
+
+    source_agent:
+      url: "${SOURCE_AGENT_URL}"
+      timeout: 120
+      retry_attempts: 2
+      circuit_breaker:
+        failure_threshold: 3
+        recovery_timeout: 60
+        success_threshold: 2
+
+    code_analyzer:
+      url: "${CODE_ANALYZER_URL}"
+      timeout: 90
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 4
+        recovery_timeout: 50
+        success_threshold: 3
+
+    log_collector:
+      url: "${LOG_COLLECTOR_URL}"
+      timeout: 10
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout: 20
+        success_threshold: 3
+
+    discovery_agent:
+      url: "${DISCOVERY_AGENT_URL}"
+      timeout: 15
+      retry_attempts: 3
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout: 25
+        success_threshold: 3
+
+    interpreter:
+      url: "${INTERPRETER_URL}"
+      timeout: 120
+      retry_attempts: 2
+      circuit_breaker:
+        failure_threshold: 3
+        recovery_timeout: 60
+        success_threshold: 2
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+logging:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    json:
+      format: '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "service": "%(name)s", "correlation_id": "%(correlation_id)s", "message": "%(message)s", "extra": %(extra)s}'
+      datefmt: "%Y-%m-%dT%H:%M:%S%z"
+      class: "pythonjsonlogger.jsonlogger.JsonFormatter"
+    detailed:
+      format: '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - %(message)s'
+      datefmt: "%Y-%m-%d %H:%M:%S"
+
+  handlers:
+    console:
+      class: "logging.StreamHandler"
+      level: "INFO"
+      formatter: "json"
+      stream: "ext://sys.stdout"
+
+    file:
+      class: "logging.handlers.RotatingFileHandler"
+      level: "INFO"
+      formatter: "detailed"
+      filename: "/app/logs/project-simulation.log"
+      maxBytes: 10485760  # 10MB
+      backupCount: 5
+
+    error_file:
+      class: "logging.handlers.RotatingFileHandler"
+      level: "ERROR"
+      formatter: "detailed"
+      filename: "/app/logs/project-simulation-error.log"
+      maxBytes: 10485760  # 10MB
+      backupCount: 5
+
+  loggers:
+    "simulation":
+      level: "INFO"
+      handlers: ["console", "file", "error_file"]
+      propagate: false
+
+    "uvicorn":
+      level: "INFO"
+      handlers: ["console", "file"]
+      propagate: false
+
+    "fastapi":
+      level: "INFO"
+      handlers: ["console", "file"]
+      propagate: false
+
+  root:
+    level: "INFO"
+    handlers: ["console", "file", "error_file"]
+
+# ============================================================================
+# Monitoring Configuration
+# ============================================================================
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+    collect_default_metrics: true
+    collect_gc_metrics: true
+    collect_process_metrics: true
+
+  health_check:
+    enabled: true
+    detailed: true
+    dependencies: true
+    database: true
+    redis: true
+    ecosystem_services: true
+
+  metrics:
+    request_duration: true
+    request_count: true
+    error_count: true
+    simulation_metrics: true
+    ecosystem_metrics: true
+    performance_metrics: true
+
+# ============================================================================
+# Performance Configuration
+# ============================================================================
+performance:
+  max_concurrent_simulations: 10
+  simulation_timeout: 3600  # 1 hour
+  cache_enabled: true
+  cache_ttl: 300  # 5 minutes
+  connection_pool_size: 20
+  max_keepalive_connections: 10
+  keepalive_timeout: 30
+
+# ============================================================================
+# Rate Limiting Configuration
+# ============================================================================
+rate_limiting:
+  enabled: true
+  requests_per_minute: 60
+  burst_limit: 10
+  exclude_paths:
+    - "/health"
+    - "/metrics"
+    - "/docs"
+    - "/redoc"
+    - "/openapi.json"
+
+# ============================================================================
+# Feature Flags
+# ============================================================================
+features:
+  websockets: true
+  real_time_updates: true
+  advanced_analytics: true
+  multi_tenant_support: false  # Enable when needed
+  audit_logging: true
+  circuit_breakers: true
+  service_discovery: true
+  load_balancing: true
+  caching: true
+  compression: true
+
+# ============================================================================
+# External Integrations
+# ============================================================================
+integrations:
+  slack:
+    enabled: "${SLACK_ENABLED:false}"
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#simulation-alerts"
+
+  email:
+    enabled: "${EMAIL_ENABLED:false}"
+    smtp_server: "${SMTP_SERVER}"
+    smtp_port: "${SMTP_PORT:587}"
+    smtp_username: "${SMTP_USERNAME}"
+    smtp_password: "${SMTP_PASSWORD}"
+    from_address: "${EMAIL_FROM_ADDRESS}"
+
+  prometheus_pushgateway:
+    enabled: "${PROMETHEUS_PUSHGATEWAY_ENABLED:false}"
+    url: "${PROMETHEUS_PUSHGATEWAY_URL}"
+    job_name: "project-simulation"
+
+# ============================================================================
+# Backup Configuration
+# ============================================================================
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 30
+  s3_bucket: "${BACKUP_S3_BUCKET}"
+  s3_region: "${BACKUP_S3_REGION:us-east-1}"
+  database_backup: true
+  logs_backup: true
+  configurations_backup: true
+
+# ============================================================================
+# Maintenance Configuration
+# ============================================================================
+maintenance:
+  enabled: true
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+  auto_cleanup: true
+  cleanup_age_days: 7
+  health_check_before_maintenance: true
+  notify_before_maintenance: true
+  maintenance_timeout: 3600  # 1 hour

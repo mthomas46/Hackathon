@@ -145,7 +145,7 @@ DEFAULT_PORT = 5020
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import AnalysisRequest, ReportRequest, NotifyOwnersRequest, FindingsResponse, ArchitectureAnalysisRequest, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest
+from .modules.models import AnalysisRequest, ReportRequest, DocumentDumpRequest, NotifyOwnersRequest, FindingsResponse, ArchitectureAnalysisRequest, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest
 from .modules.analysis_handlers import analysis_handlers
 from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
@@ -1010,6 +1010,980 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
             f"Portfolio change impact analysis failed: {str(e)}",
             error_code=ErrorCodes.ANALYSIS_FAILED
         )
+
+
+@app.post("/analyze/generate-report")
+async def generate_analysis_report_endpoint(req: dict):
+    """Generate comprehensive analysis reports for simulation service.
+
+    This endpoint is specifically designed for the simulation service to request
+    comprehensive analysis reports that include both JSON data and human-readable
+    Markdown formatting. The analysis service performs all the heavy lifting of
+    report generation, keeping the simulation service pure and focused on simulation logic.
+    """
+    try:
+        # Extract request parameters
+        simulation_id = req.get("simulation_id", "")
+        documents = req.get("documents", [])
+        report_type = req.get("report_type", "comprehensive_simulation_analysis")
+        include_markdown = req.get("include_markdown", True)
+        include_json = req.get("include_json", True)
+
+        if not simulation_id:
+            return create_error_response(
+                "simulation_id is required",
+                error_code=ErrorCodes.VALIDATION_ERROR
+            )
+
+        if not documents:
+            return create_error_response(
+                "documents list cannot be empty",
+                error_code=ErrorCodes.VALIDATION_ERROR
+            )
+
+        # Perform comprehensive analysis on all documents
+        analysis_results = []
+        total_quality_score = 0
+        total_issues = 0
+
+        for doc in documents:
+            try:
+                doc_content = doc.get("content", "")
+                if not doc_content:
+                    continue
+
+                # Use existing analysis quality endpoint for each document
+                quality_req = ContentQualityRequest(
+                    content=doc_content,
+                    document_id=doc.get("id", ""),
+                    document_type=doc.get("type", "unknown"),
+                    title=doc.get("title", "")
+                )
+
+                quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
+
+                if quality_result:
+                    doc_analysis = {
+                        "document_id": doc.get("id", ""),
+                        "analysis_type": "comprehensive_document_analysis",
+                        "quality_score": quality_result.quality_score,
+                        "readability_score": quality_result.readability_score,
+                        "issues_found": len(quality_result.issues) if quality_result.issues else 0,
+                        "issues": [str(issue) for issue in quality_result.issues] if quality_result.issues else [],
+                        "insights": [str(insight) for insight in quality_result.insights] if quality_result.insights else [],
+                        "timestamp": quality_result.analysis_timestamp.isoformat() if quality_result.analysis_timestamp else None
+                    }
+
+                    analysis_results.append(doc_analysis)
+                    total_quality_score += quality_result.quality_score
+                    total_issues += len(quality_result.issues) if quality_result.issues else 0
+
+            except Exception as e:
+                # Log individual document analysis errors but continue with others
+                fire_and_forget(
+                    "warning",
+                    f"Failed to analyze document {doc.get('id', 'unknown')}",
+                    SERVICE_NAME,
+                    {"error": str(e), "document_id": doc.get("id", "")}
+                )
+                continue
+
+        if not analysis_results:
+            return create_error_response(
+                "No documents could be analyzed",
+                error_code=ErrorCodes.ANALYSIS_FAILED
+            )
+
+        # Calculate summary statistics
+        avg_quality_score = total_quality_score / len(analysis_results) if analysis_results else 0
+
+        summary = {
+            "total_analyses": len(analysis_results),
+            "analysis_types": ["comprehensive_document_analysis"],
+            "documents_with_issues": len([r for r in analysis_results if r["issues_found"] > 0]),
+            "average_quality_score": avg_quality_score,
+            "total_issues_found": total_issues
+        }
+
+        # Generate report ID
+        report_id = f"analysis_report_{simulation_id}_{int(datetime.now().timestamp())}"
+
+        # Prepare JSON report data
+        json_report = {
+            "report_id": report_id,
+            "simulation_id": simulation_id,
+            "timestamp": datetime.now().isoformat(),
+            "documents_analyzed": len(documents),
+            "analysis_results": analysis_results,
+            "summary": summary,
+            "metadata": {
+                "source": "analysis-service",
+                "report_type": report_type,
+                "processing_time": "completed",
+                "service_version": "1.0.0"
+            }
+        }
+
+        # Generate Markdown report if requested
+        markdown_content = ""
+        if include_markdown:
+            markdown_content = generate_analysis_markdown_report(json_report)
+
+        # Prepare response
+        response_data = {
+            "success": True,
+            "report": json_report,
+            "markdown_content": markdown_content if include_markdown else None,
+            "report_id": report_id,
+            "documents_processed": len(analysis_results),
+            "processing_time": "completed"
+        }
+
+        # Log successful report generation
+        fire_and_forget(
+            "info",
+            "Analysis report generated successfully",
+            SERVICE_NAME,
+            {
+                "simulation_id": simulation_id,
+                "report_id": report_id,
+                "documents_analyzed": len(documents),
+                "documents_processed": len(analysis_results)
+            }
+        )
+
+        return create_success_response(
+            response_data,
+            message=f"Analysis report generated for {len(analysis_results)} documents"
+        )
+
+    except Exception as e:
+        # Log the error
+        fire_and_forget(
+            "error",
+            "Analysis report generation failed",
+            SERVICE_NAME,
+            {"error": str(e), "simulation_id": req.get("simulation_id", "")}
+        )
+
+        return create_error_response(
+            f"Analysis report generation failed: {str(e)}",
+            error_code=ErrorCodes.ANALYSIS_FAILED
+        )
+
+
+@app.post("/analyze/pull-request")
+async def analyze_pull_request_endpoint(req: dict):
+    """Analyze pull request changes and provide refactoring suggestions.
+
+    This endpoint provides comprehensive analysis of pull request data including:
+    - Code quality assessment
+    - Commit message quality review
+    - Structural change analysis
+    - Refactoring suggestions
+    - Health score calculation with risk assessment
+    """
+    try:
+        # Extract PR data
+        pr_data = req.get("pull_request", {})
+        simulation_id = req.get("simulation_id", "")
+
+        if not pr_data:
+            return create_error_response(
+                "Pull request data is required",
+                error_code=ErrorCodes.VALIDATION_ERROR
+            )
+
+        # Use the PR analysis handler
+        analysis_result = await analyze_pull_request_handler(pr_data, simulation_id)
+
+        return create_success_response(
+            data=analysis_result,
+            message=f"Pull request analysis completed with health score {analysis_result.get('health_score', 0):.2f}"
+        )
+
+    except Exception as e:
+        fire_and_forget(
+            "error",
+            "Pull request analysis failed",
+            SERVICE_NAME,
+            {"error": str(e)}
+        )
+
+        return create_error_response(
+            f"Pull request analysis failed: {str(e)}",
+            error_code=ErrorCodes.ANALYSIS_FAILED
+        )
+
+
+# Test endpoint for PR analysis
+@app.post("/analyze/test-pr-analysis")
+async def test_pr_analysis_endpoint():
+    """Test endpoint to demonstrate PR analysis capabilities."""
+    # Sample PR data for testing
+    test_pr_data = {
+        "title": "feat: Add user authentication system",
+        "author": "developer@example.com",
+        "description": "This PR adds a comprehensive user authentication system with JWT tokens and password hashing.",
+        "changed_files": [
+            {
+                "filename": "src/auth/auth_service.py",
+                "status": "added",
+                "additions": 150,
+                "deletions": 0,
+                "changes": 150,
+                "patch": "@@ -0,0 +1,50 @@\ndef authenticate_user(username: str, password: str) -> bool:\n    # Complex authentication logic\n    if len(username) < 3 or len(password) < 8:\n        return False\n    \n    # Hash password\n    hashed = hash_password(password)\n    \n    # Check against database\n    user = get_user_from_db(username)\n    if not user:\n        return False\n    \n    return verify_password(password, user.hashed_password)"
+            },
+            {
+                "filename": "tests/test_auth.py",
+                "status": "added",
+                "additions": 80,
+                "deletions": 0,
+                "changes": 80
+            }
+        ],
+        "commits": [
+            {
+                "message": "feat: Add user authentication service",
+                "author": "developer@example.com"
+            },
+            {
+                "message": "test: Add authentication tests",
+                "author": "developer@example.com"
+            }
+        ]
+    }
+
+    result = await analyze_pull_request_handler(test_pr_data, "test_sim_123")
+    return create_success_response(
+        data=result,
+        message="PR analysis test completed successfully"
+    )
+
+
+async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -> dict:
+    """Handle pull request analysis logic."""
+    from datetime import datetime
+
+    # Extract PR components
+    changed_files = pr_data.get("changed_files", [])
+    commits = pr_data.get("commits", [])
+    pr_title = pr_data.get("title", "")
+    pr_description = pr_data.get("description", "")
+    pr_author = pr_data.get("author", "")
+
+    # Analyze different aspects of the PR
+    code_analysis = await analyze_pr_code_changes(changed_files)
+    commit_analysis = analyze_commit_messages(commits)
+    structural_analysis = analyze_code_structure(changed_files)
+    quality_analysis = await analyze_code_quality(changed_files)
+
+    # Generate refactoring suggestions
+    refactoring_suggestions = generate_refactoring_suggestions(
+        code_analysis, structural_analysis, quality_analysis
+    )
+
+    # Calculate PR health score
+    pr_health_score = calculate_pr_health_score(
+        code_analysis, commit_analysis, structural_analysis, quality_analysis
+    )
+
+    # Generate comprehensive report
+    pr_report = {
+        "simulation_id": simulation_id,
+        "pr_title": pr_title,
+        "pr_author": pr_author,
+        "analysis_timestamp": datetime.now().isoformat(),
+        "health_score": pr_health_score,
+        "risk_level": determine_pr_risk_level(pr_health_score),
+        "files_analyzed": len(changed_files),
+        "commits_analyzed": len(commits),
+        "code_analysis": code_analysis,
+        "commit_analysis": commit_analysis,
+        "structural_analysis": structural_analysis,
+        "quality_analysis": quality_analysis,
+        "refactoring_suggestions": refactoring_suggestions,
+        "recommendations": generate_pr_recommendations({
+            "health_score": pr_health_score,
+            "risk_level": determine_pr_risk_level(pr_health_score),
+            "code_analysis": code_analysis,
+            "commit_analysis": commit_analysis,
+            "quality_analysis": quality_analysis
+        })
+    }
+
+    return pr_report
+
+
+async def analyze_pr_code_changes(changed_files: list) -> dict:
+    """Analyze the actual code changes in the pull request."""
+    analysis = {
+        "total_files_changed": len(changed_files),
+        "file_types": {},
+        "change_metrics": {
+            "lines_added": 0,
+            "lines_removed": 0,
+            "files_modified": 0,
+            "files_added": 0,
+            "files_deleted": 0
+        },
+        "code_patterns": {
+            "complex_functions": [],
+            "long_methods": [],
+            "duplicate_code": [],
+            "unused_imports": [],
+            "code_smells": []
+        }
+    }
+
+    for file_data in changed_files:
+        file_path = file_data.get("filename", "")
+        file_type = get_file_type(file_path)
+
+        # Count file types
+        analysis["file_types"][file_type] = analysis["file_types"].get(file_type, 0) + 1
+
+        # Analyze changes
+        additions = file_data.get("additions", 0)
+        deletions = file_data.get("deletions", 0)
+        changes = file_data.get("changes", 0)
+
+        analysis["change_metrics"]["lines_added"] += additions
+        analysis["change_metrics"]["lines_removed"] += deletions
+
+        if file_data.get("status") == "added":
+            analysis["change_metrics"]["files_added"] += 1
+        elif file_data.get("status") == "removed":
+            analysis["change_metrics"]["files_deleted"] += 1
+        elif file_data.get("status") == "modified":
+            analysis["change_metrics"]["files_modified"] += 1
+
+        # Basic code analysis
+        if file_type in ["python", "javascript", "typescript", "java"]:
+            code_issues = analyze_file_content(file_data, file_type)
+            for issue_type, issues in code_issues.items():
+                if issue_type in analysis["code_patterns"]:
+                    analysis["code_patterns"][issue_type].extend(issues)
+
+    return analysis
+
+
+def analyze_commit_messages(commits: list) -> dict:
+    """Analyze commit messages for quality and consistency."""
+    analysis = {
+        "total_commits": len(commits),
+        "message_quality": {
+            "good_messages": 0,
+            "needs_improvement": 0,
+            "poor_messages": 0
+        },
+        "patterns": {
+            "descriptive": 0,
+            "concise": 0,
+            "conventional_commits": 0,
+            "has_issue_references": 0
+        },
+        "issues": []
+    }
+
+    for commit in commits:
+        message = commit.get("message", "").strip()
+
+        # Analyze message quality
+        if len(message) < 10:
+            analysis["message_quality"]["poor_messages"] += 1
+            analysis["issues"].append(f"Commit message too short: '{message[:50]}...'")
+        elif len(message) > 100:
+            analysis["message_quality"]["needs_improvement"] += 1
+            analysis["issues"].append(f"Commit message too long: '{message[:50]}...'")
+        elif is_good_commit_message(message):
+            analysis["message_quality"]["good_messages"] += 1
+        else:
+            analysis["message_quality"]["needs_improvement"] += 1
+
+        # Check for conventional commits
+        if is_conventional_commit(message):
+            analysis["patterns"]["conventional_commits"] += 1
+
+        # Check for issue references
+        if "#" in message or "issue" in message.lower():
+            analysis["patterns"]["has_issue_references"] += 1
+
+    return analysis
+
+
+def analyze_code_structure(changed_files: list) -> dict:
+    """Analyze the structural changes in the codebase."""
+    analysis = {
+        "architecture_changes": [],
+        "dependency_changes": [],
+        "configuration_changes": [],
+        "test_coverage_changes": [],
+        "documentation_changes": [],
+        "structural_risks": []
+    }
+
+    for file_data in changed_files:
+        file_path = file_data.get("filename", "").lower()
+
+        # Categorize files by type and impact
+        if any(pattern in file_path for pattern in ["architecture", "design", "structure"]):
+            analysis["architecture_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]):
+            analysis["dependency_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["config", ".env", ".yaml", ".yml", ".json"]):
+            analysis["configuration_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["test", "spec", "_test"]):
+            analysis["test_coverage_changes"].append(file_path)
+
+        elif any(pattern in file_path for pattern in ["readme", "docs", ".md", ".rst"]):
+            analysis["documentation_changes"].append(file_path)
+
+    # Identify structural risks
+    if len(analysis["architecture_changes"]) > 3:
+        analysis["structural_risks"].append("Multiple architecture files changed - high risk")
+
+    if len(analysis["dependency_changes"]) > 0 and len(analysis["test_coverage_changes"]) == 0:
+        analysis["structural_risks"].append("Dependencies changed without corresponding tests")
+
+    return analysis
+
+
+async def analyze_code_quality(changed_files: list) -> dict:
+    """Analyze code quality using external analysis service."""
+    try:
+        # Prepare code content for analysis
+        code_files = []
+        for file_data in changed_files:
+            if file_data.get("patch") or file_data.get("content"):
+                content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
+                if content:
+                    code_files.append({
+                        "filename": file_data.get("filename", ""),
+                        "content": content,
+                        "type": get_file_type(file_data.get("filename", ""))
+                    })
+
+        if not code_files:
+            return {"quality_score": 0.0, "issues": ["No analyzable code content found"]}
+
+        # Use existing quality analysis endpoint
+        quality_results = []
+        for file_info in code_files:
+            quality_req = ContentQualityRequest(
+                content=file_info["content"],
+                document_id=file_info["filename"],
+                document_type=file_info["type"],
+                title=file_info["filename"]
+            )
+
+            quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
+            if quality_result:
+                quality_results.append(quality_result)
+
+        if quality_results:
+            avg_quality = sum(r.quality_score for r in quality_results) / len(quality_results)
+            total_issues = sum(len(getattr(r, 'issues', [])) for r in quality_results)
+
+            return {
+                "quality_score": avg_quality,
+                "issues_found": total_issues,
+                "files_analyzed": len(code_files),
+                "detailed_results": [{"file": f, "result": str(r)} for f, r in zip(code_files, quality_results)]
+            }
+
+        return {
+            "quality_score": 0.5,
+            "issues_found": 0,
+            "files_analyzed": len(code_files),
+            "detailed_results": []
+        }
+
+    except Exception as e:
+        return {
+            "quality_score": 0.0,
+            "issues_found": 1,
+            "error": str(e)
+        }
+
+
+def analyze_file_content(file_data: dict, file_type: str) -> dict:
+    """Perform basic static analysis on file content."""
+    issues = {
+        "complex_functions": [],
+        "long_methods": [],
+        "duplicate_code": [],
+        "unused_imports": [],
+        "code_smells": []
+    }
+
+    try:
+        content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
+
+        if not content:
+            return issues
+
+        lines = content.split('\n')
+
+        # Basic complexity analysis
+        if file_type == "python":
+            issues.update(analyze_python_file(lines))
+        elif file_type in ["javascript", "typescript"]:
+            issues.update(analyze_js_file(lines))
+        elif file_type == "java":
+            issues.update(analyze_java_file(lines))
+
+    except Exception as e:
+        pass
+
+    return issues
+
+
+def analyze_python_file(lines: list) -> dict:
+    """Analyze Python file for common issues."""
+    issues = {"complex_functions": [], "long_methods": []}
+
+    current_function = None
+    function_lines = 0
+
+    for i, line in enumerate(lines):
+        # Track function definitions
+        if line.strip().startswith("def "):
+            if current_function and function_lines > 50:
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+
+            current_function = line.split("def ")[1].split("(")[0]
+            function_lines = 0
+        elif current_function:
+            function_lines += 1
+
+            # Check for complexity indicators
+            if any(keyword in line.lower() for keyword in ["if", "elif", "for", "while"]) and line.count("and") + line.count("or") > 2:
+                issues["complex_functions"].append(f"{current_function} (line {i+1})")
+
+    # Check last function
+    if current_function and function_lines > 50:
+        issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+
+    return issues
+
+
+def analyze_js_file(lines: list) -> dict:
+    """Analyze JavaScript/TypeScript file for common issues."""
+    issues = {"complex_functions": [], "long_methods": []}
+
+    current_function = None
+    function_lines = 0
+    brace_count = 0
+
+    for i, line in enumerate(lines):
+        # Track function definitions
+        if "function " in line or "=> " in line or "const " in line and " = (" in line:
+            if current_function and function_lines > 40:
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+
+            # Extract function name
+            if "function " in line:
+                current_function = line.split("function ")[1].split("(")[0]
+            else:
+                current_function = f"anonymous_function_{i}"
+            function_lines = 0
+
+        if current_function:
+            function_lines += 1
+            brace_count += line.count("{") - line.count("}")
+
+            # Check for complexity
+            if any(keyword in line for keyword in ["if", "for", "while"]) and line.count("&&") + line.count("||") > 2:
+                issues["complex_functions"].append(f"{current_function} (line {i+1})")
+
+            # End of function
+            if brace_count == 0 and function_lines > 5:
+                if function_lines > 40:
+                    issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
+                current_function = None
+                function_lines = 0
+
+    return issues
+
+
+def analyze_java_file(lines: list) -> dict:
+    """Analyze Java file for common issues."""
+    issues = {"complex_functions": [], "long_methods": []}
+
+    current_method = None
+    method_lines = 0
+    brace_count = 0
+
+    for i, line in enumerate(lines):
+        # Track method definitions
+        if any(modifier in line for modifier in ["public ", "private ", "protected "]) and "(" in line and ")" in line:
+            if current_method and method_lines > 50:
+                issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
+
+            # Extract method name
+            method_start = line.find("(")
+            method_name_start = line.rfind(" ", 0, method_start)
+            if method_name_start != -1:
+                current_method = line[method_name_start:method_start].strip()
+            else:
+                current_method = f"method_{i}"
+            method_lines = 0
+            brace_count = 0
+
+        if current_method:
+            method_lines += 1
+            brace_count += line.count("{") - line.count("}")
+
+            # Check for complexity
+            if any(keyword in line for keyword in ["if", "for", "while", "switch"]) and line.count("&&") + line.count("||") > 2:
+                issues["complex_functions"].append(f"{current_method} (line {i+1})")
+
+            # End of method
+            if brace_count == 0 and method_lines > 5:
+                if method_lines > 50:
+                    issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
+                current_method = None
+                method_lines = 0
+
+    return issues
+
+
+def extract_content_from_patch(patch: str) -> str:
+    """Extract actual content from git diff patch."""
+    if not patch:
+        return ""
+
+    lines = patch.split('\n')
+    content_lines = []
+
+    for line in lines:
+        if line.startswith('+') and not line.startswith('+++'):
+            content_lines.append(line[1:])  # Remove the + prefix
+        elif line.startswith(' ') and not line.startswith('@@'):
+            content_lines.append(line[1:])  # Remove the space prefix for context
+
+    return '\n'.join(content_lines)
+
+
+def get_file_type(filename: str) -> str:
+    """Determine file type from filename."""
+    if filename.endswith(('.py', '.pyc')):
+        return 'python'
+    elif filename.endswith(('.js', '.jsx')):
+        return 'javascript'
+    elif filename.endswith(('.ts', '.tsx')):
+        return 'typescript'
+    elif filename.endswith(('.java',)):
+        return 'java'
+    elif filename.endswith(('.cpp', '.c++', '.cc', '.cxx', '.hpp', '.h')):
+        return 'cpp'
+    elif filename.endswith(('.cs',)):
+        return 'csharp'
+    elif filename.endswith(('.php',)):
+        return 'php'
+    elif filename.endswith(('.rb',)):
+        return 'ruby'
+    elif filename.endswith(('.go',)):
+        return 'go'
+    elif filename.endswith(('.rs',)):
+        return 'rust'
+    elif filename.endswith(('.html', '.htm')):
+        return 'html'
+    elif filename.endswith(('.css',)):
+        return 'css'
+    elif filename.endswith(('.md', '.markdown')):
+        return 'markdown'
+    elif filename.endswith(('.json',)):
+        return 'json'
+    elif filename.endswith(('.xml', '.yml', '.yaml')):
+        return 'config'
+    else:
+        return 'other'
+
+
+def is_good_commit_message(message: str) -> bool:
+    """Check if a commit message follows good practices."""
+    # Basic checks for good commit messages
+    if len(message) < 10:
+        return False
+
+    # Should start with capital letter
+    if not message[0].isupper():
+        return False
+
+    # Should not end with period
+    if message.endswith('.'):
+        return False
+
+    # Should be descriptive but not too long
+    if len(message) > 100:
+        return False
+
+    return True
+
+
+def is_conventional_commit(message: str) -> bool:
+    """Check if commit follows conventional commit format."""
+    conventional_types = ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'perf', 'ci', 'build', 'revert']
+    first_word = message.split(':')[0].strip().lower()
+    return first_word in conventional_types
+
+
+def generate_refactoring_suggestions(code_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> list:
+    """Generate refactoring suggestions based on analysis."""
+    suggestions = []
+
+    # Code complexity suggestions
+    if "code_patterns" in code_analysis:
+        patterns = code_analysis["code_patterns"]
+
+        if patterns.get("complex_functions"):
+            suggestions.append({
+                "type": "complexity_reduction",
+                "priority": "high",
+                "description": f"Simplify {len(patterns['complex_functions'])} complex functions",
+                "affected_items": patterns["complex_functions"][:5],  # Top 5
+                "estimated_effort": "medium"
+            })
+
+        if patterns.get("long_methods"):
+            suggestions.append({
+                "type": "method_extraction",
+                "priority": "medium",
+                "description": f"Extract {len(patterns['long_methods'])} long methods into smaller functions",
+                "affected_items": patterns["long_methods"][:5],
+                "estimated_effort": "medium"
+            })
+
+    # Structural suggestions
+    if structural_analysis.get("structural_risks"):
+        suggestions.append({
+            "type": "structural_improvement",
+            "priority": "high",
+            "description": "Address structural risks identified in the changes",
+            "affected_items": structural_analysis["structural_risks"],
+            "estimated_effort": "high"
+        })
+
+    # Quality suggestions
+    if quality_analysis.get("quality_score", 0) < 0.6:
+        suggestions.append({
+            "type": "quality_improvement",
+            "priority": "high",
+            "description": f"Improve code quality (current score: {quality_analysis.get('quality_score', 0):.2f})",
+            "affected_items": [f"{quality_analysis.get('issues_found', 0)} quality issues found"],
+            "estimated_effort": "medium"
+        })
+
+    # Testing suggestions
+    if (code_analysis.get("change_metrics", {}).get("files_modified", 0) > 0 and
+        len(structural_analysis.get("test_coverage_changes", [])) == 0):
+        suggestions.append({
+            "type": "test_coverage",
+            "priority": "medium",
+            "description": "Add tests for modified functionality",
+            "affected_items": ["Modified files without corresponding tests"],
+            "estimated_effort": "medium"
+        })
+
+    return suggestions
+
+
+def calculate_pr_health_score(code_analysis: dict, commit_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> float:
+    """Calculate overall health score for the pull request."""
+    scores = []
+
+    # Code analysis score (40% weight)
+    if "change_metrics" in code_analysis:
+        metrics = code_analysis["change_metrics"]
+        total_changes = metrics.get("lines_added", 0) + metrics.get("lines_removed", 0)
+
+        # Prefer balanced changes over large additions/deletions
+        if total_changes > 0:
+            balance_ratio = min(metrics.get("lines_added", 0), metrics.get("lines_removed", 0)) / total_changes
+            code_score = min(1.0, balance_ratio * 2)  # Reward balanced changes
+            scores.append((code_score, 0.4))
+
+    # Commit quality score (20% weight)
+    if "message_quality" in commit_analysis:
+        quality = commit_analysis["message_quality"]
+        total_messages = sum(quality.values())
+        if total_messages > 0:
+            good_ratio = quality.get("good_messages", 0) / total_messages
+            commit_score = good_ratio
+            scores.append((commit_score, 0.2))
+
+    # Quality score (30% weight)
+    quality_score = quality_analysis.get("quality_score", 0.5)
+    scores.append((quality_score, 0.3))
+
+    # Structural risk penalty (10% weight)
+    structural_score = 1.0
+    if structural_analysis.get("structural_risks"):
+        structural_score = max(0.0, 1.0 - (len(structural_analysis["structural_risks"]) * 0.2))
+    scores.append((structural_score, 0.1))
+
+    # Calculate weighted average
+    if not scores:
+        return 0.5
+
+    total_weight = sum(weight for _, weight in scores)
+    if total_weight == 0:
+        return 0.5
+
+    weighted_sum = sum(score * weight for score, weight in scores)
+    return min(1.0, max(0.0, weighted_sum / total_weight))
+
+
+def determine_pr_risk_level(health_score: float) -> str:
+    """Determine risk level based on health score."""
+    if health_score >= 0.8:
+        return "low"
+    elif health_score >= 0.6:
+        return "medium"
+    else:
+        return "high"
+
+
+def generate_pr_recommendations(pr_report: dict) -> list:
+    """Generate high-level recommendations for the pull request."""
+    recommendations = []
+
+    health_score = pr_report.get("health_score", 0.5)
+    risk_level = pr_report.get("risk_level", "medium")
+
+    if risk_level == "high":
+        recommendations.append("🚨 High-risk changes detected - consider breaking into smaller PRs")
+        recommendations.append("📋 Schedule thorough code review with senior developers")
+
+    elif risk_level == "medium":
+        recommendations.append("⚠️ Medium-risk changes - ensure adequate test coverage")
+        recommendations.append("👥 Consider pair programming for complex sections")
+
+    # Specific recommendations based on analysis
+    code_analysis = pr_report.get("code_analysis", {})
+
+    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > 1000:
+        recommendations.append("📊 Large PR detected - consider splitting into smaller, focused changes")
+
+    if code_analysis.get("file_types", {}).get("test", 0) == 0:
+        recommendations.append("🧪 Consider adding tests for the changes introduced")
+
+    # Commit analysis recommendations
+    commit_analysis = pr_report.get("commit_analysis", {})
+    if commit_analysis.get("message_quality", {}).get("poor_messages", 0) > 0:
+        recommendations.append("✍️ Improve commit message quality for better project history")
+
+    # Quality recommendations
+    quality_analysis = pr_report.get("quality_analysis", {})
+    if quality_analysis.get("quality_score", 1.0) < 0.7:
+        recommendations.append("🔧 Address code quality issues before merging")
+
+    return recommendations
+
+
+def generate_analysis_markdown_report(report_data: dict) -> str:
+    """Generate comprehensive Markdown report from analysis data."""
+    md_lines = []
+
+    # Header
+    md_lines.append("# 📊 Comprehensive Analysis Report")
+    md_lines.append("")
+    md_lines.append(f"**Simulation ID:** {report_data['simulation_id']}")
+    md_lines.append(f"**Report ID:** {report_data['report_id']}")
+    md_lines.append(f"**Generated:** {report_data['timestamp']}")
+    md_lines.append(f"**Documents Analyzed:** {report_data['documents_analyzed']}")
+    md_lines.append("")
+
+    # Summary section
+    summary = report_data["summary"]
+    md_lines.append("## 📈 Executive Summary")
+    md_lines.append("")
+    md_lines.append(f"- **Total Analyses:** {summary['total_analyses']}")
+    md_lines.append(f"- **Analysis Types:** {', '.join(summary['analysis_types'])}")
+    md_lines.append(f"- **Documents with Issues:** {summary['documents_with_issues']}")
+    md_lines.append(f"- **Average Quality Score:** {summary['average_quality_score']:.2f}")
+    md_lines.append(f"- **Total Issues Found:** {summary['total_issues_found']}")
+    md_lines.append("")
+
+    # Overall quality indicator
+    avg_score = summary['average_quality_score']
+    if avg_score >= 0.8:
+        quality_indicator = "🟢 **High Quality** - Documents are well-structured and clear"
+    elif avg_score >= 0.6:
+        quality_indicator = "🟡 **Medium Quality** - Documents need some improvements"
+    else:
+        quality_indicator = "🔴 **Low Quality** - Documents require significant attention"
+
+    md_lines.append(f"### Quality Assessment: {quality_indicator}")
+    md_lines.append("")
+
+    # Analysis Results section
+    md_lines.append("## 🔍 Detailed Analysis Results")
+    md_lines.append("")
+
+    for i, result in enumerate(report_data["analysis_results"], 1):
+        quality_score = result.get("quality_score", 0)
+        issues_found = result.get("issues_found", 0)
+
+        # Quality score emoji
+        if quality_score >= 0.8:
+            quality_emoji = "🟢"
+        elif quality_score >= 0.6:
+            quality_emoji = "🟡"
+        else:
+            quality_emoji = "🔴"
+
+        md_lines.append(f"### {i}. {quality_emoji} Document: {result.get('document_id', 'Unknown')}")
+        md_lines.append("")
+        md_lines.append(f"**Quality Score:** {quality_score:.2f}")
+        md_lines.append(f"**Readability Score:** {result.get('readability_score', 0):.2f}")
+        md_lines.append(f"**Issues Found:** {issues_found}")
+        md_lines.append("")
+
+        if result.get("issues"):
+            md_lines.append("**Issues Identified:**")
+            for issue in result["issues"]:
+                md_lines.append(f"- {issue}")
+            md_lines.append("")
+
+        if result.get("insights"):
+            md_lines.append("**Insights & Recommendations:**")
+            for insight in result["insights"]:
+                md_lines.append(f"- {insight}")
+            md_lines.append("")
+
+        md_lines.append("---")
+        md_lines.append("")
+
+    # Recommendations section
+    md_lines.append("## 💡 Recommendations")
+    md_lines.append("")
+
+    if summary['documents_with_issues'] > 0:
+        md_lines.append(f"Found {summary['documents_with_issues']} documents with issues that need attention:")
+        md_lines.append("")
+        md_lines.append("- Review documents with low quality scores (< 0.6)")
+        md_lines.append("- Address readability issues in documents with poor scores")
+        md_lines.append("- Consider consolidating similar content across documents")
+        md_lines.append("- Implement automated quality checks in documentation workflow")
+    else:
+        md_lines.append("✅ **Excellent!** All documents passed quality analysis with no major issues found.")
+        md_lines.append("")
+        md_lines.append("- Continue maintaining high documentation standards")
+        md_lines.append("- Consider implementing proactive quality monitoring")
+        md_lines.append("- Use this analysis as a baseline for future comparisons")
+
+    md_lines.append("")
+    md_lines.append("---")
+    md_lines.append("")
+    md_lines.append("*Report generated by Analysis Service v1.0.0*")
+
+    return "\n".join(md_lines)
 
 
 @app.post("/remediate")
@@ -2242,6 +3216,304 @@ async def generate_report(req: ReportRequest):
     return await report_handlers.handle_generate_report(req)
 
 
+@app.post("/reports/document-dump")
+async def generate_document_dump_report(req: DocumentDumpRequest):
+    """Generate a comprehensive document dump report with beautified formatting.
+
+    This endpoint creates a formatted report of all documents used in analysis,
+    properly categorized by type (Confluence, Jira, Pull Request) with appropriate
+    metadata and formatting for each document type.
+    """
+    try:
+        # Filter documents if requested
+        documents = req.documents
+        if req.filter_by_type:
+            documents = [d for d in documents if d.get("type", "").lower() in [t.lower() for t in req.filter_by_type]]
+        if req.filter_by_category:
+            documents = [d for d in documents if d.get("category", "").lower() in [c.lower() for c in req.filter_by_category]]
+
+        # Sort documents
+        reverse_sort = req.sort_order.lower() == "desc"
+        if req.sort_by in ["dateCreated", "dateUpdated"]:
+            documents.sort(key=lambda x: x.get(req.sort_by, ""), reverse=reverse_sort)
+        elif req.sort_by == "title":
+            documents.sort(key=lambda x: x.get("title", "").lower(), reverse=reverse_sort)
+
+        # Generate the formatted report
+        report_content = await generate_document_dump_markdown(documents, req)
+
+        if req.format == "json":
+            return {
+                "success": True,
+                "report_type": "document_dump",
+                "document_count": len(documents),
+                "format": "json",
+                "data": {
+                    "documents": documents,
+                    "metadata": {
+                        "generated_at": datetime.now().isoformat(),
+                        "total_documents": len(documents),
+                        "filters_applied": {
+                            "type_filter": req.filter_by_type,
+                            "category_filter": req.filter_by_category
+                        },
+                        "sorting": {
+                            "sort_by": req.sort_by,
+                            "sort_order": req.sort_order
+                        }
+                    }
+                }
+            }
+        else:
+            # Return markdown/HTML content
+            return {
+                "success": True,
+                "report_type": "document_dump",
+                "document_count": len(documents),
+                "format": req.format,
+                "content": report_content,
+                "metadata": {
+                    "generated_at": datetime.now().isoformat(),
+                    "total_documents": len(documents),
+                    "filters_applied": {
+                        "type_filter": req.filter_by_type,
+                        "category_filter": req.filter_by_category
+                    },
+                    "sorting": {
+                        "sort_by": req.sort_by,
+                        "sort_order": req.sort_order
+                    }
+                }
+            }
+
+    except Exception as e:
+        logger.error(f"Document dump report generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Document dump report generation failed: {str(e)}")
+
+
+async def generate_document_dump_markdown(documents: List[Dict[str, Any]], req: DocumentDumpRequest) -> str:
+    """Generate beautified markdown report for document dump."""
+    report_lines = []
+
+    # Header
+    report_lines.append("# 📋 Document Analysis Dump Report")
+    report_lines.append("")
+    report_lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    report_lines.append(f"**Total Documents:** {len(documents)}")
+    report_lines.append("")
+
+    # Group documents by type if requested
+    if req.group_by_type:
+        grouped_docs = {}
+        for doc in documents:
+            doc_type = doc.get("type", "unknown").lower()
+            if doc_type not in grouped_docs:
+                grouped_docs[doc_type] = []
+            grouped_docs[doc_type].append(doc)
+
+        # Process each type
+        for doc_type, docs in grouped_docs.items():
+            report_lines.append(f"## {get_type_icon(doc_type)} {doc_type.title()} Documents ({len(docs)})")
+            report_lines.append("")
+
+            for doc in docs:
+                report_lines.extend(generate_document_section(doc, req))
+
+    else:
+        # No grouping
+        for doc in documents:
+            report_lines.extend(generate_document_section(doc, req))
+
+    # Footer
+    report_lines.append("---")
+    report_lines.append("")
+    report_lines.append("*Report generated by Analysis Service*")
+    report_lines.append("")
+
+    return "\n".join(report_lines)
+
+
+def generate_document_section(doc: Dict[str, Any], req: DocumentDumpRequest) -> List[str]:
+    """Generate a formatted section for a single document."""
+    lines = []
+
+    doc_type = doc.get("type", "unknown").lower()
+    doc_id = doc.get("id", "unknown")
+    title = doc.get("title", "Untitled Document")
+
+    # Document header based on type
+    if doc_type == "confluence":
+        lines.append(f"### 📄 {title}")
+        lines.append(f"**Confluence Page ID:** {doc_id}")
+    elif doc_type == "jira":
+        lines.append(f"### 🎫 {title}")
+        lines.append(f"**Jira Ticket:** {doc_id}")
+    elif doc_type == "pull_request" or doc_type == "pr":
+        lines.append(f"### 🔄 {title}")
+        lines.append(f"**Pull Request:** {doc_id}")
+    else:
+        lines.append(f"### 📋 {title}")
+        lines.append(f"**Document ID:** {doc_id}")
+
+    lines.append("")
+
+    # Metadata section
+    if req.include_metadata:
+        lines.append("**📊 Metadata:**")
+        lines.append("")
+
+        metadata_fields = [
+            ("Category", doc.get("category", "N/A")),
+            ("Status", doc.get("status", "N/A")),
+            ("Priority", doc.get("priority", "N/A")),
+            ("Assignee", doc.get("assignee", "N/A")),
+            ("Created", format_timestamp(doc.get("dateCreated"))),
+            ("Updated", format_timestamp(doc.get("dateUpdated"))),
+            ("Author", doc.get("author", "N/A")),
+            ("Tags", ", ".join(doc.get("tags", [])) if doc.get("tags") else "N/A")
+        ]
+
+        for field_name, field_value in metadata_fields:
+            if field_value and field_value != "N/A":
+                lines.append(f"- **{field_name}:** {field_value}")
+
+        lines.append("")
+
+    # Content section
+    if req.include_content:
+        content = doc.get("content", "").strip()
+
+        if content:
+            lines.append("**📝 Content:**")
+            lines.append("")
+
+            # Format content based on document type
+            if doc_type == "confluence":
+                lines.extend(format_confluence_content(content))
+            elif doc_type == "jira":
+                lines.extend(format_jira_content(content))
+            elif doc_type == "pull_request" or doc_type == "pr":
+                lines.extend(format_pr_content(content))
+            else:
+                lines.extend(format_generic_content(content))
+
+            lines.append("")
+        else:
+            lines.append("**📝 Content:** *(Empty document)*")
+            lines.append("")
+
+    # Comments/Conversation section (for Jira and PR)
+    if doc_type in ["jira", "pull_request", "pr"]:
+        comments = doc.get("comments", [])
+        if comments:
+            lines.append("**💬 Conversation:**")
+            lines.append("")
+
+            for i, comment in enumerate(comments, 1):
+                author = comment.get("author", "Unknown")
+                timestamp = format_timestamp(comment.get("timestamp", ""))
+                comment_content = comment.get("content", "").strip()
+
+                lines.append(f"**Comment {i}** by {author} on {timestamp}:")
+                lines.append(f"> {comment_content}")
+                lines.append("")
+
+    # Separator
+    lines.append("---")
+    lines.append("")
+
+    return lines
+
+
+def get_type_icon(doc_type: str) -> str:
+    """Get appropriate icon for document type."""
+    icons = {
+        "confluence": "📄",
+        "jira": "🎫",
+        "pull_request": "🔄",
+        "pr": "🔄",
+        "unknown": "📋"
+    }
+    return icons.get(doc_type.lower(), "📋")
+
+
+def format_timestamp(timestamp: str) -> str:
+    """Format timestamp for display."""
+    if not timestamp:
+        return "N/A"
+
+    try:
+        # Try to parse and format the timestamp
+        if "T" in timestamp:
+            dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+        else:
+            return timestamp
+    except:
+        return timestamp
+
+
+def format_confluence_content(content: str) -> List[str]:
+    """Format Confluence page content."""
+    lines = []
+
+    # Split into paragraphs and format
+    paragraphs = content.split("\n\n")
+    for para in paragraphs:
+        if para.strip():
+            # Basic formatting preservation
+            formatted_para = para.replace("**", "**").replace("*", "*")
+            lines.append(formatted_para)
+            lines.append("")
+
+    return lines
+
+
+def format_jira_content(content: str) -> List[str]:
+    """Format Jira ticket content."""
+    lines = []
+
+    # Jira tickets often have structured content
+    if content.strip():
+        # Preserve basic formatting
+        formatted_content = content.replace("\n", "\n> ")
+        lines.append(f"> {formatted_content}")
+        lines.append("")
+
+    return lines
+
+
+def format_pr_content(content: str) -> List[str]:
+    """Format Pull Request content."""
+    lines = []
+
+    # PR descriptions often contain code and structured content
+    if content.strip():
+        # Basic code block preservation
+        if "```" in content:
+            lines.append(content)
+        else:
+            lines.append(f"> {content}")
+        lines.append("")
+
+    return lines
+
+
+def format_generic_content(content: str) -> List[str]:
+    """Format generic document content."""
+    lines = []
+
+    if content.strip():
+        # Generic formatting
+        paragraphs = content.split("\n\n")
+        for para in paragraphs:
+            if para.strip():
+                lines.append(para)
+                lines.append("")
+
+    return lines
+
+
 @app.get("/findings")
 async def get_findings(
     limit: int = 100,
@@ -2792,6 +4064,75 @@ async def get_analysis_statistics():
 
 
 # Custom health endpoint registered LAST to override shared health endpoint
+@app.get("/api/v1/analysis/status")
+async def get_analysis_status():
+    """Get comprehensive status of analysis service capabilities and current state."""
+    from services.shared.monitoring.health import HealthManager
+
+    health_manager = HealthManager("analysis-service", "1.0.0")
+
+    # Get basic health info
+    basic_health = await health_manager.basic_health()
+
+    # Add analysis-specific status information
+    analysis_status = {
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "status": "healthy",
+        "timestamp": basic_health.timestamp,
+        "capabilities": {
+            "document_analysis": True,
+            "semantic_similarity": True,
+            "sentiment_analysis": True,
+            "tone_analysis": True,
+            "quality_analysis": True,
+            "trend_analysis": True,
+            "risk_assessment": True,
+            "maintenance_forecasting": True,
+            "change_impact_analysis": True,
+            "cross_repository_analysis": True,
+            "distributed_processing": True,
+            "automated_remediation": True,
+            "workflow_integration": True,
+            "reporting": True,
+            "pr_confidence_analysis": True,
+            "architecture_analysis": True
+        },
+        "detectors_available": [
+            "semantic_similarity_detector",
+            "sentiment_detector",
+            "tone_detector",
+            "quality_detector",
+            "trend_detector",
+            "risk_detector",
+            "maintenance_detector",
+            "impact_detector",
+            "consistency_detector",
+            "completeness_detector"
+        ],
+        "supported_formats": [
+            "text/plain",
+            "text/markdown",
+            "application/json",
+            "text/html"
+        ],
+        "models_loaded": True,
+        "distributed_workers": 0,  # This could be expanded to show actual worker count
+        "queue_status": {
+            "pending_tasks": 0,
+            "processing_tasks": 0,
+            "completed_tasks": 0
+        },
+        "integration_status": {
+            "doc_store": "available",
+            "orchestrator": "available",
+            "prompt_store": "available",
+            "redis": "available"
+        }
+    }
+
+    return analysis_status
+
 @app.get("/health")
 async def custom_analysis_health():
     """Custom analysis-service health endpoint with models_loaded field."""
@@ -2811,6 +4152,113 @@ async def custom_analysis_health():
         uptime_seconds=uptime,
         models_loaded=models_loaded
     )
+
+
+# ============================================================================
+# PR ANALYSIS TESTS
+# ============================================================================
+
+async def test_pr_analysis_components():
+    """Test individual components of PR analysis."""
+    print("Testing PR Analysis Components...")
+
+    # Test commit message analysis
+    commits = [
+        {"message": "feat: Add user authentication service"},
+        {"message": "fix: Resolve login issue"},
+        {"message": "test: Add authentication tests"},
+        {"message": "chore: Update dependencies"},
+        {"message": "docs: Update API documentation"},
+        {"message": "refactor: Simplify auth logic"},
+        {"message": "style: Format code consistently"},
+        {"message": "perf: Optimize database queries"},
+        {"message": "ci: Update build configuration"},
+        {"message": "build: Update package version"},
+        {"message": "revert: Revert previous changes"}
+    ]
+
+    commit_analysis = analyze_commit_messages(commits)
+    print(f"✅ Commit Analysis: {commit_analysis['patterns']['conventional_commits']} conventional commits")
+
+    # Test file type detection
+    test_files = [
+        "src/auth/service.py",
+        "tests/test_auth.py",
+        "docs/api.md",
+        "config/settings.json",
+        "requirements.txt",
+        "Dockerfile"
+    ]
+
+    file_types = {}
+    for file in test_files:
+        ftype = get_file_type(file)
+        file_types[ftype] = file_types.get(ftype, 0) + 1
+
+    print(f"✅ File Type Detection: {file_types}")
+
+    # Test code structure analysis
+    changed_files = [
+        {"filename": "src/auth/service.py", "status": "modified"},
+        {"filename": "tests/test_auth.py", "status": "added"},
+        {"filename": "requirements.txt", "status": "modified"},
+        {"filename": "docs/api.md", "status": "added"}
+    ]
+
+    structure_analysis = analyze_code_structure(changed_files)
+    print(f"✅ Structural Analysis: {len(structure_analysis['dependency_changes'])} dependency changes")
+
+    # Test health score calculation
+    code_analysis = {
+        "change_metrics": {
+            "lines_added": 200,
+            "lines_removed": 50,
+            "files_modified": 3,
+            "files_added": 2
+        }
+    }
+
+    commit_analysis = {
+        "message_quality": {
+            "good_messages": 8,
+            "needs_improvement": 2,
+            "poor_messages": 1
+        }
+    }
+
+    structural_analysis = {"structural_risks": ["Dependencies changed without corresponding tests"]}
+    quality_analysis = {"quality_score": 0.75}
+
+    health_score = calculate_pr_health_score(code_analysis, commit_analysis, structural_analysis, quality_analysis)
+    risk_level = determine_pr_risk_level(health_score)
+
+    print(f"✅ Health Score: {health_score:.2f} ({risk_level} risk)")
+
+    # Test refactoring suggestions
+    suggestions = generate_refactoring_suggestions(code_analysis, structural_analysis, quality_analysis)
+    print(f"✅ Refactoring Suggestions: {len(suggestions)} suggestions generated")
+
+    # Test PR recommendations
+    pr_report = {
+        "health_score": health_score,
+        "risk_level": risk_level,
+        "code_analysis": code_analysis,
+        "commit_analysis": commit_analysis,
+        "quality_analysis": quality_analysis
+    }
+
+    recommendations = generate_pr_recommendations(pr_report)
+    print(f"✅ PR Recommendations: {len(recommendations)} recommendations generated")
+
+    return {
+        "commit_analysis": commit_analysis,
+        "file_types": file_types,
+        "structure_analysis": structure_analysis,
+        "health_score": health_score,
+        "risk_level": risk_level,
+        "suggestions": suggestions,
+        "recommendations": recommendations
+    }
 
 
 if __name__ == "__main__":

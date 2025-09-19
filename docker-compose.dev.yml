@@ -148,7 +148,7 @@ services:
       doc_store:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -193,6 +193,11 @@ services:
         condition: service_started
       analysis-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     profiles:
       - core
 
@@ -526,6 +531,117 @@ services:
       - tooling
 
   # ============================================================================
+  # SIMULATION SERVICES
+  # ============================================================================
+
+  # Project Simulation Service - AI-powered project simulation engine
+  project-simulation:
+    build:
+      context: .
+      dockerfile: services/project-simulation/Dockerfile
+    volumes:
+      - ./services/project-simulation/sample_config.yaml:/app/sample_config.yaml:ro
+      - simulation_data:/app/data
+      - simulation_logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=project-simulation
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+      - SERVICE_PORT=5075
+      # LLM Integration
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      - MOCK_DATA_GENERATOR_URL=http://mock-data-generator:5065
+      - DOC_STORE_URL=http://doc_store:5087
+      - ANALYSIS_SERVICE_URL=http://analysis-service:5080
+      # Orchestration
+      - ORCHESTRATOR_URL=http://orchestrator:5099
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5130
+      # Logging
+      - LOG_COLLECTOR_URL=http://log-collector:5080
+      # DDD Architecture
+      - DDD_ARCHITECTURE=true
+      - DDD_CONFIG_FILE=config/ddd_config.yaml
+    ports:
+      - "5075:5075"
+    depends_on:
+      redis:
+        condition: service_healthy
+      doc_store:
+        condition: service_started
+      llm-gateway:
+        condition: service_started
+      mock-data-generator:
+        condition: service_started
+      analysis-service:
+        condition: service_started
+      orchestrator:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5075/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - simulation
+      - development
+      - production
+    restart: unless-stopped
+
+  # Simulation Dashboard - Interactive web dashboard for project simulations
+  simulation-dashboard:
+    build:
+      context: .
+      dockerfile: services/simulation-dashboard/Dockerfile
+    volumes:
+      - ./services/simulation-dashboard/config.example.env:/app/config.example.env:ro
+      - dashboard_cache:/app/cache
+      - dashboard_logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=simulation-dashboard
+      - DASHBOARD_ENVIRONMENT=development
+      - DASHBOARD_DEBUG=false
+      - DASHBOARD_PORT=8501
+      - DASHBOARD_HOST=0.0.0.0
+      # Simulation Service Connection
+      - DASHBOARD_SIMULATION_SERVICE_HOST=project-simulation
+      - DASHBOARD_SIMULATION_SERVICE_PORT=5075
+      # Optional Ecosystem Services
+      - DASHBOARD_ANALYSIS_SERVICE_URL=http://analysis-service:5080
+      - DASHBOARD_HEALTH_SERVICE_URL=http://notification-service:5130
+      # WebSocket Configuration
+      - DASHBOARD_WEBSOCKET_ENABLED=true
+      - DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS=5
+      - DASHBOARD_WEBSOCKET_HEARTBEAT_INTERVAL=30.0
+      # Performance Configuration
+      - DASHBOARD_PERFORMANCE_ENABLE_COMPRESSION=true
+      - DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS=10
+    ports:
+      - "8501:8501"
+    depends_on:
+      project-simulation:
+        condition: service_healthy
+      analysis-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/health"]
+      interval: 45s
+      timeout: 20s
+      retries: 3
+      start_period: 90s
+    profiles:
+      - simulation
+      - development
+      - production
+    restart: unless-stopped
+
+  # ============================================================================
   # ANALYSIS SERVICES
   # ============================================================================
 
@@ -616,6 +732,20 @@ volumes:
 
   # Ollama models and data volume
   ollama_data:
+    driver: local
+
+  # Simulation service data volumes
+  simulation_data:
+    driver: local
+
+  simulation_logs:
+    driver: local
+
+  # Dashboard service data volumes
+  dashboard_cache:
+    driver: local
+
+  dashboard_logs:
     driver: local
 
 # ============================================================================

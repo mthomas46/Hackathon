@@ -22,9 +22,29 @@ except ImportError:
     # Fallback functions if shared modules aren't available
     def fire_and_forget(event_type, message, service, metadata=None):
         print(f"[{service}] {event_type}: {message}")
-    
+
     class ServiceNames:
         INTERPRETER = "interpreter"
+
+# Import sample documents repository
+print("🔍 DEBUG: Starting sample documents import...")
+try:
+    print("🔍 DEBUG: Attempting to import sample_documents module...")
+    from .modules.sample_documents import sample_documents
+    print(f"🔍 DEBUG: Import successful! sample_documents = {sample_documents}")
+    if sample_documents is not None:
+        print(f"🔍 DEBUG: Sample documents repository has {len(sample_documents.get_all_documents())} documents")
+    else:
+        print("🔍 DEBUG: Sample documents repository is None")
+except ImportError as e:
+    print(f"🔍 DEBUG: Import failed with ImportError: {e}")
+    # Fallback if import fails - will use mock data
+    sample_documents = None
+except Exception as e:
+    print(f"🔍 DEBUG: Import failed with unexpected error: {e}")
+    sample_documents = None
+
+print(f"🔍 DEBUG: Final sample_documents value: {sample_documents}")
 
 # Create FastAPI app
 app = FastAPI(title="Interpreter Service", version="1.0.0")
@@ -1157,12 +1177,144 @@ async def get_recent_workflow_executions(limit: int = 20):
             "execution_metrics": execution_metrics,
             "query_limit": limit
         }
-        
+
     except Exception as e:
         return {
             "error": str(e),
             "recent_executions": []
         }
+
+@app.get("/documents/sample")
+async def get_sample_documents(
+    type_filter: Optional[str] = None,
+    category_filter: Optional[str] = None,
+    limit: int = 50
+):
+    """Get sample documents for testing and demonstration purposes."""
+    try:
+        if sample_documents is None:
+            return {
+                "error": "Sample documents module not available",
+                "documents": [],
+                "total_count": 0
+            }
+
+        documents = []
+
+        if type_filter:
+            documents = sample_documents.get_documents_by_type(type_filter)
+        elif category_filter:
+            documents = sample_documents.get_documents_by_category(category_filter)
+        else:
+            documents = sample_documents.get_all_documents()
+
+        # Apply limit
+        documents = documents[:limit]
+
+        return {
+            "documents": documents,
+            "total_count": len(documents),
+            "filters_applied": {
+                "type": type_filter,
+                "category": category_filter,
+                "limit": limit
+            },
+            "available_types": ["confluence", "jira", "pull_request"],
+            "available_categories": ["architecture", "api", "security", "compliance", "feature", "bug"]
+        }
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "documents": []
+        }
+
+@app.post("/documents/sample/context")
+async def get_sample_documents_for_query(query_data: Dict[str, Any]):
+    """Get relevant sample documents based on query context."""
+    try:
+        if sample_documents is None:
+            return {
+                "error": "Sample documents module not available",
+                "relevant_documents": [],
+                "total_relevant": 0
+            }
+
+        query = query_data.get("query", "")
+        context = query_data.get("context", {})
+
+        relevant_documents = sample_documents.get_documents_for_query(query)
+
+        return {
+            "query": query,
+            "context_provided": bool(context),
+            "relevant_documents": relevant_documents,
+            "total_relevant": len(relevant_documents),
+            "document_types_found": list(set(doc.get("type", "") for doc in relevant_documents)),
+            "categories_found": list(set(doc.get("category", "") for doc in relevant_documents))
+        }
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "relevant_documents": []
+        }
+
+@app.get("/documents/sample/types")
+async def get_sample_document_types():
+    """Get available document types and their characteristics."""
+    if sample_documents is None:
+        return {
+            "error": "Sample documents module not available",
+            "document_types": {},
+            "special_collections": {}
+        }
+
+    return {
+        "document_types": {
+            "confluence": {
+                "description": "Wiki pages and technical documentation",
+                "characteristics": ["detailed_content", "structured", "technical"],
+                "count": len(sample_documents.get_documents_by_type("confluence"))
+            },
+            "jira": {
+                "description": "Issue tracking and project management",
+                "characteristics": ["conversational", "status_tracking", "requirements"],
+                "count": len(sample_documents.get_documents_by_type("jira"))
+            },
+            "pull_request": {
+                "description": "Code review and merge request discussions",
+                "characteristics": ["code_changes", "review_comments", "technical_discussion"],
+                "count": len(sample_documents.get_documents_by_type("pull_request"))
+            }
+        },
+        "special_collections": {
+            "similar_documents": {
+                "description": "Highly similar documents for testing deduplication",
+                "count": len(sample_documents.get_similar_documents())
+            },
+            "contradictory_documents": {
+                "description": "Documents with conflicting information",
+                "count": len(sample_documents.get_contradictory_documents())
+            },
+            "gap_documents": {
+                "description": "Documents identifying development gaps",
+                "count": len(sample_documents.get_gap_documents())
+            },
+            "sparse_documents": {
+                "description": "Documents with minimal content",
+                "count": len(sample_documents.get_sparse_documents())
+            },
+            "blank_documents": {
+                "description": "Documents with empty content",
+                "count": len(sample_documents.get_blank_documents())
+            },
+            "documents_with_comments": {
+                "description": "Documents with conversation history",
+                "count": len(sample_documents.get_documents_with_comments())
+            }
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn

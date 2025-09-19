@@ -10,10 +10,12 @@ import asyncio
 import sys
 import json
 import argparse
+import os
+import subprocess
 from typing import Dict, List, Any, Optional
+import urllib.request
 
 # Simple HTTP client for container environment
-import urllib.request
 import urllib.parse
 import urllib.error
 
@@ -50,13 +52,81 @@ class SimpleServiceClient:
             print(f"POST request failed for {url}: {e}")
             return None
 
+    def _make_request_with_method(self, method: str, url: str, data: Optional[Dict] = None) -> Optional[Dict]:
+        """Make HTTP request with specific method"""
+        try:
+            if data:
+                json_data = json.dumps(data).encode('utf-8')
+                req = urllib.request.Request(
+                    url,
+                    data=json_data,
+                    headers={'Content-Type': 'application/json'},
+                    method=method
+                )
+            else:
+                req = urllib.request.Request(url, method=method)
+
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                response_data = response.read().decode('utf-8')
+                return json.loads(response_data)
+        except Exception as e:
+            print(f"{method} request failed for {url}: {e}")
+            return None
+
 
 class EcosystemCLI:
     """Production-ready Ecosystem CLI"""
     
     def __init__(self):
         self.client = SimpleServiceClient()
-        self.services = {
+        # Environment-aware service URLs
+        self.services = self._create_service_mappings()
+
+    def _detect_environment(self) -> str:
+        """Detect runtime environment"""
+        # Check for Docker
+        try:
+            with open('/.dockerenv', 'r') as f:
+                return 'docker'
+        except FileNotFoundError:
+            pass
+
+        # Check for Kubernetes
+        if 'KUBERNETES_SERVICE_HOST' in os.environ:
+            return 'kubernetes'
+
+        return 'local'
+
+    def _create_service_mappings(self) -> Dict[str, str]:
+        """Create environment-appropriate service mappings"""
+        environment = self._detect_environment()
+
+        # Base localhost mappings for local development
+        services = {
+            "analysis-service": "http://localhost:5080",
+            "orchestrator": "http://localhost:5099",
+            "source-agent": "http://localhost:5085",
+            "github-mcp": "http://localhost:5072",
+            "memory-agent": "http://localhost:5040",
+            "discovery-agent": "http://localhost:5045",
+            "architecture-digitizer": "http://localhost:5105",
+            "log-collector": "http://localhost:5080",
+            "prompt_store": "http://localhost:5110",
+            "interpreter": "http://localhost:5120",
+            "notification-service": "http://localhost:5130",
+            "secure-analyzer": "http://localhost:5070",
+            "bedrock-proxy": "http://localhost:7090",
+            "doc_store": "http://localhost:5087",
+            "frontend": "http://localhost:3000",
+            "llm-gateway": "http://localhost:5055",
+            "summarizer-hub": "http://localhost:5160",
+            "code-analyzer": "http://localhost:5025"
+        }
+
+        # Override for Docker environment
+        if environment == 'docker':
+            # Use Docker service names for inter-container communication
+            docker_services = {
             "analysis-service": "http://hackathon-analysis-service-1:5020",
             "orchestrator": "http://hackathon-orchestrator-1:5099",
             "source-agent": "http://hackathon-source-agent-1:5000",
@@ -71,8 +141,14 @@ class EcosystemCLI:
             "secure-analyzer": "http://hackathon-secure-analyzer-1:5070",
             "bedrock-proxy": "http://hackathon-bedrock-proxy-1:7090",
             "doc_store": "http://hackathon-doc_store-1:5010",
-            "frontend": "http://hackathon-frontend-1:5090"
+                "frontend": "http://hackathon-frontend-1:5090",
+                "llm-gateway": "http://hackathon-llm-gateway-1:5055",
+                "summarizer-hub": "http://hackathon-summarizer-hub-1:5160",
+                "code-analyzer": "http://hackathon-code-analyzer-1:5025"
         }
+            services.update(docker_services)
+
+        return services
     
     async def health_check_all(self):
         """Check health of all services"""
@@ -227,6 +303,211 @@ class EcosystemCLI:
             print(f"⚠️  Some ecosystem workflows need attention")
         
         return test_results
+    
+    async def list_containers(self):
+        """List all Docker containers in the ecosystem"""
+        print("🐳 ECOSYSTEM CONTAINER STATUS")
+        print("=" * 50)
+
+        try:
+            # Run docker-compose ps to get container status
+            result = subprocess.run(
+                ['docker-compose', '-f', 'docker-compose.dev.yml', 'ps', '--format', 'table {{.Name}}\t{{.Service}}\t{{.Status}}\t{{.Ports}}'],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            if result.returncode == 0:
+                print(result.stdout)
+            else:
+                print(f"❌ Failed to get container status: {result.stderr}")
+
+        except FileNotFoundError:
+            print("❌ Docker Compose not found. Make sure Docker is installed and available.")
+        except Exception as e:
+            print(f"❌ Error listing containers: {str(e)}")
+
+    async def restart_container(self, service_name: str):
+        """Restart a specific container"""
+        print(f"🔄 Restarting container: {service_name}")
+        print("-" * 40)
+
+        try:
+            result = subprocess.run(
+                ['docker-compose', '-f', 'docker-compose.dev.yml', 'restart', service_name],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            if result.returncode == 0:
+                print(f"✅ Container {service_name} restarted successfully")
+                if result.stdout.strip():
+                    print(f"Output: {result.stdout.strip()}")
+            else:
+                print(f"❌ Failed to restart container {service_name}")
+                if result.stderr.strip():
+                    print(f"Error: {result.stderr.strip()}")
+
+        except Exception as e:
+            print(f"❌ Error restarting container: {str(e)}")
+
+    async def rebuild_container(self, service_name: str):
+        """Rebuild a specific container"""
+        print(f"🔨 Rebuilding container: {service_name}")
+        print("-" * 40)
+        print("This may take a few minutes...")
+
+        try:
+            # First stop the container
+            print(f"Stopping {service_name}...")
+            subprocess.run(
+                ['docker-compose', '-f', 'docker-compose.dev.yml', 'stop', service_name],
+                capture_output=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            # Rebuild the container
+            print(f"Building {service_name}...")
+            result = subprocess.run(
+                ['docker-compose', '-f', 'docker-compose.dev.yml', 'build', service_name],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            if result.returncode == 0:
+                print(f"✅ Container {service_name} rebuilt successfully")
+
+                # Start the container
+                print(f"Starting {service_name}...")
+                start_result = subprocess.run(
+                    ['docker-compose', '-f', 'docker-compose.dev.yml', 'up', '-d', service_name],
+                    capture_output=True,
+                    text=True,
+                    cwd=os.path.dirname(os.path.abspath(__file__))
+                )
+
+                if start_result.returncode == 0:
+                    print(f"✅ Container {service_name} started successfully")
+                else:
+                    print(f"⚠️  Container rebuilt but failed to start: {start_result.stderr.strip()}")
+
+            else:
+                print(f"❌ Failed to rebuild container {service_name}")
+                if result.stderr.strip():
+                    print(f"Build Error: {result.stderr.strip()}")
+
+        except Exception as e:
+            print(f"❌ Error rebuilding container: {str(e)}")
+
+    async def show_container_logs(self, service_name: str, lines: int = 50, follow: bool = False):
+        """Show logs for a specific container"""
+        print(f"📜 Container Logs: {service_name}")
+        print("-" * 40)
+
+        try:
+            cmd = ['docker-compose', '-f', 'docker-compose.dev.yml', 'logs']
+            if follow:
+                cmd.append('-f')
+            if lines:
+                cmd.extend(['--tail', str(lines)])
+            cmd.append(service_name)
+
+            if follow:
+                # For follow mode, don't capture output
+                print(f"Following logs for {service_name} (Ctrl+C to stop)...")
+                subprocess.run(cmd, cwd=os.path.dirname(os.path.abspath(__file__)))
+            else:
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    cwd=os.path.dirname(os.path.abspath(__file__))
+                )
+
+                if result.returncode == 0:
+                    if result.stdout.strip():
+                        print(result.stdout)
+                    else:
+                        print(f"No logs found for {service_name}")
+                else:
+                    print(f"❌ Failed to get logs for {service_name}")
+                    if result.stderr.strip():
+                        print(f"Error: {result.stderr.strip()}")
+
+        except KeyboardInterrupt:
+            print(f"\nStopped following logs for {service_name}")
+        except Exception as e:
+            print(f"❌ Error getting container logs: {str(e)}")
+
+    async def show_container_stats(self):
+        """Show resource usage statistics for all containers"""
+        print("📊 CONTAINER RESOURCE STATISTICS")
+        print("=" * 50)
+
+        try:
+            result = subprocess.run(
+                ['docker', 'stats', '--no-stream', '--format', 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}'],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            if result.returncode == 0:
+                print(result.stdout)
+            else:
+                print(f"❌ Failed to get container stats: {result.stderr}")
+
+        except Exception as e:
+            print(f"❌ Error getting container stats: {str(e)}")
+
+    async def stop_container(self, service_name: str):
+        """Stop a specific container"""
+        print(f"🛑 Stopping container: {service_name}")
+        print("-" * 30)
+
+        try:
+            result = subprocess.run(
+                ['docker-compose', '-f', 'docker-compose.dev.yml', 'stop', service_name],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            if result.returncode == 0:
+                print(f"✅ Container {service_name} stopped successfully")
+            else:
+                print(f"❌ Failed to stop container {service_name}")
+                if result.stderr.strip():
+                    print(f"Error: {result.stderr.strip()}")
+
+        except Exception as e:
+            print(f"❌ Error stopping container: {str(e)}")
+
+    async def start_container(self, service_name: str):
+        """Start a specific container"""
+        print(f"▶️  Starting container: {service_name}")
+        print("-" * 30)
+
+        try:
+            result = subprocess.run(
+                ['docker-compose', '-f', 'docker-compose.dev.yml', 'up', '-d', service_name],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+
+            if result.returncode == 0:
+                print(f"✅ Container {service_name} started successfully")
+            else:
+                print(f"❌ Failed to start container {service_name}")
+                if result.stderr.strip():
+                    print(f"Error: {result.stderr.strip()}")
+
+        except Exception as e:
+            print(f"❌ Error starting container: {str(e)}")
     
     async def create_mock_data(self):
         """Create mock documents and prompts to test ecosystem data flow"""
@@ -470,14 +751,14 @@ class EcosystemCLI:
                 workflow_results = []
                 
                 # Step 1: Get analysis service status
-                analysis_url = f"http://hackathon-analysis-service-1:5020/"
+                analysis_url = f"http://localhost:5080/"
                 analysis_response = await self.client.get_json(analysis_url)
                 if analysis_response:
                     workflow_results.append({"step": "analysis", "status": "success", "data": analysis_response})
                     print(f"   ✅ Analysis Service: Ready")
                 
                 # Step 2: Get source data
-                source_url = f"http://hackathon-source-agent-1:5000/sources"
+                source_url = f"http://localhost:5085/sources"
                 source_response = await self.client.get_json(source_url)
                 if source_response:
                     workflow_results.append({"step": "sources", "status": "success", "data": source_response})
@@ -532,10 +813,183 @@ class EcosystemCLI:
                 print(f"❌ Unknown workflow type: {workflow_type}")
                 print("Available types: mock-data")
         
+        elif command == "execute":
+            # Execute a workflow by ID or definition
+            workflow_id = kwargs.get("id", "")
+            workflow_def = kwargs.get("definition", "")
+
+            if not workflow_id and not workflow_def:
+                print("❌ Workflow execution requires --id or --definition parameter")
+                print("Examples:")
+                print("  execute --id 'workflow-uuid'")
+                print("  execute --definition '{\"name\":\"test\",\"steps\":[...]}'")
+                return
+
+            if workflow_id:
+                # Execute existing workflow by ID
+                url = f"{base_url}/api/v1/workflows/{workflow_id}/execute"
+                response = await self.client.post_json(url, {})
+            else:
+                # Execute workflow from definition
+                try:
+                    definition = json.loads(workflow_def)
+                    url = f"{base_url}/api/v1/workflows/execute"
+                    response = await self.client.post_json(url, definition)
+                except json.JSONDecodeError:
+                    print("❌ Invalid workflow definition JSON")
+                    return
+
+            if response:
+                print(f"🚀 Workflow Execution Started:")
+                if isinstance(response, dict):
+                    execution_id = response.get("execution_id", "unknown")
+                    status = response.get("status", "unknown")
+                    print(f"   Execution ID: {execution_id}")
+                    print(f"   Status: {status}")
+                    if "workflow_id" in response:
+                        print(f"   Workflow ID: {response['workflow_id']}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to execute workflow")
+
+        elif command == "list-executions":
+            # List workflow executions
+            limit = kwargs.get("limit", 20)
+            status = kwargs.get("status", "")
+
+            url = f"{base_url}/api/v1/executions?limit={limit}"
+            if status:
+                url += f"&status={status}"
+
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📋 Workflow Executions (Limit: {limit}):")
+                if isinstance(response, dict) and "items" in response:
+                    items = response["items"]
+                    total = response.get("total", 0)
+                    print(f"Total executions: {total}")
+                    for i, execution in enumerate(items):
+                        execution_id = execution.get("id", "unknown")[:8]
+                        workflow_name = execution.get("workflow_name", "unknown")
+                        status = execution.get("status", "unknown")
+                        started_at = execution.get("started_at", "unknown")
+                        print(f"  {i+1}. {execution_id}... | {workflow_name} | {status} | {started_at}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to list workflow executions")
+
+        elif command == "execution-status":
+            # Get execution status
+            execution_id = kwargs.get("id", "")
+            if not execution_id:
+                print("❌ Execution ID required. Use: execution-status --id 'execution-uuid'")
+                return
+
+            url = f"{base_url}/api/v1/executions/{execution_id}"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📊 Execution Status:")
+                print(f"   Execution ID: {response.get('id', 'unknown')}")
+                print(f"   Workflow: {response.get('workflow_name', 'unknown')}")
+                print(f"   Status: {response.get('status', 'unknown')}")
+                print(f"   Started: {response.get('started_at', 'unknown')}")
+                print(f"   Completed: {response.get('completed_at', 'unknown')}")
+                if "steps" in response:
+                    print(f"   Steps: {len(response['steps'])}")
+                    for i, step in enumerate(response["steps"][:5]):
+                        step_name = step.get("name", "unknown")
+                        step_status = step.get("status", "unknown")
+                        print(f"      {i+1}. {step_name}: {step_status}")
+            else:
+                print("❌ Failed to get execution status")
+
+        elif command == "cancel-execution":
+            # Cancel a running execution
+            execution_id = kwargs.get("id", "")
+            if not execution_id:
+                print("❌ Execution ID required. Use: cancel-execution --id 'execution-uuid'")
+                return
+
+            url = f"{base_url}/api/v1/executions/{execution_id}/cancel"
+            response = await self.client.post_json(url, {})
+            if response:
+                print(f"✅ Execution {execution_id} cancellation requested")
+                if isinstance(response, dict):
+                    status = response.get("status", "unknown")
+                    message = response.get("message", "")
+                    print(f"   Status: {status}")
+                    print(f"   Message: {message}")
+            else:
+                print("❌ Failed to cancel execution")
+
+        elif command == "workflow-templates":
+            # List available workflow templates
+            url = f"{base_url}/api/v1/workflows/templates"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📋 Available Workflow Templates:")
+                if isinstance(response, list):
+                    for i, template in enumerate(response):
+                        name = template.get("name", "unknown")
+                        description = template.get("description", "no description")
+                        category = template.get("category", "general")
+                        print(f"  {i+1}. {name} | {category}")
+                        print(f"      {description}")
+                        print()
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get workflow templates")
+
+        elif command == "create-template":
+            # Create workflow from template
+            template_name = kwargs.get("template", "")
+            name = kwargs.get("name", "")
+            parameters = kwargs.get("parameters", "{}")
+
+            if not template_name:
+                print("❌ Template name required. Use: create-template --template 'template-name'")
+                return
+
+            try:
+                params = json.loads(parameters) if parameters else {}
+            except json.JSONDecodeError:
+                print("❌ Invalid parameters JSON")
+                return
+
+            workflow_data = {
+                "template": template_name,
+                "name": name or f"{template_name}-workflow",
+                "parameters": params
+            }
+
+            url = f"{base_url}/api/v1/workflows/from-template"
+            response = await self.client.post_json(url, workflow_data)
+            if response:
+                print(f"✅ Workflow Created from Template:")
+                if isinstance(response, dict):
+                    workflow_id = response.get("workflow_id", "unknown")
+                    name = response.get("name", "unknown")
+                    print(f"   Workflow ID: {workflow_id}")
+                    print(f"   Name: {name}")
+                    print(f"   Template: {template_name}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to create workflow from template")
+        
         else:
             print(f"❌ Unknown orchestrator command: {command}")
-            print("Available commands: peers, sync, health, config, create-workflow")
-            print("Usage: create-workflow --type mock-data")
+            print("Available commands: peers, sync, health, config, create-workflow, execute, list-executions, execution-status, cancel-execution, workflow-templates, create-template")
+            print("\nExamples:")
+            print("  create-workflow --type mock-data")
+            print("  execute --id 'workflow-uuid'")
+            print("  list-executions --limit 10 --status 'running'")
+            print("  execution-status --id 'execution-uuid'")
+            print("  workflow-templates")
+            print("  create-template --template 'document-analysis' --name 'My Analysis'")
     
     async def github_mcp_command(self, command: str, **kwargs):
         """Execute GitHub MCP commands"""
@@ -639,9 +1093,590 @@ class EcosystemCLI:
             else:
                 print("❌ Failed to get configuration")
         
+        elif command == "list":
+            # List documents with pagination
+            limit = kwargs.get("limit", 50)
+            offset = kwargs.get("offset", 0)
+            url = f"{base_url}/api/v1/documents?limit={limit}&offset={offset}"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📄 Document List (Limit: {limit}, Offset: {offset}):")
+                if isinstance(response, dict) and "items" in response:
+                    items = response["items"]
+                    total = response.get("total", 0)
+                    has_more = response.get("has_more", False)
+                    print(f"Total documents: {total}, Has more: {has_more}")
+                    for i, doc in enumerate(items[:10]):  # Show first 10
+                        doc_id = doc.get("id", "unknown")[:8]
+                        content_preview = doc.get("content", "")[:50]
+                        print(f"  {i+1}. {doc_id}... | {content_preview}...")
+                    if len(items) > 10:
+                        print(f"  ... and {len(items) - 10} more documents")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to list documents")
+
+        elif command == "create":
+            # Create a new document
+            title = kwargs.get("title", "CLI Created Document")
+            content = kwargs.get("content", "This document was created via CLI")
+            tags = kwargs.get("tags", "").split(",") if kwargs.get("tags") else []
+
+            doc_data = {
+                "title": title,
+                "content": content,
+                "tags": tags
+            }
+
+            url = f"{base_url}/api/v1/documents"
+            response = await self.client.post_json(url, doc_data)
+            if response:
+                print(f"✅ Document Created:")
+                if isinstance(response, dict) and "id" in response:
+                    doc_id = response["id"]
+                    print(f"   ID: {doc_id}")
+                    print(f"   Title: {title}")
+                    print(f"   Content Length: {len(content)} characters")
+                    if tags:
+                        print(f"   Tags: {', '.join(tags)}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to create document")
+
+        elif command == "search":
+            # Search documents
+            query = kwargs.get("query", "")
+            if not query:
+                print("❌ Search query required. Use: search --query 'your search term'")
+                return
+
+            limit = kwargs.get("limit", 10)
+            url = f"{base_url}/api/v1/search"
+            search_data = {"query": query, "limit": limit}
+            response = await self.client.post_json(url, search_data)
+            if response:
+                print(f"🔍 Search Results for '{query}':")
+                if isinstance(response, dict) and "items" in response:
+                    items = response["items"]
+                    total = response.get("total", 0)
+                    print(f"Found {total} documents")
+                    for i, doc in enumerate(items):
+                        doc_id = doc.get("id", "unknown")[:8]
+                        content_preview = doc.get("content", "")[:100]
+                        print(f"  {i+1}. {doc_id}... | {content_preview}...")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Search failed")
+
+        elif command == "delete":
+            # Delete a document
+            doc_id = kwargs.get("id", "")
+            if not doc_id:
+                print("❌ Document ID required. Use: delete --id 'document_id'")
+                return
+
+            url = f"{base_url}/api/v1/documents/{doc_id}"
+            # For DELETE, we'll use a simple approach
+            try:
+                import urllib.request
+                req = urllib.request.Request(url, method='DELETE')
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    if response.status == 200:
+                        print(f"✅ Document {doc_id} deleted successfully")
+                    else:
+                        print(f"⚠️  Delete returned status: {response.status}")
+            except Exception as e:
+                print(f"❌ Failed to delete document: {str(e)}")
+
+        elif command == "update":
+            # Update document metadata
+            doc_id = kwargs.get("id", "")
+            metadata = kwargs.get("metadata", "")
+
+            if not doc_id:
+                print("❌ Document ID required. Use: update --id 'document_id' --metadata 'key:value'")
+                return
+
+            # Parse metadata string like "key1:value1,key2:value2"
+            metadata_dict = {}
+            if metadata:
+                try:
+                    for pair in metadata.split(","):
+                        if ":" in pair:
+                            key, value = pair.split(":", 1)
+                            metadata_dict[key.strip()] = value.strip()
+                except:
+                    print("❌ Invalid metadata format. Use: key1:value1,key2:value2")
+                    return
+
+            url = f"{base_url}/api/v1/documents/{doc_id}/metadata"
+            update_data = {"metadata": metadata_dict}
+
+            # Try PATCH first, then PUT
+            response = None
+            try:
+                # Try PATCH method for metadata updates
+                response = await self.client._make_request_with_method('PATCH', url, update_data)
+            except:
+                try:
+                    # Fallback to PUT method
+                    response = await self.client._make_request_with_method('PUT', url, update_data)
+                except:
+                    print("❌ Document metadata update endpoint not implemented yet")
+                    print("   This feature will be available in a future update")
+                    return
+
+            if response:
+                print(f"✅ Document {doc_id} metadata updated:")
+                print(json.dumps(metadata_dict, indent=2))
+            else:
+                print("❌ Failed to update document metadata")
+        
         else:
             print(f"❌ Unknown doc_store command: {command}")
-            print("Available commands: health, config")
+            print("Available commands: health, config, list, create, search, delete, update")
+            print("\nExamples:")
+            print("  list --limit 20 --offset 0")
+            print("  create --title 'My Doc' --content 'Content here' --tags 'tag1,tag2'")
+            print("  search --query 'python code' --limit 5")
+            print("  delete --id 'document-uuid'")
+            print("  update --id 'document-uuid' --metadata 'author:John,status:draft'")
+
+    async def prompt_store_command(self, command: str, **kwargs):
+        """Execute Prompt Store commands"""
+        base_url = self.services["prompt_store"]
+
+        if command == "health":
+            url = f"{base_url}/health"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"💚 Prompt Store Health:")
+                print(json.dumps(response, indent=2))
+            else:
+                print("❌ Health check failed")
+
+        elif command == "config":
+            # Get configuration from health endpoint
+            url = f"{base_url}/health"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"⚙️  Prompt Store Configuration:")
+                config_data = {
+                    "service": response.get("service", "prompt_store"),
+                    "version": response.get("version", "unknown"),
+                    "environment": response.get("environment", "unknown"),
+                    "timestamp": response.get("timestamp", "unknown"),
+                    "uptime_seconds": response.get("uptime_seconds", 0)
+                }
+                print(json.dumps(config_data, indent=2))
+            else:
+                print("❌ Failed to get configuration")
+
+        elif command == "list":
+            # List prompts with pagination
+            limit = kwargs.get("limit", 50)
+            offset = kwargs.get("offset", 0)
+            category = kwargs.get("category", "")
+            author = kwargs.get("author", "")
+
+            url = f"{base_url}/api/v1/prompts?limit={limit}&offset={offset}"
+            if category:
+                url += f"&category={category}"
+            if author:
+                url += f"&author={author}"
+
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📋 Prompt List (Limit: {limit}, Offset: {offset}):")
+                if isinstance(response, dict) and "items" in response:
+                    items = response["items"]
+                    total = response.get("total", 0)
+                    has_more = response.get("has_more", False)
+                    print(f"Total prompts: {total}, Has more: {has_more}")
+                    for i, prompt in enumerate(items[:10]):  # Show first 10
+                        prompt_id = prompt.get("id", "unknown")[:8]
+                        name = prompt.get("name", "unnamed")
+                        category = prompt.get("category", "uncategorized")
+                        print(f"  {i+1}. {prompt_id}... | {name} | {category}")
+                    if len(items) > 10:
+                        print(f"  ... and {len(items) - 10} more prompts")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to list prompts")
+
+        elif command == "create":
+            # Create a new prompt
+            name = kwargs.get("name", "CLI Created Prompt")
+            content = kwargs.get("content", "This is a sample prompt created via CLI")
+            category = kwargs.get("category", "general")
+            author = kwargs.get("author", "cli-user")
+            tags = kwargs.get("tags", "").split(",") if kwargs.get("tags") else []
+            description = kwargs.get("description", "")
+
+            prompt_data = {
+                "name": name,
+                "content": content,
+                "category": category,
+                "author": author,
+                "tags": tags,
+                "description": description
+            }
+
+            url = f"{base_url}/api/v1/prompts"
+            response = await self.client.post_json(url, prompt_data)
+            if response:
+                print(f"✅ Prompt Created:")
+                if isinstance(response, dict) and "id" in response:
+                    prompt_id = response["id"]
+                    print(f"   ID: {prompt_id}")
+                    print(f"   Name: {name}")
+                    print(f"   Category: {category}")
+                    print(f"   Author: {author}")
+                    print(f"   Content Length: {len(content)} characters")
+                    if tags:
+                        print(f"   Tags: {', '.join(tags)}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to create prompt")
+
+        elif command == "get":
+            # Get a specific prompt by ID
+            prompt_id = kwargs.get("id", "")
+            if not prompt_id:
+                print("❌ Prompt ID required. Use: get --id 'prompt_id'")
+                return
+
+            url = f"{base_url}/api/v1/prompts/{prompt_id}"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📋 Prompt Details:")
+                print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get prompt")
+
+        elif command == "search":
+            # Search prompts
+            query = kwargs.get("query", "")
+            category = kwargs.get("category", "")
+            author = kwargs.get("author", "")
+            limit = kwargs.get("limit", 10)
+
+            if not query and not category and not author:
+                print("❌ Search requires --query, --category, or --author parameter")
+                return
+
+            search_params = {"limit": limit}
+            if query:
+                search_params["query"] = query
+            if category:
+                search_params["category"] = category
+            if author:
+                search_params["author"] = author
+
+            url = f"{base_url}/api/v1/prompts/search"
+            response = await self.client.post_json(url, search_params)
+            if response:
+                print(f"🔍 Search Results:")
+                if isinstance(response, dict) and "items" in response:
+                    items = response["items"]
+                    total = response.get("total", 0)
+                    print(f"Found {total} prompts")
+                    for i, prompt in enumerate(items):
+                        prompt_id = prompt.get("id", "unknown")[:8]
+                        name = prompt.get("name", "unnamed")
+                        category = prompt.get("category", "uncategorized")
+                        print(f"  {i+1}. {prompt_id}... | {name} | {category}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Search failed")
+
+        elif command == "update":
+            # Update a prompt
+            prompt_id = kwargs.get("id", "")
+            name = kwargs.get("name")
+            content = kwargs.get("content")
+            category = kwargs.get("category")
+            description = kwargs.get("description")
+            tags = kwargs.get("tags", "").split(",") if kwargs.get("tags") else None
+
+            if not prompt_id:
+                print("❌ Prompt ID required. Use: update --id 'prompt_id'")
+                return
+
+            if not any([name, content, category, description, tags]):
+                print("❌ At least one field to update required (--name, --content, --category, --description, --tags)")
+                return
+
+            update_data = {}
+            if name:
+                update_data["name"] = name
+            if content:
+                update_data["content"] = content
+            if category:
+                update_data["category"] = category
+            if description:
+                update_data["description"] = description
+            if tags is not None:
+                update_data["tags"] = tags
+
+            url = f"{base_url}/api/v1/prompts/{prompt_id}"
+            response = await self.client.post_json(url, update_data)
+            if response:
+                print(f"✅ Prompt {prompt_id} updated:")
+                print(json.dumps(update_data, indent=2))
+            else:
+                print("❌ Failed to update prompt")
+
+        elif command == "delete":
+            # Delete a prompt
+            prompt_id = kwargs.get("id", "")
+            if not prompt_id:
+                print("❌ Prompt ID required. Use: delete --id 'prompt_id'")
+                return
+
+            url = f"{base_url}/api/v1/prompts/{prompt_id}"
+            # For DELETE, use the synchronous method
+            try:
+                import urllib.request
+                req = urllib.request.Request(url, method='DELETE')
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    if response.status == 200 or response.status == 204:
+                        print(f"✅ Prompt {prompt_id} deleted successfully")
+                    else:
+                        print(f"⚠️  Delete returned status: {response.status}")
+            except Exception as e:
+                print(f"❌ Failed to delete prompt: {str(e)}")
+
+        elif command == "categories":
+            # List available categories
+            url = f"{base_url}/api/v1/prompts/categories"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📂 Available Categories:")
+                if isinstance(response, list):
+                    for i, category in enumerate(response):
+                        print(f"  {i+1}. {category}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get categories")
+
+        else:
+            print(f"❌ Unknown prompt_store command: {command}")
+            print("Available commands: health, config, list, create, get, search, update, delete, categories")
+            print("\nExamples:")
+            print("  list --limit 20 --offset 0 --category 'analysis'")
+            print("  create --name 'My Prompt' --content 'Prompt content' --category 'general' --tags 'tag1,tag2'")
+            print("  get --id 'prompt-uuid'")
+            print("  search --query 'analysis' --limit 5")
+            print("  update --id 'prompt-uuid' --name 'Updated Name' --category 'updated'")
+            print("  delete --id 'prompt-uuid'")
+            print("  categories")
+
+    async def notification_service_command(self, command: str, **kwargs):
+        """Execute Notification Service commands"""
+        base_url = self.services["notification-service"]
+
+        if command == "health":
+            url = f"{base_url}/health"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"💚 Notification Service Health:")
+                print(json.dumps(response, indent=2))
+            else:
+                print("❌ Health check failed")
+
+        elif command == "config":
+            # Get configuration from health endpoint
+            url = f"{base_url}/health"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"⚙️  Notification Service Configuration:")
+                config_data = {
+                    "service": response.get("service", "notification-service"),
+                    "version": response.get("version", "unknown"),
+                    "environment": response.get("environment", "unknown"),
+                    "timestamp": response.get("timestamp", "unknown"),
+                    "uptime_seconds": response.get("uptime_seconds", 0)
+                }
+                print(json.dumps(config_data, indent=2))
+            else:
+                print("❌ Failed to get configuration")
+
+        elif command == "list":
+            # List notifications
+            limit = kwargs.get("limit", 50)
+            offset = kwargs.get("offset", 0)
+            status = kwargs.get("status", "")
+            priority = kwargs.get("priority", "")
+
+            url = f"{base_url}/api/v1/notifications?limit={limit}&offset={offset}"
+            if status:
+                url += f"&status={status}"
+            if priority:
+                url += f"&priority={priority}"
+
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📋 Notification List (Limit: {limit}, Offset: {offset}):")
+                if isinstance(response, dict) and "items" in response:
+                    items = response["items"]
+                    total = response.get("total", 0)
+                    has_more = response.get("has_more", False)
+                    print(f"Total notifications: {total}, Has more: {has_more}")
+                    for i, notification in enumerate(items[:10]):  # Show first 10
+                        notification_id = notification.get("id", "unknown")[:8]
+                        title = notification.get("title", "untitled")
+                        status = notification.get("status", "unknown")
+                        priority = notification.get("priority", "normal")
+                        print(f"  {i+1}. {notification_id}... | {title} | {status} | {priority}")
+                    if len(items) > 10:
+                        print(f"  ... and {len(items) - 10} more notifications")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to list notifications")
+
+        elif command == "send":
+            # Send a new notification
+            title = kwargs.get("title", "CLI Notification")
+            message = kwargs.get("message", "This is a notification sent via CLI")
+            recipient = kwargs.get("recipient", "")
+            priority = kwargs.get("priority", "normal")
+            category = kwargs.get("category", "general")
+            metadata = kwargs.get("metadata", "")
+
+            if not recipient:
+                print("❌ Recipient required. Use: send --recipient 'user@domain.com' --title 'Title' --message 'Message'")
+                return
+
+            # Parse metadata string like "key1:value1,key2:value2"
+            metadata_dict = {}
+            if metadata:
+                try:
+                    for pair in metadata.split(","):
+                        if ":" in pair:
+                            key, value = pair.split(":", 1)
+                            metadata_dict[key.strip()] = value.strip()
+                except:
+                    print("❌ Invalid metadata format. Use: key1:value1,key2:value2")
+                    return
+
+            notification_data = {
+                "title": title,
+                "message": message,
+                "recipient": recipient,
+                "priority": priority,
+                "category": category,
+                "metadata": metadata_dict
+            }
+
+            url = f"{base_url}/api/v1/notifications"
+            response = await self.client.post_json(url, notification_data)
+            if response:
+                print(f"✅ Notification Sent:")
+                if isinstance(response, dict) and "id" in response:
+                    notification_id = response["id"]
+                    print(f"   ID: {notification_id}")
+                    print(f"   Title: {title}")
+                    print(f"   Recipient: {recipient}")
+                    print(f"   Priority: {priority}")
+                    print(f"   Category: {category}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to send notification")
+
+        elif command == "get":
+            # Get a specific notification by ID
+            notification_id = kwargs.get("id", "")
+            if not notification_id:
+                print("❌ Notification ID required. Use: get --id 'notification_id'")
+                return
+
+            url = f"{base_url}/api/v1/notifications/{notification_id}"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📋 Notification Details:")
+                print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get notification")
+
+        elif command == "history":
+            # Get notification history for a recipient
+            recipient = kwargs.get("recipient", "")
+            limit = kwargs.get("limit", 20)
+
+            if not recipient:
+                print("❌ Recipient required. Use: history --recipient 'user@domain.com'")
+                return
+
+            url = f"{base_url}/api/v1/notifications/history/{recipient}?limit={limit}"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📜 Notification History for {recipient}:")
+                if isinstance(response, list):
+                    print(f"Found {len(response)} notifications")
+                    for i, notification in enumerate(response[:10]):
+                        notification_id = notification.get("id", "unknown")[:8]
+                        title = notification.get("title", "untitled")
+                        sent_at = notification.get("sent_at", "unknown")
+                        status = notification.get("status", "unknown")
+                        print(f"  {i+1}. {notification_id}... | {title} | {sent_at} | {status}")
+                    if len(response) > 10:
+                        print(f"  ... and {len(response) - 10} more notifications")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get notification history")
+
+        elif command == "stats":
+            # Get notification statistics
+            url = f"{base_url}/api/v1/notifications/stats"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📊 Notification Statistics:")
+                print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get notification statistics")
+
+        elif command == "update":
+            # Update notification status
+            notification_id = kwargs.get("id", "")
+            status = kwargs.get("status", "")
+
+            if not notification_id:
+                print("❌ Notification ID required. Use: update --id 'notification_id' --status 'read/delivered'")
+                return
+
+            if not status:
+                print("❌ Status required. Use: update --id 'notification_id' --status 'read'")
+                return
+
+            update_data = {"status": status}
+            url = f"{base_url}/api/v1/notifications/{notification_id}/status"
+            response = await self.client.post_json(url, update_data)
+            if response:
+                print(f"✅ Notification {notification_id} status updated to: {status}")
+            else:
+                print("❌ Failed to update notification status")
+
+        else:
+            print(f"❌ Unknown notification-service command: {command}")
+            print("Available commands: health, config, list, send, get, history, stats, update")
+            print("\nExamples:")
+            print("  list --limit 20 --offset 0 --status 'unread'")
+            print("  send --recipient 'user@email.com' --title 'Alert' --message 'System alert' --priority 'high'")
+            print("  get --id 'notification-uuid'")
+            print("  history --recipient 'user@email.com' --limit 10")
+            print("  stats")
+            print("  update --id 'notification-uuid' --status 'read'")
     
     async def frontend_command(self, command: str, **kwargs):
         """Execute Frontend commands"""
@@ -673,9 +1708,128 @@ class EcosystemCLI:
             else:
                 print("❌ Failed to get configuration")
         
+        elif command == "status":
+            # Get frontend application status
+            url = f"{base_url}/api/status"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📊 Frontend Application Status:")
+                print(f"   Status: {response.get('status', 'unknown')}")
+                print(f"   Version: {response.get('version', 'unknown')}")
+                print(f"   Environment: {response.get('environment', 'unknown')}")
+                print(f"   Uptime: {response.get('uptime', 'unknown')}")
+                if 'active_connections' in response:
+                    print(f"   Active Connections: {response['active_connections']}")
+                if 'memory_usage' in response:
+                    print(f"   Memory Usage: {response['memory_usage']}")
+            else:
+                # Fallback to basic health check
+                url = f"{base_url}/health"
+                response = await self.client.get_json(url)
+                if response:
+                    print(f"📊 Frontend Status (from health):")
+                    print(f"   Service: {response.get('service', 'frontend')}")
+                    print(f"   Status: {response.get('status', 'unknown')}")
+                    print(f"   Uptime: {response.get('uptime_seconds', 0)} seconds")
+                else:
+                    print("❌ Failed to get frontend status")
+
+        elif command == "logs":
+            # Get frontend logs
+            lines = kwargs.get("lines", 50)
+            level = kwargs.get("level", "")
+
+            url = f"{base_url}/api/logs?lines={lines}"
+            if level:
+                url += f"&level={level}"
+
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📜 Frontend Logs (Last {lines} lines):")
+                if isinstance(response, dict) and "logs" in response:
+                    logs = response["logs"]
+                    for log_entry in logs[-20:]:  # Show last 20 entries
+                        timestamp = log_entry.get("timestamp", "unknown")
+                        level = log_entry.get("level", "INFO")
+                        message = log_entry.get("message", "")
+                        print(f"   {timestamp} [{level}] {message}")
+                    if len(logs) > 20:
+                        print(f"   ... and {len(logs) - 20} more log entries")
+                else:
+                    print("   No structured logs available")
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get frontend logs")
+
+        elif command == "restart":
+            # Restart frontend application
+            print("🔄 Restarting Frontend Application...")
+
+            # First check if restart endpoint exists
+            url = f"{base_url}/api/restart"
+            response = await self.client.post_json(url, {})
+            if response:
+                print(f"✅ Frontend Restart Initiated:")
+                if isinstance(response, dict):
+                    status = response.get("status", "unknown")
+                    message = response.get("message", "Restart in progress")
+                    print(f"   Status: {status}")
+                    print(f"   Message: {message}")
+                    if "restart_time" in response:
+                        print(f"   Restart Time: {response['restart_time']}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Frontend restart endpoint not available")
+                print("   Note: Restart functionality may need to be implemented in the frontend service")
+
+        elif command == "metrics":
+            # Get frontend performance metrics
+            url = f"{base_url}/api/metrics"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"📈 Frontend Performance Metrics:")
+                if isinstance(response, dict):
+                    for key, value in response.items():
+                        if isinstance(value, (int, float)):
+                            print(f"   {key}: {value}")
+                        elif isinstance(value, dict):
+                            print(f"   {key}:")
+                            for sub_key, sub_value in value.items():
+                                print(f"      {sub_key}: {sub_value}")
+                        else:
+                            print(f"   {key}: {value}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get frontend metrics")
+
+        elif command == "routes":
+            # Get frontend API routes
+            url = f"{base_url}/api/routes"
+            response = await self.client.get_json(url)
+            if response:
+                print(f"🛣️  Frontend API Routes:")
+                if isinstance(response, list):
+                    for route in response:
+                        method = route.get("method", "GET")
+                        path = route.get("path", "unknown")
+                        description = route.get("description", "")
+                        print(f"   {method:<6} {path:<30} {description}")
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print("❌ Failed to get frontend routes")
+        
         else:
             print(f"❌ Unknown frontend command: {command}")
-            print("Available commands: health, config")
+            print("Available commands: health, config, status, logs, restart, metrics, routes")
+            print("\nExamples:")
+            print("  status")
+            print("  logs --lines 100 --level ERROR")
+            print("  restart")
+            print("  metrics")
+            print("  routes")
     
     async def discovery_agent_command(self, command: str, **kwargs):
         """Execute Discovery Agent commands"""
@@ -800,10 +1954,14 @@ class EcosystemCLI:
             await self.source_agent_command(command, **kwargs)
         elif service in ["doc_store", "doc-store"]:
             await self.doc_store_command(command, **kwargs)
+        elif service in ["prompt_store", "prompt-store"]:
+            await self.prompt_store_command(command, **kwargs)
         elif service == "frontend":
             await self.frontend_command(command, **kwargs)
         elif service in ["discovery-agent", "discovery_agent"]:
             await self.discovery_agent_command(command, **kwargs)
+        elif service in ["notification-service", "notification_service"]:
+            await self.notification_service_command(command, **kwargs)
         elif service == "interpreter":
             await self.interpreter_command(command, **kwargs)
         else:
@@ -828,6 +1986,13 @@ class EcosystemCLI:
         print()
         print("Commands:")
         print("  health                    - Check health of all services")
+        print("  containers                - List all Docker containers")
+        print("  container-stats           - Show container resource usage")
+        print("  restart --service <name>  - Restart a specific container")
+        print("  rebuild --service <name>  - Rebuild a specific container")
+        print("  logs --service <name>     - Show container logs")
+        print("  stop --service <name>     - Stop a specific container")
+        print("  start --service <name>    - Start a specific container")
         print("  <service> <command>       - Execute command on specific service")
         print()
         print("Available Services:")
@@ -836,9 +2001,11 @@ class EcosystemCLI:
         print()
         print("Examples:")
         print("  python3 ecosystem_cli_executable.py health")
+        print("  python3 ecosystem_cli_executable.py containers")
+        print("  python3 ecosystem_cli_executable.py restart --service doc_store")
+        print("  python3 ecosystem_cli_executable.py logs --service orchestrator --lines 20")
         print("  python3 ecosystem_cli_executable.py analysis-service status")
         print("  python3 ecosystem_cli_executable.py orchestrator peers")
-        print("  python3 ecosystem_cli_executable.py github-mcp health")
 
 
 async def main():
@@ -847,6 +2014,32 @@ async def main():
     parser.add_argument("command", nargs='?', help="Command to execute")
     parser.add_argument("subcommand", nargs='?', help="Subcommand for service")
     parser.add_argument("--help-cli", action="store_true", help="Show CLI help")
+
+    # Add support for additional arguments
+    parser.add_argument("--limit", type=int, help="Limit for list/search operations")
+    parser.add_argument("--offset", type=int, help="Offset for list operations")
+    parser.add_argument("--query", help="Search query")
+    parser.add_argument("--title", help="Document title")
+    parser.add_argument("--content", help="Document content or prompt content")
+    parser.add_argument("--tags", help="Document tags or prompt tags (comma-separated)")
+    parser.add_argument("--id", help="Document ID or prompt ID")
+    parser.add_argument("--metadata", help="Metadata (key:value,key2:value2 format)")
+    parser.add_argument("--code", help="Code to execute")
+    parser.add_argument("--type", help="Workflow or data type")
+    parser.add_argument("--name", help="Prompt name")
+    parser.add_argument("--category", help="Prompt category")
+    parser.add_argument("--author", help="Prompt author")
+    parser.add_argument("--description", help="Prompt description")
+    parser.add_argument("--message", help="Notification message")
+    parser.add_argument("--recipient", help="Notification recipient")
+    parser.add_argument("--priority", help="Notification priority (low/normal/high/critical)")
+    parser.add_argument("--status", help="Notification status or filter")
+    parser.add_argument("--lines", type=int, help="Number of log lines to retrieve")
+    parser.add_argument("--level", help="Log level filter (DEBUG/INFO/WARNING/ERROR)")
+    parser.add_argument("--definition", help="Workflow definition JSON")
+    parser.add_argument("--template", help="Workflow template name")
+    parser.add_argument("--service", help="Service/container name for container management")
+    parser.add_argument("--follow", action="store_true", help="Follow logs in real-time")
     
     args = parser.parse_args()
     
@@ -875,9 +2068,102 @@ async def main():
     if args.command == "create-mock-data":
         await cli.create_mock_data()
         return 0
+
+    # Container management commands
+    if args.command == "containers":
+        await cli.list_containers()
+        return 0
+
+    if args.command == "container-stats":
+        await cli.show_container_stats()
+        return 0
+
+    if args.command == "restart":
+        if not hasattr(args, 'service') or not args.service:
+            print("❌ Service name required. Use: restart --service <service_name>")
+            return 1
+        await cli.restart_container(args.service)
+        return 0
+
+    if args.command == "rebuild":
+        if not hasattr(args, 'service') or not args.service:
+            print("❌ Service name required. Use: rebuild --service <service_name>")
+            return 1
+        await cli.rebuild_container(args.service)
+        return 0
+
+    if args.command == "logs":
+        if not hasattr(args, 'service') or not args.service:
+            print("❌ Service name required. Use: logs --service <service_name>")
+            return 1
+        follow = hasattr(args, 'follow') and args.follow
+        lines = (args.lines if hasattr(args, 'lines') and args.lines else 50)
+        await cli.show_container_logs(args.service, lines, follow)
+        return 0
+
+    if args.command == "stop":
+        if not hasattr(args, 'service') or not args.service:
+            print("❌ Service name required. Use: stop --service <service_name>")
+            return 1
+        await cli.stop_container(args.service)
+        return 0
+
+    if args.command == "start":
+        if not hasattr(args, 'service') or not args.service:
+            print("❌ Service name required. Use: start --service <service_name>")
+            return 1
+        await cli.start_container(args.service)
+        return 0
     
     if args.subcommand:
-        await cli.execute_service_command(args.command, args.subcommand)
+        # Collect additional arguments as kwargs
+        kwargs = {}
+        if hasattr(args, 'limit') and args.limit is not None:
+            kwargs['limit'] = args.limit
+        if hasattr(args, 'offset') and args.offset is not None:
+            kwargs['offset'] = args.offset
+        if hasattr(args, 'query') and args.query:
+            kwargs['query'] = args.query
+        if hasattr(args, 'title') and args.title:
+            kwargs['title'] = args.title
+        if hasattr(args, 'content') and args.content:
+            kwargs['content'] = args.content
+        if hasattr(args, 'tags') and args.tags:
+            kwargs['tags'] = args.tags
+        if hasattr(args, 'id') and args.id:
+            kwargs['id'] = args.id
+        if hasattr(args, 'metadata') and args.metadata:
+            kwargs['metadata'] = args.metadata
+        if hasattr(args, 'code') and args.code:
+            kwargs['code'] = args.code
+        if hasattr(args, 'type') and args.type:
+            kwargs['type'] = args.type
+        if hasattr(args, 'name') and args.name:
+            kwargs['name'] = args.name
+        if hasattr(args, 'category') and args.category:
+            kwargs['category'] = args.category
+        if hasattr(args, 'author') and args.author:
+            kwargs['author'] = args.author
+        if hasattr(args, 'description') and args.description:
+            kwargs['description'] = args.description
+        if hasattr(args, 'message') and args.message:
+            kwargs['message'] = args.message
+        if hasattr(args, 'recipient') and args.recipient:
+            kwargs['recipient'] = args.recipient
+        if hasattr(args, 'priority') and args.priority:
+            kwargs['priority'] = args.priority
+        if hasattr(args, 'status') and args.status:
+            kwargs['status'] = args.status
+        if hasattr(args, 'lines') and args.lines is not None:
+            kwargs['lines'] = args.lines
+        if hasattr(args, 'level') and args.level:
+            kwargs['level'] = args.level
+        if hasattr(args, 'definition') and args.definition:
+            kwargs['definition'] = args.definition
+        if hasattr(args, 'template') and args.template:
+            kwargs['template'] = args.template
+
+        await cli.execute_service_command(args.command, args.subcommand, **kwargs)
         return 0
     
     # If no subcommand, assume health check for the service

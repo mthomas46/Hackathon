@@ -72,6 +72,8 @@ The Analysis Service employs a sophisticated, distributed analysis architecture 
 | Method | Path | Description | Purpose |
 |--------|------|-------------|---------|
 | **POST** | `/analyze` | Analyze targets | Core document analysis with configurable analysis types |
+| **POST** | `/analyze/generate-report` | Generate simulation reports | Comprehensive analysis reports for simulation service |
+| **POST** | `/analyze/pull-request` | Analyze pull request | PR analysis with refactoring suggestions and health scoring |
 | **GET** | `/findings` | List findings | Retrieve analysis findings with filtering (limit, severity, type) |
 | **GET** | `/integration/health` | Integration health | Service integration health and dependency status |
 
