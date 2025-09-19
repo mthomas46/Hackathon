@@ -2086,19 +2086,112 @@ async def perform_simulation_analysis(content: str, analysis_type: str, context:
     }
 
 async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Perform comprehensive analysis on simulation data."""
-    # This would integrate with summarizer-hub and other analysis services
-    return {
-        "document_analysis": "Mock document analysis completed",
-        "team_analysis": "Mock team dynamics analysis completed",
-        "timeline_analysis": "Mock timeline analysis completed",
-        "risk_assessment": "Mock risk assessment completed",
-        "recommendations": [
-            "Consider document consolidation",
-            "Review team member assignments",
-            "Optimize project timeline"
-        ]
-    }
+    """Perform comprehensive analysis on simulation data using summarizer-hub."""
+    try:
+        # Get documents from simulation
+        documents = mock_data.get("documents", [])
+
+        if not documents:
+            # Fallback to mock data if no documents provided
+            return {
+                "document_analysis": "Mock document analysis completed",
+                "team_analysis": "Mock team dynamics analysis completed",
+                "timeline_analysis": "Mock timeline analysis completed",
+                "risk_assessment": "Mock risk assessment completed",
+                "recommendations": [
+                    "Consider document consolidation",
+                    "Review team member assignments",
+                    "Optimize project timeline"
+                ]
+            }
+
+        # Prepare documents for summarizer-hub analysis
+        formatted_documents = []
+        for doc in documents:
+            if isinstance(doc, dict):
+                formatted_documents.append({
+                    "id": doc.get("id", f"doc_{len(formatted_documents)}"),
+                    "title": doc.get("title", "Untitled Document"),
+                    "content": doc.get("content", ""),
+                    "dateCreated": doc.get("dateCreated", datetime.now().isoformat()),
+                    "dateUpdated": doc.get("dateUpdated", datetime.now().isoformat())
+                })
+
+        # Get timeline data if available
+        timeline_data = mock_data.get("timeline", None)
+
+        # Call summarizer-hub for comprehensive analysis
+        summarizer_url = await get_summarizer_service_url()
+        if not summarizer_url:
+            logger.warning("Summarizer service URL not available")
+            summarizer_url = None
+        if summarizer_url:
+            try:
+                analysis_request = {
+                    "documents": formatted_documents,
+                    "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
+                    "confidence_threshold": 0.4,
+                    "include_jira_suggestions": True,
+                    "timeline": timeline_data
+                }
+
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(
+                        f"{summarizer_url}/recommendations",
+                        json=analysis_request,
+                        headers={"Content-Type": "application/json"}
+                    )
+
+                    if response.status_code == 200:
+                        analysis_result = response.json()
+
+                        # Extract key information for simulation report
+                        return {
+                            "document_analysis": analysis_result.get("recommendations", []),
+                            "team_analysis": mock_data.get("team_analysis", "Team analysis completed"),
+                            "timeline_analysis": analysis_result.get("timeline_analysis", {}),
+                            "risk_assessment": "Risk assessment based on document analysis",
+                            "recommendations": [
+                                rec.get("description", "General recommendation")
+                                for rec in analysis_result.get("recommendations", [])
+                            ],
+                            "jira_suggestions": analysis_result.get("suggested_jira_tickets", []),
+                            "drift_analysis": analysis_result.get("drift_analysis", {}),
+                            "alignment_analysis": analysis_result.get("alignment_analysis", {}),
+                            "inconclusive_analysis": analysis_result.get("inconclusive_analysis", {}),
+                            "analysis_service": "summarizer-hub",
+                            "analysis_timestamp": datetime.now().isoformat()
+                        }
+
+            except Exception as e:
+                logger.warning("Failed to call summarizer-hub, using mock analysis", error=str(e))
+
+        # Fallback to mock analysis if summarizer-hub is unavailable
+        return {
+            "document_analysis": "Mock document analysis completed (summarizer-hub unavailable)",
+            "team_analysis": "Mock team dynamics analysis completed",
+            "timeline_analysis": "Mock timeline analysis completed",
+            "risk_assessment": "Mock risk assessment completed",
+            "recommendations": [
+                "Consider document consolidation",
+                "Review team member assignments",
+                "Optimize project timeline"
+            ],
+            "analysis_service": "mock_fallback",
+            "analysis_timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error("Comprehensive analysis failed", error=str(e), simulation_id=simulation_id)
+        return {
+            "document_analysis": f"Analysis failed: {str(e)}",
+            "team_analysis": "Analysis failed",
+            "timeline_analysis": "Analysis failed",
+            "risk_assessment": "Analysis failed",
+            "recommendations": ["Analysis system error - manual review recommended"],
+            "analysis_service": "error_fallback",
+            "analysis_timestamp": datetime.now().isoformat()
+        }
 
 async def generate_simulation_summary_report(simulation_id: str, analysis_results: Dict[str, Any]) -> Dict[str, Any]:
     """Generate comprehensive summary report for simulation."""
@@ -3632,6 +3725,47 @@ if __name__ == "__main__":
     print("  🔄 Dependency Injection")
     print("  📡 REST API with HATEOAS")
     print("  🧪 Comprehensive Testing Infrastructure")
+
+
+def _get_summarizer_service_url() -> str:
+    """Get the appropriate summarizer service URL based on environment."""
+    # Check for explicit override
+    override_url = os.getenv("SUMMARIZER_HUB_URL")
+    if override_url:
+        return override_url
+
+    # Determine environment and return appropriate URL
+    # Based on docker-compose.dev.yml: summarizer-hub uses port 5160
+    try:
+        # Check if running in Docker environment
+        with open("/proc/1/cgroup", "r") as f:
+            if "docker" in f.read().lower():
+                return "http://summarizer-hub:5160"
+    except:
+        pass
+
+    # Default to localhost for development
+    return "http://localhost:5160"
+
+
+async def get_summarizer_service_url() -> Optional[str]:
+    """Get the URL of the summarizer-hub service."""
+    try:
+        service_url = _get_summarizer_service_url()
+
+        # Basic connectivity check
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{service_url}/health")
+            if response.status_code == 200:
+                return service_url
+
+        return None
+
+    except Exception:
+        # Service not available
+        logger.warning("Summarizer service not available for analysis")
+        return None
+
 
     uvicorn.run(
         "main:app",
