@@ -120,6 +120,15 @@ class SimulationAnalyzer:
             else:
                 result.add_finding("No recommendations report generated")
 
+            # Get comprehensive analysis report from analysis-service
+            analysis_report = await self._get_analysis_report_from_analysis_service(simulation_id, documents)
+            if analysis_report:
+                result.add_metric("analysis_report_id", analysis_report["report_id"])
+                result.add_metric("analysis_summary", analysis_report["summary"])
+                result.add_finding("Analysis report received and stored")
+            else:
+                result.add_finding("No analysis report received")
+
             # Use doc-store for document quality analysis (without local recommendations)
             doc_store_analysis = await self._analyze_with_doc_store(documents)
             if doc_store_analysis:
@@ -455,6 +464,59 @@ class SimulationAnalyzer:
             print(f"Error communicating with Summarizer Hub: {e}")
             return []
 
+    async def _get_analysis_report_from_analysis_service(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Get comprehensive analysis report from analysis-service."""
+        try:
+            # Request analysis report generation from analysis-service
+            analysis_report = await self._request_analysis_report_from_service(simulation_id, documents)
+
+            if not analysis_report:
+                return None
+
+            # Store the received report in doc-store
+            report_id = await self._store_received_analysis_report(analysis_report, simulation_id)
+
+            return {
+                "report_id": report_id,
+                "summary": analysis_report.get("summary", {})
+            }
+
+        except Exception as e:
+            print(f"Error getting analysis report from analysis-service: {e}")
+            return None
+
+    async def _request_analysis_report_from_service(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Request a complete analysis report from analysis-service."""
+        try:
+            analysis_url = self.service_urls.get('analysis_service', 'http://localhost:5020')
+
+            async with httpx.AsyncClient(timeout=60.0) as client:  # Longer timeout for report generation
+                response = await client.post(
+                    f"{analysis_url}/api/v1/analyze/generate-report",
+                    json={
+                        "simulation_id": simulation_id,
+                        "documents": documents,
+                        "report_type": "comprehensive_simulation_analysis",
+                        "include_markdown": True,
+                        "include_json": True
+                    }
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("success") and result.get("report"):
+                        return result["report"]
+                    else:
+                        print(f"Analysis service report generation failed: {result.get('error', 'Unknown error')}")
+                        return None
+                else:
+                    print(f"Analysis service report request failed: {response.status_code} - {response.text}")
+                    return None
+
+        except Exception as e:
+            print(f"Error requesting analysis report from analysis-service: {e}")
+            return None
+
     async def _store_recommendations_report(self, report_data: Dict[str, Any]) -> str:
         """Store recommendations report in doc-store and generate files."""
         try:
@@ -617,6 +679,74 @@ class SimulationAnalyzer:
 
         except Exception as e:
             print(f"Error linking report to simulation: {e}")
+
+    async def _store_received_analysis_report(self, analysis_report: Dict[str, Any], simulation_id: str) -> str:
+        """Store a pre-generated analysis report from analysis-service."""
+        try:
+            # Use the report ID from the analysis-service or generate one
+            report_id = analysis_report.get("report_id", f"analysis_report_{simulation_id}_{int(datetime.now().timestamp())}")
+
+            # Store JSON version in doc-store
+            json_content = {
+                "id": report_id,
+                "type": "analysis_report",
+                "simulation_id": simulation_id,
+                "title": f"Analysis Report - {simulation_id}",
+                "content": json.dumps(analysis_report, indent=2),
+                "format": "json",
+                "timestamp": analysis_report.get("timestamp", datetime.now().isoformat()),
+                "metadata": {
+                    "source": "analysis-service",
+                    "report_type": "simulation_analysis",
+                    "documents_analyzed": analysis_report.get("documents_analyzed", 0),
+                    **analysis_report.get("metadata", {})
+                }
+            }
+
+            # Store in doc-store
+            await self._save_to_doc_store(json_content)
+
+            # Store Markdown version if provided by analysis-service
+            if analysis_report.get("markdown_content"):
+                await self._save_markdown_report(analysis_report["markdown_content"], report_id)
+            elif analysis_report.get("markdown"):
+                await self._save_markdown_report(analysis_report["markdown"], report_id)
+
+            # Link to simulation run data
+            await self._link_analysis_report_to_simulation(report_id, simulation_id)
+
+            return report_id
+
+        except Exception as e:
+            print(f"Error storing received analysis report: {e}")
+            raise
+
+
+    async def _link_analysis_report_to_simulation(self, report_id: str, simulation_id: str) -> None:
+        """Link the analysis report to the simulation run data."""
+        try:
+            # Update simulation run data with analysis report linkage
+            simulation_repo = self._get_simulation_repository()
+
+            # Get the simulation run
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if simulation:
+                # Add analysis report linkage to simulation metadata
+                if not hasattr(simulation, 'metadata') or simulation.metadata is None:
+                    simulation.metadata = {}
+
+                simulation.metadata['analysis_report_id'] = report_id
+                simulation.metadata['analysis_report_timestamp'] = datetime.now().isoformat()
+
+                # Save updated simulation
+                await simulation_repo.save(simulation)
+
+                print(f"Linked analysis report {report_id} to simulation {simulation_id}")
+            else:
+                print(f"Simulation {simulation_id} not found for linking analysis report")
+
+        except Exception as e:
+            print(f"Error linking analysis report to simulation: {e}")
 
     def _get_simulation_repository(self):
         """Get simulation repository instance."""

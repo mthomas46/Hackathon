@@ -1277,6 +1277,152 @@ async def get_simulation_recommendations_markdown(simulation_id: str, req: Reque
             logger.error("Failed to get markdown recommendations report", error=str(e), simulation_id=simulation_id)
             raise HTTPException(status_code=500, detail="Failed to retrieve markdown recommendations report")
 
+@app.get("/api/v1/simulations/{simulation_id}/analysis")
+async def get_simulation_analysis(simulation_id: str, req: Request):
+    """Get analysis report linkage for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            # Get simulation to check for analysis report linkage
+            simulation_repo = application_service._simulation_repository if hasattr(application_service, '_simulation_repository') else None
+
+            if not simulation_repo:
+                # Fallback: try to get from direct repository access
+                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                simulation_repo = SQLiteSimulationRepository()
+
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if not simulation:
+                raise HTTPException(status_code=404, detail="Simulation not found")
+
+            # Check if analysis report exists
+            if hasattr(simulation, 'analysis_report_id') and simulation.analysis_report_id:
+                return create_success_response(
+                    data={
+                        "report_id": simulation.analysis_report_id,
+                        "report_timestamp": getattr(simulation, 'analysis_report_timestamp', None),
+                        "simulation_id": simulation_id
+                    },
+                    message="Analysis report found"
+                )
+            else:
+                return create_success_response(
+                    data={"report_id": None, "status": "not_generated"},
+                    message="No analysis report found for this simulation"
+                )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to get analysis report linkage", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to retrieve analysis report linkage")
+
+@app.get("/api/v1/simulations/{simulation_id}/analysis/report")
+async def get_simulation_analysis_report(simulation_id: str, req: Request):
+    """Get the full analysis report from doc-store."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            # Get simulation to find the report ID
+            simulation_repo = application_service._simulation_repository if hasattr(application_service, '_simulation_repository') else None
+
+            if not simulation_repo:
+                # Fallback: try to get from direct repository access
+                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                simulation_repo = SQLiteSimulationRepository()
+
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if not simulation:
+                raise HTTPException(status_code=404, detail="Simulation not found")
+
+            if not hasattr(simulation, 'analysis_report_id') or not simulation.analysis_report_id:
+                raise HTTPException(status_code=404, detail="No analysis report found for this simulation")
+
+            # Get the report from doc-store
+            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5000")
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    f"{doc_store_url}/api/documents/{simulation.analysis_report_id}"
+                )
+
+                if response.status_code == 200:
+                    doc_data = response.json()
+                    if doc_data.get("success"):
+                        # Parse the JSON content
+                        import json
+                        report_content = json.loads(doc_data["data"]["content"])
+
+                        return create_success_response(
+                            data=report_content,
+                            message="Analysis report retrieved successfully"
+                        )
+                    else:
+                        raise HTTPException(status_code=404, detail="Analysis report not found in doc-store")
+                else:
+                    raise HTTPException(status_code=500, detail="Failed to retrieve report from doc-store")
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to get analysis report", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to retrieve analysis report")
+
+@app.get("/api/v1/simulations/{simulation_id}/analysis/markdown")
+async def get_simulation_analysis_markdown(simulation_id: str, req: Request):
+    """Get the markdown version of the analysis report."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            # Get simulation to find the report ID
+            simulation_repo = application_service._simulation_repository if hasattr(application_service, '_simulation_repository') else None
+
+            if not simulation_repo:
+                # Fallback: try to get from direct repository access
+                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                simulation_repo = SQLiteSimulationRepository()
+
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if not simulation:
+                raise HTTPException(status_code=404, detail="Simulation not found")
+
+            if not hasattr(simulation, 'analysis_report_id') or not simulation.analysis_report_id:
+                raise HTTPException(status_code=404, detail="No analysis report found for this simulation")
+
+            # Get the markdown version from doc-store
+            md_report_id = f"{simulation.analysis_report_id}_md"
+            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5000")
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    f"{doc_store_url}/api/documents/{md_report_id}"
+                )
+
+                if response.status_code == 200:
+                    doc_data = response.json()
+                    if doc_data.get("success"):
+                        return create_success_response(
+                            data={
+                                "markdown_content": doc_data["data"]["content"],
+                                "format": "markdown",
+                                "report_id": simulation.analysis_report_id
+                            },
+                            message="Markdown analysis report retrieved successfully"
+                        )
+                    else:
+                        raise HTTPException(status_code=404, detail="Markdown analysis report not found")
+                else:
+                    raise HTTPException(status_code=500, detail="Failed to retrieve markdown report from doc-store")
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to get markdown analysis report", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to retrieve markdown analysis report")
+
 # ============================================================================
 # INTERPRETER SERVICE INTEGRATION ENDPOINTS
 # ============================================================================
