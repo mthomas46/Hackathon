@@ -64,6 +64,34 @@ class ServiceCircuitBreaker:
         self.last_failure_time: Optional[datetime] = None
         self.logger = get_simulation_logger()
 
+    def __enter__(self):
+        """Enter context manager - check if circuit breaker allows execution."""
+        if self.state == CircuitBreakerState.OPEN:
+            if self._should_attempt_reset():
+                self.state = CircuitBreakerState.HALF_OPEN
+                self.half_open_failure_count = 0  # Reset half-open failure count
+                self.logger.info(
+                    "Circuit breaker transitioning to half-open",
+                    service=self.service_name
+                )
+            else:
+                raise CircuitBreakerOpenException(
+                    f"Circuit breaker is OPEN for service {self.service_name}"
+                )
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit context manager - handle success or failure."""
+        if exc_type is None:
+            # No exception - success
+            self._on_success()
+        else:
+            # Only count failures if we actually executed code (not if circuit was open)
+            if self.state != CircuitBreakerState.OPEN:
+                self._on_failure()
+            # Re-raise the exception
+            return False
+
     async def call(self, func: Callable[[], Awaitable[Any]]) -> Any:
         """Execute function with circuit breaker protection."""
         if self.state == CircuitBreakerState.OPEN:
@@ -109,12 +137,18 @@ class ServiceCircuitBreaker:
 
     def _on_failure(self) -> None:
         """Handle failed call."""
-        self.failure_count += 1
         self.last_failure_time = datetime.now()
         self.success_count = 0
 
-        if self.failure_count >= self.failure_threshold:
+        if self.state == CircuitBreakerState.HALF_OPEN:
+            # In half-open state, any failure should reopen the breaker
+            # This is more conservative - we need clear success to close
             self._trip()
+        else:
+            # In closed state, increment failure count
+            self.failure_count += 1
+            if self.failure_count >= self.failure_threshold:
+                self._trip()
 
     def _trip(self) -> None:
         """Trip the circuit breaker to open state."""
@@ -131,6 +165,7 @@ class ServiceCircuitBreaker:
         self.state = CircuitBreakerState.CLOSED
         self.failure_count = 0
         self.success_count = 0
+        self.half_open_failure_count = 0  # Reset half-open failure count
         self.logger.info(
             "Circuit breaker reset to CLOSED",
             service=self.service_name
