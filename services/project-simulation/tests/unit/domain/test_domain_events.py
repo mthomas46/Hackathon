@@ -78,7 +78,8 @@ class TestProjectEvents:
         event = ProjectCreated(
             project_id="proj-123",
             project_name="Test Project",
-            project_type="web_application"
+            project_type="web_application",
+            complexity="medium"
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -91,7 +92,8 @@ class TestProjectEvents:
         event = ProjectStatusChanged(
             project_id="proj-123",
             old_status="created",
-            new_status="in_progress"
+            new_status="in_progress",
+            changed_by="user@example.com"
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -100,24 +102,31 @@ class TestProjectEvents:
 
     def test_project_phase_completed_event(self):
         """Test ProjectPhaseCompleted event."""
-        completed_at = datetime(2024, 1, 1, 12, 0, 0)
         event = ProjectPhaseCompleted(
             project_id="proj-123",
             phase_name="planning",
-            completed_at=completed_at
+            phase_number=1,
+            completion_percentage=100.0,
+            duration_days=5
         )
 
         assert event.get_aggregate_id() == "proj-123"
         assert event.phase_name == "planning"
-        assert event.completed_at == completed_at
+        assert event.phase_number == 1
+        assert event.completion_percentage == 100.0
+        assert event.duration_days == 5
 
     def test_team_member_added_event(self):
         """Test TeamMemberAdded event."""
         event = TeamMemberAdded(
+            team_id="team-789",
             project_id="proj-123",
             member_id="user-456",
             member_name="John Doe",
-            role="developer"
+            role="developer",
+            skills=["python", "django", "react"],
+            experience_years=5,
+            productivity_factor=1.2
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -127,10 +136,15 @@ class TestProjectEvents:
 
     def test_team_member_removed_event(self):
         """Test TeamMemberRemoved event."""
+        removal_date = datetime(2024, 1, 15, 10, 0, 0)
         event = TeamMemberRemoved(
+            team_id="team-789",
             project_id="proj-123",
             member_id="user-456",
-            member_name="John Doe"
+            member_name="John Doe",
+            removal_reason="End of contract",
+            removal_date=removal_date,
+            replacement_planned=True
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -143,18 +157,17 @@ class TestSimulationEvents:
 
     def test_simulation_started_event(self):
         """Test SimulationStarted event."""
-        start_time = datetime(2024, 1, 1, 10, 0, 0)
         event = SimulationStarted(
             simulation_id="sim-123",
             project_id="proj-456",
             scenario_type="full_project",
-            start_time=start_time
+            estimated_duration_hours=8
         )
 
         assert event.get_aggregate_id() == "sim-123"
         assert event.project_id == "proj-456"
         assert event.scenario_type == "full_project"
-        assert event.start_time == start_time
+        assert event.estimated_duration_hours == 8
 
     def test_simulation_completed_event(self):
         """Test SimulationCompleted event."""
