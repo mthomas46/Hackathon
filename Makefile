@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -306,6 +306,59 @@ heal-stop: ## Stop auto-healing monitoring system
 heal-status: ## Show auto-healing system status
 	@echo "$(BLUE)📊 Auto-healing system status...$(NC)"
 	source $(VENV)/bin/activate && python3 scripts/hardening/auto_healer.py --status
+
+# ============================================================================
+# SIMULATION SERVICE MANAGEMENT
+# ============================================================================
+
+simulation: ## Show simulation service management commands
+	@echo "$(BLUE)🚀 Project Simulation Service$(NC)"
+	@echo "================================"
+	@echo ""
+	@echo "Available simulation commands:"
+	@echo "  $(CYAN)make simulation-run$(NC)       - Start simulation service"
+	@echo "  $(CYAN)make simulation-test$(NC)      - Run simulation tests"
+	@echo "  $(CYAN)make simulation-docker$(NC)    - Start simulation in Docker"
+	@echo "  $(CYAN)make simulation-stop$(NC)      - Stop simulation service"
+	@echo "  $(CYAN)make simulation-status$(NC)    - Check simulation status"
+	@echo ""
+
+simulation-run: ## Start project simulation service
+	@echo "$(BLUE)🚀 Starting Project Simulation Service...$(NC)"
+	cd services/project-simulation && make run
+
+simulation-test: ## Run project simulation tests
+	@echo "$(BLUE)🧪 Running Project Simulation Tests...$(NC)"
+	cd services/project-simulation && make test
+
+simulation-docker: ## Start project simulation service in Docker
+	@echo "$(BLUE)🐳 Starting Project Simulation Service in Docker...$(NC)"
+	docker-compose --profile simulation up -d
+	@echo "$(GREEN)✅ Simulation service started in Docker$(NC)"
+	@echo "$(YELLOW)📊 Service available at: http://localhost:5075$(NC)"
+
+simulation-stop: ## Stop project simulation service
+	@echo "$(BLUE)🛑 Stopping Project Simulation Service...$(NC)"
+	docker-compose --profile simulation down
+	@echo "$(GREEN)✅ Simulation service stopped$(NC)"
+
+simulation-status: ## Check project simulation service status
+	@echo "$(BLUE)📊 Project Simulation Service Status$(NC)"
+	@echo "=========================================="
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:5075/health > /dev/null && echo "✅ Service is healthy" || echo "❌ Service is not responding"
+	@echo ""
+	@echo "$(YELLOW)Docker Containers:$(NC)"
+	@docker ps --filter name=project-simulation --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Database:$(NC)"
+	@if [ -f "services/project-simulation/data/simulation.db" ]; then \
+		echo "✅ Database file exists"; \
+		sqlite3 services/project-simulation/data/simulation.db "SELECT COUNT(*) FROM simulations;" 2>/dev/null | xargs echo "📊 Simulations in database:"; \
+	else \
+		echo "❌ Database file not found"; \
+	fi
 
 # Default target
 .DEFAULT_GOAL := help

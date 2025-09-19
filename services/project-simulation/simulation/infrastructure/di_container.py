@@ -122,7 +122,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         self._singletons["team_repository"] = get_team_repository()
         self._service_metadata["team_repository"] = {"type": "infrastructure", "tags": ["repository", "data", "team"]}
 
-        self._singletons["simulation_repository"] = get_simulation_repository()
+        # Use SQLite repository for persistence
+        from .repositories.sqlite_repositories import get_sqlite_simulation_repository
+        self._singletons["simulation_repository"] = get_sqlite_simulation_repository()
         self._service_metadata["simulation_repository"] = {"type": "infrastructure", "tags": ["repository", "data", "simulation"]}
 
     def _register_domain_services(self) -> None:

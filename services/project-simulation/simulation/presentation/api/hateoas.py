@@ -44,26 +44,26 @@ class Links(BaseModel):
         """Add a link to the collection."""
         self.links.append(link)
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert links to dictionary for JSON response."""
-        result = {"self": self.self.to_dict()}
+    def to_dict(self) -> List[Dict[str, Any]]:
+        """Convert links to list format for JSON response."""
+        result = [self.self.to_dict()]
         for link in self.links:
-            if link.rel not in result:
-                result[link.rel] = link.to_dict()
-            elif isinstance(result[link.rel], list):
-                result[link.rel].append(link.to_dict())
-            else:
-                result[link.rel] = [result[link.rel], link.to_dict()]
+            result.append(link.to_dict())
         return result
 
 
 class HateoasResponse(BaseModel):
     """Base class for HATEOAS-enabled API responses."""
+    success: bool = Field(default=True, description="Operation success status")
     data: Any = Field(..., description="The response data")
-    links: Links = Field(..., description="HATEOAS links")
+    links: Links = Field(..., description="HATEOAS links", alias="_links")
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Response timestamp")
     version: str = Field(default="1.0.0", description="API version")
     status: str = Field(default="success", description="Response status")
+
+    class Config:
+        """Pydantic configuration."""
+        allow_population_by_field_name = True
 
 
 class SimulationResource:
@@ -278,8 +278,8 @@ class HealthResource:
 
 def create_hateoas_response(data: Any, links: Links, **kwargs) -> Dict[str, Any]:
     """Create a HATEOAS-enabled response."""
-    response = HateoasResponse(data=data, links=links, **kwargs)
-    return response.dict()
+    response = HateoasResponse(data=data, _links=links, **kwargs)
+    return response.dict(by_alias=True)
 
 
 def add_cors_headers(response_data: Dict[str, Any]) -> Dict[str, Any]:

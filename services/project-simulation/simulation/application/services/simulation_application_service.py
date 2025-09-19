@@ -227,6 +227,36 @@ class SimulationApplicationService:
                 "message": "Failed to create simulation"
             }
 
+    async def link_document_to_simulation(self, simulation_id: str, document_id: str,
+                                       document_type: str, doc_store_reference: str) -> None:
+        """Link a document to a simulation in the repository."""
+        await self._simulation_repository.link_document_to_simulation(
+            simulation_id, document_id, document_type, doc_store_reference
+        )
+
+    async def link_prompt_to_simulation(self, simulation_id: str, prompt_id: str,
+                                      prompt_type: str, prompt_store_reference: str) -> None:
+        """Link a prompt to a simulation in the repository."""
+        await self._simulation_repository.link_prompt_to_simulation(
+            simulation_id, prompt_id, prompt_type, prompt_store_reference
+        )
+
+    async def get_simulation_documents(self, simulation_id: str) -> List[Dict[str, Any]]:
+        """Get all documents linked to a simulation."""
+        return await self._simulation_repository.get_simulation_documents(simulation_id)
+
+    async def get_simulation_prompts(self, simulation_id: str) -> List[Dict[str, Any]]:
+        """Get all prompts linked to a simulation."""
+        return await self._simulation_repository.get_simulation_prompts(simulation_id)
+
+    async def save_simulation_run_data(self, simulation_id: str, run_id: str, execution_data: Dict[str, Any]) -> None:
+        """Save simulation run data to the repository."""
+        await self._simulation_repository.save_simulation_run_data(simulation_id, run_id, execution_data)
+
+    async def get_simulation_run_data(self, simulation_id: str, run_id: str) -> Optional[Dict[str, Any]]:
+        """Get simulation run data from the repository."""
+        return await self._simulation_repository.get_simulation_run_data(simulation_id, run_id)
+
     async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
         """Execute a simulation."""
         correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
