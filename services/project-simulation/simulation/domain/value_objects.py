@@ -52,6 +52,7 @@ class SimulationStatus(Enum):
 
 class DocumentType(Enum):
     """Document type value object."""
+    # Existing types
     PROJECT_REQUIREMENTS = "project_requirements"
     ARCHITECTURE_DIAGRAM = "architecture_diagram"
     USER_STORY = "user_story"
@@ -62,6 +63,39 @@ class DocumentType(Enum):
     MAINTENANCE_DOCS = "maintenance_docs"
     CHANGE_LOG = "change_log"
     TEAM_RETROSPECTIVE = "team_retrospective"
+
+    # Collaboration and Communication
+    CONFLUENCE_PAGE = "confluence_page"
+    JIRA_TICKET = "jira_ticket"
+    GITHUB_PR = "github_pr"
+    GITHUB_ISSUE = "github_issue"
+    SLACK_MESSAGE = "slack_message"
+    EMAIL = "email"
+    MEETING_NOTES = "meeting_notes"
+
+    # Project Management
+    REQUIREMENTS_DOC = "requirements_doc"
+    DESIGN_DOC = "design_doc"
+    ARCHITECTURE_DOC = "architecture_doc"
+    TEST_PLAN = "test_plan"
+    ACCEPTANCE_CRITERIA = "acceptance_criteria"
+    CODE_REVIEW = "code_review"
+    RUNBOOK = "runbook"
+    INCIDENT_REPORT = "incident_report"
+    ROADMAP = "roadmap"
+    STATUS_REPORT = "status_report"
+    RETROSPECTIVE = "retrospective"
+    WIKI_PAGE = "wiki_page"
+
+    # Technical Documentation
+    API_DOCUMENTATION = "api_documentation"
+    DATABASE_SCHEMA = "database_schema"
+    CONFIGURATION_FILE = "configuration_file"
+    LOG_FILE = "log_file"
+    METRICS_REPORT = "metrics_report"
+    PERFORMANCE_REPORT = "performance_report"
+    SECURITY_AUDIT = "security_audit"
+    COMPLIANCE_REPORT = "compliance_report"
 
 
 class ServiceHealth(Enum):
