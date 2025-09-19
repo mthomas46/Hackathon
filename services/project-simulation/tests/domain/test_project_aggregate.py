@@ -8,12 +8,12 @@ import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
-from services.project_simulation.simulation.domain.entities.project import Project
-from services.project_simulation.simulation.domain.value_objects import (
+from simulation.domain.entities.project import Project
+from simulation.domain.value_objects import (
     ProjectType, ComplexityLevel, ProjectStatus, TeamMember, Phase, Milestone
 )
-from services.project_simulation.simulation.domain.events import (
-    ProjectCreated, ProjectUpdated, ProjectStatusChanged
+from simulation.domain.events import (
+    ProjectCreated, ProjectStatusChanged
 )
 
 
