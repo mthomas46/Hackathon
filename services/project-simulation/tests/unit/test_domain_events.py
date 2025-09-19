@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 import json
+from dataclasses import dataclass, field
 
 from simulation.domain.events import (
     DomainEvent, ProjectCreated, ProjectStatusChanged, ProjectPhaseCompleted,
@@ -22,38 +23,99 @@ from simulation.domain.value_objects import (
 )
 
 
+# Create a concrete test implementation of DomainEvent
+@dataclass(frozen=True)
+class TestDomainEvent(DomainEvent):
+    """Concrete implementation of DomainEvent for testing base functionality."""
+    test_id: str
+    test_data: str
+    event_version: int = 1
+    occurred_at: datetime = field(default_factory=datetime.now)
+
+    def get_aggregate_id(self) -> str:
+        return self.test_id
+
+
 class TestDomainEventBase:
     """Test cases for the base DomainEvent class."""
 
-    @pytest.mark.skip(reason="Cannot instantiate abstract DomainEvent class")
     def test_domain_event_creation(self):
         """Test basic domain event creation."""
-        pass
+        event = TestDomainEvent(
+            test_id="test-123",
+            test_data="test data"
+        )
 
-    @pytest.mark.skip(reason="Cannot instantiate abstract DomainEvent class")
+        assert event.test_id == "test-123"
+        assert event.test_data == "test data"
+        assert event.event_id is not None
+        assert event.event_type == "TestDomainEvent"
+        assert event.event_version == 1
+        assert isinstance(event.occurred_at, datetime)
+
     def test_domain_event_initialization(self):
         """Test domain event initialization with custom values."""
-        pass
+        custom_time = datetime.now() - timedelta(hours=1)
 
-    @pytest.mark.skip(reason="Cannot instantiate abstract DomainEvent class")
+        event = TestDomainEvent(
+            test_id="test-123",
+            test_data="test data",
+            occurred_at=custom_time,
+            event_version=2
+        )
+
+        assert event.occurred_at == custom_time
+        assert event.event_version == 2
+
     def test_domain_event_id_generation(self):
         """Test automatic event ID generation."""
-        pass
+        event = TestDomainEvent(
+            test_id="test-123",
+            test_data="test data"
+        )
 
-    @pytest.mark.skip(reason="Cannot instantiate abstract DomainEvent class")
+        assert event.event_id is not None
+        assert isinstance(event.event_id, str)
+        assert "TestDomainEvent" in event.event_id
+
     def test_domain_event_type_setting(self):
         """Test automatic event type setting."""
-        pass
+        event = TestDomainEvent(
+            test_id="test-123",
+            test_data="test data"
+        )
 
-    @pytest.mark.skip(reason="Cannot instantiate abstract DomainEvent class")
+        assert event.event_type == "TestDomainEvent"
+
     def test_domain_event_to_dict(self):
         """Test domain event serialization to dictionary."""
-        pass
+        event = TestDomainEvent(
+            test_id="test-123",
+            test_data="test data"
+        )
 
-    @pytest.mark.skip(reason="Cannot instantiate abstract DomainEvent class")
+        event_dict = event.to_dict()
+
+        assert isinstance(event_dict, dict)
+        assert "event_id" in event_dict
+        assert "event_type" in event_dict
+        assert "occurred_at" in event_dict
+        assert "event_version" in event_dict
+        assert event_dict["event_type"] == "TestDomainEvent"
+        assert event_dict["event_version"] == 1
+        assert event_dict["test_id"] == "test-123"
+        assert event_dict["test_data"] == "test data"
+
     def test_domain_event_immutability(self):
         """Test domain event immutability (frozen dataclass)."""
-        pass
+        event = TestDomainEvent(
+            test_id="test-123",
+            test_data="test data"
+        )
+
+        # Should be immutable after creation
+        with pytest.raises(AttributeError):
+            event.new_attribute = "test"
 
 
 class TestProjectEvents:
