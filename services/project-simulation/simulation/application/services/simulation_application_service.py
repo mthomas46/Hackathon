@@ -228,7 +228,7 @@ class SimulationApplicationService:
 
     async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
         """Execute a simulation."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
+        correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
 
         try:
             self._logger.info(
@@ -303,7 +303,7 @@ class SimulationApplicationService:
 
     async def get_simulation_status(self, simulation_id: str) -> Dict[str, Any]:
         """Get simulation status."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
+        correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
 
         try:
             self._logger.debug(
@@ -350,7 +350,7 @@ class SimulationApplicationService:
     async def list_simulations(self, status_filter: Optional[str] = None,
                               limit: int = 50, offset: int = 0) -> Dict[str, Any]:
         """List simulations with optional filtering."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
+        correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
 
         try:
             self._logger.debug(
@@ -406,7 +406,7 @@ class SimulationApplicationService:
 
     async def cancel_simulation(self, simulation_id: str) -> Dict[str, Any]:
         """Cancel a running simulation."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
+        correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
 
         try:
             self._logger.info(
@@ -469,7 +469,7 @@ class SimulationApplicationService:
 
     async def get_simulation_results(self, simulation_id: str) -> Dict[str, Any]:
         """Get detailed simulation results."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
+        correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
 
         try:
             self._logger.debug(
@@ -525,7 +525,7 @@ class SimulationApplicationService:
 
     async def get_health_status(self) -> Dict[str, Any]:
         """Get comprehensive health status."""
-        correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
+        correlation_id = getattr(self._logger, '_correlation_id', None) or 'unknown'
 
         try:
             from ...infrastructure.di_container import get_simulation_container
