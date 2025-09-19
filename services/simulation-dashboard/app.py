@@ -43,6 +43,7 @@ from pages.audit import render_audit_page
 from pages.ai_insights import render_ai_insights_page
 from pages.autonomous import render_autonomous_page
 from pages.advanced_analytics import render_advanced_analytics_page
+from pages.wizard import render_wizard_page
 
 # Configure page
 st.set_page_config(
@@ -113,6 +114,11 @@ PAGES = {
         "name": "🏠 Overview",
         "function": render_overview_page,
         "description": "Main dashboard with simulation status and key metrics"
+    },
+    "wizard": {
+        "name": "🧙‍♂️ Wizard",
+        "function": render_wizard_page,
+        "description": "Guided simulation setup wizard"
     },
     "create": {
         "name": "➕ Create",
