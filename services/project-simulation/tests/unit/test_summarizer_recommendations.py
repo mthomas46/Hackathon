@@ -683,3 +683,541 @@ class TestAnalysisServiceReportIntegration:
             # Should handle error gracefully and return None
             assert result is None
 
+    @pytest.mark.asyncio
+    async def test_place_documents_on_timeline(self):
+        """Test placing documents on simulation timeline."""
+        documents = [
+            {
+                "id": "doc1",
+                "title": "Early Document",
+                "type": "guide",
+                "dateCreated": "2024-01-01T10:00:00",
+                "dateUpdated": "2024-01-02T10:00:00"
+            },
+            {
+                "id": "doc2",
+                "title": "Later Document",
+                "type": "api",
+                "dateCreated": "2024-02-01T10:00:00"
+            }
+        ]
+
+        timeline = {
+            "phases": [
+                {
+                    "id": "phase1",
+                    "name": "Planning",
+                    "start_date": "2024-01-01T00:00:00",
+                    "end_date": "2024-01-15T00:00:00"
+                },
+                {
+                    "id": "phase2",
+                    "name": "Development",
+                    "start_date": "2024-01-15T00:00:00",
+                    "end_date": "2024-02-15T00:00:00"
+                }
+            ]
+        }
+
+        result = await self.summarizer.place_documents_on_timeline("sim_123", documents, timeline)
+
+        assert result["simulation_id"] == "sim_123"
+        assert result["timeline_phases"] == 2
+        assert result["total_documents"] == 2
+        assert result["placed_documents"] >= 1  # At least one document should be placed
+        assert "phase_breakdown" in result
+        assert "placement_report" in result
+
+    def test_parse_timestamp_iso_format(self):
+        """Test parsing ISO format timestamps."""
+        timestamp_str = "2024-01-01T10:00:00"
+        result = self.summarizer._parse_timestamp(timestamp_str)
+
+        assert result is not None
+        assert result.year == 2024
+        assert result.month == 1
+        assert result.day == 1
+
+    def test_parse_timestamp_with_zulu(self):
+        """Test parsing ISO format timestamps with Z suffix."""
+        timestamp_str = "2024-01-01T10:00:00Z"
+        result = self.summarizer._parse_timestamp(timestamp_str)
+
+        assert result is not None
+        assert result.year == 2024
+
+    def test_parse_timestamp_various_formats(self):
+        """Test parsing various timestamp formats."""
+        formats = [
+            "2024-01-01",
+            "01/01/2024",
+            "2024-01-01 10:00:00"
+        ]
+
+        for fmt in formats:
+            result = self.summarizer._parse_timestamp(fmt)
+            assert result is not None, f"Failed to parse format: {fmt}"
+
+    def test_find_relevant_timeline_phase_within_dates(self):
+        """Test finding relevant phase when document date is within phase dates."""
+        doc_date = datetime(2024, 1, 10)
+        timeline_phases = [
+            {
+                "id": "phase1",
+                "name": "Planning",
+                "start_date": "2024-01-01T00:00:00",
+                "end_date": "2024-01-15T00:00:00"
+            }
+        ]
+
+        result = self.summarizer._find_relevant_timeline_phase(doc_date, timeline_phases)
+
+        assert result is not None
+        assert result["id"] == "phase1"
+
+    def test_find_relevant_timeline_phase_closest_match(self):
+        """Test finding relevant phase when document date doesn't overlap any phase."""
+        doc_date = datetime(2024, 3, 1)  # March 1st
+        timeline_phases = [
+            {
+                "id": "phase1",
+                "name": "Planning",
+                "start_date": "2024-01-01T00:00:00",
+                "end_date": "2024-01-15T00:00:00"
+            },
+            {
+                "id": "phase2",
+                "name": "Development",
+                "start_date": "2024-02-01T00:00:00",  # February 1st - closest to March 1st
+                "end_date": "2024-02-15T00:00:00"
+            }
+        ]
+
+        result = self.summarizer._find_relevant_timeline_phase(doc_date, timeline_phases)
+
+        # Should find phase2 as it's closer to the document date
+        assert result is not None
+        assert result["id"] == "phase2"
+
+    def test_determine_placement_reason_within_phase(self):
+        """Test placement reason for documents within phase dates."""
+        doc_date = datetime(2024, 1, 10)
+        phase = {
+            "id": "phase1",
+            "name": "Planning",
+            "start_date": "2024-01-01T00:00:00",
+            "end_date": "2024-01-15T00:00:00"
+        }
+
+        reason = self.summarizer._determine_placement_reason(doc_date, phase)
+
+        assert reason == "within_phase_dates"
+
+    def test_determine_placement_reason_before_phase(self):
+        """Test placement reason for documents before phase start."""
+        doc_date = datetime(2023, 12, 25)  # Before phase starts
+        phase = {
+            "id": "phase1",
+            "name": "Planning",
+            "start_date": "2024-01-01T00:00:00",
+            "end_date": "2024-01-15T00:00:00"
+        }
+
+        reason = self.summarizer._determine_placement_reason(doc_date, phase)
+
+        assert "before_phase_start" in reason
+
+    def test_calculate_timeline_relevance_perfect_match(self):
+        """Test relevance calculation for perfect date match."""
+        doc_date = datetime(2024, 1, 10)
+        phase = {
+            "id": "phase1",
+            "name": "Planning",
+            "start_date": "2024-01-01T00:00:00",
+            "end_date": "2024-01-15T00:00:00"
+        }
+
+        relevance = self.summarizer._calculate_timeline_relevance(doc_date, phase)
+
+        assert relevance == 1.0
+
+    def test_calculate_timeline_relevance_outside_phase(self):
+        """Test relevance calculation for dates outside phase range."""
+        doc_date = datetime(2024, 3, 1)  # March 1st
+        phase = {
+            "id": "phase1",
+            "name": "Planning",
+            "start_date": "2024-01-01T00:00:00",  # January 1st
+            "end_date": "2024-01-15T00:00:00"    # January 15th
+        }
+
+        relevance = self.summarizer._calculate_timeline_relevance(doc_date, phase)
+
+        # Should be less than 1.0 but greater than 0
+        assert 0 < relevance < 1.0
+
+    def test_group_documents_by_phases(self):
+        """Test grouping documents by timeline phases."""
+        document_placements = [
+            {
+                "document_id": "doc1",
+                "timeline_phase": "phase1",
+                "relevance_score": 0.9
+            },
+            {
+                "document_id": "doc2",
+                "timeline_phase": "phase1",
+                "relevance_score": 0.8
+            },
+            {
+                "document_id": "doc3",
+                "timeline_phase": "phase2",
+                "relevance_score": 0.7
+            }
+        ]
+
+        timeline_phases = [
+            {
+                "id": "phase1",
+                "name": "Planning",
+                "start_date": "2024-01-01T00:00:00",
+                "end_date": "2024-01-15T00:00:00"
+            },
+            {
+                "id": "phase2",
+                "name": "Development",
+                "start_date": "2024-01-15T00:00:00",
+                "end_date": "2024-02-15T00:00:00"
+            }
+        ]
+
+        result = self.summarizer._group_documents_by_phases(document_placements, timeline_phases)
+
+        assert "phase1" in result
+        assert "phase2" in result
+        assert result["phase1"]["document_count"] == 2
+        assert result["phase2"]["document_count"] == 1
+        assert result["phase1"]["avg_relevance"] == 0.85  # (0.9 + 0.8) / 2
+        assert result["phase2"]["avg_relevance"] == 0.7
+
+    def test_generate_timeline_recommendations_good_coverage(self):
+        """Test timeline recommendations with good document coverage."""
+        phase_documents = {
+            "phase1": {"phase_name": "Planning", "document_count": 5, "avg_relevance": 0.8},
+            "phase2": {"phase_name": "Development", "document_count": 3, "avg_relevance": 0.7}
+        }
+        timeline_phases = [
+            {"id": "phase1", "name": "Planning"},
+            {"id": "phase2", "name": "Development"}
+        ]
+
+        recommendations = self.summarizer._generate_timeline_recommendations(phase_documents, timeline_phases)
+
+        # Should have positive recommendations
+        assert len(recommendations) > 0
+        assert any("good" in rec.lower() or "adequate" in rec.lower() for rec in recommendations)
+
+    def test_generate_timeline_recommendations_poor_coverage(self):
+        """Test timeline recommendations with poor document coverage."""
+        phase_documents = {
+            "phase1": {"phase_name": "Planning", "document_count": 0, "avg_relevance": 0.0},
+            "phase2": {"phase_name": "Development", "document_count": 0, "avg_relevance": 0.0},
+            "phase3": {"phase_name": "Testing", "document_count": 1, "avg_relevance": 0.3}
+        }
+        timeline_phases = [
+            {"id": "phase1", "name": "Planning"},
+            {"id": "phase2", "name": "Development"},
+            {"id": "phase3", "name": "Testing"}
+        ]
+
+        recommendations = self.summarizer._generate_timeline_recommendations(phase_documents, timeline_phases)
+
+        # Should have recommendations for improvement
+        assert len(recommendations) > 0
+        assert any("coverage is low" in rec.lower() or "consider adding" in rec.lower() for rec in recommendations)
+
+    @pytest.mark.asyncio
+    async def test_generate_comprehensive_summary_report(self):
+        """Test generating comprehensive summary report."""
+        documents = [
+            {
+                "id": "doc1",
+                "title": "API Documentation",
+                "type": "api",
+                "content": "This is API documentation content...",
+                "dateCreated": "2024-01-01T10:00:00"
+            },
+            {
+                "id": "doc2",
+                "title": "User Guide",
+                "type": "guide",
+                "content": "This is user guide content...",
+                "dateCreated": "2024-01-15T10:00:00"
+            }
+        ]
+
+        timeline = {
+            "phases": [
+                {
+                    "id": "phase1",
+                    "name": "Planning",
+                    "start_date": "2024-01-01T00:00:00",
+                    "end_date": "2024-01-15T00:00:00"
+                },
+                {
+                    "id": "phase2",
+                    "name": "Development",
+                    "start_date": "2024-01-15T00:00:00",
+                    "end_date": "2024-02-15T00:00:00"
+                }
+            ]
+        }
+
+        result = await self.summarizer.generate_comprehensive_summary_report("sim_123", documents, timeline)
+
+        assert result["simulation_id"] == "sim_123"
+        assert result["report_generated"] is True
+        assert "comprehensive_report_id" in result
+        assert "sections_included" in result
+        assert result["total_documents"] == 2
+
+    def test_generate_executive_summary(self):
+        """Test generating executive summary from report data."""
+        recommendations = {
+            "recommendations": [
+                {"priority": "high", "description": "Critical recommendation"},
+                {"priority": "medium", "description": "Medium recommendation"}
+            ]
+        }
+
+        analysis = {
+            "summary_statistics": {
+                "average_quality_score": 0.75,
+                "total_issues_found": 3
+            }
+        }
+
+        timeline = {
+            "placement_report": {
+                "timeline_coverage": 0.8,
+                "placed_documents": 8
+            }
+        }
+
+        documents = [{"id": "doc1"}, {"id": "doc2"}]
+
+        summary = self.summarizer._generate_executive_summary(recommendations, analysis, timeline, documents)
+
+        assert summary["total_documents"] == 2
+        assert summary["critical_issues"] == 1  # High priority recommendation
+        assert summary["improvement_opportunities"] == 2
+        assert len(summary["key_findings"]) > 0
+
+    def test_generate_overall_assessment_high_score(self):
+        """Test overall assessment generation with high scores."""
+        sections = {
+            "recommendations": {
+                "total_recommendations": 3,
+                "source": "summarizer-hub"
+            },
+            "analysis": {
+                "average_quality_score": 0.9,
+                "documents_with_issues": 0,
+                "source": "analysis-service"
+            },
+            "timeline": {
+                "timeline_coverage": 0.95,
+                "source": "simulation-service"
+            }
+        }
+
+        assessment = self.summarizer._generate_overall_assessment(sections)
+
+        assert assessment["overall_health_score"] > 0.8
+        assert assessment["risk_level"] == "low"
+        assert len(assessment["strengths"]) > 0
+        assert len(assessment["weaknesses"]) == 0
+
+    def test_generate_overall_assessment_low_score(self):
+        """Test overall assessment generation with low scores."""
+        sections = {
+            "recommendations": {
+                "total_recommendations": 15,
+                "source": "summarizer-hub"
+            },
+            "analysis": {
+                "average_quality_score": 0.4,
+                "documents_with_issues": 5,
+                "source": "analysis-service"
+            },
+            "timeline": {
+                "timeline_coverage": 0.3,
+                "source": "simulation-service"
+            }
+        }
+
+        assessment = self.summarizer._generate_overall_assessment(sections)
+
+        assert assessment["overall_health_score"] < 0.6
+        assert assessment["risk_level"] == "high"
+        assert len(assessment["weaknesses"]) > 0
+        assert len(assessment["strengths"]) >= 0
+
+    def test_generate_action_items_from_sections(self):
+        """Test generating action items from all report sections."""
+        sections = {
+            "recommendations": {
+                "details": {
+                    "recommendations": [
+                        {
+                            "priority": "high",
+                            "description": "Critical recommendation",
+                            "type": "consolidation",
+                            "estimated_effort": "medium"
+                        }
+                    ]
+                }
+            },
+            "analysis": {
+                "details": {
+                    "quality_analysis": [
+                        {
+                            "document_id": "doc1",
+                            "quality_score": 0.3,
+                            "issues_found": 2,
+                            "issues": ["Issue 1", "Issue 2"]
+                        }
+                    ]
+                }
+            },
+            "timeline": {
+                "recommendations": ["Consider adding documentation for phase X"]
+            }
+        }
+
+        action_items = self.summarizer._generate_action_items(sections)
+
+        assert len(action_items) > 0
+        # Should be sorted by priority (high first)
+        assert action_items[0]["priority"] == "high"
+
+        # Check that different types of action items are included
+        action_types = {item["type"] for item in action_items}
+        assert "recommendation" in action_types
+        assert "quality_fix" in action_types
+        assert "timeline_optimization" in action_types
+
+    def test_combine_reports_into_summary_all_sections(self):
+        """Test combining all report types into comprehensive summary."""
+        recommendations = {
+            "source": "summarizer-hub",
+            "recommendations": [{"description": "Test recommendation"}],
+            "consolidation_suggestions": [],
+            "duplicate_analysis": [],
+            "outdated_analysis": [],
+            "quality_improvements": []
+        }
+
+        analysis = {
+            "source": "analysis-service",
+            "quality_analysis": [{"document_id": "doc1", "quality_score": 0.8}],
+            "summary_statistics": {
+                "average_quality_score": 0.8,
+                "documents_with_issues": 1,
+                "total_issues_found": 2
+            },
+            "processing_metadata": {
+                "documents_processed": 1,
+                "processing_time": "completed"
+            }
+        }
+
+        timeline = {
+            "timeline_phases": 2,
+            "placed_documents": 1,
+            "placement_report": {
+                "timeline_coverage": 0.5,
+                "recommendations": ["Add more documentation"]
+            },
+            "phase_breakdown": {}
+        }
+
+        documents = [{"id": "doc1"}]
+
+        summary_report = self.summarizer._combine_reports_into_summary(
+            "sim_123", recommendations, analysis, timeline, documents
+        )
+
+        assert summary_report["simulation_id"] == "sim_123"
+        assert "executive_summary" in summary_report
+        assert "overall_assessment" in summary_report
+        assert "action_items" in summary_report
+        assert "sections" in summary_report
+
+        # Check all sections are included
+        sections = summary_report["sections"]
+        assert "recommendations" in sections
+        assert "analysis" in sections
+        assert "timeline" in sections
+
+    def test_generate_comprehensive_markdown_report(self):
+        """Test generating comprehensive markdown report."""
+        report_data = {
+            "report_id": "comprehensive_test_123",
+            "simulation_id": "sim_123",
+            "generated_at": "2024-01-01T10:00:00",
+            "executive_summary": {
+                "total_documents": 2,
+                "critical_issues": 1,
+                "improvement_opportunities": 3,
+                "key_findings": ["Test finding 1", "Test finding 2"]
+            },
+            "overall_assessment": {
+                "overall_health_score": 0.75,
+                "risk_level": "medium",
+                "strengths": ["Good coverage"],
+                "weaknesses": ["Low quality scores"]
+            },
+            "sections": {
+                "recommendations": {
+                    "total_recommendations": 3,
+                    "consolidation_opportunities": 1,
+                    "duplicate_issues": 0,
+                    "outdated_documents": 1,
+                    "quality_improvements": 1
+                },
+                "analysis": {
+                    "documents_analyzed": 2,
+                    "average_quality_score": 0.75,
+                    "documents_with_issues": 1,
+                    "total_issues_found": 3
+                },
+                "timeline": {
+                    "total_phases": 2,
+                    "documents_placed": 2,
+                    "timeline_coverage": 1.0
+                }
+            },
+            "action_items": [
+                {
+                    "priority": "high",
+                    "description": "Critical action",
+                    "category": "quality",
+                    "estimated_effort": "medium"
+                }
+            ]
+        }
+
+        markdown = self.summarizer._generate_comprehensive_markdown_report(report_data)
+
+        # Check markdown structure
+        assert "# 📊 Comprehensive Simulation Summary Report" in markdown
+        assert "**Simulation ID:** sim_123" in markdown
+        assert "## 📈 Executive Summary" in markdown
+        assert "## 🎯 Overall Assessment" in markdown
+        assert "## 💡 Recommendations" in markdown
+        assert "## 🔍 Quality Analysis" in markdown
+        assert "## 📅 Timeline Analysis" in markdown
+        assert "## ✅ Action Items" in markdown
+        assert "🚨 **High** - Critical action" in markdown  # Priority emoji and formatting
+

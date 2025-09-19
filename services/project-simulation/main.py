@@ -1423,6 +1423,156 @@ async def get_simulation_analysis_markdown(simulation_id: str, req: Request):
             logger.error("Failed to get markdown analysis report", error=str(e), simulation_id=simulation_id)
             raise HTTPException(status_code=500, detail="Failed to retrieve markdown analysis report")
 
+@app.post("/api/v1/simulations/{simulation_id}/timeline/place-documents")
+async def place_documents_on_simulation_timeline(simulation_id: str, request: Dict[str, Any], req: Request):
+    """Place documents on the simulation timeline based on timestamps."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            documents = request.get("documents", [])
+            timeline = request.get("timeline", {})
+
+            if not documents:
+                return create_error_response("Documents list cannot be empty")
+
+            if not timeline:
+                return create_error_response("Timeline data is required")
+
+            # Use the simulation analyzer to place documents on timeline
+            analyzer = application_service._simulation_analyzer if hasattr(application_service, '_simulation_analyzer') else None
+
+            if not analyzer:
+                # Fallback: create analyzer directly
+                from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+                analyzer = SimulationAnalyzer()
+
+            placement_result = await analyzer.place_documents_on_timeline(simulation_id, documents, timeline)
+
+            return create_success_response(
+                data=placement_result,
+                message=f"Placed {placement_result.get('placed_documents', 0)} documents on timeline"
+            )
+
+        except Exception as e:
+            logger.error("Failed to place documents on timeline", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to place documents on timeline")
+
+@app.get("/api/v1/simulations/{simulation_id}/timeline/placement-report")
+async def get_timeline_placement_report(simulation_id: str, req: Request):
+    """Get the timeline document placement report for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            # Get simulation to check for timeline placement data
+            simulation_repo = application_service._simulation_repository if hasattr(application_service, '_simulation_repository') else None
+
+            if not simulation_repo:
+                # Fallback: try to get from direct repository access
+                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                simulation_repo = SQLiteSimulationRepository()
+
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if not simulation:
+                raise HTTPException(status_code=404, detail="Simulation not found")
+
+            # For now, return a placeholder response
+            # In a full implementation, this would retrieve stored timeline placement data
+            return create_success_response(
+                data={
+                    "simulation_id": simulation_id,
+                    "timeline_placement_available": False,
+                    "message": "Timeline placement report generation available via POST /timeline/place-documents"
+                },
+                message="Timeline placement report endpoint ready"
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to get timeline placement report", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to retrieve timeline placement report")
+
+@app.post("/api/v1/simulations/{simulation_id}/reports/comprehensive-summary")
+async def generate_comprehensive_summary_report(simulation_id: str, request: Dict[str, Any], req: Request):
+    """Generate a comprehensive summary report combining all analysis types."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            documents = request.get("documents", [])
+            include_timeline = request.get("include_timeline", True)
+            timeline_data = request.get("timeline") if include_timeline else None
+
+            if not documents:
+                return create_error_response("Documents list cannot be empty")
+
+            # Use the simulation analyzer to generate comprehensive report
+            analyzer = application_service._simulation_analyzer if hasattr(application_service, '_simulation_analyzer') else None
+
+            if not analyzer:
+                # Fallback: create analyzer directly
+                from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+                analyzer = SimulationAnalyzer()
+
+            summary_result = await analyzer.generate_comprehensive_summary_report(
+                simulation_id, documents, timeline_data
+            )
+
+            if summary_result.get("report_generated"):
+                return create_success_response(
+                    data=summary_result,
+                    message=f"Comprehensive summary report generated with {len(summary_result.get('sections_included', []))} sections"
+                )
+            else:
+                return create_error_response(
+                    summary_result.get("error", "Failed to generate comprehensive report"),
+                    error_code="REPORT_GENERATION_FAILED"
+                )
+
+        except Exception as e:
+            logger.error("Failed to generate comprehensive summary report", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to generate comprehensive summary report")
+
+@app.get("/api/v1/simulations/{simulation_id}/reports/comprehensive-summary")
+async def get_comprehensive_summary_report(simulation_id: str, req: Request, format: str = "json"):
+    """Get the comprehensive summary report for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        try:
+            # Get simulation to find the report ID
+            simulation_repo = application_service._simulation_repository if hasattr(application_service, '_simulation_repository') else None
+
+            if not simulation_repo:
+                # Fallback: try to get from direct repository access
+                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                simulation_repo = SQLiteSimulationRepository()
+
+            simulation = await simulation_repo.find_by_id(simulation_id)
+            if not simulation:
+                raise HTTPException(status_code=404, detail="Simulation not found")
+
+            # For now, return a placeholder response
+            # In a full implementation, this would retrieve stored comprehensive summary report
+            return create_success_response(
+                data={
+                    "simulation_id": simulation_id,
+                    "comprehensive_report_available": False,
+                    "message": "Comprehensive summary report generation available via POST /reports/comprehensive-summary",
+                    "supported_formats": ["json", "markdown"],
+                    "requested_format": format
+                },
+                message="Comprehensive summary report endpoint ready"
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to get comprehensive summary report", error=str(e), simulation_id=simulation_id)
+            raise HTTPException(status_code=500, detail="Failed to retrieve comprehensive summary report")
+
 # ============================================================================
 # INTERPRETER SERVICE INTEGRATION ENDPOINTS
 # ============================================================================

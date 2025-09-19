@@ -124,6 +124,18 @@ DELETE /api/v1/simulations/{id}  # Cancel simulation
 GET    /api/v1/simulations/{id}/result # Get simulation results
 ```
 
+### Timeline Management
+```http
+POST   /api/v1/simulations/{id}/timeline/place-documents        # Place documents on timeline
+GET    /api/v1/simulations/{id}/timeline/placement-report       # Get timeline placement report
+```
+
+### Comprehensive Reports
+```http
+POST   /api/v1/simulations/{id}/reports/comprehensive-summary   # Generate comprehensive summary report
+GET    /api/v1/simulations/{id}/reports/comprehensive-summary   # Get comprehensive summary report
+```
+
 ### Real-Time Events
 ```http
 GET    /api/v1/simulations/{id}/events # Get simulation events
