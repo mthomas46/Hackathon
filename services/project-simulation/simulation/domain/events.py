@@ -15,10 +15,10 @@ from abc import ABC, abstractmethod
 @dataclass(frozen=True)
 class DomainEvent(ABC):
     """Base class for all domain events."""
+    event_version: int = 1
+    occurred_at: datetime = field(default_factory=datetime.now)
     event_id: str = field(init=False)
     event_type: str = field(init=False)
-    occurred_at: datetime = field(default_factory=datetime.now)
-    event_version: int = 1
 
     def __post_init__(self):
         # Set event_id and event_type based on class name
