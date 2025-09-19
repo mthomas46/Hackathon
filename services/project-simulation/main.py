@@ -1195,7 +1195,7 @@ async def get_simulation_recommendations_report(simulation_id: str, req: Request
                 raise HTTPException(status_code=404, detail="No recommendations report found for this simulation")
 
             # Get the report from doc-store
-            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5000")
+            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
@@ -1248,7 +1248,7 @@ async def get_simulation_recommendations_markdown(simulation_id: str, req: Reque
 
             # Get the markdown version from doc-store
             md_report_id = f"{simulation.recommendations_report_id}_md"
-            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5000")
+            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
@@ -1341,7 +1341,7 @@ async def get_simulation_analysis_report(simulation_id: str, req: Request):
                 raise HTTPException(status_code=404, detail="No analysis report found for this simulation")
 
             # Get the report from doc-store
-            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5000")
+            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
@@ -1394,7 +1394,7 @@ async def get_simulation_analysis_markdown(simulation_id: str, req: Request):
 
             # Get the markdown version from doc-store
             md_report_id = f"{simulation.analysis_report_id}_md"
-            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5000")
+            doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
