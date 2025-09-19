@@ -10,6 +10,7 @@ import psutil
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 import statistics
 from typing import Dict, Any, List
@@ -19,18 +20,24 @@ import tempfile
 class TestTestSuitePerformance:
     """Test cases for measuring test suite performance."""
 
-    def test_single_test_execution_time(self, benchmark):
+    def test_single_test_execution_time(self):
         """Benchmark single test execution time."""
         def simple_test():
             assert True
             return "test_result"
 
-        # Use pytest-benchmark if available
-        result = benchmark(simple_test)
-        assert result == "test_result"
+        # Measure execution time
+        start_time = time.time()
+        result = simple_test()
+        execution_time = time.time() - start_time
 
-        # Should complete in reasonable time
-        assert result is not None
+        # Verify performance requirements
+        assert result == "test_result"
+        assert execution_time < 0.01  # Should be very fast
+        assert execution_time >= 0  # Should be positive
+
+        # Store result for analysis (in real benchmark would use external tool)
+        print(".6f")
 
     def test_test_discovery_performance(self):
         """Test performance of test discovery."""
@@ -310,7 +317,6 @@ class TestParallelExecutionPerformance:
     def test_parallel_test_simulation(self):
         """Simulate parallel test execution performance."""
         import concurrent.futures
-        import threading
 
         def run_parallel_test(test_id):
             """Simulate a test running in parallel."""
