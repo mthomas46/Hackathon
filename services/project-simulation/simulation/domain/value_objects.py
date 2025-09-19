@@ -50,6 +50,61 @@ class SimulationStatus(Enum):
     CANCELLED = "cancelled"
 
 
+class ExpertiseLevel(Enum):
+    """Team member expertise levels."""
+    JUNIOR = "junior"
+    INTERMEDIATE = "intermediate"
+    SENIOR = "senior"
+    EXPERT = "expert"
+    LEAD = "lead"
+
+
+class Phase(Enum):
+    """Project phases."""
+    PLANNING = "planning"
+    DESIGN = "design"
+    DEVELOPMENT = "development"
+    TESTING = "testing"
+    DEPLOYMENT = "deployment"
+
+
+class Role(Enum):
+    """Team member role value object."""
+    DEVELOPER = "developer"
+    QA = "qa"
+    DESIGNER = "designer"
+    PRODUCT_MANAGER = "product_manager"
+    ARCHITECT = "architect"
+    DEVOPS = "devops"
+
+
+class TeamMemberRole(Enum):
+    """Team member role - alias for Role for backward compatibility."""
+    DEVELOPER = "developer"
+    QA = "qa"
+    DESIGNER = "designer"
+    PRODUCT_MANAGER = "product_manager"
+    ARCHITECT = "architect"
+    DEVOPS = "devops"
+
+
+@dataclass(frozen=True)
+class TeamMember:
+    """Team member value object."""
+    name: str
+    role: Role
+    expertise_level: ExpertiseLevel = ExpertiseLevel.INTERMEDIATE
+
+
+@dataclass(frozen=True)
+class SimulationConfig:
+    """Simulation configuration value object."""
+    project_type: ProjectType
+    complexity: ComplexityLevel
+    team_size: int = 5
+    duration_days: int = 30
+
+
 class DocumentType(Enum):
     """Document type value object."""
     # Existing types

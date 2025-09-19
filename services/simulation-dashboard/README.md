@@ -22,9 +22,12 @@ docker run -p 8501:8501 simulation-dashboard
 
 ### Option 3: Ecosystem Mode (Full Integration)
 ```bash
-# Run with the full ecosystem
+# Run simulation services only
+docker-compose -f docker-compose.simulation.yml up
+
+# Or run with the full LLM Documentation Ecosystem
 cd ../..  # Go to project root
-docker-compose -f docker-compose.ecosystem.yml up simulation-dashboard
+docker-compose --profile simulation up
 ```
 
 ## 📋 Features
@@ -210,9 +213,12 @@ docker run -p 8501:8501 simulation-dashboard
 
 ## Option 3: Docker Compose (Ecosystem Integration)
 ```bash
-# Run with the full ecosystem
+# Run simulation services only
 cd ../..  # Go to project root
-docker-compose -f docker-compose.ecosystem.yml up simulation-dashboard
+docker-compose -f docker-compose.simulation.yml up
+
+# Or run with the full LLM Documentation Ecosystem
+docker-compose --profile simulation up
 ```
 
 # 🧪 Testing

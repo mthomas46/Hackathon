@@ -1,0 +1,232 @@
+# =============================================================================
+# DOCKER COMPOSE - SIMULATION ECOSYSTEM
+# =============================================================================
+# Comprehensive simulation ecosystem setup including:
+# - Project Simulation Service (AI-powered simulation engine)
+# - Simulation Dashboard (Interactive web interface)
+# - Supporting infrastructure (Redis, etc.)
+#
+# Usage:
+#   docker-compose -f docker-compose.simulation.yml up         # Start all services
+#   docker-compose -f docker-compose.simulation.yml up dashboard  # Start only dashboard
+#   docker-compose -f docker-compose.simulation.yml up simulation # Start only simulation service
+#
+# Services will be available at:
+# - Simulation Dashboard: http://localhost:8501
+# - Project Simulation API: http://localhost:5075
+# - Redis: localhost:6379
+# =============================================================================
+
+services:
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+
+  # Redis - In-memory data store and cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================================
+  # SIMULATION SERVICES
+  # ============================================================================
+
+  # Project Simulation Service - AI-powered project simulation engine
+  project-simulation:
+    build:
+      context: .
+      dockerfile: services/project-simulation/Dockerfile
+    container_name: hackathon-project-simulation
+    volumes:
+      - ./services/project-simulation/sample_config.yaml:/app/sample_config.yaml:ro
+      - simulation_data:/app/data
+      - simulation_logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=project-simulation
+      - REDIS_HOST=redis
+      - ENVIRONMENT=development
+      - SERVICE_PORT=5075
+      # External service URLs (will use host.docker.internal for local development)
+      - LLM_GATEWAY_URL=http://host.docker.internal:5055
+      - MOCK_DATA_GENERATOR_URL=http://host.docker.internal:5065
+      - DOC_STORE_URL=http://host.docker.internal:5087
+      - ANALYSIS_SERVICE_URL=http://host.docker.internal:5080
+      - ORCHESTRATOR_URL=http://host.docker.internal:5099
+      - NOTIFICATION_SERVICE_URL=http://host.docker.internal:5130
+      - LOG_COLLECTOR_URL=http://host.docker.internal:5080
+      # DDD Architecture
+      - DDD_ARCHITECTURE=true
+      - DDD_CONFIG_FILE=config/ddd_config.yaml
+      # Development overrides
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+    ports:
+      - "5075:5075"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5075/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - simulation-network
+
+  # Simulation Dashboard - Interactive web dashboard for project simulations
+  simulation-dashboard:
+    build:
+      context: .
+      dockerfile: services/simulation-dashboard/Dockerfile
+    container_name: hackathon-simulation-dashboard
+    volumes:
+      - ./services/simulation-dashboard/config.example.env:/app/config.example.env:ro
+      - dashboard_cache:/app/cache
+      - dashboard_logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_NAME=simulation-dashboard
+      - DASHBOARD_ENVIRONMENT=development
+      - DASHBOARD_DEBUG=true
+      - DASHBOARD_PORT=8501
+      - DASHBOARD_HOST=0.0.0.0
+      # Simulation Service Connection
+      - DASHBOARD_SIMULATION_SERVICE_HOST=project-simulation
+      - DASHBOARD_SIMULATION_SERVICE_PORT=5075
+      # Optional Ecosystem Services (use host.docker.internal for external services)
+      - DASHBOARD_ANALYSIS_SERVICE_URL=http://host.docker.internal:5080
+      - DASHBOARD_HEALTH_SERVICE_URL=http://host.docker.internal:5130
+      # WebSocket Configuration
+      - DASHBOARD_WEBSOCKET_ENABLED=true
+      - DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS=5
+      - DASHBOARD_WEBSOCKET_HEARTBEAT_INTERVAL=30.0
+      # Performance Configuration
+      - DASHBOARD_PERFORMANCE_ENABLE_COMPRESSION=true
+      - DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS=10
+      # UI Configuration
+      - DASHBOARD_THEME=light
+      - DASHBOARD_REFRESH_INTERVAL=5000
+      - DASHBOARD_MAX_SIMULATIONS_DISPLAY=50
+    ports:
+      - "8501:8501"
+    depends_on:
+      project-simulation:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/health"]
+      interval: 45s
+      timeout: 20s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - simulation-network
+
+  # ============================================================================
+  # OPTIONAL: FULL ECOSYSTEM INTEGRATION
+  # ============================================================================
+  # Uncomment the services below if you want to run the full ecosystem
+  # Note: This requires the full LLM Documentation Ecosystem to be available
+
+  # LLM Gateway (uncomment to enable full AI integration)
+  # llm-gateway:
+  #   image: python:3.12-slim
+  #   container_name: hackathon-llm-gateway
+  #   environment:
+  #     - PYTHONPATH=/app
+  #     - SERVICE_NAME=llm-gateway
+  #     - REDIS_HOST=redis
+  #     - ENVIRONMENT=development
+  #     - SERVICE_PORT=5055
+  #   ports:
+  #     - "5055:5055"
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:5055/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - simulation-network
+  #   profiles:
+  #     - full
+
+  # Mock Data Generator (uncomment to enable AI content generation)
+  # mock-data-generator:
+  #   image: python:3.12-slim
+  #   container_name: hackathon-mock-data-generator
+  #   environment:
+  #     - PYTHONPATH=/app
+  #     - SERVICE_NAME=mock-data-generator
+  #     - REDIS_HOST=redis
+  #     - ENVIRONMENT=development
+  #     - SERVICE_PORT=5065
+  #   ports:
+  #     - "5065:5065"
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:5065/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - simulation-network
+  #   profiles:
+  #     - full
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+
+volumes:
+  # Redis persistence
+  redis_data:
+    driver: local
+
+  # Simulation service data
+  simulation_data:
+    driver: local
+
+  simulation_logs:
+    driver: local
+
+  # Dashboard service data
+  dashboard_cache:
+    driver: local
+
+  dashboard_logs:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+
+networks:
+  simulation-network:
+    name: hackathon-simulation-network
+    driver: bridge
+
+# ============================================================================
+# CONFIGURATIONS
+# ============================================================================
+
+configs:
+  simulation_config:
+    file: ./services/project-simulation/sample_config.yaml

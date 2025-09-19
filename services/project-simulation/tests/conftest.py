@@ -12,8 +12,12 @@ from typing import Dict, Any, List, Optional, AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
 # Add the services path to Python path
-services_path = Path(__file__).parent.parent.parent / "services"
+services_path = Path(__file__).parent.parent.parent.parent / "services"
 sys.path.insert(0, str(services_path))
+
+# Also add the project-simulation path directly
+project_sim_path = services_path / "project-simulation"
+sys.path.insert(0, str(project_sim_path))
 
 # Create mock shared modules for testing
 import types
