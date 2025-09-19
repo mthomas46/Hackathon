@@ -6,7 +6,6 @@ Following DDD application layer patterns with clean separation of concerns.
 from typing import List, Dict, Any, Optional
 import asyncio
 
-from simulation.domain.recommendations.recommendation_engine import RecommendationEngine
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
 
@@ -16,7 +15,6 @@ class DocumentRecommendationService:
 
     def __init__(self):
         """Initialize the document recommendation service."""
-        self.recommendation_engine = RecommendationEngine()
         self.summarizer_client = SummarizerHubClient()
 
     async def analyze_document_quality(self, document: Dict[str, Any]) -> float:
@@ -48,8 +46,8 @@ class DocumentRecommendationService:
         """Detect similar documents in a collection."""
         similar_pairs = []
 
-        # Use recommendation engine for duplicate detection
-        duplicate_recommendations = await self.recommendation_engine.generate_duplicate_recommendations(documents)
+        # Use summarizer client for duplicate detection
+        duplicate_recommendations = await self.summarizer_client.get_duplicate_recommendations(documents)
 
         for rec in duplicate_recommendations:
             if rec.affected_documents and len(rec.affected_documents) >= 2:
@@ -179,7 +177,7 @@ class DocumentRecommendationService:
             self._analyze_quality_scores(documents),
             self.detect_similar_documents(documents),
             self.identify_content_gaps(documents),
-            self.recommendation_engine.generate_comprehensive_recommendations(documents)
+            self.summarizer_client.get_comprehensive_recommendations(documents)
         ]
 
         results = await asyncio.gather(*tasks)

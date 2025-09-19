@@ -11,23 +11,22 @@ from unittest.mock import Mock, AsyncMock, patch
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 
-# Import the modules we'll be testing (these may not exist yet - that's why tests will fail)
-from simulation.domain.recommendations.recommendation_engine import RecommendationEngine
+# Import the modules we'll be testing
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 from simulation.application.recommendations.document_recommendation_service import DocumentRecommendationService
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
 
 
-class TestRecommendationEngine:
-    """Test the core recommendation engine functionality."""
+class TestSummarizerHubClient:
+    """Test the SummarizerHub client recommendation functionality."""
 
     def setup_method(self):
         """Setup test fixtures."""
-        self.engine = RecommendationEngine()
+        self.client = SummarizerHubClient()
 
     @pytest.mark.asyncio
-    async def test_generate_document_consolidation_recommendations(self):
-        """Test generation of document consolidation recommendations."""
+    async def test_get_consolidation_recommendations(self):
+        """Test getting consolidation recommendations from summarizer-hub."""
         # Arrange
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API documentation", "type": "api_docs"},
@@ -35,23 +34,61 @@ class TestRecommendationEngine:
             {"id": "doc3", "title": "API Examples", "content": "API usage examples", "type": "api_docs"}
         ]
 
-        # Act
-        recommendations = await self.engine.generate_consolidation_recommendations(documents)
+        mock_response = {
+            "success": True,
+            "recommendations": [
+                {
+                    "id": "rec1",
+                    "type": "consolidation",
+                    "description": "Consolidate 3 api_docs documents into a comprehensive guide",
+                    "affected_documents": ["doc1", "doc2", "doc3"],
+                    "confidence_score": 0.8,
+                    "priority": "high",
+                    "rationale": "Multiple api_docs documents with 75.0% average similarity",
+                    "expected_impact": "Reduce maintenance overhead by 45%",
+                    "effort_level": "medium",
+                    "tags": ["consolidation", "api_docs"],
+                    "metadata": {
+                        "document_type": "api_docs",
+                        "document_count": 3,
+                        "average_similarity": 0.75,
+                        "consolidation_strategy": "merge_into_comprehensive_guide"
+                    }
+                }
+            ],
+            "total_documents": 3,
+            "recommendations_count": 1,
+            "processing_time": 0.5,
+            "recommendation_types": ["consolidation"],
+            "confidence_threshold": 0.4
+        }
 
-        # Assert
-        assert isinstance(recommendations, list)
-        assert len(recommendations) > 0
+        # Act & Assert
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_instance = AsyncMock()
+            mock_client.return_value = mock_instance
+            mock_instance.__aenter__.return_value = mock_instance
+            mock_instance.post.return_value = AsyncMock()
+            mock_instance.post.return_value.status_code = 200
+            mock_instance.post.return_value.json.return_value = mock_response
 
-        for rec in recommendations:
+            recommendations = await self.client.get_consolidation_recommendations(documents)
+
+            # Assert
+            assert isinstance(recommendations, list)
+            assert len(recommendations) == 1
+
+            rec = recommendations[0]
             assert isinstance(rec, Recommendation)
             assert rec.type == RecommendationType.CONSOLIDATION
-            assert "consolidat" in rec.description.lower()  # Check for "consolidat" to match both "consolidate" and "consolidating"
-            assert rec.confidence_score > 0
-            assert rec.priority in ["high", "medium", "low"]
+            assert "consolidat" in rec.description.lower()
+            assert rec.confidence_score == 0.8
+            assert rec.priority == "high"
+            assert rec.affected_documents == ["doc1", "doc2", "doc3"]
 
     @pytest.mark.asyncio
-    async def test_generate_duplicate_detection_recommendations(self):
-        """Test generation of duplicate document detection recommendations."""
+    async def test_get_duplicate_recommendations(self):
+        """Test getting duplicate detection recommendations from summarizer-hub."""
         # Arrange
         documents = [
             {"id": "doc1", "title": "User Guide", "content": "How to use the system"},
@@ -59,22 +96,55 @@ class TestRecommendationEngine:
             {"id": "doc3", "title": "Getting Started", "content": "How to use the system"}
         ]
 
-        # Act
-        recommendations = await self.engine.generate_duplicate_recommendations(documents)
+        mock_response = {
+            "success": True,
+            "recommendations": [
+                {
+                    "id": "rec1",
+                    "type": "duplicate",
+                    "description": "Documents 'User Guide' and 'User Manual' appear to be duplicates",
+                    "affected_documents": ["doc1", "doc2"],
+                    "confidence_score": 0.92,
+                    "priority": "medium",
+                    "rationale": "Content similarity score: 0.92",
+                    "expected_impact": "Eliminate redundancy and reduce maintenance burden",
+                    "effort_level": "low",
+                    "tags": ["duplicate", "redundancy"],
+                    "metadata": {"similarity_score": 0.92}
+                }
+            ],
+            "total_documents": 3,
+            "recommendations_count": 1,
+            "processing_time": 0.3,
+            "recommendation_types": ["duplicate"],
+            "confidence_threshold": 0.4
+        }
 
-        # Assert
-        assert isinstance(recommendations, list)
+        # Act & Assert
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_instance = AsyncMock()
+            mock_client.return_value = mock_instance
+            mock_instance.__aenter__.return_value = mock_instance
+            mock_instance.post.return_value = AsyncMock()
+            mock_instance.post.return_value.status_code = 200
+            mock_instance.post.return_value.json.return_value = mock_response
 
-        for rec in recommendations:
+            recommendations = await self.client.get_duplicate_recommendations(documents)
+
+            # Assert
+            assert isinstance(recommendations, list)
+            assert len(recommendations) == 1
+
+            rec = recommendations[0]
             assert isinstance(rec, Recommendation)
             assert rec.type == RecommendationType.DUPLICATE
             assert "duplicate" in rec.description.lower()
-            assert rec.affected_documents is not None
-            assert len(rec.affected_documents) >= 2
+            assert len(rec.affected_documents) == 2
+            assert rec.confidence_score == 0.92
 
     @pytest.mark.asyncio
-    async def test_generate_outdated_document_recommendations(self):
-        """Test generation of outdated document recommendations."""
+    async def test_get_outdated_recommendations(self):
+        """Test getting outdated document recommendations from summarizer-hub."""
         # Arrange
         current_time = datetime.now()
         old_time = current_time - timedelta(days=365*2)  # 2 years old
@@ -96,21 +166,55 @@ class TestRecommendationEngine:
             }
         ]
 
-        # Act
-        recommendations = await self.engine.generate_outdated_recommendations(documents)
+        mock_response = {
+            "success": True,
+            "recommendations": [
+                {
+                    "id": "rec1",
+                    "type": "outdated",
+                    "description": "Document 'Old API Guide' is 730 days old and may be outdated",
+                    "affected_documents": ["doc1"],
+                    "confidence_score": 0.85,
+                    "priority": "high",
+                    "rationale": "Document last updated 730 days ago",
+                    "expected_impact": "Ensure users have access to current information",
+                    "effort_level": "medium",
+                    "tags": ["outdated", "maintenance"],
+                    "age_days": 730,
+                    "metadata": {"last_updated": old_time.isoformat()}
+                }
+            ],
+            "total_documents": 2,
+            "recommendations_count": 1,
+            "processing_time": 0.2,
+            "recommendation_types": ["outdated"],
+            "confidence_threshold": 0.4
+        }
 
-        # Assert
-        assert isinstance(recommendations, list)
+        # Act & Assert
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_instance = AsyncMock()
+            mock_client.return_value = mock_instance
+            mock_instance.__aenter__.return_value = mock_instance
+            mock_instance.post.return_value = AsyncMock()
+            mock_instance.post.return_value.status_code = 200
+            mock_instance.post.return_value.json.return_value = mock_response
 
-        for rec in recommendations:
+            recommendations = await self.client.get_outdated_recommendations(documents)
+
+            # Assert
+            assert isinstance(recommendations, list)
+            assert len(recommendations) == 1
+
+            rec = recommendations[0]
             assert isinstance(rec, Recommendation)
             assert rec.type == RecommendationType.OUTDATED
-            assert "outdated" in rec.description.lower() or "obsolete" in rec.description.lower()
-            assert rec.age_days > 365  # Should be more than a year old
+            assert "outdated" in rec.description.lower()
+            assert rec.age_days == 730
 
     @pytest.mark.asyncio
-    async def test_generate_quality_improvement_recommendations(self):
-        """Test generation of document quality improvement recommendations."""
+    async def test_get_quality_recommendations(self):
+        """Test getting quality improvement recommendations from summarizer-hub."""
         # Arrange
         documents = [
             {
@@ -127,20 +231,53 @@ class TestRecommendationEngine:
             }
         ]
 
-        # Act
-        recommendations = await self.engine.generate_quality_recommendations(documents)
+        mock_response = {
+            "success": True,
+            "recommendations": [
+                {
+                    "id": "rec1",
+                    "type": "quality",
+                    "description": "Improve quality of 'Poor Documentation' - content too short",
+                    "affected_documents": ["doc1"],
+                    "confidence_score": 0.75,
+                    "priority": "medium",
+                    "rationale": "Quality analysis identified 2 potential improvements",
+                    "expected_impact": "Enhanced user understanding and satisfaction",
+                    "effort_level": "low",
+                    "tags": ["quality", "improvement"],
+                    "metadata": {"issues": ["content too short"], "word_count": 10}
+                }
+            ],
+            "total_documents": 2,
+            "recommendations_count": 1,
+            "processing_time": 0.15,
+            "recommendation_types": ["quality"],
+            "confidence_threshold": 0.4
+        }
 
-        # Assert
-        assert isinstance(recommendations, list)
+        # Act & Assert
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_instance = AsyncMock()
+            mock_client.return_value = mock_instance
+            mock_instance.__aenter__.return_value = mock_instance
+            mock_instance.post.return_value = AsyncMock()
+            mock_instance.post.return_value.status_code = 200
+            mock_instance.post.return_value.json.return_value = mock_response
 
-        for rec in recommendations:
+            recommendations = await self.client.get_quality_recommendations(documents)
+
+            # Assert
+            assert isinstance(recommendations, list)
+            assert len(recommendations) == 1
+
+            rec = recommendations[0]
             assert isinstance(rec, Recommendation)
             assert rec.type == RecommendationType.QUALITY
-            assert any(word in rec.description.lower() for word in ["clarity", "completeness", "quality", "improve"])
+            assert "improve" in rec.description.lower()
 
     @pytest.mark.asyncio
-    async def test_generate_comprehensive_recommendations(self):
-        """Test generation of comprehensive recommendations across all types."""
+    async def test_get_comprehensive_recommendations(self):
+        """Test getting comprehensive recommendations across all types from summarizer-hub."""
         # Arrange
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API info", "type": "api_docs"},
@@ -148,16 +285,72 @@ class TestRecommendationEngine:
             {"id": "doc3", "title": "Old Guide", "content": "Old content", "dateCreated": "2020-01-01"}
         ]
 
-        # Act
-        recommendations = await self.engine.generate_comprehensive_recommendations(documents)
+        mock_response = {
+            "success": True,
+            "recommendations": [
+                {
+                    "id": "rec1",
+                    "type": "consolidation",
+                    "description": "Consolidate 2 api_docs documents into a comprehensive guide",
+                    "affected_documents": ["doc1", "doc2"],
+                    "confidence_score": 0.7,
+                    "priority": "medium",
+                    "rationale": "Multiple api_docs documents with 85.0% average similarity",
+                    "expected_impact": "Reduce maintenance overhead by 30%",
+                    "effort_level": "medium",
+                    "tags": ["consolidation", "api_docs"],
+                    "metadata": {
+                        "document_type": "api_docs",
+                        "document_count": 2,
+                        "average_similarity": 0.85,
+                        "consolidation_strategy": "merge_into_comprehensive_guide"
+                    }
+                },
+                {
+                    "id": "rec2",
+                    "type": "outdated",
+                    "description": "Document 'Old Guide' is 1461 days old and may be outdated",
+                    "affected_documents": ["doc3"],
+                    "confidence_score": 0.9,
+                    "priority": "high",
+                    "rationale": "Document last updated 1461 days ago",
+                    "expected_impact": "Ensure users have access to current information",
+                    "effort_level": "medium",
+                    "tags": ["outdated", "maintenance"],
+                    "age_days": 1461,
+                    "metadata": {"last_updated": "2020-01-01"}
+                }
+            ],
+            "total_documents": 3,
+            "recommendations_count": 2,
+            "processing_time": 0.5,
+            "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
+            "confidence_threshold": 0.4
+        }
 
-        # Assert
-        assert isinstance(recommendations, list)
-        assert len(recommendations) > 0
+        # Act & Assert
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_instance = AsyncMock()
+            mock_client.return_value = mock_instance
+            mock_instance.__aenter__.return_value = mock_instance
+            mock_instance.post.return_value = AsyncMock()
+            mock_instance.post.return_value.status_code = 200
+            mock_instance.post.return_value.json.return_value = mock_response
 
-        # Should include multiple types of recommendations
-        recommendation_types = set(rec.type for rec in recommendations)
-        assert len(recommendation_types) > 1
+            recommendations = await self.client.get_comprehensive_recommendations(documents)
+
+            # Assert
+            assert isinstance(recommendations, list)
+            assert len(recommendations) == 2
+
+            # Should include multiple types of recommendations
+            recommendation_types = set(rec.type for rec in recommendations)
+            assert len(recommendation_types) > 1
+
+            # Check that we have both consolidation and outdated recommendations
+            types_found = [rec.type for rec in recommendations]
+            assert RecommendationType.CONSOLIDATION in types_found
+            assert RecommendationType.OUTDATED in types_found
 
         # All recommendations should have required fields
         for rec in recommendations:

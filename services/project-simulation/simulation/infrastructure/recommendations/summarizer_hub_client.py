@@ -8,10 +8,11 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 
 
 class SummarizerHubClient:
-    """Client for communicating with the Summarizer-Hub service."""
+    """Client for communicating with the Summarizer-Hub service for recommendations."""
 
     def __init__(self, http_client: Optional[httpx.AsyncClient] = None):
         """Initialize the Summarizer-Hub client."""
@@ -208,3 +209,115 @@ class SummarizerHubClient:
             })
 
         return recommendations
+
+    async def get_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: Optional[List[str]] = None, confidence_threshold: float = 0.4) -> List[Recommendation]:
+        """Get recommendations for documents from Summarizer Hub."""
+        try:
+            async with httpx.AsyncClient(timeout=self.http_client.timeout) as client:
+                response = await client.post(
+                    f"{self.service_url}/api/v1/recommendations",
+                    json={
+                        "documents": documents,
+                        "recommendation_types": recommendation_types,
+                        "confidence_threshold": confidence_threshold
+                    }
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("success"):
+                        return self._parse_recommendations(result["recommendations"])
+                    else:
+                        print(f"Summarizer Hub error: {result.get('error', 'Unknown error')}")
+                        return []
+                else:
+                    print(f"Summarizer Hub request failed with status {response.status_code}")
+                    return []
+
+        except Exception as e:
+            print(f"Error communicating with Summarizer Hub: {e}")
+            return []
+
+    async def get_consolidation_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
+        """Get consolidation recommendations specifically."""
+        return await self.get_recommendations(documents, ["consolidation"])
+
+    async def get_duplicate_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
+        """Get duplicate detection recommendations specifically."""
+        return await self.get_recommendations(documents, ["duplicate"])
+
+    async def get_outdated_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
+        """Get outdated document recommendations specifically."""
+        return await self.get_recommendations(documents, ["outdated"])
+
+    async def get_quality_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
+        """Get quality improvement recommendations specifically."""
+        return await self.get_recommendations(documents, ["quality"])
+
+    async def get_comprehensive_recommendations(self, documents: List[Dict[str, Any]]) -> List[Recommendation]:
+        """Get comprehensive recommendations across all types."""
+        return await self.get_recommendations(documents, ["consolidation", "duplicate", "outdated", "quality"])
+
+    def _parse_recommendations(self, raw_recommendations: List[Dict[str, Any]]) -> List[Recommendation]:
+        """Parse raw recommendations into Recommendation objects."""
+        recommendations = []
+
+        for raw_rec in raw_recommendations:
+            try:
+                # Map string types to RecommendationType enum
+                rec_type_str = raw_rec.get("type", "")
+                if rec_type_str == "consolidation":
+                    rec_type = RecommendationType.CONSOLIDATION
+                elif rec_type_str == "duplicate":
+                    rec_type = RecommendationType.DUPLICATE
+                elif rec_type_str == "outdated":
+                    rec_type = RecommendationType.OUTDATED
+                elif rec_type_str == "quality":
+                    rec_type = RecommendationType.QUALITY
+                else:
+                    continue  # Skip unknown types
+
+                recommendation = Recommendation(
+                    type=rec_type,
+                    description=raw_rec.get("description", ""),
+                    affected_documents=raw_rec.get("affected_documents", []),
+                    confidence_score=raw_rec.get("confidence_score", 0.0),
+                    priority=raw_rec.get("priority", "medium"),
+                    rationale=raw_rec.get("rationale", ""),
+                    expected_impact=raw_rec.get("expected_impact", ""),
+                    effort_level=raw_rec.get("effort_level", "medium"),
+                    tags=raw_rec.get("tags", []),
+                    metadata=raw_rec.get("metadata", {}),
+                    age_days=raw_rec.get("age_days")
+                )
+                recommendations.append(recommendation)
+
+            except Exception as e:
+                print(f"Error parsing recommendation: {e}")
+                continue
+
+        return recommendations
+
+    async def get_health_status(self) -> Dict[str, Any]:
+        """Check the health status of the Summarizer Hub service."""
+        try:
+            async with httpx.AsyncClient(timeout=self.http_client.timeout) as client:
+                response = await client.get(f"{self.service_url}/health")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
+        except Exception as e:
+            return {"status": "unreachable", "error": str(e)}
+
+    async def get_capabilities(self) -> Dict[str, Any]:
+        """Get the capabilities of the Summarizer Hub service."""
+        try:
+            async with httpx.AsyncClient(timeout=self.http_client.timeout) as client:
+                response = await client.get(f"{self.service_url}/capabilities")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return {"error": f"HTTP {response.status_code}"}
+        except Exception as e:
+            return {"error": str(e)}

@@ -10,6 +10,7 @@ import time
 import os
 import httpx
 import uuid
+from datetime import datetime, timedelta
 
 # Service configuration
 SERVICE_NAME = "summarizer-hub"
@@ -77,6 +78,41 @@ class PeerReviewResponse(BaseModel):
     suggestions: List[Dict[str, Any]]
     overall_score: float
     metadata: Dict[str, Any] = {}
+
+class RecommendationType(str):
+    """Enumeration of recommendation types."""
+    CONSOLIDATION = "consolidation"
+    DUPLICATE = "duplicate"
+    OUTDATED = "outdated"
+    QUALITY = "quality"
+
+class RecommendationRequest(BaseModel):
+    """Request model for document recommendations."""
+    documents: List[Dict[str, Any]]
+    recommendation_types: Optional[List[str]] = None  # consolidation, duplicate, outdated, quality
+    confidence_threshold: float = 0.4
+
+    @field_validator('documents')
+    @classmethod
+    def validate_documents(cls, v):
+        if not isinstance(v, list) or len(v) == 0:
+            raise ValueError('At least one document is required')
+        for doc in v:
+            if not isinstance(doc, dict):
+                raise ValueError('Each document must be a dictionary')
+            if 'id' not in doc or 'content' not in doc:
+                raise ValueError('Each document must have id and content fields')
+        return v
+
+class RecommendationResponse(BaseModel):
+    """Response model for document recommendations."""
+    success: bool
+    recommendations: List[Dict[str, Any]] = []
+    total_documents: int
+    recommendations_count: int
+    processing_time: float
+    metadata: Dict[str, Any] = {}
+    error: str = ""
 
 class SimpleSummarizer:
     """Core summarization logic."""
@@ -268,16 +304,278 @@ class SimpleSummarizer:
             {"type": "clarity", "suggestion": "Consider adding more examples to improve clarity", "priority": "medium"},
             {"type": "structure", "suggestion": "Content structure is adequate", "priority": "low"}
         ]
-        
+
         # Simple scoring based on content length and structure
         word_count = len(content.split())
         score = min(8.0, 5.0 + (word_count / 200))  # Basic scoring
-        
+
         return {
             "suggestions": suggestions,
             "overall_score": score,
             "review_text": "Automated review completed with basic analysis"
         }
+
+    async def generate_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: List[str] = None, confidence_threshold: float = 0.4) -> Dict[str, Any]:
+        """Generate comprehensive document recommendations."""
+        start_time = time.time()
+
+        # Default recommendation types if none specified
+        if not recommendation_types:
+            recommendation_types = ["consolidation", "duplicate", "outdated", "quality"]
+
+        all_recommendations = []
+
+        # Generate recommendations for each type
+        if "consolidation" in recommendation_types:
+            consolidation_recs = await self._generate_consolidation_recommendations(documents, confidence_threshold)
+            all_recommendations.extend(consolidation_recs)
+
+        if "duplicate" in recommendation_types:
+            duplicate_recs = await self._generate_duplicate_recommendations(documents, confidence_threshold)
+            all_recommendations.extend(duplicate_recs)
+
+        if "outdated" in recommendation_types:
+            outdated_recs = await self._generate_outdated_recommendations(documents, confidence_threshold)
+            all_recommendations.extend(outdated_recs)
+
+        if "quality" in recommendation_types:
+            quality_recs = await self._generate_quality_recommendations(documents, confidence_threshold)
+            all_recommendations.extend(quality_recs)
+
+        # Sort by priority and confidence
+        all_recommendations.sort(key=lambda r: (
+            ["critical", "high", "medium", "low"].index(r.get("priority", "low")),
+            -r.get("confidence_score", 0)
+        ))
+
+        processing_time = time.time() - start_time
+
+        return {
+            "recommendations": all_recommendations,
+            "total_documents": len(documents),
+            "recommendations_count": len(all_recommendations),
+            "processing_time": processing_time,
+            "recommendation_types": recommendation_types,
+            "confidence_threshold": confidence_threshold
+        }
+
+    async def _generate_consolidation_recommendations(self, documents: List[Dict[str, Any]], confidence_threshold: float) -> List[Dict[str, Any]]:
+        """Generate consolidation recommendations."""
+        recommendations = []
+
+        if len(documents) < 2:
+            return recommendations
+
+        # Group documents by type
+        type_groups = {}
+        for doc in documents:
+            doc_type = doc.get("type", "unknown")
+            if doc_type not in type_groups:
+                type_groups[doc_type] = []
+            type_groups[doc_type].append(doc)
+
+        for doc_type, docs_in_type in type_groups.items():
+            if len(docs_in_type) >= 3:
+                # Calculate similarity within the group
+                avg_similarity = self._calculate_group_similarity(docs_in_type)
+                type_confidence = self._calculate_type_consolidation_confidence(docs_in_type, avg_similarity)
+
+                if type_confidence >= confidence_threshold:
+                    recommendations.append({
+                        "id": str(uuid.uuid4()),
+                        "type": "consolidation",
+                        "description": f"Consolidate {len(docs_in_type)} {doc_type} documents into a comprehensive guide",
+                        "affected_documents": [doc["id"] for doc in docs_in_type],
+                        "confidence_score": type_confidence,
+                        "priority": "high" if type_confidence > 0.8 or len(docs_in_type) > 5 else "medium",
+                        "rationale": f"{len(docs_in_type)} {doc_type} documents with {avg_similarity:.1%} average similarity",
+                        "expected_impact": f"Reduce maintenance overhead by {max(20, len(docs_in_type) * 15)}%",
+                        "effort_level": "medium" if len(docs_in_type) <= 5 else "high",
+                        "tags": ["consolidation", doc_type],
+                        "metadata": {
+                            "document_type": doc_type,
+                            "document_count": len(docs_in_type),
+                            "average_similarity": avg_similarity,
+                            "consolidation_strategy": "merge_into_comprehensive_guide"
+                        }
+                    })
+
+        return recommendations
+
+    async def _generate_duplicate_recommendations(self, documents: List[Dict[str, Any]], confidence_threshold: float) -> List[Dict[str, Any]]:
+        """Generate duplicate detection recommendations."""
+        recommendations = []
+
+        if len(documents) < 2:
+            return recommendations
+
+        processed_pairs = set()
+
+        for i, doc1 in enumerate(documents):
+            for j, doc2 in enumerate(documents):
+                if i >= j:
+                    continue
+
+                pair_key = f"{min(doc1['id'], doc2['id'])}_{max(doc1['id'], doc2['id'])}"
+                if pair_key in processed_pairs:
+                    continue
+
+                processed_pairs.add(pair_key)
+                similarity_score = self._calculate_simple_similarity(doc1, doc2)
+
+                if similarity_score >= 0.6 and similarity_score >= confidence_threshold:
+                    recommendations.append({
+                        "id": str(uuid.uuid4()),
+                        "type": "duplicate",
+                        "description": f"Documents '{doc1.get('title', 'Unknown')}' and '{doc2.get('title', 'Unknown')}' appear to be duplicates",
+                        "affected_documents": [doc1["id"], doc2["id"]],
+                        "confidence_score": min(similarity_score, 0.95),
+                        "priority": "medium",
+                        "rationale": f"Content similarity score: {similarity_score:.2f}",
+                        "expected_impact": "Eliminate redundancy and reduce maintenance burden",
+                        "effort_level": "low",
+                        "tags": ["duplicate", "redundancy"],
+                        "metadata": {"similarity_score": similarity_score}
+                    })
+
+        return recommendations
+
+    async def _generate_outdated_recommendations(self, documents: List[Dict[str, Any]], confidence_threshold: float) -> List[Dict[str, Any]]:
+        """Generate outdated document recommendations."""
+        recommendations = []
+        current_time = datetime.now()
+
+        for doc in documents:
+            created_date = self._parse_date(doc.get("dateCreated"))
+            updated_date = self._parse_date(doc.get("dateUpdated"))
+
+            if not created_date and not updated_date:
+                continue
+
+            reference_date = updated_date or created_date
+            age_days = (current_time - reference_date).days
+
+            if age_days > 365:
+                confidence = min(age_days / (365 * 2), 0.9)  # Reduced denominator for higher confidence
+                if confidence >= confidence_threshold:
+                    priority = "high" if age_days > (365 * 2) else "medium"
+
+                    recommendations.append({
+                        "id": str(uuid.uuid4()),
+                        "type": "outdated",
+                        "description": f"Document '{doc.get('title', 'Unknown')}' is {age_days} days old and may be outdated",
+                        "affected_documents": [doc["id"]],
+                        "confidence_score": confidence,
+                        "priority": priority,
+                        "rationale": f"Document last updated {age_days} days ago",
+                        "expected_impact": "Ensure users have access to current information",
+                        "effort_level": "medium",
+                        "tags": ["outdated", "maintenance"],
+                        "age_days": age_days,
+                        "metadata": {"last_updated": reference_date.isoformat() if reference_date else None}
+                    })
+
+        return recommendations
+
+    async def _generate_quality_recommendations(self, documents: List[Dict[str, Any]], confidence_threshold: float) -> List[Dict[str, Any]]:
+        """Generate quality improvement recommendations."""
+        recommendations = []
+
+        for doc in documents:
+            content = doc.get("content", "")
+            word_count = len(content.split()) if content else 0
+
+            issues = []
+
+            if word_count < 50:
+                issues.append("content too short")
+            elif word_count > 2000:
+                issues.append("content may be too verbose")
+
+            if not any(word in content.lower() for word in ["example", "usage", "guide"]):
+                issues.append("missing practical examples")
+
+            if "?" not in content and not any(word in content.lower() for word in ["how to", "guide", "tutorial"]):
+                issues.append("may lack instructional content")
+
+            if issues:
+                confidence = min(len(issues) / 5.0, 0.8)
+                if confidence >= confidence_threshold:
+                    recommendations.append({
+                        "id": str(uuid.uuid4()),
+                        "type": "quality",
+                        "description": f"Improve quality of '{doc.get('title', 'Unknown')}' - {', '.join(issues)}",
+                        "affected_documents": [doc["id"]],
+                        "confidence_score": confidence,
+                        "priority": "medium",
+                        "rationale": f"Quality analysis identified {len(issues)} potential improvements",
+                        "expected_impact": "Enhanced user understanding and satisfaction",
+                        "effort_level": "low" if len(issues) <= 2 else "medium",
+                        "tags": ["quality", "improvement"],
+                        "metadata": {"issues": issues, "word_count": word_count}
+                    })
+
+        return recommendations
+
+    def _calculate_group_similarity(self, documents: List[Dict[str, Any]]) -> float:
+        """Calculate average similarity within a group of documents."""
+        if len(documents) < 2:
+            return 0.0
+
+        total_similarity = 0.0
+        pair_count = 0
+
+        for i, doc1 in enumerate(documents):
+            for j, doc2 in enumerate(documents):
+                if i < j:
+                    similarity = self._calculate_simple_similarity(doc1, doc2)
+                    total_similarity += similarity
+                    pair_count += 1
+
+        return total_similarity / pair_count if pair_count > 0 else 0.0
+
+    def _calculate_type_consolidation_confidence(self, documents: List[Dict[str, Any]], avg_similarity: float) -> float:
+        """Calculate confidence for type-based consolidation."""
+        doc_count = len(documents)
+        count_factor = min(doc_count / 5.0, 0.6)
+        similarity_factor = avg_similarity * 0.4
+        return min(count_factor + similarity_factor, 0.95)
+
+    def _calculate_simple_similarity(self, doc1: Dict[str, Any], doc2: Dict[str, Any]) -> float:
+        """Calculate simple similarity score between two documents."""
+        title1 = doc1.get("title", "").lower()
+        title2 = doc2.get("title", "").lower()
+        content1 = doc1.get("content", "").lower()
+        content2 = doc2.get("content", "").lower()
+
+        title_words1 = set(title1.split())
+        title_words2 = set(title2.split())
+        title_similarity = len(title_words1 & title_words2) / len(title_words1 | title_words2) if (title_words1 | title_words2) else 0
+
+        content_words1 = set(content1.split())
+        content_words2 = set(content2.split())
+        content_similarity = len(content_words1 & content_words2) / len(content_words1 | content_words2) if (content_words1 | content_words2) else 0
+
+        return (title_similarity * 0.6) + (content_similarity * 0.4)
+
+    def _parse_date(self, date_str: Optional[str]) -> Optional[datetime]:
+        """Parse date string into datetime object."""
+        if not date_str:
+            return None
+
+        try:
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            try:
+                for fmt in ["%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y/%m/%d"]:
+                    try:
+                        return datetime.strptime(date_str, fmt)
+                    except ValueError:
+                        continue
+            except:
+                pass
+
+        return None
 
 # Initialize summarizer
 summarizer = SimpleSummarizer()
@@ -307,13 +605,15 @@ async def root():
             "summarize": "/summarize",
             "categorize": "/categorize",
             "peer_review": "/peer-review",
+            "recommendations": "/recommendations",
             "capabilities": "/capabilities"
         },
         "features": {
             "llm_integration": True,
             "fallback_processing": True,
             "batch_processing": True,
-            "peer_review": True
+            "peer_review": True,
+            "recommendations": True
         }
     }
 
@@ -335,6 +635,13 @@ async def get_capabilities():
             "review_types": ["general", "technical", "editorial", "compliance"],
             "focus_areas": ["clarity", "completeness", "accuracy", "style", "structure"],
             "scoring": "0-10 scale"
+        },
+        "recommendations": {
+            "types": ["consolidation", "duplicate", "outdated", "quality"],
+            "confidence_threshold": "0.4-0.9",
+            "max_documents": 100,
+            "batch_processing": True,
+            "priority_levels": ["critical", "high", "medium", "low"]
         }
     }
 
@@ -397,7 +704,7 @@ async def peer_review_document(request: PeerReviewRequest):
             request.review_type,
             request.focus_areas
         )
-        
+
         return PeerReviewResponse(
             success=True,
             review_id=str(uuid.uuid4()),
@@ -410,9 +717,74 @@ async def peer_review_document(request: PeerReviewRequest):
                 "review_timestamp": time.time()
             }
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/recommendations", response_model=RecommendationResponse)
+async def generate_recommendations(request: RecommendationRequest):
+    """Generate document recommendations."""
+    try:
+        result = await summarizer.generate_recommendations(
+            request.documents,
+            request.recommendation_types,
+            request.confidence_threshold
+        )
+
+        return RecommendationResponse(
+            success=True,
+            recommendations=result["recommendations"],
+            total_documents=result["total_documents"],
+            recommendations_count=result["recommendations_count"],
+            processing_time=result["processing_time"],
+            metadata={
+                "recommendation_types": result["recommendation_types"],
+                "confidence_threshold": result["confidence_threshold"],
+                "timestamp": time.time()
+            }
+        )
+
+    except Exception as e:
+        return RecommendationResponse(
+            success=False,
+            total_documents=len(request.documents),
+            recommendations_count=0,
+            processing_time=0.0,
+            error=f"Recommendation generation failed: {str(e)}"
+        )
+
+@app.post("/api/v1/recommendations")
+async def recommendations_v1(request: RecommendationRequest):
+    """Generate document recommendations using standardized API v1 interface."""
+    try:
+        result = await summarizer.generate_recommendations(
+            request.documents,
+            request.recommendation_types,
+            request.confidence_threshold
+        )
+
+        return {
+            "success": True,
+            "recommendations": result["recommendations"],
+            "total_documents": result["total_documents"],
+            "recommendations_count": result["recommendations_count"],
+            "processing_time": result["processing_time"],
+            "metadata": {
+                "recommendation_types": result["recommendation_types"],
+                "confidence_threshold": result["confidence_threshold"],
+                "timestamp": time.time(),
+                "version": SERVICE_VERSION
+            }
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Recommendation generation failed: {str(e)}",
+            "total_documents": len(request.documents),
+            "recommendations_count": 0,
+            "processing_time": 0.0
+        }
 
 @app.post("/batch/summarize")
 async def batch_summarize(requests: List[SummarizeRequest]):
