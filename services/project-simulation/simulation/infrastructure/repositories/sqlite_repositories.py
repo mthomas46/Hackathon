@@ -51,6 +51,8 @@ class SQLiteSimulationRepository(ISimulationRepository):
                     configuration TEXT NOT NULL,  -- JSON
                     recommendations_report_id TEXT,  -- Link to recommendations report
                     recommendations_report_timestamp TEXT,  -- When report was generated
+                    analysis_report_id TEXT,  -- Link to analysis-service report
+                    analysis_report_timestamp TEXT,  -- When analysis report was generated
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 )
@@ -122,8 +124,8 @@ class SQLiteSimulationRepository(ISimulationRepository):
 
             conn.execute("""
                 INSERT OR REPLACE INTO simulations
-                (id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, analysis_report_id, analysis_report_timestamp, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 simulation_dict["id"],
                 simulation_dict["project_id"],
@@ -131,6 +133,8 @@ class SQLiteSimulationRepository(ISimulationRepository):
                 json.dumps(config_dict),
                 getattr(simulation, 'recommendations_report_id', None),
                 getattr(simulation, 'recommendations_report_timestamp', None),
+                getattr(simulation, 'analysis_report_id', None),
+                getattr(simulation, 'analysis_report_timestamp', None),
                 now,  # For new records, use current time
                 now   # Always update timestamp
             ))
@@ -140,7 +144,7 @@ class SQLiteSimulationRepository(ISimulationRepository):
         """Find a simulation by its ID."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
-                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, created_at, updated_at
+                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, analysis_report_id, analysis_report_timestamp, created_at, updated_at
                 FROM simulations
                 WHERE id = ?
             """, (simulation_id,))
@@ -154,7 +158,7 @@ class SQLiteSimulationRepository(ISimulationRepository):
         """Find all simulations for a project."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
-                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, created_at, updated_at
+                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, analysis_report_id, analysis_report_timestamp, created_at, updated_at
                 FROM simulations
                 WHERE project_id = ?
                 ORDER BY created_at DESC
@@ -172,7 +176,7 @@ class SQLiteSimulationRepository(ISimulationRepository):
         """Find all simulations."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
-                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, created_at, updated_at
+                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, analysis_report_id, analysis_report_timestamp, created_at, updated_at
                 FROM simulations
                 ORDER BY created_at DESC
             """)
@@ -189,7 +193,7 @@ class SQLiteSimulationRepository(ISimulationRepository):
         """Find simulations by status."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
-                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, created_at, updated_at
+                SELECT id, project_id, status, configuration, recommendations_report_id, recommendations_report_timestamp, analysis_report_id, analysis_report_timestamp, created_at, updated_at
                 FROM simulations
                 WHERE status = ?
                 ORDER BY created_at DESC
@@ -348,7 +352,7 @@ class SQLiteSimulationRepository(ISimulationRepository):
     def _row_to_simulation(self, row) -> Optional[Simulation]:
         """Convert a database row to a Simulation object."""
         try:
-            id_str, project_id, status_str, config_json, recommendations_report_id, recommendations_report_timestamp, created_at, updated_at = row
+            id_str, project_id, status_str, config_json, recommendations_report_id, recommendations_report_timestamp, analysis_report_id, analysis_report_timestamp, created_at, updated_at = row
 
             # Parse configuration
             config_dict = json.loads(config_json)
@@ -382,6 +386,11 @@ class SQLiteSimulationRepository(ISimulationRepository):
             if recommendations_report_id:
                 simulation.recommendations_report_id = recommendations_report_id
                 simulation.recommendations_report_timestamp = recommendations_report_timestamp
+
+            # Set analysis report linkage if present
+            if analysis_report_id:
+                simulation.analysis_report_id = analysis_report_id
+                simulation.analysis_report_timestamp = analysis_report_timestamp
 
             return simulation
 

@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 # Import the modules we'll be testing
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
+from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
 
 
 class TestSummarizerHubClient:
@@ -518,3 +519,167 @@ class TestRecommendationTypes:
         assert sorted_recs[0].priority == "high"
         assert sorted_recs[1].priority == "medium"
         assert sorted_recs[2].priority == "low"
+
+
+class TestAnalysisServiceReportIntegration:
+    """Test the analysis-service report generation and storage functionality."""
+
+    def setup_method(self):
+        """Setup test fixtures."""
+        self.summarizer = SimulationAnalyzer()
+
+    @pytest.mark.asyncio
+    async def test_get_analysis_report_from_analysis_service(self):
+        """Test getting analysis report from analysis-service."""
+        documents = [
+            {
+                "id": "doc1",
+                "content": "This is a comprehensive API documentation with clear examples and proper structure.",
+                "title": "API Guide",
+                "type": "api_docs"
+            },
+            {
+                "id": "doc2",
+                "content": "This is a short document.",
+                "title": "Brief Note",
+                "type": "note"
+            }
+        ]
+
+        # Mock the analysis-service response
+        mock_report = {
+            "report_id": "analysis_report_sim_123_1234567890",
+            "simulation_id": "sim_123",
+            "timestamp": "2024-01-01T10:00:00",
+            "documents_analyzed": 2,
+            "summary": {
+                "total_analyses": 2,
+                "analysis_types": ["comprehensive_document_analysis"],
+                "documents_with_issues": 1,
+                "average_quality_score": 0.75
+            },
+            "analysis_results": [
+                {
+                    "document_id": "doc1",
+                    "quality_score": 0.9,
+                    "issues_found": 0
+                },
+                {
+                    "document_id": "doc2",
+                    "quality_score": 0.6,
+                    "issues_found": 1
+                }
+            ]
+        }
+
+        with patch.object(self.summarizer, '_request_analysis_report_from_service', return_value=mock_report):
+            with patch.object(self.summarizer, '_store_received_analysis_report', return_value="analysis_report_sim_123_1234567890"):
+                # Test analysis report reception
+                analysis_report = await self.summarizer._get_analysis_report_from_analysis_service("sim_123", documents)
+
+                # Should return a report with proper structure
+                assert analysis_report is not None
+                assert analysis_report["report_id"] == "analysis_report_sim_123_1234567890"
+                assert "summary" in analysis_report
+                assert analysis_report["summary"]["total_analyses"] == 2
+
+    @pytest.mark.asyncio
+    async def test_get_analysis_from_analysis_service_empty_documents(self):
+        """Test analysis with empty document list."""
+        with patch.object(self.summarizer, '_request_analysis_report_from_service', return_value=None):
+            analysis_report = await self.summarizer._get_analysis_report_from_analysis_service("sim_123", [])
+
+            assert analysis_report is None
+
+    @pytest.mark.asyncio
+    async def test_store_received_analysis_report(self):
+        """Test storing received analysis report in doc-store."""
+        analysis_report = {
+            "report_id": "analysis_report_sim_123_1234567890",
+            "simulation_id": "sim_123",
+            "timestamp": "2024-01-01T10:00:00",
+            "documents_analyzed": 2,
+            "markdown_content": "# Analysis Report\n\nThis is a test report.",
+            "summary": {
+                "total_analyses": 2,
+                "analysis_types": ["comprehensive_document_analysis"],
+                "documents_with_issues": 1,
+                "average_quality_score": 0.8
+            },
+            "metadata": {
+                "source": "analysis-service",
+                "processing_time": "2.5s"
+            }
+        }
+
+        # Mock the doc-store saving
+        with patch.object(self.summarizer, '_save_to_doc_store') as mock_save:
+            with patch.object(self.summarizer, '_save_markdown_report') as mock_save_md:
+                with patch.object(self.summarizer, '_link_analysis_report_to_simulation') as mock_link:
+                    mock_save.return_value = None
+                    mock_save_md.return_value = None
+                    mock_link.return_value = None
+
+                    report_id = await self.summarizer._store_received_analysis_report(analysis_report, "sim_123")
+
+                    assert report_id == "analysis_report_sim_123_1234567890"
+                    mock_save.assert_called()
+                    mock_save_md.assert_called()
+                    mock_link.assert_called()
+
+
+    @pytest.mark.asyncio
+    async def test_link_analysis_report_to_simulation(self):
+        """Test linking analysis report to simulation."""
+        # Mock simulation repository
+        mock_simulation = Mock()
+        mock_simulation.metadata = {}
+
+        mock_repo = Mock()
+        mock_repo.find_by_id.return_value = mock_simulation
+        mock_repo.save.return_value = None
+
+        with patch.object(self.summarizer, '_get_simulation_repository', return_value=mock_repo):
+            await self.summarizer._link_analysis_report_to_simulation("analysis_report_123", "sim_123")
+
+            # Verify the simulation was updated
+            assert mock_simulation.metadata['analysis_report_id'] == "analysis_report_123"
+            assert 'analysis_report_timestamp' in mock_simulation.metadata
+            mock_repo.save.assert_called_once_with(mock_simulation)
+
+    @pytest.mark.asyncio
+    async def test_link_analysis_report_simulation_not_found(self):
+        """Test linking analysis report when simulation is not found."""
+        mock_repo = Mock()
+        mock_repo.find_by_id.return_value = None
+
+        with patch.object(self.summarizer, '_get_simulation_repository', return_value=mock_repo):
+            await self.summarizer._link_analysis_report_to_simulation("analysis_report_123", "sim_123")
+
+            # Should not attempt to save when simulation not found
+            mock_repo.save.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_request_analysis_report_from_service_with_service_error(self):
+        """Test handling analysis service errors gracefully."""
+        documents = [
+            {
+                "id": "doc1",
+                "content": "Test content",
+                "title": "Test Doc",
+                "type": "test"
+            }
+        ]
+
+        # Mock httpx to simulate service error
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_response = Mock()
+            mock_response.status_code = 500
+            mock_response.text = "Internal Server Error"
+            mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
+
+            result = await self.summarizer._request_analysis_report_from_service("sim_123", documents)
+
+            # Should handle error gracefully and return None
+            assert result is None
+
