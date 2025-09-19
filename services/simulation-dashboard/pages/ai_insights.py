@@ -1106,3 +1106,285 @@ def render_recommendation_impact_analysis(recommendations: List[Dict[str, Any]])
     fig.update_layout(xaxis_tickangle=-45)
 
     st.plotly_chart(fig, use_container_width=True)
+
+
+# Fallback functions for limited functionality
+
+def render_pattern_recognition_limited():
+    """Render pattern recognition with limited functionality."""
+    st.markdown("### 🔍 Pattern Recognition (Limited)")
+
+    st.info("⚠️ **Limited Functionality**: Advanced ML-based pattern recognition requires scikit-learn.")
+    st.markdown("**Available Features:**")
+    st.markdown("- Basic data visualization")
+    st.markdown("- Simple statistical analysis")
+    st.markdown("- Manual pattern identification")
+
+    st.markdown("**Missing Features:**")
+    st.markdown("- ML-based clustering algorithms")
+    st.markdown("- Advanced pattern detection")
+    st.markdown("- Automated feature extraction")
+
+    st.markdown("---")
+    st.markdown("**To enable full functionality, install:**")
+    st.code("pip install scikit-learn>=1.3.0", language="bash")
+
+    # Basic statistical analysis (available without ML libraries)
+    st.markdown("### 📊 Basic Statistical Analysis")
+
+    if st.button("🔄 Load Sample Data", key="load_sample_stats"):
+        # Generate sample data for demonstration
+        sample_data = generate_sample_data()
+        display_basic_statistics(sample_data)
+
+
+def render_anomaly_detection_limited():
+    """Render anomaly detection with limited functionality."""
+    st.markdown("### ⚠️ AI Anomaly Detection (Limited)")
+
+    st.info("⚠️ **Limited Functionality**: AI-powered anomaly detection requires scikit-learn.")
+    st.markdown("**Available Features:**")
+    st.markdown("- Basic threshold-based detection")
+    st.markdown("- Manual anomaly identification")
+    st.markdown("- Simple statistical outlier detection")
+
+    st.markdown("**Missing Features:**")
+    st.markdown("- ML-based anomaly detection algorithms")
+    st.markdown("- Advanced pattern recognition")
+    st.markdown("- Automated anomaly scoring")
+
+    st.markdown("---")
+    st.markdown("**To enable full functionality, install:**")
+    st.code("pip install scikit-learn>=1.3.0", language="bash")
+
+    # Basic threshold detection
+    st.markdown("### 📊 Basic Threshold Detection")
+
+    threshold = st.slider("Anomaly Threshold (standard deviations)", 1.0, 5.0, 2.0, key="anomaly_threshold")
+
+    if st.button("🔍 Detect Anomalies", key="detect_basic_anomalies"):
+        sample_data = generate_sample_data()
+        anomalies = detect_basic_anomalies(sample_data, threshold)
+        display_anomaly_results(anomalies)
+
+
+def render_predictive_optimization_limited():
+    """Render predictive optimization with limited functionality."""
+    st.markdown("### 🔮 Predictive Optimization (Limited)")
+
+    st.info("⚠️ **Limited Functionality**: Advanced predictive analytics require additional ML libraries.")
+    st.markdown("**Available Features:**")
+    st.markdown("- Basic trend analysis")
+    st.markdown("- Simple forecasting methods")
+    st.markdown("- Manual optimization suggestions")
+
+    st.markdown("**Missing Features:**")
+    st.markdown("- ML-based predictive models")
+    st.markdown("- Advanced time series forecasting")
+    st.markdown("- Automated optimization algorithms")
+
+    st.markdown("---")
+    st.markdown("**To enable full functionality, install:**")
+    st.code("pip install scikit-learn>=1.3.0 statsmodels>=0.14.0", language="bash")
+
+    # Basic trend analysis
+    st.markdown("### 📈 Basic Trend Analysis")
+
+    if st.button("📊 Analyze Trends", key="analyze_basic_trends"):
+        sample_data = generate_time_series_data()
+        trend_analysis = analyze_basic_trends(sample_data)
+        display_trend_analysis(trend_analysis)
+
+
+# Helper functions for limited functionality
+
+def generate_sample_data() -> list:
+    """Generate sample data for demonstration."""
+    import numpy as np
+    np.random.seed(42)
+    return np.random.normal(100, 15, 100).tolist()
+
+
+def display_basic_statistics(data: list):
+    """Display basic statistical analysis."""
+    import numpy as np
+
+    st.markdown("#### 📊 Statistical Summary")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Count", len(data))
+
+    with col2:
+        st.metric("Mean", ".2f")
+
+    with col3:
+        st.metric("Std Dev", ".2f")
+
+    with col4:
+        st.metric("Median", ".2f")
+
+    # Simple distribution plot (if plotly is available)
+    try:
+        import plotly.express as px
+        fig = px.histogram(data, title="Data Distribution", labels={'value': 'Values'})
+        st.plotly_chart(fig, use_container_width=True)
+    except ImportError:
+        st.bar_chart(data)
+
+
+def detect_basic_anomalies(data: list, threshold: float) -> dict:
+    """Detect anomalies using basic statistical methods."""
+    import numpy as np
+
+    data_array = np.array(data)
+    mean_val = np.mean(data_array)
+    std_val = np.std(data_array)
+
+    upper_bound = mean_val + (threshold * std_val)
+    lower_bound = mean_val - (threshold * std_val)
+
+    anomalies = []
+    for i, value in enumerate(data):
+        if value > upper_bound or value < lower_bound:
+            anomalies.append({
+                'index': i,
+                'value': value,
+                'deviation': abs(value - mean_val) / std_val
+            })
+
+    return {
+        'anomalies': anomalies,
+        'total_points': len(data),
+        'threshold': threshold,
+        'upper_bound': upper_bound,
+        'lower_bound': lower_bound,
+        'mean': mean_val,
+        'std': std_val
+    }
+
+
+def display_anomaly_results(results: dict):
+    """Display anomaly detection results."""
+    st.markdown("#### 🎯 Anomaly Detection Results")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Total Points", results['total_points'])
+
+    with col2:
+        st.metric("Anomalies Found", len(results['anomalies']))
+
+    with col3:
+        anomaly_rate = (len(results['anomalies']) / results['total_points']) * 100
+        st.metric("Anomaly Rate", ".2f")
+
+    if results['anomalies']:
+        st.markdown("##### 📋 Detected Anomalies")
+
+        anomaly_df = pd.DataFrame(results['anomalies'])
+        st.dataframe(anomaly_df, use_container_width=True)
+
+        st.info(f"⚠️ Found {len(results['anomalies'])} anomalies using {results['threshold']}σ threshold")
+    else:
+        st.success("✅ No anomalies detected with current threshold")
+
+
+def generate_time_series_data() -> list:
+    """Generate sample time series data."""
+    import numpy as np
+
+    np.random.seed(42)
+    n_points = 50
+
+    # Generate trend + seasonal + noise
+    t = np.arange(n_points)
+    trend = 0.5 * t
+    seasonal = 10 * np.sin(2 * np.pi * t / 12)
+    noise = np.random.normal(0, 2, n_points)
+
+    return (trend + seasonal + noise + 100).tolist()
+
+
+def analyze_basic_trends(data: list) -> dict:
+    """Perform basic trend analysis."""
+    import numpy as np
+
+    data_array = np.array(data)
+
+    # Calculate basic metrics
+    mean_val = np.mean(data_array)
+    trend_slope = np.polyfit(range(len(data_array)), data_array, 1)[0]
+
+    # Simple moving averages
+    ma_5 = np.convolve(data_array, np.ones(5)/5, mode='valid')
+    ma_10 = np.convolve(data_array, np.ones(10)/10, mode='valid')
+
+    return {
+        'mean': mean_val,
+        'trend_slope': trend_slope,
+        'trend_direction': 'increasing' if trend_slope > 0 else 'decreasing',
+        'moving_average_5': ma_5.tolist(),
+        'moving_average_10': ma_10.tolist(),
+        'volatility': np.std(data_array)
+    }
+
+
+def display_trend_analysis(analysis: dict):
+    """Display trend analysis results."""
+    st.markdown("#### 📈 Trend Analysis Results")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Mean Value", ".2f")
+
+    with col2:
+        st.metric("Trend Direction", analysis['trend_direction'].title())
+
+    with col3:
+        st.metric("Volatility", ".2f")
+
+    # Trend visualization
+    try:
+        import plotly.graph_objects as go
+
+        fig = go.Figure()
+
+        # Original data
+        fig.add_trace(go.Scatter(
+            y=generate_time_series_data(),
+            mode='lines',
+            name='Original Data',
+            line=dict(color='blue')
+        ))
+
+        # Moving averages
+        if analysis['moving_average_5']:
+            fig.add_trace(go.Scatter(
+                y=analysis['moving_average_5'],
+                mode='lines',
+                name='5-Point MA',
+                line=dict(color='red', dash='dash')
+            ))
+
+        if analysis['moving_average_10']:
+            fig.add_trace(go.Scatter(
+                y=analysis['moving_average_10'],
+                mode='lines',
+                name='10-Point MA',
+                line=dict(color='green', dash='dot')
+            ))
+
+        fig.update_layout(
+            title="Trend Analysis with Moving Averages",
+            xaxis_title="Time Period",
+            yaxis_title="Value"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    except ImportError:
+        st.line_chart(generate_time_series_data())

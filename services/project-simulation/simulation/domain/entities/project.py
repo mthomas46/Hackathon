@@ -43,7 +43,7 @@ class TeamMember:
 
     def can_handle_task(self, task_type: str) -> bool:
         """Check if team member can handle a specific task type."""
-        return task_type in self.specialization or self.expertise_level in ['expert', 'advanced']
+        return task_type in self.specialization or self.expertise_level in ['expert', 'advanced', 'senior']
 
     def get_productivity_for_task(self, task_type: str) -> float:
         """Get productivity multiplier for a specific task."""
@@ -115,7 +115,8 @@ class Project:
         self._add_domain_event(ProjectCreated(
             project_id=str(self.id.value),
             project_name=self.name,
-            project_type=self.type.value
+            project_type=self.type.value,
+            complexity=self.complexity.value
         ))
 
     def _initialize_default_phases(self) -> None:
@@ -224,10 +225,15 @@ class Project:
         phase.complete_phase()
         self.updated_at = datetime.now()
 
+        # Find the phase number (index + 1)
+        phase_number = self.phases.index(phase) + 1
+
         self._add_domain_event(ProjectPhaseCompleted(
             project_id=str(self.id.value),
             phase_name=phase_name,
-            completed_at=phase.end_date
+            phase_number=phase_number,
+            completion_percentage=100.0,
+            duration_days=(phase.end_date - phase.start_date).days
         ))
 
     def update_status(self, new_status: ProjectStatus) -> None:
@@ -242,7 +248,8 @@ class Project:
         self._add_domain_event(ProjectStatusChanged(
             project_id=str(self.id.value),
             old_status=old_status.value,
-            new_status=new_status.value
+            new_status=new_status.value,
+            changed_by="system"
         ))
 
     def get_current_phase(self) -> Optional[ProjectPhase]:
