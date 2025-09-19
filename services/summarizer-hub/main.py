@@ -121,6 +121,8 @@ class RecommendationRequest(BaseModel):
     recommendation_types: Optional[List[str]] = None  # consolidation, duplicate, outdated, quality
     confidence_threshold: float = 0.4
     include_jira_suggestions: bool = False
+    create_jira_tickets: bool = False
+    jira_project_key: Optional[str] = None
     timeline: Optional[Dict[str, Any]] = None
 
     @field_validator('documents')
@@ -145,6 +147,7 @@ class RecommendationResponse(BaseModel):
     metadata: Dict[str, Any] = {}
     error: str = ""
     suggested_jira_tickets: List[Dict[str, Any]] = []
+    jira_ticket_creation: Dict[str, Any] = {}
     drift_analysis: Dict[str, Any] = {}
     alignment_analysis: Dict[str, Any] = {}
     inconclusive_analysis: Dict[str, Any] = {}
@@ -351,7 +354,7 @@ class SimpleSummarizer:
             "review_text": "Automated review completed with basic analysis"
         }
 
-    async def generate_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: List[str] = None, confidence_threshold: float = 0.4, include_jira_suggestions: bool = False, timeline: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def generate_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: List[str] = None, confidence_threshold: float = 0.4, include_jira_suggestions: bool = False, create_jira_tickets: bool = False, jira_project_key: str = None, timeline: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Generate comprehensive document recommendations."""
         start_time = time.time()
 
@@ -396,9 +399,19 @@ class SimpleSummarizer:
         }
 
         # Generate Jira ticket suggestions if requested
+        jira_ticket_creation = {}
         if include_jira_suggestions and all_recommendations:
             jira_suggestions = self._generate_jira_ticket_suggestions(all_recommendations, documents)
             result["suggested_jira_tickets"] = jira_suggestions
+
+            # Create actual Jira tickets if requested
+            if create_jira_tickets:
+                ticket_creation_result = await jira_client.create_jira_tickets_from_suggestions(
+                    jira_suggestions, jira_project_key
+                )
+                jira_ticket_creation = ticket_creation_result
+
+        result["jira_ticket_creation"] = jira_ticket_creation
 
         # Add drift detection and alerts
         drift_analysis = self._detect_drift_and_alerts(documents, all_recommendations)
@@ -1915,6 +1928,92 @@ class JiraClient:
 
         return gaps
 
+    async def create_jira_tickets_from_suggestions(self, suggested_tickets: List[Dict[str, Any]], project_key: str = None) -> Dict[str, Any]:
+        """Create actual Jira tickets from suggested tickets."""
+        if not self.is_configured():
+            return {
+                "success": False,
+                "error": "Jira client not configured",
+                "tickets_created": 0,
+                "tickets_failed": len(suggested_tickets),
+                "results": []
+            }
+
+        # Use default project if none specified
+        if not project_key:
+            project_key = JIRA_DEFAULT_PROJECT or "DOC"
+
+        results = []
+        created_count = 0
+        failed_count = 0
+
+        for ticket in suggested_tickets:
+            try:
+                # Create the Jira issue
+                create_result = await self.create_issue(
+                    project_key=project_key,
+                    summary=ticket["summary"],
+                    description=ticket["description"],
+                    issue_type=ticket["issue_type"],
+                    priority=ticket["priority"],
+                    labels=ticket.get("labels", []),
+                    components=ticket.get("components", []),
+                    custom_fields={
+                        "customfield_10010": ticket.get("epic_link", "Documentation Quality Initiative")  # Epic Link
+                    }
+                )
+
+                if create_result["success"]:
+                    created_count += 1
+                    results.append({
+                        "suggestion": ticket,
+                        "creation_result": create_result,
+                        "status": "created"
+                    })
+                else:
+                    failed_count += 1
+                    results.append({
+                        "suggestion": ticket,
+                        "creation_result": create_result,
+                        "status": "failed"
+                    })
+
+            except Exception as e:
+                failed_count += 1
+                results.append({
+                    "suggestion": ticket,
+                    "error": str(e),
+                    "status": "error"
+                })
+
+        return {
+            "success": created_count > 0,
+            "tickets_created": created_count,
+            "tickets_failed": failed_count,
+            "total_suggestions": len(suggested_tickets),
+            "project_key": project_key,
+            "results": results
+        }
+
+    async def create_jira_tickets_for_recommendations(self, recommendations: List[Dict[str, Any]], documents: List[Dict[str, Any]] = None, project_key: str = None) -> Dict[str, Any]:
+        """Create Jira tickets directly from recommendations."""
+        if not self.is_configured():
+            return {
+                "success": False,
+                "error": "Jira client not configured",
+                "tickets_created": 0,
+                "tickets_failed": len(recommendations)
+            }
+
+        if documents is None:
+            documents = []
+
+        # Generate suggestions first
+        suggestions = self._generate_jira_ticket_suggestions(recommendations, documents)
+
+        # Then create the tickets
+        return await self.create_jira_tickets_from_suggestions(suggestions, project_key)
+
 
 # Initialize clients
 summarizer = SimpleSummarizer()
@@ -2070,6 +2169,8 @@ async def generate_recommendations(request: RecommendationRequest):
             request.recommendation_types,
             request.confidence_threshold,
             request.include_jira_suggestions,
+            request.create_jira_tickets,
+            request.jira_project_key,
             request.timeline
         )
 
@@ -2085,6 +2186,7 @@ async def generate_recommendations(request: RecommendationRequest):
                 "timestamp": time.time()
             },
             suggested_jira_tickets=result.get("suggested_jira_tickets", []),
+            jira_ticket_creation=result.get("jira_ticket_creation", {}),
             drift_analysis=result.get("drift_analysis", {}),
             alignment_analysis=result.get("alignment_analysis", {}),
             inconclusive_analysis=result.get("inconclusive_analysis", {}),
@@ -2099,6 +2201,7 @@ async def generate_recommendations(request: RecommendationRequest):
             processing_time=0.0,
             error=f"Recommendation generation failed: {str(e)}",
             suggested_jira_tickets=[],
+            jira_ticket_creation={},
             drift_analysis={},
             alignment_analysis={},
             inconclusive_analysis={},
@@ -2114,6 +2217,8 @@ async def recommendations_v1(request: RecommendationRequest):
             request.recommendation_types,
             request.confidence_threshold,
             request.include_jira_suggestions,
+            request.create_jira_tickets,
+            request.jira_project_key,
             request.timeline
         )
 
@@ -2124,6 +2229,7 @@ async def recommendations_v1(request: RecommendationRequest):
             "recommendations_count": result["recommendations_count"],
             "processing_time": result["processing_time"],
             "suggested_jira_tickets": result.get("suggested_jira_tickets", []),
+            "jira_ticket_creation": result.get("jira_ticket_creation", {}),
             "drift_analysis": result.get("drift_analysis", {}),
             "alignment_analysis": result.get("alignment_analysis", {}),
             "inconclusive_analysis": result.get("inconclusive_analysis", {}),
@@ -2144,11 +2250,40 @@ async def recommendations_v1(request: RecommendationRequest):
             "recommendations_count": 0,
             "processing_time": 0.0,
             "suggested_jira_tickets": [],
+            "jira_ticket_creation": {},
             "drift_analysis": {},
             "alignment_analysis": {},
             "inconclusive_analysis": {},
             "timeline_analysis": {}
         }
+
+@app.post("/jira/create-tickets", response_model=JiraTicketResponse)
+async def create_jira_tickets(request: JiraTicketRequest):
+    """Create Jira tickets from suggestions."""
+    try:
+        if not jira_client.is_configured():
+            raise HTTPException(
+                status_code=500,
+                detail="Jira client not configured. Please set JIRA_BASE_URL, JIRA_USERNAME, and JIRA_API_TOKEN environment variables."
+            )
+
+        result = await jira_client.create_jira_tickets_from_suggestions(
+            request.suggested_tickets,
+            request.project_key
+        )
+
+        return JiraTicketResponse(
+            success=result["success"],
+            tickets_created=result["tickets_created"],
+            tickets_failed=result["tickets_failed"],
+            total_requested=len(request.suggested_tickets),
+            jira_project=request.project_key or JIRA_DEFAULT_PROJECT,
+            ticket_details=result["results"]
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Jira ticket creation failed: {str(e)}")
+
 
 @app.post("/batch/summarize")
 async def batch_summarize(requests: List[SummarizeRequest]):
