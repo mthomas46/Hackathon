@@ -1,0 +1,1 @@
+"""Summarizer-Hub test suite."""
