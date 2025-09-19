@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, Optional, List, AsyncGenerator
 from datetime import datetime, timedelta
-from uuid import uuid4
+import uuid
 import asyncio
 import json
 
@@ -649,6 +649,9 @@ class SimulationExecutionEngine:
         try:
             from simulation.presentation.websockets.simulation_websocket import notify_simulation_event_dict
             from simulation.infrastructure.ui.terminal_progress_visualizer import update_simulation_ui
+            from simulation.infrastructure.persistence.redis_event_store import (
+                get_event_store, SimulationEvent, EventType, EventPriority
+            )
 
             event_payload = {
                 "simulation_id": str(simulation.id.value),
@@ -658,6 +661,21 @@ class SimulationExecutionEngine:
                 "simulation_status": simulation.status.value,
                 "progress_percentage": simulation.get_progress_percentage()
             }
+
+            # Create and store event in Redis
+            event = SimulationEvent(
+                event_id=str(uuid.uuid4()),
+                simulation_id=str(simulation.id.value),
+                event_type=EventType(event_type),
+                timestamp=datetime.now(),
+                data=event_payload,
+                priority=EventPriority.NORMAL,
+                correlation_id=getattr(asyncio.current_task(), 'correlation_id', None),
+                tags=[event_type, "simulation", f"phase_{event_data.get('phase', 'unknown')}" if event_data else "general"]
+            )
+
+            event_store = get_event_store()
+            await event_store.store_event(event)
 
             # Publish to WebSocket
             await notify_simulation_event_dict(str(simulation.id.value), event_payload)

@@ -142,6 +142,22 @@ class StopUIMonitoringRequest(BaseModel):
     success: bool = Field(True, description="Whether the simulation completed successfully")
 
 
+class ReplayEventsRequest(BaseModel):
+    """Request model for replaying simulation events."""
+    event_types: Optional[List[str]] = Field(None, description="Types of events to replay")
+    start_time: Optional[str] = Field(None, description="Start time for replay (ISO format)")
+    end_time: Optional[str] = Field(None, description="End time for replay (ISO format)")
+    tags: Optional[List[str]] = Field(None, description="Tags to filter events")
+    speed_multiplier: float = Field(1.0, description="Speed multiplier for replay (1.0 = real-time)")
+    include_system_events: bool = Field(False, description="Include system events in replay")
+    max_events: Optional[int] = Field(None, description="Maximum number of events to replay")
+
+
+class CleanupEventsRequest(BaseModel):
+    """Request model for cleaning up old events."""
+    days_old: int = Field(30, description="Remove events older than this many days")
+
+
 # Load configuration
 config = get_config()
 
@@ -226,6 +242,14 @@ service_discovery = get_service_discovery()
 async def startup_event():
     """Application startup event handler."""
     logger.info("Starting Project Simulation Service", version=SERVICE_VERSION, environment=config.service.environment)
+
+    # Initialize event persistence
+    try:
+        from simulation.infrastructure.persistence.redis_event_store import initialize_event_persistence
+        await initialize_event_persistence()
+        logger.info("Event persistence system initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize event persistence: {e}")
 
     # Start service discovery
     if is_development():
@@ -1182,6 +1206,294 @@ async def get_simulation_ui_status(simulation_id: str, req: Request):
             )
             return create_error_response(
                 message="Internal server error during UI status retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+# Event persistence and replay endpoints
+@app.get("/api/v1/simulations/{simulation_id}/events")
+async def get_simulation_events(simulation_id: str,
+                              event_types: Optional[str] = None,
+                              start_time: Optional[str] = None,
+                              end_time: Optional[str] = None,
+                              tags: Optional[str] = None,
+                              limit: int = 50,
+                              offset: int = 0,
+                              req: Request = None):
+    """Get events for a simulation with filtering."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting simulation events",
+            operation="get_simulation_events",
+            simulation_id=simulation_id,
+            limit=limit,
+            offset=offset,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.persistence.redis_event_store import (
+                get_event_store, EventType
+            )
+
+            event_store = get_event_store()
+
+            # Parse filters
+            event_type_list = None
+            if event_types:
+                try:
+                    event_type_list = [EventType(et.strip()) for et in event_types.split(",")]
+                except ValueError as e:
+                    return create_error_response(
+                        message=f"Invalid event types: {e}",
+                        error_code="invalid_event_types",
+                        request_id=correlation_id
+                    )
+
+            start_dt = datetime.fromisoformat(start_time) if start_time else None
+            end_dt = datetime.fromisoformat(end_time) if end_time else None
+            tag_list = tags.split(",") if tags else None
+
+            # Get events
+            events = await event_store.get_events(
+                simulation_id=simulation_id,
+                event_types=event_type_list,
+                start_time=start_dt,
+                end_time=end_dt,
+                tags=tag_list,
+                limit=limit,
+                offset=offset
+            )
+
+            # Convert to response format
+            event_data = []
+            for event in events:
+                event_data.append({
+                    "event_id": event.event_id,
+                    "event_type": event.event_type.value,
+                    "timestamp": event.timestamp.isoformat(),
+                    "data": event.data,
+                    "priority": event.priority.value,
+                    "tags": event.tags,
+                    "correlation_id": event.correlation_id
+                })
+
+            return create_success_response(
+                message=f"Retrieved {len(event_data)} events for simulation {simulation_id}",
+                data={
+                    "simulation_id": simulation_id,
+                    "events": event_data,
+                    "total_count": len(event_data),
+                    "limit": limit,
+                    "offset": offset,
+                    "filters": {
+                        "event_types": event_types,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "tags": tags
+                    }
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get simulation events",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during event retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.get("/api/v1/simulations/{simulation_id}/timeline")
+async def get_simulation_timeline(simulation_id: str, req: Request):
+    """Get timeline of events for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting simulation timeline",
+            operation="get_simulation_timeline",
+            simulation_id=simulation_id,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.persistence.redis_event_store import get_event_store
+
+            event_store = get_event_store()
+            timeline = await event_store.get_simulation_timeline(simulation_id)
+
+            return create_success_response(
+                message=f"Retrieved timeline with {len(timeline)} events for simulation {simulation_id}",
+                data={
+                    "simulation_id": simulation_id,
+                    "timeline": timeline,
+                    "event_count": len(timeline)
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get simulation timeline",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during timeline retrieval",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.post("/api/v1/simulations/{simulation_id}/events/replay")
+async def replay_simulation_events(simulation_id: str,
+                                 request: ReplayEventsRequest,
+                                 req: Request):
+    """Replay events for a simulation."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Starting event replay",
+            operation="replay_simulation_events",
+            simulation_id=simulation_id,
+            speed_multiplier=request.speed_multiplier,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.persistence.redis_event_store import (
+                get_replay_manager, ReplayConfiguration, EventType
+            )
+
+            # Parse event types
+            event_type_list = None
+            if request.event_types:
+                try:
+                    event_type_list = [EventType(et) for et in request.event_types]
+                except ValueError as e:
+                    return create_error_response(
+                        message=f"Invalid event types: {e}",
+                        error_code="invalid_event_types",
+                        request_id=correlation_id
+                    )
+
+            # Create replay configuration
+            config = ReplayConfiguration(
+                simulation_id=simulation_id,
+                start_time=datetime.fromisoformat(request.start_time) if request.start_time else None,
+                end_time=datetime.fromisoformat(request.end_time) if request.end_time else None,
+                event_types=event_type_list,
+                tags=request.tags,
+                speed_multiplier=request.speed_multiplier,
+                include_system_events=request.include_system_events,
+                max_events=request.max_events
+            )
+
+            # Define callback for replay events
+            replayed_events = []
+
+            def replay_callback(event):
+                replayed_events.append({
+                    "event_id": event.event_id,
+                    "event_type": event.event_type.value,
+                    "timestamp": event.timestamp.isoformat(),
+                    "data": event.data
+                })
+
+            # Start replay
+            replay_manager = get_replay_manager()
+            replay_id = await replay_manager.start_replay(simulation_id, replay_callback, config)
+
+            return create_success_response(
+                message=f"Started event replay {replay_id} for simulation {simulation_id}",
+                data={
+                    "replay_id": replay_id,
+                    "simulation_id": simulation_id,
+                    "configuration": {
+                        "speed_multiplier": request.speed_multiplier,
+                        "event_types": request.event_types,
+                        "max_events": request.max_events,
+                        "include_system_events": request.include_system_events
+                    },
+                    "status": "started"
+                },
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to start event replay",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during event replay",
+                error_code="internal_server_error",
+                details={"error": str(e)},
+                request_id=correlation_id
+            )
+
+
+@app.get("/api/v1/events/statistics")
+async def get_event_statistics(simulation_id: Optional[str] = None,
+                             start_time: Optional[str] = None,
+                             end_time: Optional[str] = None,
+                             req: Request = None):
+    """Get statistics about stored events."""
+    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+
+    with with_correlation_id(correlation_id):
+        logger.info(
+            "Getting event statistics",
+            operation="get_event_statistics",
+            simulation_id=simulation_id,
+            correlation_id=correlation_id
+        )
+
+        try:
+            from simulation.infrastructure.persistence.redis_event_store import get_event_store
+
+            event_store = get_event_store()
+
+            start_dt = datetime.fromisoformat(start_time) if start_time else None
+            end_dt = datetime.fromisoformat(end_time) if end_time else None
+
+            stats = await event_store.get_event_statistics(
+                simulation_id=simulation_id,
+                start_time=start_dt,
+                end_time=end_dt
+            )
+
+            return create_success_response(
+                message="Retrieved event statistics",
+                data=stats,
+                request_id=correlation_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to get event statistics",
+                error=str(e),
+                correlation_id=correlation_id
+            )
+            return create_error_response(
+                message="Internal server error during statistics retrieval",
                 error_code="internal_server_error",
                 details={"error": str(e)},
                 request_id=correlation_id
