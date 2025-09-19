@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
 
-from services.project_simulation.simulation.infrastructure.logging import get_simulation_logger
+from ..logging import get_simulation_logger
 
 
 @dataclass

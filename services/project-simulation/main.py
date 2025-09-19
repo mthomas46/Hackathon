@@ -22,13 +22,20 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
 # Add shared infrastructure to path
-sys.path.append(str(Path(__file__).parent.parent / "services" / "shared"))
+project_root = Path(__file__).parent.parent.parent
+shared_path = project_root / "services" / "shared"
+services_path = project_root / "services"
+
+# Insert paths at the beginning to ensure they're found first
+sys.path.insert(0, str(shared_path))
+sys.path.insert(0, str(services_path))
+sys.path.insert(0, str(project_root))
 
 # Import shared utilities and patterns
 from services.shared.core.responses.responses import (
@@ -56,7 +63,7 @@ from services.shared.utilities.utilities import (
 )
 from services.shared.utilities.middleware import ServiceMiddleware
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.logging.correlation_middleware import CorrelationIdMiddleware
+from services.shared.core.logging.correlation_middleware import CorrelationMiddleware
 from services.shared.utilities.error_handling import register_exception_handlers
 
 # Import local modules
@@ -227,8 +234,8 @@ if not is_development():
 # Get service instances
 container = get_simulation_container()
 logger = container.logger
-application_service = container.get_service("simulation_application_service")
-simulation_execution_engine = container.get_service("simulation_execution_engine")
+application_service = container.resolve("simulation_application_service")
+simulation_execution_engine = container.resolve("simulation_execution_engine")
 
 # Create health endpoints using shared patterns
 health_endpoints = create_simulation_health_endpoints()

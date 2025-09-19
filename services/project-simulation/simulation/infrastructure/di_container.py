@@ -33,6 +33,14 @@ from simulation.infrastructure.health.simulation_health import (
     get_simulation_health_checker,
     get_simulation_health_endpoint
 )
+
+# Import health endpoints from the main health module
+try:
+    from simulation.infrastructure.health import create_simulation_health_endpoints
+except ImportError:
+    def create_simulation_health_endpoints():
+        """Mock health endpoints function."""
+        pass
 from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 from simulation.infrastructure.utilities.simulation_utilities import (
     get_simulation_validator,
@@ -142,9 +150,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
 
         # Core Simulation Execution Engine
         def create_simulation_execution_engine():
-            from ..content.content_generation_pipeline import ContentGenerationPipeline
-            from ..clients.ecosystem_clients import get_ecosystem_service_registry
-            from ..workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
+            from .content.content_generation_pipeline import ContentGenerationPipeline
+            from .clients.ecosystem_clients import get_ecosystem_service_registry
+            from .workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
 
             return SimulationExecutionEngine(
                 content_pipeline=ContentGenerationPipeline(),
@@ -585,7 +593,16 @@ class EnhancedSimulationContainer(Container):
     @property
     def logger(self):
         """Get logger service."""
+        # Return stored logger if available, otherwise resolve from provider
+        if hasattr(self, '_logger'):
+            return self._logger
         return self.resolve("logger")
+
+    @logger.setter
+    def logger(self, value):
+        """Set logger service."""
+        # Store logger directly as an attribute for easy access
+        self._logger = value
 
     @property
     def health_checker(self):

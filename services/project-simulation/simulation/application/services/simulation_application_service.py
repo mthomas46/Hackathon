@@ -13,7 +13,7 @@ from ...presentation.websockets.simulation_websocket import (
     notify_simulation_progress,
     notify_simulation_event
 )
-from ...domain.value_objects import SimulationType, SimulationStatus
+from ...domain.value_objects import SimulationStatus
 from ...infrastructure.config.simulation_config_loader import (
     load_simulation_config, create_sample_simulation_config, SimulationConfigFile, get_simulation_config_loader
 )

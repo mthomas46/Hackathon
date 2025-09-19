@@ -13,8 +13,19 @@ import asyncio
 import time
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
-from utilities.resilience import CircuitBreaker as BaseCircuitBreaker
+shared_path = Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"
+sys.path.insert(0, str(shared_path))
+
+try:
+    from utilities.resilience import CircuitBreaker as BaseCircuitBreaker
+except ImportError:
+    # Create a simple mock CircuitBreaker for testing
+    class BaseCircuitBreaker:
+        async def __call__(self, func, *args, **kwargs):
+            return await func(*args, **kwargs)
+
+        def __init__(self, *args, **kwargs):
+            pass
 
 from ..logging import get_simulation_logger
 

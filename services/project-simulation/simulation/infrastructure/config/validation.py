@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 
 from .config_manager import ConfigManager, get_config
-from services.project_simulation.simulation.infrastructure.logging import get_simulation_logger
+from ..logging import get_simulation_logger
 
 
 class ValidationError(Exception):
@@ -378,29 +378,25 @@ class ConfigValidator:
         """Print validation report."""
         report = self.get_validation_report()
 
-        print("
-=== Configuration Validation Report ===")
+        print("=== Configuration Validation Report ===")
         print(f"Valid: {'✅' if report['valid'] else '❌'}")
         print(f"Errors: {report['error_count']}")
         print(f"Warnings: {report['warning_count']}")
 
         if report['errors']:
-            print("
-❌ Errors:")
+            print("❌ Errors:")
             for error in report['errors']:
                 print(f"  • {error['field']}: {error['message']}")
                 if error['suggestion']:
                     print(f"    💡 {error['suggestion']}")
 
         if report['warnings']:
-            print("
-⚠️  Warnings:")
+            print("⚠️  Warnings:")
             for warning in report['warnings']:
                 print(f"  • {warning}")
 
         if report['valid']:
-            print("
-✅ Configuration is valid!\n")
+            print("✅ Configuration is valid!\n")
 
 
 def validate_configuration() -> bool:
