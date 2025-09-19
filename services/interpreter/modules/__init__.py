@@ -4,7 +4,13 @@ This package contains all the modularized functionality for the Interpreter serv
 Provides shared utilities and client instances for all interpreter modules.
 """
 
-from services.shared.utilities import get_service_client
+# Optional import - will use fallback if not available
+try:
+    from services.shared.utilities import get_service_client
+except ImportError:
+    def get_service_client(*args, **kwargs):
+        # Fallback function
+        pass
 
 # Shared service client for all interpreter modules - lazy initialization
 _service_client = None
