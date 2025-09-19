@@ -11,21 +11,18 @@ from unittest.mock import Mock, AsyncMock, MagicMock
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
-from services.project_simulation.simulation.domain.entities.project import Project
-from services.project_simulation.simulation.domain.value_objects import (
+from simulation.domain.entities.project import Project
+from simulation.domain.value_objects import (
     ProjectType, ComplexityLevel, ProjectStatus, TeamMember
 )
-from services.project_simulation.simulation.domain.services.simulation_domain_service import SimulationDomainService
+from simulation.domain.services.simulation_domain_service import SimulationDomainService
 
-from services.project_simulation.simulation.application.services.simulation_application_service import SimulationApplicationService
-from services.project_simulation.simulation.application.use_cases.create_simulation_use_case import CreateSimulationUseCase
-from services.project_simulation.simulation.application.use_cases.execute_simulation_use_case import ExecuteSimulationUseCase
-from services.project_simulation.simulation.application.use_cases.get_simulation_status_use_case import GetSimulationStatusUseCase
+from simulation.application.services.simulation_application_service import SimulationApplicationService
+from simulation.application.use_cases.create_simulation_use_case import CreateSimulationUseCase
+from simulation.application.use_cases.execute_simulation_use_case import ExecuteSimulationUseCase
+from simulation.application.use_cases.get_simulation_status_use_case import GetSimulationStatusUseCase
 
-from services.project_simulation.simulation.infrastructure.repositories.in_memory.project_repository import InMemoryProjectRepository
-from services.project_simulation.simulation.infrastructure.repositories.in_memory.simulation_repository import InMemorySimulationRepository
-from services.project_simulation.simulation.infrastructure.repositories.in_memory.timeline_repository import InMemoryTimelineRepository
-from services.project_simulation.simulation.infrastructure.repositories.in_memory.team_repository import InMemoryTeamRepository
+from simulation.infrastructure.repositories.in_memory_repositories import InMemoryProjectRepository, InMemorySimulationRepository, InMemoryTimelineRepository, InMemoryTeamRepository
 
 
 class TestDomainApplicationIntegration:

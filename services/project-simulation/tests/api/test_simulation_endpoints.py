@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
-from services.project_simulation.main import app
-from services.project_simulation.simulation.domain.value_objects import (
+from main import app
+from simulation.domain.value_objects import (
     ProjectType, ComplexityLevel, ProjectStatus
 )
 

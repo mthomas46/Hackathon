@@ -164,7 +164,9 @@ watchfiles>=0.20.0
 # PyGitHub>=2.0.0
 
 # Configuration validation
-# jsonschema>=4.19.0
+jsonschema>=4.19.0
+jsonschema-specifications>=2023.03.6
+referencing>=0.28.4
 
 # =============================================================================
 # PERFORMANCE AND SCALING

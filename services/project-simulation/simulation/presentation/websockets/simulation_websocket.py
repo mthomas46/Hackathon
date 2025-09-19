@@ -469,6 +469,17 @@ async def notify_ecosystem_status(service_name: str, status: str, response_time:
     await handler.notify_ecosystem_status(service_name, status, response_time)
 
 
+async def notify_simulation_error(simulation_id: str, error_data: Dict[str, Any]) -> None:
+    """Notify clients about simulation errors."""
+    handler = get_websocket_handler()
+    await handler.notify_simulation_event_dict(simulation_id, {
+        "type": "simulation_error",
+        "simulation_id": simulation_id,
+        "error": error_data,
+        "timestamp": datetime.now().isoformat()
+    })
+
+
 class SimulationWebSocketManager:
     """Manager for simulation WebSocket connections."""
 
@@ -526,5 +537,6 @@ __all__ = [
     'notify_simulation_progress',
     'notify_simulation_event',
     'notify_simulation_event_dict',
-    'notify_ecosystem_status'
+    'notify_ecosystem_status',
+    'notify_simulation_error'
 ]

@@ -17,6 +17,8 @@ class DomainEvent(ABC):
     """Base class for all domain events."""
     event_id: str = field(init=False)
     event_type: str = field(init=False)
+    event_version: int = 1
+    occurred_at: datetime = field(default_factory=datetime.now)
 
     def __post_init__(self):
         # Set event_id and event_type based on class name
@@ -337,11 +339,21 @@ class ConfigurationChanged(DomainEvent):
     changed_by: str
     change_description: str
     affected_services: List[str]
-    event_version: int = 1
-    occurred_at: datetime = field(default_factory=datetime.now)
 
     def get_aggregate_id(self) -> str:
         return self.config_id
+
+
+@dataclass(frozen=True)
+class TimelineEventOccurred(DomainEvent):
+    """Event fired when a timeline event occurs."""
+    simulation_id: str
+    event_type: str
+    timestamp: datetime
+    data: Dict[str, Any]
+
+    def get_aggregate_id(self) -> str:
+        return self.simulation_id
 
 
 # Event Registry for Serialization
@@ -372,6 +384,7 @@ EVENT_TYPES = {
     "NotificationSent": NotificationSent,
     "AnalyticsDataGenerated": AnalyticsDataGenerated,
     "ConfigurationChanged": ConfigurationChanged,
+    "TimelineEventOccurred": TimelineEventOccurred,
 }
 
 

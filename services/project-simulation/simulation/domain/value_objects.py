@@ -68,6 +68,14 @@ class Phase(Enum):
     DEPLOYMENT = "deployment"
 
 
+class PhaseStatus(Enum):
+    """Phase execution status."""
+    NOT_STARTED = "not_started"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    DELAYED = "delayed"
+
+
 class Role(Enum):
     """Team member role value object."""
     DEVELOPER = "developer"
@@ -103,6 +111,15 @@ class SimulationConfig:
     complexity: ComplexityLevel
     team_size: int = 5
     duration_days: int = 30
+
+
+@dataclass(frozen=True)
+class Milestone:
+    """Project milestone value object."""
+    name: str
+    description: str
+    due_date: datetime
+    completed: bool = False
 
 
 class DocumentType(Enum):
