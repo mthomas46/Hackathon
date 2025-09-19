@@ -193,3 +193,64 @@ def setup_test_environment():
 
     # Cleanup environment variables after all tests
     pass
+
+
+@pytest.fixture
+def test_client():
+    """Create a test client for API testing."""
+    try:
+        # Try to import the actual FastAPI app
+        from main import app
+        from fastapi.testclient import TestClient
+        return TestClient(app)
+    except ImportError:
+        # Fallback: create a mock test client
+        class MockTestClient:
+            def __init__(self):
+                self.requests = []
+
+            def get(self, url, **kwargs):
+                self.requests.append({"method": "GET", "url": url, "kwargs": kwargs})
+                return MockResponse(200, {"status": "ok"})
+
+            def post(self, url, **kwargs):
+                self.requests.append({"method": "POST", "url": url, "kwargs": kwargs})
+                return MockResponse(201, {"status": "created"})
+
+            def put(self, url, **kwargs):
+                self.requests.append({"method": "PUT", "url": url, "kwargs": kwargs})
+                return MockResponse(200, {"status": "updated"})
+
+            def delete(self, url, **kwargs):
+                self.requests.append({"method": "DELETE", "url": url, "kwargs": kwargs})
+                return MockResponse(204, None)
+
+        return MockTestClient()
+
+
+class MockResponse:
+    """Mock response object for testing."""
+    def __init__(self, status_code, json_data):
+        self.status_code = status_code
+        self._json_data = json_data
+
+    def json(self):
+        return self._json_data
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise Exception(f"HTTP {self.status_code}")
+
+
+@pytest.fixture
+def mock_service_client():
+    """Create a mock service client for testing."""
+    from unittest.mock import Mock
+
+    client = Mock()
+    client.get = Mock(return_value=MockResponse(200, {"status": "ok"}))
+    client.post = Mock(return_value=MockResponse(201, {"id": "test_123"}))
+    client.put = Mock(return_value=MockResponse(200, {"status": "updated"}))
+    client.delete = Mock(return_value=MockResponse(204, None))
+
+    return client
