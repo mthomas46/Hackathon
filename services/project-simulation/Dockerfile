@@ -28,7 +28,7 @@ RUN groupadd -r simulation && useradd -r -g simulation simulation
 WORKDIR /app
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY services/project-simulation/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN freshclam
 
 # Copy application code for scanning
-COPY . .
+COPY services/project-simulation/ .
 
 # Scan for malware (optional - can be enabled in CI/CD)
 # RUN clamscan --infected --recursive /app || true
@@ -82,7 +82,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --chown=simulation:simulation . .
+COPY --chown=simulation:simulation services/project-simulation/ .
 
 # Create logs directory and set permissions
 RUN mkdir -p logs && chown -R simulation:simulation logs
@@ -147,7 +147,7 @@ RUN groupadd -r dev && useradd -r -g dev devuser
 WORKDIR /app
 
 # Copy application code
-COPY . .
+COPY services/project-simulation/ .
 
 # Create logs directory
 RUN mkdir -p logs && chown -R devuser:dev devuser
@@ -201,7 +201,7 @@ RUN groupadd -r test && useradd -r -g test testuser
 WORKDIR /app
 
 # Copy application code
-COPY . .
+COPY services/project-simulation/ .
 
 # Switch to testing user
 USER testuser

@@ -145,7 +145,7 @@ DEFAULT_PORT = 5020
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import AnalysisRequest, ReportRequest, NotifyOwnersRequest, FindingsResponse, ArchitectureAnalysisRequest, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest
+from .modules.models import AnalysisRequest, ReportRequest, DocumentDumpRequest, NotifyOwnersRequest, FindingsResponse, ArchitectureAnalysisRequest, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest
 from .modules.analysis_handlers import analysis_handlers
 from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
@@ -3214,6 +3214,304 @@ async def get_load_balancing_config_endpoint():
 async def generate_report(req: ReportRequest):
     """Generate various types of reports."""
     return await report_handlers.handle_generate_report(req)
+
+
+@app.post("/reports/document-dump")
+async def generate_document_dump_report(req: DocumentDumpRequest):
+    """Generate a comprehensive document dump report with beautified formatting.
+
+    This endpoint creates a formatted report of all documents used in analysis,
+    properly categorized by type (Confluence, Jira, Pull Request) with appropriate
+    metadata and formatting for each document type.
+    """
+    try:
+        # Filter documents if requested
+        documents = req.documents
+        if req.filter_by_type:
+            documents = [d for d in documents if d.get("type", "").lower() in [t.lower() for t in req.filter_by_type]]
+        if req.filter_by_category:
+            documents = [d for d in documents if d.get("category", "").lower() in [c.lower() for c in req.filter_by_category]]
+
+        # Sort documents
+        reverse_sort = req.sort_order.lower() == "desc"
+        if req.sort_by in ["dateCreated", "dateUpdated"]:
+            documents.sort(key=lambda x: x.get(req.sort_by, ""), reverse=reverse_sort)
+        elif req.sort_by == "title":
+            documents.sort(key=lambda x: x.get("title", "").lower(), reverse=reverse_sort)
+
+        # Generate the formatted report
+        report_content = await generate_document_dump_markdown(documents, req)
+
+        if req.format == "json":
+            return {
+                "success": True,
+                "report_type": "document_dump",
+                "document_count": len(documents),
+                "format": "json",
+                "data": {
+                    "documents": documents,
+                    "metadata": {
+                        "generated_at": datetime.now().isoformat(),
+                        "total_documents": len(documents),
+                        "filters_applied": {
+                            "type_filter": req.filter_by_type,
+                            "category_filter": req.filter_by_category
+                        },
+                        "sorting": {
+                            "sort_by": req.sort_by,
+                            "sort_order": req.sort_order
+                        }
+                    }
+                }
+            }
+        else:
+            # Return markdown/HTML content
+            return {
+                "success": True,
+                "report_type": "document_dump",
+                "document_count": len(documents),
+                "format": req.format,
+                "content": report_content,
+                "metadata": {
+                    "generated_at": datetime.now().isoformat(),
+                    "total_documents": len(documents),
+                    "filters_applied": {
+                        "type_filter": req.filter_by_type,
+                        "category_filter": req.filter_by_category
+                    },
+                    "sorting": {
+                        "sort_by": req.sort_by,
+                        "sort_order": req.sort_order
+                    }
+                }
+            }
+
+    except Exception as e:
+        logger.error(f"Document dump report generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Document dump report generation failed: {str(e)}")
+
+
+async def generate_document_dump_markdown(documents: List[Dict[str, Any]], req: DocumentDumpRequest) -> str:
+    """Generate beautified markdown report for document dump."""
+    report_lines = []
+
+    # Header
+    report_lines.append("# 📋 Document Analysis Dump Report")
+    report_lines.append("")
+    report_lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    report_lines.append(f"**Total Documents:** {len(documents)}")
+    report_lines.append("")
+
+    # Group documents by type if requested
+    if req.group_by_type:
+        grouped_docs = {}
+        for doc in documents:
+            doc_type = doc.get("type", "unknown").lower()
+            if doc_type not in grouped_docs:
+                grouped_docs[doc_type] = []
+            grouped_docs[doc_type].append(doc)
+
+        # Process each type
+        for doc_type, docs in grouped_docs.items():
+            report_lines.append(f"## {get_type_icon(doc_type)} {doc_type.title()} Documents ({len(docs)})")
+            report_lines.append("")
+
+            for doc in docs:
+                report_lines.extend(generate_document_section(doc, req))
+
+    else:
+        # No grouping
+        for doc in documents:
+            report_lines.extend(generate_document_section(doc, req))
+
+    # Footer
+    report_lines.append("---")
+    report_lines.append("")
+    report_lines.append("*Report generated by Analysis Service*")
+    report_lines.append("")
+
+    return "\n".join(report_lines)
+
+
+def generate_document_section(doc: Dict[str, Any], req: DocumentDumpRequest) -> List[str]:
+    """Generate a formatted section for a single document."""
+    lines = []
+
+    doc_type = doc.get("type", "unknown").lower()
+    doc_id = doc.get("id", "unknown")
+    title = doc.get("title", "Untitled Document")
+
+    # Document header based on type
+    if doc_type == "confluence":
+        lines.append(f"### 📄 {title}")
+        lines.append(f"**Confluence Page ID:** {doc_id}")
+    elif doc_type == "jira":
+        lines.append(f"### 🎫 {title}")
+        lines.append(f"**Jira Ticket:** {doc_id}")
+    elif doc_type == "pull_request" or doc_type == "pr":
+        lines.append(f"### 🔄 {title}")
+        lines.append(f"**Pull Request:** {doc_id}")
+    else:
+        lines.append(f"### 📋 {title}")
+        lines.append(f"**Document ID:** {doc_id}")
+
+    lines.append("")
+
+    # Metadata section
+    if req.include_metadata:
+        lines.append("**📊 Metadata:**")
+        lines.append("")
+
+        metadata_fields = [
+            ("Category", doc.get("category", "N/A")),
+            ("Status", doc.get("status", "N/A")),
+            ("Priority", doc.get("priority", "N/A")),
+            ("Assignee", doc.get("assignee", "N/A")),
+            ("Created", format_timestamp(doc.get("dateCreated"))),
+            ("Updated", format_timestamp(doc.get("dateUpdated"))),
+            ("Author", doc.get("author", "N/A")),
+            ("Tags", ", ".join(doc.get("tags", [])) if doc.get("tags") else "N/A")
+        ]
+
+        for field_name, field_value in metadata_fields:
+            if field_value and field_value != "N/A":
+                lines.append(f"- **{field_name}:** {field_value}")
+
+        lines.append("")
+
+    # Content section
+    if req.include_content:
+        content = doc.get("content", "").strip()
+
+        if content:
+            lines.append("**📝 Content:**")
+            lines.append("")
+
+            # Format content based on document type
+            if doc_type == "confluence":
+                lines.extend(format_confluence_content(content))
+            elif doc_type == "jira":
+                lines.extend(format_jira_content(content))
+            elif doc_type == "pull_request" or doc_type == "pr":
+                lines.extend(format_pr_content(content))
+            else:
+                lines.extend(format_generic_content(content))
+
+            lines.append("")
+        else:
+            lines.append("**📝 Content:** *(Empty document)*")
+            lines.append("")
+
+    # Comments/Conversation section (for Jira and PR)
+    if doc_type in ["jira", "pull_request", "pr"]:
+        comments = doc.get("comments", [])
+        if comments:
+            lines.append("**💬 Conversation:**")
+            lines.append("")
+
+            for i, comment in enumerate(comments, 1):
+                author = comment.get("author", "Unknown")
+                timestamp = format_timestamp(comment.get("timestamp", ""))
+                comment_content = comment.get("content", "").strip()
+
+                lines.append(f"**Comment {i}** by {author} on {timestamp}:")
+                lines.append(f"> {comment_content}")
+                lines.append("")
+
+    # Separator
+    lines.append("---")
+    lines.append("")
+
+    return lines
+
+
+def get_type_icon(doc_type: str) -> str:
+    """Get appropriate icon for document type."""
+    icons = {
+        "confluence": "📄",
+        "jira": "🎫",
+        "pull_request": "🔄",
+        "pr": "🔄",
+        "unknown": "📋"
+    }
+    return icons.get(doc_type.lower(), "📋")
+
+
+def format_timestamp(timestamp: str) -> str:
+    """Format timestamp for display."""
+    if not timestamp:
+        return "N/A"
+
+    try:
+        # Try to parse and format the timestamp
+        if "T" in timestamp:
+            dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+        else:
+            return timestamp
+    except:
+        return timestamp
+
+
+def format_confluence_content(content: str) -> List[str]:
+    """Format Confluence page content."""
+    lines = []
+
+    # Split into paragraphs and format
+    paragraphs = content.split("\n\n")
+    for para in paragraphs:
+        if para.strip():
+            # Basic formatting preservation
+            formatted_para = para.replace("**", "**").replace("*", "*")
+            lines.append(formatted_para)
+            lines.append("")
+
+    return lines
+
+
+def format_jira_content(content: str) -> List[str]:
+    """Format Jira ticket content."""
+    lines = []
+
+    # Jira tickets often have structured content
+    if content.strip():
+        # Preserve basic formatting
+        formatted_content = content.replace("\n", "\n> ")
+        lines.append(f"> {formatted_content}")
+        lines.append("")
+
+    return lines
+
+
+def format_pr_content(content: str) -> List[str]:
+    """Format Pull Request content."""
+    lines = []
+
+    # PR descriptions often contain code and structured content
+    if content.strip():
+        # Basic code block preservation
+        if "```" in content:
+            lines.append(content)
+        else:
+            lines.append(f"> {content}")
+        lines.append("")
+
+    return lines
+
+
+def format_generic_content(content: str) -> List[str]:
+    """Format generic document content."""
+    lines = []
+
+    if content.strip():
+        # Generic formatting
+        paragraphs = content.split("\n\n")
+        for para in paragraphs:
+            if para.strip():
+                lines.append(para)
+                lines.append("")
+
+    return lines
 
 
 @app.get("/findings")
