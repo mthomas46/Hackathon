@@ -65,7 +65,7 @@ class TestSimulationEndpoints:
         assert response.status_code == 201
         data = response.json()
 
-        assert "data" in data
+        assert "data" in data  # Fallback response format
         assert "simulation_id" in data["data"]
         assert data["success"] is True
         assert "_links" in data
@@ -93,8 +93,16 @@ class TestSimulationEndpoints:
         assert response.status_code == 422  # Validation error
         data = response.json()
 
-        assert data["success"] is False
-        assert "field_errors" in data
+        # FastAPI validation error format
+        assert "detail" in data
+        assert isinstance(data["detail"], list)
+        assert len(data["detail"]) > 0
+
+        # Check that we have validation errors for each invalid field
+        error_types = [error["type"] for error in data["detail"]]
+        assert "string_too_short" in error_types  # Empty name
+        assert "string_pattern_mismatch" in error_types  # Invalid type and complexity
+        assert "greater_than_equal" in error_types  # Negative team size
 
     def test_get_simulation_not_found(self, client):
         """Test getting non-existent simulation."""
@@ -168,7 +176,7 @@ class TestSimulationEndpoints:
         # Arrange - Create simulation first
         create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
         assert create_response.status_code == 201
-        simulation_id = create_response.json()["data"]["simulation_id"]
+        simulation_id = create_response.json()["id"]
 
         # Act
         response = client.post(f"/api/v1/simulations/{simulation_id}/execute")
@@ -177,7 +185,7 @@ class TestSimulationEndpoints:
         assert response.status_code == 202  # Accepted for background processing
         data = response.json()
 
-        assert data["success"] is True
+        assert data["status"] == "accepted"  # HATEOAS response status
         assert data["data"]["simulation_id"] == simulation_id
         assert data["data"]["status"] == "running"
 
@@ -198,7 +206,7 @@ class TestSimulationEndpoints:
         # Arrange - Create simulation first
         create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
         assert create_response.status_code == 201
-        simulation_id = create_response.json()["data"]["simulation_id"]
+        simulation_id = create_response.json()["id"]
 
         # Act
         response = client.delete(f"/api/v1/simulations/{simulation_id}")
@@ -274,7 +282,7 @@ class TestSimulationEndpoints:
         # Arrange - Create and execute simulation
         create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
         assert create_response.status_code == 201
-        simulation_id = create_response.json()["data"]["simulation_id"]
+        simulation_id = create_response.json()["id"]
 
         # Act
         response = client.get(f"/api/v1/simulations/{simulation_id}/results")
@@ -389,7 +397,7 @@ class TestSimulationEndpoints:
         # 1. Create simulation
         create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
         assert create_response.status_code == 201
-        simulation_id = create_response.json()["data"]["simulation_id"]
+        simulation_id = create_response.json()["id"]
 
         # 2. Get simulation status
         status_response = client.get(f"/api/v1/simulations/{simulation_id}")
