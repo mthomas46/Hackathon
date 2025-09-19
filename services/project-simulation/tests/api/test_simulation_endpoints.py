@@ -330,7 +330,7 @@ class TestSimulationEndpoints:
 
         # Run concurrent requests
         tasks = [create_simulation() for _ in range(3)]
-        responses = await asyncio.gather(*[asyncio.to_thread(lambda: task()) for task in tasks])
+        responses = await asyncio.gather(*[task() for task in tasks])
 
         # Assert all requests handled properly
         for response in responses:
