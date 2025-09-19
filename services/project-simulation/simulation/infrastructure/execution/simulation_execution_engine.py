@@ -106,7 +106,7 @@ class SimulationExecutionEngine:
     async def _load_simulation(self, simulation_id: str) -> Optional[Simulation]:
         """Load simulation from repository."""
         if self.simulation_repository:
-            return self.simulation_repository.find_by_id(simulation_id)
+            return await self.simulation_repository.find_by_id(simulation_id)
         return None
 
     async def _execute_simulation_async(self, simulation: Simulation) -> Dict[str, Any]:

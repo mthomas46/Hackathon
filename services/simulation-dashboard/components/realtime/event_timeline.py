@@ -676,3 +676,4 @@ def add_sample_events_to_timeline(timeline: RealTimeEventTimeline, count: int = 
             'tags': ['sample', f'type_{i % 3}']
         }
         timeline.add_event(event_data)
+

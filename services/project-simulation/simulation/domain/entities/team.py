@@ -32,8 +32,10 @@ class TeamId:
 class ExpertiseLevel(Enum):
     """Team member expertise levels."""
     JUNIOR = "junior"
+    INTERMEDIATE = "intermediate"
     MID_LEVEL = "mid_level"
     SENIOR = "senior"
+    ADVANCED = "advanced"
     EXPERT = "expert"
     LEAD = "lead"
 
@@ -54,6 +56,24 @@ class WorkStyle(Enum):
     MENTOR = "mentor"
     INNOVATOR = "innovator"
     EXECUTOR = "executor"
+
+
+class MoraleLevel(Enum):
+    """Team morale levels."""
+    VERY_LOW = "very_low"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    VERY_HIGH = "very_high"
+
+
+class BurnoutRisk(Enum):
+    """Team burnout risk levels."""
+    NONE = "none"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
 
 
 @dataclass

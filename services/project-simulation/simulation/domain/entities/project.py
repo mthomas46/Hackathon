@@ -99,6 +99,8 @@ class Project:
     team_size: int
     complexity: ComplexityLevel
     duration_weeks: int
+    budget: Optional[float] = None
+    technologies: List[str] = field(default_factory=list)
     status: ProjectStatus = ProjectStatus.CREATED
     team_members: List[TeamMember] = field(default_factory=list)
     phases: List[ProjectPhase] = field(default_factory=list)

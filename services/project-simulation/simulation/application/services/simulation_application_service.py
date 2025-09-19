@@ -43,7 +43,7 @@ class SimulationApplicationService:
         self._monitoring_service = monitoring_service
         self._logger = logger
 
-    async def create_simulation(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_simulation(self, request: Dict[str, Any], correlation_id: Optional[str] = None) -> Dict[str, Any]:
         """Create a new project simulation."""
         try:
             self._logger.info(
@@ -64,6 +64,7 @@ class SimulationApplicationService:
                 name=request["name"],
                 description=request.get("description", ""),
                 type=ProjectType(request.get("type", "web_application")),
+                team_size=request.get("team_size", 5),
                 complexity=ComplexityLevel(request.get("complexity", "medium")),
                 duration_weeks=request.get("duration_weeks", 8),
                 budget=request.get("budget"),
@@ -93,29 +94,30 @@ class SimulationApplicationService:
             )
 
             # Create default timeline
-            from ...domain.entities.timeline import Timeline, TimelineId, Phase
-            from datetime import datetime, timedelta
+            from ...domain.entities.timeline import Timeline, TimelineId, TimelinePhase
+            from ...domain.value_objects import Duration
+            from datetime import timedelta
 
             phases = []
             start_date = datetime.now()
             for i, phase_name in enumerate(["Planning", "Design", "Development", "Testing", "Deployment"]):
                 phase_start = start_date + timedelta(weeks=i*2)
                 phase_end = phase_start + timedelta(weeks=2)
-                phases.append(Phase(
+                phases.append(TimelinePhase(
                     id=f"phase_{i+1}",
                     name=phase_name,
+                    display_name=phase_name,
                     description=f"{phase_name} phase of the project",
+                    planned_duration=Duration(weeks=2),
                     start_date=phase_start,
-                    end_date=phase_end,
+                    planned_end_date=phase_end,
                     status="pending" if i > 0 else "in_progress"
                 ))
 
             timeline = Timeline(
                 id=TimelineId(),
                 project_id=str(project.id.value),
-                name=f"Timeline for {project.name}",
-                phases=phases,
-                total_duration_weeks=10
+                phases=phases
             )
 
             # Save timeline
@@ -125,7 +127,29 @@ class SimulationApplicationService:
             from ...domain.entities.team import Team, TeamId, TeamMemberEntity, TeamRole, ExpertiseLevel, CommunicationStyle, WorkStyle, MoraleLevel, BurnoutRisk
 
             team_members = []
-            roles = [TeamRole.PRODUCT_MANAGER, TeamRole.TECHNICAL_LEAD, TeamRole.SENIOR_DEVELOPER, TeamRole.QA_ENGINEER]
+            # Create common team roles
+            product_manager = TeamRole(
+                name="Product Manager",
+                description="Manages product vision and requirements",
+                required_expertise=ExpertiseLevel.ADVANCED
+            )
+            technical_lead = TeamRole(
+                name="Technical Lead",
+                description="Leads technical architecture and development",
+                required_expertise=ExpertiseLevel.EXPERT
+            )
+            senior_developer = TeamRole(
+                name="Senior Developer",
+                description="Experienced software developer",
+                required_expertise=ExpertiseLevel.ADVANCED
+            )
+            qa_engineer = TeamRole(
+                name="QA Engineer",
+                description="Quality assurance and testing specialist",
+                required_expertise=ExpertiseLevel.INTERMEDIATE
+            )
+
+            roles = [product_manager, technical_lead, senior_developer, qa_engineer]
             for i, role in enumerate(roles):
                 member = TeamMemberEntity(
                     id=f"member_{i+1}",
@@ -138,8 +162,8 @@ class SimulationApplicationService:
                     productivity_multiplier=1.0 + (i * 0.1),
                     morale_level=MoraleLevel.HIGH,
                     burnout_risk=BurnoutRisk.LOW,
-                    join_date=datetime.now() - timedelta(days=30),
-                    skills=["Python", "FastAPI", "Testing"][:i+1] + ["Communication"]
+                    joined_at=datetime.now() - timedelta(days=30),
+                    specialization=["Python", "FastAPI", "Testing"][:i+1] + ["Communication"]
                 )
                 team_members.append(member)
 
@@ -324,7 +348,7 @@ class SimulationApplicationService:
             }
 
     async def list_simulations(self, status_filter: Optional[str] = None,
-                              limit: int = 50) -> Dict[str, Any]:
+                              limit: int = 50, offset: int = 0) -> Dict[str, Any]:
         """List simulations with optional filtering."""
         correlation_id = self._logger._logger._logger.extra.get('correlation_id', 'unknown')
 

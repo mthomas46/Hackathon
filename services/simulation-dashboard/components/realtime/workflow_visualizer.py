@@ -514,3 +514,4 @@ def render_realtime_workflow_monitor(simulation_id: Optional[str] = None,
     """Render a real-time workflow monitor component."""
     visualizer = RealTimeWorkflowVisualizer()
     visualizer.render_workflow_visualizer(title=title)
+
