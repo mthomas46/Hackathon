@@ -1686,7 +1686,7 @@ async def create_simulation_from_interpreter(request: Dict[str, Any], req: Reque
             # Generate mock data based on query and context
             mock_data = await generate_mock_simulation_data(query, context, simulation_config)
 
-            # Create simulation with mock data
+            # Create simulation with integrated mock data
             simulation_request = {
                 "name": f"Interpreter Simulation: {query[:50]}...",
                 "description": f"Simulation generated from interpreter query: {query}",
@@ -1704,7 +1704,25 @@ async def create_simulation_from_interpreter(request: Dict[str, Any], req: Reque
             if result["success"]:
                 simulation_id = result.get("simulation_id")
 
-                # Store mock data in simulation
+                # Integrate documents from doc-store if available
+                mock_documents = mock_data.get("documents", [])
+                integrated_documents = await integrate_doc_store_documents_with_timeline(
+                    simulation_id=simulation_id,
+                    mock_documents=mock_documents,
+                    timeline=mock_data.get("timeline")
+                )
+
+                # Update mock data with integrated documents
+                mock_data["documents"] = integrated_documents
+                mock_data["doc_store_integration"] = {
+                    "enabled": True,
+                    "original_mock_docs": len(mock_documents),
+                    "integrated_docs": len(integrated_documents),
+                    "doc_store_docs": len(integrated_documents) - len(mock_documents),
+                    "timestamp": datetime.now().isoformat()
+                }
+
+                # Store integrated mock data in simulation
                 await store_mock_data_in_simulation(simulation_id, mock_data)
 
                 # Execute simulation with analysis processing
@@ -3765,6 +3783,136 @@ async def get_summarizer_service_url() -> Optional[str]:
         # Service not available
         logger.warning("Summarizer service not available for analysis")
         return None
+
+
+def _get_doc_store_service_url() -> str:
+    """Get the appropriate doc-store service URL based on environment."""
+    # Check for explicit override
+    override_url = os.getenv("DOC_STORE_URL")
+    if override_url:
+        return override_url
+
+    # Determine environment and return appropriate URL
+    # Based on docker-compose.dev.yml: doc_store uses port 5051
+    try:
+        # Check if running in Docker environment
+        with open("/proc/1/cgroup", "r") as f:
+            if "docker" in f.read().lower():
+                return "http://doc-store:5051"
+    except:
+        pass
+
+    # Default to localhost for development
+    return "http://localhost:5051"
+
+
+async def get_doc_store_service_url() -> Optional[str]:
+    """Get the URL of the doc-store service."""
+    try:
+        service_url = _get_doc_store_service_url()
+
+        # Basic connectivity check
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{service_url}/health")
+            if response.status_code == 200:
+                return service_url
+
+        return None
+
+    except Exception:
+        # Service not available
+        logger.warning("Doc-store service not available")
+        return None
+
+
+async def retrieve_documents_from_doc_store(query: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    """Retrieve documents from doc-store service for timeline integration."""
+    try:
+        doc_store_url = await get_doc_store_service_url()
+        if not doc_store_url:
+            logger.warning("Doc-store service not available for document retrieval")
+            return []
+
+        # Prepare query parameters
+        params = {"limit": limit}
+        if query:
+            params["query"] = query
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                f"{doc_store_url}/api/v1/documents/search",
+                params=params,
+                headers={"Content-Type": "application/json"}
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                documents = result.get("documents", [])
+
+                # Transform doc-store format to simulation format
+                transformed_docs = []
+                for doc in documents:
+                    transformed_doc = {
+                        "id": doc.get("id", f"doc_{len(transformed_docs)}"),
+                        "title": doc.get("title", "Untitled Document"),
+                        "content": doc.get("content", ""),
+                        "dateCreated": doc.get("created_at") or doc.get("dateCreated", datetime.now().isoformat()),
+                        "dateUpdated": doc.get("updated_at") or doc.get("dateUpdated", datetime.now().isoformat()),
+                        "source": "doc_store",
+                        "metadata": doc.get("metadata", {})
+                    }
+                    transformed_docs.append(transformed_doc)
+
+                logger.info(f"Retrieved {len(transformed_docs)} documents from doc-store")
+                return transformed_docs
+            else:
+                logger.warning(f"Failed to retrieve documents from doc-store: {response.status_code}")
+                return []
+
+    except Exception as e:
+        logger.error(f"Error retrieving documents from doc-store: {str(e)}")
+        return []
+
+
+async def integrate_doc_store_documents_with_timeline(simulation_id: str, mock_documents: List[Dict[str, Any]], timeline: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    """Integrate documents from doc-store with simulation timeline."""
+    try:
+        # Retrieve additional documents from doc-store
+        doc_store_docs = await retrieve_documents_from_doc_store(
+            query=f"simulation:{simulation_id}",
+            limit=25
+        )
+
+        # Combine mock documents with doc-store documents
+        all_documents = mock_documents.copy()
+
+        # Add doc-store documents
+        for doc in doc_store_docs:
+            # Check if document already exists (avoid duplicates)
+            existing_ids = {d.get("id") for d in all_documents}
+            if doc.get("id") not in existing_ids:
+                all_documents.append(doc)
+
+        # If timeline is provided, place documents on timeline
+        if timeline and all_documents:
+            # This would integrate with the timeline placement logic
+            # For now, we'll just mark documents with their placement info
+            for doc in all_documents:
+                if doc.get("source") == "doc_store":
+                    # Add timeline placement metadata
+                    doc["timeline_placement"] = {
+                        "placed": True,
+                        "method": "doc_store_integration",
+                        "timestamp": datetime.now().isoformat()
+                    }
+
+        logger.info(f"Integrated {len(doc_store_docs)} doc-store documents with {len(mock_documents)} mock documents")
+        return all_documents
+
+    except Exception as e:
+        logger.error(f"Error integrating doc-store documents: {str(e)}")
+        # Return original documents if integration fails
+        return mock_documents
 
 
     uvicorn.run(
