@@ -20,33 +20,58 @@ warnings.filterwarnings('ignore')
 from services.clients.simulation_client import SimulationClient
 from infrastructure.config.config import get_config
 
-# Import scikit-learn for ML capabilities
-try:
-    from sklearn.ensemble import IsolationForest, RandomForestRegressor
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error, r2_score
-    import joblib
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    st.warning("⚠️ scikit-learn not available. Some AI features will be limited.")
+# Import dependency management system
+from infrastructure.dependencies import (
+    dependency_manager,
+    safe_import,
+    check_ml_availability
+)
 
-# Import statsmodels for time series analysis
-try:
-    import statsmodels.api as sm
-    from statsmodels.tsa.arima.model import ARIMA
-    from statsmodels.tsa.statespace.sarimax import SARIMAX
-    STATSMODELS_AVAILABLE = True
-except ImportError:
-    STATSMODELS_AVAILABLE = False
+# Safely import ML libraries with graceful degradation
+sklearn = safe_import('sklearn')
+statsmodels = safe_import('statsmodels')
+prophet = safe_import('prophet')
 
-# Import prophet for advanced forecasting
-try:
-    from prophet import Prophet
-    PROPHET_AVAILABLE = True
-except ImportError:
-    PROPHET_AVAILABLE = False
+# Check ML library availability
+ml_availability = check_ml_availability()
+SKLEARN_AVAILABLE = ml_availability.get('scikit_learn', False)
+STATSMODELS_AVAILABLE = ml_availability.get('statsmodels', False)
+PROPHET_AVAILABLE = ml_availability.get('prophet', False)
+XGBOOST_AVAILABLE = ml_availability.get('xgboost', False)
+LIGHTGBM_AVAILABLE = ml_availability.get('lightgbm', False)
+
+# Import specific classes if available
+if SKLEARN_AVAILABLE and sklearn:
+    try:
+        from sklearn.ensemble import IsolationForest, RandomForestRegressor
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import mean_squared_error, r2_score
+        import joblib
+    except ImportError:
+        SKLEARN_AVAILABLE = False
+
+if STATSMODELS_AVAILABLE and statsmodels:
+    try:
+        import statsmodels.api as sm
+        from statsmodels.tsa.arima.model import ARIMA
+        from statsmodels.tsa.statespace.sarimax import SARIMAX
+    except ImportError:
+        STATSMODELS_AVAILABLE = False
+
+if PROPHET_AVAILABLE and prophet:
+    try:
+        from prophet import Prophet
+    except ImportError:
+        PROPHET_AVAILABLE = False
+
+# Display dependency status
+if not SKLEARN_AVAILABLE:
+    st.warning("⚠️ scikit-learn not available. AI insights and ML-based features will be limited.")
+if not STATSMODELS_AVAILABLE:
+    st.info("ℹ️ statsmodels not available. Advanced time series analysis will be limited.")
+if not PROPHET_AVAILABLE:
+    st.info("ℹ️ Facebook Prophet not available. Prophet-based forecasting will not be available.")
 
 
 def render_ai_insights_page():
@@ -57,30 +82,56 @@ def render_ai_insights_page():
     # Initialize session state
     initialize_ai_insights_state()
 
-    # Check for required dependencies
-    if not SKLEARN_AVAILABLE:
-        st.error("❌ AI features require scikit-learn. Please install: `pip install scikit-learn`")
+    # Check feature availability
+    ai_insights_available = dependency_manager.is_feature_available('ai_insights')
+    pattern_recognition_available = dependency_manager.is_feature_available('pattern_recognition')
+    anomaly_detection_available = dependency_manager.is_feature_available('anomaly_detection')
+    predictive_analytics_available = dependency_manager.is_feature_available('predictive_analytics')
+
+    # Display feature availability status
+    if not ai_insights_available:
+        st.error("❌ Core AI features are not available due to missing dependencies.")
+        st.info("Please install required dependencies: `pip install scikit-learn>=1.3.0`")
         return
 
-    # Create tabs for different AI capabilities
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🔍 Pattern Recognition",
-        "🎯 Intelligent Recommendations",
-        "⚠️ AI Anomaly Detection",
-        "🔮 Predictive Optimization"
-    ])
+    # Create tabs for different AI capabilities with availability indicators
+    tab_names = []
+    tab_functions = []
 
-    with tab1:
-        render_pattern_recognition()
+    # Pattern Recognition Tab
+    if pattern_recognition_available:
+        tab_names.append("🔍 Pattern Recognition")
+        tab_functions.append(render_pattern_recognition)
+    else:
+        tab_names.append("🔍 Pattern Recognition (Limited)")
+        tab_functions.append(render_pattern_recognition_limited)
 
-    with tab2:
-        render_intelligent_recommendations()
+    # Intelligent Recommendations Tab
+    tab_names.append("🎯 Intelligent Recommendations")
+    tab_functions.append(render_intelligent_recommendations)
 
-    with tab3:
-        render_ai_anomaly_detection()
+    # Anomaly Detection Tab
+    if anomaly_detection_available:
+        tab_names.append("⚠️ AI Anomaly Detection")
+        tab_functions.append(render_ai_anomaly_detection)
+    else:
+        tab_names.append("⚠️ AI Anomaly Detection (Limited)")
+        tab_functions.append(render_anomaly_detection_limited)
 
-    with tab4:
-        render_predictive_optimization()
+    # Predictive Optimization Tab
+    if predictive_analytics_available:
+        tab_names.append("🔮 Predictive Optimization")
+        tab_functions.append(render_predictive_optimization)
+    else:
+        tab_names.append("🔮 Predictive Optimization (Limited)")
+        tab_functions.append(render_predictive_optimization_limited)
+
+    # Create tabs
+    tabs = st.tabs(tab_names)
+
+    for i, (tab, func) in enumerate(zip(tabs, tab_functions)):
+        with tab:
+            func()
 
 
 def initialize_ai_insights_state():
