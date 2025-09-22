@@ -5,8 +5,8 @@ from typing import List, Optional
 from ...domain.service_registry import Service, ServiceDiscoveryService, ServiceRegistrationService
 from ...shared.application import UseCase
 from ...shared.domain import DomainResult
-from .commands import *
-from .queries import *
+from .commands import RegisterServiceCommand, UnregisterServiceCommand, UpdateServiceStatusCommand, HeartbeatServiceCommand
+from .queries import GetServiceQuery, ListServicesQuery, GetServiceCategoriesQuery, GetServiceCapabilitiesQuery
 
 
 class RegisterServiceUseCase(UseCase):
