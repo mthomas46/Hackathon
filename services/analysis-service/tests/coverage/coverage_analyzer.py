@@ -1,11 +1,11 @@
 """Coverage Analyzer - Analyze and report test coverage metrics."""
 
-import os
 import json
-import subprocess
-from typing import Dict, Any, List, Optional, Set
-from pathlib import Path
+import os
 import re
+import subprocess
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 
 class CoverageAnalyzer:

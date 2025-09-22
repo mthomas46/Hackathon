@@ -1,24 +1,19 @@
 """SQLite Migration Manager - SQLite-specific migration implementation."""
 
-import sqlite3
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
-from pathlib import Path
+import sqlite3
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
-from .migration_manager import MigrationManager
 from .migration import MigrationExecutionContext, MigrationResult, MigrationStatus
+from .migration_manager import MigrationManager
 
 
 class SQLiteMigrationManager(MigrationManager):
     """SQLite-specific migration manager."""
 
-    def __init__(
-        self,
-        database_path: str,
-        migration_table: str = "schema_migrations",
-        dry_run: bool = False
-    ):
+    def __init__(self, database_path: str, migration_table: str = "schema_migrations", dry_run: bool = False):
         """Initialize SQLite migration manager."""
         super().__init__(dry_run=dry_run)
         self.database_path = Path(database_path)
@@ -37,7 +32,7 @@ class SQLiteMigrationManager(MigrationManager):
             conn = sqlite3.connect(
                 str(self.database_path),
                 isolation_level=None,  # We'll manage transactions manually
-                check_same_thread=False
+                check_same_thread=False,
             )
             conn.execute("PRAGMA foreign_keys = ON")
             conn.execute("PRAGMA journal_mode = WAL")
@@ -64,7 +59,8 @@ class SQLiteMigrationManager(MigrationManager):
             cursor = conn.cursor()
 
             # Create migration table if it doesn't exist
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 CREATE TABLE IF NOT EXISTS {self.migration_table} (
                     migration_id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -78,18 +74,23 @@ class SQLiteMigrationManager(MigrationManager):
                     checksum TEXT,
                     metadata TEXT
                 )
-            """)
+            """
+            )
 
             # Create indexes for better performance
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 CREATE INDEX IF NOT EXISTS idx_migrations_executed_at
                 ON {self.migration_table} (executed_at)
-            """)
+            """
+            )
 
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 CREATE INDEX IF NOT EXISTS idx_migrations_status
                 ON {self.migration_table} (status)
-            """)
+            """
+            )
 
             conn.commit()
 
@@ -106,11 +107,14 @@ class SQLiteMigrationManager(MigrationManager):
             cursor = conn.cursor()
 
             # Get all completed migrations
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 SELECT migration_id FROM {self.migration_table}
                 WHERE status = ?
                 ORDER BY executed_at
-            """, (MigrationStatus.COMPLETED.value,))
+            """,
+                (MigrationStatus.COMPLETED.value,),
+            )
 
             executed_migration_ids = [row[0] for row in cursor.fetchall()]
             self.executed_migrations = set(executed_migration_ids)
@@ -127,25 +131,40 @@ class SQLiteMigrationManager(MigrationManager):
             cursor = conn.cursor()
 
             # Insert or replace migration record
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 INSERT OR REPLACE INTO {self.migration_table}
                 (migration_id, name, version, migration_type, executed_at,
                  duration_seconds, status, error_message, rollback_available,
                  checksum, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                result.migration_id,
-                self.migrations.get(result.migration_id, Migration()).name if result.migration_id in self.migrations else "Unknown",
-                self.migrations.get(result.migration_id, Migration()).version if result.migration_id in self.migrations else "1.0.0",
-                self.migrations.get(result.migration_id, Migration()).migration_type.value if result.migration_id in self.migrations else "schema",
-                result.executed_at.isoformat(),
-                result.duration_seconds,
-                result.status.value,
-                result.error_message,
-                result.rollback_available,
-                self._calculate_checksum(result.migration_id),
-                str(result.metadata) if result.metadata else None
-            ))
+            """,
+                (
+                    result.migration_id,
+                    (
+                        self.migrations.get(result.migration_id, Migration()).name
+                        if result.migration_id in self.migrations
+                        else "Unknown"
+                    ),
+                    (
+                        self.migrations.get(result.migration_id, Migration()).version
+                        if result.migration_id in self.migrations
+                        else "1.0.0"
+                    ),
+                    (
+                        self.migrations.get(result.migration_id, Migration()).migration_type.value
+                        if result.migration_id in self.migrations
+                        else "schema"
+                    ),
+                    result.executed_at.isoformat(),
+                    result.duration_seconds,
+                    result.status.value,
+                    result.error_message,
+                    result.rollback_available,
+                    self._calculate_checksum(result.migration_id),
+                    str(result.metadata) if result.metadata else None,
+                ),
+            )
 
             conn.commit()
 
@@ -173,10 +192,7 @@ class SQLiteMigrationManager(MigrationManager):
         context = SQLiteMigrationExecutionContext(conn)
         return context
 
-    async def execute_migration_with_tracking(
-        self,
-        migration_id: str
-    ) -> MigrationResult:
+    async def execute_migration_with_tracking(self, migration_id: str) -> MigrationResult:
         """Execute a migration with full tracking."""
         migration = self.get_migration(migration_id)
         if not migration:
@@ -202,7 +218,7 @@ class SQLiteMigrationManager(MigrationManager):
                 status=MigrationStatus.FAILED,
                 executed_at=datetime.utcnow(),
                 duration_seconds=execution_time,
-                error_message=str(e)
+                error_message=str(e),
             )
 
             # Save failure result
@@ -218,26 +234,30 @@ class SQLiteMigrationManager(MigrationManager):
         try:
             cursor = conn.cursor()
 
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 SELECT migration_id, name, version, migration_type, executed_at,
                        duration_seconds, status, error_message, rollback_available
                 FROM {self.migration_table}
                 ORDER BY executed_at DESC
-            """)
+            """
+            )
 
             history = []
             for row in cursor.fetchall():
-                history.append({
-                    'migration_id': row[0],
-                    'name': row[1],
-                    'version': row[2],
-                    'migration_type': row[3],
-                    'executed_at': row[4],
-                    'duration_seconds': row[5],
-                    'status': row[6],
-                    'error_message': row[7],
-                    'rollback_available': row[8]
-                })
+                history.append(
+                    {
+                        "migration_id": row[0],
+                        "name": row[1],
+                        "version": row[2],
+                        "migration_type": row[3],
+                        "executed_at": row[4],
+                        "duration_seconds": row[5],
+                        "status": row[6],
+                        "error_message": row[7],
+                        "rollback_available": row[8],
+                    }
+                )
 
             return history
 
@@ -253,25 +273,28 @@ class SQLiteMigrationManager(MigrationManager):
         try:
             cursor = conn.cursor()
 
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 SELECT migration_id, name, version, migration_type, executed_at,
                        duration_seconds, status, error_message, rollback_available
                 FROM {self.migration_table}
                 WHERE migration_id = ?
-            """, (migration_id,))
+            """,
+                (migration_id,),
+            )
 
             row = cursor.fetchone()
             if row:
                 return {
-                    'migration_id': row[0],
-                    'name': row[1],
-                    'version': row[2],
-                    'migration_type': row[3],
-                    'executed_at': row[4],
-                    'duration_seconds': row[5],
-                    'status': row[6],
-                    'error_message': row[7],
-                    'rollback_available': row[8]
+                    "migration_id": row[0],
+                    "name": row[1],
+                    "version": row[2],
+                    "migration_type": row[3],
+                    "executed_at": row[4],
+                    "duration_seconds": row[5],
+                    "status": row[6],
+                    "error_message": row[7],
+                    "rollback_available": row[8],
                 }
 
             return None
@@ -282,10 +305,7 @@ class SQLiteMigrationManager(MigrationManager):
         finally:
             self._close_connection()
 
-    async def rollback_migration_with_tracking(
-        self,
-        migration_id: str
-    ) -> MigrationResult:
+    async def rollback_migration_with_tracking(self, migration_id: str) -> MigrationResult:
         """Rollback a migration with tracking."""
         migration = self.get_migration(migration_id)
         if not migration:
@@ -311,7 +331,7 @@ class SQLiteMigrationManager(MigrationManager):
                 status=MigrationStatus.FAILED,
                 executed_at=datetime.utcnow(),
                 duration_seconds=execution_time,
-                error_message=f"Rollback failed: {str(e)}"
+                error_message=f"Rollback failed: {str(e)}",
             )
 
             # Save failure result
@@ -328,7 +348,8 @@ class SQLiteMigrationManager(MigrationManager):
             cursor = conn.cursor()
 
             # Delete old records but keep the most recent of each migration
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 DELETE FROM {self.migration_table}
                 WHERE migration_id IN (
                     SELECT migration_id
@@ -342,7 +363,8 @@ class SQLiteMigrationManager(MigrationManager):
                         HAVING executed_at = MAX(executed_at)
                     )
                 )
-            """)
+            """
+            )
 
             deleted_count = cursor.rowcount
             conn.commit()
@@ -374,21 +396,17 @@ class SQLiteMigrationManager(MigrationManager):
             self._close_connection()
 
             return {
-                'status': 'healthy',
-                'database_path': str(self.database_path),
-                'database_exists': self.database_path.exists(),
-                'migration_table_exists': True,
-                'total_migrations_recorded': migration_count,
-                'registered_migrations': len(self.migrations),
-                'executed_migrations': len(self.executed_migrations)
+                "status": "healthy",
+                "database_path": str(self.database_path),
+                "database_exists": self.database_path.exists(),
+                "migration_table_exists": True,
+                "total_migrations_recorded": migration_count,
+                "registered_migrations": len(self.migrations),
+                "executed_migrations": len(self.executed_migrations),
             }
 
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'database_path': str(self.database_path)
-            }
+            return {"status": "unhealthy", "error": str(e), "database_path": str(self.database_path)}
 
 
 class SQLiteMigrationExecutionContext(MigrationExecutionContext):
@@ -411,9 +429,9 @@ class SQLiteMigrationExecutionContext(MigrationExecutionContext):
                 cursor.execute(sql)
 
             # Get affected rows for data migrations
-            if sql.strip().upper().startswith(('INSERT', 'UPDATE', 'DELETE')):
+            if sql.strip().upper().startswith(("INSERT", "UPDATE", "DELETE")):
                 affected_rows = cursor.rowcount
-                self.add_metadata('affected_rows', affected_rows)
+                self.add_metadata("affected_rows", affected_rows)
 
             return cursor
 
@@ -430,7 +448,7 @@ class SQLiteMigrationExecutionContext(MigrationExecutionContext):
 
             # Get affected rows
             affected_rows = cursor.rowcount
-            self.add_metadata('affected_rows', affected_rows)
+            self.add_metadata("affected_rows", affected_rows)
 
             return cursor
 

@@ -1,6 +1,7 @@
 """Remediation Models - Automated remediation request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
 
 from .base import BaseModel
@@ -8,6 +9,7 @@ from .base import BaseModel
 
 class AutomatedRemediationRequest(BaseModel):
     """Request for automated remediation."""
+
     document_id: str = Field(..., description="Document ID to remediate")
     issues: List[Dict[str, Any]] = Field(..., description="Issues to remediate")
     remediation_type: Optional[str] = Field("auto", description="Type of remediation")
@@ -16,6 +18,7 @@ class AutomatedRemediationRequest(BaseModel):
 
 class AutomatedRemediationResponse(BaseModel):
     """Response for automated remediation."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was remediated")
     success: bool = Field(..., description="Whether remediation was successful")
@@ -28,6 +31,7 @@ class AutomatedRemediationResponse(BaseModel):
 
 class RemediationPreviewRequest(BaseModel):
     """Request for remediation preview."""
+
     document_id: str = Field(..., description="Document ID to preview")
     issues: List[Dict[str, Any]] = Field(..., description="Issues to preview remediation for")
     remediation_type: Optional[str] = Field("auto", description="Type of remediation")
@@ -36,6 +40,7 @@ class RemediationPreviewRequest(BaseModel):
 
 class RemediationPreviewResponse(BaseModel):
     """Response for remediation preview."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was previewed")
     preview_available: bool = Field(..., description="Whether preview is available")

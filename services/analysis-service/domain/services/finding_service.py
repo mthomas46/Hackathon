@@ -1,7 +1,7 @@
 """Finding domain service."""
 
-from typing import List, Dict, Any, Optional
 from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
 from ..entities import Finding, FindingId, Severity
 from ..entities.document import DocumentId
@@ -14,11 +14,18 @@ class FindingService:
         """Initialize finding service."""
         pass
 
-    def create_finding(self, document_id: DocumentId, analysis_id: str,
-                      title: str, description: str, severity: Severity,
-                      category: str, confidence: float = 0.0,
-                      location: Optional[Dict[str, Any]] = None,
-                      suggestion: Optional[str] = None) -> Finding:
+    def create_finding(
+        self,
+        document_id: DocumentId,
+        analysis_id: str,
+        title: str,
+        description: str,
+        severity: Severity,
+        category: str,
+        confidence: float = 0.0,
+        location: Optional[Dict[str, Any]] = None,
+        suggestion: Optional[str] = None,
+    ) -> Finding:
         """Create a new finding."""
         finding_id = FindingId(f"finding_{document_id.value}_{hash(title) % 10000}")
 
@@ -32,7 +39,7 @@ class FindingService:
             category=category,
             confidence=confidence,
             location=location,
-            suggestion=suggestion
+            suggestion=suggestion,
         )
 
         return finding
@@ -46,41 +53,27 @@ class FindingService:
 
         return dict(categorized)
 
-    def filter_findings_by_severity(self, findings: List[Finding],
-                                   min_severity: Severity) -> List[Finding]:
+    def filter_findings_by_severity(self, findings: List[Finding], min_severity: Severity) -> List[Finding]:
         """Filter findings by minimum severity level."""
-        severity_order = {
-            Severity.INFO: 1,
-            Severity.LOW: 2,
-            Severity.MEDIUM: 3,
-            Severity.HIGH: 4,
-            Severity.CRITICAL: 5
-        }
+        severity_order = {Severity.INFO: 1, Severity.LOW: 2, Severity.MEDIUM: 3, Severity.HIGH: 4, Severity.CRITICAL: 5}
 
         min_level = severity_order[min_severity]
 
-        return [
-            finding for finding in findings
-            if severity_order[finding.severity] >= min_level
-        ]
+        return [finding for finding in findings if severity_order[finding.severity] >= min_level]
 
-    def filter_findings_by_category(self, findings: List[Finding],
-                                   categories: List[str]) -> List[Finding]:
+    def filter_findings_by_category(self, findings: List[Finding], categories: List[str]) -> List[Finding]:
         """Filter findings by category."""
-        return [
-            finding for finding in findings
-            if finding.category in categories
-        ]
+        return [finding for finding in findings if finding.category in categories]
 
     def get_findings_statistics(self, findings: List[Finding]) -> Dict[str, Any]:
         """Get statistics about findings."""
         if not findings:
             return {
-                'total_findings': 0,
-                'severity_distribution': {},
-                'category_distribution': {},
-                'avg_confidence': 0.0,
-                'resolved_percentage': 0.0
+                "total_findings": 0,
+                "severity_distribution": {},
+                "category_distribution": {},
+                "avg_confidence": 0.0,
+                "resolved_percentage": 0.0,
             }
 
         # Severity distribution
@@ -100,16 +93,17 @@ class FindingService:
         resolved_percentage = (resolved_count / total_findings) * 100
 
         return {
-            'total_findings': total_findings,
-            'severity_distribution': dict(severity_counts),
-            'category_distribution': dict(category_counts),
-            'avg_confidence': round(avg_confidence, 3),
-            'resolved_percentage': round(resolved_percentage, 1),
-            'unresolved_count': total_findings - resolved_count
+            "total_findings": total_findings,
+            "severity_distribution": dict(severity_counts),
+            "category_distribution": dict(category_counts),
+            "avg_confidence": round(avg_confidence, 3),
+            "resolved_percentage": round(resolved_percentage, 1),
+            "unresolved_count": total_findings - resolved_count,
         }
 
     def prioritize_findings(self, findings: List[Finding]) -> List[Finding]:
         """Prioritize findings by severity and confidence."""
+
         def priority_key(finding: Finding) -> tuple:
             # Sort by: severity (desc), confidence (desc), age (desc)
             severity_score = finding.severity_score
@@ -128,8 +122,7 @@ class FindingService:
 
         return dict(grouped)
 
-    def get_high_priority_findings(self, findings: List[Finding],
-                                  max_items: int = 10) -> List[Finding]:
+    def get_high_priority_findings(self, findings: List[Finding], max_items: int = 10) -> List[Finding]:
         """Get top priority findings."""
         prioritized = self.prioritize_findings(findings)
         return prioritized[:max_items]
@@ -147,7 +140,7 @@ class FindingService:
         if not 0.0 <= finding.confidence <= 1.0:
             issues.append("Confidence must be between 0.0 and 1.0")
 
-        if finding.category not in ['consistency', 'quality', 'security', 'performance', 'usability']:
+        if finding.category not in ["consistency", "quality", "security", "performance", "usability"]:
             issues.append("Invalid category - must be one of: consistency, quality, security, performance, usability")
 
         return issues

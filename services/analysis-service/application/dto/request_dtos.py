@@ -1,13 +1,14 @@
 """Request DTOs for application layer."""
 
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class CreateDocumentRequest:
     """DTO for creating a document."""
+
     title: str
     content: str
     format: str = "markdown"
@@ -50,6 +51,7 @@ class CreateDocumentRequest:
 @dataclass
 class UpdateDocumentRequest:
     """DTO for updating a document."""
+
     document_id: str
     title: Optional[str] = None
     content: Optional[str] = None
@@ -94,6 +96,7 @@ class UpdateDocumentRequest:
 @dataclass
 class PerformAnalysisRequest:
     """DTO for performing analysis."""
+
     document_id: str
     analysis_type: str
     configuration: Optional[Dict[str, Any]] = None
@@ -111,10 +114,16 @@ class PerformAnalysisRequest:
             errors.append("Analysis type is required")
 
         valid_types = [
-            "semantic_similarity", "sentiment", "content_quality",
-            "trend_analysis", "risk_assessment", "maintenance_forecast",
-            "quality_degradation", "change_impact", "cross_repository",
-            "automated_remediation"
+            "semantic_similarity",
+            "sentiment",
+            "content_quality",
+            "trend_analysis",
+            "risk_assessment",
+            "maintenance_forecast",
+            "quality_degradation",
+            "change_impact",
+            "cross_repository",
+            "automated_remediation",
         ]
 
         if self.analysis_type not in valid_types:
@@ -127,8 +136,8 @@ class PerformAnalysisRequest:
             errors.append("Timeout must be between 10 and 3600 seconds")
 
         if self.configuration:
-            if 'detectors' in self.configuration:
-                detectors = self.configuration['detectors']
+            if "detectors" in self.configuration:
+                detectors = self.configuration["detectors"]
                 if not isinstance(detectors, list) or len(detectors) == 0:
                     errors.append("Detectors must be a non-empty list")
                 elif len(detectors) > 10:
@@ -140,6 +149,7 @@ class PerformAnalysisRequest:
 @dataclass
 class CreateFindingRequest:
     """DTO for creating a finding."""
+
     document_id: str
     analysis_id: str
     title: str
@@ -155,7 +165,7 @@ class CreateFindingRequest:
         """Validate the request."""
         errors = []
 
-        required_fields = ['document_id', 'analysis_id', 'title', 'description', 'severity', 'category']
+        required_fields = ["document_id", "analysis_id", "title", "description", "severity", "category"]
         for field in required_fields:
             value = getattr(self, field)
             if not value or not str(value).strip():
@@ -170,7 +180,7 @@ class CreateFindingRequest:
         if self.severity not in ["info", "low", "medium", "high", "critical"]:
             errors.append("Invalid severity")
 
-        valid_categories = ['consistency', 'quality', 'security', 'performance', 'usability']
+        valid_categories = ["consistency", "quality", "security", "performance", "usability"]
         if self.category not in valid_categories:
             errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
 
@@ -186,6 +196,7 @@ class CreateFindingRequest:
 @dataclass
 class UpdateFindingRequest:
     """DTO for updating a finding."""
+
     finding_id: str
     title: Optional[str] = None
     description: Optional[str] = None
@@ -207,9 +218,16 @@ class UpdateFindingRequest:
 
         # At least one field should be provided for update
         updatable_fields = [
-            self.title, self.description, self.severity, self.category,
-            self.location, self.suggestion, self.confidence, self.resolved,
-            self.resolved_by, self.metadata
+            self.title,
+            self.description,
+            self.severity,
+            self.category,
+            self.location,
+            self.suggestion,
+            self.confidence,
+            self.resolved,
+            self.resolved_by,
+            self.metadata,
         ]
         if not any(field is not None for field in updatable_fields):
             errors.append("At least one field must be provided for update")
@@ -224,7 +242,7 @@ class UpdateFindingRequest:
             errors.append("Invalid severity")
 
         if self.category:
-            valid_categories = ['consistency', 'quality', 'security', 'performance', 'usability']
+            valid_categories = ["consistency", "quality", "security", "performance", "usability"]
             if self.category not in valid_categories:
                 errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
 
@@ -243,6 +261,7 @@ class UpdateFindingRequest:
 @dataclass
 class GetDocumentsRequest:
     """DTO for getting documents with filtering."""
+
     author: Optional[str] = None
     tags: Optional[List[str]] = None
     repository_id: Optional[str] = None
@@ -273,6 +292,7 @@ class GetDocumentsRequest:
 @dataclass
 class GetFindingsRequest:
     """DTO for getting findings with filtering."""
+
     document_id: Optional[str] = None
     category: Optional[str] = None
     severity: Optional[str] = None
@@ -296,7 +316,7 @@ class GetFindingsRequest:
             errors.append("Invalid severity")
 
         if self.category:
-            valid_categories = ['consistency', 'quality', 'security', 'performance', 'usability']
+            valid_categories = ["consistency", "quality", "security", "performance", "usability"]
             if self.category not in valid_categories:
                 errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
 

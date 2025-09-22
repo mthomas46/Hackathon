@@ -8,14 +8,17 @@ handler modules in the handlers/ package.
 import logging
 import time
 from typing import Any
-from .handlers import handler_registry
-from services.shared.utilities.logging_client import get_log_collector_client
+
 from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities.logging_client import get_log_collector_client
+
+from .handlers import handler_registry
 
 logger = logging.getLogger(__name__)
 
 # Global logger client instance
 logger_client = None
+
 
 async def get_logger_client():
     """Get or initialize the logger client."""
@@ -41,20 +44,26 @@ class AnalysisHandlers:
         try:
             # Log analysis start
             if logger:
-                await logger.log_business_event("document_analysis_started", {
-                    "request_id": request_id,
-                    "analysis_type": "document_consistency",
-                    "target_count": len(getattr(req, 'targets', [])),
-                    "detectors": getattr(req, 'detectors', []),
-                    "correlation_id": getattr(req, 'correlation_id', None)
-                })
+                await logger.log_business_event(
+                    "document_analysis_started",
+                    {
+                        "request_id": request_id,
+                        "analysis_type": "document_consistency",
+                        "target_count": len(getattr(req, "targets", [])),
+                        "detectors": getattr(req, "detectors", []),
+                        "correlation_id": getattr(req, "correlation_id", None),
+                    },
+                )
 
-                await logger.log_info("Starting document analysis", {
-                    "request_id": request_id,
-                    "analysis_type": "consistency_check",
-                    "has_targets": bool(getattr(req, 'targets', [])),
-                    "detector_count": len(getattr(req, 'detectors', []))
-                })
+                await logger.log_info(
+                    "Starting document analysis",
+                    {
+                        "request_id": request_id,
+                        "analysis_type": "consistency_check",
+                        "has_targets": bool(getattr(req, "targets", [])),
+                        "detector_count": len(getattr(req, "detectors", [])),
+                    },
+                )
 
             handler = handler_registry.get_handler("semantic_similarity")
             if handler:
@@ -63,14 +72,17 @@ class AnalysisHandlers:
 
                 # Log successful analysis
                 if logger:
-                    await logger.log_business_event("document_analysis_completed", {
-                        "request_id": request_id,
-                        "analysis_type": "document_consistency",
-                        "response_time_seconds": response_time,
-                        "success": True,
-                        "findings_count": len(result.get("findings", [])),
-                        "documents_analyzed": len(result.get("analyzed_documents", []))
-                    })
+                    await logger.log_business_event(
+                        "document_analysis_completed",
+                        {
+                            "request_id": request_id,
+                            "analysis_type": "document_consistency",
+                            "response_time_seconds": response_time,
+                            "success": True,
+                            "findings_count": len(result.get("findings", [])),
+                            "documents_analyzed": len(result.get("analyzed_documents", [])),
+                        },
+                    )
 
                     await logger.log_performance_metric(
                         "document_analysis",
@@ -79,8 +91,8 @@ class AnalysisHandlers:
                             "request_id": request_id,
                             "analysis_type": "consistency",
                             "findings_discovered": len(result.get("findings", [])),
-                            "analysis_success": True
-                        }
+                            "analysis_success": True,
+                        },
                     )
 
                 return result
@@ -94,17 +106,20 @@ class AnalysisHandlers:
                         {
                             "request_id": request_id,
                             "error_type": "handler_unavailable",
-                            "response_time_seconds": error_time
+                            "response_time_seconds": error_time,
                         },
-                        error=Exception("No semantic similarity handler available")
+                        error=Exception("No semantic similarity handler available"),
                     )
 
-                    await logger.log_business_event("document_analysis_failed", {
-                        "request_id": request_id,
-                        "error_type": "handler_unavailable",
-                        "error_message": "No semantic similarity handler available",
-                        "response_time_seconds": error_time
-                    })
+                    await logger.log_business_event(
+                        "document_analysis_failed",
+                        {
+                            "request_id": request_id,
+                            "error_type": "handler_unavailable",
+                            "error_message": "No semantic similarity handler available",
+                            "response_time_seconds": error_time,
+                        },
+                    )
 
                 logger.error("No semantic similarity handler available")
                 return {"error": "Handler not available", "analysis_id": f"error-{id(req)}"}
@@ -116,20 +131,19 @@ class AnalysisHandlers:
             if logger:
                 await logger.log_error(
                     f"Document analysis failed: {str(e)}",
+                    {"request_id": request_id, "error_type": type(e).__name__, "response_time_seconds": error_time},
+                    error=e,
+                )
+
+                await logger.log_business_event(
+                    "document_analysis_failed",
                     {
                         "request_id": request_id,
                         "error_type": type(e).__name__,
-                        "response_time_seconds": error_time
+                        "error_message": str(e),
+                        "response_time_seconds": error_time,
                     },
-                    error=e
                 )
-
-                await logger.log_business_event("document_analysis_failed", {
-                    "request_id": request_id,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                    "response_time_seconds": error_time
-                })
 
             logger.error(f"Document analysis error: {e}")
             return {"error": str(e), "analysis_id": f"error-{id(req)}"}
@@ -204,18 +218,24 @@ class AnalysisHandlers:
         try:
             # Log risk assessment start
             if logger:
-                await logger.log_business_event("risk_assessment_started", {
-                    "request_id": request_id,
-                    "analysis_type": "risk_assessment",
-                    "target_count": len(getattr(req, 'targets', [])),
-                    "assessment_type": getattr(req, 'assessment_type', 'comprehensive')
-                })
+                await logger.log_business_event(
+                    "risk_assessment_started",
+                    {
+                        "request_id": request_id,
+                        "analysis_type": "risk_assessment",
+                        "target_count": len(getattr(req, "targets", [])),
+                        "assessment_type": getattr(req, "assessment_type", "comprehensive"),
+                    },
+                )
 
-                await logger.log_info("Starting risk assessment analysis", {
-                    "request_id": request_id,
-                    "assessment_type": getattr(req, 'assessment_type', 'comprehensive'),
-                    "has_targets": bool(getattr(req, 'targets', []))
-                })
+                await logger.log_info(
+                    "Starting risk assessment analysis",
+                    {
+                        "request_id": request_id,
+                        "assessment_type": getattr(req, "assessment_type", "comprehensive"),
+                        "has_targets": bool(getattr(req, "targets", [])),
+                    },
+                )
 
             handler = handler_registry.get_handler("risk_assessment")
             if handler:
@@ -227,15 +247,18 @@ class AnalysisHandlers:
                     risk_score = result.get("overall_risk_score", 0)
                     critical_issues = len([f for f in result.get("findings", []) if f.get("severity") == "critical"])
 
-                    await logger.log_business_event("risk_assessment_completed", {
-                        "request_id": request_id,
-                        "analysis_type": "risk_assessment",
-                        "response_time_seconds": response_time,
-                        "success": True,
-                        "overall_risk_score": risk_score,
-                        "critical_issues_count": critical_issues,
-                        "findings_count": len(result.get("findings", []))
-                    })
+                    await logger.log_business_event(
+                        "risk_assessment_completed",
+                        {
+                            "request_id": request_id,
+                            "analysis_type": "risk_assessment",
+                            "response_time_seconds": response_time,
+                            "success": True,
+                            "overall_risk_score": risk_score,
+                            "critical_issues_count": critical_issues,
+                            "findings_count": len(result.get("findings", [])),
+                        },
+                    )
 
                     await logger.log_performance_metric(
                         "risk_assessment",
@@ -244,8 +267,8 @@ class AnalysisHandlers:
                             "request_id": request_id,
                             "risk_score": risk_score,
                             "critical_issues": critical_issues,
-                            "assessment_success": True
-                        }
+                            "assessment_success": True,
+                        },
                     )
 
                 return result
@@ -259,9 +282,9 @@ class AnalysisHandlers:
                         {
                             "request_id": request_id,
                             "error_type": "handler_unavailable",
-                            "response_time_seconds": error_time
+                            "response_time_seconds": error_time,
                         },
-                        error=Exception("No risk assessment handler available")
+                        error=Exception("No risk assessment handler available"),
                     )
 
                 logger.error("No risk assessment handler available")
@@ -274,20 +297,19 @@ class AnalysisHandlers:
             if logger:
                 await logger.log_error(
                     f"Risk assessment failed: {str(e)}",
+                    {"request_id": request_id, "error_type": type(e).__name__, "response_time_seconds": error_time},
+                    error=e,
+                )
+
+                await logger.log_business_event(
+                    "risk_assessment_failed",
                     {
                         "request_id": request_id,
                         "error_type": type(e).__name__,
-                        "response_time_seconds": error_time
+                        "error_message": str(e),
+                        "response_time_seconds": error_time,
                     },
-                    error=e
                 )
-
-                await logger.log_business_event("risk_assessment_failed", {
-                    "request_id": request_id,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                    "response_time_seconds": error_time
-                })
 
             logger.error(f"Risk assessment error: {e}")
             return {"error": str(e), "analysis_id": f"error-{id(req)}"}

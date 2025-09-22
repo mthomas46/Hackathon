@@ -1,24 +1,20 @@
 """Query handlers for CQRS pattern."""
 
-from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
+from ...domain.entities import Analysis, Document, Finding
+from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
 from .queries import (
+    GetAnalysesQuery,
+    GetAnalysisQuery,
     GetDocumentQuery,
     GetDocumentsQuery,
-    GetAnalysisQuery,
-    GetAnalysesQuery,
     GetFindingQuery,
     GetFindingsQuery,
-    GetRepositoryQuery,
     GetRepositoriesQuery,
-    GetStatisticsQuery
-)
-from ...domain.entities import Document, Analysis, Finding
-from ...infrastructure.repositories import (
-    DocumentRepository,
-    AnalysisRepository,
-    FindingRepository
+    GetRepositoryQuery,
+    GetStatisticsQuery,
 )
 
 
@@ -68,8 +64,7 @@ class GetDocumentsQueryHandler(QueryHandler):
         filtered = documents
 
         if query.author:
-            filtered = [d for d in filtered if d.metadata.author and
-                       query.author.lower() in d.metadata.author.lower()]
+            filtered = [d for d in filtered if d.metadata.author and query.author.lower() in d.metadata.author.lower()]
 
         if query.tags:
             filtered = [d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)]
@@ -188,6 +183,7 @@ class GetFindingsQueryHandler(QueryHandler):
 
     def _sort_findings(self, findings: List[Finding]) -> List[Finding]:
         """Sort findings by priority (severity and confidence)."""
+
         def priority_key(finding: Finding) -> tuple:
             # Sort by: severity (desc), confidence (desc), age (desc)
             severity_score = finding.severity_score
@@ -201,10 +197,12 @@ class GetFindingsQueryHandler(QueryHandler):
 class GetStatisticsQueryHandler(QueryHandler):
     """Handler for getting system statistics."""
 
-    def __init__(self,
-                 document_repository: DocumentRepository,
-                 analysis_repository: AnalysisRepository,
-                 finding_repository: FindingRepository):
+    def __init__(
+        self,
+        document_repository: DocumentRepository,
+        analysis_repository: AnalysisRepository,
+        finding_repository: FindingRepository,
+    ):
         """Initialize handler with dependencies."""
         self.document_repository = document_repository
         self.analysis_repository = analysis_repository
@@ -216,31 +214,31 @@ class GetStatisticsQueryHandler(QueryHandler):
 
         if query.include_documents:
             documents = await self.document_repository.get_all()
-            stats['documents'] = {
-                'total': len(documents),
-                'by_format': self._count_by_attribute(documents, lambda d: d.content.format),
-                'by_author': self._count_by_attribute(documents, lambda d: d.metadata.author or 'Unknown'),
-                'recent': len([d for d in documents if d.is_recently_updated])
+            stats["documents"] = {
+                "total": len(documents),
+                "by_format": self._count_by_attribute(documents, lambda d: d.content.format),
+                "by_author": self._count_by_attribute(documents, lambda d: d.metadata.author or "Unknown"),
+                "recent": len([d for d in documents if d.is_recently_updated]),
             }
 
         if query.include_analyses:
             analyses = await self.analysis_repository.get_all()
-            stats['analyses'] = {
-                'total': len(analyses),
-                'by_type': self._count_by_attribute(analyses, lambda a: a.analysis_type),
-                'by_status': self._count_by_attribute(analyses, lambda a: a.status.value),
-                'completed': len([a for a in analyses if a.is_completed])
+            stats["analyses"] = {
+                "total": len(analyses),
+                "by_type": self._count_by_attribute(analyses, lambda a: a.analysis_type),
+                "by_status": self._count_by_attribute(analyses, lambda a: a.status.value),
+                "completed": len([a for a in analyses if a.is_completed]),
             }
 
         if query.include_findings:
             findings = await self.finding_repository.get_all()
             unresolved = await self.finding_repository.get_unresolved()
-            stats['findings'] = {
-                'total': len(findings),
-                'by_category': self._count_by_attribute(findings, lambda f: f.category),
-                'by_severity': self._count_by_attribute(findings, lambda f: f.severity.value),
-                'unresolved': len(unresolved),
-                'resolved': len(findings) - len(unresolved)
+            stats["findings"] = {
+                "total": len(findings),
+                "by_category": self._count_by_attribute(findings, lambda f: f.category),
+                "by_severity": self._count_by_attribute(findings, lambda f: f.severity.value),
+                "unresolved": len(unresolved),
+                "resolved": len(findings) - len(unresolved),
             }
 
         return stats

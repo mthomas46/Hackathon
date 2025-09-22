@@ -1,14 +1,11 @@
 """Workflow Controller - Handles workflow and webhook endpoints."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException
 
-from ...modules.models import (
-    WorkflowEventRequest,
-    WorkflowStatusRequest,
-    WebhookConfigRequest
-)
 from ...modules.analysis_handlers import analysis_handlers
+from ...modules.models import WebhookConfigRequest, WorkflowEventRequest, WorkflowStatusRequest
 
 
 class WorkflowController:
@@ -38,9 +35,7 @@ class WorkflowController:
             Retrieves detailed status information for a specific workflow analysis
             including progress, results, and any errors encountered.
             """
-            return await analysis_handlers.handle_workflow_status(
-                WorkflowStatusRequest(workflow_id=workflow_id)
-            )
+            return await analysis_handlers.handle_workflow_status(WorkflowStatusRequest(workflow_id=workflow_id))
 
         @self.router.get("/workflows/queue/status")
         async def get_workflow_queue_status_endpoint():

@@ -1,15 +1,16 @@
 """Tests for domain services."""
 
-import pytest
-from unittest.mock import Mock, AsyncMock
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock
 
+import pytest
+
+from ...domain.entities.analysis import Analysis, AnalysisStatus
+from ...domain.entities.document import Document, DocumentStatus
+from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.services.analysis_service import AnalysisService
 from ...domain.services.document_service import DocumentService
 from ...domain.services.finding_service import FindingService
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
 
@@ -25,9 +26,7 @@ class TestAnalysisService:
         assert service.document_repository == document_repository
 
     @pytest.mark.asyncio
-    async def test_start_analysis_success(
-        self, analysis_service, document_repository, sample_document
-    ):
+    async def test_start_analysis_success(self, analysis_service, document_repository, sample_document):
         """Test starting analysis successfully."""
         # Setup
         await document_repository.save(sample_document)
@@ -35,10 +34,7 @@ class TestAnalysisService:
         analysis_type = AnalysisType.SEMANTIC_SIMILARITY
 
         # Execute
-        analysis = await analysis_service.start_analysis(
-            document_id=sample_document.id,
-            analysis_type=analysis_type
-        )
+        analysis = await analysis_service.start_analysis(document_id=sample_document.id, analysis_type=analysis_type)
 
         # Assert
         assert analysis.document_id == sample_document.id
@@ -50,8 +46,7 @@ class TestAnalysisService:
         """Test starting analysis with non-existent document."""
         with pytest.raises(ValueError, match="Document not found"):
             await analysis_service.start_analysis(
-                document_id='non-existent-doc',
-                analysis_type=AnalysisType.CODE_QUALITY
+                document_id="non-existent-doc", analysis_type=AnalysisType.CODE_QUALITY
             )
 
     @pytest.mark.asyncio
@@ -60,14 +55,12 @@ class TestAnalysisService:
         # Setup
         sample_analysis.status = AnalysisStatus.RUNNING
 
-        results = {'similarity_score': 0.85}
+        results = {"similarity_score": 0.85}
         confidence = Confidence(0.85)
 
         # Execute
         completed_analysis = await analysis_service.complete_analysis(
-            analysis_id=sample_analysis.id,
-            results=results,
-            confidence=confidence
+            analysis_id=sample_analysis.id, results=results, confidence=confidence
         )
 
         # Assert
@@ -83,9 +76,9 @@ class TestAnalysisService:
         status = await analysis_service.get_analysis_status(sample_analysis.id)
 
         # Assert
-        assert status['id'] == sample_analysis.id
-        assert status['status'] == sample_analysis.status.value
-        assert 'created_at' in status
+        assert status["id"] == sample_analysis.id
+        assert status["status"] == sample_analysis.status.value
+        assert "created_at" in status
 
     def test_validate_analysis_type_support(self, analysis_service):
         """Test analysis type support validation."""
@@ -123,8 +116,8 @@ class TestDocumentService:
         document = await document_service.create_document(**sample_document_data)
 
         # Assert
-        assert document.id == sample_document_data['id']
-        assert document.title == sample_document_data['title']
+        assert document.id == sample_document_data["id"]
+        assert document.title == sample_document_data["title"]
         assert document.status == DocumentStatus.ACTIVE
 
     @pytest.mark.asyncio
@@ -140,7 +133,7 @@ class TestDocumentService:
     async def test_get_document_not_found(self, document_service):
         """Test getting non-existent document."""
         with pytest.raises(ValueError, match="Document not found"):
-            await document_service.get_document_by_id('non-existent-id')
+            await document_service.get_document_by_id("non-existent-id")
 
     @pytest.mark.asyncio
     async def test_update_document_content(self, document_service, sample_document):
@@ -149,8 +142,7 @@ class TestDocumentService:
 
         # Execute
         updated_doc = await document_service.update_document_content(
-            document_id=sample_document.id,
-            new_content=new_content
+            document_id=sample_document.id, new_content=new_content
         )
 
         # Assert
@@ -173,12 +165,12 @@ class TestDocumentService:
         documents = test_data_populator.create_test_documents(3)
 
         # Execute
-        repo_docs = await document_service.get_documents_by_repository('test-repo-001')
+        repo_docs = await document_service.get_documents_by_repository("test-repo-001")
 
         # Assert
         assert len(repo_docs) == 3
         for doc in repo_docs:
-            assert doc.repository_id == 'test-repo-001'
+            assert doc.repository_id == "test-repo-001"
 
 
 class TestFindingService:
@@ -197,8 +189,8 @@ class TestFindingService:
         finding = await finding_service.create_finding(**sample_finding_data)
 
         # Assert
-        assert finding.id == sample_finding_data['id']
-        assert finding.title == sample_finding_data['title']
+        assert finding.id == sample_finding_data["id"]
+        assert finding.title == sample_finding_data["title"]
         assert finding.severity == FindingSeverity.MEDIUM
 
     @pytest.mark.asyncio
@@ -241,8 +233,7 @@ class TestFindingService:
 
         # Execute
         updated_finding = await finding_service.update_finding_confidence(
-            finding_id=sample_finding.id,
-            new_confidence=new_confidence
+            finding_id=sample_finding.id, new_confidence=new_confidence
         )
 
         # Assert
@@ -255,8 +246,7 @@ class TestFindingService:
 
         # Execute
         resolved_finding = await finding_service.resolve_finding(
-            finding_id=sample_finding.id,
-            resolution_notes=resolution_notes
+            finding_id=sample_finding.id, resolution_notes=resolution_notes
         )
 
         # Assert
@@ -269,8 +259,7 @@ class TestDomainServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_analysis_workflow_integration(
-        self, analysis_service, document_service, finding_service,
-        test_data_populator
+        self, analysis_service, document_service, finding_service, test_data_populator
     ):
         """Test complete analysis workflow integration."""
         # Setup test document
@@ -279,20 +268,17 @@ class TestDomainServiceIntegration:
 
         # Start analysis
         analysis = await analysis_service.start_analysis(
-            document_id=document.id,
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            document_id=document.id, analysis_type=AnalysisType.SEMANTIC_SIMILARITY
         )
 
         assert analysis.status == AnalysisStatus.RUNNING
 
         # Complete analysis
-        results = {'test_result': 'completed'}
+        results = {"test_result": "completed"}
         confidence = Confidence(0.85)
 
         completed_analysis = await analysis_service.complete_analysis(
-            analysis_id=analysis.id,
-            results=results,
-            confidence=confidence
+            analysis_id=analysis.id, results=results, confidence=confidence
         )
 
         assert completed_analysis.status == AnalysisStatus.COMPLETED
@@ -300,8 +286,7 @@ class TestDomainServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_cross_service_data_consistency(
-        self, analysis_service, document_service, finding_service,
-        test_data_populator
+        self, analysis_service, document_service, finding_service, test_data_populator
     ):
         """Test data consistency across services."""
         # Setup test data
@@ -319,16 +304,14 @@ class TestDomainServiceIntegration:
         for finding in findings:
             analysis = await analysis_service.get_analysis_status(finding.analysis_id)
             assert analysis is not None
-            assert analysis['id'] == finding.analysis_id
+            assert analysis["id"] == finding.analysis_id
 
 
 class TestDomainServiceErrorHandling:
     """Test error handling in domain services."""
 
     @pytest.mark.asyncio
-    async def test_analysis_service_concurrent_access(
-        self, analysis_service, sample_analysis
-    ):
+    async def test_analysis_service_concurrent_access(self, analysis_service, sample_analysis):
         """Test concurrent access to analysis service."""
         # This test would need proper async concurrency testing
         # For now, just test basic functionality
@@ -339,10 +322,10 @@ class TestDomainServiceErrorHandling:
         """Test document service validation errors."""
         # Test creating document with invalid data
         invalid_data = {
-            'id': '',  # Invalid empty ID
-            'title': 'Test',
-            'content': 'Content',
-            'repository_id': 'repo-001'
+            "id": "",  # Invalid empty ID
+            "title": "Test",
+            "content": "Content",
+            "repository_id": "repo-001",
         }
 
         with pytest.raises(ValueError):
@@ -353,14 +336,14 @@ class TestDomainServiceErrorHandling:
         """Test finding service constraint validation."""
         # Test creating finding with invalid confidence
         invalid_data = {
-            'id': 'test-finding',
-            'analysis_id': 'analysis-001',
-            'document_id': 'doc-001',
-            'title': 'Test Finding',
-            'description': 'Description',
-            'severity': FindingSeverity.HIGH,
-            'confidence': Confidence(1.5),  # Invalid confidence
-            'category': 'test'
+            "id": "test-finding",
+            "analysis_id": "analysis-001",
+            "document_id": "doc-001",
+            "title": "Test Finding",
+            "description": "Description",
+            "severity": FindingSeverity.HIGH,
+            "confidence": Confidence(1.5),  # Invalid confidence
+            "category": "test",
         }
 
         # This should fail during finding creation
@@ -373,8 +356,7 @@ class TestDomainServicePerformance:
 
     @pytest.mark.asyncio
     async def test_analysis_service_bulk_operations(
-        self, analysis_service, document_repository,
-        test_data_populator, performance_timer
+        self, analysis_service, document_repository, test_data_populator, performance_timer
     ):
         """Test bulk analysis operations performance."""
         # Setup multiple documents
@@ -387,8 +369,7 @@ class TestDomainServicePerformance:
         analyses = []
         for doc in documents:
             analysis = await analysis_service.start_analysis(
-                document_id=doc.id,
-                analysis_type=AnalysisType.CODE_QUALITY
+                document_id=doc.id, analysis_type=AnalysisType.CODE_QUALITY
             )
             analyses.append(analysis)
 
@@ -400,9 +381,7 @@ class TestDomainServicePerformance:
         assert len(analyses) == 10
 
     @pytest.mark.asyncio
-    async def test_document_service_query_performance(
-        self, document_service, test_data_populator, performance_timer
-    ):
+    async def test_document_service_query_performance(self, document_service, test_data_populator, performance_timer):
         """Test document query performance."""
         # Setup test data
         documents = test_data_populator.create_test_documents(50)
@@ -410,7 +389,7 @@ class TestDomainServicePerformance:
         # Test query performance
         performance_timer.start()
 
-        repo_docs = await document_service.get_documents_by_repository('test-repo-001')
+        repo_docs = await document_service.get_documents_by_repository("test-repo-001")
 
         performance_timer.stop()
 

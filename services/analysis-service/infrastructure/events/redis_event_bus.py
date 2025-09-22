@@ -3,14 +3,11 @@
 import asyncio
 import json
 import pickle
-from typing import Any, Dict, List, Optional, Callable, Union
-from datetime import datetime
 import threading
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from .event_bus import (
-    EventBus, EventPublisher, EventSubscriber,
-    DomainEvent, EventEnvelope, EventPriority
-)
+from .event_bus import DomainEvent, EventBus, EventEnvelope, EventPriority, EventPublisher, EventSubscriber
 
 
 class RedisEventBus(EventBus):
@@ -23,7 +20,7 @@ class RedisEventBus(EventBus):
         channel_prefix: str = "event:",
         consumer_group: str = "analysis_service",
         consumer_name: Optional[str] = None,
-        max_connections: int = 10
+        max_connections: int = 10,
     ):
         """Initialize Redis event bus."""
         self.redis = redis_client
@@ -68,11 +65,15 @@ class RedisEventBus(EventBus):
 
             # Also store in stream for persistence (optional)
             stream_key = f"stream:{envelope.topic}"
-            await self.redis.xadd(stream_key, {
-                'event_id': envelope.event.event_id,
-                'data': message_data,
-                'timestamp': envelope.event.timestamp.isoformat()
-            }, maxlen=10000)  # Keep last 10k messages
+            await self.redis.xadd(
+                stream_key,
+                {
+                    "event_id": envelope.event.event_id,
+                    "data": message_data,
+                    "timestamp": envelope.event.timestamp.isoformat(),
+                },
+                maxlen=10000,
+            )  # Keep last 10k messages
 
             self.messages_published += 1
 
@@ -112,11 +113,15 @@ class RedisEventBus(EventBus):
                     await self.redis.publish(channel, message_data)
 
                     # Add to stream
-                    await self.redis.xadd(stream_key, {
-                        'event_id': envelope.event.event_id,
-                        'data': message_data,
-                        'timestamp': envelope.event.timestamp.isoformat()
-                    }, maxlen=10000)
+                    await self.redis.xadd(
+                        stream_key,
+                        {
+                            "event_id": envelope.event.event_id,
+                            "data": message_data,
+                            "timestamp": envelope.event.timestamp.isoformat(),
+                        },
+                        maxlen=10000,
+                    )
 
             self.messages_published += len(events)
 
@@ -133,9 +138,7 @@ class RedisEventBus(EventBus):
 
         # Start subscriber task if not already running
         if topic not in self._subscriber_tasks or self._subscriber_tasks[topic].done():
-            self._subscriber_tasks[topic] = asyncio.create_task(
-                self._subscribe_topic(topic, **kwargs)
-            )
+            self._subscriber_tasks[topic] = asyncio.create_task(self._subscribe_topic(topic, **kwargs))
 
     async def unsubscribe(self, topic: str, handler: Callable) -> None:
         """Unsubscribe from events on a topic."""
@@ -166,10 +169,10 @@ class RedisEventBus(EventBus):
             await pubsub.subscribe(channel)
 
             async for message in pubsub.listen():
-                if message['type'] == 'message':
+                if message["type"] == "message":
                     try:
                         # Deserialize envelope
-                        envelope = self._deserialize_envelope(message['data'])
+                        envelope = self._deserialize_envelope(message["data"])
 
                         # Handle message
                         await self._handle_message(envelope, topic)
@@ -211,7 +214,7 @@ class RedisEventBus(EventBus):
         try:
             # Get all channels with our prefix
             channels = await self.redis.pubsub_channels(f"{self.channel_prefix}*")
-            return [ch.decode('utf-8').replace(self.channel_prefix, '') for ch in channels]
+            return [ch.decode("utf-8").replace(self.channel_prefix, "") for ch in channels]
         except Exception:
             return []
 
@@ -219,52 +222,45 @@ class RedisEventBus(EventBus):
         """Perform health check."""
         try:
             if not self.redis:
-                return {
-                    'status': 'unhealthy',
-                    'error': 'Redis client not configured'
-                }
+                return {"status": "unhealthy", "error": "Redis client not configured"}
 
             # Test Redis connection
             await self.redis.ping()
 
             return {
-                'status': 'healthy',
-                'redis_connected': True,
-                'active_subscriptions': len(self._subscriber_tasks),
-                'registered_handlers': sum(len(handlers) for handlers in self._handlers.values()),
-                'messages_published': self.messages_published,
-                'messages_received': self.messages_received,
-                'errors_count': self.errors_count
+                "status": "healthy",
+                "redis_connected": True,
+                "active_subscriptions": len(self._subscriber_tasks),
+                "registered_handlers": sum(len(handlers) for handlers in self._handlers.values()),
+                "messages_published": self.messages_published,
+                "messages_received": self.messages_received,
+                "errors_count": self.errors_count,
             }
 
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'redis_connected': False
-            }
+            return {"status": "unhealthy", "error": str(e), "redis_connected": False}
 
     def _get_default_topic(self, event: DomainEvent) -> str:
         """Get default topic for event type."""
         from .event_bus import EventType
 
         topic_map = {
-            EventType.ANALYSIS_STARTED: 'analysis.events',
-            EventType.ANALYSIS_COMPLETED: 'analysis.events',
-            EventType.ANALYSIS_FAILED: 'analysis.events',
-            EventType.DOCUMENT_CREATED: 'document.events',
-            EventType.DOCUMENT_UPDATED: 'document.events',
-            EventType.DOCUMENT_DELETED: 'document.events',
-            EventType.FINDING_CREATED: 'finding.events',
-            EventType.FINDING_UPDATED: 'finding.events',
-            EventType.WORKFLOW_TRIGGERED: 'workflow.events',
-            EventType.NOTIFICATION_SENT: 'notification.events',
-            EventType.CACHE_INVALIDATED: 'cache.events',
-            EventType.METRICS_UPDATED: 'metrics.events',
-            EventType.SYSTEM_HEALTH_CHECK: 'system.events'
+            EventType.ANALYSIS_STARTED: "analysis.events",
+            EventType.ANALYSIS_COMPLETED: "analysis.events",
+            EventType.ANALYSIS_FAILED: "analysis.events",
+            EventType.DOCUMENT_CREATED: "document.events",
+            EventType.DOCUMENT_UPDATED: "document.events",
+            EventType.DOCUMENT_DELETED: "document.events",
+            EventType.FINDING_CREATED: "finding.events",
+            EventType.FINDING_UPDATED: "finding.events",
+            EventType.WORKFLOW_TRIGGERED: "workflow.events",
+            EventType.NOTIFICATION_SENT: "notification.events",
+            EventType.CACHE_INVALIDATED: "cache.events",
+            EventType.METRICS_UPDATED: "metrics.events",
+            EventType.SYSTEM_HEALTH_CHECK: "system.events",
         }
 
-        return topic_map.get(event.event_type, 'general.events')
+        return topic_map.get(event.event_type, "general.events")
 
     def _serialize_envelope(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope."""
@@ -273,12 +269,12 @@ class RedisEventBus(EventBus):
         else:
             # Default JSON serialization
             data = {
-                'event': envelope.event.to_dict(),
-                'topic': envelope.topic,
-                'partition_key': envelope.partition_key,
-                'headers': envelope.headers,
-                'retry_count': envelope.retry_count,
-                'max_retries': envelope.max_retries
+                "event": envelope.event.to_dict(),
+                "topic": envelope.topic,
+                "partition_key": envelope.partition_key,
+                "headers": envelope.headers,
+                "retry_count": envelope.retry_count,
+                "max_retries": envelope.max_retries,
             }
             return json.dumps(data, default=str)
 
@@ -291,16 +287,16 @@ class RedisEventBus(EventBus):
             parsed = json.loads(data)
 
             # Reconstruct event
-            event_data = parsed['event']
+            event_data = parsed["event"]
             event = DomainEvent.from_dict(event_data)
 
             return EventEnvelope(
                 event=event,
-                topic=parsed['topic'],
-                partition_key=parsed.get('partition_key'),
-                headers=parsed.get('headers', {}),
-                retry_count=parsed.get('retry_count', 0),
-                max_retries=parsed.get('max_retries', 3)
+                topic=parsed["topic"],
+                partition_key=parsed.get("partition_key"),
+                headers=parsed.get("headers", {}),
+                retry_count=parsed.get("retry_count", 0),
+                max_retries=parsed.get("max_retries", 3),
             )
 
 
@@ -332,7 +328,7 @@ class RedisStreamEventBus(EventBus):
         consumer_group: str = "analysis_service",
         consumer_name: Optional[str] = None,
         batch_size: int = 10,
-        block_timeout: int = 5000  # milliseconds
+        block_timeout: int = 5000,  # milliseconds
     ):
         """Initialize Redis Streams event bus."""
         self.redis = redis_client
@@ -368,11 +364,14 @@ class RedisStreamEventBus(EventBus):
             stream_key = f"{self.stream_prefix}{envelope.topic}"
             message_data = self._serialize_envelope(envelope)
 
-            await self.redis.xadd(stream_key, {
-                'event_id': envelope.event.event_id,
-                'data': message_data,
-                'timestamp': envelope.event.timestamp.isoformat()
-            })
+            await self.redis.xadd(
+                stream_key,
+                {
+                    "event_id": envelope.event.event_id,
+                    "data": message_data,
+                    "timestamp": envelope.event.timestamp.isoformat(),
+                },
+            )
 
             self.messages_published += 1
 
@@ -407,11 +406,14 @@ class RedisStreamEventBus(EventBus):
 
                 for envelope in envelopes:
                     message_data = self._serialize_envelope(envelope)
-                    await self.redis.xadd(stream_key, {
-                        'event_id': envelope.event.event_id,
-                        'data': message_data,
-                        'timestamp': envelope.event.timestamp.isoformat()
-                    })
+                    await self.redis.xadd(
+                        stream_key,
+                        {
+                            "event_id": envelope.event.event_id,
+                            "data": message_data,
+                            "timestamp": envelope.event.timestamp.isoformat(),
+                        },
+                    )
 
             self.messages_published += len(events)
 
@@ -428,9 +430,7 @@ class RedisStreamEventBus(EventBus):
 
         # Start consumer task if not already running
         if topic not in self._subscriber_tasks or self._subscriber_tasks[topic].done():
-            self._subscriber_tasks[topic] = asyncio.create_task(
-                self._consume_stream(topic, **kwargs)
-            )
+            self._subscriber_tasks[topic] = asyncio.create_task(self._consume_stream(topic, **kwargs))
 
     async def unsubscribe(self, topic: str, handler: Callable) -> None:
         """Unsubscribe from Redis Stream."""
@@ -458,17 +458,12 @@ class RedisStreamEventBus(EventBus):
         try:
             # Create consumer group if it doesn't exist
             try:
-                await self.redis.xgroup_create(
-                    stream_key,
-                    self.consumer_group,
-                    '$',
-                    mkstream=True
-                )
+                await self.redis.xgroup_create(stream_key, self.consumer_group, "$", mkstream=True)
             except Exception:
                 # Group might already exist
                 pass
 
-            last_id = '0'  # Start from beginning for new consumers
+            last_id = "0"  # Start from beginning for new consumers
 
             while True:
                 try:
@@ -478,7 +473,7 @@ class RedisStreamEventBus(EventBus):
                         self.consumer_name,
                         {stream_key: last_id},
                         count=self.batch_size,
-                        block=self.block_timeout
+                        block=self.block_timeout,
                     )
 
                     if not messages:
@@ -488,7 +483,7 @@ class RedisStreamEventBus(EventBus):
                         for message_id, message_data in message_list:
                             try:
                                 # Deserialize envelope
-                                envelope = self._deserialize_envelope(message_data['data'])
+                                envelope = self._deserialize_envelope(message_data["data"])
 
                                 # Handle message
                                 await self._handle_message(envelope, topic)
@@ -540,7 +535,7 @@ class RedisStreamEventBus(EventBus):
         try:
             # Get all stream keys
             keys = await self.redis.keys(f"{self.stream_prefix}*")
-            return [key.decode('utf-8').replace(self.stream_prefix, '') for key in keys]
+            return [key.decode("utf-8").replace(self.stream_prefix, "") for key in keys]
         except Exception:
             return []
 
@@ -548,64 +543,57 @@ class RedisStreamEventBus(EventBus):
         """Perform health check."""
         try:
             if not self.redis:
-                return {
-                    'status': 'unhealthy',
-                    'error': 'Redis client not configured'
-                }
+                return {"status": "unhealthy", "error": "Redis client not configured"}
 
             # Test Redis connection
             await self.redis.ping()
 
             return {
-                'status': 'healthy',
-                'redis_connected': True,
-                'active_consumers': len(self._subscriber_tasks),
-                'registered_handlers': sum(len(handlers) for handlers in self._handlers.values()),
-                'messages_published': self.messages_published,
-                'messages_processed': self.messages_processed,
-                'errors_count': self.errors_count,
-                'consumer_group': self.consumer_group,
-                'consumer_name': self.consumer_name
+                "status": "healthy",
+                "redis_connected": True,
+                "active_consumers": len(self._subscriber_tasks),
+                "registered_handlers": sum(len(handlers) for handlers in self._handlers.values()),
+                "messages_published": self.messages_published,
+                "messages_processed": self.messages_processed,
+                "errors_count": self.errors_count,
+                "consumer_group": self.consumer_group,
+                "consumer_name": self.consumer_name,
             }
 
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'redis_connected': False
-            }
+            return {"status": "unhealthy", "error": str(e), "redis_connected": False}
 
     def _get_default_topic(self, event: DomainEvent) -> str:
         """Get default topic for event type."""
         from .event_bus import EventType
 
         topic_map = {
-            EventType.ANALYSIS_STARTED: 'analysis.events',
-            EventType.ANALYSIS_COMPLETED: 'analysis.events',
-            EventType.ANALYSIS_FAILED: 'analysis.events',
-            EventType.DOCUMENT_CREATED: 'document.events',
-            EventType.DOCUMENT_UPDATED: 'document.events',
-            EventType.DOCUMENT_DELETED: 'document.events',
-            EventType.FINDING_CREATED: 'finding.events',
-            EventType.FINDING_UPDATED: 'finding.events',
-            EventType.WORKFLOW_TRIGGERED: 'workflow.events',
-            EventType.NOTIFICATION_SENT: 'notification.events',
-            EventType.CACHE_INVALIDATED: 'cache.events',
-            EventType.METRICS_UPDATED: 'metrics.events',
-            EventType.SYSTEM_HEALTH_CHECK: 'system.events'
+            EventType.ANALYSIS_STARTED: "analysis.events",
+            EventType.ANALYSIS_COMPLETED: "analysis.events",
+            EventType.ANALYSIS_FAILED: "analysis.events",
+            EventType.DOCUMENT_CREATED: "document.events",
+            EventType.DOCUMENT_UPDATED: "document.events",
+            EventType.DOCUMENT_DELETED: "document.events",
+            EventType.FINDING_CREATED: "finding.events",
+            EventType.FINDING_UPDATED: "finding.events",
+            EventType.WORKFLOW_TRIGGERED: "workflow.events",
+            EventType.NOTIFICATION_SENT: "notification.events",
+            EventType.CACHE_INVALIDATED: "cache.events",
+            EventType.METRICS_UPDATED: "metrics.events",
+            EventType.SYSTEM_HEALTH_CHECK: "system.events",
         }
 
-        return topic_map.get(event.event_type, 'general.events')
+        return topic_map.get(event.event_type, "general.events")
 
     def _serialize_envelope(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope."""
         data = {
-            'event': envelope.event.to_dict(),
-            'topic': envelope.topic,
-            'partition_key': envelope.partition_key,
-            'headers': envelope.headers,
-            'retry_count': envelope.retry_count,
-            'max_retries': envelope.max_retries
+            "event": envelope.event.to_dict(),
+            "topic": envelope.topic,
+            "partition_key": envelope.partition_key,
+            "headers": envelope.headers,
+            "retry_count": envelope.retry_count,
+            "max_retries": envelope.max_retries,
         }
         return json.dumps(data, default=str)
 
@@ -614,14 +602,14 @@ class RedisStreamEventBus(EventBus):
         parsed = json.loads(data)
 
         # Reconstruct event
-        event_data = parsed['event']
+        event_data = parsed["event"]
         event = DomainEvent.from_dict(event_data)
 
         return EventEnvelope(
             event=event,
-            topic=parsed['topic'],
-            partition_key=parsed.get('partition_key'),
-            headers=parsed.get('headers', {}),
-            retry_count=parsed.get('retry_count', 0),
-            max_retries=parsed.get('max_retries', 3)
+            topic=parsed["topic"],
+            partition_key=parsed.get("partition_key"),
+            headers=parsed.get("headers", {}),
+            retry_count=parsed.get("retry_count", 0),
+            max_retries=parsed.get("max_retries", 3),
         )

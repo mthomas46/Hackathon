@@ -4,22 +4,20 @@ This is a simplified version that focuses on getting the service running
 without the complex DDD relative import issues.
 """
 
+import os
+import time
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
-import uvicorn
-import time
+
+from services.shared.core.responses import create_error_response, create_success_response
 
 # Shared modules (these work with absolute imports)
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses import create_success_response, create_error_response
 
 # Create FastAPI app
-app = FastAPI(
-    title="Analysis Service",
-    description="Code analysis and quality assessment service",
-    version="1.0.0"
-)
+app = FastAPI(title="Analysis Service", description="Code analysis and quality assessment service", version="1.0.0")
 
 # Add CORS middleware
 app.add_middleware(
@@ -33,13 +31,12 @@ app.add_middleware(
 # Register health endpoints
 register_health_endpoints(app, "analysis-service")
 
+
 # Basic analysis endpoint
 @app.get("/")
 async def root():
-    return create_success_response(
-        data={"message": "Analysis Service is running"},
-        message="Service operational"
-    )
+    return create_success_response(data={"message": "Analysis Service is running"}, message="Service operational")
+
 
 @app.get("/api/analysis/status")
 async def analysis_status():
@@ -48,14 +45,11 @@ async def analysis_status():
             "service": "analysis-service",
             "status": "operational",
             "version": "1.0.0",
-            "features": [
-                "code_analysis",
-                "quality_metrics",
-                "security_scanning"
-            ]
+            "features": ["code_analysis", "quality_metrics", "security_scanning"],
         },
-        message="Analysis service status"
+        message="Analysis service status",
     )
+
 
 @app.get("/api/v1/analysis/status")
 async def get_analysis_status_v1():
@@ -67,7 +61,7 @@ async def get_analysis_status_v1():
         "version": "1.0.0",
         "status": "healthy",
         "timestamp": time.time(),
-        "environment": os.environ.get("ENVIRONMENT", "development")
+        "environment": os.environ.get("ENVIRONMENT", "development"),
     }
 
     # Add analysis-specific status information
@@ -89,7 +83,7 @@ async def get_analysis_status_v1():
             "workflow_integration": True,
             "reporting": True,
             "pr_confidence_analysis": True,
-            "architecture_analysis": True
+            "architecture_analysis": True,
         },
         "detectors_available": [
             "semantic_similarity_detector",
@@ -101,30 +95,22 @@ async def get_analysis_status_v1():
             "maintenance_detector",
             "impact_detector",
             "consistency_detector",
-            "completeness_detector"
+            "completeness_detector",
         ],
-        "supported_formats": [
-            "text/plain",
-            "text/markdown",
-            "application/json",
-            "text/html"
-        ],
+        "supported_formats": ["text/plain", "text/markdown", "application/json", "text/html"],
         "models_loaded": True,
         "distributed_workers": 0,
-        "queue_status": {
-            "pending_tasks": 0,
-            "processing_tasks": 0,
-            "completed_tasks": 0
-        },
+        "queue_status": {"pending_tasks": 0, "processing_tasks": 0, "completed_tasks": 0},
         "integration_status": {
             "doc_store": "available",
             "orchestrator": "available",
             "prompt_store": "available",
-            "redis": "available"
-        }
+            "redis": "available",
+        },
     }
 
     return analysis_status
+
 
 @app.post("/api/analysis/analyze")
 async def analyze_code():
@@ -133,16 +119,13 @@ async def analyze_code():
         data={
             "analysis_id": "analysis_123",
             "status": "completed",
-            "results": {
-                "quality_score": 85,
-                "security_issues": 0,
-                "maintainability": "high"
-            }
+            "results": {"quality_score": 85, "security_issues": 0, "maintainability": "high"},
         },
-        message="Analysis completed successfully"
+        message="Analysis completed successfully",
     )
 
+
 if __name__ == "__main__":
-    port = int(os.environ.get('SERVICE_PORT', 5020))
+    port = int(os.environ.get("SERVICE_PORT", 5020))
     print(f"Starting simplified analysis service on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)

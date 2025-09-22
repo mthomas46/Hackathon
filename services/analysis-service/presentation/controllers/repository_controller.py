@@ -1,14 +1,15 @@
 """Repository Controller - Handles repository analysis endpoints."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException
 
+from ...modules.analysis_handlers import analysis_handlers
 from ...modules.models import (
     CrossRepositoryAnalysisRequest,
     RepositoryConnectivityRequest,
-    RepositoryConnectorConfigRequest
+    RepositoryConnectorConfigRequest,
 )
-from ...modules.analysis_handlers import analysis_handlers
 
 
 class RepositoryController:

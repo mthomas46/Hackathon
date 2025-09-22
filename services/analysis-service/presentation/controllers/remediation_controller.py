@@ -1,10 +1,11 @@
 """Remediation Controller - Handles automated remediation endpoints."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException
 
-from ...modules.models import AutomatedRemediationRequest, RemediationPreviewRequest
 from ...modules.analysis_handlers import analysis_handlers
+from ...modules.models import AutomatedRemediationRequest, RemediationPreviewRequest
 
 
 class RemediationController:

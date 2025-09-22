@@ -1,53 +1,49 @@
 """Analysis Controller - Handles core document analysis endpoints."""
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, HTTPException
 
+from ...application.dto import AnalysisResultResponse, ErrorResponse, PerformAnalysisRequest
 from ...application.use_cases import PerformAnalysisUseCase
-from ...application.dto import (
-    PerformAnalysisRequest,
-    AnalysisResultResponse,
-    ErrorResponse
-)
-from ...infrastructure.repositories import (
-    DocumentRepository,
-    AnalysisRepository
-)
 from ...domain.services import AnalysisService
+from ...infrastructure.repositories import AnalysisRepository, DocumentRepository
+from ...modules.analysis_handlers import analysis_handlers
 from ...presentation.models.analysis import (
     AnalysisRequest,
     AnalysisResponse,
+    ChangeImpactRequest,
+    ChangeImpactResponse,
+    ContentQualityRequest,
+    ContentQualityResponse,
+    MaintenanceForecastRequest,
+    MaintenanceForecastResponse,
+    QualityDegradationRequest,
+    QualityDegradationResponse,
+    RiskAssessmentRequest,
+    RiskAssessmentResponse,
     SemanticSimilarityRequest,
     SemanticSimilarityResponse,
     SentimentAnalysisRequest,
     SentimentAnalysisResponse,
     ToneAnalysisRequest,
     ToneAnalysisResponse,
-    ContentQualityRequest,
-    ContentQualityResponse,
     TrendAnalysisRequest,
     TrendAnalysisResponse,
-    RiskAssessmentRequest,
-    RiskAssessmentResponse,
-    MaintenanceForecastRequest,
-    MaintenanceForecastResponse,
-    QualityDegradationRequest,
-    QualityDegradationResponse,
-    ChangeImpactRequest,
-    ChangeImpactResponse
 )
-from ...presentation.models.base import SuccessResponse, ErrorResponse
-from ...modules.analysis_handlers import analysis_handlers
+from ...presentation.models.base import ErrorResponse, SuccessResponse
 
 
 class AnalysisController:
     """Controller for analysis-related endpoints."""
 
-    def __init__(self,
-                 perform_analysis_use_case: PerformAnalysisUseCase,
-                 document_repository: DocumentRepository,
-                 analysis_repository: AnalysisRepository,
-                 analysis_service: AnalysisService):
+    def __init__(
+        self,
+        perform_analysis_use_case: PerformAnalysisUseCase,
+        document_repository: DocumentRepository,
+        analysis_repository: AnalysisRepository,
+        analysis_service: AnalysisService,
+    ):
         """Initialize controller with dependencies."""
         self.perform_analysis_use_case = perform_analysis_use_case
         self.document_repository = document_repository
@@ -82,11 +78,11 @@ class AnalysisController:
                     document_id=req.targets[0] if req.targets else "",
                     analysis_type="semantic_similarity",
                     configuration={
-                        'threshold': req.threshold,
-                        'embedding_model': req.embedding_model,
-                        'similarity_metric': req.similarity_metric,
-                        'options': req.options or {}
-                    }
+                        "threshold": req.threshold,
+                        "embedding_model": req.embedding_model,
+                        "similarity_metric": req.similarity_metric,
+                        "options": req.options or {},
+                    },
                 )
 
                 # Execute analysis
@@ -99,11 +95,11 @@ class AnalysisController:
                     targets=req.targets,
                     status="completed",
                     results={
-                        'similarities': [],  # Will be populated by the analysis
-                        'threshold': req.threshold,
-                        'metric': req.similarity_metric
+                        "similarities": [],  # Will be populated by the analysis
+                        "threshold": req.threshold,
+                        "metric": req.similarity_metric,
                     },
-                    findings=result.findings or []
+                    findings=result.findings or [],
                 )
 
                 return SuccessResponse.with_data(response.dict())
