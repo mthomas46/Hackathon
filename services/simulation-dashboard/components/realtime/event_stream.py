@@ -4,12 +4,13 @@ This module provides real-time event streaming and display capabilities,
 with filtering, search, and live updates.
 """
 
-import streamlit as st
-from typing import Dict, Any, Optional, List, Callable
-import pandas as pd
-from datetime import datetime, timedelta
-import time
 import json
+import time
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional
+
+import pandas as pd
+import streamlit as st
 
 
 def render_event_stream(
@@ -19,7 +20,7 @@ def render_event_stream(
     enable_search: bool = True,
     max_display_events: int = 100,
     auto_scroll: bool = True,
-    on_event_click: Optional[Callable] = None
+    on_event_click: Optional[Callable] = None,
 ) -> Dict[str, Any]:
     """Render a live event stream with real-time updates.
 
@@ -38,18 +39,13 @@ def render_event_stream(
     st.markdown(f"### {title}")
 
     # Initialize session state for event stream
-    if 'event_stream_data' not in st.session_state:
+    if "event_stream_data" not in st.session_state:
         st.session_state.event_stream_data = events_data.copy() if events_data else []
-    if 'event_filters' not in st.session_state:
-        st.session_state.event_filters = {
-            'severity': [],
-            'event_type': [],
-            'source': [],
-            'time_range': '1h'
-        }
-    if 'event_search' not in st.session_state:
+    if "event_filters" not in st.session_state:
+        st.session_state.event_filters = {"severity": [], "event_type": [], "source": [], "time_range": "1h"}
+    if "event_search" not in st.session_state:
         st.session_state.event_search = ""
-    if 'stream_paused' not in st.session_state:
+    if "stream_paused" not in st.session_state:
         st.session_state.stream_paused = False
 
     # Control panel
@@ -70,10 +66,10 @@ def render_event_stream(
     display_stream_statistics(filtered_events)
 
     return {
-        'current_events': st.session_state.get('event_stream_data', []),
-        'filtered_events': filtered_events,
-        'stream_status': 'active' if not st.session_state.get('stream_paused', False) else 'paused',
-        'filters': st.session_state.get('event_filters', {})
+        "current_events": st.session_state.get("event_stream_data", []),
+        "filtered_events": filtered_events,
+        "stream_status": "active" if not st.session_state.get("stream_paused", False) else "paused",
+        "filters": st.session_state.get("event_filters", {}),
     }
 
 
@@ -87,9 +83,9 @@ def display_stream_controls():
             st.rerun()
 
     with col2:
-        pause_label = "⏸️ Pause" if not st.session_state.get('stream_paused', False) else "▶️ Resume"
+        pause_label = "⏸️ Pause" if not st.session_state.get("stream_paused", False) else "▶️ Resume"
         if st.button(pause_label, key="toggle_pause"):
-            st.session_state.stream_paused = not st.session_state.get('stream_paused', False)
+            st.session_state.stream_paused = not st.session_state.get("stream_paused", False)
             st.rerun()
 
     with col3:
@@ -104,15 +100,15 @@ def display_stream_controls():
     with col5:
         export_events = st.button("📥 Export", key="export_events")
         if export_events:
-            events_df = pd.DataFrame(st.session_state.get('event_stream_data', []))
+            events_df = pd.DataFrame(st.session_state.get("event_stream_data", []))
             if not events_df.empty:
                 csv_data = events_df.to_csv(index=False)
                 st.download_button(
                     label="Download CSV",
                     data=csv_data,
                     file_name="events.csv",
-                    mime='text/csv',
-                    key="download_events_csv"
+                    mime="text/csv",
+                    key="download_events_csv",
                 )
 
 
@@ -123,56 +119,56 @@ def display_stream_filters(enable_filtering: bool, enable_search: bool):
 
         with col1:
             if enable_filtering:
-                severity_options = ['critical', 'high', 'medium', 'low', 'info']
+                severity_options = ["critical", "high", "medium", "low", "info"]
                 selected_severity = st.multiselect(
                     "Severity",
                     options=severity_options,
-                    default=st.session_state.event_filters.get('severity', []),
-                    key="severity_filter"
+                    default=st.session_state.event_filters.get("severity", []),
+                    key="severity_filter",
                 )
-                st.session_state.event_filters['severity'] = selected_severity
+                st.session_state.event_filters["severity"] = selected_severity
 
         with col2:
             if enable_filtering:
                 # Get unique event types from current data
-                all_events = st.session_state.get('event_stream_data', [])
-                event_types = list(set([e.get('event_type', 'unknown') for e in all_events]))
+                all_events = st.session_state.get("event_stream_data", [])
+                event_types = list(set([e.get("event_type", "unknown") for e in all_events]))
                 selected_types = st.multiselect(
                     "Event Type",
                     options=event_types,
-                    default=st.session_state.event_filters.get('event_type', []),
-                    key="event_type_filter"
+                    default=st.session_state.event_filters.get("event_type", []),
+                    key="event_type_filter",
                 )
-                st.session_state.event_filters['event_type'] = selected_types
+                st.session_state.event_filters["event_type"] = selected_types
 
         with col3:
             if enable_filtering:
-                time_ranges = ['5m', '15m', '1h', '6h', '24h', 'all']
+                time_ranges = ["5m", "15m", "1h", "6h", "24h", "all"]
                 selected_time = st.selectbox(
                     "Time Range",
                     options=time_ranges,
-                    index=time_ranges.index(st.session_state.event_filters.get('time_range', '1h')),
-                    key="time_filter"
+                    index=time_ranges.index(st.session_state.event_filters.get("time_range", "1h")),
+                    key="time_filter",
                 )
-                st.session_state.event_filters['time_range'] = selected_time
+                st.session_state.event_filters["time_range"] = selected_time
 
         with col4:
             if enable_search:
                 search_term = st.text_input(
                     "Search Events",
-                    value=st.session_state.get('event_search', ''),
+                    value=st.session_state.get("event_search", ""),
                     placeholder="Search by message, source...",
-                    key="event_search_input"
+                    key="event_search_input",
                 )
                 st.session_state.event_search = search_term
 
 
 def update_event_stream():
     """Update the event stream with new events."""
-    if st.session_state.get('stream_paused', False):
+    if st.session_state.get("stream_paused", False):
         return
 
-    current_events = st.session_state.get('event_stream_data', [])
+    current_events = st.session_state.get("event_stream_data", [])
 
     # Add new simulated events
     new_events = generate_new_events(3)  # Generate 3 new events
@@ -191,13 +187,19 @@ def generate_new_events(count: int = 1) -> List[Dict[str, Any]]:
 
     events = []
     event_types = [
-        'simulation_start', 'simulation_complete', 'error_occurred',
-        'performance_warning', 'resource_allocated', 'user_action',
-        'system_status', 'data_processed', 'alert_triggered'
+        "simulation_start",
+        "simulation_complete",
+        "error_occurred",
+        "performance_warning",
+        "resource_allocated",
+        "user_action",
+        "system_status",
+        "data_processed",
+        "alert_triggered",
     ]
 
-    severities = ['info', 'low', 'medium', 'high', 'critical']
-    sources = ['simulation_engine', 'monitoring_system', 'user_interface', 'database', 'api_gateway']
+    severities = ["info", "low", "medium", "high", "critical"]
+    sources = ["simulation_engine", "monitoring_system", "user_interface", "database", "api_gateway"]
 
     messages = [
         "Simulation execution started",
@@ -208,22 +210,22 @@ def generate_new_events(count: int = 1) -> List[Dict[str, Any]]:
         "System health check passed",
         "Error detected in processing pipeline",
         "Configuration update applied",
-        "Backup operation completed"
+        "Backup operation completed",
     ]
 
     for _ in range(count):
         event = {
-            'id': f"evt_{int(time.time() * 1000000)}",
-            'timestamp': datetime.now(),
-            'event_type': np.random.choice(event_types),
-            'severity': np.random.choice(severities, p=[0.4, 0.3, 0.2, 0.08, 0.02]),
-            'source': np.random.choice(sources),
-            'message': np.random.choice(messages),
-            'details': {
-                'user_id': np.random.randint(1000, 9999),
-                'session_id': f"sess_{np.random.randint(100, 999)}",
-                'request_id': f"req_{np.random.randint(10000, 99999)}"
-            }
+            "id": f"evt_{int(time.time() * 1000000)}",
+            "timestamp": datetime.now(),
+            "event_type": np.random.choice(event_types),
+            "severity": np.random.choice(severities, p=[0.4, 0.3, 0.2, 0.08, 0.02]),
+            "source": np.random.choice(sources),
+            "message": np.random.choice(messages),
+            "details": {
+                "user_id": np.random.randint(1000, 9999),
+                "session_id": f"sess_{np.random.randint(100, 999)}",
+                "request_id": f"req_{np.random.randint(10000, 99999)}",
+            },
         }
         events.append(event)
 
@@ -232,48 +234,46 @@ def generate_new_events(count: int = 1) -> List[Dict[str, Any]]:
 
 def get_filtered_events() -> List[Dict[str, Any]]:
     """Get events filtered by current criteria."""
-    all_events = st.session_state.get('event_stream_data', [])
-    filters = st.session_state.get('event_filters', {})
-    search_term = st.session_state.get('event_search', '')
+    all_events = st.session_state.get("event_stream_data", [])
+    filters = st.session_state.get("event_filters", {})
+    search_term = st.session_state.get("event_search", "")
 
     filtered_events = all_events.copy()
 
     # Apply time filter
-    time_range = filters.get('time_range', '1h')
-    if time_range != 'all':
-        time_map = {'5m': 5, '15m': 15, '1h': 60, '6h': 360, '24h': 1440}
+    time_range = filters.get("time_range", "1h")
+    if time_range != "all":
+        time_map = {"5m": 5, "15m": 15, "1h": 60, "6h": 360, "24h": 1440}
         minutes_back = time_map.get(time_range, 60)
         cutoff_time = datetime.now() - timedelta(minutes=minutes_back)
-        filtered_events = [e for e in filtered_events if e['timestamp'] > cutoff_time]
+        filtered_events = [e for e in filtered_events if e["timestamp"] > cutoff_time]
 
     # Apply severity filter
-    severity_filter = filters.get('severity', [])
+    severity_filter = filters.get("severity", [])
     if severity_filter:
-        filtered_events = [e for e in filtered_events if e['severity'] in severity_filter]
+        filtered_events = [e for e in filtered_events if e["severity"] in severity_filter]
 
     # Apply event type filter
-    event_type_filter = filters.get('event_type', [])
+    event_type_filter = filters.get("event_type", [])
     if event_type_filter:
-        filtered_events = [e for e in filtered_events if e['event_type'] in event_type_filter]
+        filtered_events = [e for e in filtered_events if e["event_type"] in event_type_filter]
 
     # Apply search filter
     if search_term:
         search_lower = search_term.lower()
         filtered_events = [
-            e for e in filtered_events
-            if search_lower in e['message'].lower() or
-               search_lower in e['source'].lower() or
-               search_lower in e['event_type'].lower()
+            e
+            for e in filtered_events
+            if search_lower in e["message"].lower()
+            or search_lower in e["source"].lower()
+            or search_lower in e["event_type"].lower()
         ]
 
     return filtered_events
 
 
 def display_event_stream(
-    events: List[Dict[str, Any]],
-    max_display: int,
-    auto_scroll: bool,
-    on_event_click: Optional[Callable]
+    events: List[Dict[str, Any]], max_display: int, auto_scroll: bool, on_event_click: Optional[Callable]
 ):
     """Display the event stream."""
     if not events:
@@ -297,38 +297,41 @@ def display_event_stream(
     if auto_scroll and display_events:
         # Use a small invisible element at the bottom to scroll to
         st.markdown('<div id="scroll-to-bottom"></div>', unsafe_allow_html=True)
-        st.markdown("""
+        st.markdown(
+            """
         <script>
             var element = document.getElementById('scroll-to-bottom');
             if (element) {
                 element.scrollIntoView({behavior: 'smooth'});
             }
         </script>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 
 def display_single_event(event: Dict[str, Any], on_event_click: Optional[Callable]):
     """Display a single event in the stream."""
-    severity = event.get('severity', 'info')
-    timestamp = event.get('timestamp', datetime.now())
-    event_type = event.get('event_type', 'unknown')
-    source = event.get('source', 'unknown')
-    message = event.get('message', 'No message')
+    severity = event.get("severity", "info")
+    timestamp = event.get("timestamp", datetime.now())
+    event_type = event.get("event_type", "unknown")
+    source = event.get("source", "unknown")
+    message = event.get("message", "No message")
 
     # Severity-based styling
-    if severity == 'critical':
+    if severity == "critical":
         icon = "🚨"
         bg_color = "#ffcccc"
         border_color = "#cc0000"
-    elif severity == 'high':
+    elif severity == "high":
         icon = "🔴"
         bg_color = "#ffe6e6"
         border_color = "#ff4444"
-    elif severity == 'medium':
+    elif severity == "medium":
         icon = "🟡"
         bg_color = "#fff9e6"
         border_color = "#ffaa00"
-    elif severity == 'low':
+    elif severity == "low":
         icon = "🟢"
         bg_color = "#e6ffe6"
         border_color = "#44aa44"
@@ -344,7 +347,7 @@ def display_single_event(event: Dict[str, Any], on_event_click: Optional[Callabl
     event_clicked = st.button(
         f"{icon} {time_str} | {event_type.upper()} | {source} | {message}",
         key=f"event_{event['id']}",
-        help=f"Click to view event details | Severity: {severity}"
+        help=f"Click to view event details | Severity: {severity}",
     )
 
     if event_clicked:
@@ -371,9 +374,9 @@ def display_event_details(event: Dict[str, Any]):
         st.write(f"**Message:** {event['message']}")
 
     # Additional details
-    if 'details' in event and event['details']:
+    if "details" in event and event["details"]:
         st.markdown("**Additional Details:**")
-        st.json(event['details'])
+        st.json(event["details"])
 
 
 def display_stream_statistics(events: List[Dict[str, Any]]):
@@ -386,26 +389,26 @@ def display_stream_statistics(events: List[Dict[str, Any]]):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        total_events = len(st.session_state.get('event_stream_data', []))
+        total_events = len(st.session_state.get("event_stream_data", []))
         st.metric("Total Events", total_events)
 
     with col2:
-        recent_count = len([e for e in events if e['timestamp'] > datetime.now() - timedelta(minutes=5)])
+        recent_count = len([e for e in events if e["timestamp"] > datetime.now() - timedelta(minutes=5)])
         st.metric("Last 5 min", recent_count)
 
     with col3:
-        critical_count = len([e for e in events if e['severity'] == 'critical'])
+        critical_count = len([e for e in events if e["severity"] == "critical"])
         st.metric("Critical", critical_count)
 
     with col4:
-        error_count = len([e for e in events if 'error' in e['event_type'].lower()])
+        error_count = len([e for e in events if "error" in e["event_type"].lower()])
         st.metric("Errors", error_count)
 
     # Event type breakdown
     if events:
         event_types = {}
         for event in events[-50:]:  # Last 50 events
-            event_type = event.get('event_type', 'unknown')
+            event_type = event.get("event_type", "unknown")
             event_types[event_type] = event_types.get(event_type, 0) + 1
 
         st.markdown("**Recent Event Types:**")

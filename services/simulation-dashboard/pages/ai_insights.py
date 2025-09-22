@@ -4,50 +4,49 @@ This module provides AI-powered insights, intelligent recommendations,
 and predictive analytics for simulation operations and performance optimization.
 """
 
-import streamlit as st
 import asyncio
 import time
-import pandas as pd
-import numpy as np
+import warnings
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
-import warnings
-warnings.filterwarnings('ignore')
 
-from services.clients.simulation_client import SimulationClient
+warnings.filterwarnings("ignore")
+
 from infrastructure.config.config import get_config
 
 # Import dependency management system
-from infrastructure.dependencies import (
-    dependency_manager,
-    safe_import,
-    check_ml_availability
-)
+from infrastructure.dependencies import check_ml_availability, dependency_manager, safe_import
+
+from services.clients.simulation_client import SimulationClient
 
 # Safely import ML libraries with graceful degradation
-sklearn = safe_import('sklearn')
-statsmodels = safe_import('statsmodels')
-prophet = safe_import('prophet')
+sklearn = safe_import("sklearn")
+statsmodels = safe_import("statsmodels")
+prophet = safe_import("prophet")
 
 # Check ML library availability
 ml_availability = check_ml_availability()
-SKLEARN_AVAILABLE = ml_availability.get('scikit_learn', False)
-STATSMODELS_AVAILABLE = ml_availability.get('statsmodels', False)
-PROPHET_AVAILABLE = ml_availability.get('prophet', False)
-XGBOOST_AVAILABLE = ml_availability.get('xgboost', False)
-LIGHTGBM_AVAILABLE = ml_availability.get('lightgbm', False)
+SKLEARN_AVAILABLE = ml_availability.get("scikit_learn", False)
+STATSMODELS_AVAILABLE = ml_availability.get("statsmodels", False)
+PROPHET_AVAILABLE = ml_availability.get("prophet", False)
+XGBOOST_AVAILABLE = ml_availability.get("xgboost", False)
+LIGHTGBM_AVAILABLE = ml_availability.get("lightgbm", False)
 
 # Import specific classes if available
 if SKLEARN_AVAILABLE and sklearn:
     try:
-        from sklearn.ensemble import IsolationForest, RandomForestRegressor
-        from sklearn.preprocessing import StandardScaler
-        from sklearn.model_selection import train_test_split
-        from sklearn.metrics import mean_squared_error, r2_score
         import joblib
+        from sklearn.ensemble import IsolationForest, RandomForestRegressor
+        from sklearn.metrics import mean_squared_error, r2_score
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler
     except ImportError:
         SKLEARN_AVAILABLE = False
 
@@ -77,16 +76,18 @@ if not PROPHET_AVAILABLE:
 def render_ai_insights_page():
     """Render the AI-powered insights engine page."""
     st.markdown("## 🤖 AI-Powered Insights Engine")
-    st.markdown("Intelligent pattern recognition, predictive analytics, and automated optimization for simulation operations.")
+    st.markdown(
+        "Intelligent pattern recognition, predictive analytics, and automated optimization for simulation operations."
+    )
 
     # Initialize session state
     initialize_ai_insights_state()
 
     # Check feature availability
-    ai_insights_available = dependency_manager.is_feature_available('ai_insights')
-    pattern_recognition_available = dependency_manager.is_feature_available('pattern_recognition')
-    anomaly_detection_available = dependency_manager.is_feature_available('anomaly_detection')
-    predictive_analytics_available = dependency_manager.is_feature_available('predictive_analytics')
+    ai_insights_available = dependency_manager.is_feature_available("ai_insights")
+    pattern_recognition_available = dependency_manager.is_feature_available("pattern_recognition")
+    anomaly_detection_available = dependency_manager.is_feature_available("anomaly_detection")
+    predictive_analytics_available = dependency_manager.is_feature_available("predictive_analytics")
 
     # Display feature availability status
     if not ai_insights_available:
@@ -136,21 +137,16 @@ def render_ai_insights_page():
 
 def initialize_ai_insights_state():
     """Initialize session state for AI insights page."""
-    if 'ml_models' not in st.session_state:
+    if "ml_models" not in st.session_state:
         st.session_state.ml_models = {}
 
-    if 'ai_insights' not in st.session_state:
-        st.session_state.ai_insights = {
-            'patterns': [],
-            'recommendations': [],
-            'anomalies': [],
-            'predictions': {}
-        }
+    if "ai_insights" not in st.session_state:
+        st.session_state.ai_insights = {"patterns": [], "recommendations": [], "anomalies": [], "predictions": {}}
 
-    if 'training_data' not in st.session_state:
+    if "training_data" not in st.session_state:
         st.session_state.training_data = {}
 
-    if 'model_performance' not in st.session_state:
+    if "model_performance" not in st.session_state:
         st.session_state.model_performance = {}
 
 
@@ -167,7 +163,7 @@ def render_pattern_recognition():
         data_source = st.selectbox(
             "Data Source",
             options=["Simulation Metrics", "Audit Events", "Performance Data", "System Resources"],
-            key="pattern_data_source"
+            key="pattern_data_source",
         )
 
     with col2:
@@ -175,7 +171,7 @@ def render_pattern_recognition():
         algorithm = st.selectbox(
             "ML Algorithm",
             options=["Clustering (K-Means)", "PCA Analysis", "Time Series Clustering", "Association Rules"],
-            key="pattern_algorithm"
+            key="pattern_algorithm",
         )
 
     with col3:
@@ -186,16 +182,16 @@ def render_pattern_recognition():
     if st.button("🔍 Discover Patterns", key="run_pattern_recognition", type="primary"):
         with st.spinner("Analyzing data patterns..."):
             patterns = discover_patterns(data_source, algorithm, min_samples)
-            st.session_state.ai_insights['patterns'] = patterns
+            st.session_state.ai_insights["patterns"] = patterns
 
     # Display discovered patterns
-    if st.session_state.ai_insights.get('patterns'):
-        display_patterns(st.session_state.ai_insights['patterns'])
+    if st.session_state.ai_insights.get("patterns"):
+        display_patterns(st.session_state.ai_insights["patterns"])
 
     # Pattern visualization
-    if st.session_state.ai_insights.get('patterns'):
+    if st.session_state.ai_insights.get("patterns"):
         st.markdown("#### 📈 Pattern Visualization")
-        render_pattern_visualization(st.session_state.ai_insights['patterns'])
+        render_pattern_visualization(st.session_state.ai_insights["patterns"])
 
 
 def render_intelligent_recommendations():
@@ -209,35 +205,33 @@ def render_intelligent_recommendations():
         "Resource Allocation",
         "Configuration Tuning",
         "Workflow Optimization",
-        "Risk Mitigation"
+        "Risk Mitigation",
     ]
 
-    selected_category = st.selectbox(
-        "Recommendation Category",
-        options=categories,
-        key="recommendation_category"
-    )
+    selected_category = st.selectbox("Recommendation Category", options=categories, key="recommendation_category")
 
     # Generate recommendations
     if st.button("🧠 Generate Recommendations", key="generate_recommendations", type="primary"):
         with st.spinner("Analyzing data and generating recommendations..."):
             recommendations = generate_intelligent_recommendations(selected_category)
-            st.session_state.ai_insights['recommendations'] = recommendations
+            st.session_state.ai_insights["recommendations"] = recommendations
 
     # Display recommendations
-    if st.session_state.ai_insights.get('recommendations'):
-        display_recommendations(st.session_state.ai_insights['recommendations'])
+    if st.session_state.ai_insights.get("recommendations"):
+        display_recommendations(st.session_state.ai_insights["recommendations"])
 
     # Recommendation impact analysis
-    if st.session_state.ai_insights.get('recommendations'):
+    if st.session_state.ai_insights.get("recommendations"):
         st.markdown("#### 📊 Recommendation Impact Analysis")
-        render_recommendation_impact_analysis(st.session_state.ai_insights['recommendations'])
+        render_recommendation_impact_analysis(st.session_state.ai_insights["recommendations"])
 
 
 def render_ai_anomaly_detection():
     """Render AI-powered anomaly detection."""
     st.markdown("### ⚠️ AI-Powered Anomaly Detection")
-    st.markdown("Advanced anomaly detection using machine learning algorithms to identify unusual patterns and potential issues.")
+    st.markdown(
+        "Advanced anomaly detection using machine learning algorithms to identify unusual patterns and potential issues."
+    )
 
     # Anomaly detection configuration
     col1, col2, col3 = st.columns(3)
@@ -247,7 +241,7 @@ def render_ai_anomaly_detection():
         detection_target = st.selectbox(
             "Target Metric",
             options=["CPU Usage", "Memory Usage", "Response Time", "Error Rate", "Throughput"],
-            key="anomaly_target"
+            key="anomaly_target",
         )
 
     with col2:
@@ -255,7 +249,7 @@ def render_ai_anomaly_detection():
         anomaly_algorithm = st.selectbox(
             "Algorithm",
             options=["Isolation Forest", "Local Outlier Factor", "One-Class SVM", "Autoencoder"],
-            key="anomaly_algorithm"
+            key="anomaly_algorithm",
         )
 
     with col3:
@@ -279,18 +273,18 @@ def render_ai_anomaly_detection():
             if detection_target in st.session_state.ml_models:
                 with st.spinner("Detecting anomalies..."):
                     anomalies = detect_anomalies(detection_target)
-                    st.session_state.ai_insights['anomalies'] = anomalies
+                    st.session_state.ai_insights["anomalies"] = anomalies
             else:
                 st.warning("⚠️ Please train the model first!")
 
     # Display anomalies
-    if st.session_state.ai_insights.get('anomalies'):
-        display_anomalies(st.session_state.ai_insights['anomalies'])
+    if st.session_state.ai_insights.get("anomalies"):
+        display_anomalies(st.session_state.ai_insights["anomalies"])
 
     # Anomaly visualization
-    if st.session_state.ai_insights.get('anomalies'):
+    if st.session_state.ai_insights.get("anomalies"):
         st.markdown("#### 📈 Anomaly Visualization")
-        render_anomaly_visualization(st.session_state.ai_insights['anomalies'])
+        render_anomaly_visualization(st.session_state.ai_insights["anomalies"])
 
 
 def render_predictive_optimization():
@@ -304,13 +298,11 @@ def render_predictive_optimization():
         "Resource Forecasting",
         "Workload Optimization",
         "Cost Optimization",
-        "Quality Prediction"
+        "Quality Prediction",
     ]
 
     selected_optimization = st.selectbox(
-        "Optimization Category",
-        options=optimization_categories,
-        key="optimization_category"
+        "Optimization Category", options=optimization_categories, key="optimization_category"
     )
 
     # Model training and prediction
@@ -330,33 +322,36 @@ def render_predictive_optimization():
             if selected_optimization in st.session_state.ml_models:
                 with st.spinner("Generating predictions..."):
                     predictions = generate_predictions(selected_optimization)
-                    st.session_state.ai_insights['predictions'][selected_optimization] = predictions
+                    st.session_state.ai_insights["predictions"][selected_optimization] = predictions
             else:
                 st.warning("⚠️ Please train the model first!")
 
     with col3:
         if st.button("📋 Generate Optimization Plan", key="generate_optimization_plan"):
-            if selected_optimization in st.session_state.ai_insights.get('predictions', {}):
+            if selected_optimization in st.session_state.ai_insights.get("predictions", {}):
                 with st.spinner("Generating optimization plan..."):
                     plan = generate_optimization_plan(selected_optimization)
-                    st.session_state.ai_insights['optimization_plan'] = plan
+                    st.session_state.ai_insights["optimization_plan"] = plan
             else:
                 st.warning("⚠️ Please generate predictions first!")
 
     # Display predictions and optimization plans
-    if st.session_state.ai_insights.get('predictions', {}).get(selected_optimization):
-        display_predictions(selected_optimization, st.session_state.ai_insights['predictions'][selected_optimization])
+    if st.session_state.ai_insights.get("predictions", {}).get(selected_optimization):
+        display_predictions(selected_optimization, st.session_state.ai_insights["predictions"][selected_optimization])
 
-    if st.session_state.ai_insights.get('optimization_plan'):
-        display_optimization_plan(st.session_state.ai_insights['optimization_plan'])
+    if st.session_state.ai_insights.get("optimization_plan"):
+        display_optimization_plan(st.session_state.ai_insights["optimization_plan"])
 
     # Predictive visualization
-    if st.session_state.ai_insights.get('predictions', {}).get(selected_optimization):
+    if st.session_state.ai_insights.get("predictions", {}).get(selected_optimization):
         st.markdown("#### 📈 Predictive Analytics")
-        render_predictive_visualization(selected_optimization, st.session_state.ai_insights['predictions'][selected_optimization])
+        render_predictive_visualization(
+            selected_optimization, st.session_state.ai_insights["predictions"][selected_optimization]
+        )
 
 
 # Core AI Functions
+
 
 def discover_patterns(data_source: str, algorithm: str, min_samples: int) -> List[Dict[str, Any]]:
     """Discover patterns in simulation data using ML algorithms."""
@@ -375,7 +370,7 @@ def discover_patterns(data_source: str, algorithm: str, min_samples: int) -> Lis
                     "support": 0.72,
                     "affected_simulations": 15,
                     "potential_impact": "Resource optimization opportunity",
-                    "recommendation": "Implement resource scaling during peak hours"
+                    "recommendation": "Implement resource scaling during peak hours",
                 },
                 {
                     "pattern_id": "pattern_002",
@@ -385,7 +380,7 @@ def discover_patterns(data_source: str, algorithm: str, min_samples: int) -> Lis
                     "support": 0.68,
                     "affected_simulations": 8,
                     "potential_impact": "Stability improvement",
-                    "recommendation": "Reduce max concurrent simulations or increase timeouts"
+                    "recommendation": "Reduce max concurrent simulations or increase timeouts",
                 },
                 {
                     "pattern_id": "pattern_003",
@@ -395,8 +390,8 @@ def discover_patterns(data_source: str, algorithm: str, min_samples: int) -> Lis
                     "support": 0.55,
                     "affected_simulations": 22,
                     "potential_impact": "Performance optimization",
-                    "recommendation": "Schedule heavy workloads during weekdays"
-                }
+                    "recommendation": "Schedule heavy workloads during weekdays",
+                },
             ]
 
         elif data_source == "Audit Events":
@@ -409,7 +404,7 @@ def discover_patterns(data_source: str, algorithm: str, min_samples: int) -> Lis
                     "support": 0.45,
                     "affected_simulations": 3,
                     "potential_impact": "Security enhancement",
-                    "recommendation": "Implement IP-based access controls"
+                    "recommendation": "Implement IP-based access controls",
                 }
             ]
 
@@ -439,8 +434,8 @@ def generate_intelligent_recommendations(category: str) -> List[Dict[str, Any]]:
                     "data_driven_insights": [
                         "Peak usage occurs between 2-4 PM daily",
                         "Current resource utilization is only 65% during peaks",
-                        "Auto-scaling could reduce costs by $1,200/month"
-                    ]
+                        "Auto-scaling could reduce costs by $1,200/month",
+                    ],
                 },
                 {
                     "recommendation_id": "rec_002",
@@ -454,9 +449,9 @@ def generate_intelligent_recommendations(category: str) -> List[Dict[str, Any]]:
                     "data_driven_insights": [
                         "Average query time: 2.3 seconds",
                         "Most expensive queries involve document generation",
-                        "Index optimization could improve performance by 50%"
-                    ]
-                }
+                        "Index optimization could improve performance by 50%",
+                    ],
+                },
             ]
 
         elif category == "Resource Allocation":
@@ -473,8 +468,8 @@ def generate_intelligent_recommendations(category: str) -> List[Dict[str, Any]]:
                     "data_driven_insights": [
                         "Simple simulations use only 256MB on average",
                         "Complex simulations require up to 2GB",
-                        "Current static allocation wastes 40% of memory"
-                    ]
+                        "Current static allocation wastes 40% of memory",
+                    ],
                 }
             ]
 
@@ -515,11 +510,7 @@ def train_anomaly_detection_model(target: str, algorithm: str, sensitivity: floa
             data = np.random.normal(50, 10, n_samples)
 
         # Train Isolation Forest model
-        model = IsolationForest(
-            contamination=sensitivity,
-            random_state=42,
-            n_estimators=100
-        )
+        model = IsolationForest(contamination=sensitivity, random_state=42, n_estimators=100)
 
         # Reshape data for sklearn
         X = data.reshape(-1, 1)
@@ -527,11 +518,11 @@ def train_anomaly_detection_model(target: str, algorithm: str, sensitivity: floa
 
         # Store the trained model
         st.session_state.ml_models[target] = {
-            'model': model,
-            'algorithm': algorithm,
-            'sensitivity': sensitivity,
-            'training_date': datetime.now(),
-            'training_samples': n_samples
+            "model": model,
+            "algorithm": algorithm,
+            "sensitivity": sensitivity,
+            "training_date": datetime.now(),
+            "training_samples": n_samples,
         }
 
         return True
@@ -549,7 +540,7 @@ def detect_anomalies(target: str) -> List[Dict[str, Any]]:
             return []
 
         model_info = st.session_state.ml_models[target]
-        model = model_info['model']
+        model = model_info["model"]
 
         # Generate current data to analyze (in production, this would be real data)
         np.random.seed(123)
@@ -576,13 +567,15 @@ def detect_anomalies(target: str) -> List[Dict[str, Any]]:
 
         anomalies = []
         for idx in anomaly_indices:
-            anomalies.append({
-                "timestamp": datetime.now() - timedelta(minutes=n_samples - idx),
-                "value": float(data[idx]),
-                "anomaly_score": float(scores[idx]),
-                "severity": "High" if abs(scores[idx]) > 0.5 else "Medium",
-                "description": f"Anomalous {target.lower()} detected: {data[idx]:.2f}"
-            })
+            anomalies.append(
+                {
+                    "timestamp": datetime.now() - timedelta(minutes=n_samples - idx),
+                    "value": float(data[idx]),
+                    "anomaly_score": float(scores[idx]),
+                    "severity": "High" if abs(scores[idx]) > 0.5 else "Medium",
+                    "description": f"Anomalous {target.lower()} detected: {data[idx]:.2f}",
+                }
+            )
 
         return anomalies
 
@@ -607,7 +600,7 @@ def train_predictive_model(category: str) -> bool:
             X[:, 3] = X[:, 3] * 24  # Hour of day
 
             # Target: Response time
-            y = (X[:, 0] * 0.1 + X[:, 1] * 0.001 + X[:, 2] * 0.5 + np.sin(X[:, 3] * np.pi / 12) * 2)
+            y = X[:, 0] * 0.1 + X[:, 1] * 0.001 + X[:, 2] * 0.5 + np.sin(X[:, 3] * np.pi / 12) * 2
             y = y + np.random.normal(0, 0.5, n_samples)  # Add noise
 
         elif category == "Resource Forecasting":
@@ -627,11 +620,7 @@ def train_predictive_model(category: str) -> bool:
             y = X.sum(axis=1) + np.random.normal(0, 0.1, n_samples)
 
         # Train model
-        model = RandomForestRegressor(
-            n_estimators=100,
-            random_state=42,
-            max_depth=10
-        )
+        model = RandomForestRegressor(n_estimators=100, random_state=42, max_depth=10)
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -644,20 +633,15 @@ def train_predictive_model(category: str) -> bool:
 
         # Store model and performance
         st.session_state.ml_models[category] = {
-            'model': model,
-            'training_date': datetime.now(),
-            'performance': {
-                'mse': mse,
-                'r2_score': r2,
-                'training_samples': len(X_train),
-                'test_samples': len(X_test)
-            }
+            "model": model,
+            "training_date": datetime.now(),
+            "performance": {"mse": mse, "r2_score": r2, "training_samples": len(X_train), "test_samples": len(X_test)},
         }
 
         st.session_state.model_performance[category] = {
-            'mse': mse,
-            'r2_score': r2,
-            'accuracy': f"{r2 * 100:.1f}%" if r2 > 0 else "Poor fit"
+            "mse": mse,
+            "r2_score": r2,
+            "accuracy": f"{r2 * 100:.1f}%" if r2 > 0 else "Poor fit",
         }
 
         return True
@@ -675,7 +659,7 @@ def generate_predictions(category: str) -> Dict[str, Any]:
             return {}
 
         model_info = st.session_state.ml_models[category]
-        model = model_info['model']
+        model = model_info["model"]
 
         # Generate prediction scenarios
         n_scenarios = 10
@@ -688,16 +672,24 @@ def generate_predictions(category: str) -> Dict[str, Any]:
                     "cpu_usage": np.random.uniform(20, 80),
                     "memory_usage": np.random.uniform(512, 2048),
                     "concurrent_simulations": np.random.poisson(5),
-                    "hour_of_day": np.random.uniform(0, 24)
+                    "hour_of_day": np.random.uniform(0, 24),
                 }
-                X = np.array([[scenario["cpu_usage"], scenario["memory_usage"],
-                              scenario["concurrent_simulations"], scenario["hour_of_day"]]])
+                X = np.array(
+                    [
+                        [
+                            scenario["cpu_usage"],
+                            scenario["memory_usage"],
+                            scenario["concurrent_simulations"],
+                            scenario["hour_of_day"],
+                        ]
+                    ]
+                )
 
             elif category == "Resource Forecasting":
                 scenario = {
                     "historical_cpu": np.random.uniform(30, 70),
                     "hour_of_day": np.random.uniform(0, 24),
-                    "day_of_week": np.random.uniform(0, 7)
+                    "day_of_week": np.random.uniform(0, 7),
                 }
                 X = np.array([[scenario["historical_cpu"], scenario["hour_of_day"], scenario["day_of_week"]]])
 
@@ -716,8 +708,8 @@ def generate_predictions(category: str) -> Dict[str, Any]:
         return {
             "predictions": predictions,
             "category": category,
-            "model_info": model_info.get('performance', {}),
-            "generated_at": datetime.now()
+            "model_info": model_info.get("performance", {}),
+            "generated_at": datetime.now(),
         }
 
     except Exception as e:
@@ -728,7 +720,7 @@ def generate_predictions(category: str) -> Dict[str, Any]:
 def generate_optimization_plan(category: str) -> Dict[str, Any]:
     """Generate optimization plan based on predictions."""
     try:
-        predictions = st.session_state.ai_insights.get('predictions', {}).get(category, {})
+        predictions = st.session_state.ai_insights.get("predictions", {}).get(category, {})
         if not predictions:
             return {}
 
@@ -738,14 +730,14 @@ def generate_optimization_plan(category: str) -> Dict[str, Any]:
             "recommendations": [],
             "implementation_steps": [],
             "expected_benefits": {},
-            "risk_assessment": []
+            "risk_assessment": [],
         }
 
         if category == "Performance Prediction":
             plan["recommendations"] = [
                 "Implement predictive auto-scaling based on CPU/memory forecasts",
                 "Optimize resource allocation during predicted peak hours",
-                "Implement workload balancing to prevent performance bottlenecks"
+                "Implement workload balancing to prevent performance bottlenecks",
             ]
 
             plan["implementation_steps"] = [
@@ -753,20 +745,20 @@ def generate_optimization_plan(category: str) -> Dict[str, Any]:
                 "2. Configure resource thresholds",
                 "3. Set up monitoring and alerting",
                 "4. Test scaling behavior under load",
-                "5. Implement gradual rollout"
+                "5. Implement gradual rollout",
             ]
 
             plan["expected_benefits"] = {
                 "performance_improvement": "35%",
                 "cost_reduction": "25%",
-                "resource_efficiency": "40%"
+                "resource_efficiency": "40%",
             }
 
         elif category == "Resource Forecasting":
             plan["recommendations"] = [
                 "Implement dynamic resource allocation",
                 "Schedule maintenance during predicted low-usage periods",
-                "Optimize backup windows based on usage patterns"
+                "Optimize backup windows based on usage patterns",
             ]
 
             plan["implementation_steps"] = [
@@ -774,19 +766,23 @@ def generate_optimization_plan(category: str) -> Dict[str, Any]:
                 "2. Update scheduling based on forecasts",
                 "3. Implement resource monitoring",
                 "4. Set up automated scaling rules",
-                "5. Monitor and adjust policies"
+                "5. Monitor and adjust policies",
             ]
 
             plan["expected_benefits"] = {
                 "resource_optimization": "45%",
                 "cost_savings": "30%",
-                "operational_efficiency": "50%"
+                "operational_efficiency": "50%",
             }
 
         plan["risk_assessment"] = [
             {"risk": "Model accuracy degradation", "probability": "Low", "mitigation": "Regular model retraining"},
             {"risk": "Resource over-provisioning", "probability": "Medium", "mitigation": "Implement safety buffers"},
-            {"risk": "Unexpected workload spikes", "probability": "Low", "mitigation": "Maintain manual override capability"}
+            {
+                "risk": "Unexpected workload spikes",
+                "probability": "Low",
+                "mitigation": "Maintain manual override capability",
+            },
         ]
 
         return plan
@@ -798,6 +794,7 @@ def generate_optimization_plan(category: str) -> Dict[str, Any]:
 
 # Display Functions
 
+
 def display_patterns(patterns: List[Dict[str, Any]]):
     """Display discovered patterns."""
     st.markdown("#### 🔍 Discovered Patterns")
@@ -807,11 +804,11 @@ def display_patterns(patterns: List[Dict[str, Any]]):
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.metric("Confidence", ".1%", pattern['confidence'] * 100)
-                st.metric("Support", ".1%", pattern['support'] * 100)
+                st.metric("Confidence", ".1%", pattern["confidence"] * 100)
+                st.metric("Support", ".1%", pattern["support"] * 100)
 
             with col2:
-                st.metric("Affected Simulations", pattern['affected_simulations'])
+                st.metric("Affected Simulations", pattern["affected_simulations"])
                 st.write(f"**Impact:** {pattern['potential_impact']}")
 
             with col3:
@@ -833,9 +830,9 @@ def display_recommendations(recommendations: List[Dict[str, Any]]):
             col1, col2 = st.columns(2)
 
             with col1:
-                st.metric("Expected Impact", rec['expected_impact'])
-                st.metric("Implementation Effort", rec['implementation_effort'])
-                st.metric("Confidence", ".1%", rec['confidence'] * 100)
+                st.metric("Expected Impact", rec["expected_impact"])
+                st.metric("Implementation Effort", rec["implementation_effort"])
+                st.metric("Confidence", ".1%", rec["confidence"] * 100)
 
             with col2:
                 st.write(f"**Priority:** {rec['priority']}")
@@ -843,7 +840,7 @@ def display_recommendations(recommendations: List[Dict[str, Any]]):
 
             # Data-driven insights
             st.markdown("**📊 Data-Driven Insights:**")
-            for insight in rec['data_driven_insights']:
+            for insight in rec["data_driven_insights"]:
                 st.write(f"• {insight}")
 
             # Action buttons
@@ -872,23 +869,23 @@ def display_anomalies(anomalies: List[Dict[str, Any]]):
         st.metric("Total Anomalies", len(anomalies))
 
     with col2:
-        high_severity = len([a for a in anomalies if a['severity'] == 'High'])
+        high_severity = len([a for a in anomalies if a["severity"] == "High"])
         st.metric("High Severity", high_severity)
 
     with col3:
-        avg_score = np.mean([a['anomaly_score'] for a in anomalies])
+        avg_score = np.mean([a["anomaly_score"] for a in anomalies])
         st.metric("Avg Anomaly Score", ".3f", avg_score)
 
     # Anomaly list
     for anomaly in anomalies[:10]:  # Show first 10
-        severity_icon = "🔴" if anomaly['severity'] == 'High' else "🟡"
+        severity_icon = "🔴" if anomaly["severity"] == "High" else "🟡"
 
         with st.expander(f"{severity_icon} {anomaly['description']}"):
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.metric("Value", ".2f", anomaly['value'])
-                st.metric("Score", ".3f", anomaly['anomaly_score'])
+                st.metric("Value", ".2f", anomaly["value"])
+                st.metric("Score", ".3f", anomaly["anomaly_score"])
 
             with col2:
                 st.write(f"**Severity:** {anomaly['severity']}")
@@ -903,33 +900,33 @@ def display_predictions(category: str, predictions_data: Dict[str, Any]):
     """Display predictions."""
     st.markdown(f"#### 🔮 {category} Predictions")
 
-    predictions = predictions_data.get('predictions', [])
+    predictions = predictions_data.get("predictions", [])
 
     if not predictions:
         st.warning("No predictions available.")
         return
 
     # Model performance
-    model_info = predictions_data.get('model_info', {})
+    model_info = predictions_data.get("model_info", {})
     if model_info:
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.metric("Model R² Score", ".3f", model_info.get('r2_score', 0))
+            st.metric("Model R² Score", ".3f", model_info.get("r2_score", 0))
 
         with col2:
-            st.metric("MSE", ".4f", model_info.get('mse', 0))
+            st.metric("MSE", ".4f", model_info.get("mse", 0))
 
         with col3:
-            accuracy = st.session_state.model_performance.get(category, {}).get('accuracy', 'Unknown')
+            accuracy = st.session_state.model_performance.get(category, {}).get("accuracy", "Unknown")
             st.metric("Accuracy", accuracy)
 
     # Predictions table
     pred_df = pd.DataFrame(predictions)
     if not pred_df.empty:
         # Format columns appropriately
-        if 'prediction' in pred_df.columns:
-            pred_df['prediction'] = pred_df['prediction'].round(2)
+        if "prediction" in pred_df.columns:
+            pred_df["prediction"] = pred_df["prediction"].round(2)
 
         st.dataframe(pred_df, use_container_width=True)
 
@@ -942,38 +939,35 @@ def display_optimization_plan(plan: Dict[str, Any]):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric("Category", plan.get('category', 'Unknown'))
-        st.metric("Generated", plan.get('generated_at', datetime.now()).strftime('%H:%M'))
+        st.metric("Category", plan.get("category", "Unknown"))
+        st.metric("Generated", plan.get("generated_at", datetime.now()).strftime("%H:%M"))
 
     with col2:
-        benefits = plan.get('expected_benefits', {})
+        benefits = plan.get("expected_benefits", {})
         if benefits:
             primary_benefit = list(benefits.keys())[0]
             st.metric("Primary Benefit", benefits[primary_benefit])
 
     # Recommendations
     st.markdown("**🎯 Key Recommendations:**")
-    for rec in plan.get('recommendations', []):
+    for rec in plan.get("recommendations", []):
         st.write(f"• {rec}")
 
     # Implementation steps
     st.markdown("**📝 Implementation Steps:**")
-    for step in plan.get('implementation_steps', []):
+    for step in plan.get("implementation_steps", []):
         st.write(f"• {step}")
 
     # Expected benefits
-    if plan.get('expected_benefits'):
+    if plan.get("expected_benefits"):
         st.markdown("**💰 Expected Benefits:**")
-        benefits_df = pd.DataFrame(
-            list(plan['expected_benefits'].items()),
-            columns=['Metric', 'Improvement']
-        )
+        benefits_df = pd.DataFrame(list(plan["expected_benefits"].items()), columns=["Metric", "Improvement"])
         st.dataframe(benefits_df, use_container_width=True)
 
     # Risk assessment
-    if plan.get('risk_assessment'):
+    if plan.get("risk_assessment"):
         st.markdown("**⚠️ Risk Assessment:**")
-        for risk in plan.get('risk_assessment', []):
+        for risk in plan.get("risk_assessment", []):
             with st.expander(f"Risk: {risk['risk']}"):
                 st.write(f"**Probability:** {risk['probability']}")
                 st.write(f"**Mitigation:** {risk['mitigation']}")
@@ -981,22 +975,23 @@ def display_optimization_plan(plan: Dict[str, Any]):
 
 # Visualization Functions
 
+
 def render_pattern_visualization(patterns: List[Dict[str, Any]]):
     """Render pattern visualization."""
     if not patterns:
         return
 
     # Create pattern summary chart
-    pattern_types = [p['type'] for p in patterns]
-    confidences = [p['confidence'] for p in patterns]
+    pattern_types = [p["type"] for p in patterns]
+    confidences = [p["confidence"] for p in patterns]
 
     fig = px.bar(
         x=pattern_types,
         y=confidences,
         title="Pattern Confidence Levels",
-        labels={'x': 'Pattern Type', 'y': 'Confidence'},
+        labels={"x": "Pattern Type", "y": "Confidence"},
         color=confidences,
-        color_continuous_scale='Viridis'
+        color_continuous_scale="Viridis",
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -1008,23 +1003,19 @@ def render_anomaly_visualization(anomalies: List[Dict[str, Any]]):
         return
 
     # Create timeline of anomalies
-    timestamps = [a['timestamp'] for a in anomalies]
-    values = [a['value'] for a in anomalies]
-    scores = [a['anomaly_score'] for a in anomalies]
+    timestamps = [a["timestamp"] for a in anomalies]
+    values = [a["value"] for a in anomalies]
+    scores = [a["anomaly_score"] for a in anomalies]
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     # Values over time
-    fig.add_trace(
-        go.Scatter(x=timestamps, y=values, name="Values", mode='lines+markers'),
-        secondary_y=False
-    )
+    fig.add_trace(go.Scatter(x=timestamps, y=values, name="Values", mode="lines+markers"), secondary_y=False)
 
     # Anomaly scores
     fig.add_trace(
-        go.Scatter(x=timestamps, y=scores, name="Anomaly Score", mode='markers',
-                  marker=dict(color='red', size=8)),
-        secondary_y=True
+        go.Scatter(x=timestamps, y=scores, name="Anomaly Score", mode="markers", marker=dict(color="red", size=8)),
+        secondary_y=True,
     )
 
     fig.update_layout(title="Anomaly Detection Timeline")
@@ -1037,29 +1028,27 @@ def render_anomaly_visualization(anomalies: List[Dict[str, Any]]):
 
 def render_predictive_visualization(category: str, predictions_data: Dict[str, Any]):
     """Render predictive analytics visualization."""
-    predictions = predictions_data.get('predictions', [])
+    predictions = predictions_data.get("predictions", [])
 
     if not predictions:
         return
 
     if category == "Performance Prediction":
         # Create performance prediction chart
-        timestamps = [p['timestamp'] for p in predictions]
-        predictions_values = [p['prediction'] for p in predictions]
-        cpu_values = [p.get('cpu_usage', 0) for p in predictions]
+        timestamps = [p["timestamp"] for p in predictions]
+        predictions_values = [p["prediction"] for p in predictions]
+        cpu_values = [p.get("cpu_usage", 0) for p in predictions]
 
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         fig.add_trace(
-            go.Scatter(x=timestamps, y=predictions_values, name="Predicted Response Time",
-                      mode='lines+markers'),
-            secondary_y=False
+            go.Scatter(x=timestamps, y=predictions_values, name="Predicted Response Time", mode="lines+markers"),
+            secondary_y=False,
         )
 
         fig.add_trace(
-            go.Scatter(x=timestamps, y=cpu_values, name="CPU Usage",
-                      mode='lines', line=dict(dash='dot')),
-            secondary_y=True
+            go.Scatter(x=timestamps, y=cpu_values, name="CPU Usage", mode="lines", line=dict(dash="dot")),
+            secondary_y=True,
         )
 
         fig.update_layout(title="Performance Prediction Over Time")
@@ -1069,14 +1058,14 @@ def render_predictive_visualization(category: str, predictions_data: Dict[str, A
 
     else:
         # Generic prediction chart
-        timestamps = [p['timestamp'] for p in predictions]
-        predictions_values = [p['prediction'] for p in predictions]
+        timestamps = [p["timestamp"] for p in predictions]
+        predictions_values = [p["prediction"] for p in predictions]
 
         fig = px.line(
             x=timestamps,
             y=predictions_values,
             title=f"{category} Predictions",
-            labels={'x': 'Time', 'y': 'Predicted Value'}
+            labels={"x": "Time", "y": "Predicted Value"},
         )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -1088,19 +1077,19 @@ def render_recommendation_impact_analysis(recommendations: List[Dict[str, Any]])
         return
 
     # Create impact analysis chart
-    rec_titles = [r['title'][:30] + "..." for r in recommendations]
-    impacts = [float(r['expected_impact'].split('%')[0]) for r in recommendations]
-    priorities = [r['priority'] for r in recommendations]
+    rec_titles = [r["title"][:30] + "..." for r in recommendations]
+    impacts = [float(r["expected_impact"].split("%")[0]) for r in recommendations]
+    priorities = [r["priority"] for r in recommendations]
 
-    priority_colors = {'High': 'red', 'Medium': 'orange', 'Low': 'green'}
+    priority_colors = {"High": "red", "Medium": "orange", "Low": "green"}
 
     fig = px.bar(
         x=rec_titles,
         y=impacts,
         title="Recommendation Impact Analysis",
-        labels={'x': 'Recommendation', 'y': 'Expected Impact (%)'},
+        labels={"x": "Recommendation", "y": "Expected Impact (%)"},
         color=priorities,
-        color_discrete_map=priority_colors
+        color_discrete_map=priority_colors,
     )
 
     fig.update_layout(xaxis_tickangle=-45)
@@ -1109,6 +1098,7 @@ def render_recommendation_impact_analysis(recommendations: List[Dict[str, Any]])
 
 
 # Fallback functions for limited functionality
+
 
 def render_pattern_recognition_limited():
     """Render pattern recognition with limited functionality."""
@@ -1198,9 +1188,11 @@ def render_predictive_optimization_limited():
 
 # Helper functions for limited functionality
 
+
 def generate_sample_data() -> list:
     """Generate sample data for demonstration."""
     import numpy as np
+
     np.random.seed(42)
     return np.random.normal(100, 15, 100).tolist()
 
@@ -1228,7 +1220,8 @@ def display_basic_statistics(data: list):
     # Simple distribution plot (if plotly is available)
     try:
         import plotly.express as px
-        fig = px.histogram(data, title="Data Distribution", labels={'value': 'Values'})
+
+        fig = px.histogram(data, title="Data Distribution", labels={"value": "Values"})
         st.plotly_chart(fig, use_container_width=True)
     except ImportError:
         st.bar_chart(data)
@@ -1248,20 +1241,16 @@ def detect_basic_anomalies(data: list, threshold: float) -> dict:
     anomalies = []
     for i, value in enumerate(data):
         if value > upper_bound or value < lower_bound:
-            anomalies.append({
-                'index': i,
-                'value': value,
-                'deviation': abs(value - mean_val) / std_val
-            })
+            anomalies.append({"index": i, "value": value, "deviation": abs(value - mean_val) / std_val})
 
     return {
-        'anomalies': anomalies,
-        'total_points': len(data),
-        'threshold': threshold,
-        'upper_bound': upper_bound,
-        'lower_bound': lower_bound,
-        'mean': mean_val,
-        'std': std_val
+        "anomalies": anomalies,
+        "total_points": len(data),
+        "threshold": threshold,
+        "upper_bound": upper_bound,
+        "lower_bound": lower_bound,
+        "mean": mean_val,
+        "std": std_val,
     }
 
 
@@ -1272,19 +1261,19 @@ def display_anomaly_results(results: dict):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric("Total Points", results['total_points'])
+        st.metric("Total Points", results["total_points"])
 
     with col2:
-        st.metric("Anomalies Found", len(results['anomalies']))
+        st.metric("Anomalies Found", len(results["anomalies"]))
 
     with col3:
-        anomaly_rate = (len(results['anomalies']) / results['total_points']) * 100
+        anomaly_rate = (len(results["anomalies"]) / results["total_points"]) * 100
         st.metric("Anomaly Rate", ".2f")
 
-    if results['anomalies']:
+    if results["anomalies"]:
         st.markdown("##### 📋 Detected Anomalies")
 
-        anomaly_df = pd.DataFrame(results['anomalies'])
+        anomaly_df = pd.DataFrame(results["anomalies"])
         st.dataframe(anomaly_df, use_container_width=True)
 
         st.info(f"⚠️ Found {len(results['anomalies'])} anomalies using {results['threshold']}σ threshold")
@@ -1319,16 +1308,16 @@ def analyze_basic_trends(data: list) -> dict:
     trend_slope = np.polyfit(range(len(data_array)), data_array, 1)[0]
 
     # Simple moving averages
-    ma_5 = np.convolve(data_array, np.ones(5)/5, mode='valid')
-    ma_10 = np.convolve(data_array, np.ones(10)/10, mode='valid')
+    ma_5 = np.convolve(data_array, np.ones(5) / 5, mode="valid")
+    ma_10 = np.convolve(data_array, np.ones(10) / 10, mode="valid")
 
     return {
-        'mean': mean_val,
-        'trend_slope': trend_slope,
-        'trend_direction': 'increasing' if trend_slope > 0 else 'decreasing',
-        'moving_average_5': ma_5.tolist(),
-        'moving_average_10': ma_10.tolist(),
-        'volatility': np.std(data_array)
+        "mean": mean_val,
+        "trend_slope": trend_slope,
+        "trend_direction": "increasing" if trend_slope > 0 else "decreasing",
+        "moving_average_5": ma_5.tolist(),
+        "moving_average_10": ma_10.tolist(),
+        "volatility": np.std(data_array),
     }
 
 
@@ -1342,7 +1331,7 @@ def display_trend_analysis(analysis: dict):
         st.metric("Mean Value", ".2f")
 
     with col2:
-        st.metric("Trend Direction", analysis['trend_direction'].title())
+        st.metric("Trend Direction", analysis["trend_direction"].title())
 
     with col3:
         st.metric("Volatility", ".2f")
@@ -1354,35 +1343,29 @@ def display_trend_analysis(analysis: dict):
         fig = go.Figure()
 
         # Original data
-        fig.add_trace(go.Scatter(
-            y=generate_time_series_data(),
-            mode='lines',
-            name='Original Data',
-            line=dict(color='blue')
-        ))
+        fig.add_trace(
+            go.Scatter(y=generate_time_series_data(), mode="lines", name="Original Data", line=dict(color="blue"))
+        )
 
         # Moving averages
-        if analysis['moving_average_5']:
-            fig.add_trace(go.Scatter(
-                y=analysis['moving_average_5'],
-                mode='lines',
-                name='5-Point MA',
-                line=dict(color='red', dash='dash')
-            ))
+        if analysis["moving_average_5"]:
+            fig.add_trace(
+                go.Scatter(
+                    y=analysis["moving_average_5"], mode="lines", name="5-Point MA", line=dict(color="red", dash="dash")
+                )
+            )
 
-        if analysis['moving_average_10']:
-            fig.add_trace(go.Scatter(
-                y=analysis['moving_average_10'],
-                mode='lines',
-                name='10-Point MA',
-                line=dict(color='green', dash='dot')
-            ))
+        if analysis["moving_average_10"]:
+            fig.add_trace(
+                go.Scatter(
+                    y=analysis["moving_average_10"],
+                    mode="lines",
+                    name="10-Point MA",
+                    line=dict(color="green", dash="dot"),
+                )
+            )
 
-        fig.update_layout(
-            title="Trend Analysis with Moving Averages",
-            xaxis_title="Time Period",
-            yaxis_title="Value"
-        )
+        fig.update_layout(title="Trend Analysis with Moving Averages", xaxis_title="Time Period", yaxis_title="Value")
 
         st.plotly_chart(fig, use_container_width=True)
 

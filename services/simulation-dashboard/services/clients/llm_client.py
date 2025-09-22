@@ -4,22 +4,20 @@ This module provides a client for interacting with the LLM Gateway service,
 enabling AI-powered insights and intelligent analysis in the dashboard.
 """
 
-import httpx
 import asyncio
 import json
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import httpx
 from infrastructure.config.config import get_config
 
 
 class LLMGatewayClient:
     """Client for interacting with the LLM Gateway service."""
 
-    def __init__(self,
-                 base_url: Optional[str] = None,
-                 timeout: float = 30.0):
+    def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
         """Initialize the LLM Gateway client.
 
         Args:
@@ -34,10 +32,7 @@ class LLMGatewayClient:
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=timeout,
-            headers={
-                'Content-Type': 'application/json',
-                'User-Agent': 'SimulationDashboard/1.0'
-            }
+            headers={"Content-Type": "application/json", "User-Agent": "SimulationDashboard/1.0"},
         )
 
         # Logging
@@ -73,12 +68,14 @@ class LLMGatewayClient:
             self.logger.error(f"Failed to get providers: {e}")
             return {"providers": [], "error": str(e)}
 
-    async def query_llm(self,
-                       prompt: str,
-                       model: str = "llama2",
-                       provider: str = "ollama",
-                       max_tokens: int = 1000,
-                       temperature: float = 0.7) -> Dict[str, Any]:
+    async def query_llm(
+        self,
+        prompt: str,
+        model: str = "llama2",
+        provider: str = "ollama",
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+    ) -> Dict[str, Any]:
         """Send a query to the LLM Gateway."""
         try:
             request_data = {
@@ -87,7 +84,7 @@ class LLMGatewayClient:
                 "provider": provider,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
-                "stream": False
+                "stream": False,
             }
 
             response = await self.client.post("/query", json=request_data)
@@ -96,12 +93,14 @@ class LLMGatewayClient:
             self.logger.error(f"LLM query failed: {e}")
             return {"success": False, "error": str(e)}
 
-    async def chat_llm(self,
-                      messages: List[Dict[str, str]],
-                      model: str = "llama2",
-                      provider: str = "ollama",
-                      max_tokens: int = 1000,
-                      temperature: float = 0.7) -> Dict[str, Any]:
+    async def chat_llm(
+        self,
+        messages: List[Dict[str, str]],
+        model: str = "llama2",
+        provider: str = "ollama",
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+    ) -> Dict[str, Any]:
         """Send a chat request to the LLM Gateway."""
         try:
             request_data = {
@@ -110,7 +109,7 @@ class LLMGatewayClient:
                 "provider": provider,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
-                "stream": False
+                "stream": False,
             }
 
             response = await self.client.post("/chat", json=request_data)
@@ -130,7 +129,7 @@ class LLMGatewayClient:
                 prompt=prompt,
                 model="llama2",
                 max_tokens=500,
-                temperature=0.3  # Lower temperature for more focused insights
+                temperature=0.3,  # Lower temperature for more focused insights
             )
 
             if result.get("success"):
@@ -161,9 +160,9 @@ SYSTEM HEALTH SUMMARY:
 SERVICE DETAILS:
 """
 
-        for service_name, service_data in health_data.get('services', {}).items():
-            status = service_data.get('status', 'unknown')
-            response_time = service_data.get('response_time', 'N/A')
+        for service_name, service_data in health_data.get("services", {}).items():
+            status = service_data.get("status", "unknown")
+            response_time = service_data.get("response_time", "N/A")
             prompt += f"- {service_name}: {status} (response time: {response_time})\n"
 
         prompt += f"""
@@ -191,7 +190,7 @@ Format your response as a numbered list of insights, each starting with an emoji
         insights = []
 
         # Split by numbered items or bullet points
-        lines = response_text.strip().split('\n')
+        lines = response_text.strip().split("\n")
 
         for line in lines:
             line = line.strip()
@@ -199,15 +198,16 @@ Format your response as a numbered list of insights, each starting with an emoji
                 continue
 
             # Look for numbered insights or insights starting with emojis
-            if (line[0].isdigit() and line[1:3] in ['. ', ') ']) or \
-               any(line.startswith(emoji) for emoji in ['🔍', '📈', '⚠️', '💡', '🎯', '🚀', '🔮']):
+            if (line[0].isdigit() and line[1:3] in [". ", ") "]) or any(
+                line.startswith(emoji) for emoji in ["🔍", "📈", "⚠️", "💡", "🎯", "🚀", "🔮"]
+            ):
                 # Clean up the line
                 if line[0].isdigit():
                     # Remove numbering
-                    if '. ' in line:
-                        insight = line.split('. ', 1)[1]
-                    elif ') ' in line:
-                        insight = line.split(') ', 1)[1]
+                    if ". " in line:
+                        insight = line.split(". ", 1)[1]
+                    elif ") " in line:
+                        insight = line.split(") ", 1)[1]
                     else:
                         insight = line[2:]  # Remove number
                 else:
@@ -221,7 +221,7 @@ Format your response as a numbered list of insights, each starting with an emoji
         # If no structured insights found, create some from the text
         if not insights:
             # Split by sentences and take first few meaningful ones
-            sentences = [s.strip() for s in response_text.split('.') if s.strip()]
+            sentences = [s.strip() for s in response_text.split(".") if s.strip()]
             insights = sentences[:4]  # Take up to 4 insights
 
         return insights[:5]  # Limit to 5 insights max

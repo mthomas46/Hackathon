@@ -5,23 +5,23 @@ ecosystem infrastructure including LLM Gateway, Analysis Service, and real-time
 data processing for intelligent insights, predictive analytics, and autonomous features.
 """
 
-import streamlit as st
 import asyncio
-import httpx
-from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime, timedelta
-import time
 import json
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+import httpx
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
+from components.realtime.analytics_stream import render_realtime_analytics_dashboard
+from infrastructure.logging.logger import get_dashboard_logger
 from plotly.subplots import make_subplots
 
-from infrastructure.logging.logger import get_dashboard_logger
-from services.clients.simulation_client import SimulationClient
 from services.clients.llm_client import LLMGatewayClient
-from components.realtime.analytics_stream import render_realtime_analytics_dashboard
-
+from services.clients.simulation_client import SimulationClient
 
 logger = get_dashboard_logger("intelligent_overview_page")
 
@@ -29,68 +29,68 @@ logger = get_dashboard_logger("intelligent_overview_page")
 async def check_ecosystem_health() -> Dict[str, Any]:
     """Check the health of all ecosystem services."""
     health_status = {
-        'overall_health': 'unknown',
-        'services': {},
-        'timestamp': datetime.now(),
-        'insights': [],
-        'recommendations': []
+        "overall_health": "unknown",
+        "services": {},
+        "timestamp": datetime.now(),
+        "insights": [],
+        "recommendations": [],
     }
 
     services_to_check = [
-        ('project-simulation', 'http://localhost:5075/health'),
-        ('analysis-service', 'http://localhost:5080/health'),
-        ('llm-gateway', 'http://localhost:5055/health'),
-        ('doc-store', 'http://localhost:5087/health'),
-        ('orchestrator', 'http://localhost:5099/health'),
-        ('interpreter', 'http://localhost:5120/health'),
-        ('summarizer-hub', 'http://localhost:5160/health'),
-        ('redis', 'http://localhost:6379')  # Special case for Redis
+        ("project-simulation", "http://localhost:5075/health"),
+        ("analysis-service", "http://localhost:5080/health"),
+        ("llm-gateway", "http://localhost:5055/health"),
+        ("doc-store", "http://localhost:5087/health"),
+        ("orchestrator", "http://localhost:5099/health"),
+        ("interpreter", "http://localhost:5120/health"),
+        ("summarizer-hub", "http://localhost:5160/health"),
+        ("redis", "http://localhost:6379"),  # Special case for Redis
     ]
 
     async with httpx.AsyncClient(timeout=5.0) as client:
         for service_name, url in services_to_check:
             try:
-                if service_name == 'redis':
+                if service_name == "redis":
                     # Special handling for Redis
                     response = await client.get(url)
-                    health_status['services'][service_name] = {
-                        'status': 'healthy' if response.status_code == 200 else 'unhealthy',
-                        'response_time': response.elapsed.total_seconds(),
-                        'last_check': datetime.now()
+                    health_status["services"][service_name] = {
+                        "status": "healthy" if response.status_code == 200 else "unhealthy",
+                        "response_time": response.elapsed.total_seconds(),
+                        "last_check": datetime.now(),
                     }
                 else:
                     response = await client.get(url)
                     data = response.json() if response.status_code == 200 else {}
 
-                    health_status['services'][service_name] = {
-                        'status': data.get('status', 'unknown') if isinstance(data, dict) else 'healthy',
-                        'response_time': response.elapsed.total_seconds(),
-                        'version': data.get('version', 'unknown') if isinstance(data, dict) else 'unknown',
-                        'last_check': datetime.now()
+                    health_status["services"][service_name] = {
+                        "status": data.get("status", "unknown") if isinstance(data, dict) else "healthy",
+                        "response_time": response.elapsed.total_seconds(),
+                        "version": data.get("version", "unknown") if isinstance(data, dict) else "unknown",
+                        "last_check": datetime.now(),
                     }
             except Exception as e:
-                health_status['services'][service_name] = {
-                    'status': 'unhealthy',
-                    'error': str(e),
-                    'last_check': datetime.now()
+                health_status["services"][service_name] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "last_check": datetime.now(),
                 }
 
     # Calculate overall health
-    healthy_services = sum(1 for s in health_status['services'].values() if s['status'] == 'healthy')
-    total_services = len(health_status['services'])
+    healthy_services = sum(1 for s in health_status["services"].values() if s["status"] == "healthy")
+    total_services = len(health_status["services"])
 
     if healthy_services == total_services:
-        health_status['overall_health'] = 'excellent'
+        health_status["overall_health"] = "excellent"
     elif healthy_services >= total_services * 0.8:
-        health_status['overall_health'] = 'good'
+        health_status["overall_health"] = "good"
     elif healthy_services >= total_services * 0.5:
-        health_status['overall_health'] = 'fair'
+        health_status["overall_health"] = "fair"
     else:
-        health_status['overall_health'] = 'poor'
+        health_status["overall_health"] = "poor"
 
     # Generate intelligent insights
-    health_status['insights'] = generate_health_insights(health_status)
-    health_status['recommendations'] = generate_health_recommendations(health_status)
+    health_status["insights"] = generate_health_insights(health_status)
+    health_status["recommendations"] = generate_health_recommendations(health_status)
 
     return health_status
 
@@ -99,8 +99,8 @@ def generate_health_insights(health_data: Dict[str, Any]) -> List[str]:
     """Generate intelligent insights from health data."""
     insights = []
 
-    services = health_data['services']
-    healthy_count = sum(1 for s in services.values() if s['status'] == 'healthy')
+    services = health_data["services"]
+    healthy_count = sum(1 for s in services.values() if s["status"] == "healthy")
     total_count = len(services)
 
     # Service health insights
@@ -109,11 +109,11 @@ def generate_health_insights(health_data: Dict[str, Any]) -> List[str]:
     elif healthy_count >= total_count * 0.8:
         insights.append(f"✅ {healthy_count}/{total_count} services healthy - ecosystem stable")
     else:
-        unhealthy = [name for name, data in services.items() if data['status'] != 'healthy']
+        unhealthy = [name for name, data in services.items() if data["status"] != "healthy"]
         insights.append(f"⚠️ {len(unhealthy)} services need attention: {', '.join(unhealthy[:3])}")
 
     # Performance insights
-    response_times = [s.get('response_time', 0) for s in services.values() if s.get('response_time')]
+    response_times = [s.get("response_time", 0) for s in services.values() if s.get("response_time")]
     if response_times:
         avg_response = sum(response_times) / len(response_times)
         if avg_response < 0.5:
@@ -129,22 +129,23 @@ def generate_health_insights(health_data: Dict[str, Any]) -> List[str]:
 def generate_health_recommendations(health_data: Dict[str, Any]) -> List[str]:
     """Generate intelligent recommendations based on health data."""
     recommendations = []
-    services = health_data['services']
+    services = health_data["services"]
 
     # Check for unhealthy services
-    unhealthy_services = [name for name, data in services.items() if data['status'] != 'healthy']
+    unhealthy_services = [name for name, data in services.items() if data["status"] != "healthy"]
     if unhealthy_services:
         recommendations.append(f"🔧 Restart or investigate unhealthy services: {', '.join(unhealthy_services)}")
 
     # Performance recommendations
-    slow_services = [name for name, data in services.items()
-                    if data.get('response_time', 0) > 2.0 and data['status'] == 'healthy']
+    slow_services = [
+        name for name, data in services.items() if data.get("response_time", 0) > 2.0 and data["status"] == "healthy"
+    ]
     if slow_services:
         recommendations.append(f"⚡ Optimize performance for: {', '.join(slow_services)}")
 
     # Ecosystem completeness
-    critical_services = ['project-simulation', 'llm-gateway', 'analysis-service']
-    missing_critical = [s for s in critical_services if s not in services or services[s]['status'] != 'healthy']
+    critical_services = ["project-simulation", "llm-gateway", "analysis-service"]
+    missing_critical = [s for s in critical_services if s not in services or services[s]["status"] != "healthy"]
     if missing_critical:
         recommendations.append(f"🚨 Critical services need attention: {', '.join(missing_critical)}")
 
@@ -158,7 +159,7 @@ def render_overview_page():
     st.markdown("---")
 
     # Initialize ecosystem clients
-    sim_client = st.session_state.get('simulation_client')
+    sim_client = st.session_state.get("simulation_client")
     if not sim_client:
         st.error("❌ Simulation service not available")
         return
@@ -167,10 +168,15 @@ def render_overview_page():
     ecosystem_health = asyncio.run(check_ecosystem_health())
 
     # Create intelligent tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🧠 AI Insights", "📊 Smart Metrics", "🎯 Intelligent Monitoring",
-        "🔮 Predictive Analytics", "⚡ Autonomous Actions"
-    ])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        [
+            "🧠 AI Insights",
+            "📊 Smart Metrics",
+            "🎯 Intelligent Monitoring",
+            "🔮 Predictive Analytics",
+            "⚡ Autonomous Actions",
+        ]
+    )
 
     with tab1:
         render_ai_insights_dashboard(ecosystem_health)
@@ -192,6 +198,17 @@ def render_overview_page():
     render_intelligent_system_status(ecosystem_health)
 
 
+async def generate_llm_insights(context: Dict[str, Any]) -> List[str]:
+    """Generate LLM-powered insights from context data."""
+    logger = get_dashboard_logger()
+    try:
+        async with LLMGatewayClient() as llm_client:
+            return await llm_client.generate_insights(context)
+    except Exception as e:
+        logger.error(f"Failed to generate LLM insights: {e}")
+        return []
+
+
 def render_ai_insights_dashboard(ecosystem_health: Dict[str, Any]):
     """Render AI-powered insights dashboard."""
     st.markdown("### 🧠 AI-Powered Ecosystem Insights")
@@ -201,52 +218,49 @@ def render_ai_insights_dashboard(ecosystem_health: Dict[str, Any]):
     with col1:
         # Health insights
         st.markdown("#### 🔍 System Intelligence")
-        for insight in ecosystem_health.get('insights', []):
+        for insight in ecosystem_health.get("insights", []):
             st.markdown(f"• {insight}")
 
         # LLM Gateway integration for intelligent analysis
-        llm_gateway_status = ecosystem_health['services'].get('llm-gateway', {}).get('status')
-        if llm_gateway_status == 'healthy':
+        llm_gateway_status = ecosystem_health["services"].get("llm-gateway", {}).get("status")
+        if llm_gateway_status == "healthy":
             st.markdown("#### 🤖 AI Analysis Available")
             st.success("✅ LLM Gateway online - Intelligent analysis enabled")
 
             # Get simulation data for context
-            sim_data = asyncio.run(get_simulation_metrics(st.session_state.get('simulation_client')))
+            sim_data = asyncio.run(get_simulation_metrics(st.session_state.get("simulation_client")))
 
             if st.button("🔮 Generate AI Insights", key="ai_insights_btn"):
                 with st.spinner("Generating intelligent insights..."):
-                    async with LLMGatewayClient() as llm_client:
-                        context = {
-                            "health_data": ecosystem_health,
-                            "simulation_data": sim_data,
-                            "timestamp": ecosystem_health.get('timestamp', datetime.now())
-                        }
-                        insights = await llm_client.generate_insights(context)
+                    context = {
+                        "health_data": ecosystem_health,
+                        "simulation_data": sim_data,
+                        "timestamp": ecosystem_health.get("timestamp", datetime.now()),
+                    }
+                    insights = asyncio.run(generate_llm_insights(context))
+                    if insights:
+                        st.markdown("#### ✨ AI-Generated Insights")
                         for insight in insights:
-                            st.info(f"🧠 {insight}")
+                            st.markdown(f"• {insight}")
+                    else:
+                        st.warning("⚠️ Could not generate AI insights at this time")
         else:
             st.warning(f"⚠️ LLM Gateway {llm_gateway_status} - Limited AI features")
 
     with col2:
         # Quick health overview
-        health_colors = {
-            'excellent': '🟢',
-            'good': '🟡',
-            'fair': '🟠',
-            'poor': '🔴',
-            'unknown': '⚪'
-        }
+        health_colors = {"excellent": "🟢", "good": "🟡", "fair": "🟠", "poor": "🔴", "unknown": "⚪"}
 
-        overall_health = ecosystem_health.get('overall_health', 'unknown')
+        overall_health = ecosystem_health.get("overall_health", "unknown")
         st.metric(
             "Ecosystem Health",
             f"{health_colors.get(overall_health, '⚪')} {overall_health.title()}",
-            help="Overall health of the ecosystem services"
+            help="Overall health of the ecosystem services",
         )
 
         # Service count
-        healthy_count = sum(1 for s in ecosystem_health['services'].values() if s['status'] == 'healthy')
-        total_count = len(ecosystem_health['services'])
+        healthy_count = sum(1 for s in ecosystem_health["services"].values() if s["status"] == "healthy")
+        total_count = len(ecosystem_health["services"])
         st.metric("Services Online", f"{healthy_count}/{total_count}")
 
 
@@ -264,51 +278,53 @@ def render_smart_metrics_dashboard(sim_client: SimulationClient, ecosystem_healt
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric(
-            "Active Simulations",
-            simulation_data.get('active_count', 0),
-            delta="+2 from yesterday"
-        )
+        st.metric("Active Simulations", simulation_data.get("active_count", 0), delta="+2 from yesterday")
 
     with col2:
-        st.metric(
-            "Success Rate",
-            f"{simulation_data.get('success_rate', 85)}%",
-            delta="+5% from last week"
-        )
+        st.metric("Success Rate", f"{simulation_data.get('success_rate', 85)}%", delta="+5% from last week")
 
     with col3:
-        st.metric(
-            "Avg Processing Time",
-            f"{simulation_data.get('avg_duration', 45)}min",
-            delta="-8min improvement"
-        )
+        st.metric("Avg Processing Time", f"{simulation_data.get('avg_duration', 45)}min", delta="-8min improvement")
 
     # Intelligent charts
     st.markdown("#### 📈 Performance Trends")
 
     # Create sample trend data
-    trend_data = pd.DataFrame({
-        'timestamp': pd.date_range(start='2024-01-01', periods=30, freq='D'),
-        'success_rate': [85 + (i % 10 - 5) for i in range(30)],
-        'processing_time': [45 + (i % 8 - 4) for i in range(30)],
-        'simulations_count': [5 + (i % 6 - 3) for i in range(30)]
-    })
+    trend_data = pd.DataFrame(
+        {
+            "timestamp": pd.date_range(start="2024-01-01", periods=30, freq="D"),
+            "success_rate": [85 + (i % 10 - 5) for i in range(30)],
+            "processing_time": [45 + (i % 8 - 4) for i in range(30)],
+            "simulations_count": [5 + (i % 6 - 3) for i in range(30)],
+        }
+    )
 
-    fig = make_subplots(rows=2, cols=2,
-                       subplot_titles=('Success Rate Trend', 'Processing Time',
-                                     'Simulations Count', 'Performance Correlation'))
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=("Success Rate Trend", "Processing Time", "Simulations Count", "Performance Correlation"),
+    )
 
-    fig.add_trace(go.Scatter(x=trend_data['timestamp'], y=trend_data['success_rate'],
-                           mode='lines', name='Success Rate'), row=1, col=1)
-    fig.add_trace(go.Scatter(x=trend_data['timestamp'], y=trend_data['processing_time'],
-                           mode='lines', name='Processing Time'), row=1, col=2)
-    fig.add_trace(go.Bar(x=trend_data['timestamp'], y=trend_data['simulations_count'],
-                        name='Simulations'), row=2, col=1)
+    fig.add_trace(
+        go.Scatter(x=trend_data["timestamp"], y=trend_data["success_rate"], mode="lines", name="Success Rate"),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(x=trend_data["timestamp"], y=trend_data["processing_time"], mode="lines", name="Processing Time"),
+        row=1,
+        col=2,
+    )
+    fig.add_trace(
+        go.Bar(x=trend_data["timestamp"], y=trend_data["simulations_count"], name="Simulations"), row=2, col=1
+    )
 
     # Correlation scatter plot
-    fig.add_trace(go.Scatter(x=trend_data['processing_time'], y=trend_data['success_rate'],
-                           mode='markers', name='Correlation'), row=2, col=2)
+    fig.add_trace(
+        go.Scatter(x=trend_data["processing_time"], y=trend_data["success_rate"], mode="markers", name="Correlation"),
+        row=2,
+        col=2,
+    )
 
     fig.update_layout(height=600, showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
@@ -326,14 +342,14 @@ def render_intelligent_monitoring_dashboard(sim_client: SimulationClient):
 
         # Mock real-time data (would come from WebSocket)
         progress_data = {
-            'simulation_1': {'name': 'E-commerce Platform', 'progress': 85, 'status': 'running', 'eta': '5 min'},
-            'simulation_2': {'name': 'FinTech API', 'progress': 62, 'status': 'running', 'eta': '12 min'},
-            'simulation_3': {'name': 'Healthcare System', 'progress': 100, 'status': 'completed', 'eta': 'Done'}
+            "simulation_1": {"name": "E-commerce Platform", "progress": 85, "status": "running", "eta": "5 min"},
+            "simulation_2": {"name": "FinTech API", "progress": 62, "status": "running", "eta": "12 min"},
+            "simulation_3": {"name": "Healthcare System", "progress": 100, "status": "completed", "eta": "Done"},
         }
 
         for sim_id, data in progress_data.items():
-            status_color = {'running': '🟡', 'completed': '🟢', 'failed': '🔴'}.get(data['status'], '⚪')
-            st.progress(data['progress'] / 100)
+            status_color = {"running": "🟡", "completed": "🟢", "failed": "🔴"}.get(data["status"], "⚪")
+            st.progress(data["progress"] / 100)
             st.markdown(f"{status_color} **{data['name']}** - {data['progress']}% complete (ETA: {data['eta']})")
 
     with col2:
@@ -372,45 +388,52 @@ def render_load_forecasting():
         # Generate forecasting data based on current ecosystem state
         forecast_data = generate_load_forecast_data()
 
-        fig = px.line(forecast_data, x='hour', y='predicted_load',
-                     title='24-Hour Load Forecast',
-                     labels={'predicted_load': 'Predicted Load (%)', 'hour': 'Hour'})
+        fig = px.line(
+            forecast_data,
+            x="hour",
+            y="predicted_load",
+            title="24-Hour Load Forecast",
+            labels={"predicted_load": "Predicted Load (%)", "hour": "Hour"},
+        )
 
         # Add confidence intervals
-        fig.add_trace(go.Scatter(
-            x=forecast_data['hour'],
-            y=forecast_data['upper_bound'],
-            mode='lines',
-            name='Upper Bound',
-            line=dict(width=0),
-            showlegend=False
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=forecast_data["hour"],
+                y=forecast_data["upper_bound"],
+                mode="lines",
+                name="Upper Bound",
+                line=dict(width=0),
+                showlegend=False,
+            )
+        )
 
-        fig.add_trace(go.Scatter(
-            x=forecast_data['hour'],
-            y=forecast_data['lower_bound'],
-            mode='lines',
-            name='Lower Bound',
-            fill='tonexty',
-            fillcolor='rgba(0,100,255,0.2)',
-            line=dict(width=0),
-            showlegend=False
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=forecast_data["hour"],
+                y=forecast_data["lower_bound"],
+                mode="lines",
+                name="Lower Bound",
+                fill="tonexty",
+                fillcolor="rgba(0,100,255,0.2)",
+                line=dict(width=0),
+                showlegend=False,
+            )
+        )
 
         # Add confidence percentage line
-        fig.add_trace(go.Scatter(
-            x=forecast_data['hour'],
-            y=forecast_data['confidence'],
-            mode='lines',
-            name='Confidence %',
-            yaxis='y2',
-            line=dict(dash='dot', color='red')
-        ))
-
-        fig.update_layout(
-            yaxis2=dict(title='Confidence %', overlaying='y', side='right'),
-            height=400
+        fig.add_trace(
+            go.Scatter(
+                x=forecast_data["hour"],
+                y=forecast_data["confidence"],
+                mode="lines",
+                name="Confidence %",
+                yaxis="y2",
+                line=dict(dash="dot", color="red"),
+            )
         )
+
+        fig.update_layout(yaxis2=dict(title="Confidence %", overlaying="y", side="right"), height=400)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -425,7 +448,7 @@ def render_load_forecasting():
             "Current Load": "65%",
             "Peak Load": "92%",
             "Recommended Buffer": "20%",
-            "Auto-scale Threshold": "80%"
+            "Auto-scale Threshold": "80%",
         }
 
         for metric, value in capacity_metrics.items():
@@ -446,7 +469,9 @@ def render_anomaly_detection(ecosystem_health: Dict[str, Any]):
             st.markdown("**🚨 Detected Anomalies:**")
 
             for anomaly in anomalies:
-                severity_color = {'Critical': '🔴', 'High': '🟠', 'Medium': '🟡', 'Low': '🟢'}.get(anomaly['severity'], '⚪')
+                severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(
+                    anomaly["severity"], "⚪"
+                )
 
                 with st.expander(f"{severity_color} {anomaly['title']} ({anomaly['severity']})"):
                     st.markdown(f"**Description:** {anomaly['description']}")
@@ -468,8 +493,8 @@ def render_anomaly_detection(ecosystem_health: Dict[str, Any]):
     with col2:
         st.markdown("**Anomaly Statistics:**")
         total_anomalies = len(anomalies)
-        critical_count = sum(1 for a in anomalies if a['severity'] == 'Critical')
-        high_count = sum(1 for a in anomalies if a['severity'] == 'High')
+        critical_count = sum(1 for a in anomalies if a["severity"] == "Critical")
+        high_count = sum(1 for a in anomalies if a["severity"] == "High")
 
         st.metric("Total Anomalies", total_anomalies)
         st.metric("Critical Issues", critical_count, delta=f"{'+' if critical_count > 0 else ''}{critical_count}")
@@ -504,66 +529,74 @@ def generate_load_forecast_data() -> pd.DataFrame:
 
         load_pattern.append(max(10, min(100, load)))  # Clamp between 10-100
 
-    return pd.DataFrame({
-        'hour': hours,
-        'predicted_load': load_pattern,
-        'upper_bound': [min(100, l + 5 + np.random.uniform(0, 3)) for l in load_pattern],
-        'lower_bound': [max(0, l - 5 - np.random.uniform(0, 3)) for l in load_pattern],
-        'confidence': [85 + np.random.normal(0, 5) for _ in hours]
-    })
+    return pd.DataFrame(
+        {
+            "hour": hours,
+            "predicted_load": load_pattern,
+            "upper_bound": [min(100, l + 5 + np.random.uniform(0, 3)) for l in load_pattern],
+            "lower_bound": [max(0, l - 5 - np.random.uniform(0, 3)) for l in load_pattern],
+            "confidence": [85 + np.random.normal(0, 5) for _ in hours],
+        }
+    )
 
 
 def detect_anomalies(ecosystem_health: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Detect anomalies in ecosystem health data."""
     anomalies = []
-    services = ecosystem_health.get('services', {})
+    services = ecosystem_health.get("services", {})
 
     # Check for response time anomalies
     for service_name, service_data in services.items():
-        response_time = service_data.get('response_time', 0)
-        status = service_data.get('status')
+        response_time = service_data.get("response_time", 0)
+        status = service_data.get("status")
 
         # Define anomaly thresholds
-        if response_time > 3.0 and status == 'healthy':
-            anomalies.append({
-                'id': f"response_time_{service_name}",
-                'title': f"High Response Time: {service_name}",
-                'description': f"Service {service_name} showing elevated response time of {response_time:.2f}s",
-                'severity': 'Medium' if response_time < 5.0 else 'High',
-                'impact': 'Performance degradation affecting user experience',
-                'affected_services': [service_name],
-                'timestamp': ecosystem_health.get('timestamp', datetime.now()),
-                'auto_fix_available': True
-            })
+        if response_time > 3.0 and status == "healthy":
+            anomalies.append(
+                {
+                    "id": f"response_time_{service_name}",
+                    "title": f"High Response Time: {service_name}",
+                    "description": f"Service {service_name} showing elevated response time of {response_time:.2f}s",
+                    "severity": "Medium" if response_time < 5.0 else "High",
+                    "impact": "Performance degradation affecting user experience",
+                    "affected_services": [service_name],
+                    "timestamp": ecosystem_health.get("timestamp", datetime.now()),
+                    "auto_fix_available": True,
+                }
+            )
 
         # Check for unhealthy services
-        if status != 'healthy':
-            anomalies.append({
-                'id': f"service_health_{service_name}",
-                'title': f"Service Unhealthy: {service_name}",
-                'description': f"Service {service_name} is reporting {status} status",
-                'severity': 'Critical' if service_name in ['project-simulation', 'llm-gateway'] else 'High',
-                'impact': 'Service disruption affecting system functionality',
-                'affected_services': [service_name],
-                'timestamp': ecosystem_health.get('timestamp', datetime.now()),
-                'auto_fix_available': service_name not in ['llm-gateway']  # Can't auto-restart LLM gateway
-            })
+        if status != "healthy":
+            anomalies.append(
+                {
+                    "id": f"service_health_{service_name}",
+                    "title": f"Service Unhealthy: {service_name}",
+                    "description": f"Service {service_name} is reporting {status} status",
+                    "severity": "Critical" if service_name in ["project-simulation", "llm-gateway"] else "High",
+                    "impact": "Service disruption affecting system functionality",
+                    "affected_services": [service_name],
+                    "timestamp": ecosystem_health.get("timestamp", datetime.now()),
+                    "auto_fix_available": service_name not in ["llm-gateway"],  # Can't auto-restart LLM gateway
+                }
+            )
 
     # Check for overall system health
-    healthy_count = sum(1 for s in services.values() if s.get('status') == 'healthy')
+    healthy_count = sum(1 for s in services.values() if s.get("status") == "healthy")
     total_count = len(services)
 
     if healthy_count / total_count < 0.8:  # Less than 80% services healthy
-        anomalies.append({
-            'id': 'system_health_critical',
-            'title': 'Critical System Health Degradation',
-            'description': f"Only {healthy_count}/{total_count} services are healthy",
-            'severity': 'Critical',
-            'impact': 'System-wide performance and reliability impact',
-            'affected_services': list(services.keys()),
-            'timestamp': ecosystem_health.get('timestamp', datetime.now()),
-            'auto_fix_available': False
-        })
+        anomalies.append(
+            {
+                "id": "system_health_critical",
+                "title": "Critical System Health Degradation",
+                "description": f"Only {healthy_count}/{total_count} services are healthy",
+                "severity": "Critical",
+                "impact": "System-wide performance and reliability impact",
+                "affected_services": list(services.keys()),
+                "timestamp": ecosystem_health.get("timestamp", datetime.now()),
+                "auto_fix_available": False,
+            }
+        )
 
     return anomalies
 
@@ -576,9 +609,9 @@ def render_autonomous_actions_dashboard(sim_client: SimulationClient, ecosystem_
     llm_client = LLMGatewayClient()
 
     # Create tabs for different autonomous capabilities
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🤖 Smart Recommendations", "⚡ Auto-Optimization", "🔧 Self-Healing", "📈 Predictive Scaling"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["🤖 Smart Recommendations", "⚡ Auto-Optimization", "🔧 Self-Healing", "📈 Predictive Scaling"]
+    )
 
     with tab1:
         render_smart_recommendations(ecosystem_health, llm_client)
@@ -604,38 +637,38 @@ def render_smart_recommendations(ecosystem_health: Dict[str, Any], llm_client: L
         # Fallback recommendations
         recommendations = [
             {
-                'type': 'optimization',
-                'title': 'Scale Analysis Service',
-                'description': 'Increase instances based on predicted load',
-                'impact': 'High',
-                'confidence': 92,
-                'action': 'Auto-scale to 3 instances',
-                'category': 'performance'
+                "type": "optimization",
+                "title": "Scale Analysis Service",
+                "description": "Increase instances based on predicted load",
+                "impact": "High",
+                "confidence": 92,
+                "action": "Auto-scale to 3 instances",
+                "category": "performance",
             },
             {
-                'type': 'maintenance',
-                'title': 'Cache Optimization',
-                'description': 'Clear outdated cache entries',
-                'impact': 'Medium',
-                'confidence': 87,
-                'action': 'Schedule cache cleanup',
-                'category': 'maintenance'
+                "type": "maintenance",
+                "title": "Cache Optimization",
+                "description": "Clear outdated cache entries",
+                "impact": "Medium",
+                "confidence": 87,
+                "action": "Schedule cache cleanup",
+                "category": "maintenance",
             },
             {
-                'type': 'security',
-                'title': 'Update Dependencies',
-                'description': 'Critical security updates available',
-                'impact': 'High',
-                'confidence': 95,
-                'action': 'Apply security patches',
-                'category': 'security'
-            }
+                "type": "security",
+                "title": "Update Dependencies",
+                "description": "Critical security updates available",
+                "impact": "High",
+                "confidence": 95,
+                "action": "Apply security patches",
+                "category": "security",
+            },
         ]
 
     # Group recommendations by category
     categories = {}
     for rec in recommendations:
-        category = rec.get('category', 'general')
+        category = rec.get("category", "general")
         if category not in categories:
             categories[category] = []
         categories[category].append(rec)
@@ -645,7 +678,7 @@ def render_smart_recommendations(ecosystem_health: Dict[str, Any], llm_client: L
         st.markdown(f"**{category.title()} Recommendations:**")
 
         for rec in recs:
-            impact_color = {'High': '🔴', 'Medium': '🟡', 'Low': '🟢'}.get(rec['impact'], '⚪')
+            impact_color = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(rec["impact"], "⚪")
 
             with st.expander(f"{impact_color} {rec['title']} (Confidence: {rec['confidence']}%)"):
                 col1, col2 = st.columns([3, 1])
@@ -665,7 +698,9 @@ def render_smart_recommendations(ecosystem_health: Dict[str, Any], llm_client: L
                         st.info(f"⏰ Scheduled: {rec['action']}")
 
 
-def render_auto_optimization(sim_client: SimulationClient, ecosystem_health: Dict[str, Any], llm_client: LLMGatewayClient):
+def render_auto_optimization(
+    sim_client: SimulationClient, ecosystem_health: Dict[str, Any], llm_client: LLMGatewayClient
+):
     """Render automatic optimization features."""
     st.markdown("#### ⚡ Autonomous Optimization Engine")
 
@@ -676,16 +711,14 @@ def render_auto_optimization(sim_client: SimulationClient, ecosystem_health: Dic
 
         # Auto-optimization settings
         auto_optimization_enabled = st.checkbox(
-            "Enable Auto-Optimization",
-            value=True,
-            help="Allow automatic optimization based on AI recommendations"
+            "Enable Auto-Optimization", value=True, help="Allow automatic optimization based on AI recommendations"
         )
 
         optimization_frequency = st.selectbox(
             "Optimization Frequency",
             options=["Continuous", "Hourly", "Daily", "Weekly"],
             index=1,
-            help="How often to check for optimizations"
+            help="How often to check for optimizations",
         )
 
         risk_tolerance = st.slider(
@@ -693,7 +726,7 @@ def render_auto_optimization(sim_client: SimulationClient, ecosystem_health: Dic
             min_value=1,
             max_value=10,
             value=7,
-            help="Higher values allow more aggressive optimizations"
+            help="Higher values allow more aggressive optimizations",
         )
 
     with col2:
@@ -704,7 +737,7 @@ def render_auto_optimization(sim_client: SimulationClient, ecosystem_health: Dic
             "Optimizations Applied": 24,
             "Performance Improvement": "+18%",
             "Cost Savings": "$2,340",
-            "Uptime Impact": "0.01%"
+            "Uptime Impact": "0.01%",
         }
 
         for metric, value in optimization_metrics.items():
@@ -741,14 +774,16 @@ def render_self_healing(ecosystem_health: Dict[str, Any]):
         st.markdown("**🚨 Detected Issues:**")
 
         for issue in issues:
-            severity_color = {'Critical': '🔴', 'High': '🟠', 'Medium': '🟡', 'Low': '🟢'}.get(issue['severity'], '⚪')
+            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(issue["severity"], "⚪")
 
             with st.expander(f"{severity_color} {issue['title']} ({issue['severity']})"):
                 st.markdown(f"**Description:** {issue['description']}")
                 st.markdown(f"**Affected Services:** {', '.join(issue['affected_services'])}")
-                st.markdown(f"**Auto-Recovery:** {'Available' if issue['auto_recoverable'] else 'Manual intervention required'}")
+                st.markdown(
+                    f"**Auto-Recovery:** {'Available' if issue['auto_recoverable'] else 'Manual intervention required'}"
+                )
 
-                if issue['auto_recoverable']:
+                if issue["auto_recoverable"]:
                     if st.button(f"🔧 Auto-Fix", key=f"fix_{issue['id']}"):
                         with st.spinner("Applying automatic fix..."):
                             success = apply_auto_fix(issue)
@@ -778,7 +813,7 @@ def render_predictive_scaling(ecosystem_health: Dict[str, Any], llm_client: LLMG
             "Memory Usage": "74%",
             "Network I/O": "45 Mbps",
             "Active Connections": 1250,
-            "Queue Depth": 23
+            "Queue Depth": 23,
         }
 
         for metric, value in load_data.items():
@@ -806,14 +841,19 @@ def render_predictive_scaling(ecosystem_health: Dict[str, Any], llm_client: LLMG
                     st.success(f"✅ Scaling {rec['service']} to {rec['recommended_instances']} instances")
 
 
-async def generate_dynamic_recommendations(ecosystem_health: Dict[str, Any], llm_client: LLMGatewayClient) -> List[Dict[str, Any]]:
+async def generate_dynamic_recommendations(
+    ecosystem_health: Dict[str, Any], llm_client: LLMGatewayClient
+) -> List[Dict[str, Any]]:
     """Generate dynamic AI-powered recommendations."""
     try:
         # Analyze ecosystem health for specific recommendations
-        services = ecosystem_health.get('services', {})
-        unhealthy_services = [name for name, data in services.items() if data.get('status') != 'healthy']
-        slow_services = [name for name, data in services.items()
-                        if data.get('response_time', 0) > 2.0 and data.get('status') == 'healthy']
+        services = ecosystem_health.get("services", {})
+        unhealthy_services = [name for name, data in services.items() if data.get("status") != "healthy"]
+        slow_services = [
+            name
+            for name, data in services.items()
+            if data.get("response_time", 0) > 2.0 and data.get("status") == "healthy"
+        ]
 
         context = f"""
         Ecosystem Health Analysis:
@@ -850,25 +890,27 @@ def parse_recommendations_from_text(text: str) -> List[Dict[str, Any]]:
     recommendations = []
 
     # Simple text parsing - look for numbered or bulleted items
-    lines = text.strip().split('\n')
+    lines = text.strip().split("\n")
 
     for line in lines:
         line = line.strip()
-        if line and (line[0].isdigit() or line.startswith('-') or line.startswith('•')):
+        if line and (line[0].isdigit() or line.startswith("-") or line.startswith("•")):
             # Extract the main recommendation text
             if line[0].isdigit():
-                rec_text = line.split('. ', 1)[1] if '. ' in line else line[2:]
+                rec_text = line.split(". ", 1)[1] if ". " in line else line[2:]
             else:
                 rec_text = line[1:].strip()
 
-            recommendations.append({
-                'title': rec_text[:50] + '...' if len(rec_text) > 50 else rec_text,
-                'description': rec_text,
-                'impact': 'Medium',
-                'confidence': 85,
-                'action': f"Implement: {rec_text}",
-                'category': 'optimization'
-            })
+            recommendations.append(
+                {
+                    "title": rec_text[:50] + "..." if len(rec_text) > 50 else rec_text,
+                    "description": rec_text,
+                    "impact": "Medium",
+                    "confidence": 85,
+                    "action": f"Implement: {rec_text}",
+                    "category": "optimization",
+                }
+            )
 
     return recommendations[:5]
 
@@ -912,7 +954,7 @@ async def apply_quick_optimizations(ecosystem_health: Dict[str, Any]):
             "Cleared expired cache entries",
             "Optimized database connections",
             "Balanced load across instances",
-            "Updated configuration parameters"
+            "Updated configuration parameters",
         ]
 
         st.markdown("#### ⚡ Quick Optimizations Applied")
@@ -928,32 +970,36 @@ async def apply_quick_optimizations(ecosystem_health: Dict[str, Any]):
 def detect_system_issues(ecosystem_health: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Detect system issues that need healing."""
     issues = []
-    services = ecosystem_health.get('services', {})
+    services = ecosystem_health.get("services", {})
 
     for service_name, service_data in services.items():
-        status = service_data.get('status')
+        status = service_data.get("status")
 
-        if status != 'healthy':
-            issues.append({
-                'id': f"health_{service_name}",
-                'title': f"Service {service_name} unhealthy",
-                'description': f"Service {service_name} is reporting {status} status",
-                'severity': 'Critical' if service_name in ['project-simulation', 'llm-gateway'] else 'High',
-                'affected_services': [service_name],
-                'auto_recoverable': service_name not in ['llm-gateway']  # Can't auto-restart LLM gateway
-            })
+        if status != "healthy":
+            issues.append(
+                {
+                    "id": f"health_{service_name}",
+                    "title": f"Service {service_name} unhealthy",
+                    "description": f"Service {service_name} is reporting {status} status",
+                    "severity": "Critical" if service_name in ["project-simulation", "llm-gateway"] else "High",
+                    "affected_services": [service_name],
+                    "auto_recoverable": service_name not in ["llm-gateway"],  # Can't auto-restart LLM gateway
+                }
+            )
 
         # Check for performance issues
-        response_time = service_data.get('response_time', 0)
-        if response_time > 5.0 and status == 'healthy':
-            issues.append({
-                'id': f"perf_{service_name}",
-                'title': f"High response time: {service_name}",
-                'description': f"Service {service_name} response time is {response_time:.2f}s",
-                'severity': 'Medium',
-                'affected_services': [service_name],
-                'auto_recoverable': True
-            })
+        response_time = service_data.get("response_time", 0)
+        if response_time > 5.0 and status == "healthy":
+            issues.append(
+                {
+                    "id": f"perf_{service_name}",
+                    "title": f"High response time: {service_name}",
+                    "description": f"Service {service_name} response time is {response_time:.2f}s",
+                    "severity": "Medium",
+                    "affected_services": [service_name],
+                    "auto_recoverable": True,
+                }
+            )
 
     return issues
 
@@ -961,16 +1007,16 @@ def detect_system_issues(ecosystem_health: Dict[str, Any]) -> List[Dict[str, Any
 def apply_auto_fix(issue: Dict[str, Any]) -> bool:
     """Apply automatic fix for an issue."""
     try:
-        issue_type = issue['id'].split('_')[0]
+        issue_type = issue["id"].split("_")[0]
 
-        if issue_type == 'health':
+        if issue_type == "health":
             # Service restart simulation
-            service_name = issue['affected_services'][0]
+            service_name = issue["affected_services"][0]
             st.info(f"🔄 Restarting service: {service_name}")
             return True
-        elif issue_type == 'perf':
+        elif issue_type == "perf":
             # Performance optimization
-            service_name = issue['affected_services'][0]
+            service_name = issue["affected_services"][0]
             st.info(f"⚡ Optimizing performance for: {service_name}")
             return True
 
@@ -982,7 +1028,7 @@ def apply_auto_fix(issue: Dict[str, Any]) -> bool:
 def predict_load_trend(ecosystem_health: Dict[str, Any]) -> Dict[str, Any]:
     """Predict load trends for the next hour."""
     # Mock prediction logic
-    current_hour = ecosystem_health.get('timestamp', datetime.now()).hour
+    current_hour = ecosystem_health.get("timestamp", datetime.now()).hour
 
     # Simulate business hours peak
     if 9 <= current_hour <= 17:
@@ -993,13 +1039,15 @@ def predict_load_trend(ecosystem_health: Dict[str, Any]) -> Dict[str, Any]:
         peak_time = "09:00"
 
     return {
-        'peak_load': min(100, peak_load),
-        'peak_time': peak_time,
-        'trend': 'increasing' if current_hour < 14 else 'decreasing'
+        "peak_load": min(100, peak_load),
+        "peak_time": peak_time,
+        "trend": "increasing" if current_hour < 14 else "decreasing",
     }
 
 
-async def generate_scaling_recommendations(ecosystem_health: Dict[str, Any], llm_client: LLMGatewayClient) -> List[Dict[str, Any]]:
+async def generate_scaling_recommendations(
+    ecosystem_health: Dict[str, Any], llm_client: LLMGatewayClient
+) -> List[Dict[str, Any]]:
     """Generate scaling recommendations."""
     try:
         scaling_prompt = f"""
@@ -1035,32 +1083,34 @@ async def generate_scaling_recommendations(ecosystem_health: Dict[str, Any], llm
 
 def generate_fallback_scaling_recs(ecosystem_health: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Generate fallback scaling recommendations."""
-    services = ecosystem_health.get('services', {})
+    services = ecosystem_health.get("services", {})
 
     recommendations = []
-    for service_name in ['project-simulation', 'analysis-service', 'llm-gateway']:
+    for service_name in ["project-simulation", "analysis-service", "llm-gateway"]:
         if service_name in services:
             service_data = services[service_name]
-            response_time = service_data.get('response_time', 0)
+            response_time = service_data.get("response_time", 0)
 
             if response_time > 2.0:
-                recommendations.append({
-                    'service': service_name,
-                    'current_instances': 1,
-                    'recommended_instances': 2,
-                    'reason': f'High response time ({response_time:.2f}s) indicates need for scaling',
-                    'confidence': 85
-                })
+                recommendations.append(
+                    {
+                        "service": service_name,
+                        "current_instances": 1,
+                        "recommended_instances": 2,
+                        "reason": f"High response time ({response_time:.2f}s) indicates need for scaling",
+                        "confidence": 85,
+                    }
+                )
 
     if not recommendations:
         # Default recommendations
         recommendations = [
             {
-                'service': 'analysis-service',
-                'current_instances': 1,
-                'recommended_instances': 2,
-                'reason': 'Predicted load increase during business hours',
-                'confidence': 78
+                "service": "analysis-service",
+                "current_instances": 1,
+                "recommended_instances": 2,
+                "reason": "Predicted load increase during business hours",
+                "confidence": 78,
             }
         ]
 
@@ -1072,22 +1122,22 @@ def render_intelligent_system_status(ecosystem_health: Dict[str, Any]):
     st.markdown("### 🔧 Intelligent System Status")
 
     # Overall health indicator
-    health_status = ecosystem_health.get('overall_health', 'unknown')
+    health_status = ecosystem_health.get("overall_health", "unknown")
     health_colors = {
-        'excellent': ('🟢', 'success'),
-        'good': ('🟡', 'warning'),
-        'fair': ('🟠', 'warning'),
-        'poor': ('🔴', 'error'),
-        'unknown': ('⚪', 'info')
+        "excellent": ("🟢", "success"),
+        "good": ("🟡", "warning"),
+        "fair": ("🟠", "warning"),
+        "poor": ("🔴", "error"),
+        "unknown": ("⚪", "info"),
     }
 
-    color, level = health_colors.get(health_status, ('⚪', 'info'))
+    color, level = health_colors.get(health_status, ("⚪", "info"))
 
-    if level == 'success':
+    if level == "success":
         st.success(f"{color} **Ecosystem Health: {health_status.title()}**")
-    elif level == 'warning':
+    elif level == "warning":
         st.warning(f"{color} **Ecosystem Health: {health_status.title()}**")
-    elif level == 'error':
+    elif level == "error":
         st.error(f"{color} **Ecosystem Health: {health_status.title()}**")
     else:
         st.info(f"{color} **Ecosystem Health: {health_status.title()}**")
@@ -1095,53 +1145,47 @@ def render_intelligent_system_status(ecosystem_health: Dict[str, Any]):
     # Service grid
     st.markdown("#### 🏥 Service Health Matrix")
 
-    services = ecosystem_health.get('services', {})
+    services = ecosystem_health.get("services", {})
     cols = st.columns(4)
 
     for i, (service_name, service_data) in enumerate(services.items()):
         with cols[i % 4]:
-            status = service_data.get('status', 'unknown')
-            status_icon = {
-                'healthy': '✅',
-                'unhealthy': '❌',
-                'unknown': '❓'
-            }.get(status, '❓')
+            status = service_data.get("status", "unknown")
+            status_icon = {"healthy": "✅", "unhealthy": "❌", "unknown": "❓"}.get(status, "❓")
 
             st.metric(
-                service_name.replace('-', ' ').title(),
+                service_name.replace("-", " ").title(),
                 f"{status_icon} {status.title()}",
-                help=f"Response time: {service_data.get('response_time', 'N/A')}"
+                help=f"Response time: {service_data.get('response_time', 'N/A')}",
             )
 
     # Intelligent recommendations
-    if ecosystem_health.get('recommendations'):
+    if ecosystem_health.get("recommendations"):
         st.markdown("#### 💡 AI Recommendations")
-        for rec in ecosystem_health['recommendations']:
+        for rec in ecosystem_health["recommendations"]:
             st.info(f"🧠 {rec}")
-
-
 
 
 async def get_simulation_metrics(sim_client: SimulationClient) -> Dict[str, Any]:
     """Get simulation metrics from the service."""
     # This would make actual API calls to the simulation service
     return {
-        'active_count': 3,
-        'success_rate': 89,
-        'avg_duration': 42,
-        'total_simulations': 156,
-        'performance_score': 94
+        "active_count": 3,
+        "success_rate": 89,
+        "avg_duration": 42,
+        "total_simulations": 156,
+        "performance_score": 94,
     }
 
 
 def generate_mock_simulation_data() -> Dict[str, Any]:
     """Generate mock simulation data for demonstration."""
     return {
-        'active_count': 3,
-        'success_rate': 87,
-        'avg_duration': 38,
-        'total_simulations': 142,
-        'performance_score': 91
+        "active_count": 3,
+        "success_rate": 87,
+        "avg_duration": 38,
+        "total_simulations": 142,
+        "performance_score": 91,
     }
 
 
@@ -1159,7 +1203,7 @@ def render_key_metrics():
             label="Total Simulations",
             value=total_simulations,
             delta="+2 from yesterday",
-            help="Total number of simulations created"
+            help="Total number of simulations created",
         )
 
     with col2:
@@ -1168,7 +1212,7 @@ def render_key_metrics():
             label="Active Simulations",
             value=active_simulations,
             delta=f"{active_simulations} running",
-            help="Currently running simulations"
+            help="Currently running simulations",
         )
 
     with col3:
@@ -1177,7 +1221,7 @@ def render_key_metrics():
             label="Success Rate",
             value=f"{success_rate}%",
             delta="+5% from last week",
-            help="Percentage of successful simulations"
+            help="Percentage of successful simulations",
         )
 
     with col4:
@@ -1186,7 +1230,7 @@ def render_key_metrics():
             label="Avg Duration",
             value=f"{avg_duration}min",
             delta="-2min from last week",
-            help="Average simulation duration"
+            help="Average simulation duration",
         )
 
     # Additional metrics
@@ -1201,12 +1245,7 @@ def render_additional_metrics():
     with col1:
         st.markdown("**📊 Simulation Types**")
         # Mock data
-        simulation_types = {
-            "Web Application": 45,
-            "Mobile App": 23,
-            "API Service": 18,
-            "Data Pipeline": 14
-        }
+        simulation_types = {"Web Application": 45, "Mobile App": 23, "API Service": 18, "Data Pipeline": 14}
 
         for sim_type, count in simulation_types.items():
             st.progress(count / 100, text=f"{sim_type}: {count}")
@@ -1225,7 +1264,7 @@ def render_additional_metrics():
         top_performers = [
             ("E-commerce Platform", "98%"),
             ("User Management API", "95%"),
-            ("Analytics Dashboard", "93%")
+            ("Analytics Dashboard", "93%"),
         ]
 
         for name, score in top_performers:
@@ -1254,25 +1293,25 @@ def render_active_simulations():
 
             with col2:
                 st.markdown(f"**Status:** {sim['status']}")
-                if sim['status'] == 'running':
+                if sim["status"] == "running":
                     st.success("🟢 Running")
-                elif sim['status'] == 'paused':
+                elif sim["status"] == "paused":
                     st.warning("🟡 Paused")
                 else:
                     st.info(f"🔵 {sim['status']}")
 
             with col3:
-                progress = sim.get('progress', 0)
+                progress = sim.get("progress", 0)
                 st.progress(progress / 100, text=f"{progress}% Complete")
 
             with col4:
                 st.markdown(f"**Started:** {sim['start_time']}")
-                if 'estimated_completion' in sim:
+                if "estimated_completion" in sim:
                     st.caption(f"Est. completion: {sim['estimated_completion']}")
 
             with col5:
                 if st.button("👁️ View", key=f"view_{sim['id']}", help=f"Monitor simulation {sim['id']}"):
-                    st.session_state.selected_simulation = sim['id']
+                    st.session_state.selected_simulation = sim["id"]
                     st.session_state.current_page = "monitor"
                     st.rerun()
 
@@ -1302,9 +1341,9 @@ def render_recent_activity():
                     "simulation_started": "▶️",
                     "simulation_completed": "✅",
                     "simulation_failed": "❌",
-                    "report_generated": "📊"
+                    "report_generated": "📊",
                 }
-                icon = icon_map.get(activity['type'], "📝")
+                icon = icon_map.get(activity["type"], "📝")
                 st.markdown(f"### {icon}")
 
             with col2:
@@ -1371,7 +1410,7 @@ def render_system_status():
         # Simulation Service Status
         st.markdown("**🎯 Simulation Service**")
         service_status = check_simulation_service_status()
-        if service_status['healthy']:
+        if service_status["healthy"]:
             st.success("✅ Healthy")
         else:
             st.error("❌ Unhealthy")
@@ -1381,7 +1420,7 @@ def render_system_status():
         # Database Status
         st.markdown("**🗄️ Database**")
         db_status = check_database_status()
-        if db_status['healthy']:
+        if db_status["healthy"]:
             st.success("✅ Connected")
         else:
             st.error("❌ Disconnected")
@@ -1391,7 +1430,7 @@ def render_system_status():
         # WebSocket Status
         st.markdown("**🔄 Real-time Updates**")
         ws_status = check_websocket_status()
-        if ws_status['connected']:
+        if ws_status["connected"]:
             st.success("✅ Connected")
         else:
             st.warning("⚠️ Disconnected")
@@ -1401,8 +1440,8 @@ def render_system_status():
         # System Resources
         st.markdown("**💻 System Resources**")
         resources = get_system_resources()
-        cpu_usage = resources['cpu_percent']
-        memory_usage = resources['memory_percent']
+        cpu_usage = resources["cpu_percent"]
+        memory_usage = resources["memory_percent"]
 
         if cpu_usage < 70 and memory_usage < 80:
             st.success("✅ Normal")
@@ -1416,25 +1455,30 @@ def render_system_status():
 
 # Mock data functions - in real implementation these would call the actual services
 
+
 def get_total_simulations_count() -> int:
     """Get total simulations count."""
     # Mock data
     return 127
+
 
 def get_active_simulations_count() -> int:
     """Get active simulations count."""
     # Mock data
     return 3
 
+
 def get_success_rate() -> int:
     """Get success rate percentage."""
     # Mock data
     return 89
 
+
 def get_average_duration() -> int:
     """Get average duration in minutes."""
     # Mock data
     return 45
+
 
 def get_active_simulations() -> List[Dict[str, Any]]:
     """Get list of active simulations."""
@@ -1446,7 +1490,7 @@ def get_active_simulations() -> List[Dict[str, Any]]:
             "status": "running",
             "progress": 67,
             "start_time": "2024-01-15 14:30:00",
-            "estimated_completion": "2024-01-15 16:15:00"
+            "estimated_completion": "2024-01-15 16:15:00",
         },
         {
             "id": "sim_002",
@@ -1454,16 +1498,17 @@ def get_active_simulations() -> List[Dict[str, Any]]:
             "status": "running",
             "progress": 34,
             "start_time": "2024-01-15 15:45:00",
-            "estimated_completion": "2024-01-15 17:30:00"
+            "estimated_completion": "2024-01-15 17:30:00",
         },
         {
             "id": "sim_003",
             "name": "Analytics Dashboard",
             "status": "paused",
             "progress": 12,
-            "start_time": "2024-01-15 16:00:00"
-        }
+            "start_time": "2024-01-15 16:00:00",
+        },
     ]
+
 
 def get_recent_activities() -> List[Dict[str, Any]]:
     """Get recent activities."""
@@ -1474,59 +1519,51 @@ def get_recent_activities() -> List[Dict[str, Any]]:
             "title": "Simulation Completed",
             "description": "Mobile App Development simulation finished successfully",
             "timestamp": "2024-01-15 14:15:00",
-            "user": "System"
+            "user": "System",
         },
         {
             "type": "report_generated",
             "title": "Report Generated",
             "description": "Executive summary report for Project Alpha",
             "timestamp": "2024-01-15 13:45:00",
-            "user": "john.doe@example.com"
+            "user": "john.doe@example.com",
         },
         {
             "type": "simulation_started",
             "title": "Simulation Started",
             "description": "E-commerce Platform simulation initiated",
             "timestamp": "2024-01-15 13:30:00",
-            "user": "jane.smith@example.com"
+            "user": "jane.smith@example.com",
         },
         {
             "type": "simulation_created",
             "title": "Simulation Created",
             "description": "New simulation: API Service Development",
             "timestamp": "2024-01-15 12:00:00",
-            "user": "System"
-        }
+            "user": "System",
+        },
     ]
+
 
 def check_simulation_service_status() -> Dict[str, Any]:
     """Check simulation service health."""
     # Mock health check
-    return {
-        "healthy": True,
-        "response_time": 45
-    }
+    return {"healthy": True, "response_time": 45}
+
 
 def check_database_status() -> Dict[str, Any]:
     """Check database health."""
     # Mock database check
-    return {
-        "healthy": True,
-        "active_connections": 5
-    }
+    return {"healthy": True, "active_connections": 5}
+
 
 def check_websocket_status() -> Dict[str, Any]:
     """Check WebSocket connection status."""
     # Mock WebSocket check
-    return {
-        "connected": True,
-        "active_connections": 2
-    }
+    return {"connected": True, "active_connections": 2}
+
 
 def get_system_resources() -> Dict[str, Any]:
     """Get system resource usage."""
     # Mock resource data
-    return {
-        "cpu_percent": 23.5,
-        "memory_percent": 45.2
-    }
+    return {"cpu_percent": 23.5, "memory_percent": 45.2}

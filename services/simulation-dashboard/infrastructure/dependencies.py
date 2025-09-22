@@ -7,9 +7,9 @@ features are not available.
 
 import importlib
 import sys
-from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 from infrastructure.logging.logger import get_dashboard_logger
 
@@ -18,6 +18,7 @@ logger = get_dashboard_logger("dependencies")
 
 class DependencyStatus(Enum):
     """Status of a dependency."""
+
     AVAILABLE = "available"
     MISSING = "missing"
     OPTIONAL = "optional"
@@ -27,6 +28,7 @@ class DependencyStatus(Enum):
 @dataclass
 class DependencyInfo:
     """Information about a dependency."""
+
     name: str
     package_name: str
     version_required: Optional[str] = None
@@ -133,13 +135,13 @@ class DependencyManager:
         status = {}
         for name, dep in self.dependencies.items():
             status[name] = {
-                'name': dep.name,
-                'status': dep.status.value,
-                'description': dep.description,
-                'features_affected': dep.features_affected,
-                'available': self.check_dependency(name),
-                'install_command': dep.install_command,
-                'fallback_message': dep.fallback_message
+                "name": dep.name,
+                "status": dep.status.value,
+                "description": dep.description,
+                "features_affected": dep.features_affected,
+                "available": self.check_dependency(name),
+                "install_command": dep.install_command,
+                "fallback_message": dep.fallback_message,
             }
         return status
 
@@ -148,23 +150,33 @@ class DependencyManager:
         missing = []
         for name, dep in self.dependencies.items():
             if not self.check_dependency(name):
-                missing.append({
-                    'name': dep.name,
-                    'package_name': dep.package_name,
-                    'description': dep.description,
-                    'install_command': dep.install_command,
-                    'features_affected': dep.features_affected
-                })
+                missing.append(
+                    {
+                        "name": dep.name,
+                        "package_name": dep.package_name,
+                        "description": dep.description,
+                        "install_command": dep.install_command,
+                        "features_affected": dep.features_affected,
+                    }
+                )
         return missing
 
     def get_feature_status(self) -> Dict[str, bool]:
         """Get availability status of all features."""
         # Define all known features
         all_features = [
-            'ai_insights', 'pattern_recognition', 'anomaly_detection',
-            'predictive_analytics', 'time_series_forecasting', 'ml_model_training',
-            'advanced_visualizations', 'real_time_monitoring', 'autonomous_systems',
-            'advanced_reporting', 'causal_analysis', 'correlation_analysis'
+            "ai_insights",
+            "pattern_recognition",
+            "anomaly_detection",
+            "predictive_analytics",
+            "time_series_forecasting",
+            "ml_model_training",
+            "advanced_visualizations",
+            "real_time_monitoring",
+            "autonomous_systems",
+            "advanced_reporting",
+            "causal_analysis",
+            "correlation_analysis",
         ]
 
         feature_status = {}
@@ -177,169 +189,196 @@ class DependencyManager:
 # Global dependency manager instance
 dependency_manager = DependencyManager()
 
+
 # Register all known dependencies
 def initialize_dependencies():
     """Initialize all known dependencies."""
 
     # Core ML Libraries
-    dependency_manager.register_dependency(DependencyInfo(
-        name="scikit_learn",
-        package_name="scikit-learn",
-        import_name="sklearn",
-        version_required=">=1.3.0",
-        status=DependencyStatus.REQUIRED,
-        description="Machine learning algorithms for pattern recognition and predictive modeling",
-        features_affected=["ai_insights", "pattern_recognition", "anomaly_detection", "ml_model_training"],
-        fallback_message="AI insights and ML-based features will be limited",
-        install_command="pip install scikit-learn>=1.3.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="scikit_learn",
+            package_name="scikit-learn",
+            import_name="sklearn",
+            version_required=">=1.3.0",
+            status=DependencyStatus.REQUIRED,
+            description="Machine learning algorithms for pattern recognition and predictive modeling",
+            features_affected=["ai_insights", "pattern_recognition", "anomaly_detection", "ml_model_training"],
+            fallback_message="AI insights and ML-based features will be limited",
+            install_command="pip install scikit-learn>=1.3.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="statsmodels",
-        package_name="statsmodels",
-        import_name="statsmodels",
-        version_required=">=0.14.0",
-        status=DependencyStatus.OPTIONAL,
-        description="Statistical models and time series analysis",
-        features_affected=["time_series_forecasting", "causal_analysis", "predictive_analytics"],
-        fallback_message="Advanced time series analysis will be limited",
-        install_command="pip install statsmodels>=0.14.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="statsmodels",
+            package_name="statsmodels",
+            import_name="statsmodels",
+            version_required=">=0.14.0",
+            status=DependencyStatus.OPTIONAL,
+            description="Statistical models and time series analysis",
+            features_affected=["time_series_forecasting", "causal_analysis", "predictive_analytics"],
+            fallback_message="Advanced time series analysis will be limited",
+            install_command="pip install statsmodels>=0.14.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="prophet",
-        package_name="prophet",
-        import_name="prophet",
-        version_required=">=1.1.0",
-        status=DependencyStatus.OPTIONAL,
-        description="Facebook Prophet for advanced time series forecasting",
-        features_affected=["time_series_forecasting", "predictive_analytics"],
-        fallback_message="Prophet-based forecasting will not be available",
-        install_command="pip install prophet>=1.1.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="prophet",
+            package_name="prophet",
+            import_name="prophet",
+            version_required=">=1.1.0",
+            status=DependencyStatus.OPTIONAL,
+            description="Facebook Prophet for advanced time series forecasting",
+            features_affected=["time_series_forecasting", "predictive_analytics"],
+            fallback_message="Prophet-based forecasting will not be available",
+            install_command="pip install prophet>=1.1.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="xgboost",
-        package_name="xgboost",
-        import_name="xgboost",
-        version_required=">=1.7.0",
-        status=DependencyStatus.OPTIONAL,
-        description="Gradient boosting framework for advanced ML models",
-        features_affected=["ml_model_training", "predictive_analytics"],
-        fallback_message="XGBoost models will not be available",
-        install_command="pip install xgboost>=1.7.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="xgboost",
+            package_name="xgboost",
+            import_name="xgboost",
+            version_required=">=1.7.0",
+            status=DependencyStatus.OPTIONAL,
+            description="Gradient boosting framework for advanced ML models",
+            features_affected=["ml_model_training", "predictive_analytics"],
+            fallback_message="XGBoost models will not be available",
+            install_command="pip install xgboost>=1.7.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="lightgbm",
-        package_name="lightgbm",
-        import_name="lightgbm",
-        version_required=">=4.0.0",
-        status=DependencyStatus.OPTIONAL,
-        description="LightGBM for fast gradient boosting",
-        features_affected=["ml_model_training", "predictive_analytics"],
-        fallback_message="LightGBM models will not be available",
-        install_command="pip install lightgbm>=4.0.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="lightgbm",
+            package_name="lightgbm",
+            import_name="lightgbm",
+            version_required=">=4.0.0",
+            status=DependencyStatus.OPTIONAL,
+            description="LightGBM for fast gradient boosting",
+            features_affected=["ml_model_training", "predictive_analytics"],
+            fallback_message="LightGBM models will not be available",
+            install_command="pip install lightgbm>=4.0.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="tensorflow",
-        package_name="tensorflow",
-        import_name="tensorflow",
-        version_required=">=2.13.0",
-        status=DependencyStatus.OPTIONAL,
-        description="TensorFlow for deep learning and neural networks",
-        features_affected=["ml_model_training", "pattern_recognition"],
-        fallback_message="Deep learning features will not be available",
-        install_command="pip install tensorflow>=2.13.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="tensorflow",
+            package_name="tensorflow",
+            import_name="tensorflow",
+            version_required=">=2.13.0",
+            status=DependencyStatus.OPTIONAL,
+            description="TensorFlow for deep learning and neural networks",
+            features_affected=["ml_model_training", "pattern_recognition"],
+            fallback_message="Deep learning features will not be available",
+            install_command="pip install tensorflow>=2.13.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="torch",
-        package_name="torch",
-        import_name="torch",
-        version_required=">=2.0.0",
-        status=DependencyStatus.OPTIONAL,
-        description="PyTorch for deep learning and neural networks",
-        features_affected=["ml_model_training", "pattern_recognition"],
-        fallback_message="PyTorch-based features will not be available",
-        install_command="pip install torch>=2.0.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="torch",
+            package_name="torch",
+            import_name="torch",
+            version_required=">=2.0.0",
+            status=DependencyStatus.OPTIONAL,
+            description="PyTorch for deep learning and neural networks",
+            features_affected=["ml_model_training", "pattern_recognition"],
+            fallback_message="PyTorch-based features will not be available",
+            install_command="pip install torch>=2.0.0",
+        )
+    )
 
     # Visualization Libraries
-    dependency_manager.register_dependency(DependencyInfo(
-        name="plotly",
-        package_name="plotly",
-        import_name="plotly",
-        version_required=">=5.17.0",
-        status=DependencyStatus.REQUIRED,
-        description="Interactive plotting library for advanced visualizations",
-        features_affected=["advanced_visualizations", "real_time_monitoring"],
-        fallback_message="Advanced charts and visualizations will be limited",
-        install_command="pip install plotly>=5.17.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="plotly",
+            package_name="plotly",
+            import_name="plotly",
+            version_required=">=5.17.0",
+            status=DependencyStatus.REQUIRED,
+            description="Interactive plotting library for advanced visualizations",
+            features_affected=["advanced_visualizations", "real_time_monitoring"],
+            fallback_message="Advanced charts and visualizations will be limited",
+            install_command="pip install plotly>=5.17.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="bokeh",
-        package_name="bokeh",
-        import_name="bokeh",
-        version_required=">=3.2.0",
-        status=DependencyStatus.OPTIONAL,
-        description="Interactive visualizations and dashboards",
-        features_affected=["advanced_visualizations"],
-        fallback_message="Some advanced visualization features will be limited",
-        install_command="pip install bokeh>=3.2.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="bokeh",
+            package_name="bokeh",
+            import_name="bokeh",
+            version_required=">=3.2.0",
+            status=DependencyStatus.OPTIONAL,
+            description="Interactive visualizations and dashboards",
+            features_affected=["advanced_visualizations"],
+            fallback_message="Some advanced visualization features will be limited",
+            install_command="pip install bokeh>=3.2.0",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="altair",
-        package_name="altair",
-        import_name="altair",
-        version_required=">=5.1.0",
-        status=DependencyStatus.OPTIONAL,
-        description="Declarative statistical visualization library",
-        features_affected=["advanced_visualizations", "correlation_analysis"],
-        fallback_message="Altair-based visualizations will not be available",
-        install_command="pip install altair>=5.1.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="altair",
+            package_name="altair",
+            import_name="altair",
+            version_required=">=5.1.0",
+            status=DependencyStatus.OPTIONAL,
+            description="Declarative statistical visualization library",
+            features_affected=["advanced_visualizations", "correlation_analysis"],
+            fallback_message="Altair-based visualizations will not be available",
+            install_command="pip install altair>=5.1.0",
+        )
+    )
 
     # Additional Analytics Libraries
-    dependency_manager.register_dependency(DependencyInfo(
-        name="pandas_ta",
-        package_name="pandas-ta",
-        import_name="pandas_ta",
-        version_required=">=0.3.14b",
-        status=DependencyStatus.OPTIONAL,
-        description="Technical analysis library for financial data",
-        features_affected=["pattern_recognition", "anomaly_detection"],
-        fallback_message="Technical analysis features will be limited",
-        install_command="pip install pandas-ta>=0.3.14b"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="pandas_ta",
+            package_name="pandas-ta",
+            import_name="pandas_ta",
+            version_required=">=0.3.14b",
+            status=DependencyStatus.OPTIONAL,
+            description="Technical analysis library for financial data",
+            features_affected=["pattern_recognition", "anomaly_detection"],
+            fallback_message="Technical analysis features will be limited",
+            install_command="pip install pandas-ta>=0.3.14b",
+        )
+    )
 
-    dependency_manager.register_dependency(DependencyInfo(
-        name="ta_lib",
-        package_name="TA-Lib",
-        import_name="talib",
-        version_required=">=0.4.25",
-        status=DependencyStatus.OPTIONAL,
-        description="Technical analysis library",
-        features_affected=["pattern_recognition", "predictive_analytics"],
-        fallback_message="TA-Lib indicators will not be available",
-        install_command="pip install TA-Lib>=0.4.25"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="ta_lib",
+            package_name="TA-Lib",
+            import_name="talib",
+            version_required=">=0.4.25",
+            status=DependencyStatus.OPTIONAL,
+            description="Technical analysis library",
+            features_affected=["pattern_recognition", "predictive_analytics"],
+            fallback_message="TA-Lib indicators will not be available",
+            install_command="pip install TA-Lib>=0.4.25",
+        )
+    )
 
     # WebSocket and Real-time Libraries
-    dependency_manager.register_dependency(DependencyInfo(
-        name="websockets",
-        package_name="websockets",
-        import_name="websockets",
-        version_required=">=12.0",
-        status=DependencyStatus.REQUIRED,
-        description="WebSocket library for real-time communication",
-        features_affected=["real_time_monitoring", "autonomous_systems"],
-        fallback_message="Real-time features will be disabled",
-        install_command="pip install websockets>=12.0"
-    ))
+    dependency_manager.register_dependency(
+        DependencyInfo(
+            name="websockets",
+            package_name="websockets",
+            import_name="websockets",
+            version_required=">=12.0",
+            status=DependencyStatus.REQUIRED,
+            description="WebSocket library for real-time communication",
+            features_affected=["real_time_monitoring", "autonomous_systems"],
+            fallback_message="Real-time features will be disabled",
+            install_command="pip install websockets>=12.0",
+        )
+    )
 
     logger.info("✅ Dependency management system initialized")
 
@@ -356,24 +395,24 @@ def safe_import(module_name: str, fallback=None):
 
 def check_ml_availability() -> Dict[str, bool]:
     """Check availability of ML libraries."""
-    ml_libs = ['scikit_learn', 'statsmodels', 'prophet', 'xgboost', 'lightgbm', 'tensorflow', 'torch']
+    ml_libs = ["scikit_learn", "statsmodels", "prophet", "xgboost", "lightgbm", "tensorflow", "torch"]
     return {lib: dependency_manager.check_dependency(lib) for lib in ml_libs}
 
 
 def check_visualization_availability() -> Dict[str, bool]:
     """Check availability of visualization libraries."""
-    viz_libs = ['plotly', 'bokeh', 'altair']
+    viz_libs = ["plotly", "bokeh", "altair"]
     return {lib: dependency_manager.check_dependency(lib) for lib in viz_libs}
 
 
 def get_system_status() -> Dict[str, Any]:
     """Get overall system status including dependency information."""
     return {
-        'dependencies': dependency_manager.get_dependency_status(),
-        'features': dependency_manager.get_feature_status(),
-        'missing_dependencies': dependency_manager.get_missing_dependencies(),
-        'ml_availability': check_ml_availability(),
-        'visualization_availability': check_visualization_availability()
+        "dependencies": dependency_manager.get_dependency_status(),
+        "features": dependency_manager.get_feature_status(),
+        "missing_dependencies": dependency_manager.get_missing_dependencies(),
+        "ml_availability": check_ml_availability(),
+        "visualization_availability": check_visualization_availability(),
     }
 
 

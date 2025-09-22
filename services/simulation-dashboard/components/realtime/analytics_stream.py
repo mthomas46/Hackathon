@@ -4,21 +4,20 @@ This module provides real-time analytics streaming capabilities that connect
 to multiple ecosystem services to provide live data analytics and insights.
 """
 
-import streamlit as st
 import asyncio
-import httpx
 import json
-import time
-import pandas as pd
-from typing import Dict, Any, List, Optional, Callable, AsyncGenerator
-from datetime import datetime, timedelta
-import threading
-import queue
-from dataclasses import dataclass
 import logging
+import queue
+import threading
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
 
+import httpx
+import pandas as pd
+import streamlit as st
 from infrastructure.logging.logger import get_dashboard_logger
-
 
 logger = get_dashboard_logger("analytics_stream")
 
@@ -26,6 +25,7 @@ logger = get_dashboard_logger("analytics_stream")
 @dataclass
 class AnalyticsDataPoint:
     """Data point for real-time analytics."""
+
     timestamp: datetime
     service: str
     metric: str
@@ -36,6 +36,7 @@ class AnalyticsDataPoint:
 @dataclass
 class AnalyticsStream:
     """Real-time analytics stream configuration."""
+
     name: str
     services: List[str]
     metrics: List[str]
@@ -63,26 +64,26 @@ class RealTimeAnalyticsStream:
                 name="Health Monitoring",
                 services=["project-simulation", "analysis-service", "llm-gateway", "doc-store"],
                 metrics=["response_time", "status", "uptime", "error_rate"],
-                update_interval=10.0
+                update_interval=10.0,
             ),
             "performance_metrics": AnalyticsStream(
                 name="Performance Metrics",
                 services=["project-simulation", "analysis-service"],
                 metrics=["cpu_usage", "memory_usage", "throughput", "latency"],
-                update_interval=5.0
+                update_interval=5.0,
             ),
             "simulation_tracking": AnalyticsStream(
                 name="Simulation Tracking",
                 services=["project-simulation"],
                 metrics=["active_simulations", "completion_rate", "success_rate", "queue_length"],
-                update_interval=2.0
+                update_interval=2.0,
             ),
             "llm_usage": AnalyticsStream(
                 name="LLM Usage Analytics",
                 services=["llm-gateway"],
                 metrics=["queries_per_minute", "tokens_used", "model_usage", "response_time"],
-                update_interval=15.0
-            )
+                update_interval=15.0,
+            ),
         }
 
         # Initialize data queues for each stream
@@ -102,11 +103,7 @@ class RealTimeAnalyticsStream:
         self.running_streams[stream_name] = True
 
         # Start the stream in a separate thread
-        thread = threading.Thread(
-            target=self._run_stream_async,
-            args=(stream_name,),
-            daemon=True
-        )
+        thread = threading.Thread(target=self._run_stream_async, args=(stream_name,), daemon=True)
         self.stream_threads[stream_name] = thread
         thread.start()
 
@@ -154,7 +151,7 @@ class RealTimeAnalyticsStream:
                                 service=service,
                                 metric=metric,
                                 value=value,
-                                metadata={"stream": stream_name}
+                                metadata={"stream": stream_name},
                             )
 
                             # Add to queue (non-blocking)
@@ -184,7 +181,7 @@ class RealTimeAnalyticsStream:
             "doc-store": "http://localhost:5087/health",
             "orchestrator": "http://localhost:5099/health",
             "interpreter": "http://localhost:5120/health",
-            "summarizer-hub": "http://localhost:5160/health"
+            "summarizer-hub": "http://localhost:5160/health",
         }
 
         if service_name not in service_urls:
@@ -205,7 +202,7 @@ class RealTimeAnalyticsStream:
                         "response_time": response_time,
                         "status": data.get("status", "unknown"),
                         "uptime": data.get("uptime_seconds", 0),
-                        "timestamp": time.time()
+                        "timestamp": time.time(),
                     }
 
                     # Add service-specific metrics
@@ -220,26 +217,17 @@ class RealTimeAnalyticsStream:
                     return {
                         "response_time": response.elapsed.total_seconds(),
                         "status": "error",
-                        "error": f"HTTP {response.status_code}"
+                        "error": f"HTTP {response.status_code}",
                     }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "response_time": 0
-            }
+            return {"status": "unhealthy", "error": str(e), "response_time": 0}
 
     async def _get_simulation_metrics(self) -> Dict[str, Any]:
         """Get simulation-specific metrics."""
         try:
             # This would ideally call simulation service APIs for real metrics
-            return {
-                "active_simulations": 3,
-                "completion_rate": 87.5,
-                "success_rate": 92.3,
-                "queue_length": 2
-            }
+            return {"active_simulations": 3, "completion_rate": 87.5, "success_rate": 92.3, "queue_length": 2}
         except:
             return {}
 
@@ -251,7 +239,7 @@ class RealTimeAnalyticsStream:
                 "queries_per_minute": 12.5,
                 "tokens_used": 15420,
                 "model_usage": {"llama2": 85, "codellama": 15},
-                "avg_response_time": 2.3
+                "avg_response_time": 2.3,
             }
         except:
             return {}
@@ -283,13 +271,15 @@ class RealTimeAnalyticsStream:
         # Convert to DataFrame
         data = []
         for point in data_points:
-            data.append({
-                'timestamp': point.timestamp,
-                'service': point.service,
-                'metric': point.metric,
-                'value': point.value,
-                **(point.metadata or {})
-            })
+            data.append(
+                {
+                    "timestamp": point.timestamp,
+                    "service": point.service,
+                    "metric": point.metric,
+                    "value": point.value,
+                    **(point.metadata or {}),
+                }
+            )
 
         return pd.DataFrame(data)
 
@@ -323,7 +313,7 @@ def render_realtime_analytics_dashboard():
             "Select Analytics Streams",
             available_streams,
             default=["health_monitoring", "performance_metrics"],
-            key="selected_streams"
+            key="selected_streams",
         )
 
     with col2:
@@ -358,7 +348,7 @@ def render_stream_visualizations(selected_streams: List[str]):
     if len(selected_streams) == 1:
         render_single_stream_visualization(selected_streams[0])
     else:
-        tabs = st.tabs([s.replace('_', ' ').title() for s in selected_streams])
+        tabs = st.tabs([s.replace("_", " ").title() for s in selected_streams])
         for i, (tab, stream_name) in enumerate(zip(tabs, selected_streams)):
             with tab:
                 render_single_stream_visualization(stream_name)
@@ -391,105 +381,126 @@ def render_single_stream_visualization(stream_name: str):
 def render_health_monitoring_charts(df: pd.DataFrame):
     """Render health monitoring specific charts."""
     # Response time trends
-    response_time_data = df[df['metric'] == 'response_time'].copy()
+    response_time_data = df[df["metric"] == "response_time"].copy()
     if not response_time_data.empty:
-        fig = px.line(response_time_data, x='timestamp', y='value', color='service',
-                     title='Service Response Times (seconds)',
-                     labels={'value': 'Response Time (s)', 'timestamp': 'Time'})
+        fig = px.line(
+            response_time_data,
+            x="timestamp",
+            y="value",
+            color="service",
+            title="Service Response Times (seconds)",
+            labels={"value": "Response Time (s)", "timestamp": "Time"},
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     # Service status overview
-    status_data = df[df['metric'] == 'status'].copy()
+    status_data = df[df["metric"] == "status"].copy()
     if not status_data.empty:
         # Convert status to numeric for charting
-        status_mapping = {'healthy': 1, 'unhealthy': 0, 'unknown': 0.5}
-        status_data['status_numeric'] = status_data['value'].map(status_mapping)
+        status_mapping = {"healthy": 1, "unhealthy": 0, "unknown": 0.5}
+        status_data["status_numeric"] = status_data["value"].map(status_mapping)
 
-        fig = px.scatter(status_data, x='timestamp', y='status_numeric', color='service',
-                        title='Service Health Status Over Time',
-                        labels={'status_numeric': 'Status (1=Healthy, 0=Unhealthy)'})
+        fig = px.scatter(
+            status_data,
+            x="timestamp",
+            y="status_numeric",
+            color="service",
+            title="Service Health Status Over Time",
+            labels={"status_numeric": "Status (1=Healthy, 0=Unhealthy)"},
+        )
         st.plotly_chart(fig, use_container_width=True)
 
 
 def render_performance_charts(df: pd.DataFrame):
     """Render performance metrics charts."""
     # CPU/Memory usage if available
-    if 'cpu_usage' in df['metric'].values:
-        cpu_data = df[df['metric'] == 'cpu_usage'].copy()
+    if "cpu_usage" in df["metric"].values:
+        cpu_data = df[df["metric"] == "cpu_usage"].copy()
         if not cpu_data.empty:
-            fig = px.area(cpu_data, x='timestamp', y='value', color='service',
-                         title='CPU Usage Over Time (%)')
+            fig = px.area(cpu_data, x="timestamp", y="value", color="service", title="CPU Usage Over Time (%)")
             st.plotly_chart(fig, use_container_width=True)
 
     # Throughput metrics
-    if 'throughput' in df['metric'].values:
-        throughput_data = df[df['metric'] == 'throughput'].copy()
+    if "throughput" in df["metric"].values:
+        throughput_data = df[df["metric"] == "throughput"].copy()
         if not throughput_data.empty:
-            fig = px.bar(throughput_data, x='timestamp', y='value', color='service',
-                        title='Service Throughput')
+            fig = px.bar(throughput_data, x="timestamp", y="value", color="service", title="Service Throughput")
             st.plotly_chart(fig, use_container_width=True)
 
 
 def render_simulation_tracking_charts(df: pd.DataFrame):
     """Render simulation tracking charts."""
     # Active simulations
-    if 'active_simulations' in df['metric'].values:
-        sim_data = df[df['metric'] == 'active_simulations'].copy()
+    if "active_simulations" in df["metric"].values:
+        sim_data = df[df["metric"] == "active_simulations"].copy()
         if not sim_data.empty:
-            fig = px.line(sim_data, x='timestamp', y='value',
-                         title='Active Simulations Over Time',
-                         labels={'value': 'Active Simulations'})
+            fig = px.line(
+                sim_data,
+                x="timestamp",
+                y="value",
+                title="Active Simulations Over Time",
+                labels={"value": "Active Simulations"},
+            )
             st.plotly_chart(fig, use_container_width=True)
 
     # Success rate trends
-    if 'success_rate' in df['metric'].values:
-        success_data = df[df['metric'] == 'success_rate'].copy()
+    if "success_rate" in df["metric"].values:
+        success_data = df[df["metric"] == "success_rate"].copy()
         if not success_data.empty:
-            fig = px.line(success_data, x='timestamp', y='value',
-                         title='Simulation Success Rate (%)',
-                         labels={'value': 'Success Rate (%)'})
-            fig.add_hline(y=90, line_dash="dot", line_color="red",
-                         annotation_text="Target: 90%")
+            fig = px.line(
+                success_data,
+                x="timestamp",
+                y="value",
+                title="Simulation Success Rate (%)",
+                labels={"value": "Success Rate (%)"},
+            )
+            fig.add_hline(y=90, line_dash="dot", line_color="red", annotation_text="Target: 90%")
             st.plotly_chart(fig, use_container_width=True)
 
 
 def render_llm_usage_charts(df: pd.DataFrame):
     """Render LLM usage analytics charts."""
     # Queries per minute
-    if 'queries_per_minute' in df['metric'].values:
-        query_data = df[df['metric'] == 'queries_per_minute'].copy()
+    if "queries_per_minute" in df["metric"].values:
+        query_data = df[df["metric"] == "queries_per_minute"].copy()
         if not query_data.empty:
-            fig = px.line(query_data, x='timestamp', y='value',
-                         title='LLM Queries per Minute',
-                         labels={'value': 'Queries/min'})
+            fig = px.line(
+                query_data, x="timestamp", y="value", title="LLM Queries per Minute", labels={"value": "Queries/min"}
+            )
             st.plotly_chart(fig, use_container_width=True)
 
     # Token usage
-    if 'tokens_used' in df['metric'].values:
-        token_data = df[df['metric'] == 'tokens_used'].copy()
+    if "tokens_used" in df["metric"].values:
+        token_data = df[df["metric"] == "tokens_used"].copy()
         if not token_data.empty:
-            fig = px.area(token_data, x='timestamp', y='value',
-                         title='Token Usage Over Time',
-                         labels={'value': 'Tokens Used'})
+            fig = px.area(
+                token_data, x="timestamp", y="value", title="Token Usage Over Time", labels={"value": "Tokens Used"}
+            )
             st.plotly_chart(fig, use_container_width=True)
 
 
 def render_generic_charts(df: pd.DataFrame, stream_name: str):
     """Render generic charts for unknown stream types."""
     # Group by metric and create subplots
-    metrics = df['metric'].unique()
+    metrics = df["metric"].unique()
 
     if len(metrics) <= 4:  # Create subplots for up to 4 metrics
         cols = st.columns(len(metrics))
         for i, metric in enumerate(metrics):
             with cols[i]:
-                metric_data = df[df['metric'] == metric].copy()
+                metric_data = df[df["metric"] == metric].copy()
                 if not metric_data.empty:
-                    fig = px.line(metric_data, x='timestamp', y='value', color='service',
-                                 title=f'{metric.replace("_", " ").title()}')
+                    fig = px.line(
+                        metric_data,
+                        x="timestamp",
+                        y="value",
+                        color="service",
+                        title=f'{metric.replace("_", " ").title()}',
+                    )
                     st.plotly_chart(fig, use_container_width=True)
     else:
         # Single combined chart
-        fig = px.line(df, x='timestamp', y='value', color='metric',
-                     title=f'{stream_name.replace("_", " ").title()} - All Metrics')
+        fig = px.line(
+            df, x="timestamp", y="value", color="metric", title=f'{stream_name.replace("_", " ").title()} - All Metrics'
+        )
         st.plotly_chart(fig, use_container_width=True)

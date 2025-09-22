@@ -1,13 +1,14 @@
 """Integration tests for simulation service integration."""
 
-import pytest
 import asyncio
 import time
-from unittest.mock import Mock, MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 from httpx import AsyncClient
+from infrastructure.config.config import DashboardSettings
 
 from services.clients.simulation_client import SimulationClient
-from infrastructure.config.config import DashboardSettings
 
 
 @pytest.mark.integration
@@ -71,7 +72,7 @@ class TestSimulationServiceIntegration:
             "type": "software_development",
             "complexity": "low",
             "team_size": 3,
-            "duration_weeks": 4
+            "duration_weeks": 4,
         }
 
         try:
@@ -159,10 +160,7 @@ class TestWebSocketIntegration:
 
             # Try to receive a response (may timeout)
             try:
-                response = await asyncio.wait_for(
-                    client.receive_message(),
-                    timeout=2.0
-                )
+                response = await asyncio.wait_for(client.receive_message(), timeout=2.0)
                 assert isinstance(response, dict)
             except asyncio.TimeoutError:
                 pass  # Expected if no response
@@ -179,6 +177,7 @@ class TestDashboardPageIntegration:
     @pytest.fixture
     def mock_streamlit_context(self):
         """Mock Streamlit context for integration testing."""
+
         class MockSt:
             session_state = {}
 
@@ -236,7 +235,7 @@ class TestDashboardPageIntegration:
 
             @staticmethod
             def slider(label, **kwargs):
-                return kwargs.get('value', 0)
+                return kwargs.get("value", 0)
 
             @staticmethod
             def checkbox(label, value=False, **kwargs):
@@ -263,8 +262,10 @@ class TestDashboardPageIntegration:
                 class SpinnerContext:
                     def __enter__(self):
                         return self
+
                     def __exit__(self, exc_type, exc_val, exc_tb):
                         pass
+
                 return SpinnerContext()
 
             @staticmethod
@@ -347,58 +348,65 @@ class TestDashboardPageIntegration:
 
         return MockSt()
 
-    @patch('streamlit.markdown')
-    @patch('streamlit.header')
-    @patch('streamlit.subheader')
-    @patch('streamlit.columns')
-    @patch('streamlit.metric')
-    @patch('streamlit.info')
-    def test_overview_page_rendering(self, mock_info, mock_metric, mock_columns, mock_subheader, mock_header, mock_markdown, mock_streamlit_context):
+    @patch("streamlit.markdown")
+    @patch("streamlit.header")
+    @patch("streamlit.subheader")
+    @patch("streamlit.columns")
+    @patch("streamlit.metric")
+    @patch("streamlit.info")
+    def test_overview_page_rendering(
+        self, mock_info, mock_metric, mock_columns, mock_subheader, mock_header, mock_markdown, mock_streamlit_context
+    ):
         """Test overview page rendering without errors."""
         # Mock the required dependencies
-        with patch('pages.overview.render_overview_page') as mock_render:
+        with patch("pages.overview.render_overview_page") as mock_render:
             mock_render.return_value = None
 
             # Import and try to call the function
             try:
                 from pages.overview import render_overview_page
+
                 # If we get here without import errors, basic structure is working
                 assert callable(render_overview_page)
             except ImportError:
                 pytest.skip("Overview page not available for testing")
 
-    @patch('pages.create.st')
+    @patch("pages.create.st")
     def test_create_page_imports(self, mock_st):
         """Test that create page can be imported without errors."""
         try:
             from pages.create import render_create_page
+
             assert callable(render_create_page)
         except ImportError:
             pytest.skip("Create page not available for testing")
 
-    @patch('pages.monitor.st')
+    @patch("pages.monitor.st")
     def test_monitor_page_imports(self, mock_st):
         """Test that monitor page can be imported without errors."""
         try:
             from pages.monitor import render_monitor_page
+
             assert callable(render_monitor_page)
         except ImportError:
             pytest.skip("Monitor page not available for testing")
 
-    @patch('pages.reports.st')
+    @patch("pages.reports.st")
     def test_reports_page_imports(self, mock_st):
         """Test that reports page can be imported without errors."""
         try:
             from pages.reports import render_reports_page
+
             assert callable(render_reports_page)
         except ImportError:
             pytest.skip("Reports page not available for testing")
 
-    @patch('pages.config.st')
+    @patch("pages.config.st")
     def test_config_page_imports(self, mock_st):
         """Test that config page can be imported without errors."""
         try:
             from pages.config import render_config_page
+
             assert callable(render_config_page)
         except ImportError:
             pytest.skip("Config page not available for testing")
@@ -422,6 +430,7 @@ class TestEndToEndWorkflow:
         # Test that dashboard can start up without critical errors
         try:
             from app import render_page_content
+
             # If we can import without errors, basic structure is working
             assert callable(render_page_content)
         except ImportError as e:

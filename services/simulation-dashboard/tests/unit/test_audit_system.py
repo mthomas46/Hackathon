@@ -1,12 +1,16 @@
 """Unit tests for audit system functionality."""
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from pages.audit import (
-    get_audit_events, get_filtered_audit_events, render_audit_filters,
-    export_audit_events, generate_audit_report, get_compliance_data
+    export_audit_events,
+    generate_audit_report,
+    get_audit_events,
+    get_compliance_data,
+    get_filtered_audit_events,
+    render_audit_filters,
 )
 
 
@@ -60,7 +64,7 @@ class TestAuditEvents:
 
             # Should be ISO format string
             try:
-                datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             except ValueError:
                 pytest.fail(f"Invalid timestamp format: {timestamp}")
 
@@ -80,8 +84,8 @@ class TestAuditFiltering:
 
     def test_get_filtered_audit_events_no_filters(self):
         """Test filtering with no active filters."""
-        with patch('pages.audit.st') as mock_st:
-            mock_st.session_state = {'audit_filters': {}}
+        with patch("pages.audit.st") as mock_st:
+            mock_st.session_state = {"audit_filters": {}}
 
             filtered_events = get_filtered_audit_events()
             all_events = get_audit_events()
@@ -91,67 +95,51 @@ class TestAuditFiltering:
 
     def test_get_filtered_audit_events_by_event_type(self):
         """Test filtering by event type."""
-        with patch('pages.audit.st') as mock_st:
-            mock_st.session_state = {
-                'audit_filters': {
-                    'event_types': ['simulation_started']
-                }
-            }
+        with patch("pages.audit.st") as mock_st:
+            mock_st.session_state = {"audit_filters": {"event_types": ["simulation_started"]}}
 
             filtered_events = get_filtered_audit_events()
 
             # All filtered events should match the type
             for event in filtered_events:
-                assert event['event_type'] == 'simulation_started'
+                assert event["event_type"] == "simulation_started"
 
     def test_get_filtered_audit_events_by_user(self):
         """Test filtering by user."""
-        with patch('pages.audit.st') as mock_st:
-            mock_st.session_state = {
-                'audit_filters': {
-                    'users': ['admin']
-                }
-            }
+        with patch("pages.audit.st") as mock_st:
+            mock_st.session_state = {"audit_filters": {"users": ["admin"]}}
 
             filtered_events = get_filtered_audit_events()
 
             # All filtered events should be from the specified user
             for event in filtered_events:
-                assert event['user'] == 'admin'
+                assert event["user"] == "admin"
 
     def test_get_filtered_audit_events_by_severity(self):
         """Test filtering by severity level."""
-        with patch('pages.audit.st') as mock_st:
-            mock_st.session_state = {
-                'audit_filters': {
-                    'severities': ['high', 'critical']
-                }
-            }
+        with patch("pages.audit.st") as mock_st:
+            mock_st.session_state = {"audit_filters": {"severities": ["high", "critical"]}}
 
             filtered_events = get_filtered_audit_events()
 
             # All filtered events should have matching severity
             for event in filtered_events:
-                assert event['severity'] in ['high', 'critical']
+                assert event["severity"] in ["high", "critical"]
 
     def test_get_filtered_audit_events_date_range(self):
         """Test filtering by date range."""
         start_date = datetime.now() - timedelta(days=1)
         end_date = datetime.now() + timedelta(days=1)
 
-        with patch('pages.audit.st') as mock_st:
-            mock_st.session_state = {
-                'audit_filters': {
-                    'date_range': (start_date.date(), end_date.date())
-                }
-            }
+        with patch("pages.audit.st") as mock_st:
+            mock_st.session_state = {"audit_filters": {"date_range": (start_date.date(), end_date.date())}}
 
             filtered_events = get_filtered_audit_events()
 
             # Should not raise exceptions and return events
             assert isinstance(filtered_events, list)
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_render_audit_filters_components(self, mock_st):
         """Test that audit filter rendering calls correct components."""
         mock_st.markdown = Mock()
@@ -171,7 +159,7 @@ class TestAuditFiltering:
 class TestAuditExport:
     """Test cases for audit event export functionality."""
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_export_audit_events_csv(self, mock_st):
         """Test CSV export functionality."""
         mock_st.download_button = Mock()
@@ -183,7 +171,7 @@ class TestAuditExport:
                 "event_type": "simulation_started",
                 "timestamp": "2024-01-15T10:00:00Z",
                 "user": "admin",
-                "severity": "low"
+                "severity": "low",
             }
         ]
 
@@ -192,7 +180,7 @@ class TestAuditExport:
         mock_st.download_button.assert_called_once()
         mock_st.success.assert_called_once_with("✅ Audit events exported as CSV!")
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_export_audit_events_json(self, mock_st):
         """Test JSON export functionality."""
         mock_st.download_button = Mock()
@@ -204,7 +192,7 @@ class TestAuditExport:
                 "event_type": "simulation_started",
                 "timestamp": "2024-01-15T10:00:00Z",
                 "user": "admin",
-                "severity": "low"
+                "severity": "low",
             }
         ]
 
@@ -213,7 +201,7 @@ class TestAuditExport:
         mock_st.download_button.assert_called_once()
         mock_st.success.assert_called_once_with("✅ Audit events exported as JSON!")
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_export_audit_events_error_handling(self, mock_st):
         """Test error handling in export functionality."""
         mock_st.error = Mock()
@@ -228,7 +216,7 @@ class TestAuditExport:
 class TestAuditReporting:
     """Test cases for audit report generation."""
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_generate_audit_report_success(self, mock_st):
         """Test successful audit report generation."""
         mock_st.success = Mock()
@@ -240,7 +228,7 @@ class TestAuditReporting:
                 "event_type": "simulation_started",
                 "timestamp": "2024-01-15T10:00:00Z",
                 "user": "admin",
-                "severity": "low"
+                "severity": "low",
             }
         ]
 
@@ -249,7 +237,7 @@ class TestAuditReporting:
         mock_st.success.assert_called_once()
         mock_st.code.assert_called_once()
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_generate_audit_report_empty_events(self, mock_st):
         """Test audit report generation with empty events."""
         mock_st.success = Mock()
@@ -269,36 +257,36 @@ class TestComplianceData:
         """Test compliance data structure."""
         compliance_data = get_compliance_data()
 
-        required_keys = ['overall_score', 'policies_enforced', 'violations', 'last_audit', 'categories']
+        required_keys = ["overall_score", "policies_enforced", "violations", "last_audit", "categories"]
 
         for key in required_keys:
             assert key in compliance_data
 
         # Check score is reasonable
-        assert 0 <= compliance_data['overall_score'] <= 100
+        assert 0 <= compliance_data["overall_score"] <= 100
 
         # Check categories structure
-        categories = compliance_data['categories']
+        categories = compliance_data["categories"]
         assert isinstance(categories, dict)
         assert len(categories) > 0
 
     def test_compliance_categories_structure(self):
         """Test compliance categories data structure."""
         compliance_data = get_compliance_data()
-        categories = compliance_data['categories']
+        categories = compliance_data["categories"]
 
         for category_name, category_data in categories.items():
-            assert 'score' in category_data
-            assert 'violations' in category_data
-            assert isinstance(category_data['score'], (int, float))
-            assert isinstance(category_data['violations'], int)
+            assert "score" in category_data
+            assert "violations" in category_data
+            assert isinstance(category_data["score"], (int, float))
+            assert isinstance(category_data["violations"], int)
 
 
 @pytest.mark.unit
 class TestAuditPageRendering:
     """Test cases for audit page rendering."""
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_render_audit_log_basic_structure(self, mock_st):
         """Test basic audit log rendering structure."""
         mock_st.markdown = Mock()
@@ -308,6 +296,7 @@ class TestAuditPageRendering:
         mock_st.expander = Mock(return_value=Mock())
 
         from pages.audit import render_audit_log
+
         render_audit_log()
 
         # Verify basic structure components
@@ -316,7 +305,7 @@ class TestAuditPageRendering:
         mock_st.metric.assert_called()
         mock_st.tabs.assert_called()
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_render_event_analysis_structure(self, mock_st):
         """Test event analysis rendering structure."""
         mock_st.markdown = Mock()
@@ -324,6 +313,7 @@ class TestAuditPageRendering:
         mock_st.metric = Mock()
 
         from pages.audit import render_event_analysis
+
         render_event_analysis()
 
         # Verify analysis components
@@ -331,7 +321,7 @@ class TestAuditPageRendering:
         mock_st.columns.assert_called()
         mock_st.metric.assert_called()
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_render_compliance_reports_structure(self, mock_st):
         """Test compliance reports rendering structure."""
         mock_st.markdown = Mock()
@@ -340,6 +330,7 @@ class TestAuditPageRendering:
         mock_st.selectbox = Mock(return_value="GDPR Compliance Report")
 
         from pages.audit import render_compliance_reports
+
         render_compliance_reports()
 
         # Verify compliance components
@@ -347,7 +338,7 @@ class TestAuditPageRendering:
         mock_st.columns.assert_called()
         mock_st.metric.assert_called()
 
-    @patch('pages.audit.st')
+    @patch("pages.audit.st")
     def test_render_audit_configuration_structure(self, mock_st):
         """Test audit configuration rendering structure."""
         mock_st.markdown = Mock()
@@ -357,6 +348,7 @@ class TestAuditPageRendering:
         mock_st.button = Mock(return_value=False)
 
         from pages.audit import render_audit_configuration
+
         render_audit_configuration()
 
         # Verify configuration components
@@ -377,7 +369,7 @@ class TestAuditUtilityFunctions:
         events = [
             {"timestamp": "2024-01-15T10:00:00Z"},
             {"timestamp": "2024-01-14T08:00:00Z"},
-            {"timestamp": "2024-01-16T12:00:00Z"}
+            {"timestamp": "2024-01-16T12:00:00Z"},
         ]
 
         earliest_date = get_earliest_event_date(events)
@@ -394,10 +386,7 @@ class TestAuditUtilityFunctions:
         """Test handling of invalid timestamps."""
         from pages.audit import get_earliest_event_date
 
-        events = [
-            {"timestamp": "invalid"},
-            {"timestamp": "2024-01-15T10:00:00Z"}
-        ]
+        events = [{"timestamp": "invalid"}, {"timestamp": "2024-01-15T10:00:00Z"}]
 
         earliest_date = get_earliest_event_date(events)
         assert earliest_date == datetime(2024, 1, 15).date()
@@ -416,7 +405,7 @@ class TestAuditEventAnalysis:
         # Calculate distribution manually
         event_counts = {}
         for event in events:
-            event_type = event.get('event_type', 'Unknown')
+            event_type = event.get("event_type", "Unknown")
             event_counts[event_type] = event_counts.get(event_type, 0) + 1
 
         # Verify we have some distribution
@@ -432,7 +421,7 @@ class TestAuditEventAnalysis:
         # Calculate user activity manually
         user_activity = {}
         for event in events:
-            user = event.get('user', 'unknown')
+            user = event.get("user", "unknown")
             user_activity[user] = user_activity.get(user, 0) + 1
 
         # Verify we have user activity data
