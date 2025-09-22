@@ -1,23 +1,25 @@
 """Unit tests for prompt tuning helper functions."""
 
-import pytest
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+import sys
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from pages.prompt_browser import (
-    extract_variables_from_prompt,
-    render_variable_manager,
-    highlight_variables_in_text,
-    estimate_token_count,
-    format_prompt_content,
     analyze_prompt_content,
+    analyze_version_differences,
     apply_ai_tuning,
-    run_prompt_performance_test,
     display_performance_results,
+    estimate_token_count,
+    extract_variables_from_prompt,
+    format_prompt_content,
     generate_mock_version_history,
     get_mock_version_content,
-    analyze_version_differences
+    highlight_variables_in_text,
+    render_variable_manager,
+    run_prompt_performance_test,
 )
 
 

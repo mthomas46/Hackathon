@@ -3,8 +3,9 @@
 This module provides the sidebar navigation component following the simulation-dashboard pattern.
 """
 
+from typing import Any, Dict
+
 import streamlit as st
-from typing import Dict, Any
 
 
 def render_sidebar(pages: Dict[str, Dict[str, Any]]) -> str:
@@ -28,17 +29,14 @@ def render_sidebar(pages: Dict[str, Dict[str, Any]]) -> str:
     st.sidebar.markdown("### 🧭 Navigation")
 
     # Get current page from session state
-    current_page = st.session_state.get('current_page', 'overview')
+    current_page = st.session_state.get("current_page", "overview")
 
     # Create navigation buttons
     selected_page = current_page
 
     for page_key, page_info in pages.items():
         if st.sidebar.button(
-            page_info["name"],
-            key=f"nav_{page_key}",
-            help=page_info["description"],
-            use_container_width=True
+            page_info["name"], key=f"nav_{page_key}", help=page_info["description"], use_container_width=True
         ):
             selected_page = page_key
             st.session_state.current_page = page_key
@@ -62,7 +60,7 @@ def render_service_health_status():
     services = {
         "Memory Agent": {"status": "unknown", "url": "http://localhost:5040/health"},
         "Prompt Store": {"status": "unknown", "url": "http://localhost:8080/health"},
-        "Document Store": {"status": "unknown", "url": "http://localhost:8081/health"}
+        "Document Store": {"status": "unknown", "url": "http://localhost:8081/health"},
     }
 
     for service_name, service_info in services.items():

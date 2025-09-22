@@ -36,4 +36,6 @@ def render_cross_service_page():
     st.markdown("---")
     st.markdown("#### 📊 Relationship Graph")
     st.info("Interactive relationship visualization coming soon!")
-    st.image("https://via.placeholder.com/800x400/4CAF50/white?text=Relationship+Graph+Coming+Soon", use_column_width=True)
+    st.image(
+        "https://via.placeholder.com/800x400/4CAF50/white?text=Relationship+Graph+Coming+Soon", use_column_width=True
+    )

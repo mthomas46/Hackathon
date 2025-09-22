@@ -20,32 +20,35 @@ Technology Stack (inspired by simulation-dashboard):
 - Real-time updates and caching
 """
 
-import streamlit as st
-import sys
-from pathlib import Path
-from typing import Dict, Any, Optional
 import asyncio
 import logging
+import sys
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import streamlit as st
 
 # Add current directory to path for imports
 sys.path.append(str(Path(__file__).parent))
 
+from components.footer import render_footer
+from components.header import render_header
+from components.sidebar import render_sidebar
+
 # Import local modules
-from infrastructure.config.config import get_config, DashboardSettings
-from infrastructure.logging.logger import setup_logging, get_logger
+from infrastructure.config.config import DashboardSettings, get_config
+from infrastructure.logging.logger import get_logger, setup_logging
+from pages.bulk_operations import render_bulk_operations_page
+from pages.cross_service import render_cross_service_page
+from pages.document_browser import render_document_browser_page
+from pages.memory_browser import render_memory_browser_page
+from pages.overview import render_overview_page
+from pages.prompt_browser import render_prompt_browser_page
+from pages.search import render_search_page
+
+from services.clients.document_client import DocumentStoreClient
 from services.clients.memory_client import MemoryAgentClient
 from services.clients.prompt_client import PromptStoreClient
-from services.clients.document_client import DocumentStoreClient
-from components.sidebar import render_sidebar
-from components.header import render_header
-from components.footer import render_footer
-from pages.overview import render_overview_page
-from pages.memory_browser import render_memory_browser_page
-from pages.prompt_browser import render_prompt_browser_page
-from pages.document_browser import render_document_browser_page
-from pages.cross_service import render_cross_service_page
-from pages.search import render_search_page
-from pages.bulk_operations import render_bulk_operations_page
 
 # Configure page
 st.set_page_config(
@@ -54,9 +57,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'Get Help': 'https://github.com/your-org/data-services-dashboard',
-        'Report a bug': 'https://github.com/your-org/data-services-dashboard/issues',
-        'About': '''
+        "Get Help": "https://github.com/your-org/data-services-dashboard",
+        "Report a bug": "https://github.com/your-org/data-services-dashboard/issues",
+        "About": """
         ## Data Services Dashboard
 
         A unified interface for managing Memory Agent, Prompt Store,
@@ -64,8 +67,8 @@ st.set_page_config(
 
         **Version:** 1.0.0
         **Environment:** Development
-        '''
-    }
+        """,
+    },
 )
 
 # Load configuration
@@ -75,87 +78,93 @@ config: DashboardSettings = get_config()
 setup_logging(config.logging)
 logger = get_logger(__name__)
 
+
 # Initialize service clients
 @st.cache_resource
 def get_memory_client() -> MemoryAgentClient:
     """Get cached memory agent client instance."""
     return MemoryAgentClient(config.memory_service.base_url)
 
+
 @st.cache_resource
 def get_prompt_client() -> PromptStoreClient:
     """Get cached prompt store client instance."""
     return PromptStoreClient(config.prompt_service.base_url)
+
 
 @st.cache_resource
 def get_document_client() -> DocumentStoreClient:
     """Get cached document store client instance."""
     return DocumentStoreClient(config.document_service.base_url)
 
+
 # Initialize session state
 def initialize_session_state():
     """Initialize Streamlit session state."""
-    if 'memory_client' not in st.session_state:
+    if "memory_client" not in st.session_state:
         st.session_state.memory_client = get_memory_client()
 
-    if 'prompt_client' not in st.session_state:
+    if "prompt_client" not in st.session_state:
         st.session_state.prompt_client = get_prompt_client()
 
-    if 'document_client' not in st.session_state:
+    if "document_client" not in st.session_state:
         st.session_state.document_client = get_document_client()
 
-    if 'current_page' not in st.session_state:
+    if "current_page" not in st.session_state:
         st.session_state.current_page = "overview"
 
-    if 'selected_service' not in st.session_state:
+    if "selected_service" not in st.session_state:
         st.session_state.selected_service = None
 
-    if 'theme' not in st.session_state:
+    if "theme" not in st.session_state:
         st.session_state.theme = config.dashboard.theme
 
-    if 'search_cache' not in st.session_state:
+    if "search_cache" not in st.session_state:
         st.session_state.search_cache = {}
 
-    if 'bulk_operations' not in st.session_state:
+    if "bulk_operations" not in st.session_state:
         st.session_state.bulk_operations = []
+
 
 # Page routing
 PAGES = {
     "overview": {
         "name": "🏠 Overview",
         "function": render_overview_page,
-        "description": "Dashboard overview with service health and key metrics"
+        "description": "Dashboard overview with service health and key metrics",
     },
     "memory_browser": {
         "name": "🧠 Memory Agent",
         "function": render_memory_browser_page,
-        "description": "Browse and manage conversation memory and operational context"
+        "description": "Browse and manage conversation memory and operational context",
     },
     "prompt_browser": {
         "name": "📝 Prompt Store",
         "function": render_prompt_browser_page,
-        "description": "Browse, create, and manage prompts by category and tags"
+        "description": "Browse, create, and manage prompts by category and tags",
     },
     "document_browser": {
         "name": "📄 Document Store",
         "function": render_document_browser_page,
-        "description": "Upload, manage, and search documents with advanced filters"
+        "description": "Upload, manage, and search documents with advanced filters",
     },
     "cross_service": {
         "name": "🔗 Cross-Service",
         "function": render_cross_service_page,
-        "description": "Link documents to prompts, memory to prompts, and view relationships"
+        "description": "Link documents to prompts, memory to prompts, and view relationships",
     },
     "search": {
         "name": "🔍 Advanced Search",
         "function": render_search_page,
-        "description": "Unified search across all services with advanced filters"
+        "description": "Unified search across all services with advanced filters",
     },
     "bulk_operations": {
         "name": "⚡ Bulk Operations",
         "function": render_bulk_operations_page,
-        "description": "Bulk import/export, batch operations, and data management"
-    }
+        "description": "Bulk import/export, batch operations, and data management",
+    },
 }
+
 
 def render_page_content(page_key: str):
     """Render the content for the selected page."""
@@ -171,6 +180,7 @@ def render_page_content(page_key: str):
         st.error(f"Error loading page: {str(e)}")
         with st.expander("Error Details"):
             st.code(str(e))
+
 
 def main():
     """Main application entry point."""
@@ -217,13 +227,14 @@ def main():
         if st.sidebar.button("🏠 Overview", key="fallback_overview"):
             st.rerun()
 
+
 if __name__ == "__main__":
     # Log startup
     logger.info(
         "Starting Data Services Dashboard Service",
         version=config.service_version,
         environment=config.environment,
-        port=config.port
+        port=config.port,
     )
 
     # Print startup information

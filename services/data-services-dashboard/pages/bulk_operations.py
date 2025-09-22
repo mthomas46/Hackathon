@@ -55,7 +55,7 @@ def render_bulk_operations_page():
     jobs_data = [
         {"id": "EXP-001", "type": "Export", "status": "Running", "progress": 67, "items": "1,245/2,000"},
         {"id": "IMP-001", "type": "Import", "status": "Completed", "progress": 100, "items": "500/500"},
-        {"id": "TAG-001", "type": "Tagging", "status": "Queued", "progress": 0, "items": "0/1,000"}
+        {"id": "TAG-001", "type": "Tagging", "status": "Queued", "progress": 0, "items": "0/1,000"},
     ]
 
     for job in jobs_data:
@@ -83,11 +83,7 @@ def render_bulk_operations_page():
 
     with col1:
         st.markdown("**Upload Files:**")
-        uploaded_files = st.file_uploader(
-            "Choose files to upload",
-            accept_multiple_files=True,
-            key="bulk_file_upload"
-        )
+        uploaded_files = st.file_uploader("Choose files to upload", accept_multiple_files=True, key="bulk_file_upload")
         if uploaded_files:
             st.success(f"✅ {len(uploaded_files)} files selected for upload")
 

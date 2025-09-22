@@ -3,12 +3,13 @@
 This module provides a comprehensive interface for managing documents in the Document Store service.
 """
 
-import streamlit as st
 import asyncio
 import json
 import re
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
+import streamlit as st
 
 
 def render_document_browser_page():
@@ -17,15 +18,15 @@ def render_document_browser_page():
     st.markdown("Upload, manage, and search documents with advanced filters.")
 
     # Get document client
-    document_client = st.session_state.get('document_client')
+    document_client = st.session_state.get("document_client")
     if not document_client:
         st.error("❌ Document Store service not available")
         return
 
     # Create tabs for different document operations
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📋 Browse Documents", "📤 Upload Document", "🔍 Advanced Search", "📊 Analytics", "🔗 Relationships"
-    ])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        ["📋 Browse Documents", "📤 Upload Document", "🔍 Advanced Search", "📊 Analytics", "🔗 Relationships"]
+    )
 
     with tab1:
         render_document_browser(document_client)
@@ -51,24 +52,14 @@ def render_document_browser(document_client):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        search_query = st.text_input(
-            "Search",
-            placeholder="Search documents...",
-            key="doc_search_query"
-        )
+        search_query = st.text_input("Search", placeholder="Search documents...", key="doc_search_query")
 
     with col2:
-        sort_by = st.selectbox(
-            "Sort by",
-            ["Newest First", "Oldest First", "Title", "Size"],
-            key="doc_sort"
-        )
+        sort_by = st.selectbox("Sort by", ["Newest First", "Oldest First", "Title", "Size"], key="doc_sort")
 
     with col3:
         content_type_filter = st.selectbox(
-            "Content Type",
-            ["All Types", "text", "markdown", "json", "html", "other"],
-            key="doc_content_type"
+            "Content Type", ["All Types", "text", "markdown", "json", "html", "other"], key="doc_content_type"
         )
 
     with col4:
@@ -82,11 +73,11 @@ def render_document_browser(document_client):
                 if content_type_filter != "All Types":
                     filters["content_type"] = content_type_filter
 
-                result = asyncio.run(document_client.list_documents(
-                    limit=limit,
-                    search=search_query if search_query.strip() else None,
-                    **filters
-                ))
+                result = asyncio.run(
+                    document_client.list_documents(
+                        limit=limit, search=search_query if search_query.strip() else None, **filters
+                    )
+                )
 
                 if "items" in result and result["items"]:
                     render_documents_table(result["items"], document_client)
@@ -100,7 +91,9 @@ def render_document_browser(document_client):
 
             except Exception as e:
                 st.error(f"Error loading documents: {e}")
-                st.info("💡 The document store might need database initialization or the API structure might be different.")
+                st.info(
+                    "💡 The document store might need database initialization or the API structure might be different."
+                )
 
     # Quick stats
     st.markdown("---")
@@ -130,15 +123,17 @@ def render_documents_table(documents: List[Dict[str, Any]], document_client):
         created_at = doc.get("created_at", "")
         metadata = doc.get("metadata", {})
 
-        df_data.append({
-            "ID": doc_id[:8] + "..." if len(doc_id) > 8 else doc_id,
-            "Title": title[:30] + "..." if len(title) > 30 else title,
-            "Type": content_type,
-            "Size": f"{size:,}" if isinstance(size, int) else str(size),
-            "Tags": ", ".join(tags[:2]) + ("..." if len(tags) > 2 else ""),
-            "Created": created_at[:19] if created_at else "",
-            "Metadata Keys": len(metadata) if metadata else 0
-        })
+        df_data.append(
+            {
+                "ID": doc_id[:8] + "..." if len(doc_id) > 8 else doc_id,
+                "Title": title[:30] + "..." if len(title) > 30 else title,
+                "Type": content_type,
+                "Size": f"{size:,}" if isinstance(size, int) else str(size),
+                "Tags": ", ".join(tags[:2]) + ("..." if len(tags) > 2 else ""),
+                "Created": created_at[:19] if created_at else "",
+                "Metadata Keys": len(metadata) if metadata else 0,
+            }
+        )
 
     df = pd.DataFrame(df_data)
 
@@ -150,8 +145,11 @@ def render_documents_table(documents: List[Dict[str, Any]], document_client):
     selected_id = st.selectbox(
         "Select document for details",
         [doc.get("id", "") for doc in documents],
-        format_func=lambda x: next((doc.get("title", doc.get("id", "")[:20]) for doc in documents if doc.get("id") == x), x)[:40] + "...",
-        key="doc_detail_select"
+        format_func=lambda x: next(
+            (doc.get("title", doc.get("id", "")[:20]) for doc in documents if doc.get("id") == x), x
+        )[:40]
+        + "...",
+        key="doc_detail_select",
     )
 
     if selected_id:
@@ -188,10 +186,7 @@ def render_document_details(document: Dict[str, Any], document_client):
                 if len(content) > 10000:
                     st.text_area("Content (truncated)", content[:10000] + "...", height=300)
                     st.download_button(
-                        "📥 Download Full Content",
-                        content,
-                        file_name=f"document_{doc_id}.txt",
-                        mime="text/plain"
+                        "📥 Download Full Content", content, file_name=f"document_{doc_id}.txt", mime="text/plain"
                     )
                 else:
                     st.text_area("Content", content, height=300)
@@ -248,31 +243,23 @@ def render_document_upload(document_client):
         with col1:
             title = st.text_input("Document Title*", key="upload_title")
             content_type = st.selectbox(
-                "Content Type",
-                ["text", "markdown", "json", "html", "code", "other"],
-                key="upload_content_type"
+                "Content Type", ["text", "markdown", "json", "html", "code", "other"], key="upload_content_type"
             )
 
         with col2:
-            tags_input = st.text_input(
-                "Tags (comma-separated)",
-                placeholder="tag1, tag2, tag3",
-                key="upload_tags"
-            )
+            tags_input = st.text_input("Tags (comma-separated)", placeholder="tag1, tag2, tag3", key="upload_tags")
 
         content = st.text_area(
             "Document Content*",
             placeholder="Enter or paste your document content here...",
             height=300,
-            key="upload_content"
+            key="upload_content",
         )
 
         # File upload alternative
         st.markdown("**Or upload a file:**")
         uploaded_file = st.file_uploader(
-            "Choose a file",
-            type=["txt", "md", "json", "html", "py", "js", "css"],
-            key="file_upload"
+            "Choose a file", type=["txt", "md", "json", "html", "py", "js", "css"], key="file_upload"
         )
 
         submitted = st.form_submit_button("📤 Upload Document")
@@ -301,10 +288,7 @@ def render_document_upload(document_client):
                     "title": final_title,
                     "content": final_content,
                     "content_type": content_type,
-                    "metadata": {
-                        "uploaded_via": "dashboard",
-                        "tags": tags
-                    }
+                    "metadata": {"uploaded_via": "dashboard", "tags": tags},
                 }
 
                 # Upload document
@@ -332,31 +316,20 @@ def render_document_search(document_client):
 
     with col1:
         search_query = st.text_area(
-            "Search Query",
-            placeholder="Enter your search query...",
-            height=100,
-            key="advanced_doc_search"
+            "Search Query", placeholder="Enter your search query...", height=100, key="advanced_doc_search"
         )
 
         # Advanced filters
         with st.expander("🎛️ Advanced Filters"):
             filter_tags = st.multiselect(
-                "Tags",
-                ["test", "performance", "refinement", "session", "batch"],
-                key="search_tags"
+                "Tags", ["test", "performance", "refinement", "session", "batch"], key="search_tags"
             )
 
             filter_content_types = st.multiselect(
-                "Content Types",
-                ["text", "markdown", "json", "html"],
-                key="search_content_types"
+                "Content Types", ["text", "markdown", "json", "html"], key="search_content_types"
             )
 
-            date_range = st.date_input(
-                "Date Range",
-                [],
-                key="search_date_range"
-            )
+            date_range = st.date_input("Date Range", [], key="search_date_range")
 
             min_size = st.number_input("Minimum Size (bytes)", min_value=0, key="min_size")
             max_size = st.number_input("Maximum Size (bytes)", min_value=0, value=1000000, key="max_size")
@@ -364,9 +337,7 @@ def render_document_search(document_client):
     with col2:
         st.markdown("**Search Options:**")
         search_mode = st.selectbox(
-            "Search Mode",
-            ["Content Only", "Metadata Only", "Content + Metadata"],
-            key="search_mode"
+            "Search Mode", ["Content Only", "Metadata Only", "Content + Metadata"], key="search_mode"
         )
 
         max_results = st.slider("Max Results", 10, 100, 50, key="search_max_results")
@@ -387,10 +358,7 @@ def render_document_search(document_client):
                         if max_size < 1000000:
                             filters["max_size"] = max_size
 
-                        result = asyncio.run(document_client.search_documents(
-                            query=search_query,
-                            **filters
-                        ))
+                        result = asyncio.run(document_client.search_documents(query=search_query, **filters))
 
                         if result.get("success") and result.get("results"):
                             documents = result["results"]
@@ -444,19 +412,13 @@ def render_analytics_display(analytics: Dict[str, Any]):
 
     # Content type distribution (mock)
     st.markdown("#### 📊 Content Type Distribution")
-    content_types = pd.DataFrame({
-        'Type': ['Text', 'Markdown', 'JSON', 'HTML', 'Other'],
-        'Count': [15, 12, 6, 2, 1]
-    })
-    st.bar_chart(content_types.set_index('Type'))
+    content_types = pd.DataFrame({"Type": ["Text", "Markdown", "JSON", "HTML", "Other"], "Count": [15, 12, 6, 2, 1]})
+    st.bar_chart(content_types.set_index("Type"))
 
     # Upload activity (mock)
     st.markdown("#### 📈 Upload Activity (Last 7 Days)")
-    activity = pd.DataFrame({
-        'Date': pd.date_range(start='2024-01-01', periods=7),
-        'Uploads': [3, 5, 2, 8, 4, 6, 7]
-    })
-    st.line_chart(activity.set_index('Date'))
+    activity = pd.DataFrame({"Date": pd.date_range(start="2024-01-01", periods=7), "Uploads": [3, 5, 2, 8, 4, 6, 7]})
+    st.line_chart(activity.set_index("Date"))
 
 
 def render_document_relationships(document_client):
@@ -468,31 +430,23 @@ def render_document_relationships(document_client):
     with col1:
         st.markdown("**Create Relationship**")
 
-        source_doc = st.text_input(
-            "Source Document ID",
-            placeholder="Enter source document ID",
-            key="source_doc_id"
-        )
+        source_doc = st.text_input("Source Document ID", placeholder="Enter source document ID", key="source_doc_id")
 
-        target_doc = st.text_input(
-            "Target Document ID",
-            placeholder="Enter target document ID",
-            key="target_doc_id"
-        )
+        target_doc = st.text_input("Target Document ID", placeholder="Enter target document ID", key="target_doc_id")
 
         relationship_type = st.selectbox(
             "Relationship Type",
             ["related_to", "parent_of", "child_of", "references", "supersedes"],
-            key="relationship_type"
+            key="relationship_type",
         )
 
         if st.button("🔗 Create Relationship", key="create_relationship"):
             if source_doc and target_doc:
                 with st.spinner("Creating relationship..."):
                     try:
-                        result = asyncio.run(document_client.add_document_relationship(
-                            source_doc, target_doc, relationship_type
-                        ))
+                        result = asyncio.run(
+                            document_client.add_document_relationship(source_doc, target_doc, relationship_type)
+                        )
 
                         if result.get("success"):
                             st.success("✅ Relationship created successfully!")
@@ -507,9 +461,7 @@ def render_document_relationships(document_client):
         st.markdown("**View Relationships**")
 
         view_doc_id = st.text_input(
-            "Document ID to View",
-            placeholder="Enter document ID",
-            key="view_relationships_doc_id"
+            "Document ID to View", placeholder="Enter document ID", key="view_relationships_doc_id"
         )
 
         if st.button("👁️ View Relationships", key="view_relationships"):
@@ -537,6 +489,7 @@ def render_document_relationships(document_client):
 # ============================================================================
 # ENHANCED DOCUMENT VIEWING FUNCTIONS
 # ============================================================================
+
 
 def render_enhanced_document_viewer(document: Dict[str, Any]):
     """Render enhanced document viewer with syntax highlighting and advanced features."""
@@ -572,7 +525,7 @@ def render_content_viewer(content: str, content_type: str, doc_id: str):
     view_mode = st.selectbox(
         "View Mode",
         ["Auto Detect", "Plain Text", "Markdown", "JSON", "Code (Python)", "Code (JavaScript)", "Code (SQL)", "HTML"],
-        key=f"view_mode_{doc_id}"
+        key=f"view_mode_{doc_id}",
     )
 
     # Determine syntax highlighting
@@ -583,7 +536,7 @@ def render_content_viewer(content: str, content_type: str, doc_id: str):
             syntax_lang = "json"
         elif content.startswith("```") and "```" in content:
             # Extract language from code blocks
-            first_line = content.split('\n')[0]
+            first_line = content.split("\n")[0]
             if first_line.startswith("```"):
                 syntax_lang = first_line[3:].strip() or "text"
             else:
@@ -604,7 +557,7 @@ def render_content_viewer(content: str, content_type: str, doc_id: str):
             "Code (Python)": "python",
             "Code (JavaScript)": "javascript",
             "Code (SQL)": "sql",
-            "HTML": "html"
+            "HTML": "html",
         }
         syntax_lang = lang_map.get(view_mode, "text")
 
@@ -617,7 +570,7 @@ def render_content_viewer(content: str, content_type: str, doc_id: str):
             max_value=min(content_length, 50000),
             value=10000,
             step=1000,
-            key=f"content_limit_{doc_id}"
+            key=f"content_limit_{doc_id}",
         )
         display_content = content[:max_chars] + "\n\n[... content truncated ...]"
         st.info(f"Showing first {max_chars} of {content_length} characters")
@@ -642,22 +595,18 @@ def render_content_viewer(content: str, content_type: str, doc_id: str):
     with col1:
         st.metric("Total Characters", content_length)
     with col2:
-        st.metric("Lines", len(content.split('\n')))
+        st.metric("Lines", len(content.split("\n")))
     with col3:
         st.metric("Words", len(content.split()))
     with col4:
-        st.metric("Paragraphs", len([p for p in content.split('\n\n') if p.strip()]))
+        st.metric("Paragraphs", len([p for p in content.split("\n\n") if p.strip()]))
 
 
 def render_content_search(content: str, doc_id: str):
     """Render content search functionality within the document."""
     st.markdown("**🔍 Search Within Document**")
 
-    search_term = st.text_input(
-        "Search Term",
-        placeholder="Enter text to find...",
-        key=f"content_search_{doc_id}"
-    )
+    search_term = st.text_input("Search Term", placeholder="Enter text to find...", key=f"content_search_{doc_id}")
 
     case_sensitive = st.checkbox("Case Sensitive", key=f"case_sensitive_{doc_id}")
     whole_words = st.checkbox("Whole Words Only", key=f"whole_words_{doc_id}")
@@ -665,7 +614,7 @@ def render_content_search(content: str, doc_id: str):
     if search_term:
         # Perform search
         flags = 0 if case_sensitive else re.IGNORECASE
-        pattern = r'\b' + re.escape(search_term) + r'\b' if whole_words else re.escape(search_term)
+        pattern = r"\b" + re.escape(search_term) + r"\b" if whole_words else re.escape(search_term)
 
         try:
             matches = list(re.finditer(pattern, content, flags))
@@ -681,12 +630,9 @@ def render_content_search(content: str, doc_id: str):
                     context = content[start:end]
 
                     # Highlight the match
-                    highlighted_context = context.replace(
-                        match.group(),
-                        f"**{match.group()}**"
-                    )
+                    highlighted_context = context.replace(match.group(), f"**{match.group()}**")
 
-                    with st.expander(f"Match #{i+1} (position {match.start()})", expanded=i<3):
+                    with st.expander(f"Match #{i+1} (position {match.start()})", expanded=i < 3):
                         st.markdown(highlighted_context)
 
                 if match_count > 20:
@@ -706,10 +652,10 @@ def render_content_search(content: str, doc_id: str):
                         hist_data[bin_idx] += 1
 
                     import pandas as pd
-                    df_hist = pd.DataFrame({
-                        "Section": [f"{i*bin_size}-{(i+1)*bin_size}" for i in range(bins)],
-                        "Matches": hist_data
-                    })
+
+                    df_hist = pd.DataFrame(
+                        {"Section": [f"{i*bin_size}-{(i+1)*bin_size}" for i in range(bins)], "Matches": hist_data}
+                    )
                     st.bar_chart(df_hist.set_index("Section"))
 
             else:
@@ -788,7 +734,7 @@ def render_content_export(content: str, document: Dict[str, Any]):
         export_format = st.selectbox(
             "Export Format",
             ["Original", "Plain Text", "Markdown", "PDF", "HTML"],
-            key=f"export_format_{document.get('id', '')}"
+            key=f"export_format_{document.get('id', '')}",
         )
 
         include_metadata = st.checkbox("Include Metadata", value=True, key=f"include_meta_{document.get('id', '')}")
@@ -797,7 +743,7 @@ def render_content_export(content: str, document: Dict[str, Any]):
         export_filename = st.text_input(
             "Filename",
             value=f"document_{document.get('id', 'unknown')}",
-            key=f"export_filename_{document.get('id', '')}"
+            key=f"export_filename_{document.get('id', '')}",
         )
 
         if "." not in export_filename and export_format != "Original":
@@ -823,7 +769,7 @@ def render_content_export(content: str, document: Dict[str, Any]):
                 html_content,
                 file_name=export_filename,
                 mime="text/html",
-                key=f"download_html_{document.get('id', '')}"
+                key=f"download_html_{document.get('id', '')}",
             )
         else:
             st.download_button(
@@ -831,7 +777,7 @@ def render_content_export(content: str, document: Dict[str, Any]):
                 export_content,
                 file_name=export_filename,
                 mime="text/plain",
-                key=f"download_file_{document.get('id', '')}"
+                key=f"download_file_{document.get('id', '')}",
             )
 
     # Quick actions
@@ -859,45 +805,45 @@ def render_content_export(content: str, document: Dict[str, Any]):
 # CONTENT ANALYSIS HELPER FUNCTIONS
 # ============================================================================
 
+
 def analyze_document_content(content: str, content_type: str) -> Dict[str, Any]:
     """Analyze document content and return metrics and insights."""
-    analysis = {
-        "metrics": {},
-        "insights": [],
-        "quality": [],
-        "structure": {}
-    }
+    analysis = {"metrics": {}, "insights": [], "quality": [], "structure": {}}
 
     # Basic metrics
     analysis["metrics"]["Characters"] = len(content)
     analysis["metrics"]["Words"] = len(content.split())
-    analysis["metrics"]["Sentences"] = len([s for s in content.split('.') if s.strip()])
-    analysis["metrics"]["Lines"] = len(content.split('\n'))
-    analysis["metrics"]["Paragraphs"] = len([p for p in content.split('\n\n') if p.strip()])
+    analysis["metrics"]["Sentences"] = len([s for s in content.split(".") if s.strip()])
+    analysis["metrics"]["Lines"] = len(content.split("\n"))
+    analysis["metrics"]["Paragraphs"] = len([p for p in content.split("\n\n") if p.strip()])
 
     # Content type specific analysis
     if content_type == "markdown":
         analysis["structure"]["headings"] = extract_markdown_headings(content)
-        analysis["structure"]["code_blocks"] = len(re.findall(r'```.*?```', content, re.DOTALL))
-        analysis["structure"]["lists"] = len(re.findall(r'^[-*+]\s', content, re.MULTILINE))
+        analysis["structure"]["code_blocks"] = len(re.findall(r"```.*?```", content, re.DOTALL))
+        analysis["structure"]["lists"] = len(re.findall(r"^[-*+]\s", content, re.MULTILINE))
 
     # Quality indicators
     quality_indicators = [
         {
             "name": "Readability",
-            "score": min(100, max(0, 100 - (analysis["metrics"]["Words"] / max(analysis["metrics"]["Sentences"], 1) - 15) * 5)),
-            "level": "Good" if analysis["metrics"]["Words"] / max(analysis["metrics"]["Sentences"], 1) < 25 else "Needs Work"
+            "score": min(
+                100, max(0, 100 - (analysis["metrics"]["Words"] / max(analysis["metrics"]["Sentences"], 1) - 15) * 5)
+            ),
+            "level": (
+                "Good" if analysis["metrics"]["Words"] / max(analysis["metrics"]["Sentences"], 1) < 25 else "Needs Work"
+            ),
         },
         {
             "name": "Structure",
             "score": 80 if analysis["metrics"]["Paragraphs"] > 3 else 60,
-            "level": "Good" if analysis["metrics"]["Paragraphs"] > 3 else "Basic"
+            "level": "Good" if analysis["metrics"]["Paragraphs"] > 3 else "Basic",
         },
         {
             "name": "Conciseness",
             "score": max(0, 100 - (len(content) - 1000) // 100),
-            "level": "Excellent" if len(content) < 2000 else "Good" if len(content) < 5000 else "Verbose"
-        }
+            "level": "Excellent" if len(content) < 2000 else "Good" if len(content) < 5000 else "Verbose",
+        },
     ]
 
     analysis["quality"] = quality_indicators
@@ -907,7 +853,7 @@ def analyze_document_content(content: str, content_type: str) -> Dict[str, Any]:
         analysis["insights"].append("Document is quite long - consider breaking into sections")
     if analysis["metrics"]["Sentences"] < 5:
         analysis["insights"].append("Document appears to be very concise or fragmented")
-    if content.count('?') > content.count('.') * 0.5:
+    if content.count("?") > content.count(".") * 0.5:
         analysis["insights"].append("Document contains many questions - appears to be Q&A format")
     if any(keyword in content.lower() for keyword in ["error", "exception", "failed", "issue"]):
         analysis["insights"].append("Document contains technical issue references")
@@ -918,11 +864,11 @@ def analyze_document_content(content: str, content_type: str) -> Dict[str, Any]:
 def extract_markdown_headings(content: str) -> List[str]:
     """Extract markdown headings from content."""
     headings = []
-    lines = content.split('\n')
+    lines = content.split("\n")
     for line in lines:
-        if line.startswith('#'):
+        if line.startswith("#"):
             # Remove # symbols and extra spaces
-            heading_text = re.sub(r'^#+\s*', '', line).strip()
+            heading_text = re.sub(r"^#+\s*", "", line).strip()
             if heading_text:
                 headings.append(heading_text)
     return headings
@@ -935,22 +881,36 @@ def generate_content_summary(content: str) -> str:
         return content
 
     # Simple extractive summary - first and last sentences
-    sentences = [s.strip() for s in content.split('.') if s.strip()]
+    sentences = [s.strip() for s in content.split(".") if s.strip()]
     if len(sentences) >= 2:
         return f"{sentences[0]}. {sentences[-1]}."
     else:
-        return ' '.join(words[:30]) + "..."
+        return " ".join(words[:30]) + "..."
 
 
 def extract_keywords(content: str) -> List[str]:
     """Extract potential keywords from content."""
     # Simple keyword extraction - words that appear multiple times
-    words = re.findall(r'\b[a-zA-Z]{4,}\b', content.lower())
+    words = re.findall(r"\b[a-zA-Z]{4,}\b", content.lower())
     word_counts = {}
 
     # Count word frequencies
     for word in words:
-        if word not in ['that', 'this', 'with', 'from', 'they', 'have', 'been', 'were', 'which', 'their', 'there', 'these', 'those']:
+        if word not in [
+            "that",
+            "this",
+            "with",
+            "from",
+            "they",
+            "have",
+            "been",
+            "were",
+            "which",
+            "their",
+            "there",
+            "these",
+            "those",
+        ]:
             word_counts[word] = word_counts.get(word, 0) + 1
 
     # Return top keywords

@@ -22,10 +22,7 @@ def render_search_page():
 
     with col1:
         search_query = st.text_area(
-            "Search Query",
-            placeholder="Enter your search query...",
-            height=100,
-            key="advanced_search_query"
+            "Search Query", placeholder="Enter your search query...", height=100, key="advanced_search_query"
         )
 
     with col2:
@@ -34,14 +31,10 @@ def render_search_page():
             "Search In",
             ["Memory Agent", "Prompt Store", "Document Store"],
             default=["Memory Agent", "Prompt Store", "Document Store"],
-            key="search_services"
+            key="search_services",
         )
 
-        search_type = st.selectbox(
-            "Search Type",
-            ["Keyword", "Semantic", "Exact Match", "Regex"],
-            key="search_type"
-        )
+        search_type = st.selectbox("Search Type", ["Keyword", "Semantic", "Exact Match", "Regex"], key="search_type")
 
     # Filters section
     st.markdown("---")
@@ -67,8 +60,10 @@ def render_search_page():
         st.info("Advanced search execution coming soon!")
         st.markdown("**Mock Results:**")
         st.success("Found 156 results across 3 services")
-        st.json({
-            "memory_agent": {"results": 23, "top_match": "Sample memory item"},
-            "prompt_store": {"results": 89, "top_match": "Sample prompt"},
-            "document_store": {"results": 44, "top_match": "Sample document"}
-        })
+        st.json(
+            {
+                "memory_agent": {"results": 23, "top_match": "Sample memory item"},
+                "prompt_store": {"results": 89, "top_match": "Sample prompt"},
+                "document_store": {"results": 44, "top_match": "Sample document"},
+            }
+        )

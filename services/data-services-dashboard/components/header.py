@@ -3,8 +3,9 @@
 This module provides the header component with branding and global controls.
 """
 
-import streamlit as st
 from datetime import datetime
+
+import streamlit as st
 
 
 def render_header():
@@ -26,12 +27,7 @@ def render_header():
         st.metric("Services Online", "3/3", help="All data services are operational")
 
         # Theme selector
-        theme = st.selectbox(
-            "Theme",
-            ["Light", "Dark"],
-            index=0,
-            key="global_theme"
-        )
+        theme = st.selectbox("Theme", ["Light", "Dark"], index=0, key="global_theme")
 
     # Global search bar
     st.markdown("---")
@@ -47,14 +43,12 @@ def render_global_search():
             "🔍 Global Search",
             placeholder="Search across all services...",
             key="global_search",
-            help="Search for content across memory items, prompts, and documents"
+            help="Search for content across memory items, prompts, and documents",
         )
 
     with col2:
         search_scope = st.selectbox(
-            "Search In",
-            ["All Services", "Memory Only", "Prompts Only", "Documents Only"],
-            key="search_scope"
+            "Search In", ["All Services", "Memory Only", "Prompts Only", "Documents Only"], key="search_scope"
         )
 
     with col3:

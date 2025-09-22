@@ -1,15 +1,17 @@
 """Integration tests for service client interactions."""
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+import sys
+from unittest.mock import Mock, patch
 
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+
+from services.clients.document_client import DocumentStoreClient
 from services.clients.memory_client import MemoryAgentClient
 from services.clients.prompt_client import PromptStoreClient
-from services.clients.document_client import DocumentStoreClient
 
 
 class TestMemoryAgentClient:
@@ -21,7 +23,7 @@ class TestMemoryAgentClient:
         client = MemoryAgentClient("http://localhost:5090")
         assert client.base_url == "http://localhost:5090"
         # Session is created when entering context manager
-        assert hasattr(client, 'health_check')  # Check it has expected methods
+        assert hasattr(client, "health_check")  # Check it has expected methods
 
     @pytest.mark.asyncio
     async def test_memory_client_health_check(self, mock_memory_client):
@@ -39,7 +41,7 @@ class TestMemoryAgentClient:
             type="operation",
             key="test_operation_1",
             summary="Test operation completed successfully",
-            data={"operation_type": "test", "records_processed": 100}
+            data={"operation_type": "test", "records_processed": 100},
         )
 
         # Then list items
@@ -52,12 +54,7 @@ class TestMemoryAgentClient:
     @pytest.mark.asyncio
     async def test_memory_client_put_item(self, mock_memory_client):
         """Test storing memory items."""
-        item_data = {
-            "type": "operation",
-            "key": "test_key",
-            "summary": "Test operation",
-            "data": {"test": "data"}
-        }
+        item_data = {"type": "operation", "key": "test_key", "summary": "Test operation", "data": {"test": "data"}}
 
         result = await mock_memory_client.put_memory_item(**item_data)
         assert result["success"] is True
@@ -82,7 +79,7 @@ class TestPromptStoreClient:
         client = PromptStoreClient("http://localhost:5110")
         assert client.base_url == "http://localhost:5110"
         # Session is created when entering context manager
-        assert hasattr(client, 'list_prompts')  # Check it has expected methods
+        assert hasattr(client, "list_prompts")  # Check it has expected methods
 
     @pytest.mark.asyncio
     async def test_prompt_client_list_prompts(self, mock_prompt_client):
@@ -96,11 +93,7 @@ class TestPromptStoreClient:
     @pytest.mark.asyncio
     async def test_prompt_client_create_prompt(self, mock_prompt_client):
         """Test creating prompts."""
-        prompt_data = {
-            "name": "New Test Prompt",
-            "category": "test",
-            "content": "Test content"
-        }
+        prompt_data = {"name": "New Test Prompt", "category": "test", "content": "Test content"}
 
         result = await mock_prompt_client.create_prompt(**prompt_data)
         assert result["success"] is True
@@ -138,7 +131,7 @@ class TestDocumentStoreClient:
         client = DocumentStoreClient("http://localhost:5087")
         assert client.base_url == "http://localhost:5087"
         # Session is created when entering context manager
-        assert hasattr(client, 'list_documents')  # Check it has expected methods
+        assert hasattr(client, "list_documents")  # Check it has expected methods
 
     @pytest.mark.asyncio
     async def test_document_client_list_documents(self, mock_document_client):
@@ -151,10 +144,7 @@ class TestDocumentStoreClient:
     @pytest.mark.asyncio
     async def test_document_client_create_document(self, mock_document_client):
         """Test creating documents."""
-        doc_data = {
-            "content": "Test content",
-            "content_type": "text"
-        }
+        doc_data = {"content": "Test content", "content_type": "text"}
 
         result = await mock_document_client.create_document(doc_data)
         assert result["success"] is True

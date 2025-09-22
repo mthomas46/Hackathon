@@ -1,16 +1,18 @@
 """Unit tests for document analysis helper functions."""
 
-import pytest
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+import sys
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from pages.document_browser import (
     analyze_document_content,
+    extract_keywords,
     extract_markdown_headings,
     generate_content_summary,
-    extract_keywords,
-    prepare_export_content
+    prepare_export_content,
 )
 
 
@@ -205,7 +207,9 @@ class TestKeywordExtraction:
 
     def test_extract_keywords_frequency_based(self):
         """Test that keywords are ranked by frequency."""
-        content = "Machine learning is important. Machine learning algorithms are complex. Machine learning requires data."
+        content = (
+            "Machine learning is important. Machine learning algorithms are complex. Machine learning requires data."
+        )
         keywords = extract_keywords(content)
 
         # "machine" and "learning" should appear (combined as "machine learning" would be ideal, but our simple extraction looks for individual words)
@@ -243,7 +247,7 @@ class TestExportPreparation:
             "content_type": "text",
             "created_at": "2024-01-01T10:00:00Z",
             "updated_at": "2024-01-02T10:00:00Z",
-            "metadata": {"author": "Test Author", "version": "1.0"}
+            "metadata": {"author": "Test Author", "version": "1.0"},
         }
 
         exported = prepare_export_content(content, document, "text", True)

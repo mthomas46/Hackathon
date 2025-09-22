@@ -3,12 +3,13 @@
 This module provides a comprehensive interface for managing prompts in the Prompt Store service.
 """
 
-import streamlit as st
 import asyncio
 import json
 import time
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
+import streamlit as st
 
 
 def render_prompt_browser_page():
@@ -17,7 +18,7 @@ def render_prompt_browser_page():
     st.markdown("Browse, create, and manage prompts by category and tags.")
 
     # Get prompt client
-    prompt_client = st.session_state.get('prompt_client')
+    prompt_client = st.session_state.get("prompt_client")
     if not prompt_client:
         st.error("❌ Prompt Store service not available")
         return
@@ -30,9 +31,17 @@ def render_prompt_browser_page():
         return
 
     # Create tabs for different prompt operations
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "📋 Browse Prompts", "➕ Create Prompt", "🎯 Tune Prompts", "📝 Sample Prompts", "📊 Analytics", "🏷️ Categories & Tags", "📚 Version History"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+        [
+            "📋 Browse Prompts",
+            "➕ Create Prompt",
+            "🎯 Tune Prompts",
+            "📝 Sample Prompts",
+            "📊 Analytics",
+            "🏷️ Categories & Tags",
+            "📚 Version History",
+        ]
+    )
 
     with tab1:
         render_prompt_browser(prompt_client)
@@ -67,22 +76,18 @@ def render_prompt_browser(prompt_client):
         category_filter = st.selectbox(
             "Category",
             ["All Categories", "chat", "completion", "analysis", "generation", "classification"],
-            key="prompt_category_filter"
+            key="prompt_category_filter",
         )
 
     with col2:
         lifecycle_filter = st.selectbox(
             "Lifecycle Status",
             ["All Status", "draft", "published", "deprecated", "archived"],
-            key="prompt_lifecycle_filter"
+            key="prompt_lifecycle_filter",
         )
 
     with col3:
-        search_query = st.text_input(
-            "Search",
-            placeholder="Search prompts...",
-            key="prompt_search_query"
-        )
+        search_query = st.text_input("Search", placeholder="Search prompts...", key="prompt_search_query")
 
     with col4:
         limit = st.slider("Items per page", 10, 100, 25, key="prompt_limit")
@@ -97,10 +102,7 @@ def render_prompt_browser(prompt_client):
                 if lifecycle_filter != "All Status":
                     filters["lifecycle_status"] = lifecycle_filter
 
-                result = asyncio.run(prompt_client.list_prompts(
-                    limit=limit,
-                    **filters
-                ))
+                result = asyncio.run(prompt_client.list_prompts(limit=limit, **filters))
 
                 if result.get("success"):
                     prompts = result.get("prompts", [])
@@ -134,16 +136,18 @@ def render_prompts_table(prompts: List[Dict[str, Any]], prompt_client):
     df_data = []
     for prompt in prompts:
         formatted_prompt = prompt_client.format_prompt_for_display(prompt)
-        df_data.append({
-            "ID": formatted_prompt["id"][:8] + "...",
-            "Name": formatted_prompt["name"],
-            "Category": formatted_prompt["category"],
-            "Status": formatted_prompt["lifecycle_status"],
-            "Version": formatted_prompt["version"],
-            "Usage": formatted_prompt["usage_count"],
-            "Score": ".2f",
-            "Tags": ", ".join(formatted_prompt["tags"][:3]) + ("..." if len(formatted_prompt["tags"]) > 3 else "")
-        })
+        df_data.append(
+            {
+                "ID": formatted_prompt["id"][:8] + "...",
+                "Name": formatted_prompt["name"],
+                "Category": formatted_prompt["category"],
+                "Status": formatted_prompt["lifecycle_status"],
+                "Version": formatted_prompt["version"],
+                "Usage": formatted_prompt["usage_count"],
+                "Score": ".2f",
+                "Tags": ", ".join(formatted_prompt["tags"][:3]) + ("..." if len(formatted_prompt["tags"]) > 3 else ""),
+            }
+        )
 
     df = pd.DataFrame(df_data)
 
@@ -156,7 +160,7 @@ def render_prompts_table(prompts: List[Dict[str, Any]], prompt_client):
         "Select prompt for details",
         [p["id"] for p in prompts],
         format_func=lambda x: next((p["name"] for p in prompts if p["id"] == x), x)[:50] + "...",
-        key="prompt_detail_select"
+        key="prompt_detail_select",
     )
 
     if selected_id:
@@ -200,7 +204,7 @@ def render_prompt_details(prompt: Dict[str, Any], prompt_client):
             fork_name = st.text_input(f"New name for forked prompt", key=f"fork_name_{prompt['id']}")
             if fork_name and st.button("✅ Confirm Fork", key=f"confirm_fork_{prompt['id']}"):
                 with st.spinner("Forking prompt..."):
-                    result = asyncio.run(prompt_client.fork_prompt(prompt['id'], fork_name))
+                    result = asyncio.run(prompt_client.fork_prompt(prompt["id"], fork_name))
                     if result.get("success"):
                         st.success("✅ Prompt forked successfully!")
                         st.rerun()
@@ -235,43 +239,26 @@ def render_create_prompt(prompt_client):
             category = st.selectbox(
                 "Category*",
                 ["chat", "completion", "analysis", "generation", "classification", "other"],
-                key="new_prompt_category"
+                key="new_prompt_category",
             )
 
         with col2:
             is_template = st.checkbox("Is Template", key="new_prompt_template")
-            lifecycle_status = st.selectbox(
-                "Initial Status",
-                ["draft", "published"],
-                index=0,
-                key="new_prompt_status"
-            )
+            lifecycle_status = st.selectbox("Initial Status", ["draft", "published"], index=0, key="new_prompt_status")
 
         description = st.text_area(
-            "Description",
-            placeholder="Brief description of the prompt...",
-            height=80,
-            key="new_prompt_description"
+            "Description", placeholder="Brief description of the prompt...", height=80, key="new_prompt_description"
         )
 
         content = st.text_area(
-            "Prompt Content*",
-            placeholder="Enter your prompt content here...",
-            height=200,
-            key="new_prompt_content"
+            "Prompt Content*", placeholder="Enter your prompt content here...", height=200, key="new_prompt_content"
         )
 
         variables_input = st.text_input(
-            "Variables (comma-separated)",
-            placeholder="var1, var2, var3",
-            key="new_prompt_variables"
+            "Variables (comma-separated)", placeholder="var1, var2, var3", key="new_prompt_variables"
         )
 
-        tags_input = st.text_input(
-            "Tags (comma-separated)",
-            placeholder="tag1, tag2, tag3",
-            key="new_prompt_tags"
-        )
+        tags_input = st.text_input("Tags (comma-separated)", placeholder="tag1, tag2, tag3", key="new_prompt_tags")
 
         submitted = st.form_submit_button("💾 Create Prompt")
 
@@ -288,14 +275,16 @@ def render_create_prompt(prompt_client):
 
                 # Create prompt
                 with st.spinner("Creating prompt..."):
-                    result = asyncio.run(prompt_client.create_prompt(
-                        name=name,
-                        category=category,
-                        content=content,
-                        description=description,
-                        variables=variables,
-                        tags=tags
-                    ))
+                    result = asyncio.run(
+                        prompt_client.create_prompt(
+                            name=name,
+                            category=category,
+                            content=content,
+                            description=description,
+                            variables=variables,
+                            tags=tags,
+                        )
+                    )
 
                     if result.get("success"):
                         st.success("✅ Prompt created successfully!")
@@ -312,7 +301,7 @@ def render_prompt_tuning(prompt_client):
     st.markdown("#### 🎯 Prompt Tuning & Testing")
 
     # Check if we have a prompt to tune
-    tuning_prompt = st.session_state.get('tuning_prompt')
+    tuning_prompt = st.session_state.get("tuning_prompt")
     if tuning_prompt:
         render_prompt_tuner(tuning_prompt, prompt_client)
     else:
@@ -336,7 +325,7 @@ def render_prompt_tuning(prompt_client):
                     st.error(f"Error loading prompts: {e}")
 
         # Display available prompts
-        if 'available_prompts' in st.session_state:
+        if "available_prompts" in st.session_state:
             prompts = st.session_state.available_prompts
             for prompt in prompts[:10]:  # Show first 10
                 col1, col2 = st.columns([3, 1])
@@ -371,7 +360,7 @@ def render_prompt_tuner(prompt: Dict[str, Any], prompt_client):
             value=formatted["content_full"],
             height=300,
             key="tuned_content",
-            help="Variables are highlighted with {{variable_name}} syntax"
+            help="Variables are highlighted with {{variable_name}} syntax",
         )
 
         # Variable management section
@@ -430,7 +419,7 @@ def render_prompt_tuner(prompt: Dict[str, Any], prompt_client):
         include_metrics = st.multiselect(
             "Metrics to Track",
             ["response_time", "token_usage", "coherence", "relevance", "creativity"],
-            default=["response_time", "token_usage"]
+            default=["response_time", "token_usage"],
         )
 
     # Advanced tuning
@@ -458,14 +447,17 @@ def render_prompt_tuner(prompt: Dict[str, Any], prompt_client):
     with col1:
         if st.button("🤖 Auto-Tune", key="auto_tune"):
             with st.spinner("AI is tuning your prompt..."):
-                tuned = apply_ai_tuning(edited_content, {
-                    "optimize_length": optimize_length,
-                    "optimize_clarity": optimize_clarity,
-                    "add_examples": add_examples,
-                    "improve_variables": improve_variables,
-                    "enhance_specificity": enhance_specificity,
-                    "add_constraints": add_constraints
-                })
+                tuned = apply_ai_tuning(
+                    edited_content,
+                    {
+                        "optimize_length": optimize_length,
+                        "optimize_clarity": optimize_clarity,
+                        "add_examples": add_examples,
+                        "improve_variables": improve_variables,
+                        "enhance_specificity": enhance_specificity,
+                        "add_constraints": add_constraints,
+                    },
+                )
                 st.session_state.tuned_content = tuned
                 st.success("✅ Prompt automatically tuned!")
                 st.rerun()
@@ -488,7 +480,7 @@ def render_prompt_tuner(prompt: Dict[str, Any], prompt_client):
 
     with col4:
         if st.button("❌ Cancel", key="cancel_tune"):
-            if 'tuning_prompt' in st.session_state:
+            if "tuning_prompt" in st.session_state:
                 del st.session_state.tuning_prompt
             st.rerun()
 
@@ -528,11 +520,10 @@ def render_analytics_display(analytics: Dict[str, Any]):
 
     # Usage trends (mock)
     st.markdown("#### 📈 Usage Trends")
-    usage_data = pd.DataFrame({
-        'Date': pd.date_range(start='2024-01-01', periods=7),
-        'Usage': [120, 135, 148, 156, 142, 158, 167]
-    })
-    st.line_chart(usage_data.set_index('Date'))
+    usage_data = pd.DataFrame(
+        {"Date": pd.date_range(start="2024-01-01", periods=7), "Usage": [120, 135, 148, 156, 142, 158, 167]}
+    )
+    st.line_chart(usage_data.set_index("Date"))
 
 
 def check_prompt_store_status(prompt_client) -> Dict[str, Any]:
@@ -555,12 +546,14 @@ def render_database_initialization(prompt_client):
     st.markdown("### 🛠️ Prompt Store Database Initialization")
     st.warning("⚠️ The Prompt Store database needs to be initialized before you can use the prompt management features.")
 
-    st.markdown("""
+    st.markdown(
+        """
     **What this will do:**
     - Initialize the database schema for prompts
     - Create necessary tables and indexes
     - Set up default categories and configurations
-    """)
+    """
+    )
 
     col1, col2 = st.columns([1, 2])
 
@@ -573,7 +566,7 @@ def render_database_initialization(prompt_client):
                         "name": "system_init_test",
                         "category": "system",
                         "content": "Database initialization test prompt",
-                        "description": "Temporary prompt for database initialization"
+                        "description": "Temporary prompt for database initialization",
                     }
 
                     result = asyncio.run(prompt_client.create_prompt(**test_prompt))
@@ -586,13 +579,17 @@ def render_database_initialization(prompt_client):
                         error_msg = result.get("message", "Unknown error")
                         if "no such table" in error_msg.lower():
                             st.error("❌ Database schema not found. The service may need manual database setup.")
-                            st.info("💡 Try running the service with proper database initialization or check service logs.")
+                            st.info(
+                                "💡 Try running the service with proper database initialization or check service logs."
+                            )
                         else:
                             st.error(f"❌ Initialization failed: {error_msg}")
 
                 except Exception as e:
                     st.error(f"❌ Database initialization error: {e}")
-                    st.info("💡 The Prompt Store service may need to be restarted or the database may need manual setup.")
+                    st.info(
+                        "💡 The Prompt Store service may need to be restarted or the database may need manual setup."
+                    )
 
     with col2:
         st.markdown("**Database Status:**")
@@ -622,7 +619,7 @@ def render_sample_prompts(prompt_client):
                     "content": "You are a helpful AI assistant. Provide clear, accurate, and helpful responses to user questions. Be concise but comprehensive, and always prioritize user safety and accuracy.",
                     "description": "Basic AI assistant prompt for general conversation",
                     "variables": [],
-                    "tags": ["ai", "assistant", "chat", "general"]
+                    "tags": ["ai", "assistant", "chat", "general"],
                 }
                 result = asyncio.run(prompt_client.create_prompt(**prompt_data))
                 if result.get("success"):
@@ -639,7 +636,7 @@ def render_sample_prompts(prompt_client):
                     "content": "You are an expert Python developer. Generate clean, well-documented, and efficient Python code. Include proper error handling, type hints, and comprehensive docstrings. Follow PEP 8 style guidelines.",
                     "description": "Specialized prompt for generating Python code",
                     "variables": ["language", "task"],
-                    "tags": ["code", "python", "generation", "development"]
+                    "tags": ["code", "python", "generation", "development"],
                 }
                 result = asyncio.run(prompt_client.create_prompt(**prompt_data))
                 if result.get("success"):
@@ -656,7 +653,7 @@ def render_sample_prompts(prompt_client):
                     "content": "You are an expert data analyst. Analyze the provided data and provide actionable insights, trends, and recommendations. Use statistical reasoning and clear visualizations in your explanations.",
                     "description": "Prompt for data analysis and insights generation",
                     "variables": ["data_type", "analysis_goal"],
-                    "tags": ["data", "analysis", "insights", "statistics"]
+                    "tags": ["data", "analysis", "insights", "statistics"],
                 }
                 result = asyncio.run(prompt_client.create_prompt(**prompt_data))
                 if result.get("success"):
@@ -673,13 +670,11 @@ def render_sample_prompts(prompt_client):
         "Code Generation": ["python", "javascript", "sql", "api"],
         "Content Creation": ["blog_post", "email", "social_media", "documentation"],
         "Analysis & Insights": ["data_analysis", "text_summary", "sentiment_analysis"],
-        "Specialized Tasks": ["translation", "proofreading", "research", "tutorials"]
+        "Specialized Tasks": ["translation", "proofreading", "research", "tutorials"],
     }
 
     selected_categories = st.multiselect(
-        "Select prompt categories to create",
-        list(sample_options.keys()),
-        key="sample_categories"
+        "Select prompt categories to create", list(sample_options.keys()), key="sample_categories"
     )
 
     if selected_categories:
@@ -733,7 +728,7 @@ def generate_sample_prompt(category: str, prompt_type: str) -> Dict[str, Any]:
             "content": "You are a friendly and welcoming AI assistant. Greet users warmly and make them feel comfortable. Be helpful, engaging, and maintain a positive tone throughout the conversation.",
             "description": "Friendly greeting prompt for welcoming users",
             "variables": [],
-            "tags": ["greeting", "friendly", "chat", "welcome"]
+            "tags": ["greeting", "friendly", "chat", "welcome"],
         },
         ("Basic Chat Prompts", "question_answer"): {
             "name": "qa_helpful",
@@ -741,7 +736,7 @@ def generate_sample_prompt(category: str, prompt_type: str) -> Dict[str, Any]:
             "content": "You are a knowledgeable AI assistant specialized in answering questions clearly and accurately. Provide comprehensive but concise answers, and when appropriate, offer additional context or related information that might be helpful.",
             "description": "Helpful Q&A prompt for answering user questions",
             "variables": ["topic"],
-            "tags": ["qa", "questions", "answers", "helpful"]
+            "tags": ["qa", "questions", "answers", "helpful"],
         },
         ("Code Generation", "python"): {
             "name": "python_function_generator",
@@ -749,7 +744,7 @@ def generate_sample_prompt(category: str, prompt_type: str) -> Dict[str, Any]:
             "content": "Generate a Python function that {task}. Include proper error handling, type hints, and a comprehensive docstring. Follow PEP 8 style guidelines and best practices.",
             "description": "Python function generation prompt",
             "variables": ["task"],
-            "tags": ["python", "code", "generation", "functions"]
+            "tags": ["python", "code", "generation", "functions"],
         },
         ("Content Creation", "blog_post"): {
             "name": "blog_post_writer",
@@ -757,19 +752,22 @@ def generate_sample_prompt(category: str, prompt_type: str) -> Dict[str, Any]:
             "content": "Write an engaging blog post about {topic}. Structure it with an attention-grabbing introduction, informative body with subheadings, and a compelling conclusion. Use a conversational tone and include practical examples.",
             "description": "Blog post writing prompt",
             "variables": ["topic"],
-            "tags": ["blog", "writing", "content", "article"]
-        }
+            "tags": ["blog", "writing", "content", "article"],
+        },
     }
 
     key = (category, prompt_type)
-    return templates.get(key, {
-        "name": f"{prompt_type}_sample",
-        "category": "general",
-        "content": f"Sample prompt for {prompt_type} in {category} category.",
-        "description": f"Sample {prompt_type} prompt",
-        "variables": [],
-        "tags": [prompt_type, "sample"]
-    })
+    return templates.get(
+        key,
+        {
+            "name": f"{prompt_type}_sample",
+            "category": "general",
+            "content": f"Sample prompt for {prompt_type} in {category} category.",
+            "description": f"Sample {prompt_type} prompt",
+            "variables": [],
+            "tags": [prompt_type, "sample"],
+        },
+    )
 
 
 def get_standard_prompt_templates() -> List[Dict[str, Any]]:
@@ -781,7 +779,7 @@ def get_standard_prompt_templates() -> List[Dict[str, Any]]:
             "content": "You are a creative writer. Write an engaging and imaginative {content_type} about {topic}. Use vivid language, compelling characters, and an interesting narrative structure.",
             "description": "Creative writing prompt template",
             "variables": ["content_type", "topic"],
-            "tags": ["creative", "writing", "story", "fiction"]
+            "tags": ["creative", "writing", "story", "fiction"],
         },
         {
             "name": "technical_explanation",
@@ -789,7 +787,7 @@ def get_standard_prompt_templates() -> List[Dict[str, Any]]:
             "content": "Explain {technical_concept} in simple terms that a beginner can understand. Use analogies, avoid jargon where possible, and break down complex ideas into digestible parts.",
             "description": "Technical concept explanation prompt",
             "variables": ["technical_concept"],
-            "tags": ["technical", "explanation", "education", "simple"]
+            "tags": ["technical", "explanation", "education", "simple"],
         },
         {
             "name": "meeting_summarizer",
@@ -797,7 +795,7 @@ def get_standard_prompt_templates() -> List[Dict[str, Any]]:
             "content": "Summarize the key points from this meeting transcript. Include: main decisions made, action items with owners, important insights, and any follow-up required.",
             "description": "Meeting summary prompt",
             "variables": [],
-            "tags": ["meeting", "summary", "business", "productivity"]
+            "tags": ["meeting", "summary", "business", "productivity"],
         },
         {
             "name": "email_professional",
@@ -805,8 +803,8 @@ def get_standard_prompt_templates() -> List[Dict[str, Any]]:
             "content": "Write a professional email {purpose}. Use a clear subject line, proper greeting, concise body, and professional closing. Maintain a polite and business-appropriate tone.",
             "description": "Professional email writing prompt",
             "variables": ["purpose"],
-            "tags": ["email", "professional", "business", "communication"]
-        }
+            "tags": ["email", "professional", "business", "communication"],
+        },
     ]
 
 
@@ -834,7 +832,7 @@ def render_categories_and_tags(prompt_client):
                     st.markdown("**Tags:**")
                     if tags_result:
                         # Group tags for better display
-                        tag_groups = [tags_result[i:i+10] for i in range(0, len(tags_result), 10)]
+                        tag_groups = [tags_result[i : i + 10] for i in range(0, len(tags_result), 10)]
                         for group in tag_groups[:3]:  # Show first 30 tags
                             st.write(" • " + " • ".join(group))
                         if len(tags_result) > 30:
@@ -850,10 +848,12 @@ def render_categories_and_tags(prompt_client):
 # PROMPT TUNING HELPER FUNCTIONS
 # ============================================================================
 
+
 def extract_variables_from_prompt(content: str) -> List[str]:
     """Extract variable names from prompt content using {{variable}} syntax."""
     import re
-    variables = re.findall(r'\{\{([^}]+)\}\}', content)
+
+    variables = re.findall(r"\{\{([^}]+)\}\}", content)
     # Remove duplicates while preserving order
     seen = set()
     result = []
@@ -881,7 +881,7 @@ def render_variable_manager(content: str, current_variables: List[str]):
         # Variable validation
         st.markdown("**Variable Validation:**")
         for var in current_variables:
-            if not var.replace('_', '').replace('-', '').isalnum():
+            if not var.replace("_", "").replace("-", "").isalnum():
                 st.warning(f"⚠️ Variable '{var}' contains invalid characters")
             elif not var:
                 st.error("❌ Empty variable name found")
@@ -894,7 +894,7 @@ def render_variable_manager(content: str, current_variables: List[str]):
     if new_var and st.button("➕ Add Variable", key="add_variable"):
         if new_var in current_variables:
             st.warning("Variable already exists")
-        elif not new_var.replace('_', '').replace('-', '').isalnum():
+        elif not new_var.replace("_", "").replace("-", "").isalnum():
             st.error("Invalid variable name. Use only letters, numbers, underscores, and hyphens.")
         else:
             # Insert variable at cursor position (simplified)
@@ -907,8 +907,9 @@ def render_variable_manager(content: str, current_variables: List[str]):
 def highlight_variables_in_text(content: str) -> str:
     """Highlight variables in the text for display."""
     import re
+
     # Replace {{variable}} with **{{variable}}** for highlighting
-    highlighted = re.sub(r'\{\{([^}]+)\}\}', r'**{{\1}}**', content)
+    highlighted = re.sub(r"\{\{([^}]+)\}\}", r"**{{\1}}**", content)
     return highlighted
 
 
@@ -920,7 +921,7 @@ def estimate_token_count(content: str) -> int:
 
     # Adjust for common token patterns
     # Code and technical content often has more tokens per character
-    if any(keyword in content.lower() for keyword in ['function', 'class', 'import', 'def ', 'return']):
+    if any(keyword in content.lower() for keyword in ["function", "class", "import", "def ", "return"]):
         token_estimate = int(token_estimate * 1.2)
 
     return max(token_estimate, 1)  # Minimum 1 token
@@ -931,13 +932,13 @@ def format_prompt_content(content: str) -> str:
     import re
 
     # Remove extra whitespace
-    formatted = re.sub(r'\n\s*\n\s*\n+', '\n\n', content.strip())
+    formatted = re.sub(r"\n\s*\n\s*\n+", "\n\n", content.strip())
 
     # Ensure consistent spacing around variables
-    formatted = re.sub(r'\{\{(\s*)([^}]+)(\s*)\}\}', r'{{\2}}', formatted)
+    formatted = re.sub(r"\{\{(\s*)([^}]+)(\s*)\}\}", r"{{\2}}", formatted)
 
     # Capitalize first letter of sentences (basic)
-    sentences = re.split(r'([.!?]+\s*)', formatted)
+    sentences = re.split(r"([.!?]+\s*)", formatted)
     formatted_sentences = []
     for i, sentence in enumerate(sentences):
         if i % 2 == 0 and sentence.strip():  # Actual sentence content
@@ -945,7 +946,7 @@ def format_prompt_content(content: str) -> str:
             if sentence:
                 sentence = sentence[0].upper() + sentence[1:]
         formatted_sentences.append(sentence)
-    formatted = ''.join(formatted_sentences)
+    formatted = "".join(formatted_sentences)
 
     return formatted
 
@@ -957,8 +958,8 @@ def analyze_prompt_content(content: str) -> Dict[str, Any]:
     # Basic metrics
     analysis["Characters"] = len(content)
     analysis["Words"] = len(content.split())
-    analysis["Lines"] = len(content.split('\n'))
-    analysis["Sentences"] = len([s for s in content.split('.') if s.strip()])
+    analysis["Lines"] = len(content.split("\n"))
+    analysis["Sentences"] = len([s for s in content.split(".") if s.strip()])
 
     # Variables
     variables = extract_variables_from_prompt(content)
@@ -968,7 +969,7 @@ def analyze_prompt_content(content: str) -> Dict[str, Any]:
     analysis["Est. Tokens"] = estimate_token_count(content)
 
     # Complexity indicators
-    technical_terms = ['function', 'algorithm', 'api', 'database', 'server', 'client', 'authentication']
+    technical_terms = ["function", "algorithm", "api", "database", "server", "client", "authentication"]
     analysis["Technical Terms"] = sum(1 for term in technical_terms if term.lower() in content.lower())
 
     # Readability (very basic)
@@ -985,21 +986,22 @@ def apply_ai_tuning(content: str, options: Dict[str, bool]) -> str:
     if options.get("optimize_length"):
         # Remove redundant phrases
         redundancies = [
-            r'\b(in order to|so as to|in an effort to)\b',
-            r'\b(it is important to note that|please note that)\b',
-            r'\b(due to the fact that|because)\b'
+            r"\b(in order to|so as to|in an effort to)\b",
+            r"\b(it is important to note that|please note that)\b",
+            r"\b(due to the fact that|because)\b",
         ]
         for pattern in redundancies:
             import re
-            tuned = re.sub(pattern, '', tuned, flags=re.IGNORECASE)
+
+            tuned = re.sub(pattern, "", tuned, flags=re.IGNORECASE)
 
     if options.get("optimize_clarity"):
         # Add clarity improvements
-        if not content.strip().endswith(('.', '!', '?')):
-            tuned += '.'
+        if not content.strip().endswith((".", "!", "?")):
+            tuned += "."
 
         # Ensure proper capitalization
-        tuned = '. '.join(s.strip().capitalize() for s in tuned.split('. '))
+        tuned = ". ".join(s.strip().capitalize() for s in tuned.split(". "))
 
     if options.get("add_examples"):
         # Add example placeholder
@@ -1010,8 +1012,8 @@ def apply_ai_tuning(content: str, options: Dict[str, bool]) -> str:
         # Suggest better variable naming
         variables = extract_variables_from_prompt(tuned)
         for var in variables:
-            if var in ['var', 'var1', 'variable', 'input']:
-                tuned = tuned.replace(f'{{{{{var}}}}}', f'{{{{specific_{var}}}}}')
+            if var in ["var", "var1", "variable", "input"]:
+                tuned = tuned.replace(f"{{{{{var}}}}}", f"{{{{specific_{var}}}}}")
 
     if options.get("enhance_specificity"):
         # Add specificity prompts
@@ -1032,11 +1034,7 @@ def run_prompt_performance_test(content: str, iterations: int, metrics: List[str
     import random
     import time
 
-    results = {
-        "iterations": iterations,
-        "metrics": {},
-        "summary": {}
-    }
+    results = {"iterations": iterations, "metrics": {}, "summary": {}}
 
     # Simulate testing
     for metric in metrics:
@@ -1046,33 +1044,24 @@ def run_prompt_performance_test(content: str, iterations: int, metrics: List[str
                 "values": times,
                 "avg": sum(times) / len(times),
                 "min": min(times),
-                "max": max(times)
+                "max": max(times),
             }
         elif metric == "token_usage":
             tokens = [random.randint(100, 1000) for _ in range(iterations)]
             results["metrics"]["token_usage"] = {
                 "values": tokens,
                 "avg": sum(tokens) / len(tokens),
-                "total": sum(tokens)
+                "total": sum(tokens),
             }
         elif metric == "coherence":
             scores = [random.uniform(0.7, 0.95) for _ in range(iterations)]
-            results["metrics"]["coherence"] = {
-                "values": scores,
-                "avg": sum(scores) / len(scores)
-            }
+            results["metrics"]["coherence"] = {"values": scores, "avg": sum(scores) / len(scores)}
         elif metric == "relevance":
             scores = [random.uniform(0.75, 0.98) for _ in range(iterations)]
-            results["metrics"]["relevance"] = {
-                "values": scores,
-                "avg": sum(scores) / len(scores)
-            }
+            results["metrics"]["relevance"] = {"values": scores, "avg": sum(scores) / len(scores)}
         elif metric == "creativity":
             scores = [random.uniform(0.6, 0.9) for _ in range(iterations)]
-            results["metrics"]["creativity"] = {
-                "values": scores,
-                "avg": sum(scores) / len(scores)
-            }
+            results["metrics"]["creativity"] = {"values": scores, "avg": sum(scores) / len(scores)}
 
     # Calculate summary
     if "response_time" in results["metrics"]:
@@ -1098,7 +1087,7 @@ def display_performance_results(results: Dict[str, Any]):
         col1, col2, col3 = st.columns(3)
         for i, (key, value) in enumerate(results["summary"].items()):
             with [col1, col2, col3][i % 3]:
-                st.metric(key.replace('_', ' ').title(), value)
+                st.metric(key.replace("_", " ").title(), value)
 
     # Detailed metrics
     if "metrics" in results:
@@ -1114,10 +1103,10 @@ def display_performance_results(results: Dict[str, Any]):
                 # Simple chart for values
                 if "values" in metric_data:
                     import pandas as pd
-                    df = pd.DataFrame({
-                        "Iteration": range(1, len(metric_data["values"]) + 1),
-                        "Value": metric_data["values"]
-                    })
+
+                    df = pd.DataFrame(
+                        {"Iteration": range(1, len(metric_data["values"]) + 1), "Value": metric_data["values"]}
+                    )
                     st.line_chart(df.set_index("Iteration"))
 
 
@@ -1128,7 +1117,7 @@ def render_ai_enhancement_interface(prompt: Dict[str, Any], content: str):
     enhancement_type = st.selectbox(
         "Enhancement Type",
         ["General Optimization", "Add Structure", "Improve Instructions", "Enhance Examples", "Safety & Ethics"],
-        key="enhancement_type"
+        key="enhancement_type",
     )
 
     intensity = st.slider("Enhancement Intensity", 1, 5, 3, key="enhancement_intensity")
@@ -1164,31 +1153,27 @@ def render_template_library_interface():
         "System Prompts": [
             "You are a helpful AI assistant...",
             "You are an expert in [field] with [experience] years...",
-            "Act as a [role] who specializes in [specialty]..."
+            "Act as a [role] who specializes in [specialty]...",
         ],
         "Task Prompts": [
             "Write a [type] about [topic] that is [length]...",
             "Analyze [data] and provide [insights]...",
-            "Create a [format] for [purpose]..."
+            "Create a [format] for [purpose]...",
         ],
         "Instruction Prompts": [
             "Follow these steps: 1) [step1], 2) [step2]...",
             "Use this format: [format specification]...",
-            "Include these elements: [element1], [element2]..."
-        ]
+            "Include these elements: [element1], [element2]...",
+        ],
     }
 
     selected_category = st.selectbox("Template Category", list(templates.keys()), key="template_category")
 
     if selected_category:
-        selected_template = st.selectbox(
-            "Select Template",
-            templates[selected_category],
-            key="selected_template"
-        )
+        selected_template = st.selectbox("Select Template", templates[selected_category], key="selected_template")
 
         if selected_template and st.button("📋 Use Template", key="use_template"):
-            current_content = st.session_state.get('tuned_content', '')
+            current_content = st.session_state.get("tuned_content", "")
             if current_content:
                 combined = current_content + "\n\n" + selected_template
             else:
@@ -1208,7 +1193,7 @@ def render_performance_testing_interface(prompt: Dict[str, Any], content: str, i
         "Test Scenarios",
         ["General Q&A", "Creative Writing", "Technical Analysis", "Code Generation", "Data Processing"],
         default=["General Q&A"],
-        key="test_scenarios"
+        key="test_scenarios",
     )
 
     # Advanced settings
@@ -1229,7 +1214,7 @@ def render_performance_testing_interface(prompt: Dict[str, Any], content: str, i
                 "best_temperature": 0.9,
                 "optimal_max_tokens": 1200,
                 "strengths": ["High coherence", "Good relevance", "Efficient token usage"],
-                "improvements": ["Add more specific examples", "Enhance error handling instructions"]
+                "improvements": ["Add more specific examples", "Enhance error handling instructions"],
             }
 
             display_comprehensive_test_results(mock_results)
@@ -1241,14 +1226,11 @@ def render_ab_testing_interface(prompt: Dict[str, Any]):
 
     # Test variants
     st.markdown("**Variant A (Current):**")
-    st.code(prompt.get('content', ''), language="text")
+    st.code(prompt.get("content", ""), language="text")
 
     st.markdown("**Variant B (Modified):**")
     variant_b = st.text_area(
-        "Modified version for testing",
-        value=prompt.get('content', ''),
-        height=150,
-        key="variant_b_content"
+        "Modified version for testing", value=prompt.get("content", ""), height=150, key="variant_b_content"
     )
 
     # Test configuration
@@ -1262,7 +1244,7 @@ def render_ab_testing_interface(prompt: Dict[str, Any]):
         primary_metric = st.selectbox(
             "Primary Metric",
             ["response_quality", "user_satisfaction", "completion_rate", "response_time"],
-            key="ab_primary_metric"
+            key="ab_primary_metric",
         )
 
     if st.button("🆚 Start A/B Test", key="start_ab_test"):
@@ -1283,7 +1265,7 @@ def apply_ai_enhancement(content: str, enhancement_type: str, intensity: int) ->
         2: 0.5,  # Moderate
         3: 0.7,  # Standard
         4: 0.9,  # Strong
-        5: 1.0   # Maximum
+        5: 1.0,  # Maximum
     }
 
     multiplier = intensity_multipliers.get(intensity, 0.7)
@@ -1296,7 +1278,7 @@ def apply_ai_enhancement(content: str, enhancement_type: str, intensity: int) ->
             lambda x: apply_ai_tuning(x, {"improve_variables": True}),
         ]
 
-        for opt in optimizations[:int(len(optimizations) * multiplier)]:
+        for opt in optimizations[: int(len(optimizations) * multiplier)]:
             enhanced = opt(enhanced)
 
     elif enhancement_type == "Add Structure":
@@ -1314,10 +1296,10 @@ def apply_ai_enhancement(content: str, enhancement_type: str, intensity: int) ->
     elif enhancement_type == "Safety & Ethics":
         safety_additions = [
             "\n\n**Safety Guidelines:**\n• Ensure responses are safe and appropriate\n• Avoid harmful content\n• Respect user privacy",
-            "\n\n**Ethical Considerations:**\n• Be truthful and accurate\n• Avoid bias and discrimination\n• Promote positive outcomes"
+            "\n\n**Ethical Considerations:**\n• Be truthful and accurate\n• Avoid bias and discrimination\n• Promote positive outcomes",
         ]
 
-        for addition in safety_additions[:int(len(safety_additions) * multiplier)]:
+        for addition in safety_additions[: int(len(safety_additions) * multiplier)]:
             enhanced += addition
 
     return enhanced
@@ -1332,25 +1314,27 @@ def display_comprehensive_test_results(results: Dict[str, Any]):
     with col1:
         st.metric("Overall Score", f"{results['overall_score']}/10")
     with col2:
-        st.metric("Best Temperature", results['best_temperature'])
+        st.metric("Best Temperature", results["best_temperature"])
     with col3:
-        st.metric("Optimal Max Tokens", results['optimal_max_tokens'])
+        st.metric("Optimal Max Tokens", results["optimal_max_tokens"])
 
     # Strengths and improvements
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("**✅ Strengths:**")
-        for strength in results['strengths']:
+        for strength in results["strengths"]:
             st.write(f"• {strength}")
 
     with col2:
         st.markdown("**🔧 Improvement Areas:**")
-        for improvement in results['improvements']:
+        for improvement in results["improvements"]:
             st.write(f"• {improvement}")
 
     # Recommendations
     st.markdown("**💡 Recommendations:**")
-    st.info("Based on test results, consider adjusting temperature and adding more specific examples to improve overall performance.")
+    st.info(
+        "Based on test results, consider adjusting temperature and adding more specific examples to improve overall performance."
+    )
 
 
 def render_prompt_versioning(prompt_client):
@@ -1385,7 +1369,9 @@ def render_version_history(prompt_client):
                 if result.get("success"):
                     prompts = result.get("prompts", [])
                     # Filter prompts that have versions (mock for now)
-                    versioned_prompts = [p for p in prompts if "version" in str(p).lower() or len(str(p.get("content", ""))) > 50]
+                    versioned_prompts = [
+                        p for p in prompts if "version" in str(p).lower() or len(str(p.get("content", ""))) > 50
+                    ]
 
                     if versioned_prompts:
                         st.session_state.versioned_prompts = versioned_prompts
@@ -1398,7 +1384,7 @@ def render_version_history(prompt_client):
                 st.error(f"Error loading prompts: {e}")
 
     # Display prompts with version history
-    if 'versioned_prompts' in st.session_state:
+    if "versioned_prompts" in st.session_state:
         prompts = st.session_state.versioned_prompts
 
         for i, prompt in enumerate(prompts[:5]):  # Show first 5
@@ -1408,7 +1394,7 @@ def render_version_history(prompt_client):
 
 def render_prompt_version_timeline(prompt: Dict[str, Any], prompt_client):
     """Render version timeline for a specific prompt."""
-    prompt_id = prompt.get('id', 'unknown')
+    prompt_id = prompt.get("id", "unknown")
 
     # Mock version history (would come from API)
     versions = generate_mock_version_history(prompt)
@@ -1418,18 +1404,18 @@ def render_prompt_version_timeline(prompt: Dict[str, Any], prompt_client):
         return
 
     # Display version timeline
-    for version in sorted(versions, key=lambda x: x['version'], reverse=True):
+    for version in sorted(versions, key=lambda x: x["version"], reverse=True):
         col1, col2, col3 = st.columns([2, 2, 1])
 
         with col1:
             st.markdown(f"**Version {version['version']}**")
             st.caption(f"Created: {version['created_at']}")
-            if version.get('is_current'):
+            if version.get("is_current"):
                 st.success("🟢 Current Version")
 
         with col2:
             st.caption(f"Changes: {version['changes']}")
-            if version.get('performance_score'):
+            if version.get("performance_score"):
                 st.caption(f"Performance: {version['performance_score']}/10")
 
         with col3:
@@ -1437,18 +1423,20 @@ def render_prompt_version_timeline(prompt: Dict[str, Any], prompt_client):
                 st.session_state.selected_version = version
                 st.rerun()
 
-            if not version.get('is_current') and st.button("🔄 Restore", key=f"restore_version_{prompt_id}_{version['version']}"):
+            if not version.get("is_current") and st.button(
+                "🔄 Restore", key=f"restore_version_{prompt_id}_{version['version']}"
+            ):
                 with st.spinner("Restoring version..."):
                     # Would call API to restore version
                     st.success(f"✅ Restored to version {version['version']}")
                     st.rerun()
 
     # Show selected version content
-    if 'selected_version' in st.session_state:
+    if "selected_version" in st.session_state:
         selected = st.session_state.selected_version
         st.markdown("---")
         st.markdown(f"**Version {selected['version']} Content:**")
-        st.code(selected['content'], language="text")
+        st.code(selected["content"], language="text")
 
         if st.button("❌ Close Version View", key="close_version_view"):
             del st.session_state.selected_version
@@ -1544,7 +1532,7 @@ def render_version_rollback(prompt_client):
             st.session_state.rollback_candidates = candidates
             st.success("✅ Loaded rollback candidates")
 
-    if 'rollback_candidates' in st.session_state:
+    if "rollback_candidates" in st.session_state:
         candidates = st.session_state.rollback_candidates
 
         for candidate in candidates:
@@ -1553,20 +1541,22 @@ def render_version_rollback(prompt_client):
 
                 selected_version = st.selectbox(
                     "Select version to rollback to",
-                    candidate['available_versions'],
-                    key=f"rollback_version_{candidate['id']}"
+                    candidate["available_versions"],
+                    key=f"rollback_version_{candidate['id']}",
                 )
 
                 rollback_reason = st.text_area(
                     "Rollback Reason (optional)",
                     placeholder="Explain why you're rolling back...",
-                    key=f"rollback_reason_{candidate['id']}"
+                    key=f"rollback_reason_{candidate['id']}",
                 )
 
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("⚠️ Preview Rollback", key=f"preview_rollback_{candidate['id']}"):
-                        st.info(f"Would rollback {candidate['name']} from v{candidate['current_version']} to v{selected_version}")
+                        st.info(
+                            f"Would rollback {candidate['name']} from v{candidate['current_version']} to v{selected_version}"
+                        )
                         st.code(get_mock_version_content(f"Version {selected_version}"), language="text")
 
                 with col2:
@@ -1591,16 +1581,12 @@ def render_version_analytics(prompt_client):
                 "rollback_count": 5,
                 "avg_versions_per_prompt": 2.3,
                 "most_rolled_back_prompt": "AI Assistant (3 rollbacks)",
-                "version_adoption_trends": {
-                    "v1_adoption": 0.85,
-                    "v2_adoption": 0.65,
-                    "v3_adoption": 0.45
-                },
+                "version_adoption_trends": {"v1_adoption": 0.85, "v2_adoption": 0.65, "v3_adoption": 0.45},
                 "performance_improvements": [
                     {"prompt": "Code Generator", "improvement": "+15% accuracy", "versions": "v1→v3"},
                     {"prompt": "Data Analyst", "improvement": "+8% coherence", "versions": "v2→v4"},
-                    {"prompt": "Content Writer", "improvement": "+12% engagement", "versions": "v1→v2"}
-                ]
+                    {"prompt": "Content Writer", "improvement": "+12% engagement", "versions": "v1→v2"},
+                ],
             }
 
             display_version_analytics(analytics)
@@ -1626,10 +1612,13 @@ def display_version_analytics(analytics: Dict[str, Any]):
 
     adoption_data = analytics["version_adoption_trends"]
     import pandas as pd
-    df = pd.DataFrame({
-        "Version": ["v1", "v2", "v3"],
-        "Adoption Rate": [adoption_data["v1_adoption"], adoption_data["v2_adoption"], adoption_data["v3_adoption"]]
-    })
+
+    df = pd.DataFrame(
+        {
+            "Version": ["v1", "v2", "v3"],
+            "Adoption Rate": [adoption_data["v1_adoption"], adoption_data["v2_adoption"], adoption_data["v3_adoption"]],
+        }
+    )
     st.bar_chart(df.set_index("Version"))
 
     # Performance improvements
@@ -1654,12 +1643,13 @@ def display_version_analytics(analytics: Dict[str, Any]):
 # VERSION MANAGEMENT HELPER FUNCTIONS
 # ============================================================================
 
+
 def generate_mock_version_history(prompt: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Generate mock version history for a prompt."""
     import random
     from datetime import datetime, timedelta
 
-    base_content = prompt.get('content', 'Sample prompt content')
+    base_content = prompt.get("content", "Sample prompt content")
     versions = []
     version_count = random.randint(2, 5)
 
@@ -1672,7 +1662,7 @@ def generate_mock_version_history(prompt: Dict[str, Any]) -> List[Dict[str, Any]
                 ". Include examples where appropriate",
                 ". Ensure responses are concise yet comprehensive",
                 ". Add safety considerations",
-                ". Optimize for better performance"
+                ". Optimize for better performance",
             ]
             modified_content += random.choice(modifications)
 
@@ -1682,7 +1672,7 @@ def generate_mock_version_history(prompt: Dict[str, Any]) -> List[Dict[str, Any]
             "created_at": (datetime.now() - timedelta(days=random.randint(1, 30))).strftime("%Y-%m-%d %H:%M:%S"),
             "changes": f"Version {i} changes - {random.choice(['Improved clarity', 'Added examples', 'Enhanced specificity', 'Optimized performance', 'Added safety checks'])}",
             "performance_score": random.uniform(7.0, 9.5) if i > 1 else None,
-            "is_current": i == version_count
+            "is_current": i == version_count,
         }
         versions.append(version)
 
@@ -1694,7 +1684,7 @@ def get_mock_version_content(version_label: str) -> str:
     contents = {
         "Current Version": "You are a helpful AI assistant. Provide clear, accurate, and helpful responses to user questions.",
         "Version 2": "You are a helpful AI assistant. Provide clear, accurate, and helpful responses to user questions. Be specific and include examples when appropriate.",
-        "Version 1": "You are a helpful AI assistant. Provide responses to user questions."
+        "Version 1": "You are a helpful AI assistant. Provide responses to user questions.",
     }
     return contents.get(version_label, "Sample prompt content for " + version_label)
 
@@ -1706,7 +1696,9 @@ def analyze_version_differences(content_a: str, content_b: str) -> List[str]:
     # Length differences
     len_a, len_b = len(content_a), len(content_b)
     if abs(len_a - len_b) > 10:
-        differences.append(f"Length changed from {len_a} to {len_b} characters ({'+' if len_b > len_a else '-'}{abs(len_b - len_a)})")
+        differences.append(
+            f"Length changed from {len_a} to {len_b} characters ({'+' if len_b > len_a else '-'}{abs(len_b - len_a)})"
+        )
 
     # Word count differences
     words_a, words_b = len(content_a.split()), len(content_b.split())

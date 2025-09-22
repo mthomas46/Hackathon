@@ -3,8 +3,9 @@
 This module provides the footer component with links and information.
 """
 
-import streamlit as st
 from datetime import datetime
+
+import streamlit as st
 
 
 def render_footer():
@@ -52,5 +53,5 @@ def render_footer():
         <a href='https://docs.ecosystem.ai' target='_blank'>Documentation</a>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )

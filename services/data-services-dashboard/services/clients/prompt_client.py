@@ -4,22 +4,20 @@ This module provides a client for interacting with the Prompt Store service,
 enabling browsing, creation, and management of prompts by category and tags.
 """
 
-import httpx
 import asyncio
 import json
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import httpx
 from infrastructure.config.config import get_config
 
 
 class PromptStoreClient:
     """Client for interacting with the Prompt Store service."""
 
-    def __init__(self,
-                 base_url: Optional[str] = None,
-                 timeout: float = 30.0):
+    def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
         """Initialize the prompt store client.
 
         Args:
@@ -34,10 +32,7 @@ class PromptStoreClient:
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=timeout,
-            headers={
-                'Content-Type': 'application/json',
-                'User-Agent': 'DataServicesDashboard/1.0'
-            }
+            headers={"Content-Type": "application/json", "User-Agent": "DataServicesDashboard/1.0"},
         )
 
         # Logging
@@ -55,18 +50,17 @@ class PromptStoreClient:
         """Close the HTTP client."""
         await self.client.aclose()
 
-    async def list_prompts(self,
-                          category: Optional[str] = None,
-                          tags: Optional[List[str]] = None,
-                          lifecycle_status: Optional[str] = None,
-                          limit: int = 50,
-                          offset: int = 0) -> Dict[str, Any]:
+    async def list_prompts(
+        self,
+        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        lifecycle_status: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
         """List prompts with optional filtering."""
         try:
-            params = {
-                "limit": limit,
-                "offset": offset
-            }
+            params = {"limit": limit, "offset": offset}
             if category:
                 params["category"] = category
             if tags:
@@ -80,13 +74,15 @@ class PromptStoreClient:
             self.logger.error(f"Failed to list prompts: {e}")
             return {"success": False, "error": str(e), "prompts": []}
 
-    async def create_prompt(self,
-                           name: str,
-                           category: str,
-                           content: str,
-                           description: str = "",
-                           variables: Optional[List[str]] = None,
-                           tags: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def create_prompt(
+        self,
+        name: str,
+        category: str,
+        content: str,
+        description: str = "",
+        variables: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """Create a new prompt."""
         try:
             request_data = {
@@ -95,7 +91,7 @@ class PromptStoreClient:
                 "content": content,
                 "description": description,
                 "variables": variables or [],
-                "tags": tags or []
+                "tags": tags or [],
             }
 
             response = await self.client.post("/api/v1/prompts", json=request_data)
@@ -250,7 +246,11 @@ class PromptStoreClient:
             "name": prompt.get("name", ""),
             "category": prompt.get("category", ""),
             "description": prompt.get("description", ""),
-            "content_preview": prompt.get("content", "")[:200] + "..." if len(prompt.get("content", "")) > 200 else prompt.get("content", ""),
+            "content_preview": (
+                prompt.get("content", "")[:200] + "..."
+                if len(prompt.get("content", "")) > 200
+                else prompt.get("content", "")
+            ),
             "variables": prompt.get("variables", []),
             "tags": prompt.get("tags", []),
             "is_active": prompt.get("is_active", True),
@@ -262,5 +262,5 @@ class PromptStoreClient:
             "version": prompt.get("version", 1),
             "performance_score": prompt.get("performance_score", 0.0),
             "usage_count": prompt.get("usage_count", 0),
-            "content_full": prompt.get("content", "")
+            "content_full": prompt.get("content", ""),
         }

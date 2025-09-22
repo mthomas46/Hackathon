@@ -4,22 +4,20 @@ This module provides a client for interacting with the Document Store service,
 enabling browsing, uploading, and management of documents with advanced features.
 """
 
-import httpx
 import asyncio
 import json
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import httpx
 from infrastructure.config.config import get_config
 
 
 class DocumentStoreClient:
     """Client for interacting with the Document Store service."""
 
-    def __init__(self,
-                 base_url: Optional[str] = None,
-                 timeout: float = 30.0):
+    def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
         """Initialize the document store client.
 
         Args:
@@ -34,10 +32,7 @@ class DocumentStoreClient:
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=timeout,
-            headers={
-                'Content-Type': 'application/json',
-                'User-Agent': 'DataServicesDashboard/1.0'
-            }
+            headers={"Content-Type": "application/json", "User-Agent": "DataServicesDashboard/1.0"},
         )
 
         # Logging
@@ -64,17 +59,12 @@ class DocumentStoreClient:
             self.logger.error(f"Failed to create document: {e}")
             return {"success": False, "error": str(e)}
 
-    async def list_documents(self,
-                           skip: int = 0,
-                           limit: int = 50,
-                           search: Optional[str] = None,
-                           **filters) -> Dict[str, Any]:
+    async def list_documents(
+        self, skip: int = 0, limit: int = 50, search: Optional[str] = None, **filters
+    ) -> Dict[str, Any]:
         """List documents with optional filtering."""
         try:
-            params = {
-                "skip": skip,
-                "limit": limit
-            }
+            params = {"skip": skip, "limit": limit}
             if search:
                 params["search"] = search
 
@@ -117,10 +107,7 @@ class DocumentStoreClient:
     async def search_documents(self, query: str, **filters) -> Dict[str, Any]:
         """Search documents using advanced search."""
         try:
-            search_request = {
-                "query": query,
-                **filters
-            }
+            search_request = {"query": query, **filters}
             response = await self.client.post("/api/v1/documents/search", json=search_request)
             return response.json()
         except Exception as e:
@@ -208,13 +195,12 @@ class DocumentStoreClient:
             self.logger.error(f"Failed to get relationships for document {document_id}: {e}")
             return {"success": False, "error": str(e), "relationships": []}
 
-    async def add_document_relationship(self, document_id: str, target_id: str, relationship_type: str) -> Dict[str, Any]:
+    async def add_document_relationship(
+        self, document_id: str, target_id: str, relationship_type: str
+    ) -> Dict[str, Any]:
         """Add a relationship between documents."""
         try:
-            request_data = {
-                "target_id": target_id,
-                "relationship_type": relationship_type
-            }
+            request_data = {"target_id": target_id, "relationship_type": relationship_type}
             response = await self.client.post(f"/api/v1/documents/{document_id}/relationships", json=request_data)
             return response.json()
         except Exception as e:
@@ -252,11 +238,7 @@ class DocumentStoreClient:
     async def bulk_document_operation(self, operation: str, document_ids: List[str], **params) -> Dict[str, Any]:
         """Perform bulk operations on documents."""
         try:
-            request_data = {
-                "operation": operation,
-                "document_ids": document_ids,
-                **params
-            }
+            request_data = {"operation": operation, "document_ids": document_ids, **params}
             response = await self.client.post("/api/v1/bulk/documents", json=request_data)
             return response.json()
         except Exception as e:
@@ -277,6 +259,10 @@ class DocumentStoreClient:
             "updated_at": document.get("updated_at", ""),
             "version": document.get("version", 1),
             "lifecycle_status": document.get("lifecycle_status", "active"),
-            "content_preview": document.get("content", "")[:300] + "..." if len(document.get("content", "")) > 300 else document.get("content", ""),
-            "content_full": document.get("content", "")
+            "content_preview": (
+                document.get("content", "")[:300] + "..."
+                if len(document.get("content", "")) > 300
+                else document.get("content", "")
+            ),
+            "content_full": document.get("content", ""),
         }

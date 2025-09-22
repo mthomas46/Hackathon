@@ -4,14 +4,15 @@ This module provides the main overview dashboard with service health, key metric
 and navigation to different data services.
 """
 
-import streamlit as st
 import asyncio
-import httpx
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import httpx
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 
 
 async def check_service_health(service_name: str, url: str) -> Dict[str, Any]:
@@ -25,26 +26,20 @@ async def check_service_health(service_name: str, url: str) -> Dict[str, Any]:
                     "name": service_name,
                     "status": "healthy",
                     "response_time": response.elapsed.total_seconds(),
-                    "data": data
+                    "data": data,
                 }
             else:
-                return {
-                    "name": service_name,
-                    "status": "unhealthy",
-                    "error": f"HTTP {response.status_code}"
-                }
+                return {"name": service_name, "status": "unhealthy", "error": f"HTTP {response.status_code}"}
     except Exception as e:
-        return {
-            "name": service_name,
-            "status": "unhealthy",
-            "error": str(e)
-        }
+        return {"name": service_name, "status": "unhealthy", "error": str(e)}
 
 
 def render_overview_page():
     """Render the main overview dashboard page."""
     st.markdown("## 📊 Dashboard Overview")
-    st.markdown("Welcome to the Data Services Dashboard. Monitor and manage your Memory Agent, Prompt Store, and Document Store services.")
+    st.markdown(
+        "Welcome to the Data Services Dashboard. Monitor and manage your Memory Agent, Prompt Store, and Document Store services."
+    )
 
     # Service Health Overview
     st.markdown("### 🔧 Service Health Status")
@@ -53,7 +48,7 @@ def render_overview_page():
     services = [
         ("Memory Agent", "http://localhost:5040/health"),
         ("Prompt Store", "http://localhost:8080/health"),
-        ("Document Store", "http://localhost:8081/health")
+        ("Document Store", "http://localhost:8081/health"),
     ]
 
     # Run health checks asynchronously
@@ -122,7 +117,7 @@ def render_key_metrics(health_results: List[Dict[str, Any]]):
             label="Service Health",
             value=".1f",
             delta="+5.2%" if healthy_services == total_services else "-20.0%",
-            help="Percentage of services that are healthy"
+            help="Percentage of services that are healthy",
         )
 
     with col2:
@@ -130,24 +125,18 @@ def render_key_metrics(health_results: List[Dict[str, Any]]):
             label="Active Services",
             value=f"{healthy_services}/{total_services}",
             delta="+1" if healthy_services > 0 else "0",
-            help="Number of active vs total services"
+            help="Number of active vs total services",
         )
 
     with col3:
         st.metric(
-            label="Avg Response Time",
-            value=".2f",
-            delta="-0.05s",
-            help="Average response time across all services"
+            label="Avg Response Time", value=".2f", delta="-0.05s", help="Average response time across all services"
         )
 
     with col4:
         total_items = 1250  # Mock data - would come from actual service APIs
         st.metric(
-            label="Total Data Items",
-            value=f"{total_items:,}",
-            delta="+125",
-            help="Total items across all services"
+            label="Total Data Items", value=f"{total_items:,}", delta="+125", help="Total items across all services"
         )
 
 
@@ -184,7 +173,7 @@ def render_recent_activity():
         {"time": "5 minutes ago", "action": "Document uploaded", "service": "Document Store", "user": "admin"},
         {"time": "8 minutes ago", "action": "Memory item added", "service": "Memory Agent", "user": "system"},
         {"time": "12 minutes ago", "action": "Prompt forked", "service": "Prompt Store", "user": "developer"},
-        {"time": "15 minutes ago", "action": "Document tagged", "service": "Document Store", "user": "analyst"}
+        {"time": "15 minutes ago", "action": "Document tagged", "service": "Document Store", "user": "analyst"},
     ]
 
     for activity in activities:
@@ -192,11 +181,7 @@ def render_recent_activity():
 
         with col1:
             # Service icon
-            service_icons = {
-                "Memory Agent": "🧠",
-                "Prompt Store": "📝",
-                "Document Store": "📄"
-            }
+            service_icons = {"Memory Agent": "🧠", "Prompt Store": "📝", "Document Store": "📄"}
             st.markdown(f"{service_icons.get(activity['service'], '📊')}")
 
         with col2:

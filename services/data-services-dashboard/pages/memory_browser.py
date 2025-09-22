@@ -4,10 +4,11 @@ This module provides a comprehensive interface for browsing, searching, and mana
 memory items stored by the Memory Agent service.
 """
 
-import streamlit as st
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
+import streamlit as st
 
 
 def render_memory_browser_page():
@@ -16,15 +17,15 @@ def render_memory_browser_page():
     st.markdown("Browse and manage conversation memory and operational context items.")
 
     # Get memory client
-    memory_client = st.session_state.get('memory_client')
+    memory_client = st.session_state.get("memory_client")
     if not memory_client:
         st.error("❌ Memory Agent service not available")
         return
 
     # Create tabs for different memory operations
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📋 Browse Memory", "🔍 Advanced Search", "➕ Add Memory", "🎭 Create Samples", "📊 Analytics", "📈 Insights"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+        ["📋 Browse Memory", "🔍 Advanced Search", "➕ Add Memory", "🎭 Create Samples", "📊 Analytics", "📈 Insights"]
+    )
 
     with tab1:
         render_memory_browser(memory_client)
@@ -56,15 +57,11 @@ def render_memory_browser(memory_client):
         type_filter = st.selectbox(
             "Filter by Type",
             ["All Types", "operation", "llm_summary", "doc_summary", "api_summary", "finding"],
-            key="memory_type_filter"
+            key="memory_type_filter",
         )
 
     with col2:
-        sort_by = st.selectbox(
-            "Sort by",
-            ["Newest First", "Oldest First", "Type", "Key"],
-            key="memory_sort"
-        )
+        sort_by = st.selectbox("Sort by", ["Newest First", "Oldest First", "Type", "Key"], key="memory_sort")
 
     with col3:
         limit = st.slider("Items per page", 10, 100, 50, key="memory_limit")
@@ -105,14 +102,20 @@ def render_memory_items_table(items: List[Dict[str, Any]]):
     df_data = []
     for item in items:
         formatted_item = memory_client.format_memory_item(item)
-        df_data.append({
-            "ID": formatted_item["id"][:8] + "...",  # Truncate ID
-            "Type": formatted_item["type"],
-            "Key": formatted_item["key"] or "",
-            "Summary": formatted_item["summary"][:50] + "..." if len(formatted_item["summary"]) > 50 else formatted_item["summary"],
-            "Created": formatted_item["created_at"],
-            "Expires": formatted_item["expires_at"] or "Never"
-        })
+        df_data.append(
+            {
+                "ID": formatted_item["id"][:8] + "...",  # Truncate ID
+                "Type": formatted_item["type"],
+                "Key": formatted_item["key"] or "",
+                "Summary": (
+                    formatted_item["summary"][:50] + "..."
+                    if len(formatted_item["summary"]) > 50
+                    else formatted_item["summary"]
+                ),
+                "Created": formatted_item["created_at"],
+                "Expires": formatted_item["expires_at"] or "Never",
+            }
+        )
 
     df = pd.DataFrame(df_data)
 
@@ -125,7 +128,7 @@ def render_memory_items_table(items: List[Dict[str, Any]]):
         "Select item for details",
         [item["id"] for item in items],
         format_func=lambda x: x[:8] + "...",
-        key="memory_detail_select"
+        key="memory_detail_select",
     )
 
     if selected_id:
@@ -165,26 +168,21 @@ def render_memory_search(memory_client):
 
     with col1:
         search_query = st.text_input(
-            "Search Query",
-            placeholder="Enter keywords to search in memory...",
-            key="memory_search_query"
+            "Search Query", placeholder="Enter keywords to search in memory...", key="memory_search_query"
         )
 
     with col2:
         search_type = st.selectbox(
             "Search in Type",
             ["All Types", "operation", "llm_summary", "doc_summary", "api_summary", "finding"],
-            key="memory_search_type"
+            key="memory_search_type",
         )
 
     if st.button("🔍 Search", key="execute_memory_search") and search_query.strip():
         with st.spinner("Searching memory items..."):
             try:
                 type_filter = None if search_type == "All Types" else search_type
-                result = asyncio.run(memory_client.search_memory_items(
-                    query=search_query,
-                    type_filter=type_filter
-                ))
+                result = asyncio.run(memory_client.search_memory_items(query=search_query, type_filter=type_filter))
 
                 if result.get("success"):
                     items = result.get("items", [])
@@ -217,42 +215,30 @@ def render_advanced_memory_search(memory_client):
                 "Memory Types",
                 ["operation", "llm_summary", "doc_summary", "api_summary", "finding"],
                 default=["operation", "llm_summary"],
-                key="adv_memory_types"
+                key="adv_memory_types",
             )
 
             # Date range filter
             date_filter = st.selectbox(
                 "Time Filter",
                 ["All Time", "Last Hour", "Last 24 Hours", "Last Week", "Last Month"],
-                key="adv_date_filter"
+                key="adv_date_filter",
             )
 
         with col2:
             # Content filters
             content_contains = st.text_input(
-                "Content Contains",
-                placeholder="Keywords in content...",
-                key="adv_content_filter"
+                "Content Contains", placeholder="Keywords in content...", key="adv_content_filter"
             )
 
-            key_pattern = st.text_input(
-                "Key Pattern",
-                placeholder="Regex pattern for keys...",
-                key="adv_key_pattern"
-            )
+            key_pattern = st.text_input("Key Pattern", placeholder="Regex pattern for keys...", key="adv_key_pattern")
 
         with col3:
             # Quality filters
-            min_summary_length = st.slider(
-                "Min Summary Length",
-                0, 500, 10,
-                key="adv_min_length"
-            )
+            min_summary_length = st.slider("Min Summary Length", 0, 500, 10, key="adv_min_length")
 
             sort_by = st.selectbox(
-                "Sort By",
-                ["Newest First", "Oldest First", "Type", "Key", "Summary Length"],
-                key="adv_sort_by"
+                "Sort By", ["Newest First", "Oldest First", "Type", "Key", "Summary Length"], key="adv_sort_by"
             )
 
             results_limit = st.slider("Results Limit", 10, 200, 50, key="adv_results_limit")
@@ -262,26 +248,25 @@ def render_advanced_memory_search(memory_client):
 
     with col1:
         if st.button("🔍 Execute Search", key="execute_adv_search", use_container_width=True):
-            execute_advanced_memory_search(memory_client, {
-                "types": memory_types,
-                "date_filter": date_filter,
-                "content_contains": content_contains,
-                "key_pattern": key_pattern,
-                "min_length": min_summary_length,
-                "sort_by": sort_by,
-                "limit": results_limit
-            })
+            execute_advanced_memory_search(
+                memory_client,
+                {
+                    "types": memory_types,
+                    "date_filter": date_filter,
+                    "content_contains": content_contains,
+                    "key_pattern": key_pattern,
+                    "min_length": min_summary_length,
+                    "sort_by": sort_by,
+                    "limit": results_limit,
+                },
+            )
 
     with col2:
         if st.button("📊 Analyze Results", key="analyze_search_results", use_container_width=True):
             st.info("Analysis feature would show search result statistics and trends")
 
     with col3:
-        export_format = st.selectbox(
-            "Export Format",
-            ["JSON", "CSV", "Markdown"],
-            key="export_format"
-        )
+        export_format = st.selectbox("Export Format", ["JSON", "CSV", "Markdown"], key="export_format")
         if st.button("📥 Export Results", key="export_search_results"):
             st.info(f"Would export search results as {export_format}")
 
@@ -294,13 +279,11 @@ def render_advanced_memory_search(memory_client):
         "LLM Interactions": {"types": ["llm_summary"], "date_filter": "Last Week"},
         "Document Analysis": {"types": ["doc_summary"], "content_contains": "analysis"},
         "API Monitoring": {"types": ["api_summary"], "date_filter": "Last Hour"},
-        "Security Findings": {"types": ["finding"], "content_contains": "security"}
+        "Security Findings": {"types": ["finding"], "content_contains": "security"},
     }
 
     selected_template = st.selectbox(
-        "Quick Templates",
-        ["Select Template"] + list(templates.keys()),
-        key="search_template"
+        "Quick Templates", ["Select Template"] + list(templates.keys()), key="search_template"
     )
 
     if selected_template != "Select Template":
@@ -325,7 +308,7 @@ def render_memory_analytics(memory_client):
                     "llm_summary": 67,
                     "doc_summary": 45,
                     "api_summary": 31,
-                    "finding": 13
+                    "finding": 13,
                 },
                 "avg_summary_length": 87,
                 "oldest_item_days": 15,
@@ -334,12 +317,12 @@ def render_memory_analytics(memory_client):
                 "usage_patterns": {
                     "peak_hours": [9, 10, 14, 15],
                     "most_active_type": "operation",
-                    "avg_items_per_day": 12
+                    "avg_items_per_day": 12,
                 },
                 "content_insights": {
                     "most_common_words": ["processing", "completed", "analysis", "success", "data"],
-                    "sentiment_distribution": {"positive": 0.65, "neutral": 0.30, "negative": 0.05}
-                }
+                    "sentiment_distribution": {"positive": 0.65, "neutral": 0.30, "negative": 0.05},
+                },
             }
 
             display_memory_analytics_dashboard(analytics)
@@ -357,23 +340,23 @@ def render_memory_insights(memory_client):
                     "Operations peak during business hours (9-11 AM, 2-4 PM)",
                     "LLM summaries show increasing complexity over time",
                     "Document analysis requests correlate with code generation activities",
-                    "API monitoring shows healthy error rates (< 5%)"
+                    "API monitoring shows healthy error rates (< 5%)",
                 ],
                 "anomalies": [
                     "Unusual spike in 'finding' type memories last Tuesday",
-                    "Lower than expected memory retention for 'api_summary' items"
+                    "Lower than expected memory retention for 'api_summary' items",
                 ],
                 "recommendations": [
                     "Consider increasing memory capacity for peak hours",
                     "Implement automated cleanup for older operation logs",
                     "Add correlation analysis between different memory types",
-                    "Monitor API error patterns more closely"
+                    "Monitor API error patterns more closely",
                 ],
                 "predictions": [
                     "Memory usage expected to grow 15% in next week",
                     "New memory type 'user_feedback' might be needed soon",
-                    "Potential memory bottleneck if current growth continues"
-                ]
+                    "Potential memory bottleneck if current growth continues",
+                ],
             }
 
             display_memory_insights_dashboard(insights)
@@ -390,30 +373,22 @@ def render_add_memory(memory_client):
             memory_type = st.selectbox(
                 "Memory Type",
                 ["operation", "llm_summary", "doc_summary", "api_summary", "finding"],
-                key="new_memory_type"
+                key="new_memory_type",
             )
 
             memory_key = st.text_input(
-                "Key (Optional)",
-                placeholder="correlation_id, doc_id, etc.",
-                key="new_memory_key"
+                "Key (Optional)", placeholder="correlation_id, doc_id, etc.", key="new_memory_key"
             )
 
         with col2:
             memory_summary = st.text_area(
-                "Summary",
-                placeholder="Brief summary of the memory item...",
-                height=100,
-                key="new_memory_summary"
+                "Summary", placeholder="Brief summary of the memory item...", height=100, key="new_memory_summary"
             )
 
         # Data input
         st.markdown("**Data (JSON format):**")
         data_input = st.text_area(
-            "Data",
-            placeholder='{"key": "value", "details": "..."}',
-            height=150,
-            key="new_memory_data"
+            "Data", placeholder='{"key": "value", "details": "..."}', height=150, key="new_memory_data"
         )
 
         # Submit button
@@ -428,12 +403,14 @@ def render_add_memory(memory_client):
 
                 # Add memory item
                 with st.spinner("Saving memory item..."):
-                    result = asyncio.run(memory_client.put_memory_item(
-                        item_type=memory_type,
-                        key=memory_key if memory_key.strip() else None,
-                        summary=memory_summary,
-                        data=data
-                    ))
+                    result = asyncio.run(
+                        memory_client.put_memory_item(
+                            item_type=memory_type,
+                            key=memory_key if memory_key.strip() else None,
+                            summary=memory_summary,
+                            data=data,
+                        )
+                    )
 
                     if result.get("success"):
                         st.success("✅ Memory item saved successfully!")
@@ -520,8 +497,8 @@ def render_create_samples(memory_client):
                         "user_query": "Write a Python function to analyze CSV data",
                         "llm_response": "Generated pandas-based data analysis function",
                         "tokens_used": 245,
-                        "processing_time": 1.2
-                    }
+                        "processing_time": 1.2,
+                    },
                 }
                 result = asyncio.run(memory_client.put_memory_item(**sample_data))
                 if result.get("success"):
@@ -541,8 +518,8 @@ def render_create_samples(memory_client):
                         "analysis_type": "security_audit",
                         "issues_found": ["deprecated_auth_method", "missing_rate_limiting"],
                         "recommendations": ["Update to OAuth2", "Add rate limiting"],
-                        "quality_score": 7.8
-                    }
+                        "quality_score": 7.8,
+                    },
                 }
                 result = asyncio.run(memory_client.put_memory_item(**sample_data))
                 if result.get("success"):
@@ -563,8 +540,8 @@ def render_create_samples(memory_client):
                         "records_processed": 1500,
                         "success_rate": 0.985,
                         "duration_seconds": 45.2,
-                        "errors": ["3 validation errors", "2 timeout errors"]
-                    }
+                        "errors": ["3 validation errors", "2 timeout errors"],
+                    },
                 }
                 result = asyncio.run(memory_client.put_memory_item(**sample_data))
                 if result.get("success"):
@@ -621,8 +598,10 @@ def generate_random_sample(sample_type: str, index: int) -> Dict[str, Any]:
                 "records_processed": random.randint(100, 5000),
                 "success_rate": round(random.uniform(0.85, 0.99), 3),
                 "duration_seconds": round(random.uniform(10, 300), 1),
-                "errors": [f"{random.randint(0, 5)} {random.choice(['validation', 'timeout', 'network', 'permission'])} errors"]
-            }
+                "errors": [
+                    f"{random.randint(0, 5)} {random.choice(['validation', 'timeout', 'network', 'permission'])} errors"
+                ],
+            },
         },
         "llm_summary": {
             "type": "llm_summary",
@@ -630,17 +609,19 @@ def generate_random_sample(sample_type: str, index: int) -> Dict[str, Any]:
             "summary": f"LLM processed {random.choice(['code generation', 'text analysis', 'question answering', 'content creation'])} request with {random.randint(150, 800)} tokens used.",
             "data": {
                 "session_id": f"session_{uuid.uuid4().hex[:12]}",
-                "user_query": random.choice([
-                    "Generate a Python function for data visualization",
-                    "Analyze this text for sentiment",
-                    "Explain quantum computing concepts",
-                    "Create a marketing email template"
-                ]),
+                "user_query": random.choice(
+                    [
+                        "Generate a Python function for data visualization",
+                        "Analyze this text for sentiment",
+                        "Explain quantum computing concepts",
+                        "Create a marketing email template",
+                    ]
+                ),
                 "llm_response": "Generated comprehensive response with examples and best practices",
                 "tokens_used": random.randint(150, 800),
                 "processing_time": round(random.uniform(0.5, 5.0), 1),
-                "model_used": random.choice(["gpt-4", "claude-2", "llama-2-70b", "codellama"])
-            }
+                "model_used": random.choice(["gpt-4", "claude-2", "llama-2-70b", "codellama"]),
+            },
         },
         "doc_summary": {
             "type": "doc_summary",
@@ -648,12 +629,18 @@ def generate_random_sample(sample_type: str, index: int) -> Dict[str, Any]:
             "summary": f"Analyzed {random.choice(['API documentation', 'user manual', 'technical specification', 'research paper'])} and identified {random.randint(1, 5)} key insights.",
             "data": {
                 "document_id": f"doc_{uuid.uuid4().hex[:12]}.pdf",
-                "analysis_type": random.choice(["content_analysis", "security_audit", "quality_check", "compliance_review"]),
-                "issues_found": [f"{random.randint(0, 3)} {random.choice(['formatting', 'security', 'accessibility', 'performance'])} issues"],
-                "recommendations": [f"Improve {random.choice(['documentation', 'security', 'usability', 'performance'])}"],
+                "analysis_type": random.choice(
+                    ["content_analysis", "security_audit", "quality_check", "compliance_review"]
+                ),
+                "issues_found": [
+                    f"{random.randint(0, 3)} {random.choice(['formatting', 'security', 'accessibility', 'performance'])} issues"
+                ],
+                "recommendations": [
+                    f"Improve {random.choice(['documentation', 'security', 'usability', 'performance'])}"
+                ],
                 "quality_score": round(random.uniform(6.0, 9.5), 1),
-                "word_count": random.randint(1000, 50000)
-            }
+                "word_count": random.randint(1000, 50000),
+            },
         },
         "api_summary": {
             "type": "api_summary",
@@ -665,8 +652,8 @@ def generate_random_sample(sample_type: str, index: int) -> Dict[str, Any]:
                 "status_code": random.choice([200, 201, 400, 404, 500]),
                 "response_time": round(random.uniform(0.1, 3.0), 2),
                 "data_transferred": f"{random.randint(1, 1000)} KB",
-                "user_agent": "DataServicesDashboard/1.0"
-            }
+                "user_agent": "DataServicesDashboard/1.0",
+            },
         },
         "finding": {
             "type": "finding",
@@ -675,12 +662,14 @@ def generate_random_sample(sample_type: str, index: int) -> Dict[str, Any]:
             "data": {
                 "finding_type": random.choice(["security", "performance", "reliability", "usability"]),
                 "severity": random.choice(["low", "medium", "high", "critical"]),
-                "component": random.choice(["authentication", "data_processing", "api_gateway", "database", "frontend"]),
+                "component": random.choice(
+                    ["authentication", "data_processing", "api_gateway", "database", "frontend"]
+                ),
                 "description": f"Detected {random.choice(['potential security risk', 'performance bottleneck', 'reliability issue', 'usability problem'])}",
                 "recommendation": f"Implement {random.choice(['additional validation', 'caching layer', 'retry mechanism', 'user feedback'])}",
-                "confidence": round(random.uniform(0.7, 0.95), 2)
-            }
-        }
+                "confidence": round(random.uniform(0.7, 0.95), 2),
+            },
+        },
     }
 
     return samples.get(sample_type, samples["operation"])
@@ -689,6 +678,7 @@ def generate_random_sample(sample_type: str, index: int) -> Dict[str, Any]:
 # ============================================================================
 # MEMORY ANALYTICS AND INSIGHTS HELPER FUNCTIONS
 # ============================================================================
+
 
 def execute_advanced_memory_search(memory_client, filters):
     """Execute advanced memory search with given filters."""
@@ -746,8 +736,8 @@ def generate_mock_search_results(filters):
                 "data": {
                     "operation_type": random.choice(["data_import", "user_sync", "report_generation"]),
                     "records_processed": random.randint(100, 5000),
-                    "success_rate": round(random.uniform(0.85, 0.99), 3)
-                }
+                    "success_rate": round(random.uniform(0.85, 0.99), 3),
+                },
             }
         elif item_type == "llm_summary":
             item = {
@@ -757,8 +747,8 @@ def generate_mock_search_results(filters):
                 "data": {
                     "session_id": f"session_{random.randint(1000, 9999)}",
                     "tokens_used": random.randint(150, 800),
-                    "processing_time": round(random.uniform(0.5, 5.0), 1)
-                }
+                    "processing_time": round(random.uniform(0.5, 5.0), 1),
+                },
             }
         else:  # doc_summary
             item = {
@@ -768,8 +758,8 @@ def generate_mock_search_results(filters):
                 "data": {
                     "document_id": f"doc_{random.randint(1000, 9999)}",
                     "issues_found": random.randint(0, 3),
-                    "quality_score": round(random.uniform(7.0, 9.5), 1)
-                }
+                    "quality_score": round(random.uniform(7.0, 9.5), 1),
+                },
             }
 
         results.append(item)
@@ -808,21 +798,15 @@ def display_search_visualization(results):
 
     if type_counts:
         st.markdown("**📊 Results by Type**")
-        df_types = pd.DataFrame({
-            "Type": list(type_counts.keys()),
-            "Count": list(type_counts.values())
-        })
+        df_types = pd.DataFrame({"Type": list(type_counts.keys()), "Count": list(type_counts.values())})
         st.bar_chart(df_types.set_index("Type"))
 
     # Timeline (mock)
     if len(results) > 5:
         st.markdown("**📈 Results Timeline**")
         # Mock timeline data
-        dates = pd.date_range(start='2024-01-01', periods=min(len(results), 20), freq='H')
-        timeline_data = pd.DataFrame({
-            "Date": dates,
-            "Results": [len(results) // len(dates)] * len(dates)
-        })
+        dates = pd.date_range(start="2024-01-01", periods=min(len(results), 20), freq="H")
+        timeline_data = pd.DataFrame({"Date": dates, "Results": [len(results) // len(dates)] * len(dates)})
         st.line_chart(timeline_data.set_index("Date"))
 
 
@@ -874,10 +858,7 @@ def display_memory_analytics_dashboard(analytics):
     st.markdown("**📊 Memory Type Distribution**")
 
     type_data = analytics["memory_types"]
-    df_types = pd.DataFrame({
-        "Type": list(type_data.keys()),
-        "Count": list(type_data.values())
-    })
+    df_types = pd.DataFrame({"Type": list(type_data.keys()), "Count": list(type_data.values())})
     st.bar_chart(df_types.set_index("Type"))
 
     # Usage patterns
@@ -904,7 +885,7 @@ def display_memory_analytics_dashboard(analytics):
         {"name": "Capacity Usage", "value": 73, "status": "good", "threshold": 80},
         {"name": "TTL Compliance", "value": 98, "status": "excellent", "threshold": 95},
         {"name": "Data Freshness", "value": 89, "status": "good", "threshold": 85},
-        {"name": "Type Diversity", "value": 92, "status": "excellent", "threshold": 90}
+        {"name": "Type Diversity", "value": 92, "status": "excellent", "threshold": 90},
     ]
 
     for indicator in health_indicators:
@@ -918,7 +899,11 @@ def display_memory_analytics_dashboard(analytics):
             st.markdown(f"{color} {indicator['value']}%")
 
         with col3:
-            status_text = "Excellent" if indicator["status"] == "excellent" else "Good" if indicator["status"] == "good" else "Needs Attention"
+            status_text = (
+                "Excellent"
+                if indicator["status"] == "excellent"
+                else "Good" if indicator["status"] == "good" else "Needs Attention"
+            )
             st.caption(status_text)
 
 

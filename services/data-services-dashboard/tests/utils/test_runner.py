@@ -1,8 +1,8 @@
 """Test runner utilities for the Data Services Dashboard."""
 
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 
@@ -30,18 +30,9 @@ def run_tests(test_type="all", verbose=False, coverage=False):
         cmd.append("-q")
 
     if coverage:
-        cmd.extend([
-            "--cov=.",
-            "--cov-report=html",
-            "--cov-report=term-missing",
-            "--cov-fail-under=80"
-        ])
+        cmd.extend(["--cov=.", "--cov-report=html", "--cov-report=term-missing", "--cov-fail-under=80"])
 
-    cmd.extend([
-        "--tb=short",
-        "--asyncio-mode=auto",
-        "-x"  # Stop on first failure
-    ])
+    cmd.extend(["--tb=short", "--asyncio-mode=auto", "-x"])  # Stop on first failure
 
     # Run tests
     print(f"Running command: {' '.join(cmd)}")
@@ -94,9 +85,9 @@ def generate_test_report():
         "test_results": {
             "unit_tests": run_tests("unit", verbose=True),
             "integration_tests": run_tests("integration", verbose=True),
-            "e2e_tests": run_tests("e2e", verbose=True)
+            "e2e_tests": run_tests("e2e", verbose=True),
         },
-        "overall_success": False
+        "overall_success": False,
     }
 
     # Calculate overall success
@@ -104,7 +95,7 @@ def generate_test_report():
 
     # Save report
     report_file = Path(__file__).parent.parent / "test_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     print(f"Test report saved to: {report_file}")
@@ -115,17 +106,17 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Data Services Dashboard Test Runner")
-    parser.add_argument("test_type", nargs="?", default="all",
-                       choices=["all", "unit", "integration", "e2e"],
-                       help="Type of tests to run")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Verbose output")
-    parser.add_argument("--coverage", "-c", action="store_true",
-                       help="Run with coverage")
-    parser.add_argument("--report", "-r", action="store_true",
-                       help="Generate test report")
-    parser.add_argument("--setup", "-s", action="store_true",
-                       help="Setup test environment")
+    parser.add_argument(
+        "test_type",
+        nargs="?",
+        default="all",
+        choices=["all", "unit", "integration", "e2e"],
+        help="Type of tests to run",
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--coverage", "-c", action="store_true", help="Run with coverage")
+    parser.add_argument("--report", "-r", action="store_true", help="Generate test report")
+    parser.add_argument("--setup", "-s", action="store_true", help="Setup test environment")
 
     args = parser.parse_args()
 
