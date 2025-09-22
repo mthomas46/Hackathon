@@ -6,13 +6,11 @@ test behavior and reliable isolation.
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional, Union
-from unittest.mock import AsyncMock, MagicMock, Mock
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+from unittest.mock import AsyncMock, MagicMock, Mock
 
-from services.project_simulation.simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus
-)
+from services.project_simulation.simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
 class MockLogger:
@@ -64,21 +62,13 @@ class MockMonitoring:
 
     def record_performance(self, operation: str, duration_ms: float, **kwargs):
         """Record performance metric."""
-        self.performance_calls.append({
-            "operation": operation,
-            "duration_ms": duration_ms,
-            "kwargs": kwargs,
-            "timestamp": datetime.now()
-        })
+        self.performance_calls.append(
+            {"operation": operation, "duration_ms": duration_ms, "kwargs": kwargs, "timestamp": datetime.now()}
+        )
 
     def record_health_check(self, service: str, status: str, **kwargs):
         """Record health check."""
-        self.health_calls.append({
-            "service": service,
-            "status": status,
-            "kwargs": kwargs,
-            "timestamp": datetime.now()
-        })
+        self.health_calls.append({"service": service, "status": status, "kwargs": kwargs, "timestamp": datetime.now()})
 
     def reset(self):
         """Reset all captured data."""
@@ -101,20 +91,20 @@ class MockSimulationApplicationService:
         self.create_response = {
             "success": True,
             "simulation_id": "mock_simulation_001",
-            "message": "Simulation created successfully"
+            "message": "Simulation created successfully",
         }
 
         self.execute_response = {
             "success": True,
             "simulation_id": "mock_simulation_001",
-            "message": "Simulation execution started"
+            "message": "Simulation execution started",
         }
 
         self.status_response = {
             "success": True,
             "simulation_id": "mock_simulation_001",
             "status": "completed",
-            "message": "Simulation completed successfully"
+            "message": "Simulation completed successfully",
         }
 
     async def create_simulation(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -169,8 +159,7 @@ class MockSimulationApplicationService:
         self.cancelled_simulations.append(simulation_id)
         return {"success": True, "message": "Simulation cancelled"}
 
-    async def list_simulations(self, status: Optional[str] = None,
-                             limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+    async def list_simulations(self, status: Optional[str] = None, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
         """Mock list simulations."""
         if self.delay_seconds > 0:
             await asyncio.sleep(self.delay_seconds)
@@ -178,23 +167,25 @@ class MockSimulationApplicationService:
         simulations = []
         for sim_id, data in self.created_simulations.items():
             if status is None or data.get("status") == status:
-                simulations.append({
-                    "id": sim_id,
-                    "name": data.get("name", "Mock Simulation"),
-                    "status": data.get("status", "created"),
-                    "created_at": datetime.now().isoformat()
-                })
+                simulations.append(
+                    {
+                        "id": sim_id,
+                        "name": data.get("name", "Mock Simulation"),
+                        "status": data.get("status", "created"),
+                        "created_at": datetime.now().isoformat(),
+                    }
+                )
 
         # Apply pagination
         total_count = len(simulations)
-        paginated_simulations = simulations[offset:offset + limit]
+        paginated_simulations = simulations[offset : offset + limit]
 
         return {
             "success": True,
             "simulations": paginated_simulations,
             "total_count": total_count,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
         }
 
     def reset(self):
@@ -269,7 +260,7 @@ class MockDomainService:
         mock_timeline.phases = [
             MagicMock(name="Planning", start_date=datetime.now(), end_date=datetime.now()),
             MagicMock(name="Development", start_date=datetime.now(), end_date=datetime.now()),
-            MagicMock(name="Testing", start_date=datetime.now(), end_date=datetime.now())
+            MagicMock(name="Testing", start_date=datetime.now(), end_date=datetime.now()),
         ]
 
         self.generated_timelines[project_id] = mock_timeline
@@ -305,7 +296,7 @@ class MockHealthService:
             "service": "project-simulation",
             "version": "1.0.0",
             "uptime_seconds": 3600,
-            "environment": "testing"
+            "environment": "testing",
         }
 
     async def detailed_health_check(self) -> Dict[str, Any]:
@@ -325,13 +316,9 @@ class MockHealthService:
             "dependencies": {
                 "database": {"status": "healthy", "response_time_ms": 10},
                 "cache": {"status": "healthy", "response_time_ms": 5},
-                "external_services": {"status": "healthy", "response_time_ms": 50}
+                "external_services": {"status": "healthy", "response_time_ms": 50},
             },
-            "system_resources": {
-                "cpu_usage": 45.2,
-                "memory_usage": 67.8,
-                "disk_usage": 23.1
-            }
+            "system_resources": {"cpu_usage": 45.2, "memory_usage": 67.8, "disk_usage": 23.1},
         }
 
     async def system_health_check(self) -> Dict[str, Any]:
@@ -345,9 +332,7 @@ class MockHealthService:
                 "services_checked": 5,
                 "services_healthy": 3,
                 "services_unhealthy": 2,
-                "service_details": {
-                    "project-simulation": {"status": "unhealthy", "error": "Mock failure"}
-                }
+                "service_details": {"project-simulation": {"status": "unhealthy", "error": "Mock failure"}},
             }
 
         return {
@@ -361,13 +346,9 @@ class MockHealthService:
                 "mock-data-generator": {"status": "healthy", "response_time_ms": 15},
                 "analysis-service": {"status": "healthy", "response_time_ms": 25},
                 "doc-store": {"status": "healthy", "response_time_ms": 8},
-                "llm-gateway": {"status": "healthy", "response_time_ms": 30}
+                "llm-gateway": {"status": "healthy", "response_time_ms": 30},
             },
-            "environment_info": {
-                "environment": "testing",
-                "region": "us-east-1",
-                "cluster": "test-cluster"
-            }
+            "environment_info": {"environment": "testing", "region": "us-east-1", "cluster": "test-cluster"},
         }
 
     def reset(self):
@@ -411,20 +392,18 @@ class MockWebSocketHandler:
 
     async def send_message(self, simulation_id: str, message: Dict[str, Any]):
         """Mock sending message to simulation."""
-        self.messages_sent.append({
-            "simulation_id": simulation_id,
-            "message": message,
-            "timestamp": datetime.now()
-        })
+        self.messages_sent.append({"simulation_id": simulation_id, "message": message, "timestamp": datetime.now()})
 
     async def broadcast_message(self, message: Dict[str, Any]):
         """Mock broadcasting message to all connections."""
-        self.messages_sent.append({
-            "type": "broadcast",
-            "message": message,
-            "timestamp": datetime.now(),
-            "connections_count": len(self.connections)
-        })
+        self.messages_sent.append(
+            {
+                "type": "broadcast",
+                "message": message,
+                "timestamp": datetime.now(),
+                "connections_count": len(self.connections),
+            }
+        )
 
     def reset(self):
         """Reset mock state."""
@@ -489,16 +468,16 @@ def create_mock_websocket_handler(**kwargs) -> MockWebSocketHandler:
 
 
 __all__ = [
-    'MockLogger',
-    'MockMonitoring',
-    'MockSimulationApplicationService',
-    'MockDomainService',
-    'MockHealthService',
-    'MockWebSocketHandler',
-    'create_mock_application_service',
-    'create_mock_domain_service',
-    'create_mock_logger',
-    'create_mock_monitoring',
-    'create_mock_health_service',
-    'create_mock_websocket_handler'
+    "MockLogger",
+    "MockMonitoring",
+    "MockSimulationApplicationService",
+    "MockDomainService",
+    "MockHealthService",
+    "MockWebSocketHandler",
+    "create_mock_application_service",
+    "create_mock_domain_service",
+    "create_mock_logger",
+    "create_mock_monitoring",
+    "create_mock_health_service",
+    "create_mock_websocket_handler",
 ]

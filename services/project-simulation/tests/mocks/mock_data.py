@@ -6,13 +6,18 @@ realistic test data across all test layers.
 """
 
 import uuid
-from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock
 
 from services.project_simulation.simulation.domain.entities.project import Project
 from services.project_simulation.simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus, TeamMember, Phase, Milestone
+    ComplexityLevel,
+    Milestone,
+    Phase,
+    ProjectStatus,
+    ProjectType,
+    TeamMember,
 )
 
 
@@ -39,7 +44,7 @@ class MockDataGenerator:
             "complexity": ComplexityLevel.MEDIUM,
             "duration_weeks": 8,
             "budget": 100000,
-            "status": ProjectStatus.PLANNING
+            "status": ProjectStatus.PLANNING,
         }
         project_data.update(overrides)
 
@@ -59,7 +64,7 @@ class MockDataGenerator:
             "email": f"member{self._id_counter}@mock.com",
             "experience_years": 3,
             "skills": ["Python", "FastAPI", "Testing"],
-            "productivity_factor": 1.0
+            "productivity_factor": 1.0,
         }
         member_data.update(overrides)
 
@@ -74,7 +79,7 @@ class MockDataGenerator:
             "start_date": datetime.now(),
             "end_date": datetime.now() + timedelta(days=14),
             "duration_days": 14,
-            "status": "pending"
+            "status": "pending",
         }
         phase_data.update(overrides)
 
@@ -87,7 +92,7 @@ class MockDataGenerator:
             "name": f"Mock Milestone {self._id_counter}",
             "description": "A mock project milestone for testing",
             "due_date": datetime.now() + timedelta(days=30),
-            "status": "upcoming"
+            "status": "upcoming",
         }
         milestone_data.update(overrides)
 
@@ -103,7 +108,7 @@ class MockDataGenerator:
             "updated_at": datetime.now(),
             "results": None,
             "progress": 0.0,
-            "estimated_completion": datetime.now() + timedelta(hours=2)
+            "estimated_completion": datetime.now() + timedelta(hours=2),
         }
         simulation_data.update(overrides)
 
@@ -119,23 +124,20 @@ class MockDataGenerator:
                 self.generate_phase(
                     name="Development",
                     start_date=datetime.now() + timedelta(days=15),
-                    end_date=datetime.now() + timedelta(days=60)
+                    end_date=datetime.now() + timedelta(days=60),
                 ),
                 self.generate_phase(
                     name="Testing",
                     start_date=datetime.now() + timedelta(days=61),
-                    end_date=datetime.now() + timedelta(days=75)
-                )
+                    end_date=datetime.now() + timedelta(days=75),
+                ),
             ],
             "milestones": [
                 self.generate_milestone(),
-                self.generate_milestone(
-                    name="MVP Release",
-                    due_date=datetime.now() + timedelta(days=45)
-                )
+                self.generate_milestone(name="MVP Release", due_date=datetime.now() + timedelta(days=45)),
             ],
             "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "updated_at": datetime.now(),
         }
         timeline_data.update(overrides)
 
@@ -149,10 +151,10 @@ class MockDataGenerator:
             "members": [
                 self.generate_team_member(role="developer"),
                 self.generate_team_member(role="qa_engineer"),
-                self.generate_team_member(role="product_owner")
+                self.generate_team_member(role="product_owner"),
             ],
             "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "updated_at": datetime.now(),
         }
         team_data.update(overrides)
 
@@ -171,7 +173,7 @@ class MockDataGenerator:
             "created_at": datetime.now(),
             "updated_at": datetime.now(),
             "quality_score": 0.85,
-            "tags": ["mock", "test", "documentation"]
+            "tags": ["mock", "test", "documentation"],
         }
         document_data.update(overrides)
 
@@ -184,19 +186,10 @@ class MockDataGenerator:
             "target_id": self.generate_id("doc"),
             "analysis_type": "quality",
             "overall_score": 0.82,
-            "issues": [
-                {
-                    "severity": "medium",
-                    "description": "Mock analysis issue",
-                    "suggestion": "Fix mock issue"
-                }
-            ],
-            "recommendations": [
-                "Improve mock documentation",
-                "Add more mock tests"
-            ],
+            "issues": [{"severity": "medium", "description": "Mock analysis issue", "suggestion": "Fix mock issue"}],
+            "recommendations": ["Improve mock documentation", "Add more mock tests"],
             "created_at": datetime.now(),
-            "processing_time_seconds": 1.5
+            "processing_time_seconds": 1.5,
         }
         analysis_data.update(overrides)
 
@@ -213,18 +206,18 @@ class MockDataGenerator:
                     "name": "Document Analysis",
                     "status": "completed",
                     "duration_seconds": 2.5,
-                    "result": {"quality_score": 0.85}
+                    "result": {"quality_score": 0.85},
                 },
                 {
                     "name": "Content Generation",
                     "status": "completed",
                     "duration_seconds": 3.2,
-                    "result": {"content_length": 1500}
-                }
+                    "result": {"content_length": 1500},
+                },
             ],
             "total_duration_seconds": 5.7,
             "created_at": datetime.now(),
-            "completed_at": datetime.now() + timedelta(seconds=6)
+            "completed_at": datetime.now() + timedelta(seconds=6),
         }
         workflow_data.update(overrides)
 
@@ -245,23 +238,14 @@ class MockDataGenerator:
                     "name": f"API Member {i+1}",
                     "role": "developer" if i < 3 else "qa_engineer",
                     "experience_years": 2 + i,
-                    "skills": ["Python", "FastAPI", "Testing"][:i+1]
-                } for i in range(4)
+                    "skills": ["Python", "FastAPI", "Testing"][: i + 1],
+                }
+                for i in range(4)
             ],
             "phases": [
-                {
-                    "name": "Planning",
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-10",
-                    "duration_days": 10
-                },
-                {
-                    "name": "Development",
-                    "start_date": "2024-01-11",
-                    "end_date": "2024-02-10",
-                    "duration_days": 30
-                }
-            ]
+                {"name": "Planning", "start_date": "2024-01-01", "end_date": "2024-01-10", "duration_days": 10},
+                {"name": "Development", "start_date": "2024-01-11", "end_date": "2024-02-10", "duration_days": 30},
+            ],
         }
         request_data.update(overrides)
 
@@ -272,18 +256,14 @@ class MockDataGenerator:
         response_data = {
             "success": True,
             "message": "Operation completed successfully",
-            "data": {
-                "id": self.generate_id("response"),
-                "created_at": datetime.now().isoformat(),
-                "status": "active"
-            },
+            "data": {"id": self.generate_id("response"), "created_at": datetime.now().isoformat(), "status": "active"},
             "request_id": f"req_{uuid.uuid4().hex[:8]}",
             "timestamp": datetime.now().isoformat(),
             "_links": {
                 "self": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "GET"},
                 "update": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "PUT"},
-                "delete": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "DELETE"}
-            }
+                "delete": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "DELETE"},
+            },
         }
         response_data.update(overrides)
 
@@ -342,12 +322,9 @@ TEST_SCENARIOS = {
             "name": "Simple Web App",
             "type": ProjectType.WEB_APPLICATION,
             "complexity": ComplexityLevel.SIMPLE,
-            "duration_weeks": 4
+            "duration_weeks": 4,
         },
-        "team": [
-            {"role": "developer", "experience_years": 2},
-            {"role": "qa_engineer", "experience_years": 1}
-        ]
+        "team": [{"role": "developer", "experience_years": 2}, {"role": "qa_engineer", "experience_years": 1}],
     },
     "complex_enterprise": {
         "project": {
@@ -355,28 +332,25 @@ TEST_SCENARIOS = {
             "type": ProjectType.WEB_APPLICATION,
             "complexity": ComplexityLevel.COMPLEX,
             "duration_weeks": 16,
-            "budget": 500000
+            "budget": 500000,
         },
         "team": [
             {"role": "developer", "experience_years": 5},
             {"role": "architect", "experience_years": 8},
             {"role": "qa_engineer", "experience_years": 4},
             {"role": "product_owner", "experience_years": 6},
-            {"role": "devops_engineer", "experience_years": 3}
-        ]
+            {"role": "devops_engineer", "experience_years": 3},
+        ],
     },
     "api_microservice": {
         "project": {
             "name": "User Management API",
             "type": ProjectType.API_SERVICE,
             "complexity": ComplexityLevel.MEDIUM,
-            "duration_weeks": 6
+            "duration_weeks": 6,
         },
-        "team": [
-            {"role": "developer", "experience_years": 4},
-            {"role": "qa_engineer", "experience_years": 3}
-        ]
-    }
+        "team": [{"role": "developer", "experience_years": 4}, {"role": "qa_engineer", "experience_years": 3}],
+    },
 }
 
 
@@ -390,10 +364,7 @@ def create_test_scenario(scenario_name: str) -> Dict[str, Any]:
 
     # Generate core data
     project = generator.generate_project(**scenario["project"])
-    team_members = [
-        generator.generate_team_member(**member)
-        for member in scenario["team"]
-    ]
+    team_members = [generator.generate_team_member(**member) for member in scenario["team"]]
 
     # Create timeline
     timeline = generator.generate_timeline(project_id=project.project_id)
@@ -401,22 +372,17 @@ def create_test_scenario(scenario_name: str) -> Dict[str, Any]:
     # Create simulation
     simulation = generator.generate_simulation(project_id=project.project_id)
 
-    return {
-        "project": project,
-        "team": team_members,
-        "timeline": timeline,
-        "simulation": simulation
-    }
+    return {"project": project, "team": team_members, "timeline": timeline, "simulation": simulation}
 
 
 __all__ = [
-    'MockDataGenerator',
-    'generate_mock_project',
-    'generate_mock_team',
-    'generate_mock_timeline',
-    'generate_mock_simulation',
-    'generate_mock_document',
-    'generate_bulk_mock_data',
-    'TEST_SCENARIOS',
-    'create_test_scenario'
+    "MockDataGenerator",
+    "generate_mock_project",
+    "generate_mock_team",
+    "generate_mock_timeline",
+    "generate_mock_simulation",
+    "generate_mock_document",
+    "generate_bulk_mock_data",
+    "TEST_SCENARIOS",
+    "create_test_scenario",
 ]

@@ -4,10 +4,10 @@ This module contains comprehensive tests for Hypermedia as the Engine of Applica
 implementation. Tests cover API discoverability, link relations, and hypermedia-driven navigation.
 """
 
-import pytest
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import Mock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -26,14 +26,7 @@ class TestAPIDiscovery:
         links = data["_links"]
 
         # Essential API links
-        essential_links = [
-            "self",
-            "health",
-            "simulations",
-            "config",
-            "documentation",
-            "openapi"
-        ]
+        essential_links = ["self", "health", "simulations", "config", "documentation", "openapi"]
 
         for link in essential_links:
             assert link in links, f"Missing essential link: {link}"
@@ -92,12 +85,15 @@ class TestResourceNavigation:
     def test_simulation_resource_provides_relationship_links(self, test_client):
         """Test that simulation resource provides relationship links."""
         # Create a simulation first
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "HATEOAS Test",
-            "description": "Testing relationship links",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "HATEOAS Test",
+                "description": "Testing relationship links",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -117,10 +113,10 @@ class TestResourceNavigation:
             relationship_links = [
                 "self",
                 "collection",  # Link back to collection
-                "execute",     # Action to execute simulation
-                "reports",     # Related reports
-                "events",      # Related events
-                "logs"         # Related logs
+                "execute",  # Action to execute simulation
+                "reports",  # Related reports
+                "events",  # Related events
+                "logs",  # Related logs
             ]
 
             for link in relationship_links:
@@ -129,12 +125,15 @@ class TestResourceNavigation:
     def test_action_links_include_http_methods(self, test_client):
         """Test that action links include appropriate HTTP methods."""
         # Create a simulation
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "Method Test",
-            "description": "Testing HTTP methods in links",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "Method Test",
+                "description": "Testing HTTP methods in links",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -215,7 +214,7 @@ class TestLinkRelationSemantics:
                         collection_href = collection_links["self"]["href"]
                         item_collection_href = item_links["collection"]["href"]
                         # Normalize URLs for comparison
-                        assert collection_href.split('?')[0] == item_collection_href.split('?')[0]
+                        assert collection_href.split("?")[0] == item_collection_href.split("?")[0]
 
 
 class TestHATEOASWorkflows:
@@ -234,12 +233,15 @@ class TestHATEOASWorkflows:
         assert collection_response.status_code == 200
 
         # 3. Create a new simulation
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "Workflow Test",
-            "description": "Testing HATEOAS workflow",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "Workflow Test",
+                "description": "Testing HATEOAS workflow",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -408,4 +410,5 @@ class TestHATEOASPerformance:
 def test_client():
     """Create test client for API testing."""
     from main import app
+
     return TestClient(app)

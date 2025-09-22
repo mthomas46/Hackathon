@@ -6,10 +6,11 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any, List
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Import the modules we'll be testing (these may not exist yet - that's why tests will fail)
 from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
@@ -32,7 +33,7 @@ class TestSimulationAnalyzer:
         simulation_id = "sim_123"
         documents = [
             {"id": "doc1", "content": "API documentation", "type": "api_docs"},
-            {"id": "doc2", "content": "User manual", "type": "manual"}
+            {"id": "doc2", "content": "User manual", "type": "manual"},
         ]
 
         # Act
@@ -52,7 +53,7 @@ class TestSimulationAnalyzer:
         simulation_id = "sim_123"
         timeline = [
             {"phase": "Planning", "start_week": 0, "duration_weeks": 2, "milestones": ["Complete planning"]},
-            {"phase": "Development", "start_week": 2, "duration_weeks": 4, "milestones": ["Complete development"]}
+            {"phase": "Development", "start_week": 2, "duration_weeks": 4, "milestones": ["Complete development"]},
         ]
 
         # Act
@@ -72,7 +73,7 @@ class TestSimulationAnalyzer:
         simulation_id = "sim_123"
         team_members = [
             {"id": "member1", "role": "developer", "skills": ["python", "api"], "experience_years": 3},
-            {"id": "member2", "role": "qa_engineer", "skills": ["testing", "automation"], "experience_years": 2}
+            {"id": "member2", "role": "qa_engineer", "skills": ["testing", "automation"], "experience_years": 2},
         ]
 
         # Act
@@ -94,7 +95,7 @@ class TestSimulationAnalyzer:
             "timeline": [{"phase": "Development", "duration_weeks": 8}],
             "team_members": [{"experience_years": 2}, {"experience_years": 1}],
             "technologies": ["Python", "React", "PostgreSQL"],
-            "budget": 150000
+            "budget": 150000,
         }
 
         # Act
@@ -116,7 +117,7 @@ class TestSimulationAnalyzer:
             "budget": 150000,
             "team_cost_per_month": 25000,
             "infrastructure_cost": 15000,
-            "estimated_duration_months": 6
+            "estimated_duration_months": 6,
         }
 
         # Act
@@ -139,7 +140,7 @@ class TestSimulationAnalyzer:
             "timeline": [{"phase": "Planning", "duration_weeks": 2}],
             "team_members": [{"role": "developer", "experience_years": 3}],
             "technologies": ["Python", "FastAPI"],
-            "budget": 100000
+            "budget": 100000,
         }
 
         # Act
@@ -199,15 +200,15 @@ class TestReportGenerator:
                 analysis_type=AnalysisType.DOCUMENT_ANALYSIS,
                 findings=["Found 5 documents"],
                 recommendations=["Consider consolidating docs"],
-                metrics={"document_count": 5}
+                metrics={"document_count": 5},
             ),
             AnalysisResult(
                 simulation_id=simulation_id,
                 analysis_type=AnalysisType.TIMELINE_ANALYSIS,
                 findings=["Timeline is realistic"],
                 recommendations=["Monitor critical path"],
-                metrics={"total_duration": 12}
-            )
+                metrics={"total_duration": 12},
+            ),
         ]
 
         # Act
@@ -230,7 +231,7 @@ class TestReportGenerator:
             analysis_type=AnalysisType.DOCUMENT_ANALYSIS,
             findings=["Document quality issues found"],
             recommendations=["Improve documentation"],
-            metrics={"quality_score": 7.5}
+            metrics={"quality_score": 7.5},
         )
 
         # Act
@@ -252,7 +253,7 @@ class TestReportGenerator:
             "total_documents": 25,
             "team_size": 5,
             "estimated_duration_weeks": 12,
-            "budget_utilization": 85.5
+            "budget_utilization": 85.5,
         }
         critical_findings = ["Timeline risk identified", "Resource constraint detected"]
 
@@ -284,14 +285,14 @@ class TestSummaryProcessor:
                 "simulation_id": "sim_123",
                 "analysis_type": "DOCUMENT_ANALYSIS",
                 "key_findings": ["Documentation gaps found"],
-                "priority_recommendations": ["Improve API docs"]
+                "priority_recommendations": ["Improve API docs"],
             },
             {
                 "simulation_id": "sim_123",
                 "analysis_type": "TIMELINE_ANALYSIS",
                 "key_findings": ["Timeline realistic"],
-                "priority_recommendations": ["Monitor progress"]
-            }
+                "priority_recommendations": ["Monitor progress"],
+            },
         ]
 
         # Act
@@ -309,7 +310,7 @@ class TestSummaryProcessor:
         # Arrange
         summary_data = {
             "findings": ["High risk timeline", "Resource shortage", "Documentation incomplete"],
-            "recommendations": ["Add team member", "Review timeline", "Complete documentation"]
+            "recommendations": ["Add team member", "Review timeline", "Complete documentation"],
         }
 
         # Act
@@ -331,7 +332,7 @@ class TestSummaryProcessor:
         analysis_results = [
             {"confidence": 0.9, "data_quality": "high"},
             {"confidence": 0.7, "data_quality": "medium"},
-            {"confidence": 0.8, "data_quality": "high"}
+            {"confidence": 0.8, "data_quality": "high"},
         ]
 
         # Act

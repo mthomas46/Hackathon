@@ -4,17 +4,15 @@ This module contains integration tests for HTTP client adapters, testing
 connection pooling, retry logic, timeout handling, and resilience patterns.
 """
 
-import pytest
-import httpx
 import asyncio
 import time
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, patch
 
-from simulation.infrastructure.clients.ecosystem_clients import (
-    EcosystemServiceClient, EcosystemServiceRegistry
-)
+import httpx
+import pytest
 from simulation.domain.value_objects import ServiceEndpoint, ServiceHealth
+from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceClient, EcosystemServiceRegistry
 
 
 class TestHTTPAdapterConnectionPooling:
@@ -173,14 +171,18 @@ class TestEcosystemServiceClientIntegration:
         """Test service registry initialization."""
         # Should have clients for major services
         expected_services = [
-            "doc_store", "mock_data_generator", "orchestrator",
-            "analysis_service", "llm_gateway", "prompt_store"
+            "doc_store",
+            "mock_data_generator",
+            "orchestrator",
+            "analysis_service",
+            "llm_gateway",
+            "prompt_store",
         ]
 
         for service_name in expected_services:
             client = service_registry.get_client(service_name)
             assert client is not None
-            assert hasattr(client, 'service_name')
+            assert hasattr(client, "service_name")
             assert client.service_name == service_name
 
     @pytest.mark.asyncio
@@ -335,6 +337,7 @@ class TestHTTPAdapterPerformance:
         try:
             # Make a request and verify it completes in reasonable time
             import time
+
             start_time = time.time()
             response = await client.get_json("/json")
             end_time = time.time()

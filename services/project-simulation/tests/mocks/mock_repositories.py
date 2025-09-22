@@ -6,14 +6,12 @@ test behavior and reliable data isolation.
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional, Union
-from unittest.mock import MagicMock
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+from unittest.mock import MagicMock
 
 from services.project_simulation.simulation.domain.entities.project import Project
-from services.project_simulation.simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus
-)
+from services.project_simulation.simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
 class MockProjectRepository:
@@ -36,11 +34,9 @@ class MockProjectRepository:
             raise Exception("Mock repository save failure")
 
         self.projects[project.project_id] = project
-        self.save_calls.append({
-            "project_id": project.project_id,
-            "project_name": project.name,
-            "timestamp": datetime.now()
-        })
+        self.save_calls.append(
+            {"project_id": project.project_id, "project_name": project.name, "timestamp": datetime.now()}
+        )
 
     async def get(self, project_id: str) -> Optional[Any]:
         """Mock get operation."""
@@ -50,10 +46,7 @@ class MockProjectRepository:
         if self.should_fail:
             raise Exception("Mock repository get failure")
 
-        self.get_calls.append({
-            "project_id": project_id,
-            "timestamp": datetime.now()
-        })
+        self.get_calls.append({"project_id": project_id, "timestamp": datetime.now()})
 
         return self.projects.get(project_id)
 
@@ -66,10 +59,7 @@ class MockProjectRepository:
             raise Exception("Mock repository list failure")
 
         filters = filters or {}
-        self.list_calls.append({
-            "filters": filters,
-            "timestamp": datetime.now()
-        })
+        self.list_calls.append({"filters": filters, "timestamp": datetime.now()})
 
         projects = list(self.projects.values())
 
@@ -154,11 +144,13 @@ class MockSimulationRepository:
             raise Exception("Mock simulation repository save failure")
 
         self.simulations[simulation.id] = simulation
-        self.save_calls.append({
-            "simulation_id": simulation.id,
-            "status": getattr(simulation, 'status', 'unknown'),
-            "timestamp": datetime.now()
-        })
+        self.save_calls.append(
+            {
+                "simulation_id": simulation.id,
+                "status": getattr(simulation, "status", "unknown"),
+                "timestamp": datetime.now(),
+            }
+        )
 
     async def get(self, simulation_id: str) -> Optional[Any]:
         """Mock get operation."""
@@ -168,10 +160,7 @@ class MockSimulationRepository:
         if self.should_fail:
             raise Exception("Mock simulation repository get failure")
 
-        self.get_calls.append({
-            "simulation_id": simulation_id,
-            "timestamp": datetime.now()
-        })
+        self.get_calls.append({"simulation_id": simulation_id, "timestamp": datetime.now()})
 
         return self.simulations.get(simulation_id)
 
@@ -189,11 +178,7 @@ class MockSimulationRepository:
                 if hasattr(simulation, key):
                     setattr(simulation, key, value)
 
-            self.update_calls.append({
-                "simulation_id": simulation_id,
-                "updates": updates,
-                "timestamp": datetime.now()
-            })
+            self.update_calls.append({"simulation_id": simulation_id, "updates": updates, "timestamp": datetime.now()})
             return True
         return False
 
@@ -214,7 +199,7 @@ class MockSimulationRepository:
 
         simulations = []
         for simulation in self.simulations.values():
-            if getattr(simulation, 'status', None) == status:
+            if getattr(simulation, "status", None) == status:
                 simulations.append(simulation)
         return simulations
 
@@ -225,7 +210,7 @@ class MockSimulationRepository:
 
         simulations = []
         for simulation in self.simulations.values():
-            if getattr(simulation, 'project_id', None) == project_id:
+            if getattr(simulation, "project_id", None) == project_id:
                 simulations.append(simulation)
         return simulations
 
@@ -261,13 +246,15 @@ class MockTimelineRepository:
         if self.should_fail:
             raise Exception("Mock timeline repository save failure")
 
-        timeline_id = getattr(timeline, 'id', getattr(timeline, 'timeline_id', 'default'))
+        timeline_id = getattr(timeline, "id", getattr(timeline, "timeline_id", "default"))
         self.timelines[timeline_id] = timeline
-        self.save_calls.append({
-            "timeline_id": timeline_id,
-            "phases_count": len(getattr(timeline, 'phases', [])),
-            "timestamp": datetime.now()
-        })
+        self.save_calls.append(
+            {
+                "timeline_id": timeline_id,
+                "phases_count": len(getattr(timeline, "phases", [])),
+                "timestamp": datetime.now(),
+            }
+        )
 
     async def get(self, timeline_id: str) -> Optional[Any]:
         """Mock get operation."""
@@ -277,10 +264,7 @@ class MockTimelineRepository:
         if self.should_fail:
             raise Exception("Mock timeline repository get failure")
 
-        self.get_calls.append({
-            "timeline_id": timeline_id,
-            "timestamp": datetime.now()
-        })
+        self.get_calls.append({"timeline_id": timeline_id, "timestamp": datetime.now()})
 
         return self.timelines.get(timeline_id)
 
@@ -290,7 +274,7 @@ class MockTimelineRepository:
             await asyncio.sleep(self.delay_seconds)
 
         for timeline in self.timelines.values():
-            if getattr(timeline, 'project_id', None) == project_id:
+            if getattr(timeline, "project_id", None) == project_id:
                 return timeline
         return None
 
@@ -301,7 +285,7 @@ class MockTimelineRepository:
 
         if timeline_id in self.timelines:
             timeline = self.timelines[timeline_id]
-            if hasattr(timeline, 'phases') and phase_index < len(timeline.phases):
+            if hasattr(timeline, "phases") and phase_index < len(timeline.phases):
                 phase = timeline.phases[phase_index]
                 for key, value in updates.items():
                     if hasattr(phase, key):
@@ -319,7 +303,7 @@ class MockTimelineRepository:
 
     def add_timeline(self, timeline: Any):
         """Helper to add timeline to mock repository."""
-        timeline_id = getattr(timeline, 'id', getattr(timeline, 'timeline_id', 'default'))
+        timeline_id = getattr(timeline, "id", getattr(timeline, "timeline_id", "default"))
         self.timelines[timeline_id] = timeline
 
 
@@ -341,13 +325,11 @@ class MockTeamRepository:
         if self.should_fail:
             raise Exception("Mock team repository save failure")
 
-        team_id = getattr(team, 'id', getattr(team, 'team_id', 'default'))
+        team_id = getattr(team, "id", getattr(team, "team_id", "default"))
         self.teams[team_id] = team
-        self.save_calls.append({
-            "team_id": team_id,
-            "members_count": len(getattr(team, 'members', [])),
-            "timestamp": datetime.now()
-        })
+        self.save_calls.append(
+            {"team_id": team_id, "members_count": len(getattr(team, "members", [])), "timestamp": datetime.now()}
+        )
 
     async def get(self, team_id: str) -> Optional[Any]:
         """Mock get operation."""
@@ -357,10 +339,7 @@ class MockTeamRepository:
         if self.should_fail:
             raise Exception("Mock team repository get failure")
 
-        self.get_calls.append({
-            "team_id": team_id,
-            "timestamp": datetime.now()
-        })
+        self.get_calls.append({"team_id": team_id, "timestamp": datetime.now()})
 
         return self.teams.get(team_id)
 
@@ -370,7 +349,7 @@ class MockTeamRepository:
             await asyncio.sleep(self.delay_seconds)
 
         for team in self.teams.values():
-            if getattr(team, 'project_id', None) == project_id:
+            if getattr(team, "project_id", None) == project_id:
                 return team
         return None
 
@@ -381,7 +360,7 @@ class MockTeamRepository:
 
         if team_id in self.teams:
             team = self.teams[team_id]
-            if not hasattr(team, 'members'):
+            if not hasattr(team, "members"):
                 team.members = []
             team.members.append(member)
             return True
@@ -394,8 +373,8 @@ class MockTeamRepository:
 
         if team_id in self.teams:
             team = self.teams[team_id]
-            if hasattr(team, 'members'):
-                team.members = [m for m in team.members if getattr(m, 'member_id', None) != member_id]
+            if hasattr(team, "members"):
+                team.members = [m for m in team.members if getattr(m, "member_id", None) != member_id]
                 return True
         return False
 
@@ -409,7 +388,7 @@ class MockTeamRepository:
 
     def add_team(self, team: Any):
         """Helper to add team to mock repository."""
-        team_id = getattr(team, 'id', getattr(team, 'team_id', 'default'))
+        team_id = getattr(team, "id", getattr(team, "team_id", "default"))
         self.teams[team_id] = team
 
 
@@ -462,21 +441,21 @@ def create_mock_team_repository(**kwargs) -> MockTeamRepository:
 def create_mock_repositories(**kwargs) -> Dict[str, Any]:
     """Create all mock repositories with shared configuration."""
     return {
-        'project': create_mock_project_repository(**kwargs),
-        'simulation': create_mock_simulation_repository(**kwargs),
-        'timeline': create_mock_timeline_repository(**kwargs),
-        'team': create_mock_team_repository(**kwargs)
+        "project": create_mock_project_repository(**kwargs),
+        "simulation": create_mock_simulation_repository(**kwargs),
+        "timeline": create_mock_timeline_repository(**kwargs),
+        "team": create_mock_team_repository(**kwargs),
     }
 
 
 __all__ = [
-    'MockProjectRepository',
-    'MockSimulationRepository',
-    'MockTimelineRepository',
-    'MockTeamRepository',
-    'create_mock_project_repository',
-    'create_mock_simulation_repository',
-    'create_mock_timeline_repository',
-    'create_mock_team_repository',
-    'create_mock_repositories'
+    "MockProjectRepository",
+    "MockSimulationRepository",
+    "MockTimelineRepository",
+    "MockTeamRepository",
+    "create_mock_project_repository",
+    "create_mock_simulation_repository",
+    "create_mock_timeline_repository",
+    "create_mock_team_repository",
+    "create_mock_repositories",
 ]

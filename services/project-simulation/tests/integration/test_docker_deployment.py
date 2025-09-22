@@ -4,15 +4,16 @@ This module contains comprehensive tests for Docker container functionality,
 deployment validation, and containerized environment testing.
 """
 
-import pytest
-import subprocess
-import requests
-import time
-import docker
-from unittest.mock import patch, MagicMock
-import os
 import json
+import os
+import subprocess
+import time
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import docker
+import pytest
+import requests
 
 
 class TestDockerContainerBasics:
@@ -56,12 +57,8 @@ class TestDockerContainerBasics:
         try:
             # Quick Docker connectivity check with short timeout
             import subprocess
-            result = subprocess.run(
-                ["docker", "ps"],
-                capture_output=True,
-                text=True,
-                timeout=2  # 2 second timeout
-            )
+
+            result = subprocess.run(["docker", "ps"], capture_output=True, text=True, timeout=2)  # 2 second timeout
 
             if result.returncode != 0:
                 pytest.skip("Docker daemon not accessible")
@@ -82,11 +79,12 @@ class TestDockerContainerBasics:
         try:
             # Quick check for container existence
             import subprocess
+
             result = subprocess.run(
                 ["docker", "ps", "-a", "--filter", "name=hackathon-project-simulation"],
                 capture_output=True,
                 text=True,
-                timeout=2
+                timeout=2,
             )
 
             if result.returncode == 0 and "hackathon-project-simulation" in result.stdout:
@@ -129,11 +127,7 @@ class TestDockerComposeServices:
         compose_path = Path("docker-compose.yml")
         content = compose_path.read_text()
 
-        required_services = [
-            "project-simulation",
-            "postgres",
-            "redis"
-        ]
+        required_services = ["project-simulation", "postgres", "redis"]
 
         for service in required_services:
             assert service in content, f"Service {service} should be defined in docker-compose.yml"
@@ -151,11 +145,7 @@ class TestDockerComposeServices:
         compose_path = Path("docker-compose.yml")
         content = compose_path.read_text()
 
-        required_volumes = [
-            "postgres-data",
-            "redis-data",
-            "project-simulation-logs"
-        ]
+        required_volumes = ["postgres-data", "redis-data", "project-simulation-logs"]
 
         for volume in required_volumes:
             assert volume in content, f"Volume {volume} should be defined"
@@ -168,19 +158,13 @@ class TestDockerComposeServices:
             assert client.ping(), "Docker daemon should be responding"
 
             # Check if postgres container exists (dependency of project-simulation)
-            postgres_containers = client.containers.list(
-                filters={"name": "hackathon-postgres"},
-                all=True
-            )
+            postgres_containers = client.containers.list(filters={"name": "hackathon-postgres"}, all=True)
             if postgres_containers:
                 postgres = postgres_containers[0]
                 assert postgres.name == "hackathon-postgres", "PostgreSQL container should exist"
 
             # Check if redis container exists (dependency of project-simulation)
-            redis_containers = client.containers.list(
-                filters={"name": "hackathon-redis"},
-                all=True
-            )
+            redis_containers = client.containers.list(filters={"name": "hackathon-redis"}, all=True)
             if redis_containers:
                 redis = redis_containers[0]
                 assert redis.name == "hackathon-redis", "Redis container should exist"
@@ -222,9 +206,9 @@ class TestDockerMultiStageBuild:
 
         security_features = [
             "USER simulation",  # Non-root user
-            "HEALTHCHECK",      # Health checks
+            "HEALTHCHECK",  # Health checks
             "apt-get upgrade",  # Security updates (without RUN prefix)
-            "--no-cache-dir"    # Clean package cache
+            "--no-cache-dir",  # Clean package cache
         ]
 
         for feature in security_features:
@@ -284,14 +268,14 @@ class TestDockerBuildProcess:
         content = dockerfile_path.read_text()
 
         # Check that requirements.txt is copied before source code
-        lines = content.split('\n')
+        lines = content.split("\n")
         req_copy_line = None
         source_copy_line = None
 
         for i, line in enumerate(lines):
-            if 'COPY requirements.txt' in line:
+            if "COPY requirements.txt" in line:
                 req_copy_line = i
-            elif 'COPY . .' in line and req_copy_line is not None:
+            elif "COPY . ." in line and req_copy_line is not None:
                 source_copy_line = i
                 break
 
@@ -304,12 +288,7 @@ class TestDockerBuildProcess:
         dockerfile_path = Path("Dockerfile")
         content = dockerfile_path.read_text()
 
-        sensitive_patterns = [
-            "password",
-            "secret",
-            "key",
-            "token"
-        ]
+        sensitive_patterns = ["password", "secret", "key", "token"]
 
         for pattern in sensitive_patterns:
             assert pattern.lower() not in content.lower(), f"Dockerfile should not contain {pattern}"
@@ -321,10 +300,7 @@ class TestDockerBuildProcess:
             client = docker.from_env()
             assert client.ping(), "Docker daemon should be responding"
 
-            containers = client.containers.list(
-                filters={"name": "hackathon-project-simulation"},
-                all=True
-            )
+            containers = client.containers.list(filters={"name": "hackathon-project-simulation"}, all=True)
 
             if containers:
                 container = containers[0]
@@ -351,7 +327,9 @@ class TestDockerComposeProfiles:
         profiles = ["development", "testing", "monitoring", "production"]
 
         for profile in profiles:
-            assert f"profiles: [\"{profile}\"]" in content or f"profiles: ['{profile}']" in content, f"Profile {profile} should be defined"
+            assert (
+                f'profiles: ["{profile}"]' in content or f"profiles: ['{profile}']" in content
+            ), f"Profile {profile} should be defined"
 
     def test_profile_service_configuration(self):
         """Test that profile services have appropriate configuration."""

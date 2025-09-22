@@ -6,15 +6,16 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from typing import List, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
 
 # Import the modules we'll be testing
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
-from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
 
 
 class TestSummarizerHubClient:
@@ -31,7 +32,7 @@ class TestSummarizerHubClient:
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API documentation", "type": "api_docs"},
             {"id": "doc2", "title": "API Reference", "content": "API reference guide", "type": "api_docs"},
-            {"id": "doc3", "title": "API Examples", "content": "API usage examples", "type": "api_docs"}
+            {"id": "doc3", "title": "API Examples", "content": "API usage examples", "type": "api_docs"},
         ]
 
         mock_response = {
@@ -52,19 +53,19 @@ class TestSummarizerHubClient:
                         "document_type": "api_docs",
                         "document_count": 3,
                         "average_similarity": 0.75,
-                        "consolidation_strategy": "merge_into_comprehensive_guide"
-                    }
+                        "consolidation_strategy": "merge_into_comprehensive_guide",
+                    },
                 }
             ],
             "total_documents": 3,
             "recommendations_count": 1,
             "processing_time": 0.5,
             "recommendation_types": ["consolidation"],
-            "confidence_threshold": 0.4
+            "confidence_threshold": 0.4,
         }
 
         # Act & Assert
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_instance = AsyncMock()
             mock_client.return_value = mock_instance
             mock_instance.__aenter__.return_value = mock_instance
@@ -93,7 +94,7 @@ class TestSummarizerHubClient:
         documents = [
             {"id": "doc1", "title": "User Guide", "content": "How to use the system"},
             {"id": "doc2", "title": "User Manual", "content": "How to use the system"},
-            {"id": "doc3", "title": "Getting Started", "content": "How to use the system"}
+            {"id": "doc3", "title": "Getting Started", "content": "How to use the system"},
         ]
 
         mock_response = {
@@ -110,18 +111,18 @@ class TestSummarizerHubClient:
                     "expected_impact": "Eliminate redundancy and reduce maintenance burden",
                     "effort_level": "low",
                     "tags": ["duplicate", "redundancy"],
-                    "metadata": {"similarity_score": 0.92}
+                    "metadata": {"similarity_score": 0.92},
                 }
             ],
             "total_documents": 3,
             "recommendations_count": 1,
             "processing_time": 0.3,
             "recommendation_types": ["duplicate"],
-            "confidence_threshold": 0.4
+            "confidence_threshold": 0.4,
         }
 
         # Act & Assert
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_instance = AsyncMock()
             mock_client.return_value = mock_instance
             mock_instance.__aenter__.return_value = mock_instance
@@ -147,7 +148,7 @@ class TestSummarizerHubClient:
         """Test getting outdated document recommendations from summarizer-hub."""
         # Arrange
         current_time = datetime.now()
-        old_time = current_time - timedelta(days=365*2)  # 2 years old
+        old_time = current_time - timedelta(days=365 * 2)  # 2 years old
 
         documents = [
             {
@@ -155,15 +156,15 @@ class TestSummarizerHubClient:
                 "title": "Old API Guide",
                 "content": "Outdated API information",
                 "dateCreated": old_time.isoformat(),
-                "dateUpdated": old_time.isoformat()
+                "dateUpdated": old_time.isoformat(),
             },
             {
                 "id": "doc2",
                 "title": "Current API Guide",
                 "content": "Current API information",
                 "dateCreated": current_time.isoformat(),
-                "dateUpdated": current_time.isoformat()
-            }
+                "dateUpdated": current_time.isoformat(),
+            },
         ]
 
         mock_response = {
@@ -181,18 +182,18 @@ class TestSummarizerHubClient:
                     "effort_level": "medium",
                     "tags": ["outdated", "maintenance"],
                     "age_days": 730,
-                    "metadata": {"last_updated": old_time.isoformat()}
+                    "metadata": {"last_updated": old_time.isoformat()},
                 }
             ],
             "total_documents": 2,
             "recommendations_count": 1,
             "processing_time": 0.2,
             "recommendation_types": ["outdated"],
-            "confidence_threshold": 0.4
+            "confidence_threshold": 0.4,
         }
 
         # Act & Assert
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_instance = AsyncMock()
             mock_client.return_value = mock_instance
             mock_instance.__aenter__.return_value = mock_instance
@@ -221,14 +222,14 @@ class TestSummarizerHubClient:
                 "id": "doc1",
                 "title": "Poor Documentation",
                 "content": "This is very short and unclear.",
-                "word_count": 10
+                "word_count": 10,
             },
             {
                 "id": "doc2",
                 "title": "Good Documentation",
                 "content": "This is a comprehensive and clear explanation of the topic with detailed examples and thorough coverage.",
-                "word_count": 500
-            }
+                "word_count": 500,
+            },
         ]
 
         mock_response = {
@@ -245,18 +246,18 @@ class TestSummarizerHubClient:
                     "expected_impact": "Enhanced user understanding and satisfaction",
                     "effort_level": "low",
                     "tags": ["quality", "improvement"],
-                    "metadata": {"issues": ["content too short"], "word_count": 10}
+                    "metadata": {"issues": ["content too short"], "word_count": 10},
                 }
             ],
             "total_documents": 2,
             "recommendations_count": 1,
             "processing_time": 0.15,
             "recommendation_types": ["quality"],
-            "confidence_threshold": 0.4
+            "confidence_threshold": 0.4,
         }
 
         # Act & Assert
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_instance = AsyncMock()
             mock_client.return_value = mock_instance
             mock_instance.__aenter__.return_value = mock_instance
@@ -282,7 +283,7 @@ class TestSummarizerHubClient:
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API info", "type": "api_docs"},
             {"id": "doc2", "title": "API Reference", "content": "API info", "type": "api_docs"},
-            {"id": "doc3", "title": "Old Guide", "content": "Old content", "dateCreated": "2020-01-01"}
+            {"id": "doc3", "title": "Old Guide", "content": "Old content", "dateCreated": "2020-01-01"},
         ]
 
         mock_response = {
@@ -303,8 +304,8 @@ class TestSummarizerHubClient:
                         "document_type": "api_docs",
                         "document_count": 2,
                         "average_similarity": 0.85,
-                        "consolidation_strategy": "merge_into_comprehensive_guide"
-                    }
+                        "consolidation_strategy": "merge_into_comprehensive_guide",
+                    },
                 },
                 {
                     "id": "rec2",
@@ -318,18 +319,18 @@ class TestSummarizerHubClient:
                     "effort_level": "medium",
                     "tags": ["outdated", "maintenance"],
                     "age_days": 1461,
-                    "metadata": {"last_updated": "2020-01-01"}
-                }
+                    "metadata": {"last_updated": "2020-01-01"},
+                },
             ],
             "total_documents": 3,
             "recommendations_count": 2,
             "processing_time": 0.5,
             "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
-            "confidence_threshold": 0.4
+            "confidence_threshold": 0.4,
         }
 
         # Act & Assert
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_instance = AsyncMock()
             mock_client.return_value = mock_instance
             mock_instance.__aenter__.return_value = mock_instance
@@ -366,7 +367,7 @@ class TestSummarizerHubClient:
         # Arrange
         documents = [
             {"id": "doc1", "title": "Critical API", "content": "Critical API documentation"},
-            {"id": "doc2", "title": "Minor Guide", "content": "Minor guide content"}
+            {"id": "doc2", "title": "Minor Guide", "content": "Minor guide content"},
         ]
 
         # Act
@@ -394,11 +395,7 @@ class TestSummarizerHubClient:
     async def test_analyze_document_with_summarizer_hub(self):
         """Test document analysis using summarizer-hub service."""
         # Arrange
-        document = {
-            "id": "doc1",
-            "content": "This is a test document about API usage.",
-            "title": "API Documentation"
-        }
+        document = {"id": "doc1", "content": "This is a test document about API usage.", "title": "API Documentation"}
 
         # Act
         analysis_result = await self.client.analyze_document(document)
@@ -418,7 +415,7 @@ class TestSummarizerHubClient:
                 "document_id": "doc1",
                 "summary": "API documentation",
                 "quality_score": 0.3,
-                "issues": ["unclear", "incomplete"]
+                "issues": ["unclear", "incomplete"],
             }
         ]
 
@@ -441,7 +438,7 @@ class TestSummarizerHubClient:
         documents = [
             {"id": "doc1", "content": "Document 1 content", "title": "Doc 1"},
             {"id": "doc2", "content": "Document 2 content", "title": "Doc 2"},
-            {"id": "doc3", "content": "Document 3 content", "title": "Doc 3"}
+            {"id": "doc3", "content": "Document 3 content", "title": "Doc 3"},
         ]
 
         # Act
@@ -482,7 +479,7 @@ class TestRecommendationTypes:
             "QUALITY",
             "CONTENT_GAP",
             "STRUCTURAL_IMPROVEMENT",
-            "PRIORITY_REORDERING"
+            "PRIORITY_REORDERING",
         ]
 
         for expected_type in expected_types:
@@ -495,7 +492,7 @@ class TestRecommendationTypes:
             description="Improve documentation clarity",
             affected_documents=["doc1", "doc2"],
             confidence_score=0.85,
-            priority="high"
+            priority="high",
         )
 
         assert rec.type == RecommendationType.QUALITY
@@ -510,7 +507,7 @@ class TestRecommendationTypes:
         recommendations = [
             Recommendation(type=RecommendationType.QUALITY, description="Low priority", priority="low"),
             Recommendation(type=RecommendationType.CONSOLIDATION, description="High priority", priority="high"),
-            Recommendation(type=RecommendationType.DUPLICATE, description="Medium priority", priority="medium")
+            Recommendation(type=RecommendationType.DUPLICATE, description="Medium priority", priority="medium"),
         ]
 
         # Sort by priority
@@ -536,14 +533,9 @@ class TestAnalysisServiceReportIntegration:
                 "id": "doc1",
                 "content": "This is a comprehensive API documentation with clear examples and proper structure.",
                 "title": "API Guide",
-                "type": "api_docs"
+                "type": "api_docs",
             },
-            {
-                "id": "doc2",
-                "content": "This is a short document.",
-                "title": "Brief Note",
-                "type": "note"
-            }
+            {"id": "doc2", "content": "This is a short document.", "title": "Brief Note", "type": "note"},
         ]
 
         # Mock the analysis-service response
@@ -556,24 +548,18 @@ class TestAnalysisServiceReportIntegration:
                 "total_analyses": 2,
                 "analysis_types": ["comprehensive_document_analysis"],
                 "documents_with_issues": 1,
-                "average_quality_score": 0.75
+                "average_quality_score": 0.75,
             },
             "analysis_results": [
-                {
-                    "document_id": "doc1",
-                    "quality_score": 0.9,
-                    "issues_found": 0
-                },
-                {
-                    "document_id": "doc2",
-                    "quality_score": 0.6,
-                    "issues_found": 1
-                }
-            ]
+                {"document_id": "doc1", "quality_score": 0.9, "issues_found": 0},
+                {"document_id": "doc2", "quality_score": 0.6, "issues_found": 1},
+            ],
         }
 
-        with patch.object(self.summarizer, '_request_analysis_report_from_service', return_value=mock_report):
-            with patch.object(self.summarizer, '_store_received_analysis_report', return_value="analysis_report_sim_123_1234567890"):
+        with patch.object(self.summarizer, "_request_analysis_report_from_service", return_value=mock_report):
+            with patch.object(
+                self.summarizer, "_store_received_analysis_report", return_value="analysis_report_sim_123_1234567890"
+            ):
                 # Test analysis report reception
                 analysis_report = await self.summarizer._get_analysis_report_from_analysis_service("sim_123", documents)
 
@@ -586,7 +572,7 @@ class TestAnalysisServiceReportIntegration:
     @pytest.mark.asyncio
     async def test_get_analysis_from_analysis_service_empty_documents(self):
         """Test analysis with empty document list."""
-        with patch.object(self.summarizer, '_request_analysis_report_from_service', return_value=None):
+        with patch.object(self.summarizer, "_request_analysis_report_from_service", return_value=None):
             analysis_report = await self.summarizer._get_analysis_report_from_analysis_service("sim_123", [])
 
             assert analysis_report is None
@@ -604,18 +590,15 @@ class TestAnalysisServiceReportIntegration:
                 "total_analyses": 2,
                 "analysis_types": ["comprehensive_document_analysis"],
                 "documents_with_issues": 1,
-                "average_quality_score": 0.8
+                "average_quality_score": 0.8,
             },
-            "metadata": {
-                "source": "analysis-service",
-                "processing_time": "2.5s"
-            }
+            "metadata": {"source": "analysis-service", "processing_time": "2.5s"},
         }
 
         # Mock the doc-store saving
-        with patch.object(self.summarizer, '_save_to_doc_store') as mock_save:
-            with patch.object(self.summarizer, '_save_markdown_report') as mock_save_md:
-                with patch.object(self.summarizer, '_link_analysis_report_to_simulation') as mock_link:
+        with patch.object(self.summarizer, "_save_to_doc_store") as mock_save:
+            with patch.object(self.summarizer, "_save_markdown_report") as mock_save_md:
+                with patch.object(self.summarizer, "_link_analysis_report_to_simulation") as mock_link:
                     mock_save.return_value = None
                     mock_save_md.return_value = None
                     mock_link.return_value = None
@@ -626,7 +609,6 @@ class TestAnalysisServiceReportIntegration:
                     mock_save.assert_called()
                     mock_save_md.assert_called()
                     mock_link.assert_called()
-
 
     @pytest.mark.asyncio
     async def test_link_analysis_report_to_simulation(self):
@@ -639,12 +621,12 @@ class TestAnalysisServiceReportIntegration:
         mock_repo.find_by_id.return_value = mock_simulation
         mock_repo.save.return_value = None
 
-        with patch.object(self.summarizer, '_get_simulation_repository', return_value=mock_repo):
+        with patch.object(self.summarizer, "_get_simulation_repository", return_value=mock_repo):
             await self.summarizer._link_analysis_report_to_simulation("analysis_report_123", "sim_123")
 
             # Verify the simulation was updated
-            assert mock_simulation.metadata['analysis_report_id'] == "analysis_report_123"
-            assert 'analysis_report_timestamp' in mock_simulation.metadata
+            assert mock_simulation.metadata["analysis_report_id"] == "analysis_report_123"
+            assert "analysis_report_timestamp" in mock_simulation.metadata
             mock_repo.save.assert_called_once_with(mock_simulation)
 
     @pytest.mark.asyncio
@@ -653,7 +635,7 @@ class TestAnalysisServiceReportIntegration:
         mock_repo = Mock()
         mock_repo.find_by_id.return_value = None
 
-        with patch.object(self.summarizer, '_get_simulation_repository', return_value=mock_repo):
+        with patch.object(self.summarizer, "_get_simulation_repository", return_value=mock_repo):
             await self.summarizer._link_analysis_report_to_simulation("analysis_report_123", "sim_123")
 
             # Should not attempt to save when simulation not found
@@ -662,17 +644,10 @@ class TestAnalysisServiceReportIntegration:
     @pytest.mark.asyncio
     async def test_request_analysis_report_from_service_with_service_error(self):
         """Test handling analysis service errors gracefully."""
-        documents = [
-            {
-                "id": "doc1",
-                "content": "Test content",
-                "title": "Test Doc",
-                "type": "test"
-            }
-        ]
+        documents = [{"id": "doc1", "content": "Test content", "title": "Test Doc", "type": "test"}]
 
         # Mock httpx to simulate service error
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_response = Mock()
             mock_response.status_code = 500
             mock_response.text = "Internal Server Error"
@@ -692,14 +667,9 @@ class TestAnalysisServiceReportIntegration:
                 "title": "Early Document",
                 "type": "guide",
                 "dateCreated": "2024-01-01T10:00:00",
-                "dateUpdated": "2024-01-02T10:00:00"
+                "dateUpdated": "2024-01-02T10:00:00",
             },
-            {
-                "id": "doc2",
-                "title": "Later Document",
-                "type": "api",
-                "dateCreated": "2024-02-01T10:00:00"
-            }
+            {"id": "doc2", "title": "Later Document", "type": "api", "dateCreated": "2024-02-01T10:00:00"},
         ]
 
         timeline = {
@@ -708,14 +678,14 @@ class TestAnalysisServiceReportIntegration:
                     "id": "phase1",
                     "name": "Planning",
                     "start_date": "2024-01-01T00:00:00",
-                    "end_date": "2024-01-15T00:00:00"
+                    "end_date": "2024-01-15T00:00:00",
                 },
                 {
                     "id": "phase2",
                     "name": "Development",
                     "start_date": "2024-01-15T00:00:00",
-                    "end_date": "2024-02-15T00:00:00"
-                }
+                    "end_date": "2024-02-15T00:00:00",
+                },
             ]
         }
 
@@ -748,11 +718,7 @@ class TestAnalysisServiceReportIntegration:
 
     def test_parse_timestamp_various_formats(self):
         """Test parsing various timestamp formats."""
-        formats = [
-            "2024-01-01",
-            "01/01/2024",
-            "2024-01-01 10:00:00"
-        ]
+        formats = ["2024-01-01", "01/01/2024", "2024-01-01 10:00:00"]
 
         for fmt in formats:
             result = self.summarizer._parse_timestamp(fmt)
@@ -762,12 +728,7 @@ class TestAnalysisServiceReportIntegration:
         """Test finding relevant phase when document date is within phase dates."""
         doc_date = datetime(2024, 1, 10)
         timeline_phases = [
-            {
-                "id": "phase1",
-                "name": "Planning",
-                "start_date": "2024-01-01T00:00:00",
-                "end_date": "2024-01-15T00:00:00"
-            }
+            {"id": "phase1", "name": "Planning", "start_date": "2024-01-01T00:00:00", "end_date": "2024-01-15T00:00:00"}
         ]
 
         result = self.summarizer._find_relevant_timeline_phase(doc_date, timeline_phases)
@@ -783,14 +744,14 @@ class TestAnalysisServiceReportIntegration:
                 "id": "phase1",
                 "name": "Planning",
                 "start_date": "2024-01-01T00:00:00",
-                "end_date": "2024-01-15T00:00:00"
+                "end_date": "2024-01-15T00:00:00",
             },
             {
                 "id": "phase2",
                 "name": "Development",
                 "start_date": "2024-02-01T00:00:00",  # February 1st - closest to March 1st
-                "end_date": "2024-02-15T00:00:00"
-            }
+                "end_date": "2024-02-15T00:00:00",
+            },
         ]
 
         result = self.summarizer._find_relevant_timeline_phase(doc_date, timeline_phases)
@@ -806,7 +767,7 @@ class TestAnalysisServiceReportIntegration:
             "id": "phase1",
             "name": "Planning",
             "start_date": "2024-01-01T00:00:00",
-            "end_date": "2024-01-15T00:00:00"
+            "end_date": "2024-01-15T00:00:00",
         }
 
         reason = self.summarizer._determine_placement_reason(doc_date, phase)
@@ -820,7 +781,7 @@ class TestAnalysisServiceReportIntegration:
             "id": "phase1",
             "name": "Planning",
             "start_date": "2024-01-01T00:00:00",
-            "end_date": "2024-01-15T00:00:00"
+            "end_date": "2024-01-15T00:00:00",
         }
 
         reason = self.summarizer._determine_placement_reason(doc_date, phase)
@@ -834,7 +795,7 @@ class TestAnalysisServiceReportIntegration:
             "id": "phase1",
             "name": "Planning",
             "start_date": "2024-01-01T00:00:00",
-            "end_date": "2024-01-15T00:00:00"
+            "end_date": "2024-01-15T00:00:00",
         }
 
         relevance = self.summarizer._calculate_timeline_relevance(doc_date, phase)
@@ -848,7 +809,7 @@ class TestAnalysisServiceReportIntegration:
             "id": "phase1",
             "name": "Planning",
             "start_date": "2024-01-01T00:00:00",  # January 1st
-            "end_date": "2024-01-15T00:00:00"    # January 15th
+            "end_date": "2024-01-15T00:00:00",  # January 15th
         }
 
         relevance = self.summarizer._calculate_timeline_relevance(doc_date, phase)
@@ -859,21 +820,9 @@ class TestAnalysisServiceReportIntegration:
     def test_group_documents_by_phases(self):
         """Test grouping documents by timeline phases."""
         document_placements = [
-            {
-                "document_id": "doc1",
-                "timeline_phase": "phase1",
-                "relevance_score": 0.9
-            },
-            {
-                "document_id": "doc2",
-                "timeline_phase": "phase1",
-                "relevance_score": 0.8
-            },
-            {
-                "document_id": "doc3",
-                "timeline_phase": "phase2",
-                "relevance_score": 0.7
-            }
+            {"document_id": "doc1", "timeline_phase": "phase1", "relevance_score": 0.9},
+            {"document_id": "doc2", "timeline_phase": "phase1", "relevance_score": 0.8},
+            {"document_id": "doc3", "timeline_phase": "phase2", "relevance_score": 0.7},
         ]
 
         timeline_phases = [
@@ -881,14 +830,14 @@ class TestAnalysisServiceReportIntegration:
                 "id": "phase1",
                 "name": "Planning",
                 "start_date": "2024-01-01T00:00:00",
-                "end_date": "2024-01-15T00:00:00"
+                "end_date": "2024-01-15T00:00:00",
             },
             {
                 "id": "phase2",
                 "name": "Development",
                 "start_date": "2024-01-15T00:00:00",
-                "end_date": "2024-02-15T00:00:00"
-            }
+                "end_date": "2024-02-15T00:00:00",
+            },
         ]
 
         result = self.summarizer._group_documents_by_phases(document_placements, timeline_phases)
@@ -904,12 +853,9 @@ class TestAnalysisServiceReportIntegration:
         """Test timeline recommendations with good document coverage."""
         phase_documents = {
             "phase1": {"phase_name": "Planning", "document_count": 5, "avg_relevance": 0.8},
-            "phase2": {"phase_name": "Development", "document_count": 3, "avg_relevance": 0.7}
+            "phase2": {"phase_name": "Development", "document_count": 3, "avg_relevance": 0.7},
         }
-        timeline_phases = [
-            {"id": "phase1", "name": "Planning"},
-            {"id": "phase2", "name": "Development"}
-        ]
+        timeline_phases = [{"id": "phase1", "name": "Planning"}, {"id": "phase2", "name": "Development"}]
 
         recommendations = self.summarizer._generate_timeline_recommendations(phase_documents, timeline_phases)
 
@@ -922,12 +868,12 @@ class TestAnalysisServiceReportIntegration:
         phase_documents = {
             "phase1": {"phase_name": "Planning", "document_count": 0, "avg_relevance": 0.0},
             "phase2": {"phase_name": "Development", "document_count": 0, "avg_relevance": 0.0},
-            "phase3": {"phase_name": "Testing", "document_count": 1, "avg_relevance": 0.3}
+            "phase3": {"phase_name": "Testing", "document_count": 1, "avg_relevance": 0.3},
         }
         timeline_phases = [
             {"id": "phase1", "name": "Planning"},
             {"id": "phase2", "name": "Development"},
-            {"id": "phase3", "name": "Testing"}
+            {"id": "phase3", "name": "Testing"},
         ]
 
         recommendations = self.summarizer._generate_timeline_recommendations(phase_documents, timeline_phases)
@@ -945,15 +891,15 @@ class TestAnalysisServiceReportIntegration:
                 "title": "API Documentation",
                 "type": "api",
                 "content": "This is API documentation content...",
-                "dateCreated": "2024-01-01T10:00:00"
+                "dateCreated": "2024-01-01T10:00:00",
             },
             {
                 "id": "doc2",
                 "title": "User Guide",
                 "type": "guide",
                 "content": "This is user guide content...",
-                "dateCreated": "2024-01-15T10:00:00"
-            }
+                "dateCreated": "2024-01-15T10:00:00",
+            },
         ]
 
         timeline = {
@@ -962,14 +908,14 @@ class TestAnalysisServiceReportIntegration:
                     "id": "phase1",
                     "name": "Planning",
                     "start_date": "2024-01-01T00:00:00",
-                    "end_date": "2024-01-15T00:00:00"
+                    "end_date": "2024-01-15T00:00:00",
                 },
                 {
                     "id": "phase2",
                     "name": "Development",
                     "start_date": "2024-01-15T00:00:00",
-                    "end_date": "2024-02-15T00:00:00"
-                }
+                    "end_date": "2024-02-15T00:00:00",
+                },
             ]
         }
 
@@ -986,23 +932,13 @@ class TestAnalysisServiceReportIntegration:
         recommendations = {
             "recommendations": [
                 {"priority": "high", "description": "Critical recommendation"},
-                {"priority": "medium", "description": "Medium recommendation"}
+                {"priority": "medium", "description": "Medium recommendation"},
             ]
         }
 
-        analysis = {
-            "summary_statistics": {
-                "average_quality_score": 0.75,
-                "total_issues_found": 3
-            }
-        }
+        analysis = {"summary_statistics": {"average_quality_score": 0.75, "total_issues_found": 3}}
 
-        timeline = {
-            "placement_report": {
-                "timeline_coverage": 0.8,
-                "placed_documents": 8
-            }
-        }
+        timeline = {"placement_report": {"timeline_coverage": 0.8, "placed_documents": 8}}
 
         documents = [{"id": "doc1"}, {"id": "doc2"}]
 
@@ -1016,19 +952,9 @@ class TestAnalysisServiceReportIntegration:
     def test_generate_overall_assessment_high_score(self):
         """Test overall assessment generation with high scores."""
         sections = {
-            "recommendations": {
-                "total_recommendations": 3,
-                "source": "summarizer-hub"
-            },
-            "analysis": {
-                "average_quality_score": 0.9,
-                "documents_with_issues": 0,
-                "source": "analysis-service"
-            },
-            "timeline": {
-                "timeline_coverage": 0.95,
-                "source": "simulation-service"
-            }
+            "recommendations": {"total_recommendations": 3, "source": "summarizer-hub"},
+            "analysis": {"average_quality_score": 0.9, "documents_with_issues": 0, "source": "analysis-service"},
+            "timeline": {"timeline_coverage": 0.95, "source": "simulation-service"},
         }
 
         assessment = self.summarizer._generate_overall_assessment(sections)
@@ -1041,19 +967,9 @@ class TestAnalysisServiceReportIntegration:
     def test_generate_overall_assessment_low_score(self):
         """Test overall assessment generation with low scores."""
         sections = {
-            "recommendations": {
-                "total_recommendations": 15,
-                "source": "summarizer-hub"
-            },
-            "analysis": {
-                "average_quality_score": 0.4,
-                "documents_with_issues": 5,
-                "source": "analysis-service"
-            },
-            "timeline": {
-                "timeline_coverage": 0.3,
-                "source": "simulation-service"
-            }
+            "recommendations": {"total_recommendations": 15, "source": "summarizer-hub"},
+            "analysis": {"average_quality_score": 0.4, "documents_with_issues": 5, "source": "analysis-service"},
+            "timeline": {"timeline_coverage": 0.3, "source": "simulation-service"},
         }
 
         assessment = self.summarizer._generate_overall_assessment(sections)
@@ -1073,7 +989,7 @@ class TestAnalysisServiceReportIntegration:
                             "priority": "high",
                             "description": "Critical recommendation",
                             "type": "consolidation",
-                            "estimated_effort": "medium"
+                            "estimated_effort": "medium",
                         }
                     ]
                 }
@@ -1085,14 +1001,12 @@ class TestAnalysisServiceReportIntegration:
                             "document_id": "doc1",
                             "quality_score": 0.3,
                             "issues_found": 2,
-                            "issues": ["Issue 1", "Issue 2"]
+                            "issues": ["Issue 1", "Issue 2"],
                         }
                     ]
                 }
             },
-            "timeline": {
-                "recommendations": ["Consider adding documentation for phase X"]
-            }
+            "timeline": {"recommendations": ["Consider adding documentation for phase X"]},
         }
 
         action_items = self.summarizer._generate_action_items(sections)
@@ -1115,31 +1029,21 @@ class TestAnalysisServiceReportIntegration:
             "consolidation_suggestions": [],
             "duplicate_analysis": [],
             "outdated_analysis": [],
-            "quality_improvements": []
+            "quality_improvements": [],
         }
 
         analysis = {
             "source": "analysis-service",
             "quality_analysis": [{"document_id": "doc1", "quality_score": 0.8}],
-            "summary_statistics": {
-                "average_quality_score": 0.8,
-                "documents_with_issues": 1,
-                "total_issues_found": 2
-            },
-            "processing_metadata": {
-                "documents_processed": 1,
-                "processing_time": "completed"
-            }
+            "summary_statistics": {"average_quality_score": 0.8, "documents_with_issues": 1, "total_issues_found": 2},
+            "processing_metadata": {"documents_processed": 1, "processing_time": "completed"},
         }
 
         timeline = {
             "timeline_phases": 2,
             "placed_documents": 1,
-            "placement_report": {
-                "timeline_coverage": 0.5,
-                "recommendations": ["Add more documentation"]
-            },
-            "phase_breakdown": {}
+            "placement_report": {"timeline_coverage": 0.5, "recommendations": ["Add more documentation"]},
+            "phase_breakdown": {},
         }
 
         documents = [{"id": "doc1"}]
@@ -1170,13 +1074,13 @@ class TestAnalysisServiceReportIntegration:
                 "total_documents": 2,
                 "critical_issues": 1,
                 "improvement_opportunities": 3,
-                "key_findings": ["Test finding 1", "Test finding 2"]
+                "key_findings": ["Test finding 1", "Test finding 2"],
             },
             "overall_assessment": {
                 "overall_health_score": 0.75,
                 "risk_level": "medium",
                 "strengths": ["Good coverage"],
-                "weaknesses": ["Low quality scores"]
+                "weaknesses": ["Low quality scores"],
             },
             "sections": {
                 "recommendations": {
@@ -1184,28 +1088,24 @@ class TestAnalysisServiceReportIntegration:
                     "consolidation_opportunities": 1,
                     "duplicate_issues": 0,
                     "outdated_documents": 1,
-                    "quality_improvements": 1
+                    "quality_improvements": 1,
                 },
                 "analysis": {
                     "documents_analyzed": 2,
                     "average_quality_score": 0.75,
                     "documents_with_issues": 1,
-                    "total_issues_found": 3
+                    "total_issues_found": 3,
                 },
-                "timeline": {
-                    "total_phases": 2,
-                    "documents_placed": 2,
-                    "timeline_coverage": 1.0
-                }
+                "timeline": {"total_phases": 2, "documents_placed": 2, "timeline_coverage": 1.0},
             },
             "action_items": [
                 {
                     "priority": "high",
                     "description": "Critical action",
                     "category": "quality",
-                    "estimated_effort": "medium"
+                    "estimated_effort": "medium",
                 }
-            ]
+            ],
         }
 
         markdown = self.summarizer._generate_comprehensive_markdown_report(report_data)
@@ -1220,4 +1120,3 @@ class TestAnalysisServiceReportIntegration:
         assert "## 📅 Timeline Analysis" in markdown
         assert "## ✅ Action Items" in markdown
         assert "🚨 **High** - Critical action" in markdown  # Priority emoji and formatting
-

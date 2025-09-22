@@ -5,17 +5,18 @@ including environment configuration, database integration, and local
 development workflow validation.
 """
 
-import pytest
-import os
-import tempfile
-import shutil
-from pathlib import Path
-import sys
 import json
+import os
+import shutil
 import sqlite3
+import sys
+import tempfile
 import time
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, Any, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -27,18 +28,9 @@ class TestEnvironmentConfiguration:
     def test_environment_variable_loading(self):
         """Test loading of environment variables for local development."""
         # Test environment variables that should be set for local development
-        required_env_vars = [
-            "ENVIRONMENT",
-            "LOG_LEVEL",
-            "DATABASE_URL"
-        ]
+        required_env_vars = ["ENVIRONMENT", "LOG_LEVEL", "DATABASE_URL"]
 
-        optional_env_vars = [
-            "DEBUG",
-            "SECRET_KEY",
-            "API_PORT",
-            "REDIS_URL"
-        ]
+        optional_env_vars = ["DEBUG", "SECRET_KEY", "API_PORT", "REDIS_URL"]
 
         # Check if required environment variables are accessible
         for env_var in required_env_vars:
@@ -63,7 +55,7 @@ class TestEnvironmentConfiguration:
             Path(__file__).parent.parent.parent / "config" / "local.yaml",
             Path(__file__).parent.parent.parent / "config" / "development.yaml",
             Path(__file__).parent.parent.parent / ".env",
-            Path(__file__).parent.parent.parent / ".env.local"
+            Path(__file__).parent.parent.parent / ".env.local",
         ]
 
         # Check if config directory exists
@@ -94,7 +86,7 @@ class TestEnvironmentConfiguration:
             "sqlite:///test.db",
             "sqlite:///:memory:",
             "postgresql://localhost:5432/test_db",
-            "postgresql://user:pass@localhost:5432/dev_db"
+            "postgresql://user:pass@localhost:5432/dev_db",
         ]
 
         # Validate database URL formats
@@ -138,7 +130,7 @@ class TestEnvironmentConfiguration:
         dev_log_formats = [
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             "%(levelname)s: %(message)s",
-            "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
+            "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
         ]
 
         for log_format in dev_log_formats:
@@ -149,8 +141,7 @@ class TestEnvironmentConfiguration:
         dev_log_level_value = 10  # DEBUG = 10
         prod_log_level_value = 20  # INFO = 20
 
-        assert dev_log_level_value < prod_log_level_value, \
-            "Development logging should be more verbose than production"
+        assert dev_log_level_value < prod_log_level_value, "Development logging should be more verbose than production"
 
         print("✅ Logging configuration for development validated")
 
@@ -161,7 +152,7 @@ class TestSQLiteIntegration:
     def test_sqlite_connection_and_basic_operations(self):
         """Test SQLite connection and basic database operations."""
         # Create temporary SQLite database for testing
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
             db_path = tmp_file.name
 
         try:
@@ -170,7 +161,8 @@ class TestSQLiteIntegration:
             cursor = conn.cursor()
 
             # Create test table
-            cursor.execute('''
+            cursor.execute(
+                """
                 CREATE TABLE simulations (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -178,34 +170,35 @@ class TestSQLiteIntegration:
                     created_at REAL,
                     config TEXT
                 )
-            ''')
+            """
+            )
 
             # Insert test data
             test_data = [
-                ('sim_001', 'Test Simulation 1', 'running', time.time(), '{"type": "web"}'),
-                ('sim_002', 'Test Simulation 2', 'completed', time.time(), '{"type": "mobile"}'),
-                ('sim_003', 'Test Simulation 3', 'failed', time.time(), '{"type": "api"}')
+                ("sim_001", "Test Simulation 1", "running", time.time(), '{"type": "web"}'),
+                ("sim_002", "Test Simulation 2", "completed", time.time(), '{"type": "mobile"}'),
+                ("sim_003", "Test Simulation 3", "failed", time.time(), '{"type": "api"}'),
             ]
 
-            cursor.executemany('INSERT INTO simulations VALUES (?, ?, ?, ?, ?)', test_data)
+            cursor.executemany("INSERT INTO simulations VALUES (?, ?, ?, ?, ?)", test_data)
             conn.commit()
 
             # Query data
-            cursor.execute('SELECT COUNT(*) FROM simulations')
+            cursor.execute("SELECT COUNT(*) FROM simulations")
             count = cursor.fetchone()[0]
             assert count == 3, f"Expected 3 records, got {count}"
 
             # Query specific records
-            cursor.execute('SELECT name, status FROM simulations WHERE status = ?', ('running',))
+            cursor.execute("SELECT name, status FROM simulations WHERE status = ?", ("running",))
             running_sim = cursor.fetchone()
             assert running_sim is not None, "Should find running simulation"
-            assert running_sim[1] == 'running', f"Expected status 'running', got {running_sim[1]}"
+            assert running_sim[1] == "running", f"Expected status 'running', got {running_sim[1]}"
 
             # Test parameterized queries
-            cursor.execute('SELECT * FROM simulations WHERE id = ?', ('sim_002',))
+            cursor.execute("SELECT * FROM simulations WHERE id = ?", ("sim_002",))
             sim_002 = cursor.fetchone()
             assert sim_002 is not None, "Should find simulation with ID sim_002"
-            assert sim_002[1] == 'Test Simulation 2', f"Unexpected simulation name: {sim_002[1]}"
+            assert sim_002[1] == "Test Simulation 2", f"Unexpected simulation name: {sim_002[1]}"
 
             conn.close()
 
@@ -218,7 +211,7 @@ class TestSQLiteIntegration:
 
     def test_sqlite_schema_migrations(self):
         """Test SQLite schema migrations for local development."""
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
             db_path = tmp_file.name
 
         try:
@@ -226,39 +219,41 @@ class TestSQLiteIntegration:
             cursor = conn.cursor()
 
             # Initial schema (v1)
-            cursor.execute('''
+            cursor.execute(
+                """
                 CREATE TABLE simulations (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     status TEXT DEFAULT 'created'
                 )
-            ''')
+            """
+            )
 
             # Insert initial data
             cursor.execute("INSERT INTO simulations VALUES ('sim_001', 'Initial Sim', 'created')")
             conn.commit()
 
             # Migration 1: Add created_at column
-            cursor.execute('ALTER TABLE simulations ADD COLUMN created_at REAL')
-            cursor.execute('UPDATE simulations SET created_at = ? WHERE id = ?', (time.time(), 'sim_001'))
+            cursor.execute("ALTER TABLE simulations ADD COLUMN created_at REAL")
+            cursor.execute("UPDATE simulations SET created_at = ? WHERE id = ?", (time.time(), "sim_001"))
             conn.commit()
 
             # Migration 2: Add config column
-            cursor.execute('ALTER TABLE simulations ADD COLUMN config TEXT')
-            cursor.execute('UPDATE simulations SET config = ? WHERE id = ?', ('{"migrated": true}', 'sim_001'))
+            cursor.execute("ALTER TABLE simulations ADD COLUMN config TEXT")
+            cursor.execute("UPDATE simulations SET config = ? WHERE id = ?", ('{"migrated": true}', "sim_001"))
             conn.commit()
 
             # Verify migrations
-            cursor.execute('PRAGMA table_info(simulations)')
+            cursor.execute("PRAGMA table_info(simulations)")
             columns = cursor.fetchall()
             column_names = [col[1] for col in columns]
 
-            expected_columns = ['id', 'name', 'status', 'created_at', 'config']
+            expected_columns = ["id", "name", "status", "created_at", "config"]
             for col in expected_columns:
                 assert col in column_names, f"Missing column after migration: {col}"
 
             # Verify data integrity after migrations
-            cursor.execute('SELECT * FROM simulations WHERE id = ?', ('sim_001',))
+            cursor.execute("SELECT * FROM simulations WHERE id = ?", ("sim_001",))
             record = cursor.fetchone()
             assert record is not None, "Record should exist after migrations"
             assert len(record) == 5, f"Record should have 5 columns, got {len(record)}"
@@ -277,7 +272,7 @@ class TestSQLiteIntegration:
 
     def test_sqlite_performance_under_load(self):
         """Test SQLite performance under typical development load."""
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
             db_path = tmp_file.name
 
         try:
@@ -285,13 +280,15 @@ class TestSQLiteIntegration:
             cursor = conn.cursor()
 
             # Create test table
-            cursor.execute('''
+            cursor.execute(
+                """
                 CREATE TABLE performance_test (
                     id INTEGER PRIMARY KEY,
                     data TEXT,
                     timestamp REAL
                 )
-            ''')
+            """
+            )
 
             # Performance test: Insert many records
             start_time = time.time()
@@ -301,20 +298,16 @@ class TestSQLiteIntegration:
                 records = []
                 for i in range(batch_size):
                     record_id = batch * batch_size + i
-                    records.append((
-                        record_id,
-                        f"Test data {record_id}",
-                        time.time()
-                    ))
+                    records.append((record_id, f"Test data {record_id}", time.time()))
 
-                cursor.executemany('INSERT INTO performance_test VALUES (?, ?, ?)', records)
+                cursor.executemany("INSERT INTO performance_test VALUES (?, ?, ?)", records)
                 conn.commit()
 
             insert_time = time.time() - start_time
 
             # Query performance test
             query_start = time.time()
-            cursor.execute('SELECT COUNT(*) FROM performance_test WHERE id > ?', (5000,))
+            cursor.execute("SELECT COUNT(*) FROM performance_test WHERE id > ?", (5000,))
             count = cursor.fetchone()[0]
             query_time = time.time() - query_start
 
@@ -328,9 +321,10 @@ class TestSQLiteIntegration:
 
             # Simulate concurrent operations
             for i in range(100):
-                cursor.execute('INSERT INTO performance_test VALUES (?, ?, ?)',
-                             (10000 + i, f"Concurrent data {i}", time.time()))
-                cursor.execute('SELECT * FROM performance_test WHERE id = ?', (10000 + i,))
+                cursor.execute(
+                    "INSERT INTO performance_test VALUES (?, ?, ?)", (10000 + i, f"Concurrent data {i}", time.time())
+                )
+                cursor.execute("SELECT * FROM performance_test WHERE id = ?", (10000 + i,))
                 result = cursor.fetchone()
                 assert result is not None
 
@@ -361,7 +355,7 @@ class TestPostgreSQLIntegration:
             "postgresql://user:pass@localhost:5432/dbname",
             "postgresql://user@localhost:5432/dbname",
             "postgresql://localhost/dbname",
-            "postgresql://user:pass@host.com:5432/dbname?sslmode=require"
+            "postgresql://user:pass@host.com:5432/dbname?sslmode=require",
         ]
 
         for url in pg_urls:
@@ -417,7 +411,7 @@ class TestPostgreSQLIntegration:
             """
             CREATE INDEX idx_simulations_status ON simulations(status);
             CREATE INDEX idx_documents_simulation_id ON documents(simulation_id);
-            """
+            """,
         ]
 
         # Test schema compatibility (syntax validation)
@@ -437,7 +431,7 @@ class TestPostgreSQLIntegration:
 
         print("✅ PostgreSQL schema compatibility validated")
 
-    @patch('psycopg2.connect')
+    @patch("psycopg2.connect")
     def test_postgresql_error_handling_simulation(self, mock_connect):
         """Test PostgreSQL error handling simulation."""
         # Mock PostgreSQL connection errors
@@ -499,20 +493,9 @@ class TestLocalDevelopmentWorkflow:
             "environment": "development",
             "debug": True,
             "log_level": "DEBUG",
-            "database": {
-                "url": "sqlite:///dev.db",
-                "migrate_on_startup": True
-            },
-            "api": {
-                "host": "localhost",
-                "port": 8000,
-                "reload": True,
-                "docs_url": "/docs"
-            },
-            "redis": {
-                "url": "redis://localhost:6379",
-                "required": False  # Optional for local dev
-            }
+            "database": {"url": "sqlite:///dev.db", "migrate_on_startup": True},
+            "api": {"host": "localhost", "port": 8000, "reload": True, "docs_url": "/docs"},
+            "redis": {"url": "redis://localhost:6379", "required": False},  # Optional for local dev
         }
 
         # Validate development configuration
@@ -535,24 +518,15 @@ class TestLocalDevelopmentWorkflow:
     def test_hot_reload_configuration(self):
         """Test hot reload configuration for development."""
         # Test file watching and reload triggers
-        watched_files = [
-            "main.py",
-            "simulation/**/*.py",
-            "config/*.yaml",
-            "requirements.txt"
-        ]
+        watched_files = ["main.py", "simulation/**/*.py", "config/*.yaml", "requirements.txt"]
 
-        reload_triggers = [
-            "file_modified",
-            "file_created",
-            "file_deleted",
-            "config_changed"
-        ]
+        reload_triggers = ["file_modified", "file_created", "file_deleted", "config_changed"]
 
         # Validate watched file patterns
         for pattern in watched_files:
-            assert "*" in pattern or pattern.endswith(".py") or pattern.endswith(".yaml") or pattern.endswith(".txt"), \
-                f"Invalid watched file pattern: {pattern}"
+            assert (
+                "*" in pattern or pattern.endswith(".py") or pattern.endswith(".yaml") or pattern.endswith(".txt")
+            ), f"Invalid watched file pattern: {pattern}"
 
         # Test reload trigger logic
         def should_reload(change_type, file_path):
@@ -580,13 +554,12 @@ class TestLocalDevelopmentWorkflow:
             ("file_modified", "simulation/domain/entities.py", True),
             ("file_created", "config/local.yaml", True),
             ("file_modified", "README.md", False),  # Not watched
-            ("config_changed", "database_config", True)
+            ("config_changed", "database_config", True),
         ]
 
         for change_type, file_path, expected_reload in reload_scenarios:
             should_reload_app = should_reload(change_type, file_path)
-            assert should_reload_app == expected_reload, \
-                f"Reload decision incorrect for {change_type}:{file_path}"
+            assert should_reload_app == expected_reload, f"Reload decision incorrect for {change_type}:{file_path}"
 
         print("✅ Hot reload configuration validated")
 
@@ -597,7 +570,7 @@ class TestLocalDevelopmentWorkflow:
             "001_initial_schema.py",
             "002_add_user_table.py",
             "003_add_indexes.py",
-            "004_update_constraints.py"
+            "004_update_constraints.py",
         ]
 
         # Validate migration file naming
@@ -653,7 +626,7 @@ class TestLocalDevelopmentWorkflow:
             "active_connections": 0,
             "request_count": 0,
             "error_count": 0,
-            "uptime": 0
+            "uptime": 0,
         }
 
         # Simulate monitoring data collection
@@ -662,19 +635,15 @@ class TestLocalDevelopmentWorkflow:
         def collect_metric(metric_name, value):
             """Collect a monitoring metric."""
             dev_metrics[metric_name] = value
-            monitoring_data.append({
-                "metric": metric_name,
-                "value": value,
-                "timestamp": time.time()
-            })
+            monitoring_data.append({"metric": metric_name, "value": value, "timestamp": time.time()})
 
         # Collect various metrics
         collect_metric("memory_usage", 85.5)  # 85.5 MB
-        collect_metric("cpu_usage", 12.3)     # 12.3%
+        collect_metric("cpu_usage", 12.3)  # 12.3%
         collect_metric("active_connections", 3)
         collect_metric("request_count", 150)
         collect_metric("error_count", 2)
-        collect_metric("uptime", 3600)        # 1 hour
+        collect_metric("uptime", 3600)  # 1 hour
 
         # Validate metrics collection
         assert len(monitoring_data) == 6
@@ -699,7 +668,7 @@ class TestLocalDevelopmentWorkflow:
 @pytest.fixture
 def temp_sqlite_db():
     """Create a temporary SQLite database for testing."""
-    with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
         db_path = tmp_file.name
 
     yield db_path
@@ -733,5 +702,5 @@ def dev_environment_config():
         "api_port": 8000,
         "redis_url": "redis://localhost:6379",
         "migrate_on_startup": True,
-        "hot_reload": True
+        "hot_reload": True,
     }

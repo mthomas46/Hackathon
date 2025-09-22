@@ -3,8 +3,8 @@ Document Recommendation Service for high-level document analysis and recommendat
 Following DDD application layer patterns with clean separation of concerns.
 """
 
-from typing import List, Dict, Any, Optional
 import asyncio
+from typing import Any, Dict, List, Optional
 
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
@@ -51,12 +51,14 @@ class DocumentRecommendationService:
 
         for rec in duplicate_recommendations:
             if rec.affected_documents and len(rec.affected_documents) >= 2:
-                similar_pairs.append({
-                    "document1_id": rec.affected_documents[0],
-                    "document2_id": rec.affected_documents[1],
-                    "similarity_score": rec.confidence_score,
-                    "recommendation": rec.description
-                })
+                similar_pairs.append(
+                    {
+                        "document1_id": rec.affected_documents[0],
+                        "document2_id": rec.affected_documents[1],
+                        "similarity_score": rec.confidence_score,
+                        "recommendation": rec.description,
+                    }
+                )
 
         return similar_pairs
 
@@ -76,17 +78,19 @@ class DocumentRecommendationService:
             "user_guide": "User guides and tutorials",
             "installation": "Installation and setup guides",
             "troubleshooting": "Troubleshooting and FAQ",
-            "architecture": "System architecture documentation"
+            "architecture": "System architecture documentation",
         }
 
         for doc_type, description in essential_types.items():
             if doc_type not in doc_types or doc_types[doc_type] == 0:
-                gaps.append({
-                    "topic": description,
-                    "importance": "high",
-                    "missing_content_type": doc_type,
-                    "rationale": f"No {description.lower()} found in documentation set"
-                })
+                gaps.append(
+                    {
+                        "topic": description,
+                        "importance": "high",
+                        "missing_content_type": doc_type,
+                        "rationale": f"No {description.lower()} found in documentation set",
+                    }
+                )
 
         # Check for content depth issues
         total_docs = len(documents)
@@ -94,12 +98,14 @@ class DocumentRecommendationService:
             avg_word_count = sum(len(doc.get("content", "").split()) for doc in documents) / total_docs
 
             if avg_word_count < 200:
-                gaps.append({
-                    "topic": "Content depth and completeness",
-                    "importance": "medium",
-                    "missing_content_type": "detailed_content",
-                    "rationale": f"Average document length ({avg_word_count:.0f} words) suggests superficial coverage"
-                })
+                gaps.append(
+                    {
+                        "topic": "Content depth and completeness",
+                        "importance": "medium",
+                        "missing_content_type": "detailed_content",
+                        "rationale": f"Average document length ({avg_word_count:.0f} words) suggests superficial coverage",
+                    }
+                )
 
         return gaps
 
@@ -112,14 +118,16 @@ class DocumentRecommendationService:
         low_quality_docs = [doc_id for doc_id, score in quality_scores.items() if score < 0.6]
 
         if low_quality_docs:
-            recommendations.append({
-                "action": f"Improve quality of {len(low_quality_docs)} low-quality documents",
-                "rationale": "Low-quality documentation reduces user satisfaction and increases support burden",
-                "expected_impact": "Enhanced user experience and reduced support tickets",
-                "effort_level": "medium" if len(low_quality_docs) <= 3 else "high",
-                "affected_documents": low_quality_docs,
-                "priority": "high" if len(low_quality_docs) > 5 else "medium"
-            })
+            recommendations.append(
+                {
+                    "action": f"Improve quality of {len(low_quality_docs)} low-quality documents",
+                    "rationale": "Low-quality documentation reduces user satisfaction and increases support burden",
+                    "expected_impact": "Enhanced user experience and reduced support tickets",
+                    "effort_level": "medium" if len(low_quality_docs) <= 3 else "high",
+                    "affected_documents": low_quality_docs,
+                    "priority": "high" if len(low_quality_docs) > 5 else "medium",
+                }
+            )
 
         # Process similar documents
         similar_documents = analysis_results.get("similar_documents", [])
@@ -135,38 +143,44 @@ class DocumentRecommendationService:
                     doc_ids.add(pair["doc2"])
 
             consolidation_count = len(doc_ids)
-            recommendations.append({
-                "action": f"Consolidate {consolidation_count} redundant documents",
-                "rationale": "Duplicate content increases maintenance overhead and confuses users",
-                "expected_impact": "Simplified documentation structure and reduced maintenance costs",
-                "effort_level": "medium",
-                "affected_documents": list(doc_ids),
-                "priority": "medium"
-            })
+            recommendations.append(
+                {
+                    "action": f"Consolidate {consolidation_count} redundant documents",
+                    "rationale": "Duplicate content increases maintenance overhead and confuses users",
+                    "expected_impact": "Simplified documentation structure and reduced maintenance costs",
+                    "effort_level": "medium",
+                    "affected_documents": list(doc_ids),
+                    "priority": "medium",
+                }
+            )
 
         # Process content gaps
         content_gaps = analysis_results.get("content_gaps", [])
         for gap in content_gaps:
             if isinstance(gap, dict):
                 # Gap is already a dictionary with detailed information
-                recommendations.append({
-                    "action": f"Create {gap.get('topic', str(gap))}",
-                    "rationale": gap.get("rationale", "Fill documentation gap"),
-                    "expected_impact": "Complete documentation coverage for better user experience",
-                    "effort_level": "medium",
-                    "priority": gap.get("importance", "medium"),
-                    "content_type": gap.get("missing_content_type", "documentation")
-                })
+                recommendations.append(
+                    {
+                        "action": f"Create {gap.get('topic', str(gap))}",
+                        "rationale": gap.get("rationale", "Fill documentation gap"),
+                        "expected_impact": "Complete documentation coverage for better user experience",
+                        "effort_level": "medium",
+                        "priority": gap.get("importance", "medium"),
+                        "content_type": gap.get("missing_content_type", "documentation"),
+                    }
+                )
             else:
                 # Gap is just a string identifier
-                recommendations.append({
-                    "action": f"Create documentation for {str(gap)}",
-                    "rationale": f"Missing {str(gap)} documentation",
-                    "expected_impact": "Complete documentation coverage for better user experience",
-                    "effort_level": "medium",
-                    "priority": "medium",
-                    "content_type": str(gap)
-                })
+                recommendations.append(
+                    {
+                        "action": f"Create documentation for {str(gap)}",
+                        "rationale": f"Missing {str(gap)} documentation",
+                        "expected_impact": "Complete documentation coverage for better user experience",
+                        "effort_level": "medium",
+                        "priority": "medium",
+                        "content_type": str(gap),
+                    }
+                )
 
         return recommendations
 
@@ -177,7 +191,7 @@ class DocumentRecommendationService:
             self._analyze_quality_scores(documents),
             self.detect_similar_documents(documents),
             self.identify_content_gaps(documents),
-            self.summarizer_client.get_comprehensive_recommendations(documents)
+            self.summarizer_client.get_comprehensive_recommendations(documents),
         ]
 
         results = await asyncio.gather(*tasks)
@@ -197,9 +211,9 @@ class DocumentRecommendationService:
                 "average_quality": sum(quality_scores.values()) / len(quality_scores) if quality_scores else 0,
                 "duplicate_pairs": len(similar_documents),
                 "content_gaps": len(content_gaps),
-                "total_recommendations": len(recommendations)
+                "total_recommendations": len(recommendations),
             },
-            "analyzed_at": asyncio.get_event_loop().time()
+            "analyzed_at": asyncio.get_event_loop().time(),
         }
 
     async def _analyze_quality_scores(self, documents: List[Dict[str, Any]]) -> Dict[str, float]:
@@ -209,7 +223,7 @@ class DocumentRecommendationService:
         # Analyze documents in batches to avoid overwhelming the service
         batch_size = 5
         for i in range(0, len(documents), batch_size):
-            batch = documents[i:i + batch_size]
+            batch = documents[i : i + batch_size]
 
             # Analyze batch concurrently
             tasks = [self.analyze_document_quality(doc) for doc in batch]

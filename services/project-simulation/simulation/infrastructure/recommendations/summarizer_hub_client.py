@@ -3,10 +3,10 @@ Summarizer-Hub Client for integrating with the summarizer service.
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
-import httpx
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import httpx
 from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
 from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 
@@ -32,13 +32,13 @@ class SummarizerHubClient:
                 "content": document.get("content", ""),
                 "title": document.get("title", ""),
                 "document_type": document.get("type", "unknown"),
-                "analysis_type": "comprehensive"
+                "analysis_type": "comprehensive",
             }
 
             response = await self.http_client.post(
                 f"{self.service_url}/api/v1/analyze/document",
                 json=analysis_request,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             )
 
             if response.status_code == 200:
@@ -59,7 +59,7 @@ class SummarizerHubClient:
         batch_size = min(len(documents), 10)
 
         for i in range(0, len(documents), batch_size):
-            batch = documents[i:i + batch_size]
+            batch = documents[i : i + batch_size]
 
             try:
                 batch_request = {
@@ -68,17 +68,17 @@ class SummarizerHubClient:
                             "id": doc.get("id"),
                             "content": doc.get("content", ""),
                             "title": doc.get("title", ""),
-                            "type": doc.get("type", "unknown")
+                            "type": doc.get("type", "unknown"),
                         }
                         for doc in batch
                     ],
-                    "analysis_type": "batch_quality"
+                    "analysis_type": "batch_quality",
                 }
 
                 response = await self.http_client.post(
                     f"{self.service_url}/api/v1/analyze/batch",
                     json=batch_request,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -88,21 +88,13 @@ class SummarizerHubClient:
                     # Fallback analysis for batch
                     for doc in batch:
                         fallback_result = await self._fallback_document_analysis(doc)
-                        results.append({
-                            "document_id": doc.get("id"),
-                            "analysis": fallback_result,
-                            "fallback": True
-                        })
+                        results.append({"document_id": doc.get("id"), "analysis": fallback_result, "fallback": True})
 
             except Exception:
                 # Fallback for entire batch
                 for doc in batch:
                     fallback_result = await self._fallback_document_analysis(doc)
-                    results.append({
-                        "document_id": doc.get("id"),
-                        "analysis": fallback_result,
-                        "fallback": True
-                    })
+                    results.append({"document_id": doc.get("id"), "analysis": fallback_result, "fallback": True})
 
         return results
 
@@ -112,13 +104,13 @@ class SummarizerHubClient:
             recommendation_request = {
                 "analysis_results": analysis_results,
                 "recommendation_types": ["consolidation", "quality", "structure"],
-                "include_priorities": True
+                "include_priorities": True,
             }
 
             response = await self.http_client.post(
                 f"{self.service_url}/api/v1/recommendations/generate",
                 json=recommendation_request,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             )
 
             if response.status_code == 200:
@@ -142,10 +134,10 @@ class SummarizerHubClient:
                 {
                     "type": "service_unavailable",
                     "description": "Summarizer service is currently unavailable",
-                    "priority": "medium"
+                    "priority": "medium",
                 }
             ],
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     async def _fallback_document_analysis(self, document: Dict[str, Any]) -> Dict[str, Any]:
@@ -177,7 +169,7 @@ class SummarizerHubClient:
             "key_points": ["Content length analysis", "Basic quality assessment"],
             "sentiment": "neutral",
             "fallback_mode": True,
-            "analyzed_at": datetime.now().isoformat()
+            "analyzed_at": datetime.now().isoformat(),
         }
 
     async def _fallback_recommendation_generation(self, analysis_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -189,28 +181,37 @@ class SummarizerHubClient:
             quality_score = result.get("quality_score", 0.5)
 
             if quality_score < 0.6:
-                recommendations.append({
-                    "type": "quality",
-                    "description": f"Consider improving quality of document {doc_id}",
-                    "priority": "medium",
-                    "document_id": doc_id,
-                    "fallback": True
-                })
+                recommendations.append(
+                    {
+                        "type": "quality",
+                        "description": f"Consider improving quality of document {doc_id}",
+                        "priority": "medium",
+                        "document_id": doc_id,
+                        "fallback": True,
+                    }
+                )
 
         # Add general recommendations if we have multiple low-quality documents
         low_quality_count = sum(1 for r in analysis_results if r.get("quality_score", 0.5) < 0.6)
 
         if low_quality_count > len(analysis_results) * 0.5:
-            recommendations.append({
-                "type": "consolidation",
-                "description": "Consider consolidating multiple low-quality documents",
-                "priority": "high",
-                "fallback": True
-            })
+            recommendations.append(
+                {
+                    "type": "consolidation",
+                    "description": "Consider consolidating multiple low-quality documents",
+                    "priority": "high",
+                    "fallback": True,
+                }
+            )
 
         return recommendations
 
-    async def get_recommendations(self, documents: List[Dict[str, Any]], recommendation_types: Optional[List[str]] = None, confidence_threshold: float = 0.4) -> List[Recommendation]:
+    async def get_recommendations(
+        self,
+        documents: List[Dict[str, Any]],
+        recommendation_types: Optional[List[str]] = None,
+        confidence_threshold: float = 0.4,
+    ) -> List[Recommendation]:
         """Get recommendations for documents from Summarizer Hub."""
         try:
             async with httpx.AsyncClient(timeout=self.http_client.timeout) as client:
@@ -219,8 +220,8 @@ class SummarizerHubClient:
                     json={
                         "documents": documents,
                         "recommendation_types": recommendation_types,
-                        "confidence_threshold": confidence_threshold
-                    }
+                        "confidence_threshold": confidence_threshold,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -288,7 +289,7 @@ class SummarizerHubClient:
                     effort_level=raw_rec.get("effort_level", "medium"),
                     tags=raw_rec.get("tags", []),
                     metadata=raw_rec.get("metadata", {}),
-                    age_days=raw_rec.get("age_days")
+                    age_days=raw_rec.get("age_days"),
                 )
                 recommendations.append(recommendation)
 

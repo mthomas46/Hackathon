@@ -13,13 +13,14 @@ Usage:
     python manage_events.py --help
 """
 
-import sys
-import os
 import argparse
-import requests
 import json
+import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import requests
 
 # Add the project root to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -79,16 +80,14 @@ class EventManager:
         else:
             print(f"❌ Failed to get statistics: {response.get('error', 'Unknown error')}")
 
-    def query_events(self, simulation_id: str, event_types: Optional[str] = None,
-                    limit: int = 20, offset: int = 0) -> None:
+    def query_events(
+        self, simulation_id: str, event_types: Optional[str] = None, limit: int = 20, offset: int = 0
+    ) -> None:
         """Query events for a simulation."""
         print(f"🔍 Querying events for simulation: {simulation_id}")
         print("=" * 60)
 
-        params = {
-            "limit": limit,
-            "offset": offset
-        }
+        params = {"limit": limit, "offset": offset}
         if event_types:
             params["event_types"] = event_types
 
@@ -98,7 +97,9 @@ class EventManager:
             data = response.get("data", {})
             events = data.get("events", [])
 
-            print(f"Found {len(events)} events (showing {data.get('limit', limit)} of {data.get('total_count', len(events))})")
+            print(
+                f"Found {len(events)} events (showing {data.get('limit', limit)} of {data.get('total_count', len(events))})"
+            )
 
             if events:
                 print("\nRecent Events:")
@@ -144,8 +145,13 @@ class EventManager:
         else:
             print(f"❌ Failed to get timeline: {response.get('error', 'Unknown error')}")
 
-    def replay_events(self, simulation_id: str, speed_multiplier: float = 1.0,
-                     event_types: Optional[str] = None, max_events: Optional[int] = None) -> None:
+    def replay_events(
+        self,
+        simulation_id: str,
+        speed_multiplier: float = 1.0,
+        event_types: Optional[str] = None,
+        max_events: Optional[int] = None,
+    ) -> None:
         """Replay events for a simulation."""
         print(f"🎬 Starting event replay for simulation: {simulation_id}")
         print("=" * 60)
@@ -157,25 +163,21 @@ class EventManager:
         print()
 
         # Start replay
-        replay_data = {
-            "speed_multiplier": speed_multiplier,
-            "include_system_events": False
-        }
+        replay_data = {"speed_multiplier": speed_multiplier, "include_system_events": False}
         if event_types:
             replay_data["event_types"] = event_types.split(",")
         if max_events:
             replay_data["max_events"] = max_events
 
-        response = self.make_request("POST", f"/api/v1/simulations/{simulation_id}/events/replay",
-                                   json=replay_data)
+        response = self.make_request("POST", f"/api/v1/simulations/{simulation_id}/events/replay", json=replay_data)
 
         if response.get("success"):
             data = response.get("data", {})
             replay_id = data.get("replay_id")
 
-            print(f"✅ Replay started successfully!")
+            print("✅ Replay started successfully!")
             print(f"Replay ID: {replay_id}")
-            print("Monitor the replay status or use WebSocket for real-time updates."
+            print("Monitor the replay status or use WebSocket for real-time updates.")
         else:
             print(f"❌ Failed to start replay: {response.get('error', 'Unknown error')}")
 
@@ -184,8 +186,7 @@ class EventManager:
         print(f"🧹 Cleaning up events older than {days_old} days")
         print("=" * 50)
 
-        response = self.make_request("POST", "/api/v1/events/cleanup",
-                                   json={"days_old": days_old})
+        response = self.make_request("POST", "/api/v1/events/cleanup", json={"days_old": days_old})
 
         if response.get("success"):
             data = response.get("data", {})
@@ -242,77 +243,32 @@ Examples:
   python manage_events.py timeline abc-123
   python manage_events.py replay abc-123 --speed 2.0 --max-events 100
   python manage_events.py cleanup --days 30
-        """
+        """,
     )
 
     parser.add_argument(
-        "command",
-        choices=["stats", "query", "timeline", "replay", "cleanup"],
-        help="Command to execute"
+        "command", choices=["stats", "query", "timeline", "replay", "cleanup"], help="Command to execute"
     )
 
-    parser.add_argument(
-        "simulation_id",
-        nargs="?",
-        help="Simulation ID for commands that require it"
-    )
+    parser.add_argument("simulation_id", nargs="?", help="Simulation ID for commands that require it")
 
-    parser.add_argument(
-        "--simulation-id",
-        help="Simulation ID for filtering"
-    )
+    parser.add_argument("--simulation-id", help="Simulation ID for filtering")
 
-    parser.add_argument(
-        "--event-types",
-        help="Comma-separated list of event types to filter"
-    )
+    parser.add_argument("--event-types", help="Comma-separated list of event types to filter")
 
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=20,
-        help="Limit number of results"
-    )
+    parser.add_argument("--limit", type=int, default=20, help="Limit number of results")
 
-    parser.add_argument(
-        "--offset",
-        type=int,
-        default=0,
-        help="Offset for pagination"
-    )
+    parser.add_argument("--offset", type=int, default=0, help="Offset for pagination")
 
-    parser.add_argument(
-        "--speed",
-        type=float,
-        default=1.0,
-        help="Replay speed multiplier"
-    )
+    parser.add_argument("--speed", type=float, default=1.0, help="Replay speed multiplier")
 
-    parser.add_argument(
-        "--max-events",
-        type=int,
-        help="Maximum events to replay"
-    )
+    parser.add_argument("--max-events", type=int, help="Maximum events to replay")
 
-    parser.add_argument(
-        "--days",
-        type=int,
-        default=30,
-        help="Days old for cleanup"
-    )
+    parser.add_argument("--days", type=int, default=30, help="Days old for cleanup")
 
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="API host"
-    )
+    parser.add_argument("--host", default="localhost", help="API host")
 
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=5075,
-        help="API port"
-    )
+    parser.add_argument("--port", type=int, default=5075, help="API port")
 
     args = parser.parse_args()
 
@@ -322,7 +278,7 @@ Examples:
     try:
         # Execute command
         if args.command == "stats":
-            simulation_id = args.simulation_id or getattr(args, 'simulation_id', None)
+            simulation_id = args.simulation_id or getattr(args, "simulation_id", None)
             manager.show_statistics(simulation_id)
         elif args.command == "query":
             if not args.simulation_id:

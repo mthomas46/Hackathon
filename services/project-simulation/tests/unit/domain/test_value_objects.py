@@ -4,15 +4,28 @@ This module contains comprehensive unit tests for value objects,
 testing immutability, validation, equality, and business rules.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import pytest
 from simulation.domain.value_objects import (
-    EmailAddress, ProjectName, Duration, Money, Percentage,
-    ServiceEndpoint, ServiceHealthStatus, DocumentId, DocumentMetadata,
-    SimulationMetrics, EcosystemService, ProjectType, ComplexityLevel,
-    ProjectStatus, SimulationStatus, DocumentType, ServiceHealth
+    ComplexityLevel,
+    DocumentId,
+    DocumentMetadata,
+    DocumentType,
+    Duration,
+    EcosystemService,
+    EmailAddress,
+    Money,
+    Percentage,
+    ProjectName,
+    ProjectStatus,
+    ProjectType,
+    ServiceEndpoint,
+    ServiceHealth,
+    ServiceHealthStatus,
+    SimulationMetrics,
+    SimulationStatus,
 )
 
 
@@ -112,7 +125,7 @@ class TestProjectName:
             ("Project_With_Underscores", "project_with_underscores"),
             ("Project With Spaces", "project-with-spaces"),
             ("MIXED_case_PROJECT", "mixed_case_project"),
-            ("Project---Multiple---Dashes", "project---multiple---dashes")
+            ("Project---Multiple---Dashes", "project---multiple---dashes"),
         ]
 
         for input_name, expected_slug in test_cases:
@@ -168,7 +181,7 @@ class TestDuration:
             (Duration(weeks=1, days=0), "1 week"),
             (Duration(weeks=2, days=0), "2 weeks"),
             (Duration(weeks=1, days=1), "1 week 1 day"),
-            (Duration(weeks=2, days=3), "2 weeks 3 days")
+            (Duration(weeks=2, days=3), "2 weeks 3 days"),
         ]
 
         for duration, expected_str in test_cases:
@@ -307,11 +320,7 @@ class TestServiceEndpoint:
 
     def test_valid_service_endpoint_creation(self):
         """Test creating valid service endpoints."""
-        endpoint = ServiceEndpoint(
-            url="https://api.example.com",
-            timeout_seconds=30,
-            retries=3
-        )
+        endpoint = ServiceEndpoint(url="https://api.example.com", timeout_seconds=30, retries=3)
 
         assert endpoint.url == "https://api.example.com"
         assert endpoint.timeout_seconds == 30
@@ -359,7 +368,7 @@ class TestServiceHealthStatus:
             status=ServiceHealth.HEALTHY,
             response_time_ms=150.5,
             last_checked=datetime(2024, 1, 1, 12, 0, 0),
-            error_message=None
+            error_message=None,
         )
 
         assert status.service_name == "api"
@@ -370,11 +379,7 @@ class TestServiceHealthStatus:
 
     def test_service_health_degraded_status(self):
         """Test degraded service status."""
-        status = ServiceHealthStatus(
-            service_name="api",
-            status=ServiceHealth.DEGRADED,
-            response_time_ms=5000.0
-        )
+        status = ServiceHealthStatus(service_name="api", status=ServiceHealth.DEGRADED, response_time_ms=5000.0)
 
         assert status.is_healthy() == False
         assert status.needs_attention() == True
@@ -382,9 +387,7 @@ class TestServiceHealthStatus:
     def test_service_health_unhealthy_status(self):
         """Test unhealthy service status."""
         status = ServiceHealthStatus(
-            service_name="api",
-            status=ServiceHealth.UNHEALTHY,
-            error_message="Connection timeout"
+            service_name="api", status=ServiceHealth.UNHEALTHY, error_message="Connection timeout"
         )
 
         assert status.is_healthy() == False
@@ -392,10 +395,7 @@ class TestServiceHealthStatus:
 
     def test_service_health_unknown_status(self):
         """Test unknown service status."""
-        status = ServiceHealthStatus(
-            service_name="api",
-            status=ServiceHealth.UNKNOWN
-        )
+        status = ServiceHealthStatus(service_name="api", status=ServiceHealth.UNKNOWN)
 
         assert status.is_healthy() == False
         assert status.needs_attention() == False
@@ -448,7 +448,7 @@ class TestDocumentMetadata:
             created_at=created_at,
             word_count=1500,
             complexity_score=0.7,
-            tags=["api", "documentation", "technical"]
+            tags=["api", "documentation", "technical"],
         )
 
         assert metadata.document_id == doc_id
@@ -471,7 +471,7 @@ class TestDocumentMetadata:
                 title="",
                 type=DocumentType.PROJECT_REQUIREMENTS,
                 author="John Doe",
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
 
     def test_negative_word_count(self):
@@ -485,7 +485,7 @@ class TestDocumentMetadata:
                 type=DocumentType.PROJECT_REQUIREMENTS,
                 author="John Doe",
                 created_at=datetime.now(),
-                word_count=-100
+                word_count=-100,
             )
 
     def test_invalid_complexity_score(self):
@@ -499,7 +499,7 @@ class TestDocumentMetadata:
                 type=DocumentType.PROJECT_REQUIREMENTS,
                 author="John Doe",
                 created_at=datetime.now(),
-                complexity_score=1.5
+                complexity_score=1.5,
             )
 
         with pytest.raises(ValueError, match="between 0 and 1"):
@@ -509,7 +509,7 @@ class TestDocumentMetadata:
                 type=DocumentType.PROJECT_REQUIREMENTS,
                 author="John Doe",
                 created_at=datetime.now(),
-                complexity_score=-0.1
+                complexity_score=-0.1,
             )
 
     def test_tag_matching(self):
@@ -522,7 +522,7 @@ class TestDocumentMetadata:
             type=DocumentType.PROJECT_REQUIREMENTS,
             author="John Doe",
             created_at=datetime.now(),
-            tags=["API", "documentation", "TECHNICAL"]
+            tags=["API", "documentation", "TECHNICAL"],
         )
 
         # Should be case-insensitive
@@ -546,7 +546,7 @@ class TestSimulationMetrics:
             execution_time_seconds=300.5,
             average_response_time_ms=150.0,
             error_count=2,
-            success_rate=Percentage(96.0)
+            success_rate=Percentage(96.0),
         )
 
         assert metrics.total_documents == 100
@@ -564,7 +564,7 @@ class TestSimulationMetrics:
             execution_time_seconds=0,
             average_response_time_ms=0.0,
             error_count=0,
-            success_rate=Percentage(100.0)
+            success_rate=Percentage(100.0),
         )
 
         assert metrics.documents_per_second == 0
@@ -580,7 +580,7 @@ class TestSimulationMetrics:
             execution_time_seconds=300.0,
             average_response_time_ms=150.0,
             error_count=2,
-            success_rate=Percentage(96.0)
+            success_rate=Percentage(96.0),
         )
 
         str_repr = str(metrics)
@@ -601,7 +601,7 @@ class TestEcosystemService:
             endpoint=endpoint,
             health_check_endpoint="/health",
             required_for_simulation=True,
-            description="Test API service"
+            description="Test API service",
         )
 
         assert service.name == "test_api"
@@ -613,11 +613,7 @@ class TestEcosystemService:
     def test_ecosystem_service_health_check_url(self):
         """Test health check URL generation."""
         endpoint = ServiceEndpoint("https://api.example.com/v1")
-        service = EcosystemService(
-            name="test_api",
-            endpoint=endpoint,
-            health_check_endpoint="health"
-        )
+        service = EcosystemService(name="test_api", endpoint=endpoint, health_check_endpoint="health")
 
         expected_url = "https://api.example.com/health"
         assert service.get_health_check_url() == expected_url
@@ -625,10 +621,7 @@ class TestEcosystemService:
     def test_ecosystem_service_string_representation(self):
         """Test service string representation."""
         endpoint = ServiceEndpoint("https://api.example.com")
-        service = EcosystemService(
-            name="test_api",
-            endpoint=endpoint
-        )
+        service = EcosystemService(name="test_api", endpoint=endpoint)
 
         str_repr = str(service)
         assert "test_api" in str_repr

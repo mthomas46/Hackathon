@@ -4,21 +4,26 @@ This module contains simplified integration tests for core WebSocket broadcastin
 focusing on event broadcasting and message formatting without complex infrastructure dependencies.
 """
 
-import pytest
 import asyncio
 import json
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
 import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from simulation.presentation.websockets.simulation_websocket import (
-    SimulationWebSocketManager, notify_simulation_event,
-    notify_simulation_progress, notify_simulation_error
-)
+import pytest
 from simulation.domain.events import (
-    SimulationStarted, SimulationCompleted, DocumentGenerated,
-    PhaseStarted, PhaseDelayed
+    DocumentGenerated,
+    PhaseDelayed,
+    PhaseStarted,
+    SimulationCompleted,
+    SimulationStarted,
+)
+from simulation.presentation.websockets.simulation_websocket import (
+    SimulationWebSocketManager,
+    notify_simulation_error,
+    notify_simulation_event,
+    notify_simulation_progress,
 )
 
 
@@ -32,10 +37,10 @@ class TestWebSocketBroadcastingIntegration:
             simulation_id=str(uuid.uuid4()),
             project_id=str(uuid.uuid4()),
             scenario_type="full_project",
-            estimated_duration_hours=8
+            estimated_duration_hours=8,
         )
 
-        assert hasattr(started_event, 'simulation_id')
+        assert hasattr(started_event, "simulation_id")
         assert started_event.scenario_type == "full_project"
         assert started_event.estimated_duration_hours == 8
 
@@ -45,7 +50,7 @@ class TestWebSocketBroadcastingIntegration:
             project_id=str(uuid.uuid4()),
             status="completed",
             metrics={"execution_time": 28800, "documents_generated": 5},
-            total_duration_hours=8.0
+            total_duration_hours=8.0,
         )
 
         assert completed_event.status == "completed"
@@ -61,7 +66,7 @@ class TestWebSocketBroadcastingIntegration:
             document_type="requirements",
             title="Requirements Document",
             content_hash="abc123def456",
-            metadata={"word_count": 1500, "format": "markdown"}
+            metadata={"word_count": 1500, "format": "markdown"},
         )
 
         assert doc_event.document_type == "requirements"
@@ -75,12 +80,12 @@ class TestWebSocketBroadcastingIntegration:
             timeline_id=str(uuid.uuid4()),
             project_id=str(uuid.uuid4()),
             phase_name="Planning",
-            start_date=datetime.now()
+            start_date=datetime.now(),
         )
 
-        assert hasattr(phase_started, 'timeline_id')
+        assert hasattr(phase_started, "timeline_id")
         assert phase_started.phase_name == "Planning"
-        assert hasattr(phase_started, 'start_date')
+        assert hasattr(phase_started, "start_date")
 
         # Test PhaseDelayed event
         original_date = datetime.now()
@@ -91,7 +96,7 @@ class TestWebSocketBroadcastingIntegration:
             phase_name="Development",
             original_end_date=original_date,
             new_end_date=new_date,
-            delay_reason="Resource constraints"
+            delay_reason="Resource constraints",
         )
 
         assert phase_delayed.phase_name == "Development"
@@ -103,7 +108,9 @@ class TestWebSocketBroadcastingIntegration:
         """Test WebSocket notification functions can be imported and called."""
         # Test that the notification functions can be imported without errors
         from simulation.presentation.websockets.simulation_websocket import (
-            notify_simulation_event, notify_simulation_progress, notify_simulation_error
+            notify_simulation_error,
+            notify_simulation_event,
+            notify_simulation_progress,
         )
 
         # Test that the functions are callable
@@ -116,14 +123,14 @@ class TestWebSocketBroadcastingIntegration:
             simulation_id=str(uuid.uuid4()),
             project_id=str(uuid.uuid4()),
             scenario_type="full_project",
-            estimated_duration_hours=8
+            estimated_duration_hours=8,
         )
 
         # Test that the event has the required attributes
-        assert hasattr(event, 'simulation_id')
-        assert hasattr(event, 'project_id')
-        assert hasattr(event, 'scenario_type')
-        assert hasattr(event, 'estimated_duration_hours')
+        assert hasattr(event, "simulation_id")
+        assert hasattr(event, "project_id")
+        assert hasattr(event, "scenario_type")
+        assert hasattr(event, "estimated_duration_hours")
 
         # Note: Full integration test would require a running WebSocket server
         # This test verifies the basic structure and imports work correctly
@@ -132,15 +139,12 @@ class TestWebSocketBroadcastingIntegration:
         """Test WebSocket message formatting."""
         # Test simulation event message format
         event = SimulationStarted(
-            simulation_id="sim_123",
-            project_id="proj_123",
-            scenario_type="full_project",
-            estimated_duration_hours=8
+            simulation_id="sim_123", project_id="proj_123", scenario_type="full_project", estimated_duration_hours=8
         )
 
         # Verify event has required attributes for message formatting
-        assert hasattr(event, 'simulation_id')
-        assert hasattr(event, 'project_id')
-        assert hasattr(event, 'scenario_type')
-        assert hasattr(event, 'estimated_duration_hours')
-        assert hasattr(event, 'occurred_at')
+        assert hasattr(event, "simulation_id")
+        assert hasattr(event, "project_id")
+        assert hasattr(event, "scenario_type")
+        assert hasattr(event, "estimated_duration_hours")
+        assert hasattr(event, "occurred_at")

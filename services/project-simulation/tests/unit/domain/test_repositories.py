@@ -4,20 +4,23 @@ This module contains comprehensive unit tests for repository interfaces,
 testing data access patterns, contract compliance, and repository behavior.
 """
 
-import pytest
 from abc import ABC
-from unittest.mock import Mock, MagicMock
 from typing import List, Optional
+from unittest.mock import MagicMock, Mock
 
-from simulation.domain.repositories import (
-    IProjectRepository, ITimelineRepository, ITeamRepository,
-    ISimulationRepository, IUnitOfWork
-)
+import pytest
 from simulation.domain.entities.project import Project, ProjectId, TeamMember
-from simulation.domain.entities.timeline import Timeline, TimelineId
-from simulation.domain.entities.team import Team, TeamId
 from simulation.domain.entities.simulation import Simulation, SimulationId
-from simulation.domain.value_objects import ProjectType, ComplexityLevel, ProjectStatus
+from simulation.domain.entities.team import Team, TeamId
+from simulation.domain.entities.timeline import Timeline, TimelineId
+from simulation.domain.repositories import (
+    IProjectRepository,
+    ISimulationRepository,
+    ITeamRepository,
+    ITimelineRepository,
+    IUnitOfWork,
+)
+from simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
 class TestRepositoryContracts:
@@ -28,26 +31,22 @@ class TestRepositoryContracts:
         # Get all abstract methods from the interface
         abstract_methods = IProjectRepository.__abstractmethods__
 
-        expected_methods = {
-            'save', 'find_by_id', 'find_by_name', 'find_all', 'find_by_status', 'delete'
-        }
+        expected_methods = {"save", "find_by_id", "find_by_name", "find_all", "find_by_status", "delete"}
 
         assert abstract_methods == expected_methods
 
         # Verify method signatures
-        save_method = getattr(IProjectRepository, 'save')
+        save_method = getattr(IProjectRepository, "save")
         assert callable(save_method)
 
-        find_by_id_method = getattr(IProjectRepository, 'find_by_id')
+        find_by_id_method = getattr(IProjectRepository, "find_by_id")
         assert callable(find_by_id_method)
 
     def test_timeline_repository_interface(self):
         """Test TimelineRepository interface contract."""
         abstract_methods = ITimelineRepository.__abstractmethods__
 
-        expected_methods = {
-            'save', 'find_by_id', 'find_by_project_id', 'find_all_for_project', 'delete'
-        }
+        expected_methods = {"save", "find_by_id", "find_by_project_id", "find_all_for_project", "delete"}
 
         assert abstract_methods == expected_methods
 
@@ -56,8 +55,12 @@ class TestRepositoryContracts:
         abstract_methods = ITeamRepository.__abstractmethods__
 
         expected_methods = {
-            'save', 'find_by_id', 'find_by_project_id', 'find_by_name',
-            'find_all_for_project', 'delete'
+            "save",
+            "find_by_id",
+            "find_by_project_id",
+            "find_by_name",
+            "find_all_for_project",
+            "delete",
         }
 
         assert abstract_methods == expected_methods
@@ -66,10 +69,7 @@ class TestRepositoryContracts:
         """Test SimulationRepository interface contract."""
         abstract_methods = ISimulationRepository.__abstractmethods__
 
-        expected_methods = {
-            'save', 'find_by_id', 'find_by_project_id', 'find_by_status',
-            'find_recent', 'delete'
-        }
+        expected_methods = {"save", "find_by_id", "find_by_project_id", "find_by_status", "find_recent", "delete"}
 
         assert abstract_methods == expected_methods
 
@@ -78,13 +78,9 @@ class TestRepositoryContracts:
         abstract_methods = IUnitOfWork.__abstractmethods__
 
         # The interface should have both transaction methods and repository properties as abstract
-        expected_transaction_methods = {
-            'begin', 'commit', 'rollback', '__enter__', '__exit__'
-        }
+        expected_transaction_methods = {"begin", "commit", "rollback", "__enter__", "__exit__"}
 
-        expected_repository_properties = {
-            'projects', 'timelines', 'teams', 'simulations'
-        }
+        expected_repository_properties = {"projects", "timelines", "teams", "simulations"}
 
         # Check that all expected transaction methods are present
         for method in expected_transaction_methods:
@@ -95,10 +91,10 @@ class TestRepositoryContracts:
             assert prop in abstract_methods, f"Repository property {prop} missing from abstract methods"
 
         # Test that UnitOfWork provides repository properties
-        assert hasattr(IUnitOfWork, 'projects')
-        assert hasattr(IUnitOfWork, 'timelines')
-        assert hasattr(IUnitOfWork, 'teams')
-        assert hasattr(IUnitOfWork, 'simulations')
+        assert hasattr(IUnitOfWork, "projects")
+        assert hasattr(IUnitOfWork, "timelines")
+        assert hasattr(IUnitOfWork, "teams")
+        assert hasattr(IUnitOfWork, "simulations")
 
 
 class TestRepositoryBehavior:
@@ -178,15 +174,13 @@ class TestRepositoryBehavior:
         # Test find_by_status
         active_projects = [
             create_test_project(status=ProjectStatus.IN_PROGRESS),
-            create_test_project(status=ProjectStatus.IN_PROGRESS)
+            create_test_project(status=ProjectStatus.IN_PROGRESS),
         ]
-        completed_projects = [
-            create_test_project(status=ProjectStatus.COMPLETED)
-        ]
+        completed_projects = [create_test_project(status=ProjectStatus.COMPLETED)]
 
         mock_repo.find_by_status.side_effect = lambda status: {
             ProjectStatus.IN_PROGRESS: active_projects,
-            ProjectStatus.COMPLETED: completed_projects
+            ProjectStatus.COMPLETED: completed_projects,
         }.get(status, [])
 
         active_result = mock_repo.find_by_status(ProjectStatus.IN_PROGRESS)
@@ -431,7 +425,7 @@ def create_test_project(status: ProjectStatus = ProjectStatus.CREATED) -> Projec
         team_size=3,
         complexity=ComplexityLevel.MEDIUM,
         duration_weeks=8,
-        status=status
+        status=status,
     )
 
 
@@ -465,9 +459,11 @@ def create_test_simulation() -> Simulation:
 # Custom exceptions for testing
 class ConcurrentModificationError(Exception):
     """Exception for concurrent modification scenarios."""
+
     pass
 
 
 class ConnectionError(Exception):
     """Exception for database connection issues."""
+
     pass

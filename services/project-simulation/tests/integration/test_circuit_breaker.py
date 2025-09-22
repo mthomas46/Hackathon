@@ -4,16 +4,20 @@ This module contains integration tests for circuit breaker functionality,
 testing failure thresholds, recovery mechanisms, and resilience patterns.
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from simulation.infrastructure.resilience.circuit_breaker import (
-    ServiceCircuitBreaker, CircuitBreakerState, CircuitBreakerOpenException,
-    EcosystemCircuitBreakerRegistry, ResilientServiceClient, execute_with_resilience
-)
+import pytest
 from simulation.domain.value_objects import ServiceHealth
+from simulation.infrastructure.resilience.circuit_breaker import (
+    CircuitBreakerOpenException,
+    CircuitBreakerState,
+    EcosystemCircuitBreakerRegistry,
+    ResilientServiceClient,
+    ServiceCircuitBreaker,
+    execute_with_resilience,
+)
 
 
 class TestCircuitBreakerStateTransitions:
@@ -283,7 +287,7 @@ class TestResilientServiceClient:
     def resilient_client(self):
         """Create resilient service client for testing."""
         # Mock the ecosystem client
-        with patch('simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client') as mock_get_client:
+        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
             mock_client = Mock()
             mock_get_client.return_value = mock_client
 
@@ -322,7 +326,7 @@ class TestResilientServiceClient:
     @pytest.mark.asyncio
     async def test_resilient_client_no_client_available(self):
         """Test resilient client when no underlying client is available."""
-        with patch('simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client') as mock_get_client:
+        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
             mock_get_client.return_value = None
 
             client = ResilientServiceClient("test_service")
@@ -426,6 +430,7 @@ class TestExecuteWithResilience:
     @pytest.mark.asyncio
     async def test_execute_with_resilience_success(self):
         """Test successful execution with resilience."""
+
         async def successful_operation():
             return "success"
 
@@ -477,6 +482,7 @@ class TestCircuitBreakerMonitoring:
 
         # Should be parseable back to datetime
         from datetime import datetime
+
         parsed_datetime = datetime.fromisoformat(last_failure_iso)
         assert isinstance(parsed_datetime, datetime)
 
@@ -550,10 +556,7 @@ class TestCircuitBreakerIntegrationSuite:
     def test_circuit_breaker_configuration_persistence(self):
         """Test that circuit breaker configuration is maintained."""
         breaker = ServiceCircuitBreaker(
-            "config_test",
-            failure_threshold=10,
-            recovery_timeout=120.0,
-            success_threshold=5
+            "config_test", failure_threshold=10, recovery_timeout=120.0, success_threshold=5
         )
 
         # Verify configuration is preserved

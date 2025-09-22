@@ -5,14 +5,14 @@ for state persistence, session management, and distributed caching to ensure con
 and optimal performance across the simulation service.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable, Type, Union, TypeVar
-from datetime import datetime, timedelta
+import asyncio
 import json
 import pickle
-import asyncio
+import sys
 import threading
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -23,9 +23,10 @@ from simulation.infrastructure.utilities.simulation_utilities import get_simulat
 # Import Redis patterns (with fallbacks)
 try:
     import redis.asyncio as redis
-    from services.shared.cache.redis_manager import RedisManager, CacheConfig, CacheStrategy
-    from services.shared.cache.session_store import SessionStore
+
     from services.shared.cache.distributed_lock import DistributedLock
+    from services.shared.cache.redis_manager import CacheConfig, CacheStrategy, RedisManager
+    from services.shared.cache.session_store import SessionStore
 except ImportError:
     # Fallback implementations
     class RedisManager:
@@ -116,7 +117,7 @@ class SimulationRedisCacheManager:
             "socket_connect_timeout": 5,
             "socket_keepalive": True,
             "socket_keepalive_options": {},
-            "health_check_interval": 30
+            "health_check_interval": 30,
         }
 
         # Initialize Redis manager
@@ -125,9 +126,7 @@ class SimulationRedisCacheManager:
 
         # Cache configuration
         self.cache_config = CacheConfig(
-            ttl_seconds=300,  # 5 minutes default
-            max_size=10000,   # 10k items
-            strategy=CacheStrategy.LRU
+            ttl_seconds=300, max_size=10000, strategy=CacheStrategy.LRU  # 5 minutes default  # 10k items
         )
 
         # Cache namespaces
@@ -137,17 +136,11 @@ class SimulationRedisCacheManager:
             "session": "sess",
             "workflow": "wf",
             "document": "doc",
-            "metrics": "met"
+            "metrics": "met",
         }
 
         # Cache statistics
-        self.stats = {
-            "hits": 0,
-            "misses": 0,
-            "sets": 0,
-            "deletes": 0,
-            "errors": 0
-        }
+        self.stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "errors": 0}
 
         self.logger.info("Simulation Redis cache manager initialized")
 
@@ -173,8 +166,7 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Redis cache error for simulation state",
-                              simulation_id=simulation_id, error=str(e))
+            self.logger.warning("Redis cache error for simulation state", simulation_id=simulation_id, error=str(e))
             return None
 
     async def set_simulation_state(self, simulation_id: str, state: Dict[str, Any], ttl: Optional[int] = None):
@@ -190,8 +182,7 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to cache simulation state",
-                              simulation_id=simulation_id, error=str(e))
+            self.logger.warning("Failed to cache simulation state", simulation_id=simulation_id, error=str(e))
 
     async def delete_simulation_state(self, simulation_id: str):
         """Delete simulation state from Redis cache."""
@@ -204,8 +195,9 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to delete simulation state from cache",
-                              simulation_id=simulation_id, error=str(e))
+            self.logger.warning(
+                "Failed to delete simulation state from cache", simulation_id=simulation_id, error=str(e)
+            )
 
     async def get_aggregate_snapshot(self, aggregate_id: str) -> Optional[Dict[str, Any]]:
         """Get aggregate snapshot from Redis cache."""
@@ -222,30 +214,23 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Redis cache error for aggregate snapshot",
-                              aggregate_id=aggregate_id, error=str(e))
+            self.logger.warning("Redis cache error for aggregate snapshot", aggregate_id=aggregate_id, error=str(e))
             return None
 
     async def set_aggregate_snapshot(self, aggregate_id: str, snapshot: Dict[str, Any], version: int):
         """Set aggregate snapshot in Redis cache."""
         try:
             key = self._make_key("aggregate", f"{aggregate_id}:snapshot")
-            snapshot_data = {
-                "data": snapshot,
-                "version": version,
-                "timestamp": datetime.now().isoformat()
-            }
+            snapshot_data = {"data": snapshot, "version": version, "timestamp": datetime.now().isoformat()}
 
             await self.redis_manager.set(key, snapshot_data, ttl=3600)  # 1 hour TTL
             self.stats["sets"] += 1
 
-            self.logger.debug("Cached aggregate snapshot",
-                            aggregate_id=aggregate_id, version=version)
+            self.logger.debug("Cached aggregate snapshot", aggregate_id=aggregate_id, version=version)
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to cache aggregate snapshot",
-                              aggregate_id=aggregate_id, error=str(e))
+            self.logger.warning("Failed to cache aggregate snapshot", aggregate_id=aggregate_id, error=str(e))
 
     async def invalidate_aggregate_cache(self, aggregate_id: str):
         """Invalidate all cache entries for an aggregate."""
@@ -263,8 +248,7 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to invalidate aggregate cache",
-                              aggregate_id=aggregate_id, error=str(e))
+            self.logger.warning("Failed to invalidate aggregate cache", aggregate_id=aggregate_id, error=str(e))
 
     async def create_simulation_session(self, simulation_id: str, initial_data: Dict[str, Any]) -> str:
         """Create a simulation session in Redis."""
@@ -276,7 +260,7 @@ class SimulationRedisCacheManager:
                 "created_at": datetime.now().isoformat(),
                 "last_activity": datetime.now().isoformat(),
                 "data": initial_data,
-                "status": "active"
+                "status": "active",
             }
 
             await self.session_store.create_session(session_id, session_data, ttl=7200)  # 2 hours
@@ -285,8 +269,7 @@ class SimulationRedisCacheManager:
             return session_id
 
         except Exception as e:
-            self.logger.error("Failed to create simulation session",
-                            simulation_id=simulation_id, error=str(e))
+            self.logger.error("Failed to create simulation session", simulation_id=simulation_id, error=str(e))
             raise
 
     async def get_simulation_session(self, session_id: str) -> Optional[Dict[str, Any]]:
@@ -305,8 +288,7 @@ class SimulationRedisCacheManager:
             return None
 
         except Exception as e:
-            self.logger.warning("Failed to get simulation session",
-                              session_id=session_id, error=str(e))
+            self.logger.warning("Failed to get simulation session", session_id=session_id, error=str(e))
             return None
 
     async def update_simulation_session(self, session_id: str, updates: Dict[str, Any]):
@@ -323,8 +305,7 @@ class SimulationRedisCacheManager:
                 self.logger.debug("Updated simulation session", session_id=session_id)
 
         except Exception as e:
-            self.logger.warning("Failed to update simulation session",
-                              session_id=session_id, error=str(e))
+            self.logger.warning("Failed to update simulation session", session_id=session_id, error=str(e))
 
     async def delete_simulation_session(self, session_id: str):
         """Delete simulation session from Redis."""
@@ -333,8 +314,7 @@ class SimulationRedisCacheManager:
             self.logger.debug("Deleted simulation session", session_id=session_id)
 
         except Exception as e:
-            self.logger.warning("Failed to delete simulation session",
-                              session_id=session_id, error=str(e))
+            self.logger.warning("Failed to delete simulation session", session_id=session_id, error=str(e))
 
     async def acquire_simulation_lock(self, simulation_id: str, timeout: int = 30) -> DistributedLock:
         """Acquire a distributed lock for simulation operations."""
@@ -359,8 +339,7 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to cache workflow state",
-                              workflow_id=workflow_id, error=str(e))
+            self.logger.warning("Failed to cache workflow state", workflow_id=workflow_id, error=str(e))
 
     async def get_workflow_state(self, workflow_id: str) -> Optional[Dict[str, Any]]:
         """Get workflow state from Redis cache."""
@@ -377,27 +356,23 @@ class SimulationRedisCacheManager:
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to get workflow state",
-                              workflow_id=workflow_id, error=str(e))
+            self.logger.warning("Failed to get workflow state", workflow_id=workflow_id, error=str(e))
             return None
 
-    async def cache_metrics(self, metric_name: str, value: Union[int, float], tags: Dict[str, str] = None, ttl: int = 3600):
+    async def cache_metrics(
+        self, metric_name: str, value: Union[int, float], tags: Dict[str, str] = None, ttl: int = 3600
+    ):
         """Cache metrics data in Redis."""
         try:
             key = self._make_key("metrics", metric_name)
-            metric_data = {
-                "value": value,
-                "tags": tags or {},
-                "timestamp": datetime.now().isoformat()
-            }
+            metric_data = {"value": value, "tags": tags or {}, "timestamp": datetime.now().isoformat()}
 
             await self.redis_manager.set(key, metric_data, ttl)
             self.stats["sets"] += 1
 
         except Exception as e:
             self.stats["errors"] += 1
-            self.logger.warning("Failed to cache metrics",
-                              metric_name=metric_name, error=str(e))
+            self.logger.warning("Failed to cache metrics", metric_name=metric_name, error=str(e))
 
     def get_cache_statistics(self) -> Dict[str, Any]:
         """Get cache statistics."""
@@ -411,7 +386,7 @@ class SimulationRedisCacheManager:
             "deletes": self.stats["deletes"],
             "errors": self.stats["errors"],
             "hit_rate": round(hit_rate, 2),
-            "total_requests": total_requests
+            "total_requests": total_requests,
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -430,16 +405,11 @@ class SimulationRedisCacheManager:
                 "healthy": is_healthy,
                 "response_time": 0.001,  # Would be measured in real implementation
                 "timestamp": datetime.now(),
-                "config": self.redis_config
+                "config": self.redis_config,
             }
 
         except Exception as e:
-            return {
-                "healthy": False,
-                "error": str(e),
-                "timestamp": datetime.now(),
-                "config": self.redis_config
-            }
+            return {"healthy": False, "error": str(e), "timestamp": datetime.now(), "config": self.redis_config}
 
     async def cleanup_expired_sessions(self):
         """Clean up expired simulation sessions."""
@@ -495,11 +465,11 @@ async def get_simulation_session(session_id: str) -> Optional[Dict[str, Any]]:
 
 
 __all__ = [
-    'SimulationRedisCacheManager',
-    'get_simulation_redis_cache',
-    'cache_simulation_state',
-    'get_cached_simulation_state',
-    'invalidate_simulation_cache',
-    'create_simulation_session',
-    'get_simulation_session'
+    "SimulationRedisCacheManager",
+    "get_simulation_redis_cache",
+    "cache_simulation_state",
+    "get_cached_simulation_state",
+    "invalidate_simulation_cache",
+    "create_simulation_session",
+    "get_simulation_session",
 ]

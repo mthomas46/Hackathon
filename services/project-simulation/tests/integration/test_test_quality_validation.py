@@ -4,12 +4,13 @@ This module contains tests that validate the quality, structure, and maintainabi
 of the test suite itself, ensuring enterprise-grade testing standards.
 """
 
-import pytest
 import ast
 import inspect
-from pathlib import Path
-from typing import Dict, Any, List, Set
 import re
+from pathlib import Path
+from typing import Any, Dict, List, Set
+
+import pytest
 
 
 class TestTestStructureValidation:
@@ -20,11 +21,13 @@ class TestTestStructureValidation:
         test_dir = Path(__file__).parent.parent
 
         # Should have proper directory structure
-        expected_dirs = ['unit', 'integration', 'functional', 'performance', 'api']
+        expected_dirs = ["unit", "integration", "functional", "performance", "api"]
         actual_dirs = [d.name for d in test_dir.iterdir() if d.is_dir()]
 
         common_dirs = set(expected_dirs) & set(actual_dirs)
-        assert len(common_dirs) > 0, f"No expected test directories found. Expected: {expected_dirs}, Found: {actual_dirs}"
+        assert (
+            len(common_dirs) > 0
+        ), f"No expected test directories found. Expected: {expected_dirs}, Found: {actual_dirs}"
 
     def test_test_naming_consistency(self):
         """Test that test naming is consistent across the suite."""
@@ -37,10 +40,10 @@ class TestTestStructureValidation:
             name = test_file.stem  # Remove .py extension
 
             # Should follow pattern: test_[category]_[feature]
-            if '_' in name:
-                parts = name.split('_')
+            if "_" in name:
+                parts = name.split("_")
                 if len(parts) >= 2:
-                    naming_patterns.append('_'.join(parts[:2]))  # First two parts
+                    naming_patterns.append("_".join(parts[:2]))  # First two parts
 
         # Should have some consistent naming patterns
         if naming_patterns:
@@ -56,21 +59,21 @@ class TestTestStructureValidation:
         class_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Find class definitions
-            classes = re.findall(r'class\s+(\w+)\s*\(', content)
+            classes = re.findall(r"class\s+(\w+)\s*\(", content)
 
             for class_name in classes:
-                if class_name.startswith('Test'):
+                if class_name.startswith("Test"):
                     class_patterns.append(class_name)
 
         # Should have properly named test classes
         assert len(class_patterns) > 0, "No test classes found"
 
         # Check naming convention
-        proper_naming = [name for name in class_patterns if name.startswith('Test') and name != 'Test']
+        proper_naming = [name for name in class_patterns if name.startswith("Test") and name != "Test"]
         assert len(proper_naming) > 0, "No properly named test classes found"
 
 
@@ -86,11 +89,11 @@ class TestTestCodeQuality:
         documented_functions = 0
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Find test functions
-            test_functions = re.findall(r'def\s+(test_\w+)\s*\(', content)
+            test_functions = re.findall(r"def\s+(test_\w+)\s*\(", content)
 
             for func in test_functions:
                 total_functions += 1
@@ -112,11 +115,11 @@ class TestTestCodeQuality:
         assertion_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Count different types of assertions
-            assertions = re.findall(r'assert\s+', content)
+            assertions = re.findall(r"assert\s+", content)
             assertion_patterns.extend(assertions)
 
         # Should have reasonable number of assertions
@@ -130,18 +133,18 @@ class TestTestCodeQuality:
         fixture_usage = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for fixture usage
-            if '@pytest.fixture' in content:
-                fixture_usage.append('defines_fixtures')
-            if 'def test_' in content and '(' in content:
+            if "@pytest.fixture" in content:
+                fixture_usage.append("defines_fixtures")
+            if "def test_" in content and "(" in content:
                 # Check if test functions use fixtures
-                test_defs = re.findall(r'def\s+test_\w+\s*\([^)]*\)', content)
+                test_defs = re.findall(r"def\s+test_\w+\s*\([^)]*\)", content)
                 for test_def in test_defs:
-                    if any(param in test_def for param in ['test_client', 'mock_', 'fixture']):
-                        fixture_usage.append('uses_fixtures')
+                    if any(param in test_def for param in ["test_client", "mock_", "fixture"]):
+                        fixture_usage.append("uses_fixtures")
 
         # Should have some fixture usage
         assert len(fixture_usage) > 0, "No fixture usage found"
@@ -154,16 +157,16 @@ class TestTestCodeQuality:
         exception_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for exception handling patterns
-            if 'pytest.raises' in content:
-                exception_patterns.append('pytest_raises')
-            if 'with pytest.raises' in content:
-                exception_patterns.append('context_manager')
-            if 'try:' in content and 'except' in content:
-                exception_patterns.append('try_except')
+            if "pytest.raises" in content:
+                exception_patterns.append("pytest_raises")
+            if "with pytest.raises" in content:
+                exception_patterns.append("context_manager")
+            if "try:" in content and "except" in content:
+                exception_patterns.append("try_except")
 
         # Should have some exception handling
         assert len(exception_patterns) > 0, "No exception handling found in tests"
@@ -180,22 +183,22 @@ class TestTestMaintainability:
         function_lengths = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Find test functions and their lengths
-            lines = content.split('\n')
+            lines = content.split("\n")
             in_function = False
             function_start = 0
 
             for i, line in enumerate(lines):
-                if line.strip().startswith('def test_'):
+                if line.strip().startswith("def test_"):
                     if in_function:
                         # End previous function
                         function_lengths.append(i - function_start)
                     in_function = True
                     function_start = i
-                elif in_function and line.strip() and not line.startswith(' ') and not line.startswith('\t'):
+                elif in_function and line.strip() and not line.startswith(" ") and not line.startswith("\t"):
                     # End of function (next function or class)
                     function_lengths.append(i - function_start)
                     in_function = False
@@ -216,7 +219,7 @@ class TestTestMaintainability:
         file_sizes = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 lines = len(f.readlines())
                 file_sizes.append(lines)
 
@@ -233,12 +236,12 @@ class TestTestMaintainability:
         complexity_scores = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Simple complexity measure: count control structures
-            control_structures = len(re.findall(r'\b(if|for|while|try|with)\b', content))
-            functions = len(re.findall(r'def\s+test_', content))
+            control_structures = len(re.findall(r"\b(if|for|while|try|with)\b", content))
+            functions = len(re.findall(r"def\s+test_", content))
 
             if functions > 0:
                 avg_complexity = control_structures / functions
@@ -259,11 +262,11 @@ class TestTestCoverageAnalysis:
 
         # Define expected test categories
         expected_categories = {
-            'unit': ['test_*.py'],
-            'integration': ['test_*.py'],
-            'functional': ['test_*.py'],
-            'api': ['test_*.py'],
-            'performance': ['test_*.py']
+            "unit": ["test_*.py"],
+            "integration": ["test_*.py"],
+            "functional": ["test_*.py"],
+            "api": ["test_*.py"],
+            "performance": ["test_*.py"],
         }
 
         found_categories = set()
@@ -311,21 +314,21 @@ class TestTestStandardsCompliance:
         total_checks = 0
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             total_checks += 1
 
             # Check for fixture usage
-            if '@pytest.fixture' in content:
+            if "@pytest.fixture" in content:
                 best_practice_score += 1
 
             # Check for parametrize usage
-            if '@pytest.mark.parametrize' in content:
+            if "@pytest.mark.parametrize" in content:
                 best_practice_score += 1
 
             # Check for proper assertion messages
-            if 'assert ' in content and ',' in content:
+            if "assert " in content and "," in content:
                 # Likely has custom assertion messages
                 best_practice_score += 1
 
@@ -341,15 +344,15 @@ class TestTestStandardsCompliance:
         independence_issues = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for global state modifications
-            if re.search(r'\bg_test_\w+\s*=', content):
+            if re.search(r"\bg_test_\w+\s*=", content):
                 independence_issues.append(f"{test_file.name}: Modifies global test state")
 
             # Check for class-level state that persists
-            if 'self.' in content and '@classmethod' not in content:
+            if "self." in content and "@classmethod" not in content:
                 # This is normal for test classes, so we'll allow it
                 pass
 
@@ -364,16 +367,16 @@ class TestTestStandardsCompliance:
         cleanup_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for cleanup patterns
-            if 'yield' in content and 'finally' in content:
-                cleanup_patterns.append('generator_cleanup')
-            if 'addCleanup' in content:
-                cleanup_patterns.append('pytest_cleanup')
-            if 'tearDown' in content:
-                cleanup_patterns.append('unittest_cleanup')
+            if "yield" in content and "finally" in content:
+                cleanup_patterns.append("generator_cleanup")
+            if "addCleanup" in content:
+                cleanup_patterns.append("pytest_cleanup")
+            if "tearDown" in content:
+                cleanup_patterns.append("unittest_cleanup")
 
         # Should have some cleanup patterns
         assert len(cleanup_patterns) >= 0  # At least some tests should have cleanup
@@ -390,7 +393,7 @@ class TestTestDocumentation:
         documented_files = 0
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for module docstring
@@ -410,14 +413,14 @@ class TestTestDocumentation:
         documented_classes = 0
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Find class definitions
-            class_matches = re.findall(r'class\s+(\w+)\s*\(', content)
+            class_matches = re.findall(r"class\s+(\w+)\s*\(", content)
 
             for class_match in class_matches:
-                if class_match.startswith('Test'):
+                if class_match.startswith("Test"):
                     total_classes += 1
 
                     # Check if class has docstring
@@ -456,15 +459,15 @@ class TestTestReliability:
         isolation_concerns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for shared state concerns
-            if 'global ' in content and 'test' in content.lower():
+            if "global " in content and "test" in content.lower():
                 isolation_concerns.append(f"{test_file.name}: Uses global variables in tests")
 
             # Check for file system modifications without cleanup
-            if ('open(' in content or 'os.' in content) and 'cleanup' not in content.lower():
+            if ("open(" in content or "os." in content) and "cleanup" not in content.lower():
                 isolation_concerns.append(f"{test_file.name}: May modify file system without cleanup")
 
         # Should have minimal isolation concerns
@@ -474,22 +477,22 @@ class TestTestReliability:
 # Utility functions
 def analyze_test_file_complexity(file_path: Path) -> Dict[str, Any]:
     """Analyze the complexity of a test file."""
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         content = f.read()
 
     # Count various complexity metrics
-    functions = len(re.findall(r'def\s+test_', content))
-    assertions = len(re.findall(r'assert\s+', content))
-    fixtures = len(re.findall(r'@pytest\.fixture', content))
-    classes = len(re.findall(r'class\s+Test', content))
+    functions = len(re.findall(r"def\s+test_", content))
+    assertions = len(re.findall(r"assert\s+", content))
+    fixtures = len(re.findall(r"@pytest\.fixture", content))
+    classes = len(re.findall(r"class\s+Test", content))
 
     return {
-        'functions': functions,
-        'assertions': assertions,
-        'fixtures': fixtures,
-        'classes': classes,
-        'assertions_per_function': assertions / max(functions, 1),
-        'lines': len(content.split('\n'))
+        "functions": functions,
+        "assertions": assertions,
+        "fixtures": fixtures,
+        "classes": classes,
+        "assertions_per_function": assertions / max(functions, 1),
+        "lines": len(content.split("\n")),
     }
 
 
@@ -498,12 +501,12 @@ def get_test_file_metrics(test_dir: Path) -> Dict[str, Any]:
     test_files = list(test_dir.rglob("test_*.py"))
 
     metrics = {
-        'total_files': len(test_files),
-        'total_functions': 0,
-        'total_assertions': 0,
-        'total_fixtures': 0,
-        'total_classes': 0,
-        'total_lines': 0
+        "total_files": len(test_files),
+        "total_functions": 0,
+        "total_assertions": 0,
+        "total_fixtures": 0,
+        "total_classes": 0,
+        "total_lines": 0,
     }
 
     for test_file in test_files:

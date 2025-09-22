@@ -3,8 +3,8 @@ Report Generator for creating analysis reports.
 Following DDD principles with clean, focused functionality.
 """
 
-from typing import List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List
 
 from simulation.domain.analysis.analysis_result import AnalysisResult, AnalysisType
 
@@ -22,7 +22,7 @@ class ReportGenerator:
             "analysis_summary": {},
             "recommendations": [],
             "key_metrics": {},
-            "overall_confidence": 0.0
+            "overall_confidence": 0.0,
         }
 
         total_confidence = 0
@@ -35,7 +35,7 @@ class ReportGenerator:
                 "findings_count": len(result.findings),
                 "recommendations_count": len(result.recommendations),
                 "confidence_score": result.confidence_score,
-                "processing_time": result.processing_time_seconds
+                "processing_time": result.processing_time_seconds,
             }
 
             # Collect recommendations
@@ -73,7 +73,7 @@ class ReportGenerator:
             "insights": analysis_result.insights,
             "confidence_score": analysis_result.confidence_score,
             "processing_time_seconds": analysis_result.processing_time_seconds,
-            "analyzed_at": analysis_result.analyzed_at.isoformat()
+            "analyzed_at": analysis_result.analyzed_at.isoformat(),
         }
 
         # Add analysis-specific insights
@@ -86,8 +86,9 @@ class ReportGenerator:
 
         return report
 
-    def generate_executive_summary(self, simulation_id: str, key_metrics: Dict[str, Any],
-                                critical_findings: List[str]) -> Dict[str, Any]:
+    def generate_executive_summary(
+        self, simulation_id: str, key_metrics: Dict[str, Any], critical_findings: List[str]
+    ) -> Dict[str, Any]:
         """Generate an executive summary for stakeholders."""
         summary = {
             "simulation_id": simulation_id,
@@ -97,7 +98,7 @@ class ReportGenerator:
             "critical_findings": critical_findings,
             "recommendations": [],
             "confidence_level": "medium",
-            "next_steps": []
+            "next_steps": [],
         }
 
         # Generate recommendations based on critical findings
@@ -126,11 +127,9 @@ class ReportGenerator:
 
         for rec in recommendations:
             priority = self._calculate_priority(rec)
-            prioritized.append({
-                "recommendation": rec,
-                "priority": priority,
-                "category": self._categorize_recommendation(rec)
-            })
+            prioritized.append(
+                {"recommendation": rec, "priority": priority, "category": self._categorize_recommendation(rec)}
+            )
 
         # Sort by priority (high first)
         return sorted(prioritized, key=lambda x: x["priority"], reverse=True)

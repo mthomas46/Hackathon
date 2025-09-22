@@ -4,23 +4,20 @@ This module provides CLI commands for the project-simulation service,
 integrating with the existing ecosystem CLI framework.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-import json
-import asyncio
 import argparse
+import asyncio
+import json
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.presentation.websockets.simulation_websocket import (
-    notify_simulation_progress,
-    notify_ecosystem_status
-)
+from simulation.presentation.websockets.simulation_websocket import notify_ecosystem_status, notify_simulation_progress
 
 
 class SimulationCLI:
@@ -38,21 +35,21 @@ class SimulationCLI:
             # Build simulation configuration
             simulation_config = {
                 "name": args.name,
-                "description": getattr(args, 'description', ''),
-                "type": getattr(args, 'type', 'web_application'),
-                "team_size": getattr(args, 'team_size', 5),
-                "complexity": getattr(args, 'complexity', 'medium'),
-                "duration_weeks": getattr(args, 'duration_weeks', 8)
+                "description": getattr(args, "description", ""),
+                "type": getattr(args, "type", "web_application"),
+                "team_size": getattr(args, "team_size", 5),
+                "complexity": getattr(args, "complexity", "medium"),
+                "duration_weeks": getattr(args, "duration_weeks", 8),
             }
 
             # Add optional team members if provided
-            if hasattr(args, 'team_members') and args.team_members:
+            if hasattr(args, "team_members") and args.team_members:
                 simulation_config["team_members"] = args.team_members
 
             self.logger.info(
                 "Creating simulation via CLI",
                 simulation_name=args.name,
-                project_type=getattr(args, 'type', 'web_application')
+                project_type=getattr(args, "type", "web_application"),
             )
 
             result = await self.application_service.create_simulation(simulation_config)
@@ -65,7 +62,7 @@ class SimulationCLI:
                 print(f"📅 Created: {result.get('created_at', 'Unknown')}")
 
                 # Offer to start the simulation immediately
-                if getattr(args, 'start_immediately', False):
+                if getattr(args, "start_immediately", False):
                     print(f"\n🚀 Starting simulation execution...")
                     await self.execute_simulation_by_id(simulation_id, args)
                 else:
@@ -85,10 +82,7 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.info(
-                "Executing simulation via CLI",
-                simulation_id=simulation_id
-            )
+            self.logger.info("Executing simulation via CLI", simulation_id=simulation_id)
 
             result = await self.application_service.execute_simulation(simulation_id)
 
@@ -130,10 +124,7 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.debug(
-                "Getting simulation status via CLI",
-                simulation_id=simulation_id
-            )
+            self.logger.debug("Getting simulation status via CLI", simulation_id=simulation_id)
 
             result = await self.application_service.get_simulation_status(simulation_id)
 
@@ -171,10 +162,7 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.debug(
-                "Getting simulation results via CLI",
-                simulation_id=simulation_id
-            )
+            self.logger.debug("Getting simulation results via CLI", simulation_id=simulation_id)
 
             result = await self.application_service.get_simulation_results(simulation_id)
 
@@ -217,14 +205,10 @@ class SimulationCLI:
     async def list_simulations(self, args: argparse.Namespace) -> None:
         """List all simulations."""
         try:
-            status_filter = getattr(args, 'status', None)
-            limit = getattr(args, 'limit', 50)
+            status_filter = getattr(args, "status", None)
+            limit = getattr(args, "limit", 50)
 
-            self.logger.debug(
-                "Listing simulations via CLI",
-                status_filter=status_filter,
-                limit=limit
-            )
+            self.logger.debug("Listing simulations via CLI", status_filter=status_filter, limit=limit)
 
             result = await self.application_service.list_simulations(status_filter, limit)
 
@@ -279,10 +263,7 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.info(
-                "Cancelling simulation via CLI",
-                simulation_id=simulation_id
-            )
+            self.logger.info("Cancelling simulation via CLI", simulation_id=simulation_id)
 
             result = await self.application_service.cancel_simulation(simulation_id)
 
@@ -315,7 +296,9 @@ class SimulationCLI:
 
                 # Overall health
                 service_health = health.get("service_health", {})
-                print(f"📊 Overall Status: {'✅ Healthy' if service_health.get('status') == 'healthy' else '❌ Unhealthy'}")
+                print(
+                    f"📊 Overall Status: {'✅ Healthy' if service_health.get('status') == 'healthy' else '❌ Unhealthy'}"
+                )
                 print(f"🏷️  Service: {service_health.get('service', 'Unknown')}")
                 print(f"🏷️  Version: {service_health.get('version', 'Unknown')}")
                 print(f"⏰ Uptime: {service_health.get('uptime_seconds', 0):.0f} seconds")
@@ -324,9 +307,15 @@ class SimulationCLI:
                 sim_specific = health.get("simulation_specific", {})
                 if sim_specific:
                     print(f"\n🎯 Simulation Health:")
-                    print(f"   Domain Models: {'✅ Loaded' if sim_specific.get('domain_models_loaded') else '❌ Not loaded'}")
-                    print(f"   Infrastructure: {'✅ Ready' if sim_specific.get('infrastructure_ready') else '❌ Not ready'}")
-                    print(f"   Ecosystem: {'✅ Connected' if sim_specific.get('ecosystem_integration') else '❌ Disconnected'}")
+                    print(
+                        f"   Domain Models: {'✅ Loaded' if sim_specific.get('domain_models_loaded') else '❌ Not loaded'}"
+                    )
+                    print(
+                        f"   Infrastructure: {'✅ Ready' if sim_specific.get('infrastructure_ready') else '❌ Not ready'}"
+                    )
+                    print(
+                        f"   Ecosystem: {'✅ Connected' if sim_specific.get('ecosystem_integration') else '❌ Disconnected'}"
+                    )
 
                 # Ecosystem services
                 critical_services = sim_specific.get("critical_services", {})
@@ -354,10 +343,7 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.info(
-                "Starting simulation watch via CLI",
-                simulation_id=simulation_id
-            )
+            self.logger.info("Starting simulation watch via CLI", simulation_id=simulation_id)
 
             print(f"👀 Watching simulation: {simulation_id}")
             print("Press Ctrl+C to stop watching")
@@ -421,80 +407,57 @@ def get_simulation_cli() -> SimulationCLI:
 def create_simulation_parser(subparsers) -> None:
     """Create argument parser for simulation commands."""
     simulation_parser = subparsers.add_parser(
-        'simulation',
-        help='Manage project simulations',
-        description='Create, execute, and monitor project simulations'
+        "simulation", help="Manage project simulations", description="Create, execute, and monitor project simulations"
     )
 
-    simulation_subparsers = simulation_parser.add_subparsers(
-        dest='simulation_command',
-        help='Simulation commands'
-    )
+    simulation_subparsers = simulation_parser.add_subparsers(dest="simulation_command", help="Simulation commands")
 
     # Create simulation command
-    create_parser = simulation_subparsers.add_parser(
-        'create',
-        help='Create a new simulation'
+    create_parser = simulation_subparsers.add_parser("create", help="Create a new simulation")
+    create_parser.add_argument("name", help="Simulation name")
+    create_parser.add_argument("--description", help="Simulation description")
+    create_parser.add_argument(
+        "--type",
+        choices=["web_application", "api_service", "mobile_application", "data_science", "devops_tool"],
+        default="web_application",
+        help="Project type",
     )
-    create_parser.add_argument('name', help='Simulation name')
-    create_parser.add_argument('--description', help='Simulation description')
-    create_parser.add_argument('--type', choices=['web_application', 'api_service', 'mobile_application', 'data_science', 'devops_tool'],
-                              default='web_application', help='Project type')
-    create_parser.add_argument('--team-size', type=int, default=5, help='Team size')
-    create_parser.add_argument('--complexity', choices=['simple', 'medium', 'complex'],
-                              default='medium', help='Project complexity')
-    create_parser.add_argument('--duration-weeks', type=int, default=8, help='Project duration in weeks')
-    create_parser.add_argument('--start-immediately', action='store_true',
-                              help='Start simulation immediately after creation')
+    create_parser.add_argument("--team-size", type=int, default=5, help="Team size")
+    create_parser.add_argument(
+        "--complexity", choices=["simple", "medium", "complex"], default="medium", help="Project complexity"
+    )
+    create_parser.add_argument("--duration-weeks", type=int, default=8, help="Project duration in weeks")
+    create_parser.add_argument(
+        "--start-immediately", action="store_true", help="Start simulation immediately after creation"
+    )
 
     # Execute simulation command
-    execute_parser = simulation_subparsers.add_parser(
-        'execute',
-        help='Execute a simulation'
-    )
-    execute_parser.add_argument('simulation_id', help='Simulation ID to execute')
+    execute_parser = simulation_subparsers.add_parser("execute", help="Execute a simulation")
+    execute_parser.add_argument("simulation_id", help="Simulation ID to execute")
 
     # Status command
-    status_parser = simulation_subparsers.add_parser(
-        'status',
-        help='Get simulation status'
-    )
-    status_parser.add_argument('simulation_id', help='Simulation ID')
+    status_parser = simulation_subparsers.add_parser("status", help="Get simulation status")
+    status_parser.add_argument("simulation_id", help="Simulation ID")
 
     # Results command
-    results_parser = simulation_subparsers.add_parser(
-        'results',
-        help='Get simulation results'
-    )
-    results_parser.add_argument('simulation_id', help='Simulation ID')
+    results_parser = simulation_subparsers.add_parser("results", help="Get simulation results")
+    results_parser.add_argument("simulation_id", help="Simulation ID")
 
     # List command
-    list_parser = simulation_subparsers.add_parser(
-        'list',
-        help='List simulations'
-    )
-    list_parser.add_argument('--status', help='Filter by status')
-    list_parser.add_argument('--limit', type=int, default=50, help='Maximum number of results')
+    list_parser = simulation_subparsers.add_parser("list", help="List simulations")
+    list_parser.add_argument("--status", help="Filter by status")
+    list_parser.add_argument("--limit", type=int, default=50, help="Maximum number of results")
 
     # Cancel command
-    cancel_parser = simulation_subparsers.add_parser(
-        'cancel',
-        help='Cancel a simulation'
-    )
-    cancel_parser.add_argument('simulation_id', help='Simulation ID to cancel')
+    cancel_parser = simulation_subparsers.add_parser("cancel", help="Cancel a simulation")
+    cancel_parser.add_argument("simulation_id", help="Simulation ID to cancel")
 
     # Health command
-    health_parser = simulation_subparsers.add_parser(
-        'health',
-        help='Get system health status'
-    )
+    health_parser = simulation_subparsers.add_parser("health", help="Get system health status")
 
     # Watch command
-    watch_parser = simulation_subparsers.add_parser(
-        'watch',
-        help='Watch simulation progress in real-time'
-    )
-    watch_parser.add_argument('simulation_id', help='Simulation ID to watch')
+    watch_parser = simulation_subparsers.add_parser("watch", help="Watch simulation progress in real-time")
+    watch_parser.add_argument("simulation_id", help="Simulation ID to watch")
 
 
 async def handle_simulation_command(args: argparse.Namespace) -> None:
@@ -503,21 +466,21 @@ async def handle_simulation_command(args: argparse.Namespace) -> None:
 
     command = args.simulation_command
 
-    if command == 'create':
+    if command == "create":
         await cli.create_simulation(args)
-    elif command == 'execute':
+    elif command == "execute":
         await cli.execute_simulation(args)
-    elif command == 'status':
+    elif command == "status":
         await cli.get_simulation_status(args)
-    elif command == 'results':
+    elif command == "results":
         await cli.get_simulation_results(args)
-    elif command == 'list':
+    elif command == "list":
         await cli.list_simulations(args)
-    elif command == 'cancel':
+    elif command == "cancel":
         await cli.cancel_simulation(args)
-    elif command == 'health':
+    elif command == "health":
         await cli.get_health_status(args)
-    elif command == 'watch':
+    elif command == "watch":
         await cli.watch_simulation(args)
     else:
         print(f"❌ Unknown simulation command: {command}")
@@ -525,9 +488,4 @@ async def handle_simulation_command(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-__all__ = [
-    'SimulationCLI',
-    'get_simulation_cli',
-    'create_simulation_parser',
-    'handle_simulation_command'
-]
+__all__ = ["SimulationCLI", "get_simulation_cli", "create_simulation_parser", "handle_simulation_command"]
