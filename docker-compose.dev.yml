@@ -658,6 +658,51 @@ services:
     - production
     - ai_services
     restart: unless-stopped
+
+  data-services-dashboard:
+    build:
+      context: .
+      dockerfile: services/data-services-dashboard/Dockerfile
+    volumes:
+    - data_dashboard_cache:/app/cache
+    - data_dashboard_logs:/app/logs
+    environment:
+    - PYTHONPATH=/app
+    - SERVICE_NAME=data-services-dashboard
+    - DASHBOARD_ENVIRONMENT=development
+    - DASHBOARD_DEBUG=false
+    - DASHBOARD_PORT=8502
+    - DASHBOARD_HOST=0.0.0.0
+    - MEMORY_AGENT_URL=http://memory-agent:5040
+    - PROMPT_STORE_URL=http://prompt_store:5110
+    - DOCUMENT_STORE_URL=http://doc_store:5010
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=8502
+    ports:
+    - 8502:8502
+    depends_on:
+      memory-agent:
+        condition: service_healthy
+      prompt_store:
+        condition: service_healthy
+      doc_store:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8502/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+    - development
+    - ai_services
+    restart: unless-stopped
+
   code-analyzer:
     build:
       context: .
@@ -757,6 +802,10 @@ volumes:
   ollama_logs:
     driver: local
   prompt_store_logs:
+    driver: local
+  data_dashboard_cache:
+    driver: local
+  data_dashboard_logs:
     driver: local
 networks:
   default:

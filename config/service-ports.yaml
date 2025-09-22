@@ -127,6 +127,11 @@ simulation_services:
     external_port: 8501
     description: "Interactive simulation dashboard"
 
+  data_services_dashboard:
+    internal_port: 8502
+    external_port: 8502
+    description: "Unified data services management dashboard"
+
 # Web Services
 web_services:
   frontend:
