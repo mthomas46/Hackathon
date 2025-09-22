@@ -2,16 +2,20 @@
 
 Handles bulk operation-related HTTP requests and responses.
 """
-from typing import Dict, Any, List
+
 import time
-from ...core.handler import BaseHandler
-from ...core.entities import BulkDocumentItem
-from .service import BulkOperationsService
-from services.shared.utilities.logging_client import get_log_collector_client
+from typing import Any, Dict, List
+
 from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities.logging_client import get_log_collector_client
+
+from ...core.entities import BulkDocumentItem
+from ...core.handler import BaseHandler
+from .service import BulkOperationsService
 
 # Global logger client instance
 logger_client = None
+
 
 async def get_logger_client():
     """Get or initialize the logger client."""
@@ -43,15 +47,18 @@ class BulkOperationsHandlers(BaseHandler):
 
                 # Log empty bulk operation
                 if logger:
-                    await logger.log_business_event("bulk_documents_creation_rejected", {
-                        "request_id": request_id,
-                        "operation": "bulk_document_operations",
-                        "operation_type": "bulk_create_documents",
-                        "response_time_seconds": response_time,
-                        "error_type": "empty_request",
-                        "documents_count": 0,
-                        "validation_failed": True
-                    })
+                    await logger.log_business_event(
+                        "bulk_documents_creation_rejected",
+                        {
+                            "request_id": request_id,
+                            "operation": "bulk_document_operations",
+                            "operation_type": "bulk_create_documents",
+                            "response_time_seconds": response_time,
+                            "error_type": "empty_request",
+                            "documents_count": 0,
+                            "validation_failed": True,
+                        },
+                    )
 
                 return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No documents provided")))
 
@@ -59,30 +66,36 @@ class BulkOperationsHandlers(BaseHandler):
 
             # Log bulk creation start
             if logger:
-                await logger.log_business_event("bulk_documents_creation_started", {
-                    "request_id": request_id,
-                    "operation": "bulk_document_operations",
-                    "operation_type": "bulk_create_documents",
-                    "documents_count": documents_count,
-                    "batch_processing_required": True,
-                    "transaction_scope": "bulk_operation",
-                    "data_ingestion_initiated": True
-                })
+                await logger.log_business_event(
+                    "bulk_documents_creation_started",
+                    {
+                        "request_id": request_id,
+                        "operation": "bulk_document_operations",
+                        "operation_type": "bulk_create_documents",
+                        "documents_count": documents_count,
+                        "batch_processing_required": True,
+                        "transaction_scope": "bulk_operation",
+                        "data_ingestion_initiated": True,
+                    },
+                )
 
-                await logger.log_info("Initiating bulk document creation", {
-                    "request_id": request_id,
-                    "documents_count": documents_count,
-                    "batch_size": documents_count,
-                    "operation_scope": "bulk_document_ingestion",
-                    "parallel_processing_enabled": True,
-                    "transaction_management_activated": True
-                })
+                await logger.log_info(
+                    "Initiating bulk document creation",
+                    {
+                        "request_id": request_id,
+                        "documents_count": documents_count,
+                        "batch_size": documents_count,
+                        "operation_scope": "bulk_document_ingestion",
+                        "parallel_processing_enabled": True,
+                        "transaction_management_activated": True,
+                    },
+                )
 
             # Convert to BulkDocumentItem objects
             bulk_items = []
             for doc_data in documents:
                 # Handle both dict and Pydantic model inputs
-                if hasattr(doc_data, 'model_dump'):
+                if hasattr(doc_data, "model_dump"):
                     # Pydantic model
                     doc_dict = doc_data.model_dump()
                 else:
@@ -90,32 +103,35 @@ class BulkOperationsHandlers(BaseHandler):
                     doc_dict = doc_data
 
                 item = BulkDocumentItem(
-                    id=doc_dict.get('id'),
-                    content=doc_dict.get('content', ''),
-                    metadata=doc_dict.get('metadata'),
-                    correlation_id=doc_dict.get('correlation_id')
+                    id=doc_dict.get("id"),
+                    content=doc_dict.get("content", ""),
+                    metadata=doc_dict.get("metadata"),
+                    correlation_id=doc_dict.get("correlation_id"),
                 )
                 bulk_items.append(item)
 
             # Create bulk operation
-            operation = self.service.create_bulk_operation('create_documents', bulk_items)
+            operation = self.service.create_bulk_operation("create_documents", bulk_items)
 
             response_time = time.time() - start_time
-            operation_id = operation.id if hasattr(operation, 'id') else str(operation)
+            operation_id = operation.id if hasattr(operation, "id") else str(operation)
 
             # Log successful bulk creation
             if logger:
-                await logger.log_business_event("bulk_documents_created", {
-                    "request_id": request_id,
-                    "operation_id": operation_id,
-                    "operation": "bulk_document_operations",
-                    "response_time_seconds": response_time,
-                    "success": True,
-                    "documents_count": documents_count,
-                    "bulk_operation_type": "create_documents",
-                    "batch_processing_completed": True,
-                    "documents_ingested": documents_count
-                })
+                await logger.log_business_event(
+                    "bulk_documents_created",
+                    {
+                        "request_id": request_id,
+                        "operation_id": operation_id,
+                        "operation": "bulk_document_operations",
+                        "response_time_seconds": response_time,
+                        "success": True,
+                        "documents_count": documents_count,
+                        "bulk_operation_type": "create_documents",
+                        "batch_processing_completed": True,
+                        "documents_ingested": documents_count,
+                    },
+                )
 
                 await logger.log_performance_metric(
                     "bulk_document_creation",
@@ -125,8 +141,8 @@ class BulkOperationsHandlers(BaseHandler):
                         "operation_id": operation_id,
                         "documents_processed": documents_count,
                         "batch_success": True,
-                        "bulk_operation_time": response_time
-                    }
+                        "bulk_operation_time": response_time,
+                    },
                 )
 
             return await self._handle_request(lambda: operation.to_dict())
@@ -142,22 +158,25 @@ class BulkOperationsHandlers(BaseHandler):
                         "request_id": request_id,
                         "operation": "bulk_document_operations",
                         "operation_type": "bulk_create_documents",
-                        "documents_count": len(documents) if 'documents' in locals() else 0,
+                        "documents_count": len(documents) if "documents" in locals() else 0,
                         "error_type": type(e).__name__,
                         "response_time_seconds": error_time,
-                        "bulk_creation_failed": True
+                        "bulk_creation_failed": True,
                     },
-                    error=e
+                    error=e,
                 )
 
-                await logger.log_business_event("bulk_documents_creation_failed", {
-                    "request_id": request_id,
-                    "operation": "bulk_document_operations",
-                    "operation_type": "bulk_create_documents",
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                    "response_time_seconds": error_time
-                })
+                await logger.log_business_event(
+                    "bulk_documents_creation_failed",
+                    {
+                        "request_id": request_id,
+                        "operation": "bulk_document_operations",
+                        "operation_type": "bulk_create_documents",
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                        "response_time_seconds": error_time,
+                    },
+                )
 
             return await self._handle_request(lambda: operation.to_dict())
 
@@ -166,7 +185,7 @@ class BulkOperationsHandlers(BaseHandler):
         if not queries:
             return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No queries provided")))
 
-        operation = self.service.create_bulk_operation('search_documents', queries)
+        operation = self.service.create_bulk_operation("search_documents", queries)
 
         return await self._handle_request(lambda: operation.to_dict())
 
@@ -175,7 +194,7 @@ class BulkOperationsHandlers(BaseHandler):
         if not document_ids:
             return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No document IDs provided")))
 
-        operation = self.service.create_bulk_operation('tag_documents', document_ids)
+        operation = self.service.create_bulk_operation("tag_documents", document_ids)
 
         return await self._handle_request(lambda: operation.to_dict())
 
@@ -198,7 +217,9 @@ class BulkOperationsHandlers(BaseHandler):
         cancelled = self.service.cancel_operation(operation_id)
 
         if not cancelled:
-            return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("Operation could not be cancelled")))
+            return await self._handle_request(
+                lambda: (_ for _ in ()).throw(ValueError("Operation could not be cancelled"))
+            )
 
         return await self._handle_request(lambda: {"operation_id": operation_id, "cancelled": True})
 

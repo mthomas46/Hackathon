@@ -2,15 +2,19 @@
 
 Handles analytics-related HTTP requests and responses.
 """
-from typing import Dict, Any
+
 import time
+from typing import Any, Dict
+
+from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities.logging_client import get_log_collector_client
+
 from ...core.handler import BaseHandler
 from .service import AnalyticsService
-from services.shared.utilities.logging_client import get_log_collector_client
-from services.shared.core.constants_new import ServiceNames
 
 # Global logger client instance
 logger_client = None
+
 
 async def get_logger_client():
     """Get or initialize the logger client."""
@@ -38,42 +42,51 @@ class AnalyticsHandlers(BaseHandler):
         try:
             # Log analytics retrieval start
             if logger:
-                await logger.log_business_event("document_analytics_retrieval_started", {
-                    "request_id": request_id,
-                    "operation": "document_analytics_computation",
-                    "analytics_scope": "comprehensive_dashboard",
-                    "time_range_days": days_back,
-                    "data_aggregation_required": True,
-                    "performance_insights_requested": True
-                })
+                await logger.log_business_event(
+                    "document_analytics_retrieval_started",
+                    {
+                        "request_id": request_id,
+                        "operation": "document_analytics_computation",
+                        "analytics_scope": "comprehensive_dashboard",
+                        "time_range_days": days_back,
+                        "data_aggregation_required": True,
+                        "performance_insights_requested": True,
+                    },
+                )
 
-                await logger.log_info("Retrieving comprehensive document analytics", {
-                    "request_id": request_id,
-                    "time_range_days": days_back,
-                    "historical_data_scope": f"last_{days_back}_days",
-                    "analytics_types": ["documents", "analyses", "ensembles", "quality", "trends", "insights"],
-                    "computation_engine_activated": True
-                })
+                await logger.log_info(
+                    "Retrieving comprehensive document analytics",
+                    {
+                        "request_id": request_id,
+                        "time_range_days": days_back,
+                        "historical_data_scope": f"last_{days_back}_days",
+                        "analytics_types": ["documents", "analyses", "ensembles", "quality", "trends", "insights"],
+                        "computation_engine_activated": True,
+                    },
+                )
 
             analytics = self.service.generate_analytics(days_back)
 
             response_time = time.time() - start_time
-            documents_count = analytics.total_documents if hasattr(analytics, 'total_documents') else 0
-            analyses_count = analytics.total_analyses if hasattr(analytics, 'total_analyses') else 0
+            documents_count = analytics.total_documents if hasattr(analytics, "total_documents") else 0
+            analyses_count = analytics.total_analyses if hasattr(analytics, "total_analyses") else 0
 
             # Log successful analytics retrieval
             if logger:
-                await logger.log_business_event("document_analytics_retrieved", {
-                    "request_id": request_id,
-                    "operation": "document_analytics_computation",
-                    "response_time_seconds": response_time,
-                    "success": True,
-                    "time_range_days": days_back,
-                    "total_documents_analyzed": documents_count,
-                    "total_analyses_processed": analyses_count,
-                    "analytics_data_generated": True,
-                    "insights_computed": True
-                })
+                await logger.log_business_event(
+                    "document_analytics_retrieved",
+                    {
+                        "request_id": request_id,
+                        "operation": "document_analytics_computation",
+                        "response_time_seconds": response_time,
+                        "success": True,
+                        "time_range_days": days_back,
+                        "total_documents_analyzed": documents_count,
+                        "total_analyses_processed": analyses_count,
+                        "analytics_data_generated": True,
+                        "insights_computed": True,
+                    },
+                )
 
                 await logger.log_performance_metric(
                     "document_analytics_computation",
@@ -84,8 +97,8 @@ class AnalyticsHandlers(BaseHandler):
                         "documents_processed": documents_count,
                         "analyses_computed": analyses_count,
                         "analytics_success": True,
-                        "computation_time": response_time
-                    }
+                        "computation_time": response_time,
+                    },
                 )
 
             return await self._handle_request(
@@ -98,10 +111,10 @@ class AnalyticsHandlers(BaseHandler):
                     "quality_metrics": self.service.get_quality_metrics(),
                     "temporal_trends": analytics.temporal_trends,
                     "content_insights": analytics.content_insights,
-                    "relationship_insights": analytics.relationship_insights
+                    "relationship_insights": analytics.relationship_insights,
                 },
                 operation="get_analytics",
-                days_back=days_back
+                days_back=days_back,
             )
 
         except Exception as e:
@@ -117,19 +130,22 @@ class AnalyticsHandlers(BaseHandler):
                         "time_range_days": days_back,
                         "error_type": type(e).__name__,
                         "response_time_seconds": error_time,
-                        "analytics_retrieval_failed": True
+                        "analytics_retrieval_failed": True,
                     },
-                    error=e
+                    error=e,
                 )
 
-                await logger.log_business_event("document_analytics_retrieval_failed", {
-                    "request_id": request_id,
-                    "operation": "document_analytics_computation",
-                    "time_range_days": days_back,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                    "response_time_seconds": error_time
-                })
+                await logger.log_business_event(
+                    "document_analytics_retrieval_failed",
+                    {
+                        "request_id": request_id,
+                        "operation": "document_analytics_computation",
+                        "time_range_days": days_back,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                        "response_time_seconds": error_time,
+                    },
+                )
 
             return await self._handle_request(
                 lambda: {
@@ -141,10 +157,10 @@ class AnalyticsHandlers(BaseHandler):
                     "quality_metrics": self.service.get_quality_metrics(),
                     "temporal_trends": analytics.temporal_trends,
                     "content_insights": analytics.content_insights,
-                    "relationship_insights": analytics.relationship_insights
+                    "relationship_insights": analytics.relationship_insights,
                 },
                 operation="get_analytics",
-                days_back=days_back
+                days_back=days_back,
             )
 
     async def handle_get_analytics_summary(self) -> Dict[str, Any]:

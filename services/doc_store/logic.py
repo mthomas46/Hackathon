@@ -1,10 +1,13 @@
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import datetime, timezone
+
 import json
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 
-def compute_quality_flags(rows: List[Tuple[str, str, str, str]], stale_threshold_days: int = 180, min_views: int = 3) -> List[Dict[str, Any]]:
+def compute_quality_flags(
+    rows: List[Tuple[str, str, str, str]], stale_threshold_days: int = 180, min_views: int = 3
+) -> List[Dict[str, Any]]:
     now = datetime.now(timezone.utc)
     # rows: (id, content_hash, metadata_json, created_at)
     hash_counts: Dict[str, int] = {}
@@ -93,15 +96,15 @@ def compute_quality_flags(rows: List[Tuple[str, str, str, str]], stale_threshold
         backlinks = meta.get("backlinks") if isinstance(meta, dict) else None
         if isinstance(backlinks, int) and backlinks == 0 and "orphan_candidate" not in flags:
             flags.append("orphan_candidate")
-        out.append({
-            "id": doc_id,
-            "created_at": created,
-            "content_hash": ch or "",
-            "stale_days": stale_days,
-            "flags": flags,
-            "metadata": meta,
-            "importance_score": round(importance_score, 2),
-        })
+        out.append(
+            {
+                "id": doc_id,
+                "created_at": created,
+                "content_hash": ch or "",
+                "stale_days": stale_days,
+                "flags": flags,
+                "metadata": meta,
+                "importance_score": round(importance_score, 2),
+            }
+        )
     return out
-
-

@@ -8,15 +8,16 @@ Provides multi-level caching with Redis integration, intelligent cache invalidat
 performance monitoring, and adaptive caching strategies.
 """
 
-import json
 import hashlib
+import json
 import time
-from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     aioredis = None
@@ -28,6 +29,7 @@ from services.shared.utilities import utc_now
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     key: str
     value: Any
     ttl: int
@@ -41,6 +43,7 @@ class CacheEntry:
 @dataclass
 class CacheStats:
     """Cache performance statistics."""
+
     total_entries: int = 0
     total_hits: int = 0
     total_misses: int = 0
@@ -70,8 +73,8 @@ class DocStoreCache:
             try:
                 self.redis_client = aioredis.from_url(self.redis_url)
                 # Configure Redis for caching
-                await self.redis_client.config_set('maxmemory', f'{self.max_memory_mb}mb')
-                await self.redis_client.config_set('maxmemory-policy', 'allkeys-lru')
+                await self.redis_client.config_set("maxmemory", f"{self.max_memory_mb}mb")
+                await self.redis_client.config_set("maxmemory-policy", "allkeys-lru")
                 self.stats.connections = 1
                 return True
             except Exception:
@@ -97,11 +100,11 @@ class DocStoreCache:
     def _calculate_size(self, value: Any) -> int:
         """Calculate approximate memory size of cached value."""
         if isinstance(value, (dict, list)):
-            return len(json.dumps(value).encode('utf-8'))
+            return len(json.dumps(value).encode("utf-8"))
         elif isinstance(value, str):
-            return len(value.encode('utf-8'))
+            return len(value.encode("utf-8"))
         else:
-            return len(str(value).encode('utf-8'))
+            return len(str(value).encode("utf-8"))
 
     async def get(self, operation: str, params: Dict[str, Any], tags: Optional[List[str]] = None) -> Optional[Any]:
         """Get cached value with performance monitoring."""
@@ -147,12 +150,13 @@ class DocStoreCache:
             self.stats.total_misses += 1
             return None
 
-    async def set(self, operation: str, params: Dict[str, Any], value: Any,
-                  ttl: int = 300, tags: Optional[List[str]] = None) -> bool:
+    async def set(
+        self, operation: str, params: Dict[str, Any], value: Any, ttl: int = 300, tags: Optional[List[str]] = None
+    ) -> bool:
         """Set cached value with metadata."""
         cache_key = self._generate_cache_key(operation, params)
         serialized_value = json.dumps(value, default=str)
-        size_bytes = len(serialized_value.encode('utf-8'))
+        size_bytes = len(serialized_value.encode("utf-8"))
 
         # Try to store in Redis first
         redis_success = True
@@ -163,15 +167,18 @@ class DocStoreCache:
 
                 # Store metadata
                 meta_key = f"{cache_key}:meta"
-                await self.redis_client.hset(meta_key, mapping={
-                    "operation": operation,
-                    "params": json.dumps(params),
-                    "ttl": ttl,
-                    "created_at": utc_now().isoformat(),
-                    "hits": 0,
-                    "size_bytes": size_bytes,
-                    "tags": json.dumps(tags or [])
-                })
+                await self.redis_client.hset(
+                    meta_key,
+                    mapping={
+                        "operation": operation,
+                        "params": json.dumps(params),
+                        "ttl": ttl,
+                        "created_at": utc_now().isoformat(),
+                        "hits": 0,
+                        "size_bytes": size_bytes,
+                        "tags": json.dumps(tags or []),
+                    },
+                )
                 await self.redis_client.expire(meta_key, ttl)
 
                 # Add to tag index
@@ -185,12 +192,7 @@ class DocStoreCache:
         # Always store in local cache as backup
         try:
             self.local_cache[cache_key] = CacheEntry(
-                key=cache_key,
-                value=value,
-                ttl=ttl,
-                created_at=utc_now(),
-                size_bytes=size_bytes,
-                tags=tags or []
+                key=cache_key, value=value, ttl=ttl, created_at=utc_now(), size_bytes=size_bytes, tags=tags or []
             )
 
             # Update stats
@@ -263,7 +265,7 @@ class DocStoreCache:
                     "redis_used_memory": info.get("used_memory", 0),
                     "redis_total_connections": info.get("total_connections_received", 0),
                     "redis_connected_clients": info.get("connected_clients", 0),
-                    "redis_keys_count": await self.redis_client.dbsize()
+                    "redis_keys_count": await self.redis_client.dbsize(),
                 }
 
             # Calculate hit rate
@@ -286,7 +288,7 @@ class DocStoreCache:
                 "evictions": self.stats.evictions,
                 "avg_response_time_ms": round(avg_response_time, 2),
                 "redis_stats": redis_stats,
-                "uptime_seconds": 86400.0  # 1 day for testing
+                "uptime_seconds": 86400.0,  # 1 day for testing
             }
 
         except Exception as e:
@@ -299,7 +301,7 @@ class DocStoreCache:
             # For now, return placeholder
             return {
                 "status": "warmup_placeholder",
-                "message": "Cache warmup not yet implemented - would preload analytics, search facets, etc."
+                "message": "Cache warmup not yet implemented - would preload analytics, search facets, etc.",
             }
         except Exception as e:
             return {"error": str(e)}
@@ -328,10 +330,7 @@ class DocStoreCache:
                 await self.redis_client.memory_purge()
                 optimizations.append("Triggered Redis memory optimization")
 
-            return {
-                "optimizations_applied": optimizations,
-                "local_cache_entries_after": len(self.local_cache)
-            }
+            return {"optimizations_applied": optimizations, "local_cache_entries_after": len(self.local_cache)}
 
         except Exception as e:
             return {"error": str(e)}
