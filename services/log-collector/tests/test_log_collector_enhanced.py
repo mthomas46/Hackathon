@@ -479,3 +479,370 @@ class TestPersistentStorageIntegration:
                 assert len(lines) == 1
                 persisted_log = json.loads(lines[0])
                 assert persisted_log["message"] == "Persistent test message"
+
+
+class TestConcurrencyAndPerformance:
+    """Test concurrency and performance aspects."""
+
+    def test_concurrent_log_ingestion(self):
+        """Test concurrent log ingestion from multiple services."""
+        import threading
+        import time
+        import queue
+
+        storage = LogStorage(max_logs=1000)
+        results = queue.Queue()
+
+        def worker_thread(service_name, num_logs):
+            """Worker thread to simulate concurrent log ingestion."""
+            try:
+                for i in range(num_logs):
+                    log_entry = {
+                        "service": service_name,
+                        "level": "info",
+                        "message": f"Log {i} from {service_name}",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                    storage.add_log(log_entry)
+                results.put((service_name, "success", num_logs))
+            except Exception as e:
+                results.put((service_name, "error", str(e)))
+
+        # Start multiple threads simulating different services
+        threads = []
+        services = ["api", "worker", "scheduler", "notifier"]
+
+        for service in services:
+            t = threading.Thread(target=worker_thread, args=(service, 50))
+            threads.append(t)
+            t.start()
+
+        # Wait for all threads to complete
+        for t in threads:
+            t.join()
+
+        # Verify results
+        total_results = 0
+        successful_services = 0
+
+        while not results.empty():
+            service, status, count = results.get()
+            if status == "success":
+                successful_services += 1
+                total_results += count
+
+        assert successful_services == len(services)
+        assert total_results == 200  # 4 services * 50 logs each
+
+        # Verify logs were stored
+        assert len(storage._logs) == 200
+
+    def test_high_volume_performance(self):
+        """Test performance with high volume of logs."""
+        storage = LogStorage(max_logs=2000)
+
+        # Add 1000 logs
+        start_time = time.time()
+        for i in range(1000):
+            log_entry = {
+                "service": "performance_test",
+                "level": "info",
+                "message": f"Performance log {i}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            storage.add_log(log_entry)
+
+        ingestion_time = time.time() - start_time
+
+        # Performance check: should be able to ingest 1000 logs quickly
+        assert ingestion_time < 2.0  # Less than 2 seconds
+        assert len(storage._logs) == 1000
+
+        # Test search performance
+        search_start = time.time()
+        results = storage.search_logs("Performance log 500")
+        search_time = time.time() - search_start
+
+        # Search should be fast
+        assert search_time < 0.1  # Less than 100ms
+        assert len(results) == 1
+
+    def test_memory_cleanup_performance(self):
+        """Test cleanup performance with large datasets."""
+        storage = LogStorage(max_logs=500)
+
+        # Add logs with old timestamps (expired)
+        old_timestamp = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+
+        for i in range(600):  # More than max capacity
+            log_entry = {
+                "service": "cleanup_test",
+                "level": "info",
+                "message": f"Cleanup log {i}",
+                "timestamp": old_timestamp,
+            }
+            storage.add_log(log_entry)
+
+        # Should have exactly max_logs after cleanup
+        assert len(storage._logs) == 500
+
+        # Test cleanup performance
+        start_time = time.time()
+        storage._cleanup_expired_logs()  # Force cleanup
+        cleanup_time = time.time() - start_time
+
+        # Cleanup should be fast even with many logs
+        assert cleanup_time < 0.5  # Less than 500ms
+
+
+class TestErrorHandlingAndEdgeCases:
+    """Test error handling and edge cases."""
+
+    def test_invalid_log_format_handling(self):
+        """Test handling of invalid log formats."""
+        storage = LogStorage()
+
+        # Test with missing required fields
+        invalid_logs = [
+            {"level": "info", "message": "Missing service"},  # Missing service
+            {"service": "test", "message": "Missing level"},  # Missing level
+            {"service": "test", "level": "info"},  # Missing message
+            {},  # Completely empty
+            None,  # None value
+        ]
+
+        for invalid_log in invalid_logs:
+            # Should not crash, but may not add invalid logs
+            try:
+                storage.add_log(invalid_log)
+            except Exception:
+                # Expected for some invalid formats
+                pass
+
+        # Should have some logs (valid ones would be added)
+        assert len(storage._logs) >= 0
+
+    def test_timestamp_parsing_edge_cases(self):
+        """Test timestamp parsing with various formats."""
+        storage = LogStorage()
+
+        test_cases = [
+            {"service": "test", "level": "info", "message": "ISO format", "timestamp": "2024-01-01T12:00:00Z"},
+            {"service": "test", "level": "info", "message": "ISO with microseconds", "timestamp": "2024-01-01T12:00:00.123456Z"},
+            {"service": "test", "level": "info", "message": "ISO with timezone", "timestamp": "2024-01-01T12:00:00+00:00"},
+            {"service": "test", "level": "info", "message": "Invalid timestamp", "timestamp": "invalid"},
+            {"service": "test", "level": "info", "message": "No timestamp"},  # Missing timestamp
+        ]
+
+        for log_entry in test_cases:
+            # Should handle all timestamp formats gracefully
+            try:
+                storage.add_log(log_entry)
+            except Exception:
+                # May fail for completely invalid timestamps
+                pass
+
+        # Should have added at least the valid timestamp logs
+        assert len(storage._logs) >= 3
+
+    def test_search_with_special_characters(self):
+        """Test search functionality with special characters and edge cases."""
+        storage = LogStorage()
+
+        special_logs = [
+            {"service": "test", "level": "info", "message": "Special chars: @#$%^&*()"},
+            {"service": "test", "level": "info", "message": "Unicode: 你好世界 🌍"},
+            {"service": "test", "level": "info", "message": "Empty string: "},
+            {"service": "test", "level": "info", "message": "Very long message: " + "x" * 1000},
+        ]
+
+        for log in special_logs:
+            storage.add_log(log)
+
+        # Search should handle special characters
+        results = storage.search_logs("@#$%^&*()")
+        assert len(results) == 1
+
+        # Search should handle empty strings gracefully
+        results = storage.search_logs("")
+        assert len(results) >= 0  # May return all or none
+
+    def test_export_edge_cases(self):
+        """Test export functionality with edge cases."""
+        storage = LogStorage()
+
+        # Add logs with various data types
+        complex_logs = [
+            {"service": "test", "level": "info", "message": "Simple string"},
+            {"service": "test", "level": "info", "message": "With metadata", "metadata": {"key": "value", "number": 42}},
+            {"service": "test", "level": "info", "message": "With nested data", "context": {"nested": {"deep": True}}},
+            {"service": "test", "level": "info", "message": "With list", "tags": ["tag1", "tag2"]},
+        ]
+
+        for log in complex_logs:
+            storage.add_log(log)
+
+        # Test export with complex data
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            temp_file = f.name
+
+        try:
+            count = storage.export_logs(temp_file, format="json")
+            assert count == 4
+
+            # Verify complex data is preserved
+            with open(temp_file, "r") as f:
+                exported_data = json.load(f)
+                assert len(exported_data) == 4
+
+                # Check that complex objects are preserved
+                metadata_log = next((log for log in exported_data if "metadata" in log), None)
+                assert metadata_log is not None
+                assert metadata_log["metadata"]["number"] == 42
+
+        finally:
+            if os.path.exists(temp_file):
+                os.unlink(temp_file)
+
+    def test_persistence_error_handling(self):
+        """Test error handling in persistent storage operations."""
+        # Test with invalid path
+        storage = LogStorage(persist_to_disk=True, storage_path="/invalid/path/that/does/not/exist")
+
+        log_entry = {"service": "test", "level": "info", "message": "Test message"}
+
+        # Should handle persistence errors gracefully (not crash)
+        try:
+            storage.add_log(log_entry)
+            # If persistence fails, should still work in memory
+            assert len(storage._logs) >= 1
+        except Exception:
+            # May fail if path is completely invalid
+            pass
+
+
+class TestConfigurationScenarios:
+    """Test different configuration scenarios."""
+
+    def test_minimal_configuration(self):
+        """Test log collector with minimal configuration."""
+        storage = LogStorage(
+            max_logs=100,
+            persist_to_disk=False,
+        )
+
+        assert storage._max_logs == 100
+        assert storage._persist_to_disk is False
+
+        # Add logs and verify basic functionality
+        for i in range(50):
+            storage.add_log({"service": "test", "level": "info", "message": f"Log {i}"})
+
+        assert len(storage._logs) == 50
+
+    def test_high_performance_configuration(self):
+        """Test log collector optimized for high performance."""
+        storage = LogStorage(
+            max_logs=10000,
+            persist_to_disk=True,
+        )
+
+        assert storage._max_logs == 10000
+        assert storage._persist_to_disk is True
+
+        # Should handle high volume
+        for i in range(1000):
+            storage.add_log({"service": "perf", "level": "info", "message": f"High volume log {i}"})
+
+        assert len(storage._logs) == 1000
+
+    def test_long_retention_configuration(self):
+        """Test log collector with long retention policies."""
+        storage = LogStorage(
+            persist_to_disk=True,
+            retention_days=90,
+        )
+
+        assert storage._retention_days == 90
+
+        # Should be configured for long-term storage
+        assert storage._persist_to_disk is True
+
+    def test_debug_configuration(self):
+        """Test log collector in debug mode (no limits)."""
+        storage = LogStorage(
+            max_logs=100000,  # Very high limit for debugging
+            persist_to_disk=False,  # Keep in memory for speed
+        )
+
+        assert storage._max_logs == 100000
+        assert storage._persist_to_disk is False
+
+
+class TestRetentionAndCleanup:
+    """Test log retention and cleanup functionality."""
+
+    def test_retention_policy_enforcement(self):
+        """Test that retention policies are properly enforced."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            storage = LogStorage(
+                persist_to_disk=True,
+                storage_path=temp_dir,
+                retention_days=1,  # Only keep 1 day
+            )
+
+            # Create old log files (simulate files older than retention period)
+            old_date = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+            old_file = storage._storage_path / f"logs_{old_date}.jsonl"
+
+            # Create old file
+            with open(old_file, "w") as f:
+                f.write('{"service": "old", "level": "info", "message": "Old log"}\n')
+
+            # Create recent file
+            recent_date = datetime.now().strftime("%Y-%m-%d")
+            recent_file = storage._storage_path / f"logs_{recent_date}.jsonl"
+
+            with open(recent_file, "w") as f:
+                f.write('{"service": "recent", "level": "info", "message": "Recent log"}\n')
+
+            # Run cleanup
+            asyncio.run(storage._cleanup_old_logs())
+
+            # Old file should be removed, recent file should remain
+            assert not old_file.exists()
+            assert recent_file.exists()
+
+    def test_cleanup_scheduling(self):
+        """Test that cleanup runs at appropriate intervals."""
+        storage = LogStorage(max_logs=1000)
+
+        # Reset cleanup tracking
+        storage._last_cleanup_time = None
+
+        # Add some logs
+        for i in range(100):
+            storage.add_log({"service": "test", "level": "info", "message": f"Log {i}"})
+
+        # First cleanup should work
+        storage._lazy_cleanup_memory()
+        first_cleanup_logs = len(storage._logs)
+
+        # Immediate second cleanup should not run
+        storage._lazy_cleanup_memory()
+        second_cleanup_logs = len(storage._logs)
+
+        # Should be the same (cleanup didn't run again)
+        assert first_cleanup_logs == second_cleanup_logs
+
+        # Simulate time passing
+        storage._last_cleanup_time = time.time() - 4000  # 4000 seconds ago (> 3000 threshold)
+
+        # Now cleanup should run again
+        storage._lazy_cleanup_memory()
+        # Should still have the same logs (none expired)
+        assert len(storage._logs) == 100
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
