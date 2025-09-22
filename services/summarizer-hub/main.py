@@ -10,10 +10,41 @@ import time
 import os
 import httpx
 import uuid
+
+
+# Configuration loading
+import yaml
+from pathlib import Path
+
+def load_config() -> dict:
+    """Load service configuration from config file."""
+    config_path = Path(__file__).parent / 'config.yaml'
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+# Load configuration
+config = load_config()
+
+# Extract configuration values with environment variable override
+AWS_REGION = os.getenv('AWS_REGION', config.get('aws-region', 'default_value'))
+ENVIRONMENT = os.getenv('ENVIRONMENT', config.get('environment', 'default_value'))
+JIRA_API_TOKEN = os.getenv('JIRA_API_TOKEN', config.get('jira-api-token', 'default_value'))
+JIRA_BASE_URL = os.getenv('JIRA_BASE_URL', config.get('jira-base-url', 'default_value'))
+JIRA_DEFAULT_PROJECT = os.getenv('JIRA_DEFAULT_PROJECT', config.get('jira-default-project', 'default_value'))
+JIRA_USERNAME = os.getenv('JIRA_USERNAME', config.get('jira-username', 'default_value'))
+LLM_GATEWAY_URL = os.getenv('LLM_GATEWAY_URL', config.get('llm-gateway-url', 'default_value'))
+SERVICE_PORT = os.getenv('SERVICE_PORT', config.get('service-port', 'default_value'))
+
 import json
 import base64
 import re
 from datetime import datetime, timedelta
+
+# Shared utilities
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
 
 # Service configuration
 SERVICE_NAME = "summarizer-hub"
@@ -31,11 +62,49 @@ JIRA_USERNAME = os.getenv("JIRA_USERNAME", "")
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN", "")
 JIRA_DEFAULT_PROJECT = os.getenv("JIRA_DEFAULT_PROJECT", "DOC")
 
+# Initialize log collector client
+logger_client = None
+
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Advanced document summarization, categorization, and AI-assisted peer review service"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        # Use a fallback service name if SUMMARIZER_HUB doesn't exist in ServiceNames
+        service_name = getattr(ServiceNames, "SUMMARIZER_HUB", SERVICE_NAME)
+        logger_client = await get_log_collector_client(service_name)
+        if logger_client:
+            await logger_client.log_business_event("summarizer_hub_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["document_summarization", "content_categorization", "peer_review", "recommendations", "alignment_analysis", "terminology_consistency"],
+                "integrations": ["llm_gateway", "log_collector", "jira_api"],
+                "ai_features": ["llm_summarization", "content_analysis", "peer_review_assistance", "consistency_checking"],
+                "supported_formats": ["markdown", "json", "text"],
+                "analysis_types": ["terminology", "consistency", "patterns", "conflicts"]
+            })
+            await logger_client.log_info("Summarizer Hub service started", {
+                "llm_gateway_connected": True,
+                "jira_integration_enabled": bool(JIRA_API_TOKEN),
+                "document_analysis_ready": True,
+                "peer_review_engine_active": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Summarizer Hub service shutting down")
+        except Exception:
+            pass
 
 class SummarizeRequest(BaseModel):
     """Request model for document summarization."""
@@ -2503,25 +2572,109 @@ async def get_capabilities():
 @app.post("/summarize", response_model=SummarizeResponse)
 async def summarize_document(request: SummarizeRequest):
     """Summarize a document."""
+    start_time = time.time()
+    request_id = f"summarizer_summarize_{int(time.time() * 1000)}"
+
     try:
+        # Log summarization start
+        if logger_client:
+            await logger_client.log_business_event("document_summarization_started", {
+                "request_id": request_id,
+                "content_length": len(request.content),
+                "max_length": request.max_length,
+                "format": request.format,
+                "style": getattr(request, 'style', 'professional'),
+                "operation_type": "single_document_summarization"
+            })
+
+            await logger_client.log_info("Starting document summarization", {
+                "request_id": request_id,
+                "content_word_count": len(request.content.split()),
+                "max_summary_length": request.max_length,
+                "output_format": request.format,
+                "llm_gateway_call": True
+            })
+
         summary = await summarizer.summarize_with_llm(
-            request.content, 
+            request.content,
             request.max_length,
             getattr(request, 'style', 'professional')
         )
-        
+
+        processing_time = time.time() - start_time
+
+        # Calculate summarization metrics
+        original_word_count = len(request.content.split())
+        summary_word_count = len(summary.split())
+        compression_ratio = len(summary) / len(request.content) if request.content else 0
+        compression_efficiency = summary_word_count / original_word_count if original_word_count > 0 else 0
+
+        # Log successful summarization completion
+        if logger_client:
+            await logger_client.log_business_event("document_summarization_completed", {
+                "request_id": request_id,
+                "original_word_count": original_word_count,
+                "summary_word_count": summary_word_count,
+                "compression_ratio": compression_ratio,
+                "compression_efficiency": compression_efficiency,
+                "processing_time_seconds": processing_time,
+                "format": request.format,
+                "style": getattr(request, 'style', 'professional'),
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "document_summarization",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "content_length": len(request.content),
+                    "compression_ratio": compression_ratio,
+                    "summarization_success": True,
+                    "llm_processing_time": processing_time
+                }
+            )
+
         return SummarizeResponse(
             success=True,
             data={
                 "summary": summary,
-                "original_length": len(request.content.split()),
-                "summary_length": len(summary.split()),
-                "compression_ratio": len(summary) / len(request.content) if request.content else 0,
+                "original_length": original_word_count,
+                "summary_length": summary_word_count,
+                "compression_ratio": compression_ratio,
                 "format": request.format
             }
         )
-        
+
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log summarization failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Document summarization failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "content_length": len(request.content),
+                    "max_length": request.max_length,
+                    "format": request.format,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "llm_gateway_failure": True
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("document_summarization_failed", {
+                "request_id": request_id,
+                "content_length": len(request.content),
+                "max_length": request.max_length,
+                "format": request.format,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
         return SummarizeResponse(
             success=False,
             error=str(e)

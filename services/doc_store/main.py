@@ -14,6 +14,9 @@ from services.shared.utilities.utilities import setup_common_middleware, attach_
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.utilities.error_handling import install_error_handlers
 from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities.logging_client import get_log_collector_client
+import asyncio
+import time
 
 # ============================================================================
 # NEW DOMAIN-DRIVEN ARCHITECTURE - Clean separation of concerns
@@ -33,6 +36,44 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Initialize log collector client
+logger_client = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.DOC_STORE)
+        if logger_client:
+            await logger_client.log_business_event("doc_store_startup", {
+                "version": "2.0.0",
+                "architecture": "domain_driven_design",
+                "domain_contexts": ["documents", "bulk", "analytics", "lifecycle", "versioning", "relationships", "tagging", "notifications"],
+                "database_enabled": True,
+                "cache_enabled": True,
+                "features": ["versioning", "relationships", "tagging", "lifecycle", "analytics", "bulk_operations", "search", "quality_assessment"]
+            })
+            await logger_client.log_info("Doc Store service started", {
+                "ddd_architecture": True,
+                "domain_count": 8,
+                "database_initialized": True,
+                "cache_enabled": True,
+                "versioning_enabled": True,
+                "relationships_enabled": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Doc Store service shutting down")
+        except Exception:
+            pass
+
 # Setup shared middleware and utilities
 setup_common_middleware(app, ServiceNames.DOC_STORE)
 install_error_handlers(app)
@@ -51,6 +92,27 @@ async def simple_health():
         "version": "1.0.0",
         "timestamp": time.time(),
         "uptime_seconds": 0
+
+
+# Configuration loading
+import yaml
+from pathlib import Path
+
+def load_config() -> dict:
+    """Load service configuration from config file."""
+    config_path = Path(__file__).parent / 'config.yaml'
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+# Load configuration
+config = load_config()
+
+# Extract configuration values with environment variable override
+DOCSTORE_CONNECTION_POOL_SIZE = os.getenv('DOCSTORE_CONNECTION_POOL_SIZE', config.get('docstore-connection-pool-size', 'default_value'))
+DOCSTORE_DB = os.getenv('DOCSTORE_DB', config.get('docstore-db', 'default_value'))
+
     }
 
 # Skip custom health endpoint registration - using simple one above

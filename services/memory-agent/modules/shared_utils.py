@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone, timedelta
 
 # Import shared utilities
-from services.shared.utilities import utc_now, generate_id
+from services.shared.utilities.utilities import utc_now, generate_id
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.core.responses.responses import create_success_response, create_error_response
 from services.shared.utilities.error_handling import ServiceException

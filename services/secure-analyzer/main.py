@@ -27,7 +27,10 @@ import signal
 from contextlib import asynccontextmanager
 
 from services.shared.monitoring.logging import fire_and_forget  # type: ignore
-from services.shared.utilities import attach_self_register  # type: ignore
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
+import time
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware  # type: ignore
 from services.shared.core.constants_new import EnvVars, ServiceNames  # type: ignore
 
 try:
@@ -60,13 +63,51 @@ MAX_PROVIDER_NAME_LENGTH = 100
 DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES = 5
 DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60
 
+# Initialize log collector client
+logger_client = None
+
 app = FastAPI(
     title="Secure Analyzer",
     version=SERVICE_VERSION,
     description="AI content security analysis service with policy enforcement and circuit breaker protection"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        # Use a fallback service name if SECURE_ANALYZER doesn't exist in ServiceNames
+        service_name = getattr(ServiceNames, "SECURE_ANALYZER", SERVICE_NAME)
+        logger_client = await get_log_collector_client(service_name)
+        if logger_client:
+            await logger_client.log_business_event("secure_analyzer_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["content_security_analysis", "policy_enforcement", "circuit_breaker_protection", "model_suggestions", "content_summarization"],
+                "integrations": ["log_collector", "summarizer_hub", "content_detection_modules"],
+                "security_features": ["pattern_matching", "keyword_detection", "circuit_breaker", "timeout_protection", "policy_enforcement"],
+                "analysis_types": ["sensitive_content_detection", "model_recommendations", "content_summarization"]
+            })
+            await logger_client.log_info("Secure Analyzer service started", {
+                "circuit_breaker_enabled": True,
+                "content_detection_ready": True,
+                "model_suggestion_engine": True,
+                "summarization_integration": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Secure Analyzer service shutting down")
+        except Exception:
+            pass
+
 # Use common middleware setup to reduce duplication across services
-from services.shared.utilities import setup_common_middleware
+# setup_common_middleware already imported above
 setup_common_middleware(app, ServiceNames.SECURE_ANALYZER)
 attach_self_register(app, ServiceNames.SECURE_ANALYZER)
 
@@ -151,32 +192,163 @@ async def detect(req: DetectRequest):
 
     Protected by circuit breaker to prevent cascade failures.
     """
-    # Check circuit breaker to prevent cascade failures
-    if circuit_breaker.is_open():
-        print(f"[{SERVICE_NAME.upper()}] Circuit breaker is OPEN - rejecting detect request")
-        raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
+    start_time = time.time()
+    request_id = f"secure_detect_{int(time.time() * 1000)}"
 
-    async with operation_timeout_context("detect"):
-        fire_and_forget("info", "detect", ServiceNames.SECURE_ANALYZER, {
-            "has_keywords": bool(req.keywords),
-            "has_keyword_doc": bool(req.keyword_document),
-            "content_length": len(req.content)
-        })
+    try:
+        # Check circuit breaker to prevent cascade failures
+        if circuit_breaker.is_open():
+            circuit_breaker_open_time = time.time() - start_time
 
-        # Load additional keywords from URL if provided
-        extra_keywords = req.keywords or []
-        if req.keyword_document:
-            print(f"[{SERVICE_NAME.upper()}] Loading keywords from URL: {req.keyword_document}")
-            try:
-                # TODO: Implement URL keyword loading
-                print(f"[{SERVICE_NAME.upper()}] Loaded {len(extra_keywords)} keywords total")
-            except Exception as e:
-                print(f"[{SERVICE_NAME.upper()}] Failed to load keywords from URL: {e}")
+            # Log circuit breaker rejection
+            if logger_client:
+                await logger_client.log_business_event("secure_analyzer_circuit_breaker_rejection", {
+                    "request_id": request_id,
+                    "operation": "detect",
+                    "rejection_reason": "circuit_breaker_open",
+                    "processing_time_seconds": circuit_breaker_open_time
+                })
 
-        # Detect sensitive content using pattern matching
-        detection_result = content_detector.detect_sensitive_content(req.content, extra_keywords)
+                await logger_client.log_error(
+                    f"Secure analyzer circuit breaker open - rejecting detect request",
+                    {
+                        "request_id": request_id,
+                        "operation": "detect",
+                        "circuit_breaker_state": "open",
+                        "processing_time_seconds": circuit_breaker_open_time
+                    },
+                    error=Exception("Service temporarily unavailable due to circuit breaker")
+                )
 
-        return DetectResponse(**detection_result)
+            print(f"[{SERVICE_NAME.upper()}] Circuit breaker is OPEN - rejecting detect request")
+            raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
+
+        async with operation_timeout_context("detect"):
+            # Log detection start
+            if logger_client:
+                await logger_client.log_business_event("secure_content_detection_started", {
+                    "request_id": request_id,
+                    "content_length": len(req.content),
+                    "has_custom_keywords": bool(req.keywords),
+                    "has_keyword_document": bool(req.keyword_document),
+                    "keyword_document_url": req.keyword_document,
+                    "custom_keywords_count": len(req.keywords) if req.keywords else 0
+                })
+
+                await logger_client.log_info("Starting secure content detection", {
+                    "request_id": request_id,
+                    "content_length": len(req.content),
+                    "keyword_sources": ["custom"] if req.keywords else [] + ["document"] if req.keyword_document else [],
+                    "circuit_breaker_state": "closed"
+                })
+
+            fire_and_forget("info", "detect", ServiceNames.SECURE_ANALYZER, {
+                "has_keywords": bool(req.keywords),
+                "has_keyword_doc": bool(req.keyword_document),
+                "content_length": len(req.content)
+            })
+
+            # Load additional keywords from URL if provided
+            extra_keywords = req.keywords or []
+            keyword_load_success = True
+            if req.keyword_document:
+                print(f"[{SERVICE_NAME.upper()}] Loading keywords from URL: {req.keyword_document}")
+                try:
+                    # TODO: Implement URL keyword loading
+                    print(f"[{SERVICE_NAME.upper()}] Loaded {len(extra_keywords)} keywords total")
+
+                    # Log successful keyword loading
+                    if logger_client:
+                        await logger_client.log_info("Successfully loaded keywords from document", {
+                            "request_id": request_id,
+                            "keyword_document_url": req.keyword_document,
+                            "keywords_loaded": len(extra_keywords)
+                        })
+
+                except Exception as e:
+                    keyword_load_success = False
+                    print(f"[{SERVICE_NAME.upper()}] Failed to load keywords from URL: {e}")
+
+                    # Log keyword loading failure
+                    if logger_client:
+                        await logger_client.log_error(
+                            f"Failed to load keywords from document URL: {str(e)}",
+                            {
+                                "request_id": request_id,
+                                "keyword_document_url": req.keyword_document,
+                                "error_type": type(e).__name__,
+                                "keyword_load_success": False
+                            },
+                            error=e
+                        )
+
+            # Detect sensitive content using pattern matching
+            detection_result = content_detector.detect_sensitive_content(req.content, extra_keywords)
+
+            processing_time = time.time() - start_time
+
+            # Calculate detection metrics
+            sensitive_content_detected = detection_result.get("sensitive", False)
+            matches_found = len(detection_result.get("matches", []))
+            topics_identified = len(detection_result.get("topics", []))
+            total_patterns_checked = matches_found + topics_identified
+
+            # Log successful detection completion
+            if logger_client:
+                await logger_client.log_business_event("secure_content_detection_completed", {
+                    "request_id": request_id,
+                    "sensitive_content_detected": sensitive_content_detected,
+                    "matches_found": matches_found,
+                    "topics_identified": topics_identified,
+                    "total_patterns_checked": total_patterns_checked,
+                    "processing_time_seconds": processing_time,
+                    "keyword_load_success": keyword_load_success,
+                    "success": True
+                })
+
+                await logger_client.log_performance_metric(
+                    "secure_content_detection",
+                    processing_time,
+                    {
+                        "request_id": request_id,
+                        "content_length": len(req.content),
+                        "patterns_analyzed": total_patterns_checked,
+                        "detection_success": True,
+                        "sensitive_content_found": sensitive_content_detected
+                    }
+                )
+
+            return DetectResponse(**detection_result)
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is (already logged above for circuit breaker)
+        raise
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log detection failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Secure content detection failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "content_length": len(req.content) if 'req' in locals() else None,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "circuit_breaker_state": "open" if 'circuit_breaker' in locals() and circuit_breaker.is_open() else "closed"
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("secure_content_detection_failed", {
+                "request_id": request_id,
+                "content_length": len(req.content) if 'req' in locals() else None,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
+        raise
 
 
 class SuggestRequest(BaseModel):

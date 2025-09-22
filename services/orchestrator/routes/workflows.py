@@ -1,9 +1,25 @@
 """Workflow Routes for Orchestrator Service with LangGraph Integration"""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, field_validator
 from typing import Dict, Any, Optional, List
+import time
 
 from ..modules.workflow_handlers import workflow_handlers
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
+
+# Global logger client instance
+logger_client = None
+
+async def get_logger_client():
+    """Get or initialize the logger client."""
+    global logger_client
+    if logger_client is None:
+        try:
+            logger_client = await get_log_collector_client(ServiceNames.ORCHESTRATOR)
+        except Exception:
+            pass  # Fallback to no logging if client unavailable
+    return logger_client
 
 router = APIRouter()
 
@@ -47,29 +63,179 @@ class ToolDiscoveryRequest(BaseModel):
     auto_register: bool = True  # Automatically register discovered tools
 
 @router.post("/workflows/run")
-async def run_workflow(req: WorkflowRunRequest):
+async def run_workflow(req: WorkflowRunRequest, request: Request):
     """Execute a workflow using the enhanced workflow handlers."""
+    start_time = time.time()
+    request_id = req.correlation_id or f"wf_{int(time.time() * 1000)}"
+    logger = await get_logger_client()
+
     try:
+        # Log workflow execution start
+        if logger:
+            await logger.log_business_event("workflow_execution_started", {
+                "request_id": request_id,
+                "workflow_type": req.workflow_type,
+                "workflow_id": req.workflow_id,
+                "user_id": req.user_id,
+                "priority": req.priority,
+                "correlation_id": req.correlation_id,
+                "parameters_count": len(req.parameters) if req.parameters else 0,
+                "context_keys": list(req.context.keys()) if req.context else []
+            })
+
+            await logger.log_info("Starting workflow execution", {
+                "request_id": request_id,
+                "workflow_type": req.workflow_type,
+                "priority": req.priority,
+                "has_parameters": bool(req.parameters),
+                "has_context": bool(req.context)
+            })
+
+        # Execute workflow
         result = await workflow_handlers.handle_workflow_run(req)
+        response_time = time.time() - start_time
+
+        # Log successful completion
+        if logger:
+            await logger.log_business_event("workflow_execution_completed", {
+                "request_id": request_id,
+                "workflow_type": req.workflow_type,
+                "workflow_id": req.workflow_id,
+                "user_id": req.user_id,
+                "response_time_seconds": response_time,
+                "success": True,
+                "result_summary": str(result)[:500] if result else None
+            })
+
+            await logger.log_performance_metric(
+                "workflow_execution",
+                response_time,
+                {
+                    "request_id": request_id,
+                    "workflow_type": req.workflow_type,
+                    "priority": req.priority,
+                    "success": True
+                }
+            )
+
         return result
+
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log workflow execution failure
+        if logger:
+            await logger.log_error(
+                f"Workflow execution failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "workflow_type": req.workflow_type,
+                    "workflow_id": req.workflow_id,
+                    "user_id": req.user_id,
+                    "priority": req.priority,
+                    "error_type": type(e).__name__,
+                    "response_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger.log_business_event("workflow_execution_failed", {
+                "request_id": request_id,
+                "workflow_type": req.workflow_type,
+                "workflow_id": req.workflow_id,
+                "user_id": req.user_id,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "response_time_seconds": error_time
+            })
+
         raise HTTPException(status_code=500, detail=f"Workflow execution failed: {str(e)}")
 
 @router.post("/workflows/ai/{workflow_type}")
-async def run_langgraph_workflow(workflow_type: str, req: LangGraphWorkflowRequest):
+async def run_langgraph_workflow(workflow_type: str, req: LangGraphWorkflowRequest, request: Request):
     """Execute a LangGraph workflow directly."""
+    start_time = time.time()
+    request_id = f"lg-{workflow_type}-{req.parameters.get('id', 'auto')}"
+    logger = await get_logger_client()
+
     try:
+        # Log LangGraph workflow start
+        if logger:
+            await logger.log_business_event("langgraph_workflow_started", {
+                "request_id": request_id,
+                "workflow_type": workflow_type,
+                "user_id": req.user_id,
+                "parameters_count": len(req.parameters),
+                "tags": req.tags or []
+            })
+
+            await logger.log_info("Starting LangGraph workflow execution", {
+                "request_id": request_id,
+                "workflow_type": workflow_type,
+                "user_id": req.user_id,
+                "has_tags": bool(req.tags)
+            })
+
         # Create a workflow request for the LangGraph handler
         workflow_req = WorkflowRunRequest(
             workflow_type=workflow_type,
             parameters=req.parameters,
             user_id=req.user_id,
-            correlation_id=f"lg-{workflow_type}-{req.parameters.get('id', 'auto')}"
+            correlation_id=request_id
         )
 
+        # Execute workflow
         result = await workflow_handlers.handle_workflow_run(workflow_req)
+        response_time = time.time() - start_time
+
+        # Log successful completion
+        if logger:
+            await logger.log_business_event("langgraph_workflow_completed", {
+                "request_id": request_id,
+                "workflow_type": workflow_type,
+                "user_id": req.user_id,
+                "response_time_seconds": response_time,
+                "success": True
+            })
+
+            await logger.log_performance_metric(
+                "langgraph_workflow_execution",
+                response_time,
+                {
+                    "request_id": request_id,
+                    "workflow_type": workflow_type,
+                    "success": True
+                }
+            )
+
         return result
+
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log LangGraph workflow failure
+        if logger:
+            await logger.log_error(
+                f"LangGraph workflow execution failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "workflow_type": workflow_type,
+                    "user_id": req.user_id,
+                    "error_type": type(e).__name__,
+                    "response_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger.log_business_event("langgraph_workflow_failed", {
+                "request_id": request_id,
+                "workflow_type": workflow_type,
+                "user_id": req.user_id,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "response_time_seconds": error_time
+            })
+
         raise HTTPException(
             status_code=500,
             detail=f"LangGraph workflow execution failed: {str(e)}"

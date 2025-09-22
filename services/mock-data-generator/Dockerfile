@@ -14,6 +14,11 @@ LABEL description="LLM-integrated mock data generation for testing"
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     SERVICE_NAME=mock-data-generator \
@@ -23,7 +28,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN groupadd -r mockgen && useradd -r -g mockgen mockgen
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -65,3 +70,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Default command
 WORKDIR /app
 CMD ["python", "services/mock-data-generator/main.py"]
+
+# Run as non-root user
+USER appuser

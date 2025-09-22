@@ -62,8 +62,8 @@ agent_services:
     description: "Memory and context management"
     
   discovery_agent:
-    internal_port: 5050
-    external_port: 5050
+    internal_port: 5045
+    external_port: 5045
     description: "Service discovery and registry"
     
   source_agent:

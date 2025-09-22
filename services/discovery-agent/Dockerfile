@@ -18,7 +18,7 @@ LABEL profile="development"
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     && rm -rf /var/lib/apt/lists/*
@@ -32,14 +32,19 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.base.txt && \
     pip install --no-cache-dir -r shared_requirements.txt
 
-# Skip copying service code - rely on volume mounts for development
-# COPY services/discovery-agent/ ./services/discovery_agent/
-# COPY services/shared/ ./services/shared/
-# COPY config.yml ./
-# COPY config/ ./config/
+# Copy service code
+COPY services/discovery-agent/ ./services/discovery-agent/
+COPY services/shared/ ./services/shared/
+COPY config.yml ./
+COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV SERVICE_NAME=discovery-agent
 ENV SERVICE_PORT=5045
 ENV REDIS_HOST=redis
@@ -57,5 +62,5 @@ EXPOSE 5045
 
 USER appuser
 
-# Start command - using module path for proper imports
-CMD ["python", "-m", "services.discovery_agent.main"]
+# Start command - run directly since directory name has hyphen
+CMD ["python", "services/discovery-agent/main.py"]

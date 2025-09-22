@@ -1,46 +1,50 @@
-# Mock Data Generator Service Configuration
 service:
-  name: "mock-data-generator"
-  title: "Mock Data Generator"
-  version: "1.0.0"
+  name: mock-data-generator
+  title: Mock Data Generator
+  version: 1.0.0
   port: 5065
-
-# LLM Gateway Integration
 llm_gateway:
-  url: "http://llm-gateway:5055"
-  default_provider: "ollama"
+  url: http://llm-gateway:5055
+  default_provider: ollama
   generation_timeout: 30
   max_tokens: 2000
-
-# Document Store Integration
 doc_store:
-  url: "http://doc_store:5087"
+  url: http://doc_store:5087
   auto_persist: true
   retention_days: 7
-
-# Generation Settings
 generation:
   max_items_per_request: 50
-  default_complexity: "medium"
+  default_complexity: medium
   supported_types:
-    - confluence_page
-    - github_repo
-    - github_pr
-    - jira_issue
-    - jira_epic
-    - api_docs
-    - code_sample
-
-# Logging Configuration
+  - confluence_page
+  - github_repo
+  - github_pr
+  - jira_issue
+  - jira_epic
+  - api_docs
+  - code_sample
 logging:
-  level: "INFO"
-  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-  file: "logs/mock_data_generator.log"
-
-# Health Check Configuration
+  level: INFO
+  format: '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+  file: logs/mock_data_generator.log
 health:
   check_interval: 30
   timeout: 10
   dependencies:
-    - llm_gateway
-    - doc_store
+  - llm_gateway
+  - doc_store
+security:
+  enable_ssl: ${SSL_ENABLED:-false}
+  ssl_cert_path: ${SSL_CERT_PATH:-}
+  ssl_key_path: ${SSL_KEY_PATH:-}
+  cors_origins: ${CORS_ORIGINS:-http://localhost:3000}
+  rate_limiting_enabled: ${RATE_LIMITING_ENABLED:-true}
+  max_request_size: ${MAX_REQUEST_SIZE:-10485760}
+  timeout_seconds: ${TIMEOUT_SECONDS:-30}
+  enable_request_logging: ${REQUEST_LOGGING:-false}
+  enable_metrics: ${METRICS_ENABLED:-true}
+development:
+  debug_mode: ${DEBUG_MODE:-false}
+  enable_cors: ${ENABLE_CORS:-true}
+  mock_external_services: ${MOCK_EXTERNAL:-false}
+  log_level: ${LOG_LEVEL:-INFO}

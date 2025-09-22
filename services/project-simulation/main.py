@@ -223,6 +223,9 @@ except ImportError:
 
 try:
     from services.shared.utilities.error_handling import register_exception_handlers
+    from services.shared.utilities.logging_client import get_log_collector_client
+    from services.shared.core.constants_new import ServiceNames
+    import time
 except ImportError:
     # Fallback exception handlers for testing
     from datetime import datetime, timezone
@@ -367,6 +370,9 @@ RATE_LIMITS = {
 }
 
 # Initialize FastAPI application with configuration-driven setup
+# Initialize log collector client
+logger_client = None
+
 app = FastAPI(
     title=f"{SERVICE_NAME.replace('-', ' ').title()} Service",
     description="AI-powered project simulation and ecosystem demonstration service with comprehensive shared infrastructure integration",
@@ -481,6 +487,21 @@ service_discovery = get_service_discovery()
 @app.on_event("startup")
 async def startup_event():
     """Application startup event handler."""
+    global logger_client
+    try:
+        # Initialize log collector client
+        service_name = getattr(ServiceNames, "PROJECT_SIMULATION", SERVICE_NAME)
+        logger_client = await get_log_collector_client(service_name)
+        if logger_client:
+            await logger_client.log_business_event("project_simulation_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["simulation_execution", "document_generation", "prompt_management", "real_time_monitoring", "event_persistence", "report_generation", "analysis_integration"],
+                "integrations": ["doc_store", "prompt_store", "llm_gateway", "log_collector", "summarizer_hub", "analysis_service"],
+                "features": ["websocket_communication", "correlation_tracking", "health_monitoring", "bulk_operations", "timeline_analysis", "playback_engine"]
+            })
+    except Exception as e:
+        logger.warning(f"Failed to initialize log collector client: {e}")
+
     logger.info("Starting Project Simulation Service", version=SERVICE_VERSION, environment=config.service.environment)
 
     # Initialize event persistence
@@ -527,6 +548,12 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Application shutdown event handler."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Project Simulation service shutting down")
+        except Exception:
+            pass
+
     logger.info("Shutting down Project Simulation Service")
 
     # Stop service discovery
@@ -2327,6 +2354,28 @@ async def create_simulation(request: CreateSimulationRequest, req: Request):
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
+        # Log simulation creation start
+        if logger_client:
+            await logger_client.log_business_event("simulation_creation_started", {
+                "correlation_id": correlation_id,
+                "project_name": request.name,
+                "project_description": request.description,
+                "duration_weeks": request.duration_weeks,
+                "complexity": request.complexity,
+                "technologies": request.technologies,
+                "has_requirements": bool(request.requirements),
+                "has_team": bool(request.team),
+                "has_milestones": bool(request.milestones)
+            })
+
+            await logger_client.log_info("Creating project simulation", {
+                "correlation_id": correlation_id,
+                "project_name": request.name,
+                "duration_weeks": request.duration_weeks,
+                "complexity": request.complexity,
+                "technologies_count": len(request.technologies) if request.technologies else 0
+            })
+
         logger.info(
             "Creating simulation",
             operation="create_simulation",
@@ -2341,6 +2390,35 @@ async def create_simulation(request: CreateSimulationRequest, req: Request):
                 # Create HATEOAS links for the created simulation
                 simulation_id = result.get("simulation_id")
                 links = SimulationResource.create_simulation_links(simulation_id)
+
+                # Calculate simulation metrics
+                simulation_data = result.get("simulation", {})
+                team_size = len(simulation_data.get("team", []))
+                milestones_count = len(simulation_data.get("milestones", []))
+                requirements_count = len(simulation_data.get("requirements", []))
+
+                # Log successful simulation creation
+                if logger_client:
+                    await logger_client.log_business_event("simulation_creation_completed", {
+                        "correlation_id": correlation_id,
+                        "simulation_id": simulation_id,
+                        "project_name": request.name,
+                        "duration_weeks": request.duration_weeks,
+                        "complexity": request.complexity,
+                        "team_size": team_size,
+                        "milestones_count": milestones_count,
+                        "requirements_count": requirements_count,
+                        "technologies_used": request.technologies,
+                        "success": True
+                    })
+
+                    await logger_client.log_info("Project simulation created successfully", {
+                        "correlation_id": correlation_id,
+                        "simulation_id": simulation_id,
+                        "project_name": request.name,
+                        "team_size": team_size,
+                        "milestones_count": milestones_count
+                    })
 
                 # Use shared CRUD response
                 response_data = create_crud_response(
@@ -2363,12 +2441,43 @@ async def create_simulation(request: CreateSimulationRequest, req: Request):
                     headers={"X-Correlation-ID": correlation_id}
                 )
             else:
+                # Log simulation creation failure
+                if logger_client:
+                    await logger_client.log_business_event("simulation_creation_failed", {
+                        "correlation_id": correlation_id,
+                        "project_name": request.name,
+                        "failure_reason": result.get("message", "Unknown failure"),
+                        "error_type": "validation_error"
+                    })
+
                 raise HTTPException(
                     status_code=400,
                     detail=result.get("message", "Failed to create simulation")
                 )
 
         except Exception as e:
+            # Log simulation creation error
+            if logger_client:
+                await logger_client.log_error(
+                    f"Simulation creation failed: {str(e)}",
+                    {
+                        "correlation_id": correlation_id,
+                        "project_name": request.name,
+                        "error_type": type(e).__name__,
+                        "duration_weeks": request.duration_weeks,
+                        "complexity": request.complexity
+                    },
+                    error=e
+                )
+
+                await logger_client.log_business_event("simulation_creation_failed", {
+                    "correlation_id": correlation_id,
+                    "project_name": request.name,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "failure_stage": "execution"
+                })
+
             logger.error(
                 "Failed to create simulation",
                 error=str(e),

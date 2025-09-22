@@ -16,6 +16,9 @@ from services.shared.utilities.error_handling import ServiceException, install_e
 from services.shared.core.constants_new import ServiceNames
 from services.shared.utilities import setup_common_middleware, attach_self_register
 from services.shared.core.config.config import get_config_value
+from services.shared.utilities.logging_client import get_log_collector_client
+import asyncio
+import time
 
 # ============================================================================
 # DOMAIN MODULES - Following domain-driven design
@@ -45,6 +48,27 @@ from services.prompt_store.infrastructure.cache import prompt_store_cache
 # ============================================================================
 SERVICE_NAME = "prompt-store"
 SERVICE_TITLE = "Prompt Store"
+
+
+# Configuration loading
+import yaml
+from pathlib import Path
+
+def load_config() -> dict:
+    """Load service configuration from config file."""
+    config_path = Path(__file__).parent / 'config.yaml'
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+# Load configuration
+config = load_config()
+
+# Extract configuration values with environment variable override
+PROMPT_STORE_CONNECTION_POOL_SIZE = os.getenv('PROMPT_STORE_CONNECTION_POOL_SIZE', config.get('prompt-store-connection-pool-size', 'default_value'))
+PROMPT_STORE_DB = os.getenv('PROMPT_STORE_DB', config.get('prompt-store-db', 'default_value'))
+
 SERVICE_VERSION = "2.0.0"
 DEFAULT_PORT = 5110
 
@@ -63,16 +87,48 @@ install_error_handlers(app)
 register_health_endpoints(app, ServiceNames.PROMPT_STORE, SERVICE_VERSION)
 attach_self_register(app, ServiceNames.PROMPT_STORE)
 
-# Initialize cache
+# Initialize cache and logging
+logger_client = None
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize service components on startup."""
+    global logger_client
+
+    # Initialize logger client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.PROMPT_STORE)
+        if logger_client:
+            await logger_client.log_business_event("prompt_store_startup", {
+                "version": SERVICE_VERSION,
+                "architecture": "domain_driven_design",
+                "domain_contexts": ["prompts", "ab_testing", "analytics", "bulk", "refinement", "lifecycle", "relationships", "notifications", "optimization", "intelligence", "validation", "orchestration"],
+                "cache_enabled": True,
+                "database_enabled": True,
+                "features": ["versioning", "ab_testing", "analytics", "bulk_operations", "refinement", "lifecycle_management"]
+            })
+            await logger_client.log_info("Prompt Store service started", {
+                "ddd_architecture": True,
+                "domain_count": 12,
+                "cache_initialized": True,
+                "versioning_enabled": True,
+                "ab_testing_enabled": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
     await prompt_store_cache.initialize()
     print("✅ Prompt Store service initialized with domain-driven architecture")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Prompt Store service shutting down")
+        except Exception:
+            pass
+
     await prompt_store_cache.close()
     print("👋 Prompt Store service shut down")
 

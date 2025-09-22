@@ -21,6 +21,9 @@ from services.shared.monitoring.health import register_health_endpoints
 from services.shared.utilities.error_handling import register_exception_handlers
 from services.shared.core.constants_new import ServiceNames
 from services.shared.utilities.utilities import setup_common_middleware, attach_self_register
+from services.shared.utilities.logging_client import get_log_collector_client
+import asyncio
+import time
 
 # Infrastructure components
 from .infrastructure.persistence.in_memory import InMemoryWorkflowRepository, InMemoryWorkflowExecutionRepository
@@ -189,6 +192,40 @@ app = FastAPI(
     description="Central control plane and coordination service for the LLM Documentation Ecosystem",
     version=SERVICE_VERSION
 )
+
+# Initialize log collector client
+logger_client = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.ORCHESTRATOR)
+        if logger_client:
+            await logger_client.log_business_event("orchestrator_startup", {
+                "version": SERVICE_VERSION,
+                "architecture": "domain_driven_design",
+                "services_loaded": ["health_monitoring", "workflow_management", "service_registry", "infrastructure"],
+                "domain_contexts": ["health_monitoring", "infrastructure", "ingestion", "query_processing", "reporting", "service_registry", "workflow_management"]
+            })
+            await logger_client.log_info("Orchestrator service started", {
+                "ddd_architecture": True,
+                "bounded_contexts": 7,
+                "service_discovery": True,
+                "workflow_orchestration": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Orchestrator service shutting down")
+        except Exception:
+            pass
 
 # Use common middleware setup to reduce duplication across services
 setup_common_middleware(app, ServiceNames.ORCHESTRATOR)

@@ -4,7 +4,7 @@ This package contains all the modularized functionality for the Memory Agent ser
 Provides shared utilities and client instances for all memory agent modules.
 """
 
-from services.shared.utilities import get_service_client
+from services.shared.utilities.utilities import get_service_client
 
 # Shared service client for all memory agent modules - lazy initialization
 _service_client = None

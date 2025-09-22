@@ -22,6 +22,9 @@ from typing import Optional, Dict, Any, List
 
 from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 from services.shared.utilities import attach_self_register  # type: ignore
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
+import time
 
 from .modules.owner_resolver import owner_resolver
 from .modules.notification_sender import notification_sender
@@ -36,6 +39,9 @@ DEFAULT_PORT = int(os.environ.get('SERVICE_PORT', 5020))
 DEFAULT_DLQ_LIMIT = 50
 MAX_DLQ_LIMIT = 500
 
+# Initialize log collector client
+logger_client = None
+
 app = FastAPI(
     title="Notification Service",
     version=SERVICE_VERSION,
@@ -44,6 +50,37 @@ app = FastAPI(
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
 attach_self_register(app, SERVICE_NAME)
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.NOTIFICATION_SERVICE)
+        if logger_client:
+            await logger_client.log_business_event("notification_service_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["owner_resolution", "notification_delivery", "deduplication", "dead_letter_queue", "multi_channel_support"],
+                "integrations": ["email", "slack", "webhooks", "cache"],
+                "features": ["spam_prevention", "failure_retry", "delivery_tracking", "owner_caching"]
+            })
+            await logger_client.log_info("Notification service started", {
+                "channels": ["email", "slack", "webhook"],
+                "deduplication_enabled": True,
+                "dlq_enabled": True,
+                "owner_cache_enabled": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Notification service shutting down")
+        except Exception:
+            pass
 
 
 class OwnerUpdate(BaseModel):
@@ -125,7 +162,30 @@ async def notify(req: NotifyPayload):
     spam, and delivers through the appropriate channel. Failed notifications
     are automatically added to the dead letter queue for retry or analysis.
     """
+    start_time = time.time()
+    request_id = f"notify_{int(time.time() * 1000)}"
+
     try:
+        # Log notification send start
+        if logger_client:
+            await logger_client.log_business_event("notification_send_started", {
+                "request_id": request_id,
+                "channel": req.channel,
+                "target": req.target,
+                "title": req.title,
+                "has_metadata": bool(req.metadata),
+                "has_labels": bool(req.labels),
+                "message_length": len(req.message) if req.message else 0
+            })
+
+            await logger_client.log_info("Sending notification", {
+                "request_id": request_id,
+                "channel": req.channel,
+                "target_type": "webhook" if req.channel == "webhook" else "address",
+                "has_deduplication": True,
+                "dlq_enabled": True
+            })
+
         result = await notification_sender.send_notification(
             channel=req.channel,
             target=req.target,
@@ -134,10 +194,68 @@ async def notify(req: NotifyPayload):
             metadata=req.metadata,
             labels=req.labels
         )
+
+        processing_time = time.time() - start_time
+
+        # Log successful notification delivery
+        if logger_client:
+            delivery_status = result.get("status", "unknown")
+            was_deduplicated = result.get("deduplicated", False)
+
+            await logger_client.log_business_event("notification_delivered", {
+                "request_id": request_id,
+                "channel": req.channel,
+                "target": req.target,
+                "delivery_status": delivery_status,
+                "was_deduplicated": was_deduplicated,
+                "processing_time_seconds": processing_time,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "notification_delivery",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "channel": req.channel,
+                    "delivery_success": True,
+                    "was_deduplicated": was_deduplicated
+                }
+            )
+
         return result
+
     except Exception as e:
+        error_time = time.time() - start_time
+
         # Add failed notification to DLQ for later analysis
         dlq_manager.add_failed_notification(req.model_dump(), str(e))
+
+        # Log notification delivery failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Notification delivery failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "channel": req.channel,
+                    "target": req.target,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "dlq_queued": True
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("notification_delivery_failed", {
+                "request_id": request_id,
+                "channel": req.channel,
+                "target": req.target,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time,
+                "dlq_queued": True
+            })
+
         raise
 
 
@@ -159,8 +277,79 @@ async def owners_resolve(req: ResolveOwnersRequest):
     targets (email addresses, webhook URLs, etc.) using cached mappings
     and fallback heuristics.
     """
-    resolved_targets = owner_resolver.resolve_owners(req.owners)
-    return {"resolved": resolved_targets}
+    start_time = time.time()
+    request_id = f"owner_resolve_{int(time.time() * 1000)}"
+
+    try:
+        # Log owner resolution start
+        if logger_client:
+            await logger_client.log_business_event("owner_resolution_started", {
+                "request_id": request_id,
+                "owner_count": len(req.owners),
+                "owners": req.owners[:5] if len(req.owners) > 5 else req.owners  # Limit for log size
+            })
+
+            await logger_client.log_info("Resolving owner targets", {
+                "request_id": request_id,
+                "owner_count": len(req.owners),
+                "cache_enabled": True
+            })
+
+        resolved_targets = owner_resolver.resolve_owners(req.owners)
+        processing_time = time.time() - start_time
+
+        resolved_count = sum(1 for target in resolved_targets.values() if target)
+        unresolved_count = len(req.owners) - resolved_count
+
+        # Log successful owner resolution
+        if logger_client:
+            await logger_client.log_business_event("owner_resolution_completed", {
+                "request_id": request_id,
+                "total_owners": len(req.owners),
+                "resolved_count": resolved_count,
+                "unresolved_count": unresolved_count,
+                "processing_time_seconds": processing_time,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "owner_resolution",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "resolution_success": True,
+                    "resolved_count": resolved_count,
+                    "unresolved_count": unresolved_count
+                }
+            )
+
+        return {"resolved": resolved_targets}
+
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log owner resolution failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Owner resolution failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "owner_count": len(req.owners),
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("owner_resolution_failed", {
+                "request_id": request_id,
+                "owner_count": len(req.owners),
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
+        raise
 
 
 @app.get("/dlq")
@@ -170,10 +359,79 @@ async def get_dlq(limit: int = 50):
     Returns the most recent failed notification attempts for monitoring
     and debugging purposes. Limited to prevent excessive response sizes.
     """
-    # Apply safety limits to prevent excessive memory usage
-    safe_limit = min(limit, MAX_DLQ_LIMIT) if limit > 0 else DEFAULT_DLQ_LIMIT
-    failed_notifications = dlq_manager.get_dlq_entries(safe_limit)
-    return {"items": failed_notifications}
+    start_time = time.time()
+    request_id = f"dlq_query_{int(time.time() * 1000)}"
+
+    try:
+        # Apply safety limits to prevent excessive memory usage
+        safe_limit = min(limit, MAX_DLQ_LIMIT) if limit > 0 else DEFAULT_DLQ_LIMIT
+
+        # Log DLQ query start
+        if logger_client:
+            await logger_client.log_business_event("dlq_query_started", {
+                "request_id": request_id,
+                "requested_limit": limit,
+                "applied_limit": safe_limit,
+                "limit_was_capped": limit > MAX_DLQ_LIMIT if limit > 0 else False
+            })
+
+            await logger_client.log_info("Querying dead letter queue", {
+                "request_id": request_id,
+                "applied_limit": safe_limit,
+                "safety_limits_applied": True
+            })
+
+        failed_notifications = dlq_manager.get_dlq_entries(safe_limit)
+        processing_time = time.time() - start_time
+
+        # Log successful DLQ query
+        if logger_client:
+            await logger_client.log_business_event("dlq_query_completed", {
+                "request_id": request_id,
+                "entries_returned": len(failed_notifications),
+                "applied_limit": safe_limit,
+                "processing_time_seconds": processing_time,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "dlq_query",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "entries_returned": len(failed_notifications),
+                    "query_success": True
+                }
+            )
+
+        return {"items": failed_notifications}
+
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log DLQ query failure
+        if logger_client:
+            await logger_client.log_error(
+                f"DLQ query failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "requested_limit": limit,
+                    "applied_limit": safe_limit if 'safe_limit' in locals() else DEFAULT_DLQ_LIMIT,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("dlq_query_failed", {
+                "request_id": request_id,
+                "requested_limit": limit,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
+        raise
 
 
 if __name__ == "__main__":

@@ -3,14 +3,30 @@
 Handles HTTP requests and responses for document operations.
 """
 from typing import Dict, Any, Optional
+import time
 from fastapi import HTTPException
 from services.shared.core.responses.responses import create_success_response, create_error_response
 from services.shared.utilities import utc_now
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
 from ...core.models import (
     DocumentRequest, DocumentResponse, DocumentListResponse,
     MetadataUpdateRequest, SearchRequest, SearchResponse, QualityResponse
 )
 from .service import DocumentService
+
+# Global logger client instance
+logger_client = None
+
+async def get_logger_client():
+    """Get or initialize the logger client."""
+    global logger_client
+    if logger_client is None:
+        try:
+            logger_client = await get_log_collector_client(ServiceNames.DOC_STORE)
+        except Exception:
+            pass  # Fallback to no logging if client unavailable
+    return logger_client
 
 
 class DocumentHandlers:
@@ -21,9 +37,31 @@ class DocumentHandlers:
 
     async def handle_create_document(self, request: DocumentRequest) -> DocumentResponse:
         """Handle document creation."""
+        start_time = time.time()
+        request_id = f"doc_create_{int(time.time() * 1000)}"
+        logger = await get_logger_client()
+
         try:
             # Process metadata
             metadata = request.metadata if isinstance(request.metadata, dict) else {}
+
+            # Log document creation start
+            if logger:
+                await logger.log_business_event("document_creation_started", {
+                    "request_id": request_id,
+                    "content_type": request.content_type,
+                    "content_length": len(request.content) if request.content else 0,
+                    "has_metadata": bool(metadata),
+                    "metadata_keys": list(metadata.keys()) if metadata else [],
+                    "has_tags": bool(request.tags)
+                })
+
+                await logger.log_info("Creating new document", {
+                    "request_id": request_id,
+                    "content_type": request.content_type,
+                    "content_length": len(request.content) if request.content else 0,
+                    "metadata_count": len(metadata)
+                })
 
             # Create document
             document = self.service.create_document(
@@ -32,6 +70,31 @@ class DocumentHandlers:
                 document_id=request.id,
                 correlation_id=request.correlation_id
             )
+
+            # Calculate response time
+            response_time = time.time() - start_time
+
+            # Log successful creation
+            if logger:
+                await logger.log_business_event("document_created", {
+                    "request_id": request_id,
+                    "document_id": document.id,
+                    "content_type": request.content_type,
+                    "content_length": len(document.content) if document.content else 0,
+                    "response_time_seconds": response_time,
+                    "success": True
+                })
+
+                await logger.log_performance_metric(
+                    "document_creation",
+                    response_time,
+                    {
+                        "request_id": request_id,
+                        "document_id": document.id,
+                        "content_type": request.content_type,
+                        "creation_success": True
+                    }
+                )
 
             # Return direct DocumentResponse without wrapper
             return DocumentResponse(
@@ -43,8 +106,54 @@ class DocumentHandlers:
             )
 
         except ValueError as e:
+            error_time = time.time() - start_time
+
+            # Log validation error
+            if logger:
+                await logger.log_error(
+                    f"Document creation validation failed: {str(e)}",
+                    {
+                        "request_id": request_id,
+                        "content_type": request.content_type,
+                        "error_type": "validation_error",
+                        "response_time_seconds": error_time
+                    },
+                    error=e
+                )
+
+                await logger.log_business_event("document_creation_validation_failed", {
+                    "request_id": request_id,
+                    "content_type": request.content_type,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time
+                })
+
             raise HTTPException(status_code=400, detail=str(e))
+
         except Exception as e:
+            error_time = time.time() - start_time
+
+            # Log internal error
+            if logger:
+                await logger.log_error(
+                    f"Document creation failed: {str(e)}",
+                    {
+                        "request_id": request_id,
+                        "content_type": request.content_type,
+                        "error_type": type(e).__name__,
+                        "response_time_seconds": error_time
+                    },
+                    error=e
+                )
+
+                await logger.log_business_event("document_creation_failed", {
+                    "request_id": request_id,
+                    "content_type": request.content_type,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time
+                })
+
             raise HTTPException(status_code=500, detail=f"Failed to create document: {str(e)}")
 
     async def handle_get_document(self, document_id: str) -> DocumentResponse:

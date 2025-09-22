@@ -15,6 +15,8 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 from enum import Enum
 import httpx
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
 
 # Service configuration
 SERVICE_NAME = "mock-data-generator"
@@ -170,12 +172,49 @@ class SimulationResponse(BaseModel):
     generation_time: float
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+# Initialize log collector client
+logger_client = None
+
 # Initialize FastAPI app
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Enhanced mock data generator for LLM ecosystem testing. Creates representative data collections, bulk datasets, and complete ecosystem scenarios for comprehensive testing and development.",
     version=SERVICE_VERSION
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.MOCK_DATA_GENERATOR)
+        if logger_client:
+            await logger_client.log_business_event("mock_data_generator_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["bulk_data_generation", "ecosystem_scenarios", "intelligent_content", "data_relationships", "export_formats", "collection_templates"],
+                "integrations": ["llm_gateway", "doc_store", "log_collector"],
+                "data_types": ["confluence_page", "github_repo", "github_pr", "jira_issue", "api_docs", "code_sample", "analysis_report", "user_profile", "log_entry", "workflow_data"],
+                "features": ["llm_enhanced_content", "relationship_mapping", "bulk_operations", "scenario_generation", "data_export"]
+            })
+            await logger_client.log_info("Mock Data Generator service started", {
+                "llm_gateway_url": LLM_GATEWAY_URL,
+                "doc_store_url": DOC_STORE_URL,
+                "data_types_supported": 15,
+                "bulk_generation_enabled": True,
+                "ecosystem_scenarios_enabled": True,
+                "export_formats": ["json", "csv", "xml", "yaml"]
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Mock Data Generator service shutting down")
+        except Exception:
+            pass
 
 class MockDataGenerator:
     """Core mock data generation logic."""
@@ -1680,32 +1719,79 @@ async def get_data_types():
 async def generate_mock_data(request: GenerationRequest):
     """Generate mock data based on the request."""
     start_time = time.time()
-    
+    request_id = f"mock_gen_{int(time.time() * 1000)}"
+
     try:
+        # Log data generation start
+        if logger_client:
+            await logger_client.log_business_event("mock_data_generation_started", {
+                "request_id": request_id,
+                "data_type": request.data_type.value,
+                "count_requested": request.count,
+                "store_in_doc_store": request.store_in_doc_store,
+                "has_context": bool(request.context),
+                "has_parameters": bool(request.parameters),
+                "llm_enhanced": True
+            })
+
+            await logger_client.log_info("Starting mock data generation", {
+                "request_id": request_id,
+                "data_type": request.data_type.value,
+                "items_to_generate": request.count,
+                "doc_store_storage": request.store_in_doc_store,
+                "llm_integration": True
+            })
+
         generated_data = []
         stored_documents = []
-        
+
         for i in range(request.count):
             # Generate data with optional LLM enhancement
             data = await generator.generate_with_llm(
-                request.data_type, 
+                request.data_type,
                 request.context
             )
-            
+
             # Add request parameters
             if request.parameters:
                 data.update(request.parameters)
-            
+
             generated_data.append(data)
-            
+
             # Store in doc store if requested
             if request.store_in_doc_store:
                 doc_id = await generator.store_in_doc_store(data, request.data_type.value)
                 if doc_id:
                     stored_documents.append(doc_id)
-        
+
         generation_time = time.time() - start_time
-        
+
+        # Log successful data generation
+        if logger_client:
+            storage_rate = len(stored_documents) / request.count if request.count > 0 else 0
+
+            await logger_client.log_business_event("mock_data_generation_completed", {
+                "request_id": request_id,
+                "data_type": request.data_type.value,
+                "items_generated": len(generated_data),
+                "items_stored": len(stored_documents),
+                "storage_success_rate": storage_rate,
+                "generation_time_seconds": generation_time,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "mock_data_generation",
+                generation_time,
+                {
+                    "request_id": request_id,
+                    "data_type": request.data_type.value,
+                    "items_generated": len(generated_data),
+                    "storage_enabled": request.store_in_doc_store,
+                    "generation_success": True
+                }
+            )
+
         return MockDataResponse(
             success=True,
             data_type=request.data_type.value,
@@ -1714,8 +1800,33 @@ async def generate_mock_data(request: GenerationRequest):
             generation_time=generation_time,
             stored_documents=stored_documents if stored_documents else None
         )
-        
+
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log data generation failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Mock data generation failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "data_type": request.data_type.value if 'request' in locals() else None,
+                    "count_requested": request.count if 'request' in locals() else None,
+                    "error_type": type(e).__name__,
+                    "generation_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("mock_data_generation_failed", {
+                "request_id": request_id,
+                "data_type": request.data_type.value if 'request' in locals() else None,
+                "count_requested": request.count if 'request' in locals() else None,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "generation_time_seconds": error_time
+            })
+
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate mock data: {str(e)}"
@@ -1799,7 +1910,89 @@ async def test_doc_store_connection():
 @app.post("/collections/generate", response_model=BulkCollectionResponse)
 async def generate_bulk_collection(request: BulkCollectionRequest):
     """Generate a bulk collection of mock data."""
-    return await generator.generate_bulk_collection(request)
+    start_time = time.time()
+    request_id = f"bulk_gen_{int(time.time() * 1000)}"
+
+    try:
+        # Log bulk collection generation start
+        if logger_client:
+            total_items = sum(request.distribution.values())
+            await logger_client.log_business_event("bulk_collection_generation_started", {
+                "request_id": request_id,
+                "collection_name": request.name,
+                "data_types": list(request.distribution.keys()),
+                "total_items_requested": total_items,
+                "store_in_doc_store": request.store_in_doc_store,
+                "include_relationships": request.include_relationships,
+                "has_metadata": bool(request.metadata)
+            })
+
+            await logger_client.log_info("Starting bulk collection generation", {
+                "request_id": request_id,
+                "collection_name": request.name,
+                "data_types_count": len(request.distribution),
+                "total_items": total_items,
+                "doc_store_storage": request.store_in_doc_store,
+                "relationships_enabled": request.include_relationships
+            })
+
+        result = await generator.generate_bulk_collection(request)
+        processing_time = time.time() - start_time
+
+        # Log successful bulk collection generation
+        if logger_client:
+            actual_items = len(result.documents_created) if hasattr(result, 'documents_created') else 0
+            stored_count = len(result.stored_documents) if hasattr(result, 'stored_documents') and result.stored_documents else 0
+
+            await logger_client.log_business_event("bulk_collection_generation_completed", {
+                "request_id": request_id,
+                "collection_name": request.name,
+                "documents_created": actual_items,
+                "documents_stored": stored_count,
+                "processing_time_seconds": processing_time,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "bulk_collection_generation",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "collection_name": request.name,
+                    "documents_created": actual_items,
+                    "storage_enabled": request.store_in_doc_store,
+                    "generation_success": True
+                }
+            )
+
+        return result
+
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log bulk collection generation failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Bulk collection generation failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "collection_name": request.name if 'request' in locals() else None,
+                    "data_types_count": len(request.distribution) if 'request' in locals() else None,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("bulk_collection_generation_failed", {
+                "request_id": request_id,
+                "collection_name": request.name if 'request' in locals() else None,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
+        raise
 
 @app.get("/collections/templates")
 async def get_collection_templates():

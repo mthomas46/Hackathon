@@ -42,6 +42,9 @@ except Exception:
 from services.shared.core.models.models import Document
 from services.shared.utilities import stable_hash, cached_get
 from services.shared.envelopes import DocumentEnvelope
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
+import time
 from services.shared.owners import derive_github_owners
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
 
@@ -86,12 +89,49 @@ from .modules.fetch_handler import fetch_handler
 from .modules.normalize_handler import normalize_handler
 from .modules.code_analyzer import code_analyzer
 
+# Initialize log collector client
+logger_client = None
+
 # Create FastAPI app directly using shared utilities
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        # Use a fallback service name if SOURCE_AGENT doesn't exist in ServiceNames
+        service_name = getattr(ServiceNames, "SOURCE_AGENT", SERVICE_NAME)
+        logger_client = await get_log_collector_client(service_name)
+        if logger_client:
+            await logger_client.log_business_event("source_agent_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["document_fetching", "data_normalization", "code_analysis", "source_integration", "correlation_tracking"],
+                "integrations": ["github_api", "jira_api", "confluence_api", "log_collector", "doc_store"],
+                "supported_sources": ["github", "jira", "confluence"],
+                "features": ["secure_data_handling", "validation_sanitization", "owner_derivation", "caching_optimization"]
+            })
+            await logger_client.log_info("Source Agent service started", {
+                "supported_sources": ["github", "jira", "confluence"],
+                "document_fetching_enabled": True,
+                "normalization_engine_ready": True,
+                "code_analysis_available": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Source Agent service shutting down")
+        except Exception:
+            pass
 
 # Use common middleware setup to reduce duplication across services
 from services.shared.utilities import setup_common_middleware, attach_self_register
@@ -116,16 +156,161 @@ async def fetch_document(req: DocumentRequest):
     and Confluence (pages). Uses appropriate authentication and data
     transformation for each source type.
     """
-    if req.source == "github":
-        # Extract owner and repo for GitHub
-        owner, repo = req.identifier.split(":", 1)
-        return await fetch_handler.fetch_github_document(owner, repo, req)
+    start_time = time.time()
+    request_id = f"source_fetch_{int(time.time() * 1000)}"
 
-    elif req.source == "jira":
-        return await fetch_handler.fetch_jira_document(req)
+    try:
+        # Log document fetch start
+        if logger_client:
+            await logger_client.log_business_event("document_fetch_started", {
+                "request_id": request_id,
+                "source": req.source,
+                "identifier": req.identifier,
+                "document_type": req.doc_type,
+                "has_auth": bool(req.auth_token),
+                "include_metadata": req.include_metadata,
+                "fetch_operation": "single_document"
+            })
 
-    elif req.source == "confluence":
-        return await fetch_handler.fetch_confluence_document(req)
+            await logger_client.log_info("Starting document fetch from source", {
+                "request_id": request_id,
+                "source": req.source,
+                "identifier": req.identifier,
+                "document_type": req.doc_type,
+                "external_api_call": True
+            })
+
+        if req.source == "github":
+            # Extract owner and repo for GitHub
+            owner, repo = req.identifier.split(":", 1)
+
+            # Log GitHub-specific details
+            if logger_client:
+                await logger_client.log_info("Fetching from GitHub repository", {
+                    "request_id": request_id,
+                    "owner": owner,
+                    "repository": repo,
+                    "document_type": req.doc_type
+                })
+
+            result = await fetch_handler.fetch_github_document(owner, repo, req)
+
+        elif req.source == "jira":
+            # Log Jira-specific details
+            if logger_client:
+                await logger_client.log_info("Fetching from Jira issue/ticket", {
+                    "request_id": request_id,
+                    "jira_identifier": req.identifier,
+                    "document_type": req.doc_type
+                })
+
+            result = await fetch_handler.fetch_jira_document(req)
+
+        elif req.source == "confluence":
+            # Log Confluence-specific details
+            if logger_client:
+                await logger_client.log_info("Fetching from Confluence page", {
+                    "request_id": request_id,
+                    "confluence_identifier": req.identifier,
+                    "document_type": req.doc_type
+                })
+
+            result = await fetch_handler.fetch_confluence_document(req)
+
+        else:
+            # Log unsupported source error
+            error_time = time.time() - start_time
+            if logger_client:
+                await logger_client.log_error(
+                    f"Document fetch failed: Unsupported source {req.source}",
+                    {
+                        "request_id": request_id,
+                        "source": req.source,
+                        "identifier": req.identifier,
+                        "error_type": "unsupported_source",
+                        "processing_time_seconds": error_time
+                    },
+                    error=Exception(f"Unsupported source: {req.source}")
+                )
+
+                await logger_client.log_business_event("document_fetch_failed", {
+                    "request_id": request_id,
+                    "source": req.source,
+                    "identifier": req.identifier,
+                    "error_type": "unsupported_source",
+                    "processing_time_seconds": error_time
+                })
+
+            raise HTTPException(status_code=400, detail=f"Unsupported source: {req.source}")
+
+        processing_time = time.time() - start_time
+
+        # Calculate result metrics
+        result_size = len(str(result)) if result else 0
+        has_content = bool(result and result.get("content"))
+        has_metadata = bool(result and result.get("metadata"))
+
+        # Log successful document fetch completion
+        if logger_client:
+            await logger_client.log_business_event("document_fetch_completed", {
+                "request_id": request_id,
+                "source": req.source,
+                "identifier": req.identifier,
+                "document_type": req.doc_type,
+                "result_size_bytes": result_size,
+                "has_content": has_content,
+                "has_metadata": has_metadata,
+                "processing_time_seconds": processing_time,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "document_fetch",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "source": req.source,
+                    "document_type": req.doc_type,
+                    "fetch_success": True,
+                    "result_has_content": has_content
+                }
+            )
+
+        return result
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is (already logged above for unsupported source)
+        raise
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log document fetch failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Document fetch failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "source": getattr(req, 'source', 'unknown'),
+                    "identifier": getattr(req, 'identifier', 'unknown'),
+                    "document_type": getattr(req, 'doc_type', 'unknown'),
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "external_api_failure": True
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("document_fetch_failed", {
+                "request_id": request_id,
+                "source": getattr(req, 'source', 'unknown'),
+                "identifier": getattr(req, 'identifier', 'unknown'),
+                "document_type": getattr(req, 'doc_type', 'unknown'),
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
+        raise
 
 
 @app.post("/normalize")

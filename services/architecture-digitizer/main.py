@@ -27,6 +27,9 @@ from services.shared.core.responses.responses import create_success_response, cr
 from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities import setup_common_middleware, attach_self_register, get_service_client
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
+import time
 from services.shared.monitoring.metrics import (
     get_service_metrics,
     metrics_endpoint,
@@ -145,12 +148,49 @@ DEFAULT_PORT = 5105
 # Initialize metrics
 metrics = get_service_metrics(SERVICE_NAME)
 
+# Initialize log collector client
+logger_client = None
+
 # Create FastAPI app following ecosystem patterns
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Architecture diagram digitizer and normalizer service for the LLM Documentation Ecosystem",
     version=SERVICE_VERSION
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        # Use a fallback service name if ARCHITECTURE_DIGITIZER doesn't exist in ServiceNames
+        service_name = getattr(ServiceNames, "ARCHITECTURE_DIGITIZER", SERVICE_NAME)
+        logger_client = await get_log_collector_client(service_name)
+        if logger_client:
+            await logger_client.log_business_event("architecture_digitizer_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["diagram_normalization", "multi_format_support", "external_api_integration", "file_upload_processing"],
+                "integrations": ["miro", "figjam", "lucid", "confluence", "log_collector"],
+                "supported_formats": ["miro", "figjam", "lucid", "confluence", "json", "xml"],
+                "features": ["authentication_handling", "error_recovery", "structured_output", "component_extraction"]
+            })
+            await logger_client.log_info("Architecture Digitizer service started", {
+                "diagram_sources": ["miro", "figjam", "lucid", "confluence"],
+                "output_formats": ["json", "xml"],
+                "file_upload_enabled": True,
+                "api_integration_ready": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Architecture Digitizer service shutting down")
+        except Exception:
+            pass
 
 # Use common middleware setup and error handlers
 setup_common_middleware(app, ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME)
@@ -174,14 +214,55 @@ async def normalize_architecture(request: NormalizeRequest):
     and normalizes it into the common Software Architecture JSON schema with
     components and connections for downstream analysis and documentation.
     """
-    import time
     start_time = time.time()
+    request_id = f"arch_normalize_{int(time.time() * 1000)}"
 
     try:
+        # Log normalization start
+        if logger_client:
+            await logger_client.log_business_event("architecture_normalization_started", {
+                "request_id": request_id,
+                "system": request.system,
+                "board_id": request.board_id,
+                "has_token": bool(request.token),
+                "normalization_type": "diagram_fetch_and_normalize"
+            })
+
+            await logger_client.log_info("Starting architecture diagram normalization", {
+                "request_id": request_id,
+                "system": request.system,
+                "board_id": request.board_id,
+                "external_api_call": True
+            })
+
         # Get the appropriate normalizer for the system
         normalizer = get_normalizer(request.system)
         if not normalizer:
+            error_time = time.time() - start_time
             record_architecture_digitizer_request(metrics, request.system, "error")
+
+            # Log unsupported system error
+            if logger_client:
+                await logger_client.log_error(
+                    f"Architecture normalization failed: Unsupported system {request.system}",
+                    {
+                        "request_id": request_id,
+                        "system": request.system,
+                        "board_id": request.board_id,
+                        "error_type": "unsupported_system",
+                        "processing_time_seconds": error_time
+                    },
+                    error=Exception(f"Unsupported system: {request.system}")
+                )
+
+                await logger_client.log_business_event("architecture_normalization_failed", {
+                    "request_id": request_id,
+                    "system": request.system,
+                    "board_id": request.board_id,
+                    "error_type": "unsupported_system",
+                    "processing_time_seconds": error_time
+                })
+
             raise HTTPException(
                 status_code=400,
                 detail=f"Unsupported system: {request.system}"
@@ -190,9 +271,14 @@ async def normalize_architecture(request: NormalizeRequest):
         # Fetch and normalize the data
         result = await normalizer.normalize(request.board_id, request.token)
 
+        # Calculate metrics
+        processing_time = time.time() - start_time
+        components_count = len(result.get("components", []))
+        connections_count = len(result.get("connections", []))
+        data_size = len(str(result)) if result else 0
+
         # Record successful metrics
-        duration = time.time() - start_time
-        record_architecture_digitizer_request(metrics, request.system, "success", duration)
+        record_architecture_digitizer_request(metrics, request.system, "success", processing_time)
 
         # Store normalized data in doc_store (fire and forget)
         fire_and_forget(
@@ -200,16 +286,35 @@ async def normalize_architecture(request: NormalizeRequest):
             request.system,
             request.board_id,
             result,
-            {"request_duration": duration}
+            {"request_duration": processing_time}
         )
 
         # Log successful normalization
-        fire_and_forget(
-            "info",
-            f"Successfully normalized {request.system} diagram {request.board_id}",
-            SERVICE_NAME,
-            {"system": request.system, "board_id": request.board_id, "duration": duration}
-        )
+        if logger_client:
+            await logger_client.log_business_event("architecture_normalization_completed", {
+                "request_id": request_id,
+                "system": request.system,
+                "board_id": request.board_id,
+                "components_extracted": components_count,
+                "connections_mapped": connections_count,
+                "data_size_bytes": data_size,
+                "processing_time_seconds": processing_time,
+                "doc_store_stored": True,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "architecture_normalization",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "system": request.system,
+                    "board_id": request.board_id,
+                    "components_count": components_count,
+                    "connections_count": connections_count,
+                    "normalization_success": True
+                }
+            )
 
         return NormalizeResponse(
             success=True,
@@ -219,22 +324,40 @@ async def normalize_architecture(request: NormalizeRequest):
             message="Architecture diagram normalized successfully"
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is (already logged above for unsupported system)
+        raise
     except Exception as e:
         # Record failure metrics
-        duration = time.time() - start_time
-        record_architecture_digitizer_request(metrics, request.system, "error", duration)
-        record_architecture_digitizer_api_failure(metrics, request.system, type(e).__name__)
+        error_time = time.time() - start_time
+        record_architecture_digitizer_request(metrics, getattr(request, 'system', 'unknown'), "error", error_time)
+        record_architecture_digitizer_api_failure(metrics, getattr(request, 'system', 'unknown'), type(e).__name__)
 
-        error_msg = f"Failed to normalize {request.system} diagram {request.board_id}: {str(e)}"
+        # Log normalization failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Architecture normalization failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "system": getattr(request, 'system', 'unknown'),
+                    "board_id": getattr(request, 'board_id', 'unknown'),
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "external_api_failure": True
+                },
+                error=e
+            )
 
-        # Log the error
-        fire_and_forget(
-            "error",
-            error_msg,
-            SERVICE_NAME,
-            {"system": request.system, "board_id": request.board_id, "error": str(e), "duration": duration}
-        )
+            await logger_client.log_business_event("architecture_normalization_failed", {
+                "request_id": request_id,
+                "system": getattr(request, 'system', 'unknown'),
+                "board_id": getattr(request, 'board_id', 'unknown'),
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
 
+        error_msg = f"Failed to normalize {getattr(request, 'system', 'unknown')} diagram {getattr(request, 'board_id', 'unknown')}: {str(e)}"
         raise HTTPException(
             status_code=500,
             detail=error_msg

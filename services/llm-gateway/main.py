@@ -7,12 +7,36 @@ and provides basic LLM routing functionality.
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
+
+# Configuration loading
+import yaml
+from pathlib import Path
+
+def load_config() -> dict:
+    """Load service configuration from config file."""
+    config_path = Path(__file__).parent / 'config.yaml'
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+# Load configuration
+config = load_config()
+
+# Extract configuration values with environment variable override
+ENVIRONMENT = os.getenv('ENVIRONMENT', config.get('environment', 'default_value'))
+OLLAMA_ENDPOINT = os.getenv('OLLAMA_ENDPOINT', config.get('ollama-endpoint', 'default_value'))
+REDIS_HOST = os.getenv('REDIS_HOST', config.get('redis-host', 'default_value'))
+
 from typing import Dict, Any, List, Optional, AsyncGenerator
 import asyncio
 import time
 import json
 import os
 import httpx
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
 
 # Service configuration
 SERVICE_NAME = "llm-gateway"
@@ -60,12 +84,49 @@ class GatewayResponse(BaseModel):
     processing_time: float
     tokens_used: Optional[int] = None
 
+# Initialize log collector client
+logger_client = None
+
 # Initialize FastAPI app
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Unified access to LLM providers including Ollama",
     version=SERVICE_VERSION
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.LLM_GATEWAY)
+        if logger_client:
+            await logger_client.log_business_event("llm_gateway_startup", {
+                "version": SERVICE_VERSION,
+                "providers": ["ollama", "bedrock"],
+                "models": ["llama2", "codellama", "mistral"],
+                "capabilities": ["text_generation", "chat_completion", "streaming", "model_routing"],
+                "integrations": ["redis_cache", "log_collector"],
+                "features": ["load_balancing", "failover", "performance_monitoring"]
+            })
+            await logger_client.log_info("LLM Gateway service started", {
+                "ollama_endpoint": OLLAMA_ENDPOINT,
+                "environment": ENVIRONMENT,
+                "providers_count": 2,
+                "models_available": ["llama2", "codellama", "mistral"],
+                "streaming_enabled": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("LLM Gateway service shutting down")
+        except Exception:
+            pass
 
 # Simple health check endpoint
 @app.get("/health")
@@ -121,52 +182,189 @@ async def get_providers():
 async def query_llm(request: LLMQuery):
     """Send a query to the specified LLM provider."""
     start_time = time.time()
-    
-    if request.provider == "ollama":
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                ollama_request = {
-                    "model": request.model,
-                    "prompt": request.prompt,
-                    "stream": False,
-                    "options": {
-                        "num_predict": request.max_tokens,
-                        "temperature": request.temperature
+    request_id = f"llm_query_{int(time.time() * 1000)}"
+
+    try:
+        # Log LLM query start
+        if logger_client:
+            await logger_client.log_business_event("llm_query_started", {
+                "request_id": request_id,
+                "provider": request.provider,
+                "model": request.model,
+                "prompt_length": len(request.prompt),
+                "max_tokens": request.max_tokens,
+                "temperature": request.temperature,
+                "streaming": request.stream
+            })
+
+            await logger_client.log_info("Processing LLM query", {
+                "request_id": request_id,
+                "provider": request.provider,
+                "model": request.model,
+                "prompt_preview": request.prompt[:100] + "..." if len(request.prompt) > 100 else request.prompt
+            })
+
+        if request.provider == "ollama":
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    ollama_request = {
+                        "model": request.model,
+                        "prompt": request.prompt,
+                        "stream": False,
+                        "options": {
+                            "num_predict": request.max_tokens,
+                            "temperature": request.temperature
+                        }
                     }
-                }
-                
-                response = await client.post(
-                    f"{OLLAMA_ENDPOINT}/api/generate",
-                    json=ollama_request
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
+
+                    response = await client.post(
+                        f"{OLLAMA_ENDPOINT}/api/generate",
+                        json=ollama_request
+                    )
+
                     processing_time = time.time() - start_time
-                    
-                    return GatewayResponse(
-                        success=True,
-                        data=result,
-                        provider="ollama",
-                        model=request.model,
-                        processing_time=processing_time,
-                        tokens_used=len(result.get("response", "").split())
+
+                    if response.status_code == 200:
+                        result = response.json()
+                        tokens_used = len(result.get("response", "").split())
+
+                        # Log successful LLM query
+                        if logger_client:
+                            await logger_client.log_business_event("llm_query_completed", {
+                                "request_id": request_id,
+                                "provider": "ollama",
+                                "model": request.model,
+                                "processing_time_seconds": processing_time,
+                                "tokens_used": tokens_used,
+                                "success": True,
+                                "response_length": len(result.get("response", ""))
+                            })
+
+                            await logger_client.log_performance_metric(
+                                "llm_query",
+                                processing_time,
+                                {
+                                    "request_id": request_id,
+                                    "provider": "ollama",
+                                    "model": request.model,
+                                    "tokens_used": tokens_used,
+                                    "query_success": True
+                                }
+                            )
+
+                        return GatewayResponse(
+                            success=True,
+                            data=result,
+                            provider="ollama",
+                            model=request.model,
+                            processing_time=processing_time,
+                            tokens_used=tokens_used
+                        )
+                    else:
+                        # Log LLM query failure
+                        if logger_client:
+                            await logger_client.log_error(
+                                f"LLM query failed: Ollama request failed with status {response.status_code}",
+                                {
+                                    "request_id": request_id,
+                                    "provider": "ollama",
+                                    "model": request.model,
+                                    "processing_time_seconds": processing_time,
+                                    "http_status_code": response.status_code,
+                                    "error_type": "provider_error"
+                                },
+                                error=Exception(f"Ollama request failed: {response.text}")
+                            )
+
+                            await logger_client.log_business_event("llm_query_failed", {
+                                "request_id": request_id,
+                                "provider": "ollama",
+                                "model": request.model,
+                                "processing_time_seconds": processing_time,
+                                "error_type": "provider_error",
+                                "http_status_code": response.status_code
+                            })
+
+                        raise HTTPException(
+                            status_code=response.status_code,
+                            detail=f"Ollama request failed: {response.text}"
+                        )
+
+            except Exception as e:
+                error_time = time.time() - start_time
+
+                # Log LLM query exception
+                if logger_client:
+                    await logger_client.log_error(
+                        f"LLM query failed: {str(e)}",
+                        {
+                            "request_id": request_id,
+                            "provider": "ollama",
+                            "model": request.model,
+                            "processing_time_seconds": error_time,
+                            "error_type": type(e).__name__
+                        },
+                        error=e
                     )
-                else:
-                    raise HTTPException(
-                        status_code=response.status_code,
-                        detail=f"Ollama request failed: {response.text}"
-                    )
-                    
-        except Exception as e:
+
+                    await logger_client.log_business_event("llm_query_failed", {
+                        "request_id": request_id,
+                        "provider": "ollama",
+                        "model": request.model,
+                        "processing_time_seconds": error_time,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e)
+                    })
+
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error querying Ollama: {str(e)}"
+                )
+        else:
+            # Log unsupported provider
+            error_time = time.time() - start_time
+
+            if logger_client:
+                await logger_client.log_error(
+                    f"LLM query failed: Unsupported provider {request.provider}",
+                    {
+                        "request_id": request_id,
+                        "provider": request.provider,
+                        "model": request.model,
+                        "processing_time_seconds": error_time,
+                        "error_type": "unsupported_provider"
+                    },
+                    error=Exception(f"Unsupported provider: {request.provider}")
+                )
+
             raise HTTPException(
-                status_code=500,
-                detail=f"Error querying Ollama: {str(e)}"
+                status_code=400,
+                detail=f"Unsupported provider: {request.provider}"
             )
-    else:
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log unexpected error
+        if logger_client:
+            await logger_client.log_error(
+                f"LLM query failed unexpectedly: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "provider": request.provider if 'request' in locals() else None,
+                    "model": request.model if 'request' in locals() else None,
+                    "processing_time_seconds": error_time,
+                    "error_type": "unexpected_error"
+                },
+                error=e
+            )
+
         raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported provider: {request.provider}"
+            status_code=500,
+            detail=f"Unexpected error: {str(e)}"
         )
 
 # Chat endpoint for conversational interactions

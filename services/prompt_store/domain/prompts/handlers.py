@@ -4,10 +4,26 @@ Handles HTTP requests and responses for prompt operations.
 """
 
 from typing import Dict, Any, Optional, List
+import time
 from services.prompt_store.core.handler import BaseHandler
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.core.models import PromptCreate, PromptUpdate
 from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.core.constants_new import ServiceNames
+
+# Global logger client instance
+logger_client = None
+
+async def get_logger_client():
+    """Get or initialize the logger client."""
+    global logger_client
+    if logger_client is None:
+        try:
+            logger_client = await get_log_collector_client(ServiceNames.PROMPT_STORE)
+        except Exception:
+            pass  # Fallback to no logging if client unavailable
+    return logger_client
 
 
 class PromptHandlers(BaseHandler):
@@ -18,17 +34,117 @@ class PromptHandlers(BaseHandler):
 
     async def handle_create_prompt(self, prompt_data: PromptCreate) -> Dict[str, Any]:
         """Create a new prompt."""
+        start_time = time.time()
+        request_id = f"prompt_create_{int(time.time() * 1000)}"
+        logger = await get_logger_client()
+
         try:
+            # Log prompt creation start
+            if logger:
+                await logger.log_business_event("prompt_creation_started", {
+                    "request_id": request_id,
+                    "prompt_name": prompt_data.name,
+                    "category": prompt_data.category,
+                    "content_length": len(prompt_data.content) if prompt_data.content else 0,
+                    "has_variables": bool(prompt_data.variables),
+                    "has_tags": bool(prompt_data.tags),
+                    "has_metadata": bool(prompt_data.metadata)
+                })
+
+                await logger.log_info("Creating new prompt", {
+                    "request_id": request_id,
+                    "prompt_name": prompt_data.name,
+                    "category": prompt_data.category,
+                    "content_preview": prompt_data.content[:100] + "..." if prompt_data.content and len(prompt_data.content) > 100 else prompt_data.content
+                })
+
+            # Create the prompt
             prompt = self.service.create_entity(prompt_data.model_dump())
+            response_time = time.time() - start_time
+
+            # Log successful creation
+            if logger:
+                await logger.log_business_event("prompt_created", {
+                    "request_id": request_id,
+                    "prompt_id": prompt.id,
+                    "prompt_name": prompt.name,
+                    "category": prompt.category,
+                    "version": prompt.version,
+                    "response_time_seconds": response_time,
+                    "success": True
+                })
+
+                await logger.log_performance_metric(
+                    "prompt_creation",
+                    response_time,
+                    {
+                        "request_id": request_id,
+                        "prompt_id": prompt.id,
+                        "category": prompt.category,
+                        "creation_success": True
+                    }
+                )
+
             response = create_success_response(
                 message="Prompt created successfully",
                 data=prompt.to_dict()
             )
             return response.model_dump()
+
         except ValueError as e:
+            error_time = time.time() - start_time
+
+            # Log validation error
+            if logger:
+                await logger.log_error(
+                    f"Prompt creation validation failed: {str(e)}",
+                    {
+                        "request_id": request_id,
+                        "prompt_name": prompt_data.name if prompt_data else None,
+                        "category": prompt_data.category if prompt_data else None,
+                        "error_type": "validation_error",
+                        "response_time_seconds": error_time
+                    },
+                    error=e
+                )
+
+                await logger.log_business_event("prompt_creation_validation_failed", {
+                    "request_id": request_id,
+                    "prompt_name": prompt_data.name if prompt_data else None,
+                    "category": prompt_data.category if prompt_data else None,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time
+                })
+
             error_response = create_error_response(str(e), "VALIDATION_ERROR")
             return error_response.model_dump()
+
         except Exception as e:
+            error_time = time.time() - start_time
+
+            # Log internal error
+            if logger:
+                await logger.log_error(
+                    f"Prompt creation failed: {str(e)}",
+                    {
+                        "request_id": request_id,
+                        "prompt_name": prompt_data.name if prompt_data else None,
+                        "category": prompt_data.category if prompt_data else None,
+                        "error_type": type(e).__name__,
+                        "response_time_seconds": error_time
+                    },
+                    error=e
+                )
+
+                await logger.log_business_event("prompt_creation_failed", {
+                    "request_id": request_id,
+                    "prompt_name": prompt_data.name if prompt_data else None,
+                    "category": prompt_data.category if prompt_data else None,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time
+                })
+
             error_response = create_error_response(f"Failed to create prompt: {str(e)}", "INTERNAL_ERROR")
             return error_response.model_dump()
 

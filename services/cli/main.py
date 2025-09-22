@@ -135,6 +135,38 @@ except ImportError:
         VALIDATION_ERROR = "VALIDATION_ERROR"
 
 # ============================================================================
+# LOGGING CLIENT INITIALIZATION
+# ============================================================================
+try:
+    from services.shared.utilities.logging_client import get_log_collector_client
+    logger_client = None
+
+    async def initialize_logger():
+        global logger_client
+        if logger_client is None:
+            try:
+                logger_client = await get_log_collector_client(ServiceNames.CLI)
+                if logger_client:
+                    await logger_client.log_business_event("cli_service_startup", {
+                        "version": "2.0.0",
+                        "capabilities": ["interactive_mode", "command_execution", "service_management", "bulk_operations", "workflow_execution", "data_analysis"],
+                        "integrations": ["all_services", "log_collector", "doc_store", "prompt_store"],
+                        "commands": ["interactive", "health", "analyze-docs", "workflow-run", "bulk-export", "interpret-query"],
+                        "features": ["rich_console_output", "progress_tracking", "error_handling", "bulk_operations"]
+                    })
+                    print("✅ CLI logging initialized")
+            except Exception as e:
+                print(f"Failed to initialize CLI logger: {e}")
+
+    # Initialize logger on import
+    import asyncio
+    asyncio.run(initialize_logger())
+
+except ImportError:
+    logger_client = None
+    print("⚠️  CLI logging not available - shared modules not accessible")
+
+# ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
 try:
@@ -221,10 +253,34 @@ def cli(ctx, verbose):
 @click.pass_context
 def interactive(ctx):
     """Start interactive CLI mode with menu-driven interface for ecosystem operations"""
+    start_time = time.time()
+    session_id = f"cli_session_{int(time.time() * 1000)}"
+
+    # Log interactive session start
+    if logger_client:
+        import asyncio
+        asyncio.run(logger_client.log_business_event("cli_interactive_session_started", {
+            "session_id": session_id,
+            "command": "interactive",
+            "mode": "menu_driven",
+            "capabilities": ["service_management", "bulk_operations", "workflow_execution", "data_analysis"]
+        }))
+
     # Setup interrupt handling for graceful shutdown
     def signal_handler(signum, frame):
         console = Console()
         console.print("\n[yellow]⚠️  Interrupt received. Shutting down gracefully...[/yellow]")
+
+        # Log session interruption
+        if logger_client:
+            import asyncio
+            session_duration = time.time() - start_time
+            asyncio.run(logger_client.log_business_event("cli_interactive_session_interrupted", {
+                "session_id": session_id,
+                "duration_seconds": session_duration,
+                "interruption_type": "signal_interrupt"
+            }))
+
         # Force exit for immediate termination
         os._exit(1)
 
@@ -233,12 +289,47 @@ def interactive(ctx):
 
     try:
         asyncio.run(cli_service.run())
+
+        # Log successful interactive session completion
+        session_duration = time.time() - start_time
+        if logger_client:
+            import asyncio
+            asyncio.run(logger_client.log_business_event("cli_interactive_session_completed", {
+                "session_id": session_id,
+                "duration_seconds": session_duration,
+                "exit_type": "normal_exit",
+                "success": True
+            }))
+
     except KeyboardInterrupt:
         console = Console()
         console.print("\n[yellow]⚠️  CLI interrupted by user[/yellow]")
+
+        # Log user interruption
+        session_duration = time.time() - start_time
+        if logger_client:
+            import asyncio
+            asyncio.run(logger_client.log_business_event("cli_interactive_session_interrupted", {
+                "session_id": session_id,
+                "duration_seconds": session_duration,
+                "interruption_type": "user_interrupt",
+                "exit_type": "keyboard_interrupt"
+            }))
+
     except Exception as e:
         console = Console()
         console.print(f"\n[red]❌ Fatal CLI error: {e}[/red]")
+
+        # Log fatal error
+        session_duration = time.time() - start_time
+        if logger_client:
+            import asyncio
+            asyncio.run(logger_client.log_business_event("cli_interactive_session_failed", {
+                "session_id": session_id,
+                "duration_seconds": session_duration,
+                "exit_type": "fatal_error",
+                "error_message": str(e)
+            }))
 
 @cli.command()
 @click.argument('category')
@@ -276,7 +367,70 @@ def get_prompt(ctx, category, name, content):
 @click.pass_context
 def health(ctx):
     """Check and display health status of all ecosystem services with detailed connectivity information"""
-    asyncio.run(cli_service.display_health_status())
+    start_time = time.time()
+    command_id = f"cli_health_check_{int(time.time() * 1000)}"
+
+    try:
+        # Log health check start
+        if logger_client:
+            import asyncio
+            asyncio.run(logger_client.log_business_event("cli_health_check_started", {
+                "command_id": command_id,
+                "command": "health",
+                "scope": "all_services",
+                "check_type": "connectivity_and_status"
+            }))
+
+        result = asyncio.run(cli_service.display_health_status())
+        processing_time = time.time() - start_time
+
+        # Log successful health check completion
+        if logger_client:
+            import asyncio
+            asyncio.run(logger_client.log_business_event("cli_health_check_completed", {
+                "command_id": command_id,
+                "processing_time_seconds": processing_time,
+                "success": True,
+                "services_checked": ["all_ecosystem_services"]
+            }))
+
+            asyncio.run(logger_client.log_performance_metric(
+                "cli_health_check",
+                processing_time,
+                {
+                    "command_id": command_id,
+                    "command": "health",
+                    "check_success": True
+                }
+            ))
+
+        return result
+
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log health check failure
+        if logger_client:
+            import asyncio
+            asyncio.run(logger_client.log_error(
+                f"CLI health check failed: {str(e)}",
+                {
+                    "command_id": command_id,
+                    "command": "health",
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            ))
+
+            asyncio.run(logger_client.log_business_event("cli_health_check_failed", {
+                "command_id": command_id,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            }))
+
+        raise
 
 @cli.command()
 @click.option('--category', '-c', help='Filter prompts by specific category (e.g., analysis, consistency)')

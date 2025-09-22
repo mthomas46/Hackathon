@@ -18,10 +18,16 @@ import asyncio
 try:
     from services.shared.logging import fire_and_forget
     from services.shared.constants_new import ServiceNames
+    from services.shared.utilities.logging_client import get_log_collector_client
+    import asyncio
+    import time
 except ImportError:
     # Fallback functions if shared modules aren't available
     def fire_and_forget(event_type, message, service, metadata=None):
         print(f"[{service}] {event_type}: {message}")
+
+    async def get_log_collector_client(service_name):
+        return None
 
     class ServiceNames:
         INTERPRETER = "interpreter"
@@ -48,6 +54,32 @@ print(f"🔍 DEBUG: Final sample_documents value: {sample_documents}")
 
 # Create FastAPI app
 app = FastAPI(title="Interpreter Service", version="1.0.0")
+
+# Initialize log collector client
+logger_client = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.INTERPRETER)
+        if logger_client:
+            await logger_client.log_info("Interpreter service started", {
+                "version": "1.0.0",
+                "sample_documents_loaded": sample_documents is not None
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Interpreter service shutting down")
+        except Exception:
+            pass
 
 # ============================================================================
 # BASIC MODELS
@@ -1232,8 +1264,22 @@ async def get_sample_documents(
 @app.post("/documents/sample/context")
 async def get_sample_documents_for_query(query_data: Dict[str, Any]):
     """Get relevant sample documents based on query context."""
+    start_time = time.time()
+    request_id = query_data.get("request_id", f"req_{int(time.time() * 1000)}")
+
     try:
         if sample_documents is None:
+            # Log service unavailability
+            if logger_client:
+                await logger_client.log_error(
+                    "Sample documents module not available",
+                    {
+                        "request_id": request_id,
+                        "endpoint": "/documents/sample/context",
+                        "error_type": "service_unavailable"
+                    }
+                )
+
             return {
                 "error": "Sample documents module not available",
                 "relevant_documents": [],
@@ -1243,78 +1289,208 @@ async def get_sample_documents_for_query(query_data: Dict[str, Any]):
         query = query_data.get("query", "")
         context = query_data.get("context", {})
 
+        # Log query processing start
+        if logger_client:
+            await logger_client.log_info(
+                "Processing document query request",
+                {
+                    "request_id": request_id,
+                    "query_length": len(query),
+                    "context_keys": list(context.keys()) if context else [],
+                    "has_context": bool(context)
+                }
+            )
+
         relevant_documents = sample_documents.get_documents_for_query(query)
+        document_types = list(set(doc.get("type", "") for doc in relevant_documents))
+        categories = list(set(doc.get("category", "") for doc in relevant_documents))
+
+        # Calculate response time
+        response_time = time.time() - start_time
+
+        # Log successful query processing
+        if logger_client:
+            await logger_client.log_business_event("document_query_processed", {
+                "request_id": request_id,
+                "query_length": len(query),
+                "documents_found": len(relevant_documents),
+                "document_types": document_types,
+                "categories": categories,
+                "response_time_seconds": response_time,
+                "has_context": bool(context)
+            })
+
+            # Log performance metric
+            await logger_client.log_performance_metric(
+                "document_query",
+                response_time,
+                {
+                    "request_id": request_id,
+                    "documents_returned": len(relevant_documents),
+                    "query_complexity": "simple" if len(query.split()) < 10 else "complex"
+                }
+            )
 
         return {
             "query": query,
             "context_provided": bool(context),
             "relevant_documents": relevant_documents,
             "total_relevant": len(relevant_documents),
-            "document_types_found": list(set(doc.get("type", "") for doc in relevant_documents)),
-            "categories_found": list(set(doc.get("category", "") for doc in relevant_documents))
+            "document_types_found": document_types,
+            "categories_found": categories,
+            "request_id": request_id,
+            "processing_time_seconds": response_time
         }
 
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log error
+        if logger_client:
+            await logger_client.log_error(
+                f"Document query processing failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "endpoint": "/documents/sample/context",
+                    "error_type": type(e).__name__,
+                    "query_provided": bool(query_data.get("query")),
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            )
+
         return {
             "error": str(e),
-            "relevant_documents": []
+            "relevant_documents": [],
+            "request_id": request_id
         }
 
 @app.get("/documents/sample/types")
 async def get_sample_document_types():
     """Get available document types and their characteristics."""
-    if sample_documents is None:
+    start_time = time.time()
+
+    try:
+        if sample_documents is None:
+            if logger_client:
+                await logger_client.log_error(
+                    "Sample documents module not available for types request",
+                    {
+                        "endpoint": "/documents/sample/types",
+                        "error_type": "service_unavailable"
+                    }
+                )
+
+            return {
+                "error": "Sample documents module not available",
+                "document_types": {},
+                "special_collections": {}
+            }
+
+        # Log request
+        if logger_client:
+            await logger_client.log_info("Retrieving document types information")
+
+        result = {
+            "document_types": {
+                "confluence": {
+                    "description": "Wiki pages and technical documentation",
+                    "characteristics": ["detailed_content", "structured", "technical"],
+                    "count": len(sample_documents.get_documents_by_type("confluence"))
+                },
+                "jira": {
+                    "description": "Issue tracking and project management",
+                    "characteristics": ["actionable", "status_tracking", "team_collaboration"],
+                    "count": len(sample_documents.get_documents_by_type("jira"))
+                },
+                "github": {
+                    "description": "Code repositories and pull requests",
+                    "characteristics": ["code_examples", "version_control", "collaboration"],
+                    "count": len(sample_documents.get_documents_by_type("github"))
+                },
+                "api_docs": {
+                    "description": "API specifications and documentation",
+                    "characteristics": ["technical_reference", "structured", "implementation"],
+                    "count": len(sample_documents.get_documents_by_type("api_docs"))
+                },
+                "meeting_notes": {
+                    "description": "Meeting summaries and discussions",
+                    "characteristics": ["temporal", "decision_tracking", "team_context"],
+                    "count": len(sample_documents.get_documents_by_type("meeting_notes"))
+                },
+                "user_stories": {
+                    "description": "User requirements and feature descriptions",
+                    "characteristics": ["user_centric", "requirements", "acceptance_criteria"],
+                    "count": len(sample_documents.get_documents_by_type("user_stories"))
+                },
+                "design_docs": {
+                    "description": "System design and architecture documents",
+                    "characteristics": ["technical_design", "architecture", "planning"],
+                    "count": len(sample_documents.get_documents_by_type("design_docs"))
+                },
+                "bug_reports": {
+                    "description": "Issue reports and bug tracking",
+                    "characteristics": ["problem_solving", "reproduction_steps", "severity"],
+                    "count": len(sample_documents.get_documents_by_type("bug_reports"))
+                }
+            },
+            "special_collections": {
+                "recent_activities": {
+                    "description": "Recently updated documents and activities",
+                    "characteristics": ["temporal", "recent_changes"],
+                    "count": len(sample_documents.get_recent_documents())
+                },
+                "high_priority": {
+                    "description": "Critical issues and high-priority items",
+                    "characteristics": ["urgent", "attention_required"],
+                    "count": len(sample_documents.get_high_priority_documents())
+                }
+            }
+        }
+
+        # Calculate total documents
+        total_docs = sum(dtype["count"] for dtype in result["document_types"].values())
+        special_docs = sum(special["count"] for special in result["special_collections"].values())
+
+        response_time = time.time() - start_time
+
+        # Log successful response
+        if logger_client:
+            await logger_client.log_business_event("document_types_retrieved", {
+                "total_document_types": len(result["document_types"]),
+                "total_documents": total_docs,
+                "special_collections": len(result["special_collections"]),
+                "special_documents": special_docs,
+                "response_time_seconds": response_time
+            })
+
+        result["metadata"] = {
+            "total_documents": total_docs,
+            "total_types": len(result["document_types"]),
+            "response_time_seconds": response_time
+        }
+
+        return result
+
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        if logger_client:
+            await logger_client.log_error(
+                f"Document types retrieval failed: {str(e)}",
+                {
+                    "endpoint": "/documents/sample/types",
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            )
+
         return {
-            "error": "Sample documents module not available",
+            "error": str(e),
             "document_types": {},
             "special_collections": {}
         }
-
-    return {
-        "document_types": {
-            "confluence": {
-                "description": "Wiki pages and technical documentation",
-                "characteristics": ["detailed_content", "structured", "technical"],
-                "count": len(sample_documents.get_documents_by_type("confluence"))
-            },
-            "jira": {
-                "description": "Issue tracking and project management",
-                "characteristics": ["conversational", "status_tracking", "requirements"],
-                "count": len(sample_documents.get_documents_by_type("jira"))
-            },
-            "pull_request": {
-                "description": "Code review and merge request discussions",
-                "characteristics": ["code_changes", "review_comments", "technical_discussion"],
-                "count": len(sample_documents.get_documents_by_type("pull_request"))
-            }
-        },
-        "special_collections": {
-            "similar_documents": {
-                "description": "Highly similar documents for testing deduplication",
-                "count": len(sample_documents.get_similar_documents())
-            },
-            "contradictory_documents": {
-                "description": "Documents with conflicting information",
-                "count": len(sample_documents.get_contradictory_documents())
-            },
-            "gap_documents": {
-                "description": "Documents identifying development gaps",
-                "count": len(sample_documents.get_gap_documents())
-            },
-            "sparse_documents": {
-                "description": "Documents with minimal content",
-                "count": len(sample_documents.get_sparse_documents())
-            },
-            "blank_documents": {
-                "description": "Documents with empty content",
-                "count": len(sample_documents.get_blank_documents())
-            },
-            "documents_with_comments": {
-                "description": "Documents with conversation history",
-                "count": len(sample_documents.get_documents_with_comments())
-            }
-        }
-    }
 
 if __name__ == "__main__":
     import uvicorn

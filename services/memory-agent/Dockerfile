@@ -10,7 +10,7 @@ LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="memory-agent"
 LABEL version="1.0.0"
 LABEL description="Operational context and event summary storage service"
-LABEL port="5160"
+LABEL port="5040"
 LABEL dependencies="redis"
 LABEL profile="ai_services"
 
@@ -18,7 +18,7 @@ LABEL profile="ai_services"
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     && rm -rf /var/lib/apt/lists/*
@@ -40,8 +40,13 @@ COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV SERVICE_NAME=memory-agent
-ENV SERVICE_PORT=5160
+ENV SERVICE_PORT=5040
 ENV REDIS_HOST=redis
 ENV ENVIRONMENT=development
 
@@ -50,10 +55,10 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5160/health || exit 1
+    CMD curl -f http://localhost:5040/health || exit 1
 
 # Expose port
-EXPOSE 5160
+EXPOSE 5040
 
 USER appuser
 

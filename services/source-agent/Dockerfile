@@ -18,7 +18,7 @@ LABEL profile="core"
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     git \
@@ -41,6 +41,11 @@ COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV SERVICE_NAME=source-agent
 ENV SERVICE_PORT=5070
 ENV REDIS_HOST=redis

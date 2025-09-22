@@ -21,7 +21,9 @@ import json
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.core.responses.responses import create_success_response, create_error_response
 from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import setup_common_middleware, attach_self_register
+from services.shared.utilities.utilities import setup_common_middleware, attach_self_register
+from services.shared.utilities.logging_client import get_log_collector_client
+import time
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS
@@ -46,6 +48,9 @@ class BulkDiscoverRequest(BaseModel):
 # ENHANCED DISCOVERY AGENT APPLICATION
 # ============================================================================
 
+# Initialize log collector client
+logger_client = None
+
 app = FastAPI(
     title="Enhanced Discovery Agent",
     description="Advanced service discovery with ecosystem integration",
@@ -55,6 +60,40 @@ app = FastAPI(
 # Setup middleware and health endpoints
 setup_common_middleware(app, ServiceNames.DISCOVERY_AGENT)
 register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT)
+
+# Register service with orchestrator
+attach_self_register(app, ServiceNames.DISCOVERY_AGENT)
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.DISCOVERY_AGENT)
+        if logger_client:
+            await logger_client.log_business_event("discovery_agent_startup", {
+                "version": "2.0.0",
+                "capabilities": ["service_discovery", "openapi_spec_analysis", "bulk_discovery", "auto_detection", "health_checking", "ecosystem_mapping"],
+                "integrations": ["docker_network", "log_collector"],
+                "features": ["url_normalization", "spec_validation", "endpoint_extraction", "relationship_mapping"]
+            })
+            await logger_client.log_info("Discovery Agent service started", {
+                "enhanced_features": True,
+                "bulk_discovery": True,
+                "auto_detection": True,
+                "network_integration": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Discovery Agent service shutting down")
+        except Exception:
+            pass
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -135,24 +174,70 @@ async def fetch_openapi_spec_with_fallback(base_url: str, openapi_url: str = Non
 @app.post("/discover")
 async def discover_service(request: DiscoverRequest):
     """Enhanced single service discovery with network URL normalization"""
+    start_time = time.time()
+    request_id = f"discovery_{int(time.time() * 1000)}"
+
     try:
-        print(f"🔍 Starting discovery for service: {request.name}")
-        
+        # Log discovery start
+        if logger_client:
+            await logger_client.log_business_event("service_discovery_started", {
+                "request_id": request_id,
+                "service_name": request.name,
+                "base_url": request.base_url,
+                "has_openapi_url": bool(request.openapi_url),
+                "has_inline_spec": bool(request.spec),
+                "dry_run": request.dry_run
+            })
+
+            await logger_client.log_info("Starting service discovery", {
+                "request_id": request_id,
+                "service_name": request.name,
+                "base_url": request.base_url,
+                "discovery_type": "single_service"
+            })
+
         # Normalize URLs for Docker networking
         original_base_url = request.base_url
         normalized_base_url = normalize_service_url(request.base_url, request.name)
         normalized_openapi_url = normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
-        
-        print(f"🔗 URL normalization: {original_base_url} → {normalized_base_url}")
-        
+
         # Fetch OpenAPI spec with fallback
         spec = None
         if normalized_openapi_url:
             spec = await fetch_openapi_spec_with_fallback(normalized_base_url, normalized_openapi_url)
         else:
             spec = await fetch_openapi_spec_with_fallback(normalized_base_url)
-        
+
         if not spec and not request.spec:
+            error_time = time.time() - start_time
+
+            # Log discovery failure
+            if logger_client:
+                await logger_client.log_error(
+                    f"Service discovery failed: Could not fetch OpenAPI spec for {request.name}",
+                    {
+                        "request_id": request_id,
+                        "service_name": request.name,
+                        "base_url": request.base_url,
+                        "error_type": "spec_fetch_failed",
+                        "processing_time_seconds": error_time,
+                        "tried_urls": [
+                            normalized_openapi_url,
+                            f"{normalized_base_url}/openapi.json",
+                            f"{normalized_base_url}/docs/openapi.json",
+                            f"{normalized_base_url}/api/openapi.json"
+                        ]
+                    },
+                    error=Exception("Could not fetch OpenAPI spec from any common location")
+                )
+
+                await logger_client.log_business_event("service_discovery_failed", {
+                    "request_id": request_id,
+                    "service_name": request.name,
+                    "error_type": "spec_fetch_failed",
+                    "processing_time_seconds": error_time
+                })
+
             return create_error_response(
                 message="Failed to discover endpoints",
                 error_code=ErrorCodes.INTERNAL_ERROR,
@@ -168,16 +253,38 @@ async def discover_service(request: DiscoverRequest):
                     ]
                 }
             )
-        
+
         # Use provided spec if fetching failed
         if not spec and request.spec:
             spec = request.spec
-        
+
         # Extract endpoints and process
         endpoints = extract_endpoints_from_spec(spec)
-        
-        print(f"✅ Discovered {len(endpoints)} endpoints for {request.name}")
-        
+        processing_time = time.time() - start_time
+
+        # Log successful discovery
+        if logger_client:
+            await logger_client.log_business_event("service_discovery_completed", {
+                "request_id": request_id,
+                "service_name": request.name,
+                "base_url": normalized_base_url,
+                "endpoints_discovered": len(endpoints),
+                "processing_time_seconds": processing_time,
+                "spec_source": "fetched" if spec and not request.spec else "inline",
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "service_discovery",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "service_name": request.name,
+                    "endpoints_discovered": len(endpoints),
+                    "discovery_success": True
+                }
+            )
+
         # Create discovery response
         discovery_data = {
             "service_name": request.name,
@@ -190,18 +297,40 @@ async def discover_service(request: DiscoverRequest):
             "dry_run": request.dry_run,
             "discovery_timestamp": datetime.utcnow().isoformat() + "Z"
         }
-        
+
         return create_success_response(discovery_data)
-        
+
     except Exception as e:
-        print(f"❌ Discovery failed for {request.name}: {e}")
+        error_time = time.time() - start_time
+
+        # Log discovery exception
+        if logger_client:
+            await logger_client.log_error(
+                f"Service discovery failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "service_name": request.name if 'request' in locals() else None,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("service_discovery_failed", {
+                "request_id": request_id,
+                "service_name": request.name if 'request' in locals() else None,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
         return create_error_response(
             message="Failed to discover endpoints",
             error_code=ErrorCodes.INTERNAL_ERROR,
             details={
                 "error": str(e),
                 "service": ServiceNames.DISCOVERY_AGENT,
-                "service_name": request.name
+                "service_name": request.name if 'request' in locals() else None
             }
         )
 

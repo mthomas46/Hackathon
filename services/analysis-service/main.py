@@ -124,6 +124,9 @@ from services.shared.utilities.error_handling import ServiceException, install_e
 from services.shared.core.constants_new import ServiceNames, ErrorCodes
 from services.shared.utilities.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register, get_service_client
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities.logging_client import get_log_collector_client
+import asyncio
+import time
 
 try:
     import redis.asyncio as aioredis
@@ -150,12 +153,46 @@ from .modules.analysis_handlers import analysis_handlers
 from .modules.report_handlers import report_handlers
 from .modules.integration_handlers import integration_handlers
 
+# Initialize log collector client
+logger_client = None
+
 # Create FastAPI app directly using shared utilities
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Document analysis and consistency checking service for the LLM Documentation Ecosystem",
     version=SERVICE_VERSION
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        logger_client = await get_log_collector_client(ServiceNames.ANALYSIS_SERVICE)
+        if logger_client:
+            await logger_client.log_business_event("analysis_service_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["semantic_analysis", "sentiment_analysis", "quality_analysis", "trend_analysis", "risk_assessment", "maintenance_forecasting", "change_impact_analysis", "automated_remediation", "distributed_processing", "pr_analysis", "architecture_analysis"],
+                "integrations": ["redis", "document_store", "prompt_store", "log_collector"],
+                "analysis_types": ["code", "documentation", "pull_requests", "repositories", "workflows"]
+            })
+            await logger_client.log_info("Analysis service started", {
+                "analysis_capabilities": 15,
+                "integrations_ready": True,
+                "distributed_processing": True,
+                "automated_remediation": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Analysis service shutting down")
+        except Exception:
+            pass
 
 # Use common middleware setup and error handlers to reduce duplication across services
 setup_common_middleware(app, ServiceNames.ANALYSIS_SERVICE)
@@ -411,6 +448,64 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
             error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
+
+
+
+# Configuration loading
+import yaml
+from pathlib import Path
+
+def load_config() -> dict:
+    """Load service configuration from config file."""
+    config_path = Path(__file__).parent / 'config.yaml'
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+# Load configuration
+config = load_config()
+
+# Extract configuration values with environment variable override
+ANALYSIS_DB_PATH = os.getenv('ANALYSIS_DB_PATH', config.get('analysis-db-path', 'default_value'))
+CACHE_CONNECTION_TIMEOUT = os.getenv('CACHE_CONNECTION_TIMEOUT', config.get('cache-connection-timeout', 'default_value'))
+CACHE_DEFAULT_TTL = os.getenv('CACHE_DEFAULT_TTL', config.get('cache-default-ttl', 'default_value'))
+CACHE_ENABLE_COMPRESSION = os.getenv('CACHE_ENABLE_COMPRESSION', config.get('cache-enable-compression', 'default_value'))
+CACHE_MAX_MEMORY = os.getenv('CACHE_MAX_MEMORY', config.get('cache-max-memory', 'default_value'))
+CACHE_MAX_RETRIES = os.getenv('CACHE_MAX_RETRIES', config.get('cache-max-retries', 'default_value'))
+CACHE_POOL_SIZE = os.getenv('CACHE_POOL_SIZE', config.get('cache-pool-size', 'default_value'))
+CACHE_RETRY_ON_TIMEOUT = os.getenv('CACHE_RETRY_ON_TIMEOUT', config.get('cache-retry-on-timeout', 'default_value'))
+DB_CONNECTION_TIMEOUT = os.getenv('DB_CONNECTION_TIMEOUT', config.get('db-connection-timeout', 'default_value'))
+DB_ENABLE_MIGRATIONS = os.getenv('DB_ENABLE_MIGRATIONS', config.get('db-enable-migrations', 'default_value'))
+DB_MAX_CONNECTIONS = os.getenv('DB_MAX_CONNECTIONS', config.get('db-max-connections', 'default_value'))
+DB_MIN_CONNECTIONS = os.getenv('DB_MIN_CONNECTIONS', config.get('db-min-connections', 'default_value'))
+DEBUG = os.getenv('DEBUG', config.get('debug', 'default_value'))
+ENABLE_CACHING = os.getenv('ENABLE_CACHING', config.get('enable-caching', 'default_value'))
+ENABLE_METRICS = os.getenv('ENABLE_METRICS', config.get('enable-metrics', 'default_value'))
+ENABLE_TRACING = os.getenv('ENABLE_TRACING', config.get('enable-tracing', 'default_value'))
+ENVIRONMENT = os.getenv('ENVIRONMENT', config.get('environment', 'default_value'))
+EXTERNAL_MAX_RETRIES = os.getenv('EXTERNAL_MAX_RETRIES', config.get('external-max-retries', 'default_value'))
+EXTERNAL_REQUEST_TIMEOUT = os.getenv('EXTERNAL_REQUEST_TIMEOUT', config.get('external-request-timeout', 'default_value'))
+EXTERNAL_RETRY_DELAY = os.getenv('EXTERNAL_RETRY_DELAY', config.get('external-retry-delay', 'default_value'))
+HOST = os.getenv('HOST', config.get('host', 'default_value'))
+LOG_LEVEL = os.getenv('LOG_LEVEL', config.get('log-level', 'default_value'))
+MAX_CONCURRENT_REQUESTS = os.getenv('MAX_CONCURRENT_REQUESTS', config.get('max-concurrent-requests', 'default_value'))
+OPENAI_MAX_TOKENS = os.getenv('OPENAI_MAX_TOKENS', config.get('openai-max-tokens', 'default_value'))
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', config.get('openai-model', 'default_value'))
+OPENAI_TEMPERATURE = os.getenv('OPENAI_TEMPERATURE', config.get('openai-temperature', 'default_value'))
+PORT = os.getenv('PORT', config.get('port', 'default_value'))
+POSTGRES_PORT = os.getenv('POSTGRES_PORT', config.get('postgres-port', 'default_value'))
+REDIS_DB = os.getenv('REDIS_DB', config.get('redis-db', 'default_value'))
+REDIS_HOST = os.getenv('REDIS_HOST', config.get('redis-host', 'default_value'))
+REDIS_PORT = os.getenv('REDIS_PORT', config.get('redis-port', 'default_value'))
+REDIS_SSL = os.getenv('REDIS_SSL', config.get('redis-ssl', 'default_value'))
+REQUEST_TIMEOUT = os.getenv('REQUEST_TIMEOUT', config.get('request-timeout', 'default_value'))
+SEMANTIC_BATCH_SIZE = os.getenv('SEMANTIC_BATCH_SIZE', config.get('semantic-batch-size', 'default_value'))
+SEMANTIC_SIMILARITY_THRESHOLD = os.getenv('SEMANTIC_SIMILARITY_THRESHOLD', config.get('semantic-similarity-threshold', 'default_value'))
+SENTIMENT_CONFIDENCE_THRESHOLD = os.getenv('SENTIMENT_CONFIDENCE_THRESHOLD', config.get('sentiment-confidence-threshold', 'default_value'))
+SENTIMENT_MODEL = os.getenv('SENTIMENT_MODEL', config.get('sentiment-model', 'default_value'))
+SERVICE_PORT = os.getenv('SERVICE_PORT', config.get('service-port', 'default_value'))
+TESTING = os.getenv('TESTING', config.get('testing', 'default_value'))
 
 @app.post("/analyze/trends")
 async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):

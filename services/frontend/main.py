@@ -137,6 +137,8 @@ from services.shared.monitoring.health import register_health_endpoints
 from services.shared.core.constants_new import ServiceNames, EnvVars
 from services.shared.utilities import setup_common_middleware
 from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.utilities.logging_client import get_log_collector_client
+import time
 
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
@@ -209,12 +211,50 @@ DEFAULT_PORT = 3000
 # APP INITIALIZATION - Using shared patterns for consistency
 # ============================================================================
 
+# Initialize log collector client
+logger_client = None
+
 # Initialize FastAPI app with shared middleware and error handlers
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="HTML UI service for documentation consistency analysis and reporting"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    global logger_client
+    try:
+        # Use a fallback service name if FRONTEND doesn't exist in ServiceNames
+        service_name = getattr(ServiceNames, "FRONTEND", SERVICE_NAME)
+        logger_client = await get_log_collector_client(service_name)
+        if logger_client:
+            await logger_client.log_business_event("frontend_startup", {
+                "version": SERVICE_VERSION,
+                "capabilities": ["web_ui_dashboard", "real_time_monitoring", "data_visualization", "log_streaming", "service_monitoring", "user_interaction_tracking"],
+                "integrations": ["all_services", "log_collector", "websocket_communication"],
+                "ui_features": ["interactive_dashboards", "real_time_updates", "log_viewer", "service_health_monitoring", "data_browser"],
+                "supported_pages": ["main_dashboard", "findings_reports", "log_dashboard", "service_monitoring", "data_browsers"]
+            })
+            await logger_client.log_info("Frontend service started", {
+                "ui_pages_available": 19,
+                "monitoring_dashboards": 10,
+                "real_time_features": True,
+                "log_integration": True,
+                "websocket_support": True
+            })
+    except Exception as e:
+        print(f"Failed to initialize log collector client: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    if logger_client:
+        try:
+            await logger_client.log_info("Frontend service shutting down")
+        except Exception:
+            pass
 
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 
@@ -424,7 +464,69 @@ async def ui_logs_dashboard():
     Provides a comprehensive dashboard for viewing logs, statistics,
     and real-time log streaming for system monitoring and diagnostics.
     """
-    return ui_handlers.handle_logs_dashboard()
+    start_time = time.time()
+    request_id = f"frontend_logs_dashboard_{int(time.time() * 1000)}"
+
+    try:
+        # Log dashboard access
+        if logger_client:
+            await logger_client.log_business_event("frontend_page_access", {
+                "request_id": request_id,
+                "page": "logs_dashboard",
+                "page_type": "monitoring_dashboard",
+                "features": ["log_viewer", "real_time_streaming", "statistics", "analytics"],
+                "access_type": "user_navigation"
+            })
+
+            await logger_client.log_info("Logs dashboard accessed", {
+                "request_id": request_id,
+                "dashboard_type": "comprehensive_log_viewer",
+                "real_time_enabled": True,
+                "statistics_available": True
+            })
+
+        result = ui_handlers.handle_logs_dashboard()
+
+        processing_time = time.time() - start_time
+
+        # Log successful dashboard rendering
+        if logger_client:
+            await logger_client.log_business_event("frontend_page_rendered", {
+                "request_id": request_id,
+                "page": "logs_dashboard",
+                "render_success": True,
+                "processing_time_seconds": processing_time,
+                "page_type": "monitoring_dashboard"
+            })
+
+        return result
+
+    except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log dashboard rendering failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Frontend logs dashboard rendering failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "page": "logs_dashboard",
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "page_type": "monitoring_dashboard"
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("frontend_page_render_failed", {
+                "request_id": request_id,
+                "page": "logs_dashboard",
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
+        raise
 
 
 @app.get("/doc_store/browser")
@@ -806,8 +908,59 @@ async def fetch_logs(
     Retrieves fresh logs from the log collector and updates the cache
     for subsequent visualization requests.
     """
+    start_time = time.time()
+    request_id = f"frontend_log_fetch_{int(time.time() * 1000)}"
+
     try:
+        # Log log fetching request
+        if logger_client:
+            await logger_client.log_business_event("frontend_api_call", {
+                "request_id": request_id,
+                "api_endpoint": "fetch_logs",
+                "operation": "log_data_retrieval",
+                "filters_applied": bool(service or level),
+                "service_filter": service,
+                "level_filter": level,
+                "limit_requested": limit,
+                "data_type": "system_logs"
+            })
+
+            await logger_client.log_info("Frontend fetching logs from collector", {
+                "request_id": request_id,
+                "service_filter": service,
+                "level_filter": level,
+                "limit": limit,
+                "log_collector_integration": True
+            })
+
         logs = await fetch_logs_from_collector(service=service, level=level, limit=limit)
+
+        processing_time = time.time() - start_time
+        logs_returned = len(logs)
+
+        # Log successful log fetching
+        if logger_client:
+            await logger_client.log_business_event("frontend_api_success", {
+                "request_id": request_id,
+                "api_endpoint": "fetch_logs",
+                "logs_returned": logs_returned,
+                "processing_time_seconds": processing_time,
+                "filters_applied": bool(service or level),
+                "cache_updated": True,
+                "success": True
+            })
+
+            await logger_client.log_performance_metric(
+                "frontend_log_fetch",
+                processing_time,
+                {
+                    "request_id": request_id,
+                    "logs_returned": logs_returned,
+                    "filters_used": bool(service or level),
+                    "fetch_success": True,
+                    "log_collector_response_time": processing_time
+                }
+            )
 
         return create_frontend_success_response(
             f"fetched {len(logs)} logs",
@@ -816,6 +969,33 @@ async def fetch_logs(
         )
 
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log log fetching failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Frontend log fetching failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "api_endpoint": "fetch_logs",
+                    "service_filter": service,
+                    "level_filter": level,
+                    "limit_requested": limit,
+                    "error_type": type(e).__name__,
+                    "processing_time_seconds": error_time,
+                    "log_collector_failure": True
+                },
+                error=e
+            )
+
+            await logger_client.log_business_event("frontend_api_failed", {
+                "request_id": request_id,
+                "api_endpoint": "fetch_logs",
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "processing_time_seconds": error_time
+            })
+
         return handle_frontend_error("fetch logs", e, **build_frontend_context("fetch_logs"))
 
 
