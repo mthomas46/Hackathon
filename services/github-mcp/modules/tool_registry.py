@@ -2,12 +2,15 @@
 
 Manages tool definitions, toolsets, and filtering.
 """
-from typing import Dict, List, Optional, Set, Any
+
+from typing import Any, Dict, List, Optional, Set
+
 from pydantic import BaseModel
 
 
 class ToolDescription(BaseModel):
     """Description of a tool with input schema."""
+
     name: str
     description: str
     input_schema: Dict[str, Any]
@@ -43,42 +46,85 @@ class ToolRegistry:
             ToolDescription(
                 name="github.search_repos",
                 description="Search repositories by keyword",
-                input_schema={"type": "object", "properties": {"q": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["q"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {"q": {"type": "string"}, "limit": {"type": "integer"}},
+                    "required": ["q"],
+                },
             ),
             ToolDescription(
                 name="github.get_repo",
                 description="Get repository metadata",
-                input_schema={"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}}, "required": ["owner", "repo"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}},
+                    "required": ["owner", "repo"],
+                },
             ),
             ToolDescription(
                 name="github.list_prs",
                 description="List pull requests for a repository",
-                input_schema={"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}, "state": {"type": "string"}}, "required": ["owner", "repo"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "owner": {"type": "string"},
+                        "repo": {"type": "string"},
+                        "state": {"type": "string"},
+                    },
+                    "required": ["owner", "repo"],
+                },
             ),
             ToolDescription(
                 name="github.get_pr_diff",
                 description="Get the diff for a pull request",
-                input_schema={"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}, "number": {"type": "integer"}}, "required": ["owner", "repo", "number"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "owner": {"type": "string"},
+                        "repo": {"type": "string"},
+                        "number": {"type": "integer"},
+                    },
+                    "required": ["owner", "repo", "number"],
+                },
             ),
             ToolDescription(
                 name="github.search_issues",
                 description="Search issues by query",
-                input_schema={"type": "object", "properties": {"q": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["q"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {"q": {"type": "string"}, "limit": {"type": "integer"}},
+                    "required": ["q"],
+                },
             ),
             ToolDescription(
                 name="github.list_workflows",
                 description="List GitHub Actions workflows for a repo (mock)",
-                input_schema={"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}}, "required": ["owner", "repo"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}},
+                    "required": ["owner", "repo"],
+                },
             ),
             ToolDescription(
                 name="github.list_global_security_advisories",
                 description="List global security advisories (mock)",
-                input_schema={"type": "object", "properties": {"severity": {"type": "string"}, "limit": {"type": "integer"}}},
+                input_schema={
+                    "type": "object",
+                    "properties": {"severity": {"type": "string"}, "limit": {"type": "integer"}},
+                },
             ),
             ToolDescription(
                 name="github.search_users",
                 description="Search users (mock)",
-                input_schema={"type": "object", "properties": {"query": {"type": "string"}, "perPage": {"type": "integer"}, "page": {"type": "integer"}}, "required": ["query"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "perPage": {"type": "integer"},
+                        "page": {"type": "integer"},
+                    },
+                    "required": ["query"],
+                },
             ),
             ToolDescription(
                 name="github.create_issue",
@@ -89,9 +135,9 @@ class ToolRegistry:
                         "owner": {"type": "string"},
                         "repo": {"type": "string"},
                         "title": {"type": "string"},
-                        "body": {"type": "string"}
+                        "body": {"type": "string"},
                     },
-                    "required": ["owner", "repo", "title"]
+                    "required": ["owner", "repo", "title"],
                 },
             ),
             ToolDescription(
@@ -103,9 +149,9 @@ class ToolRegistry:
                         "owner": {"type": "string"},
                         "repo": {"type": "string"},
                         "issue_number": {"type": "integer"},
-                        "comment": {"type": "string"}
+                        "comment": {"type": "string"},
                     },
-                    "required": ["owner", "repo", "issue_number", "comment"]
+                    "required": ["owner", "repo", "issue_number", "comment"],
                 },
             ),
         ]

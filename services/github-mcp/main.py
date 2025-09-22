@@ -16,33 +16,36 @@ Responsibilities:
 
 Dependencies: shared middlewares, httpx for HTTP requests, GitHub API credentials.
 """
-from typing import Dict, Any, List, Optional, Set
+
+import time
+from typing import Any, Dict, List, Optional, Set
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
-from services.shared.utilities import attach_self_register, setup_common_middleware  # type: ignore
 from services.shared.core.constants_new import ServiceNames  # type: ignore
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+from services.shared.utilities import attach_self_register, setup_common_middleware  # type: ignore
 from services.shared.utilities.logging_client import get_log_collector_client
-import time
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
 try:
     from .modules.config import config
-    from .modules.tool_registry import tool_registry, ToolDescription
+    from .modules.event_system import event_system
     from .modules.mock_implementations import mock_implementations
     from .modules.real_implementations import real_implementations
-    from .modules.event_system import event_system
+    from .modules.tool_registry import ToolDescription, tool_registry
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.config import config
-    from modules.tool_registry import tool_registry, ToolDescription
+    from modules.event_system import event_system
     from modules.mock_implementations import mock_implementations
     from modules.real_implementations import real_implementations
-    from modules.event_system import event_system
+    from modules.tool_registry import ToolDescription, tool_registry
 
 # Service configuration constants
 SERVICE_NAME = "github-mcp"
@@ -60,8 +63,9 @@ logger_client = None
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
-    description="Local GitHub Model Context Protocol server with mock and real implementations"
+    description="Local GitHub Model Context Protocol server with mock and real implementations",
 )
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -72,21 +76,34 @@ async def startup_event():
         service_name = getattr(ServiceNames, "GITHUB", SERVICE_NAME)
         logger_client = await get_log_collector_client(service_name)
         if logger_client:
-            await logger_client.log_business_event("github_mcp_startup", {
-                "version": SERVICE_VERSION,
-                "capabilities": ["github_api_integration", "mcp_tool_execution", "mock_implementations", "read_write_gating", "event_system"],
-                "integrations": ["github_api", "log_collector", "event_system"],
-                "tool_categories": ["repositories", "pull_requests", "issues", "users", "actions", "organizations"],
-                "features": ["mock_mode", "read_only_mode", "tool_filtering", "event_emission"]
-            })
-            await logger_client.log_info("GitHub MCP service started", {
-                "mock_mode_enabled": True,
-                "real_api_enabled": False,  # Default to mock mode
-                "tool_count": len(tool_registry.list_tools()),
-                "supported_categories": ["repos", "prs", "issues", "users", "actions"]
-            })
+            await logger_client.log_business_event(
+                "github_mcp_startup",
+                {
+                    "version": SERVICE_VERSION,
+                    "capabilities": [
+                        "github_api_integration",
+                        "mcp_tool_execution",
+                        "mock_implementations",
+                        "read_write_gating",
+                        "event_system",
+                    ],
+                    "integrations": ["github_api", "log_collector", "event_system"],
+                    "tool_categories": ["repositories", "pull_requests", "issues", "users", "actions", "organizations"],
+                    "features": ["mock_mode", "read_only_mode", "tool_filtering", "event_emission"],
+                },
+            )
+            await logger_client.log_info(
+                "GitHub MCP service started",
+                {
+                    "mock_mode_enabled": True,
+                    "real_api_enabled": False,  # Default to mock mode
+                    "tool_count": len(tool_registry.list_tools()),
+                    "supported_categories": ["repos", "prs", "issues", "users", "actions"],
+                },
+            )
     except Exception as e:
         print(f"Failed to initialize log collector client: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -96,6 +113,7 @@ async def shutdown_event():
             await logger_client.log_info("GitHub MCP service shutting down")
         except Exception:
             pass
+
 
 setup_common_middleware(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB") else SERVICE_NAME)
 attach_self_register(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB") else SERVICE_NAME)
@@ -145,7 +163,7 @@ async def health():
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
-        "description": "GitHub MCP service is operational"
+        "description": "GitHub MCP service is operational",
     }
 
 
@@ -188,8 +206,6 @@ async def list_tools(toolsets: Optional[str] = None):
     return tool_registry.filter_tools_by_toolsets(effective_toolsets)
 
 
-
-
 @app.post("/tools/{tool}/invoke", response_model=InvokeResponse)
 async def invoke(tool: str, payload: InvokeRequest):
     """Invoke a specific GitHub MCP tool with the provided arguments.
@@ -209,23 +225,29 @@ async def invoke(tool: str, payload: InvokeRequest):
 
         # Log tool invocation start
         if logger_client:
-            await logger_client.log_business_event("github_mcp_tool_invocation_started", {
-                "request_id": request_id,
-                "tool": tool,
-                "execution_mode": "mock" if use_mock_mode else "real_api",
-                "is_write_operation": bool(payload.write),
-                "correlation_id": payload.correlation_id,
-                "argument_count": len(payload.arguments) if payload.arguments else 0,
-                "upstream_proxy": config.should_use_official_mcp()
-            })
+            await logger_client.log_business_event(
+                "github_mcp_tool_invocation_started",
+                {
+                    "request_id": request_id,
+                    "tool": tool,
+                    "execution_mode": "mock" if use_mock_mode else "real_api",
+                    "is_write_operation": bool(payload.write),
+                    "correlation_id": payload.correlation_id,
+                    "argument_count": len(payload.arguments) if payload.arguments else 0,
+                    "upstream_proxy": config.should_use_official_mcp(),
+                },
+            )
 
-            await logger_client.log_info("Invoking GitHub MCP tool", {
-                "request_id": request_id,
-                "tool": tool,
-                "execution_mode": "mock" if use_mock_mode else "real_api",
-                "read_only_mode": config.is_read_only(),
-                "upstream_proxy_enabled": config.should_use_official_mcp()
-            })
+            await logger_client.log_info(
+                "Invoking GitHub MCP tool",
+                {
+                    "request_id": request_id,
+                    "tool": tool,
+                    "execution_mode": "mock" if use_mock_mode else "real_api",
+                    "read_only_mode": config.is_read_only(),
+                    "upstream_proxy_enabled": config.should_use_official_mcp(),
+                },
+            )
 
         # Gate write operations when in read-only mode
         if config.is_read_only() and payload.write:
@@ -239,17 +261,20 @@ async def invoke(tool: str, payload: InvokeRequest):
                         "request_id": request_id,
                         "tool": tool,
                         "error_type": "read_only_violation",
-                        "processing_time_seconds": error_time
+                        "processing_time_seconds": error_time,
                     },
-                    error=Exception("Read-only mode enabled - write operations not allowed")
+                    error=Exception("Read-only mode enabled - write operations not allowed"),
                 )
 
-                await logger_client.log_business_event("github_mcp_tool_invocation_blocked", {
-                    "request_id": request_id,
-                    "tool": tool,
-                    "block_reason": "read_only_mode",
-                    "processing_time_seconds": error_time
-                })
+                await logger_client.log_business_event(
+                    "github_mcp_tool_invocation_blocked",
+                    {
+                        "request_id": request_id,
+                        "tool": tool,
+                        "block_reason": "read_only_mode",
+                        "processing_time_seconds": error_time,
+                    },
+                )
 
             raise HTTPException(status_code=403, detail="Read-only mode enabled - write operations not allowed")
 
@@ -259,22 +284,24 @@ async def invoke(tool: str, payload: InvokeRequest):
             try:
                 service_clients = ServiceClients(timeout=DEFAULT_UPSTREAM_TIMEOUT_SECONDS)
                 upstream_response = await service_clients.post_json(
-                    f"{upstream_base_url}/tools/{tool}/invoke",
-                    payload.model_dump()
+                    f"{upstream_base_url}/tools/{tool}/invoke", payload.model_dump()
                 )
 
                 processing_time = time.time() - start_time
 
                 # Log successful upstream proxy invocation
                 if logger_client:
-                    await logger_client.log_business_event("github_mcp_tool_invocation_completed", {
-                        "request_id": request_id,
-                        "tool": tool,
-                        "execution_mode": "upstream_proxy",
-                        "upstream_url": upstream_base_url,
-                        "processing_time_seconds": processing_time,
-                        "success": True
-                    })
+                    await logger_client.log_business_event(
+                        "github_mcp_tool_invocation_completed",
+                        {
+                            "request_id": request_id,
+                            "tool": tool,
+                            "execution_mode": "upstream_proxy",
+                            "upstream_url": upstream_base_url,
+                            "processing_time_seconds": processing_time,
+                            "success": True,
+                        },
+                    )
 
                     await logger_client.log_performance_metric(
                         "github_mcp_tool_invocation",
@@ -283,8 +310,8 @@ async def invoke(tool: str, payload: InvokeRequest):
                             "request_id": request_id,
                             "tool": tool,
                             "execution_mode": "upstream_proxy",
-                            "invocation_success": True
-                        }
+                            "invocation_success": True,
+                        },
                     )
 
                 return InvokeResponse(tool=tool, success=True, result=upstream_response)
@@ -301,25 +328,25 @@ async def invoke(tool: str, payload: InvokeRequest):
                             "tool": tool,
                             "upstream_url": upstream_base_url,
                             "error_type": type(upstream_error).__name__,
-                            "processing_time_seconds": error_time
+                            "processing_time_seconds": error_time,
                         },
-                        error=upstream_error
+                        error=upstream_error,
                     )
 
-                    await logger_client.log_business_event("github_mcp_tool_invocation_failed", {
-                        "request_id": request_id,
-                        "tool": tool,
-                        "execution_mode": "upstream_proxy",
-                        "upstream_url": upstream_base_url,
-                        "error_type": type(upstream_error).__name__,
-                        "error_message": str(upstream_error),
-                        "processing_time_seconds": error_time
-                    })
+                    await logger_client.log_business_event(
+                        "github_mcp_tool_invocation_failed",
+                        {
+                            "request_id": request_id,
+                            "tool": tool,
+                            "execution_mode": "upstream_proxy",
+                            "upstream_url": upstream_base_url,
+                            "error_type": type(upstream_error).__name__,
+                            "error_message": str(upstream_error),
+                            "processing_time_seconds": error_time,
+                        },
+                    )
 
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"Upstream GitHub MCP server error: {upstream_error}"
-                )
+                raise HTTPException(status_code=502, detail=f"Upstream GitHub MCP server error: {upstream_error}")
 
         # Execute tool using local implementations
         try:
@@ -339,16 +366,19 @@ async def invoke(tool: str, payload: InvokeRequest):
 
             # Log successful local tool invocation
             if logger_client:
-                await logger_client.log_business_event("github_mcp_tool_invocation_completed", {
-                    "request_id": request_id,
-                    "tool": tool,
-                    "execution_mode": "mock" if use_mock_mode else "real_api",
-                    "result_size_bytes": result_size,
-                    "has_data": has_data,
-                    "processing_time_seconds": processing_time,
-                    "events_emitted": True,  # Assuming event emission was attempted
-                    "success": True
-                })
+                await logger_client.log_business_event(
+                    "github_mcp_tool_invocation_completed",
+                    {
+                        "request_id": request_id,
+                        "tool": tool,
+                        "execution_mode": "mock" if use_mock_mode else "real_api",
+                        "result_size_bytes": result_size,
+                        "has_data": has_data,
+                        "processing_time_seconds": processing_time,
+                        "events_emitted": True,  # Assuming event emission was attempted
+                        "success": True,
+                    },
+                )
 
                 await logger_client.log_performance_metric(
                     "github_mcp_tool_invocation",
@@ -358,8 +388,8 @@ async def invoke(tool: str, payload: InvokeRequest):
                         "tool": tool,
                         "execution_mode": "mock" if use_mock_mode else "real_api",
                         "invocation_success": True,
-                        "result_has_data": has_data
-                    }
+                        "result_has_data": has_data,
+                    },
                 )
 
             return InvokeResponse(tool=tool, success=True, result=tool_result)
@@ -379,19 +409,22 @@ async def invoke(tool: str, payload: InvokeRequest):
                         "tool": tool,
                         "execution_mode": "mock" if use_mock_mode else "real_api",
                         "error_type": type(execution_error).__name__,
-                        "processing_time_seconds": error_time
+                        "processing_time_seconds": error_time,
                     },
-                    error=execution_error
+                    error=execution_error,
                 )
 
-                await logger_client.log_business_event("github_mcp_tool_invocation_failed", {
-                    "request_id": request_id,
-                    "tool": tool,
-                    "execution_mode": "mock" if use_mock_mode else "real_api",
-                    "error_type": type(execution_error).__name__,
-                    "error_message": str(execution_error),
-                    "processing_time_seconds": error_time
-                })
+                await logger_client.log_business_event(
+                    "github_mcp_tool_invocation_failed",
+                    {
+                        "request_id": request_id,
+                        "tool": tool,
+                        "execution_mode": "mock" if use_mock_mode else "real_api",
+                        "error_type": type(execution_error).__name__,
+                        "error_message": str(execution_error),
+                        "processing_time_seconds": error_time,
+                    },
+                )
 
             # Wrap other exceptions in 500 error
             raise HTTPException(status_code=500, detail=f"Tool execution failed: {execution_error}")
@@ -408,11 +441,11 @@ async def invoke(tool: str, payload: InvokeRequest):
                 f"GitHub MCP tool invocation failed unexpectedly: {str(unexpected_error)}",
                 {
                     "request_id": request_id,
-                    "tool": tool if 'tool' in locals() else None,
+                    "tool": tool if "tool" in locals() else None,
                     "error_type": "unexpected_error",
-                    "processing_time_seconds": error_time
+                    "processing_time_seconds": error_time,
                 },
-                error=unexpected_error
+                error=unexpected_error,
             )
 
         raise HTTPException(status_code=500, detail=f"Unexpected error: {unexpected_error}")
@@ -421,9 +454,5 @@ async def invoke(tool: str, payload: InvokeRequest):
 if __name__ == "__main__":
     """Run the GitHub MCP service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

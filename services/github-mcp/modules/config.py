@@ -2,6 +2,7 @@
 
 Handles environment variable parsing and configuration settings.
 """
+
 import os
 from typing import Optional, Set
 
