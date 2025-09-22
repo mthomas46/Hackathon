@@ -3,8 +3,10 @@
 Handles loading hub configuration from YAML files and merging provider
 configurations with defaults for consistent service operation.
 """
-from typing import Dict, Any, Optional
-from services.shared.core.config.config import load_yaml_config, get_config_value
+
+from typing import Any, Dict, Optional
+
+from services.shared.core.config.config import get_config_value, load_yaml_config
 
 
 class ConfigManager:
@@ -26,10 +28,7 @@ class ConfigManager:
             Dictionary containing hub configuration, or empty dict if loading fails
         """
         config_path = get_config_value(
-            "SH_CONFIG",
-            "services/summarizer-hub/config.yaml",
-            section="summarizer_hub",
-            env_key="SH_CONFIG"
+            "SH_CONFIG", "services/summarizer-hub/config.yaml", section="summarizer_hub", env_key="SH_CONFIG"
         )
         return load_yaml_config(config_path)
 

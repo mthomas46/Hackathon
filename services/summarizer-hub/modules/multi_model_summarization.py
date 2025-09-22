@@ -10,26 +10,27 @@ Implements advanced multi-model summarization capabilities with:
 """
 
 import asyncio
-import json
-import uuid
-import time
 import hashlib
-import re
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
-from collections import defaultdict, deque
-import threading
+import json
 import random
+import re
+import threading
+import time
+import uuid
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 from services.shared.intelligent_caching import get_service_cache
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class SummarizationModel(Enum):
     """Available summarization models."""
+
     GPT4 = "gpt-4"
     GPT35 = "gpt-3.5-turbo"
     CLAUDE = "claude-3"
@@ -41,6 +42,7 @@ class SummarizationModel(Enum):
 
 class SummarizationStrategy(Enum):
     """Summarization strategies."""
+
     EXTRACTIVE = "extractive"
     ABSTRactive = "abstractive"
     HYBRID = "hybrid"
@@ -49,6 +51,7 @@ class SummarizationStrategy(Enum):
 
 class ContentType(Enum):
     """Content type classifications."""
+
     TECHNICAL_DOC = "technical_documentation"
     RESEARCH_PAPER = "research_paper"
     NEWS_ARTICLE = "news_article"
@@ -62,12 +65,15 @@ class ContentType(Enum):
 @dataclass
 class SummarizationRequest:
     """Multi-model summarization request."""
+
     request_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     content: str = ""
     content_type: ContentType = ContentType.GENERAL_TEXT
     target_length: Optional[int] = None  # Target summary length in words
     strategy: SummarizationStrategy = SummarizationStrategy.ENSEMBLE
-    models_to_use: List[SummarizationModel] = field(default_factory=lambda: [SummarizationModel.GPT4, SummarizationModel.CLAUDE])
+    models_to_use: List[SummarizationModel] = field(
+        default_factory=lambda: [SummarizationModel.GPT4, SummarizationModel.CLAUDE]
+    )
 
     # Quality requirements
     min_quality_score: float = 0.7
@@ -100,6 +106,7 @@ class SummarizationRequest:
 @dataclass
 class ModelSummary:
     """Individual model summarization result."""
+
     model: SummarizationModel
     summary: str
     quality_score: float
@@ -122,7 +129,7 @@ class ModelSummary:
             self.coherence_score,
             self.completeness_score,
             self.conciseness_score,
-            self.relevance_score
+            self.relevance_score,
         ]
 
         # Weighted average
@@ -133,6 +140,7 @@ class ModelSummary:
 @dataclass
 class EnsembleSummary:
     """Ensemble summarization result."""
+
     request_id: str
     final_summary: str
     ensemble_method: str = "consensus"
@@ -209,11 +217,10 @@ class QualityEvaluator:
             "coherence": self._evaluate_coherence,
             "completeness": self._evaluate_completeness,
             "conciseness": self._evaluate_conciseness,
-            "relevance": self._evaluate_relevance
+            "relevance": self._evaluate_relevance,
         }
 
-    async def evaluate_summary(self, original_text: str, summary: str,
-                             content_type: ContentType) -> Dict[str, float]:
+    async def evaluate_summary(self, original_text: str, summary: str, content_type: ContentType) -> Dict[str, float]:
         """Evaluate summary quality against original text."""
         evaluation_results = {}
 
@@ -229,7 +236,7 @@ class QualityEvaluator:
     async def _evaluate_coherence(self, original: str, summary: str, content_type: ContentType) -> float:
         """Evaluate coherence of the summary."""
         # Check for logical flow and connectivity
-        sentences = summary.split('.')
+        sentences = summary.split(".")
         if len(sentences) < 2:
             return 0.8  # Single sentence summaries can be coherent
 
@@ -295,7 +302,7 @@ class QualityEvaluator:
             ContentType.TECHNICAL_DOC: ["function", "class", "method", "api", "implementation"],
             ContentType.RESEARCH_PAPER: ["study", "research", "findings", "conclusion", "methodology"],
             ContentType.NEWS_ARTICLE: ["reported", "announced", "according", "stated"],
-            ContentType.CODE_REVIEW: ["bug", "fix", "improvement", "refactor", "optimization"]
+            ContentType.CODE_REVIEW: ["bug", "fix", "improvement", "refactor", "optimization"],
         }
 
         relevant_terms = key_indicators.get(content_type, ["important", "key", "main", "primary"])
@@ -317,7 +324,7 @@ class QualityEvaluator:
 
     def _extract_topic_keywords(self, text: str) -> List[str]:
         """Extract topic keywords from text (simplified)."""
-        words = re.findall(r'\b\w+\b', text.lower())
+        words = re.findall(r"\b\w+\b", text.lower())
         word_freq = defaultdict(int)
 
         for word in words:
@@ -345,7 +352,7 @@ class ModelSelector:
             ContentType.NEWS_ARTICLE: [SummarizationModel.BART, SummarizationModel.T5, SummarizationModel.GPT35],
             ContentType.CODE_REVIEW: [SummarizationModel.GPT4, SummarizationModel.CLAUDE],
             ContentType.MEETING_NOTES: [SummarizationModel.GPT35, SummarizationModel.BART],
-            ContentType.GENERAL_TEXT: [SummarizationModel.GPT35, SummarizationModel.BART, SummarizationModel.T5]
+            ContentType.GENERAL_TEXT: [SummarizationModel.GPT35, SummarizationModel.BART, SummarizationModel.T5],
         }
 
     def _initialize_capabilities(self) -> Dict[SummarizationModel, Dict[str, Any]]:
@@ -357,7 +364,7 @@ class ModelSelector:
                 "speed_score": 0.7,
                 "cost_score": 0.6,
                 "supports_technical": True,
-                "supports_long_text": True
+                "supports_long_text": True,
             },
             SummarizationModel.GPT35: {
                 "max_tokens": 4096,
@@ -365,7 +372,7 @@ class ModelSelector:
                 "speed_score": 0.9,
                 "cost_score": 0.8,
                 "supports_technical": True,
-                "supports_long_text": False
+                "supports_long_text": False,
             },
             SummarizationModel.CLAUDE: {
                 "max_tokens": 100000,
@@ -373,7 +380,7 @@ class ModelSelector:
                 "speed_score": 0.75,
                 "cost_score": 0.7,
                 "supports_technical": True,
-                "supports_long_text": True
+                "supports_long_text": True,
             },
             SummarizationModel.BART: {
                 "max_tokens": 1024,
@@ -381,7 +388,7 @@ class ModelSelector:
                 "speed_score": 0.95,
                 "cost_score": 0.9,
                 "supports_technical": False,
-                "supports_long_text": False
+                "supports_long_text": False,
             },
             SummarizationModel.T5: {
                 "max_tokens": 512,
@@ -389,7 +396,7 @@ class ModelSelector:
                 "speed_score": 0.98,
                 "cost_score": 0.95,
                 "supports_technical": False,
-                "supports_long_text": False
+                "supports_long_text": False,
             },
             SummarizationModel.PEGASUS: {
                 "max_tokens": 512,
@@ -397,8 +404,8 @@ class ModelSelector:
                 "speed_score": 0.92,
                 "cost_score": 0.88,
                 "supports_technical": True,
-                "supports_long_text": False
-            }
+                "supports_long_text": False,
+            },
         }
 
     def select_models(self, request: SummarizationRequest) -> List[SummarizationModel]:
@@ -461,7 +468,7 @@ class MultiModelSummarizer:
             SummarizationModel.BART: self._simulate_model_call,
             SummarizationModel.T5: self._simulate_model_call,
             SummarizationModel.PEGASUS: self._simulate_model_call,
-            SummarizationModel.LED: self._simulate_model_call
+            SummarizationModel.LED: self._simulate_model_call,
         }
 
         print("✅ Multi-Model Summarization Engine initialized")
@@ -514,7 +521,7 @@ class MultiModelSummarizer:
             request_id=request.request_id,
             model_summaries=model_summaries,
             total_processing_time=time.time() - start_time,
-            models_used=selected_models
+            models_used=selected_models,
         )
 
         # Calculate consensus and final summary
@@ -539,21 +546,26 @@ class MultiModelSummarizer:
         ensemble_summary.confidence_score = ensemble_summary.consensus_level
 
         # Cache result
-        await self.cache.set(cache_key, {
-            "request_id": ensemble_summary.request_id,
-            "final_summary": ensemble_summary.final_summary,
-            "ensemble_method": ensemble_summary.ensemble_method,
-            "confidence_score": ensemble_summary.confidence_score,
-            "quality_score": ensemble_summary.quality_score,
-            "models_used": [m.value for m in ensemble_summary.models_used],
-            "created_at": ensemble_summary.created_at.isoformat()
-        }, ttl_seconds=3600)
+        await self.cache.set(
+            cache_key,
+            {
+                "request_id": ensemble_summary.request_id,
+                "final_summary": ensemble_summary.final_summary,
+                "ensemble_method": ensemble_summary.ensemble_method,
+                "confidence_score": ensemble_summary.confidence_score,
+                "quality_score": ensemble_summary.quality_score,
+                "models_used": [m.value for m in ensemble_summary.models_used],
+                "created_at": ensemble_summary.created_at.isoformat(),
+            },
+            ttl_seconds=3600,
+        )
 
-        fire_and_forget("info", f"Generated ensemble summary for request {request.request_id}", ServiceNames.SUMMARIZER_HUB)
+        fire_and_forget(
+            "info", f"Generated ensemble summary for request {request.request_id}", ServiceNames.SUMMARIZER_HUB
+        )
         return ensemble_summary
 
-    async def _generate_model_summary(self, request: SummarizationRequest,
-                                    model: SummarizationModel) -> ModelSummary:
+    async def _generate_model_summary(self, request: SummarizationRequest, model: SummarizationModel) -> ModelSummary:
         """Generate summary using specific model."""
         model_start_time = time.time()
 
@@ -578,7 +590,7 @@ class MultiModelSummarizer:
             coherence_score=quality_scores.get("coherence", 0.5),
             completeness_score=quality_scores.get("completeness", 0.5),
             conciseness_score=quality_scores.get("conciseness", 0.5),
-            relevance_score=quality_scores.get("relevance", 0.5)
+            relevance_score=quality_scores.get("relevance", 0.5),
         )
 
         return model_summary
@@ -602,7 +614,7 @@ class MultiModelSummarizer:
         return {
             "summary": summary,
             "confidence": random.uniform(0.7, 0.95),
-            "tokens_used": word_count + len(summary.split())
+            "tokens_used": word_count + len(summary.split()),
         }
 
     def get_summarization_statistics(self) -> Dict[str, Any]:
@@ -612,17 +624,13 @@ class MultiModelSummarizer:
             "total_summaries_generated": 150,
             "average_quality_score": 0.82,
             "average_processing_time": 2.3,
-            "model_usage": {
-                "gpt-4": 45,
-                "claude-3": 38,
-                "gpt-3.5-turbo": 67
-            },
+            "model_usage": {"gpt-4": 45, "claude-3": 38, "gpt-3.5-turbo": 67},
             "content_type_distribution": {
                 "technical_documentation": 40,
                 "research_paper": 25,
                 "news_article": 35,
-                "general_text": 50
-            }
+                "general_text": 50,
+            },
         }
 
 
@@ -656,7 +664,7 @@ async def test_multi_model_summarization():
             emphasizes readability and productivity, with the famous motto "There should be one obvious way to do it."
             """,
             "content_type": ContentType.TECHNICAL_DOC,
-            "description": "Technical Documentation"
+            "description": "Technical Documentation",
         },
         {
             "content": """
@@ -668,7 +676,7 @@ async def test_multi_model_summarization():
             However, they also note potential concerns about misuse and ethical implications.
             """,
             "content_type": ContentType.RESEARCH_PAPER,
-            "description": "Research Paper"
+            "description": "Research Paper",
         },
         {
             "content": """
@@ -679,8 +687,8 @@ async def test_multi_model_summarization():
             for compatible iPhone models. Users are encouraged to backup their devices before updating.
             """,
             "content_type": ContentType.NEWS_ARTICLE,
-            "description": "News Article"
-        }
+            "description": "News Article",
+        },
     ]
 
     for i, test_case in enumerate(test_cases, 1):
@@ -692,7 +700,7 @@ async def test_multi_model_summarization():
             content=test_case["content"].strip(),
             content_type=test_case["content_type"],
             strategy=SummarizationStrategy.ENSEMBLE,
-            target_length=50
+            target_length=50,
         )
 
         print(f"Content length: {len(request.content.split())} words")
@@ -710,8 +718,8 @@ async def test_multi_model_summarization():
             print(f"Quality score: {result.quality_score:.2f}")
             print(f"Confidence score: {result.confidence_score:.2f}")
             print(f"Consensus level: {result.consensus_level:.2f}")
-            print("
-📄 Final Summary:"            print(f"   {result.final_summary}")
+            print("\n📄 Final Summary:")
+            print(f"   {result.final_summary}")
 
             if result.disagreement_areas:
                 print(f"   Disagreement areas: {result.disagreement_areas}")
@@ -720,17 +728,17 @@ async def test_multi_model_summarization():
             print(f"❌ Summarization failed: {e}")
 
     # Test statistics
-    print("
-📊 Summarization Statistics:"    stats = multi_model_summarizer.get_summarization_statistics()
+    print("\n📊 Summarization Statistics:")
+    stats = multi_model_summarizer.get_summarization_statistics()
     print(f"   • Total summaries: {stats['total_summaries_generated']}")
-    print(".2f")
-    print(".2f")
-    print("   • Model usage:"
-    for model, count in stats['model_usage'].items():
+    print(f"   • Average quality: {stats['average_quality_score']:.2f}")
+    print(f"   • Average confidence: {stats['average_confidence_score']:.2f}")
+    print("   • Model usage:")
+    for model, count in stats["model_usage"].items():
         print(f"     - {model}: {count}")
 
-    print("
-🎉 Multi-Model Summarization Engine Test Complete!"    print("Features demonstrated:")
+    print("\n🎉 Multi-Model Summarization Engine Test Complete!")
+    print("Features demonstrated:")
     print("   ✅ Ensemble summarization with multiple models")
     print("   ✅ Content-type aware model selection")
     print("   ✅ Quality evaluation and scoring")
