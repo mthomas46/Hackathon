@@ -1,17 +1,19 @@
 """Tests for Code Analyzer logging integration with LogCollectorClient."""
 
-import pytest
 import asyncio
-import time
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
-import httpx
-
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import sys
+import time
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import httpx
+import pytest
+from fastapi.testclient import TestClient
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from main import app, logger_client
+
 from services.shared.utilities.logging_client import LogCollectorClient
 
 
@@ -45,7 +47,7 @@ class TestCodeAnalyzerLoggingIntegration:
             "code": "def hello():\n    print('Hello, World!')\n\nclass TestClass:\n    def method(self):\n        pass",
             "language": "python",
             "include_functions": True,
-            "include_classes": True
+            "include_classes": True,
         }
 
         response = client.post("/analyze", json=request_data)
@@ -59,38 +61,41 @@ class TestCodeAnalyzerLoggingIntegration:
         assert mock_logger_client.log_performance_metric.call_count == 1
 
         # Check business events
-        business_calls = [call for call in mock_logger_client.log_business_event.call_args_list
-                        if call[0][0] in ['code_analysis_started', 'code_analysis_completed']]
+        business_calls = [
+            call
+            for call in mock_logger_client.log_business_event.call_args_list
+            if call[0][0] in ["code_analysis_started", "code_analysis_completed"]
+        ]
 
         assert len(business_calls) == 2
 
         # Check start event
-        start_call = next(call for call in business_calls if call[0][0] == 'code_analysis_started')
+        start_call = next(call for call in business_calls if call[0][0] == "code_analysis_started")
         start_data = start_call[0][1]
-        assert start_data['language'] == 'python'
-        assert start_data['code_length'] == len(request_data['code'])
-        assert start_data['include_functions'] is True
-        assert start_data['include_classes'] is True
-        assert start_data['analysis_type'] == 'structural'
-        assert 'request_id' in start_data
+        assert start_data["language"] == "python"
+        assert start_data["code_length"] == len(request_data["code"])
+        assert start_data["include_functions"] is True
+        assert start_data["include_classes"] is True
+        assert start_data["analysis_type"] == "structural"
+        assert "request_id" in start_data
 
         # Check completion event
-        completion_call = next(call for call in business_calls if call[0][0] == 'code_analysis_completed')
+        completion_call = next(call for call in business_calls if call[0][0] == "code_analysis_completed")
         completion_data = completion_call[0][1]
-        assert completion_data['language'] == 'python'
-        assert completion_data['functions_found'] == 1  # example_function
-        assert completion_data['classes_found'] == 1   # ExampleClass
-        assert completion_data['patterns_identified'] == 2  # factory, singleton
-        assert completion_data['overall_complexity'] == 5
-        assert completion_data['success'] is True
-        assert 'processing_time_seconds' in completion_data
+        assert completion_data["language"] == "python"
+        assert completion_data["functions_found"] == 1  # example_function
+        assert completion_data["classes_found"] == 1  # ExampleClass
+        assert completion_data["patterns_identified"] == 2  # factory, singleton
+        assert completion_data["overall_complexity"] == 5
+        assert completion_data["success"] is True
+        assert "processing_time_seconds" in completion_data
 
         # Check performance metric
         perf_call = mock_logger_client.log_performance_metric.call_args
-        assert perf_call[0][0] == 'code_analysis'
-        assert 'analysis_success' in perf_call[0][2]
-        assert perf_call[0][2]['analysis_success'] is True
-        assert perf_call[0][2]['elements_found'] == 4  # 1 function + 1 class + 2 patterns
+        assert perf_call[0][0] == "code_analysis"
+        assert "analysis_success" in perf_call[0][2]
+        assert perf_call[0][2]["analysis_success"] is True
+        assert perf_call[0][2]["elements_found"] == 4  # 1 function + 1 class + 2 patterns
 
     @pytest.mark.asyncio
     async def test_code_analysis_minimal_scope_logging(self, client, mock_logger_client):
@@ -100,7 +105,7 @@ class TestCodeAnalyzerLoggingIntegration:
             "code": "print('Hello, World!')",
             "language": "python",
             "include_functions": False,
-            "include_classes": False
+            "include_classes": False,
         }
 
         response = client.post("/analyze", json=request_data)
@@ -115,24 +120,27 @@ class TestCodeAnalyzerLoggingIntegration:
         assert len(analysis_data["classes"]) == 0
 
         # Check completion event reflects minimal scope
-        completion_events = [call for call in mock_logger_client.log_business_event.call_args_list
-                           if call[0][0] == 'code_analysis_completed']
+        completion_events = [
+            call
+            for call in mock_logger_client.log_business_event.call_args_list
+            if call[0][0] == "code_analysis_completed"
+        ]
         assert len(completion_events) >= 1
 
         completion_data = completion_events[0][0][1]
-        assert completion_data['functions_found'] == 0
-        assert completion_data['classes_found'] == 0
-        assert completion_data['patterns_identified'] == 2  # patterns are always included
+        assert completion_data["functions_found"] == 0
+        assert completion_data["classes_found"] == 0
+        assert completion_data["patterns_identified"] == 2  # patterns are always included
 
         # Check performance metric reflects minimal elements found
         perf_call = mock_logger_client.log_performance_metric.call_args
-        assert perf_call[0][2]['elements_found'] == 2  # only patterns
+        assert perf_call[0][2]["elements_found"] == 2  # only patterns
 
     @pytest.mark.asyncio
     async def test_code_analysis_failure_logging(self, client, mock_logger_client):
         """Test failed code analysis logging."""
         # Mock an exception in the analysis
-        with patch('main.time') as mock_time:
+        with patch("main.time") as mock_time:
             mock_time.time.side_effect = [1000.0, Exception("Analysis engine error")]
 
             # Make request
@@ -140,7 +148,7 @@ class TestCodeAnalyzerLoggingIntegration:
                 "code": "def broken_code(",
                 "language": "python",
                 "include_functions": True,
-                "include_classes": True
+                "include_classes": True,
             }
 
             response = client.post("/analyze", json=request_data)
@@ -156,20 +164,23 @@ class TestCodeAnalyzerLoggingIntegration:
 
             # Check error call
             error_call = mock_logger_client.log_error.call_args
-            assert 'Code analysis failed: Analysis engine error' in error_call[0][0]
-            assert error_call[0][1]['language'] == 'python'
-            assert error_call[0][1]['code_length'] == len("def broken_code(")
-            assert error_call[0][1]['error_type'] == 'Exception'
+            assert "Code analysis failed: Analysis engine error" in error_call[0][0]
+            assert error_call[0][1]["language"] == "python"
+            assert error_call[0][1]["code_length"] == len("def broken_code(")
+            assert error_call[0][1]["error_type"] == "Exception"
 
             # Check failure business event
-            failure_events = [call for call in mock_logger_client.log_business_event.call_args_list
-                            if call[0][0] == 'code_analysis_failed']
+            failure_events = [
+                call
+                for call in mock_logger_client.log_business_event.call_args_list
+                if call[0][0] == "code_analysis_failed"
+            ]
             assert len(failure_events) >= 1
 
             failure_data = failure_events[0][0][1]
-            assert failure_data['language'] == 'python'
-            assert failure_data['error_type'] == 'Exception'
-            assert 'Analysis engine error' in failure_data['error_message']
+            assert failure_data["language"] == "python"
+            assert failure_data["error_type"] == "Exception"
+            assert "Analysis engine error" in failure_data["error_message"]
 
     @pytest.mark.asyncio
     async def test_code_analysis_different_languages_logging(self, client, mock_logger_client):
@@ -182,19 +193,22 @@ class TestCodeAnalyzerLoggingIntegration:
                 "code": f"// {language} code sample",
                 "language": language,
                 "include_functions": True,
-                "include_classes": True
+                "include_classes": True,
             }
 
             response = client.post("/analyze", json=request_data)
             assert response.status_code == 200
 
             # Check that language is correctly logged
-            completion_events = [call for call in mock_logger_client.log_business_event.call_args_list
-                               if call[0][0] == 'code_analysis_completed']
+            completion_events = [
+                call
+                for call in mock_logger_client.log_business_event.call_args_list
+                if call[0][0] == "code_analysis_completed"
+            ]
 
             # Get the most recent completion event
             completion_data = completion_events[-1][0][1]
-            assert completion_data['language'] == language
+            assert completion_data["language"] == language
 
     @pytest.mark.asyncio
     async def test_startup_logging(self, mock_logger_client):
@@ -209,15 +223,15 @@ class TestCodeAnalyzerLoggingIntegration:
 
         # Check startup business event
         business_call = mock_logger_client.log_business_event.call_args
-        assert business_call[0][0] == 'code_analyzer_startup'
+        assert business_call[0][0] == "code_analyzer_startup"
         startup_data = business_call[0][1]
-        assert 'capabilities' in startup_data
-        assert 'supported_languages' in startup_data
-        assert 'features' in startup_data
+        assert "capabilities" in startup_data
+        assert "supported_languages" in startup_data
+        assert "features" in startup_data
 
         # Check info logging
         info_call = mock_logger_client.log_info.call_args
-        assert 'Code Analyzer service started' in info_call[0][0]
+        assert "Code Analyzer service started" in info_call[0][0]
 
     @pytest.mark.asyncio
     async def test_shutdown_logging(self, mock_logger_client):
@@ -234,7 +248,7 @@ class TestCodeAnalyzerLoggingIntegration:
         assert mock_logger_client.log_info.call_count >= 1
 
         info_call = mock_logger_client.log_info.call_args
-        assert 'Code Analyzer service shutting down' in info_call[0][0]
+        assert "Code Analyzer service shutting down" in info_call[0][0]
 
     @pytest.mark.asyncio
     async def test_logging_disabled_graceful_handling(self, client):
@@ -248,7 +262,7 @@ class TestCodeAnalyzerLoggingIntegration:
             "code": "def test():\n    pass",
             "language": "python",
             "include_functions": True,
-            "include_classes": False
+            "include_classes": False,
         }
 
         response = client.post("/analyze", json=request_data)
@@ -263,7 +277,7 @@ class TestCodeAnalyzerLoggingIntegration:
             "code": "print('test')",
             "language": "python",
             "include_functions": False,
-            "include_classes": False
+            "include_classes": False,
         }
 
         client.post("/analyze", json=request_data)
@@ -276,14 +290,14 @@ class TestCodeAnalyzerLoggingIntegration:
         request_ids = set()
         for call in business_calls + perf_calls:
             if len(call[0]) > 1 and isinstance(call[0][1], dict):
-                request_id = call[0][1].get('request_id')
+                request_id = call[0][1].get("request_id")
                 if request_id:
                     request_ids.add(request_id)
 
         # All calls should use the same request ID
         assert len(request_ids) == 1
         request_id = list(request_ids)[0]
-        assert request_id.startswith('code_analysis_')
+        assert request_id.startswith("code_analysis_")
 
     @pytest.mark.asyncio
     async def test_performance_metric_accuracy(self, client, mock_logger_client):
@@ -295,7 +309,7 @@ class TestCodeAnalyzerLoggingIntegration:
             "code": "class Test:\n    def method(self):\n        return True",
             "language": "python",
             "include_functions": True,
-            "include_classes": True
+            "include_classes": True,
         }
 
         response = client.post("/analyze", json=request_data)
@@ -319,27 +333,30 @@ class TestCodeAnalyzerLoggingIntegration:
             "code": "def func1():\n    pass\n\ndef func2():\n    pass\n\nclass Class1:\n    pass\n\nclass Class2:\n    pass",
             "language": "python",
             "include_functions": True,
-            "include_classes": True
+            "include_classes": True,
         }
 
         response = client.post("/analyze", json=request_data)
         assert response.status_code == 200
 
         # Check completion event has correct complexity data
-        completion_events = [call for call in mock_logger_client.log_business_event.call_args_list
-                           if call[0][0] == 'code_analysis_completed']
+        completion_events = [
+            call
+            for call in mock_logger_client.log_business_event.call_args_list
+            if call[0][0] == "code_analysis_completed"
+        ]
         assert len(completion_events) >= 1
 
         completion_data = completion_events[0][0][1]
-        assert completion_data['functions_found'] == 1  # example_function
-        assert completion_data['classes_found'] == 1    # ExampleClass
-        assert completion_data['patterns_identified'] == 2
-        assert completion_data['overall_complexity'] == 5
+        assert completion_data["functions_found"] == 1  # example_function
+        assert completion_data["classes_found"] == 1  # ExampleClass
+        assert completion_data["patterns_identified"] == 2
+        assert completion_data["overall_complexity"] == 5
 
         # Verify elements_found calculation in performance metric
         perf_call = mock_logger_client.log_performance_metric.call_args
         expected_elements = 1 + 1 + 2  # functions + classes + patterns
-        assert perf_call[0][2]['elements_found'] == expected_elements
+        assert perf_call[0][2]["elements_found"] == expected_elements
 
 
 if __name__ == "__main__":
