@@ -51,14 +51,14 @@ result = await analyzer.analyze_documents(targets, "consistency")
 - **Testability**: Easy to mock interfaces for unit testing
 - **Maintainability**: Clear contracts make code easier to understand
 - **Flexibility**: Implementations can be swapped without changing consumers
-- **Type Safety**: Full type checking and IDE support
+- **Type Safety**: Full type checking and IDE support.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Protocol, TypeVar, Generic, Union
 from datetime import datetime
+from typing import Any, Dict, Generic, List, Optional, Protocol, TypeVar, Union
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # Domain Service Interfaces

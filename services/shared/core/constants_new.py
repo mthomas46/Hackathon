@@ -16,13 +16,14 @@ the entire ecosystem to reduce magic strings and improve maintainability.
 
 from enum import Enum
 
-
 # ============================================================================
 # HTTP STATUS CODES
 # ============================================================================
 
+
 class HTTPStatus:
     """HTTP status codes with descriptive names."""
+
     OK = 200
     CREATED = 201
     ACCEPTED = 202
@@ -40,6 +41,7 @@ class HTTPStatus:
 # ============================================================================
 # ENVIRONMENT VARIABLE CONSTANTS
 # ============================================================================
+
 
 # Consolidated EnvVars class
 class EnvVars:
@@ -88,8 +90,10 @@ class EnvVars:
 # SERVICE NAMES AND PORTS
 # ============================================================================
 
+
 class ServiceNames:
     """Standardized service names."""
+
     ORCHESTRATOR = "orchestrator"
     ANALYSIS_SERVICE = "analysis-service"
     DOC_STORE = "doc_store"
@@ -113,6 +117,7 @@ class ServiceNames:
 
 class ServicePorts:
     """Default service ports."""
+
     ORCHESTRATOR = 5000
     ANALYSIS_SERVICE = 5020
     DOC_STORE = 5010
@@ -127,8 +132,10 @@ class ServicePorts:
 # STATUS ENUMS
 # ============================================================================
 
+
 class HealthStatus(str, Enum):
     """Health status values."""
+
     HEALTHY = "healthy"
     UNHEALTHY = "unhealthy"
     DEGRADED = "degraded"
@@ -137,6 +144,7 @@ class HealthStatus(str, Enum):
 
 class WorkflowStatus(str, Enum):
     """Workflow execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -146,6 +154,7 @@ class WorkflowStatus(str, Enum):
 
 class AnalysisStatus(str, Enum):
     """Analysis operation status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -156,8 +165,10 @@ class AnalysisStatus(str, Enum):
 # ERROR CODES
 # ============================================================================
 
+
 class ErrorCodes:
     """Standardized error codes."""
+
     INTERNAL_ERROR = "internal_error"
     VALIDATION_ERROR = "validation_error"
     NOT_FOUND = "not_found"
@@ -178,8 +189,10 @@ class ErrorCodes:
 # COMMON LIMITS AND TIMEOUTS
 # ============================================================================
 
+
 class Limits:
     """Size and count limits."""
+
     MAX_FILE_SIZE_MB = 100
     MAX_REQUEST_SIZE_MB = 50
     MAX_STRING_LENGTH = 10000
@@ -190,6 +203,7 @@ class Limits:
 
 class Timeouts:
     """Timeout constants in seconds."""
+
     DEFAULT_REQUEST_TIMEOUT = 30
     HEALTH_CHECK_TIMEOUT = 5
     DATABASE_CONNECTION_TIMEOUT = 10
@@ -200,22 +214,24 @@ class Timeouts:
 # COMMON PATTERNS AND REGEX
 # ============================================================================
 
+
 class Patterns:
     """Common regex patterns."""
+
     EMAIL = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     URL = r"https?://[^\s]+"
     UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
     VARIABLE = r"\{([^}]+)\}"
 
 
-
-
 # ============================================================================
 # CONTENT TYPES AND HEADERS
 # ============================================================================
 
+
 class ContentTypes:
     """Common content type headers."""
+
     JSON = "application/json"
     FORM_DATA = "multipart/form-data"
     TEXT_PLAIN = "text/plain"
@@ -223,6 +239,7 @@ class ContentTypes:
 
 class Headers:
     """Standard HTTP headers."""
+
     CONTENT_TYPE = "Content-Type"
     AUTHORIZATION = "Authorization"
     X_REQUEST_ID = "X-Request-ID"

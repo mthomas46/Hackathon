@@ -10,5 +10,5 @@ Modules:
 - helpers: Additional helper functions
 - validation: Input validation utilities
 - observability: Monitoring and observability helpers
-- resilience: Circuit breaker and retry logic
+- resilience: Circuit breaker and retry logic.
 """

@@ -1,11 +1,12 @@
 """Correlation Middleware - Automatic correlation ID management for requests."""
 
 import uuid
-from typing import Callable, Any, Optional
 from contextlib import asynccontextmanager
+from typing import Any, Callable, Optional
+
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .logger import set_correlation_id, get_correlation_id, generate_correlation_id
+from .logger import generate_correlation_id, get_correlation_id, set_correlation_id
 
 
 class CorrelationMiddleware(BaseHTTPMiddleware):

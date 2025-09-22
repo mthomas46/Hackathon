@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional
-from datetime import datetime, timezone
+"""Shared Pydantic models used across all services in the LLM Documentation Ecosystem.
 
-"""Shared Pydantic models used across services.
-
-These normalized types ensure consistent data exchange between agents,
-the orchestrator, the consistency engine, and reporting.
+This module provides common data models for API responses, requests, and internal data structures
+used throughout the ecosystem services.
 """
+
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):
@@ -15,6 +16,7 @@ class Document(BaseModel):
     - `source_type` indicates origin (e.g., "github", "jira", "confluence").
     - `content` carries the text payload; `metadata` stores source-specific fields.
     """
+
     id: str
     source_type: str  # github|jira|confluence
     source_id: Optional[str] = None
@@ -33,6 +35,7 @@ class Document(BaseModel):
 
 class ApiEndpoint(BaseModel):
     """Endpoint from a normalized API schema."""
+
     path: str
     method: str
     summary: Optional[str] = None
@@ -43,6 +46,7 @@ class ApiEndpoint(BaseModel):
 
 class ApiSchema(BaseModel):
     """Normalized OpenAPI/Swagger schema subset with enumerated endpoints."""
+
     id: str
     service_name: Optional[str] = None
     version: Optional[str] = None
@@ -55,6 +59,7 @@ class ApiSchema(BaseModel):
 
 class Finding(BaseModel):
     """Detected inconsistency or observation produced by the consistency engine."""
+
     id: str
     type: str  # missing_doc|contradiction|drift|stale|broken_link|schema_mismatch|acceptance_mismatch|security_gap
     title: Optional[str] = None  # Human-readable title for the finding
@@ -71,6 +76,7 @@ class Finding(BaseModel):
 
 class MemoryItem(BaseModel):
     """Short-term memory item stored by the memory-agent for operational context."""
+
     id: str
     type: str  # operation|llm_summary|doc_summary|api_summary|finding
     key: Optional[str] = None  # correlation_id, doc id, etc.
@@ -78,4 +84,3 @@ class MemoryItem(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: Optional[datetime] = None
-

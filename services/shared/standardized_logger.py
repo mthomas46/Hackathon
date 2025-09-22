@@ -18,30 +18,32 @@ Features:
 Author: Ecosystem Hardening Framework
 """
 
+import atexit
 import json
 import logging
 import logging.handlers
-import time
-import threading
-import psutil
 import os
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
+import sys
+import threading
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
-import sys
-from collections import defaultdict, deque
-import atexit
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import psutil
 
 
 @dataclass
 class LogContext:
     """Context information for logging"""
+
     service_name: str
     service_version: str = "1.0.0"
     environment: str = "development"
-    instance_id: str = field(default_factory=lambda: os.environ.get('HOSTNAME', 'unknown'))
+    instance_id: str = field(default_factory=lambda: os.environ.get("HOSTNAME", "unknown"))
     request_id: Optional[str] = None
     user_id: Optional[str] = None
     correlation_id: Optional[str] = None
@@ -51,6 +53,7 @@ class LogContext:
 @dataclass
 class PerformanceMetrics:
     """Performance metrics for monitoring"""
+
     timestamp: datetime = field(default_factory=datetime.now)
     cpu_percent: float = 0.0
     memory_percent: float = 0.0
@@ -99,11 +102,14 @@ class StandardizedLogger:
         # Register cleanup
         atexit.register(self._cleanup)
 
-        self.logger.info("🔧 Standardized Logger initialized", extra={
-            "service": self.service_name,
-            "environment": self.context.environment,
-            "instance": self.context.instance_id
-        })
+        self.logger.info(
+            "🔧 Standardized Logger initialized",
+            extra={
+                "service": self.service_name,
+                "environment": self.context.environment,
+                "instance": self.context.instance_id,
+            },
+        )
 
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default logging configuration"""
@@ -116,7 +122,7 @@ class StandardizedLogger:
             "monitoring_enabled": os.environ.get("MONITORING_ENABLED", "true").lower() == "true",
             "metrics_interval": int(os.environ.get("METRICS_INTERVAL", "30")),
             "max_log_size": int(os.environ.get("MAX_LOG_SIZE", "10485760")),  # 10MB
-            "backup_count": int(os.environ.get("LOG_BACKUP_COUNT", "5"))
+            "backup_count": int(os.environ.get("LOG_BACKUP_COUNT", "5")),
         }
 
     def _setup_logging(self):
@@ -132,9 +138,7 @@ class StandardizedLogger:
         if self.config["structured_logging"]:
             formatter = StructuredFormatter()
         else:
-            formatter = logging.Formatter(
-                '%(asctime)s [%(levelname)8s] %(name)s: %(message)s'
-            )
+            formatter = logging.Formatter("%(asctime)s [%(levelname)8s] %(name)s: %(message)s")
 
         # Console handler
         if self.config["console_logging"]:
@@ -145,9 +149,7 @@ class StandardizedLogger:
         # File handler with rotation
         try:
             file_handler = logging.handlers.RotatingFileHandler(
-                self.config["log_file"],
-                maxBytes=self.config["max_log_size"],
-                backupCount=self.config["backup_count"]
+                self.config["log_file"], maxBytes=self.config["max_log_size"], backupCount=self.config["backup_count"]
             )
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
@@ -164,9 +166,15 @@ class StandardizedLogger:
             if hasattr(self.context, key):
                 setattr(self.context, key, value)
 
-    def log_request(self, method: str, path: str, status_code: int,
-                   response_time: float, user_id: Optional[str] = None,
-                   extra: Optional[Dict[str, Any]] = None):
+    def log_request(
+        self,
+        method: str,
+        path: str,
+        status_code: int,
+        response_time: float,
+        user_id: Optional[str] = None,
+        extra: Optional[Dict[str, Any]] = None,
+    ):
         """Log HTTP request with performance metrics"""
         log_level = logging.INFO if status_code < 400 else logging.WARNING
 
@@ -181,7 +189,7 @@ class StandardizedLogger:
             "status_code": status_code,
             "response_time_ms": round(response_time * 1000, 2),
             "user_id": user_id,
-            "service": self.service_name
+            "service": self.service_name,
         }
 
         if extra:
@@ -189,15 +197,14 @@ class StandardizedLogger:
 
         self.logger.log(log_level, f"HTTP {method} {path} -> {status_code}", extra=log_data)
 
-    def log_error(self, error: Exception, context: Optional[Dict[str, Any]] = None,
-                 error_code: Optional[str] = None):
+    def log_error(self, error: Exception, context: Optional[Dict[str, Any]] = None, error_code: Optional[str] = None):
         """Log error with context"""
         error_data = {
             "error_type": type(error).__name__,
             "error_message": str(error),
             "error_code": error_code,
             "service": self.service_name,
-            "traceback": self._get_traceback(error)
+            "traceback": self._get_traceback(error),
         }
 
         if context:
@@ -205,14 +212,9 @@ class StandardizedLogger:
 
         self.logger.error(f"Error: {error}", extra=error_data, exc_info=True)
 
-    def log_performance(self, operation: str, duration: float,
-                       metadata: Optional[Dict[str, Any]] = None):
+    def log_performance(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
         """Log performance metrics"""
-        perf_data = {
-            "operation": operation,
-            "duration_ms": round(duration * 1000, 2),
-            "service": self.service_name
-        }
+        perf_data = {"operation": operation, "duration_ms": round(duration * 1000, 2), "service": self.service_name}
 
         if metadata:
             perf_data.update(metadata)
@@ -221,17 +223,16 @@ class StandardizedLogger:
 
     def log_business_event(self, event_type: str, event_data: Dict[str, Any]):
         """Log business events for analytics"""
-        event_data.update({
-            "event_type": event_type,
-            "service": self.service_name,
-            "timestamp": datetime.now().isoformat()
-        })
+        event_data.update(
+            {"event_type": event_type, "service": self.service_name, "timestamp": datetime.now().isoformat()}
+        )
 
         self.logger.info(f"Business Event: {event_type}", extra=event_data)
 
     def _get_traceback(self, error: Exception) -> str:
         """Get formatted traceback"""
         import traceback
+
         return "".join(traceback.format_exception(type(error), error, error.__traceback__))
 
     def start_monitoring(self):
@@ -244,9 +245,7 @@ class StandardizedLogger:
 
         self._monitoring_active = True
         self._monitoring_thread = threading.Thread(
-            target=self._monitoring_loop,
-            daemon=True,
-            name=f"{self.service_name}-monitoring"
+            target=self._monitoring_loop, daemon=True, name=f"{self.service_name}-monitoring"
         )
         self._monitoring_thread.start()
         self.logger.info("📊 Performance monitoring started")
@@ -277,7 +276,7 @@ class StandardizedLogger:
             self.metrics.memory_percent = memory.percent
             self.metrics.memory_mb = memory.used / 1024 / 1024
 
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             self.metrics.disk_usage_percent = disk.percent
 
             network = psutil.net_connections()
@@ -325,7 +324,7 @@ class StandardizedLogger:
             "total_errors": total_errors,
             "error_rate": round(total_errors / max(total_requests, 1) * 100, 2),
             "service": self.service_name,
-            "period_seconds": len(recent_metrics) * self.config["metrics_interval"]
+            "period_seconds": len(recent_metrics) * self.config["metrics_interval"],
         }
 
         self.logger.info("📊 Metrics Summary", extra=metrics_data)
@@ -365,9 +364,9 @@ class StandardizedLogger:
                 "active_threads": self.metrics.active_threads,
                 "request_count": total_requests,
                 "error_count": total_errors,
-                "error_rate": round(error_rate * 100, 2)
+                "error_rate": round(error_rate * 100, 2),
             },
-            "uptime_seconds": (datetime.now() - datetime.fromtimestamp(psutil.boot_time())).total_seconds()
+            "uptime_seconds": (datetime.now() - datetime.fromtimestamp(psutil.boot_time())).total_seconds(),
         }
 
     def _cleanup(self):
@@ -401,11 +400,11 @@ class StandardizedLogger:
         extra = {
             "service": self.service_name,
             "instance": self.context.instance_id,
-            "environment": self.context.environment
+            "environment": self.context.environment,
         }
 
         # Add context fields if they exist
-        for field in ['request_id', 'user_id', 'correlation_id', 'session_id']:
+        for field in ["request_id", "user_id", "correlation_id", "session_id"]:
             value = getattr(self.context, field, None)
             if value:
                 extra[field] = value
@@ -424,23 +423,41 @@ class StructuredFormatter(logging.Formatter):
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
-            "service": getattr(record, 'service', 'unknown'),
-            "instance": getattr(record, 'instance', 'unknown'),
-            "environment": getattr(record, 'environment', 'unknown')
+            "service": getattr(record, "service", "unknown"),
+            "instance": getattr(record, "instance", "unknown"),
+            "environment": getattr(record, "environment", "unknown"),
         }
 
         # Add any extra fields from the record
-        if hasattr(record, '__dict__'):
+        if hasattr(record, "__dict__"):
             for key, value in record.__dict__.items():
-                if key not in ['name', 'msg', 'args', 'levelname', 'levelno',
-                             'pathname', 'filename', 'module', 'exc_info',
-                             'exc_text', 'stack_info', 'lineno', 'funcName',
-                             'created', 'msecs', 'relativeCreated', 'thread',
-                             'threadName', 'processName', 'process', 'message']:
+                if key not in [
+                    "name",
+                    "msg",
+                    "args",
+                    "levelname",
+                    "levelno",
+                    "pathname",
+                    "filename",
+                    "module",
+                    "exc_info",
+                    "exc_text",
+                    "stack_info",
+                    "lineno",
+                    "funcName",
+                    "created",
+                    "msecs",
+                    "relativeCreated",
+                    "thread",
+                    "threadName",
+                    "processName",
+                    "process",
+                    "message",
+                ]:
                     # Convert non-serializable objects to strings
                     if isinstance(value, (datetime, Path)):
                         log_entry[key] = str(value)
-                    elif hasattr(value, '__dict__'):
+                    elif hasattr(value, "__dict__"):
                         log_entry[key] = str(value)
                     else:
                         try:
@@ -456,6 +473,7 @@ def performance_monitor(operation_name: str = None):
     """
     Decorator for performance monitoring of functions
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -468,17 +486,15 @@ def performance_monitor(operation_name: str = None):
 
                 # Get logger from first argument if it's a class instance
                 logger = None
-                if args and hasattr(args[0], 'logger'):
+                if args and hasattr(args[0], "logger"):
                     logger = args[0].logger
-                elif hasattr(func, '__self__') and hasattr(func.__self__, 'logger'):
+                elif hasattr(func, "__self__") and hasattr(func.__self__, "logger"):
                     logger = func.__self__.logger
 
                 if logger:
-                    logger.log_performance(operation, duration, {
-                        "success": True,
-                        "args_count": len(args),
-                        "kwargs_count": len(kwargs)
-                    })
+                    logger.log_performance(
+                        operation, duration, {"success": True, "args_count": len(args), "kwargs_count": len(kwargs)}
+                    )
 
                 return result
 
@@ -486,15 +502,14 @@ def performance_monitor(operation_name: str = None):
                 duration = time.time() - start_time
 
                 if logger:
-                    logger.log_performance(operation, duration, {
-                        "success": False,
-                        "error": str(e),
-                        "error_type": type(e).__name__
-                    })
+                    logger.log_performance(
+                        operation, duration, {"success": False, "error": str(e), "error_type": type(e).__name__}
+                    )
 
                 raise
 
         return wrapper
+
     return decorator
 
 
@@ -540,11 +555,9 @@ def configure_service_logging(service_name: str, config: Dict[str, Any]):
 # Example usage and testing
 if __name__ == "__main__":
     # Example usage
-    logger = get_logger("example-service", {
-        "log_level": "INFO",
-        "structured_logging": True,
-        "monitoring_enabled": True
-    })
+    logger = get_logger(
+        "example-service", {"log_level": "INFO", "structured_logging": True, "monitoring_enabled": True}
+    )
 
     logger.start_monitoring()
 

@@ -5,16 +5,18 @@ Supports templating, versioning, and easy customization.
 """
 
 import os
-import yaml
-from typing import Dict, Any, Optional, List
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 from string import Template
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 
 @dataclass
 class PromptTemplate:
     """Represents a configurable prompt template."""
+
     name: str
     category: str
     content: str
@@ -48,7 +50,7 @@ class PromptManager:
             return
 
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
 
             for category, prompts in config.items():
@@ -62,17 +64,17 @@ class PromptManager:
                             name=prompt_name,
                             category=category,
                             content=prompt_data,
-                            variables=self._extract_variables(prompt_data)
+                            variables=self._extract_variables(prompt_data),
                         )
                     elif isinstance(prompt_data, dict):
                         # Prompt with metadata
                         template = PromptTemplate(
                             name=prompt_name,
                             category=category,
-                            content=prompt_data.get('content', ''),
-                            variables=self._extract_variables(prompt_data.get('content', '')),
-                            version=prompt_data.get('version', '1.0.0'),
-                            description=prompt_data.get('description', '')
+                            content=prompt_data.get("content", ""),
+                            variables=self._extract_variables(prompt_data.get("content", "")),
+                            version=prompt_data.get("version", "1.0.0"),
+                            description=prompt_data.get("description", ""),
                         )
 
                     self._prompts[f"{category}.{prompt_name}"] = template
@@ -83,6 +85,7 @@ class PromptManager:
     def _extract_variables(self, content: str) -> List[str]:
         """Extract template variables from prompt content."""
         from .utilities import extract_variables
+
         return extract_variables(content)
 
     def get_prompt(self, key: str, **variables) -> str:
@@ -139,14 +142,15 @@ class PromptManager:
 
         for key, template in self._prompts.items():
             # Check for unmatched braces
-            if '{' in template.content and '}' not in template.content:
+            if "{" in template.content and "}" not in template.content:
                 errors.append(f"Prompt '{key}': Unmatched opening brace")
-            if '}' in template.content and '{' not in template.content:
+            if "}" in template.content and "{" not in template.content:
                 errors.append(f"Prompt '{key}': Unmatched closing brace")
 
             # Check for unused variables in content
             import re
-            content_vars = set(re.findall(r'\{([^}]+)\}', template.content))
+
+            content_vars = set(re.findall(r"\{([^}]+)\}", template.content))
             declared_vars = set(template.variables)
 
             unused_vars = declared_vars - content_vars
@@ -158,6 +162,7 @@ class PromptManager:
 
 # Global prompt manager instance
 _prompt_manager = None
+
 
 def get_prompt_manager() -> PromptManager:
     """Get the global prompt manager instance."""

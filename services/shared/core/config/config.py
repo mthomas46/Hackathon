@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import os
+from typing import Any, Dict, Optional
 
 _CONFIG_CACHE: Dict[str, Any] = {}
 
@@ -14,6 +14,7 @@ def load_yaml_config(default_path: str) -> Dict[str, Any]:
     """
     try:
         import yaml  # type: ignore
+
         with open(default_path, "r") as f:
             return yaml.safe_load(f) or {}
     except Exception:
@@ -29,8 +30,8 @@ def _load_app_config() -> Dict[str, Any]:
     # Check for unified config.yml first, then fall back to config/app.yaml
     config_paths = [
         os.environ.get("APP_CONFIG_PATH"),  # Explicit override
-        "config.yml",                       # Unified config at project root
-        "config/app.yaml"                   # Legacy config location
+        "config.yml",  # Unified config at project root
+        "config/app.yaml",  # Legacy config location
     ]
 
     for cfg_path in config_paths:
@@ -42,10 +43,9 @@ def _load_app_config() -> Dict[str, Any]:
     return _CONFIG_CACHE
 
 
-def get_config_value(key: str,
-                     default: Any = None,
-                     section: Optional[str] = None,
-                     env_key: Optional[str] = None) -> Any:
+def get_config_value(
+    key: str, default: Any = None, section: Optional[str] = None, env_key: Optional[str] = None
+) -> Any:
     """Return a configuration value with precedence: env > app.yaml section > app.yaml root > default.
 
     Args:
@@ -70,5 +70,3 @@ def get_config_value(key: str,
 
     # 3) Default
     return default
-
-

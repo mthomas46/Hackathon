@@ -21,19 +21,20 @@ Usage:
     # Log events
     await logger.log_info("Operation completed", {"user_id": 123, "duration": 1.5})
     await logger.log_error("Database connection failed", {"error_code": "DB_001"})
-    await logger.log_business_event("user_registered", {"user_id": 123, "plan": "premium"})
+    await logger.log_business_event("user_registered", {"user_id": 123, "plan": "premium"}).
 """
 
 import asyncio
 import json
 import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timezone
-import httpx
-from contextlib import asynccontextmanager
 import threading
-from queue import Queue
 import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from queue import Queue
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 
 class LogCollectorClient:
@@ -43,9 +44,15 @@ class LogCollectorClient:
     automatic batching, retries, and error handling.
     """
 
-    def __init__(self, service_name: str, collector_url: Optional[str] = None,
-                 batch_size: int = 10, flush_interval: float = 5.0,
-                 max_retries: int = 3, timeout: float = 10.0):
+    def __init__(
+        self,
+        service_name: str,
+        collector_url: Optional[str] = None,
+        batch_size: int = 10,
+        flush_interval: float = 5.0,
+        max_retries: int = 3,
+        timeout: float = 10.0,
+    ):
         """Initialize the log collector client.
 
         Args:
@@ -74,21 +81,13 @@ class LogCollectorClient:
         self._local_logger = logging.getLogger(f"{service_name}_logs")
         if not self._local_logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                f'[{service_name}] %(asctime)s - %(levelname)s - %(message)s'
-            )
+            formatter = logging.Formatter(f"[{service_name}] %(asctime)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             self._local_logger.addHandler(handler)
             self._local_logger.setLevel(logging.INFO)
 
         # Stats for monitoring
-        self.stats = {
-            "logs_sent": 0,
-            "batches_sent": 0,
-            "errors": 0,
-            "retries": 0,
-            "last_flush": None
-        }
+        self.stats = {"logs_sent": 0, "batches_sent": 0, "errors": 0, "retries": 0, "last_flush": None}
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -110,11 +109,11 @@ class LogCollectorClient:
         # Start periodic flush task
         self._flush_task = asyncio.create_task(self._periodic_flush())
 
-        self._log_local("info", "Log collector client started", {
-            "collector_url": self.collector_url,
-            "batch_size": self.batch_size,
-            "flush_interval": self.flush_interval
-        })
+        self._log_local(
+            "info",
+            "Log collector client started",
+            {"collector_url": self.collector_url, "batch_size": self.batch_size, "flush_interval": self.flush_interval},
+        )
 
     async def stop(self):
         """Stop the logging client and flush remaining logs."""
@@ -149,8 +148,9 @@ class LogCollectorClient:
         """Log a warning-level message."""
         await self._log("warning", message, context)
 
-    async def log_error(self, message: str, context: Optional[Dict[str, Any]] = None,
-                       error: Optional[Exception] = None):
+    async def log_error(
+        self, message: str, context: Optional[Dict[str, Any]] = None, error: Optional[Exception] = None
+    ):
         """Log an error-level message."""
         if error:
             context = context or {}
@@ -161,19 +161,11 @@ class LogCollectorClient:
 
     async def log_business_event(self, event_type: str, data: Dict[str, Any]):
         """Log a business event."""
-        await self._log("info", f"Business event: {event_type}", {
-            "event_type": event_type,
-            **data
-        })
+        await self._log("info", f"Business event: {event_type}", {"event_type": event_type, **data})
 
-    async def log_performance_metric(self, operation: str, duration: float,
-                                   metadata: Optional[Dict[str, Any]] = None):
+    async def log_performance_metric(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
         """Log a performance metric."""
-        context = {
-            "operation": operation,
-            "duration_seconds": duration,
-            "performance_metric": True
-        }
+        context = {"operation": operation, "duration_seconds": duration, "performance_metric": True}
         if metadata:
             context.update(metadata)
 
@@ -186,7 +178,7 @@ class LogCollectorClient:
             "level": level,
             "message": message,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "context": context or {}
+            "context": context or {},
         }
 
         async with self._batch_lock:
@@ -230,7 +222,7 @@ class LogCollectorClient:
                 response = await self._session.post(
                     f"{self.collector_url}/logs/batch",
                     json={"items": batch_to_send},
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -245,7 +237,7 @@ class LogCollectorClient:
             except Exception as e:
                 self.stats["retries"] += 1
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(0.1 * (2 ** attempt))  # Exponential backoff
+                    await asyncio.sleep(0.1 * (2**attempt))  # Exponential backoff
                 else:
                     self._log_local("error", f"Failed to send logs after {self.max_retries} attempts: {e}")
                     # Fallback to local logging
@@ -279,7 +271,7 @@ class LogCollectorClient:
             **self.stats,
             "batch_queue_size": len(self._batch),
             "is_running": self._running,
-            "collector_url": self.collector_url
+            "collector_url": self.collector_url,
         }
 
 
@@ -317,8 +309,7 @@ async def shutdown_all_clients():
 
 
 # Convenience functions for easy logging
-async def log_service_event(service_name: str, level: str, message: str,
-                          context: Optional[Dict[str, Any]] = None):
+async def log_service_event(service_name: str, level: str, message: str, context: Optional[Dict[str, Any]] = None):
     """Log an event for a service."""
     client = await get_log_collector_client(service_name)
 
@@ -338,8 +329,9 @@ async def log_business_event(service_name: str, event_type: str, data: Dict[str,
     await client.log_business_event(event_type, data)
 
 
-async def log_performance_metric(service_name: str, operation: str, duration: float,
-                               metadata: Optional[Dict[str, Any]] = None):
+async def log_performance_metric(
+    service_name: str, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None
+):
     """Log a performance metric for a service."""
     client = await get_log_collector_client(service_name)
     await client.log_performance_metric(operation, duration, metadata)

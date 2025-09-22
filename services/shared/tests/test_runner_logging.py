@@ -21,22 +21,21 @@ Examples:
     python test_runner_logging.py --services interpreter,memory-agent  # Test specific services
 """
 
-import sys
-import os
-import subprocess
 import argparse
 import json
+import os
+import subprocess
+import sys
 import time
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class LoggingTestRunner:
     """Comprehensive test runner for logging functionality."""
 
-    def __init__(self, verbose: bool = False, coverage: bool = False,
-                 services: Optional[List[str]] = None):
+    def __init__(self, verbose: bool = False, coverage: bool = False, services: Optional[List[str]] = None):
         """Initialize the test runner.
 
         Args:
@@ -56,132 +55,132 @@ class LoggingTestRunner:
             "log_collector_client": {
                 "name": "Log Collector Client",
                 "path": "services/shared/tests/test_logging_client.py",
-                "description": "Tests for the centralized logging client"
+                "description": "Tests for the centralized logging client",
             },
             "log_collector_enhanced": {
                 "name": "Enhanced Log Collector",
                 "path": "services/log-collector/tests/test_log_collector_enhanced.py",
-                "description": "Tests for enhanced log storage, search, and analytics"
+                "description": "Tests for enhanced log storage, search, and analytics",
             },
             "interpreter_logging": {
                 "name": "Interpreter Service Logging",
                 "path": "services/interpreter/tests/test_logging_integration.py",
-                "description": "Tests for interpreter service logging integration"
+                "description": "Tests for interpreter service logging integration",
             },
             "analysis_service_logging": {
                 "name": "Analysis Service Logging",
                 "path": "services/analysis-service/tests/test_logging_integration.py",
-                "description": "Tests for analysis service logging integration"
+                "description": "Tests for analysis service logging integration",
             },
             "llm_gateway_logging": {
                 "name": "LLM Gateway Logging",
                 "path": "services/llm-gateway/tests/test_logging_integration.py",
-                "description": "Tests for LLM gateway logging integration"
+                "description": "Tests for LLM gateway logging integration",
             },
             "discovery_agent_logging": {
                 "name": "Discovery Agent Logging",
                 "path": "services/discovery-agent/tests/test_logging_integration.py",
-                "description": "Tests for discovery agent logging integration"
+                "description": "Tests for discovery agent logging integration",
             },
             "notification_service_logging": {
                 "name": "Notification Service Logging",
                 "path": "services/notification-service/tests/test_logging_integration.py",
-                "description": "Tests for notification service logging integration"
+                "description": "Tests for notification service logging integration",
             },
             "mock_data_generator_logging": {
                 "name": "Mock Data Generator Logging",
                 "path": "services/mock-data-generator/tests/test_logging_integration.py",
-                "description": "Tests for mock data generator logging integration"
+                "description": "Tests for mock data generator logging integration",
             },
             "code_analyzer_logging": {
                 "name": "Code Analyzer Logging",
                 "path": "services/code-analyzer/tests/test_logging_integration.py",
-                "description": "Tests for code analyzer logging integration"
+                "description": "Tests for code analyzer logging integration",
             },
             "bedrock_proxy_logging": {
                 "name": "Bedrock Proxy Logging",
                 "path": "services/bedrock-proxy/tests/test_logging_integration.py",
-                "description": "Tests for bedrock proxy logging integration"
+                "description": "Tests for bedrock proxy logging integration",
             },
             "architecture_digitizer_logging": {
                 "name": "Architecture Digitizer Logging",
                 "path": "services/architecture-digitizer/tests/test_logging_integration.py",
-                "description": "Tests for architecture digitizer logging integration"
+                "description": "Tests for architecture digitizer logging integration",
             },
             "cli_logging": {
                 "name": "CLI Service Logging",
                 "path": "services/cli/tests/test_logging_integration.py",
-                "description": "Tests for CLI service logging integration"
+                "description": "Tests for CLI service logging integration",
             },
             "github_mcp_logging": {
                 "name": "GitHub MCP Logging",
                 "path": "services/github-mcp/tests/test_logging_integration.py",
-                "description": "Tests for GitHub MCP logging integration"
+                "description": "Tests for GitHub MCP logging integration",
             },
             "project_simulation_logging": {
                 "name": "Project Simulation Logging",
                 "path": "services/project-simulation/tests/test_logging_integration.py",
-                "description": "Tests for project simulation logging integration"
+                "description": "Tests for project simulation logging integration",
             },
             "secure_analyzer_logging": {
                 "name": "Secure Analyzer Logging",
                 "path": "services/secure-analyzer/tests/test_logging_integration.py",
-                "description": "Tests for secure analyzer logging integration"
+                "description": "Tests for secure analyzer logging integration",
             },
             "source_agent_logging": {
                 "name": "Source Agent Logging",
                 "path": "services/source-agent/tests/test_logging_integration.py",
-                "description": "Tests for source agent logging integration"
+                "description": "Tests for source agent logging integration",
             },
             "summarizer_hub_logging": {
                 "name": "Summarizer Hub Logging",
                 "path": "services/summarizer-hub/tests/test_logging_integration.py",
-                "description": "Tests for summarizer hub logging integration"
+                "description": "Tests for summarizer hub logging integration",
             },
             "frontend_logging": {
                 "name": "Frontend Logging",
                 "path": "services/frontend/tests/test_logging_integration.py",
-                "description": "Tests for frontend logging integration"
+                "description": "Tests for frontend logging integration",
             },
             "orchestrator_infrastructure_logging": {
                 "name": "Orchestrator Infrastructure Logging",
                 "path": "services/orchestrator/tests/test_infrastructure_logging_integration.py",
-                "description": "Tests for orchestrator infrastructure routes logging integration"
+                "description": "Tests for orchestrator infrastructure routes logging integration",
             },
             "orchestrator_service_registry_logging": {
                 "name": "Orchestrator Service Registry Logging",
                 "path": "services/orchestrator/tests/test_service_registry_logging_integration.py",
-                "description": "Tests for orchestrator service registry routes logging integration"
+                "description": "Tests for orchestrator service registry routes logging integration",
             },
             "orchestrator_ingestion_logging": {
                 "name": "Orchestrator Ingestion Logging",
                 "path": "services/orchestrator/tests/test_ingestion_logging_integration.py",
-                "description": "Tests for orchestrator ingestion routes logging integration"
+                "description": "Tests for orchestrator ingestion routes logging integration",
             },
             "orchestrator_query_processing_logging": {
                 "name": "Orchestrator Query Processing Logging",
                 "path": "services/orchestrator/tests/test_query_processing_logging_integration.py",
-                "description": "Tests for orchestrator query processing routes logging integration"
+                "description": "Tests for orchestrator query processing routes logging integration",
             },
             "orchestrator_reporting_logging": {
                 "name": "Orchestrator Reporting Logging",
                 "path": "services/orchestrator/tests/test_reporting_logging_integration.py",
-                "description": "Tests for orchestrator reporting routes logging integration"
+                "description": "Tests for orchestrator reporting routes logging integration",
             },
             "orchestrator_workflow_management_logging": {
                 "name": "Orchestrator Workflow Management Logging",
                 "path": "services/orchestrator/tests/test_workflow_management_logging_integration.py",
-                "description": "Tests for orchestrator workflow management routes logging integration"
+                "description": "Tests for orchestrator workflow management routes logging integration",
             },
             "prompt_store_handlers_logging": {
                 "name": "Prompt Store Handlers Logging",
                 "path": "services/prompt_store/tests/test_prompt_store_handlers_logging_integration.py",
-                "description": "Tests for prompt store additional handlers logging integration"
+                "description": "Tests for prompt store additional handlers logging integration",
             },
             "doc_store_handlers_logging": {
                 "name": "Doc Store Handlers Logging",
                 "path": "services/doc_store/tests/test_doc_store_handlers_logging_integration.py",
-                "description": "Tests for doc store additional handlers logging integration"
+                "description": "Tests for doc store additional handlers logging integration",
             },
             # Future: Add more service logging tests
             # "orchestrator_logging": {
@@ -266,7 +265,7 @@ class LoggingTestRunner:
                 "tests_run": 0,
                 "tests_passed": 0,
                 "tests_failed": 0,
-                "error": f"Test file not found: {test_file}"
+                "error": f"Test file not found: {test_file}",
             }
 
         # Build pytest command
@@ -276,11 +275,7 @@ class LoggingTestRunner:
             cmd.append("-q")  # Quiet mode unless verbose requested
 
         if self.coverage:
-            cmd.extend([
-                "--cov=services",
-                "--cov-report=term-missing",
-                f"--cov-report=html:htmlcov_{category_key}"
-            ])
+            cmd.extend(["--cov=services", "--cov-report=term-missing", f"--cov-report=html:htmlcov_{category_key}"])
 
         # Set environment variables for testing
         env = os.environ.copy()
@@ -297,7 +292,7 @@ class LoggingTestRunner:
                 env=env,
                 capture_output=not self.verbose,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300,  # 5 minute timeout
             )
 
             # Parse pytest output to extract test counts
@@ -319,7 +314,7 @@ class LoggingTestRunner:
                 "tests_failed": tests_failed,
                 "return_code": result.returncode,
                 "stdout": result.stdout if self.verbose else None,
-                "stderr": result.stderr if self.verbose else None
+                "stderr": result.stderr if self.verbose else None,
             }
 
         except subprocess.TimeoutExpired:
@@ -329,17 +324,11 @@ class LoggingTestRunner:
                 "tests_run": 0,
                 "tests_passed": 0,
                 "tests_failed": 0,
-                "error": "Test execution timed out"
+                "error": "Test execution timed out",
             }
         except Exception as e:
             print(f"   💥 {category_info['name']} tests failed with exception: {e}")
-            return {
-                "success": False,
-                "tests_run": 0,
-                "tests_passed": 0,
-                "tests_failed": 0,
-                "error": str(e)
-            }
+            return {"success": False, "tests_run": 0, "tests_passed": 0, "tests_failed": 0, "error": str(e)}
 
     def _parse_pytest_output(self, stdout: str, stderr: str) -> tuple[int, int, int]:
         """Parse pytest output to extract test counts.
@@ -354,33 +343,33 @@ class LoggingTestRunner:
         output = stdout + stderr
 
         # Look for pytest summary lines
-        lines = output.split('\n')
+        lines = output.split("\n")
         for line in reversed(lines):
             line = line.strip()
-            if line.startswith('=') and ('passed' in line or 'failed' in line):
+            if line.startswith("=") and ("passed" in line or "failed" in line):
                 # Example: "5 passed, 2 failed, 1 error in 1.23s"
-                parts = line.split(',')
+                parts = line.split(",")
                 tests_run = 0
                 tests_passed = 0
                 tests_failed = 0
 
                 for part in parts:
                     part = part.strip()
-                    if 'passed' in part:
+                    if "passed" in part:
                         tests_passed = int(part.split()[0])
                         tests_run += tests_passed
-                    elif 'failed' in part:
+                    elif "failed" in part:
                         tests_failed = int(part.split()[0])
                         tests_run += tests_failed
-                    elif 'error' in part:
+                    elif "error" in part:
                         tests_failed += int(part.split()[0])
                         tests_run += int(part.split()[0])
 
                 return tests_run, tests_passed, tests_failed
 
         # Fallback: try to count from individual test results
-        passed_count = output.count('. ')
-        failed_count = output.count('F ') + output.count('E ')
+        passed_count = output.count(". ")
+        failed_count = output.count("F ") + output.count("E ")
 
         return passed_count + failed_count, passed_count, failed_count
 
@@ -454,7 +443,7 @@ class LoggingTestRunner:
                 "duration_seconds": self.end_time - self.start_time if self.end_time else None,
                 "services_tested": self.services or ["all"],
                 "coverage_enabled": self.coverage,
-                "verbose_mode": self.verbose
+                "verbose_mode": self.verbose,
             },
             "results": {
                 "overall_success": all(result["success"] for result in self.test_results.values()),
@@ -464,11 +453,11 @@ class LoggingTestRunner:
                 "total_tests_failed": sum(result["tests_failed"] for result in self.test_results.values()),
             },
             "category_results": self.test_results,
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         if output_file:
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 json.dump(report, f, indent=2, default=str)
             print(f"📄 Detailed report saved to: {output_file}")
 
@@ -478,22 +467,15 @@ class LoggingTestRunner:
         """Generate recommendations based on test results."""
         recommendations = []
 
-        failed_categories = [
-            category for category, result in self.test_results.items()
-            if not result["success"]
-        ]
+        failed_categories = [category for category, result in self.test_results.items() if not result["success"]]
 
         if failed_categories:
-            recommendations.append(
-                f"Fix failing tests in categories: {', '.join(failed_categories)}"
-            )
+            recommendations.append(f"Fix failing tests in categories: {', '.join(failed_categories)}")
 
         # Check for low test coverage
         total_tests = sum(result["tests_run"] for result in self.test_results.values())
         if total_tests < 20:  # Arbitrary threshold
-            recommendations.append(
-                "Consider adding more comprehensive tests for better coverage"
-            )
+            recommendations.append("Consider adding more comprehensive tests for better coverage")
 
         # Check for specific service gaps
         tested_services = set()
@@ -506,9 +488,7 @@ class LoggingTestRunner:
         missing_services = all_services - tested_services
 
         if missing_services:
-            recommendations.append(
-                f"Add logging tests for services: {', '.join(missing_services)}"
-            )
+            recommendations.append(f"Add logging tests for services: {', '.join(missing_services)}")
 
         if not recommendations:
             recommendations.append("All logging tests passed successfully!")
@@ -527,40 +507,23 @@ Examples:
   python test_runner_logging.py --verbose --coverage
   python test_runner_logging.py --services interpreter memory-agent
   python test_runner_logging.py --report results.json
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
+
+    parser.add_argument("--coverage", "-c", action="store_true", help="Enable coverage reporting")
 
     parser.add_argument(
-        "--coverage", "-c",
-        action="store_true",
-        help="Enable coverage reporting"
+        "--services", "-s", nargs="+", help="Test only specific services (e.g., interpreter memory-agent)"
     )
 
-    parser.add_argument(
-        "--services", "-s",
-        nargs="+",
-        help="Test only specific services (e.g., interpreter memory-agent)"
-    )
-
-    parser.add_argument(
-        "--report", "-r",
-        help="Generate detailed JSON report to specified file"
-    )
+    parser.add_argument("--report", "-r", help="Generate detailed JSON report to specified file")
 
     args = parser.parse_args()
 
     # Create and run test runner
-    runner = LoggingTestRunner(
-        verbose=args.verbose,
-        coverage=args.coverage,
-        services=args.services
-    )
+    runner = LoggingTestRunner(verbose=args.verbose, coverage=args.coverage, services=args.services)
 
     success = runner.run_tests()
 

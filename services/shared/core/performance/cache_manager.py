@@ -1,20 +1,21 @@
 """Cache Manager - Advanced caching strategies and implementations."""
 
 import asyncio
-import threading
+import hashlib
 import json
 import pickle
-from typing import Dict, Any, Optional, Union, List, Callable, TypeVar, Generic
+import threading
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
-import hashlib
+from datetime import datetime, timedelta, timezone
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
+
 import lru
 
-from ..di.services import ILoggerService, ICacheService
+from ..di.services import ICacheService, ILoggerService
 from ..logging.logger import get_logger
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
@@ -44,14 +45,18 @@ class CacheEntry:
         try:
             # Rough size calculation
             value_size = len(pickle.dumps(self.value))
-            metadata_size = len(pickle.dumps({
-                'key': self.key,
-                'created_at': self.created_at,
-                'expires_at': self.expires_at,
-                'access_count': self.access_count,
-                'last_accessed': self.last_accessed,
-                'tags': self.tags
-            }))
+            metadata_size = len(
+                pickle.dumps(
+                    {
+                        "key": self.key,
+                        "created_at": self.created_at,
+                        "expires_at": self.expires_at,
+                        "access_count": self.access_count,
+                        "last_accessed": self.last_accessed,
+                        "tags": self.tags,
+                    }
+                )
+            )
             return value_size + metadata_size
         except Exception:
             return 1024  # Default size estimate
@@ -137,12 +142,7 @@ class MemoryCache(CacheBackend):
                 expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
             # Create cache entry
-            entry = CacheEntry(
-                key=key,
-                value=value,
-                created_at=datetime.now(timezone.utc),
-                expires_at=expires_at
-            )
+            entry = CacheEntry(key=key, value=value, created_at=datetime.now(timezone.utc), expires_at=expires_at)
             entry.calculate_size()
 
             # Check if we need to evict
@@ -210,20 +210,22 @@ class MemoryCache(CacheBackend):
                 "misses": self._misses,
                 "hit_rate": self._hits / (self._hits + self._misses) if (self._hits + self._misses) > 0 else 0,
                 "evictions": self._evictions,
-                "default_ttl": self._default_ttl
+                "default_ttl": self._default_ttl,
             }
 
 
 class RedisCache(CacheBackend):
     """Redis cache implementation."""
 
-    def __init__(self,
-                 host: str = "localhost",
-                 port: int = 6379,
-                 db: int = 0,
-                 password: Optional[str] = None,
-                 default_ttl: Optional[int] = None,
-                 key_prefix: str = "cache:") -> None:
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 6379,
+        db: int = 0,
+        password: Optional[str] = None,
+        default_ttl: Optional[int] = None,
+        key_prefix: str = "cache:",
+    ) -> None:
         """Initialize Redis cache.
 
         Args:
@@ -250,12 +252,13 @@ class RedisCache(CacheBackend):
         """Initialize Redis connection."""
         try:
             import redis.asyncio as aioredis
+
             self._redis = aioredis.Redis(
                 host=self._host,
                 port=self._port,
                 db=self._db,
                 password=self._password,
-                decode_responses=False  # Keep as bytes for pickle
+                decode_responses=False,  # Keep as bytes for pickle
             )
         except ImportError:
             # Redis not available
@@ -346,7 +349,7 @@ class RedisCache(CacheBackend):
                 "used_memory": info.get("used_memory_human"),
                 "connected_clients": info.get("connected_clients"),
                 "key_prefix": self._key_prefix,
-                "default_ttl": self._default_ttl
+                "default_ttl": self._default_ttl,
             }
         except Exception as e:
             return {"error": str(e)}
@@ -355,10 +358,12 @@ class RedisCache(CacheBackend):
 class CacheManager(ICacheService):
     """Advanced cache manager with multiple backends and strategies."""
 
-    def __init__(self,
-                 primary_backend: Optional[CacheBackend] = None,
-                 secondary_backend: Optional[CacheBackend] = None,
-                 logger: Optional[ILoggerService] = None) -> None:
+    def __init__(
+        self,
+        primary_backend: Optional[CacheBackend] = None,
+        secondary_backend: Optional[CacheBackend] = None,
+        logger: Optional[ILoggerService] = None,
+    ) -> None:
         """Initialize cache manager.
 
         Args:
@@ -382,7 +387,7 @@ class CacheManager(ICacheService):
             "secondary_hits": 0,
             "secondary_misses": 0,
             "write_operations": 0,
-            "read_operations": 0
+            "read_operations": 0,
         }
 
     async def get(self, key: str) -> Optional[Any]:

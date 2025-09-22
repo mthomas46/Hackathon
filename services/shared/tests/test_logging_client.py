@@ -1,21 +1,22 @@
 """Tests for the centralized logging client."""
 
-import pytest
 import asyncio
-import time
-from unittest.mock import Mock, patch, AsyncMock
-import sys
 import os
+import sys
+import time
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Add the parent directory to sys.path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from services.shared.utilities.logging_client import (
     LogCollectorClient,
     get_log_collector_client,
-    log_service_event,
     log_business_event,
-    log_performance_metric
+    log_performance_metric,
+    log_service_event,
 )
 
 
@@ -28,7 +29,7 @@ class TestLogCollectorClient:
         client = LogCollectorClient(
             service_name="test-service",
             batch_size=2,  # Small batch for testing
-            flush_interval=0.1  # Fast flush for testing
+            flush_interval=0.1,  # Fast flush for testing
         )
         await client.start()
         yield client
@@ -83,10 +84,7 @@ class TestLogCollectorClient:
     @pytest.mark.asyncio
     async def test_business_event_logging(self, client):
         """Test business event logging."""
-        await client.log_business_event("user_registered", {
-            "user_id": 123,
-            "plan": "premium"
-        })
+        await client.log_business_event("user_registered", {"user_id": 123, "plan": "premium"})
 
         assert len(client._batch) == 1
         log_entry = client._batch[0]
@@ -170,7 +168,7 @@ class TestLogCollectorClient:
         client._session.post.side_effect = [
             mock_response_fail,  # First attempt fails
             mock_response_fail,  # Second attempt fails
-            mock_response_success  # Third attempt succeeds
+            mock_response_success,  # Third attempt succeeds
         ]
 
         await client.log_info("Test message")
@@ -201,6 +199,7 @@ class TestGlobalClientManagement:
 
         # Clean up
         from services.shared.utilities.logging_client import _clients
+
         for service_name in ["test-service-1", "test-service-2"]:
             if service_name in _clients:
                 await _clients[service_name].stop()
@@ -215,8 +214,7 @@ class TestGlobalClientManagement:
         mock_client.log_business_event = AsyncMock()
         mock_client.log_performance_metric = AsyncMock()
 
-        with patch('services.shared.utilities.logging_client.get_log_collector_client',
-                  return_value=mock_client):
+        with patch("services.shared.utilities.logging_client.get_log_collector_client", return_value=mock_client):
             # Test service event logging
             await log_service_event("test-service", "info", "Test message", {"key": "value"})
             mock_client.log_info.assert_called_with("Test message", {"key": "value"})

@@ -5,5 +5,5 @@ services and APIs used across the LLM Documentation Ecosystem.
 
 Modules:
 - clients: HTTP client utilities and service clients
-- orchestration: Workflow orchestration utilities
+- orchestration: Workflow orchestration utilities.
 """

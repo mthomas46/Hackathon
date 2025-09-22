@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import os
 import asyncio
+import os
 from typing import Any, Dict, Optional
+
 import httpx
+
 from ..core.config.config import get_config_value
 
 
@@ -51,5 +53,3 @@ def fire_and_forget(level: str, message: str, service: str, context: Optional[Di
             asyncio.run(post_log(level, message, service, context))
         except Exception:
             return
-
-
