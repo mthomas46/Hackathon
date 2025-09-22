@@ -353,6 +353,154 @@ curl -X POST http://localhost:5120/execute \
 
 ---
 
+## 🌐 Dashboard & Monitoring Services
+
+### 🎯 Unified API Ecosystem Dashboard (`services/unified-api-dashboard/`)
+[README](./unified-api-dashboard/README.md) · [Tests](../tests/unit/unified_api_dashboard)
+**Ports: 8501 (Streamlit UI) / 8000 (FastAPI)** | **Purpose: Centralized API Intelligence Hub**
+
+#### 🌟 Revolutionary Features:
+- ✅ **Unified API Catalog**: Single source of truth for all 450+ ecosystem API endpoints
+- ✅ **Discovery Agent Integration**: Real-time API discovery and documentation updates
+- ✅ **Interactive API Testing**: Built-in testing tools with authentication and request/response validation
+- ✅ **API Health Monitoring**: Real-time availability monitoring across all services
+- ✅ **Analytics & Insights**: Usage patterns, performance metrics, and error tracking
+- ✅ **Developer Portal**: Self-service API documentation and integration tools
+- ✅ **Service Topology**: Visual API relationship and dependency mapping
+- ✅ **Enterprise Security**: API access control, audit trails, and compliance monitoring
+
+#### 🎯 Key Capabilities:
+
+**📚 API Catalog & Documentation**
+- Centralized repository of all ecosystem APIs with search and filtering
+- Interactive OpenAPI documentation viewer for each service
+- Real-time documentation updates as APIs change
+- Category-based and service-based API organization
+
+**🧪 API Testing & Development**
+- Interactive API testing interface with request builder
+- Authentication support and header management
+- Response validation and formatting
+- Batch testing capabilities for multiple endpoints
+
+**📊 API Analytics & Monitoring**
+- Real-time API health status across all services
+- Usage analytics with performance metrics and trends
+- Error tracking and failure analysis
+- Performance benchmarking and optimization insights
+
+**🔗 Discovery Agent Integration**
+- Automatic API discovery and registration
+- OpenAPI specification parsing and validation
+- Service topology mapping and dependency analysis
+- Change detection and documentation synchronization
+
+#### 📡 REST API Endpoints (25+ total):
+```bash
+# Health & Monitoring
+GET    /health                    # Service health and system status
+GET    /api/health/apis           # API ecosystem health overview
+GET    /api/health/services       # Individual service connectivity status
+
+# API Discovery
+POST   /api/discovery/scan        # Trigger API discovery scan
+GET    /api/discovery/apis        # List all discovered APIs
+GET    /api/discovery/services    # List all discovered services
+GET    /api/discovery/specifications  # Get OpenAPI specs for all services
+
+# API Catalog
+GET    /api/catalog/endpoints     # Comprehensive API endpoint catalog
+GET    /api/catalog/services/{service}  # API catalog for specific service
+GET    /api/catalog/search        # Search API endpoints with filtering
+GET    /api/catalog/categories    # APIs grouped by category
+
+# API Testing
+POST   /api/testing/execute       # Execute API test against endpoint
+GET    /api/testing/history       # API testing history and results
+POST   /api/testing/batch         # Batch API testing across endpoints
+GET    /api/testing/validation    # API specification validation results
+
+# Analytics & Insights
+GET    /api/analytics/overview    # API ecosystem analytics overview
+GET    /api/analytics/endpoints   # Analytics for specific API endpoints
+GET    /api/analytics/performance # API performance metrics and trends
+
+# Developer Tools
+POST   /api/tools/generate-client # Generate API client code
+GET    /api/tools/templates       # Available API client templates
+POST   /api/tools/validate-spec   # Validate OpenAPI specification
+```
+
+#### 🎨 Streamlit Web UI Features:
+- **API Catalog Browser**: Explore all APIs by service and category
+- **Interactive Testing**: Test APIs with built-in request/response tools
+- **Health Dashboard**: Real-time API availability and performance monitoring
+- **Analytics Dashboard**: API usage patterns and performance insights
+- **Developer Tools**: Code generation and API integration helpers
+- **Service Topology**: Visual API relationship and dependency mapping
+
+#### 🔍 Integration Architecture:
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend UI   │    │  Discovery Agent │    │  All Services   │
+│   (Streamlit)   │◄──►│   Intelligence   │◄──►│   APIs (450+)    │
+│                 │    │   Hub (Port 5010)│    │                 │
+│ • API Catalog   │    │                 │    │ • REST APIs      │
+│ • Testing Tools │    │ • Auto Discovery │    │ • Health Checks │
+│ • Health Monitor│    │ • Spec Parsing   │    │ • Documentation  │
+│ • Analytics     │    │ • Change Detect  │    │ • Real-time     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   FastAPI       │    │   API Registry  │    │ Service Health  │
+│   REST API      │    │   & Catalog     │    │   Monitoring     │
+│   (Port 8000)   │    │                 │    │                 │
+│                 │    │ • API Metadata  │    │ • Connectivity   │
+│ • Programmatic  │    │ • Relationships │    │ • Performance    │
+│ • Integration   │    │ • Dependencies  │    │ • Error Tracking │
+│ • Automation    │    │ • Categories    │    │ • Alerting       │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+#### 🚀 Usage Examples:
+
+**API Discovery & Catalog:**
+```bash
+# Discover all APIs across ecosystem
+curl -X POST http://localhost:8000/api/discovery/scan
+
+# Get API catalog for specific service
+curl http://localhost:8000/api/catalog/services/orchestrator
+
+# Search APIs with filtering
+curl "http://localhost:8000/api/catalog/search?q=workflow&category=orchestration"
+```
+
+**API Testing:**
+```bash
+# Test specific API endpoint
+curl -X POST http://localhost:8000/api/testing/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "POST",
+    "url": "/api/workflows/execute",
+    "body": {"query": "analyze document"},
+    "headers": {"Authorization": "Bearer token"}
+  }'
+```
+
+**Health Monitoring:**
+```bash
+# Get ecosystem health overview
+curl http://localhost:8000/api/health/apis
+
+# Get service-specific health
+curl http://localhost:8000/api/health/services
+```
+
+---
+
 ## 🛠️ Quick Start
 
 ### 1. Start Services with Docker Compose:

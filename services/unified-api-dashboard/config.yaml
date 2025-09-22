@@ -1,0 +1,58 @@
+service:
+  name: "unified-api-dashboard"
+  version: "1.0.0"
+  debug: true
+  port: 8501
+  api_port: 8000
+
+discovery_agent:
+  base_url: "http://localhost:5010"
+  timeout: 30
+  retry_attempts: 3
+
+ecosystem_services:
+  orchestrator:
+    base_url: "http://localhost:5006"
+    enabled: true
+  interpreter:
+    base_url: "http://localhost:5120"
+    enabled: true
+  doc_store:
+    base_url: "http://localhost:5087"
+    enabled: true
+  prompt_store:
+    base_url: "http://localhost:5110"
+    enabled: true
+  frontend:
+    base_url: "http://localhost:3000"
+    enabled: true
+  cli:
+    base_url: "http://localhost:5005"
+    enabled: true
+  discovery_agent:
+    base_url: "http://localhost:5010"
+    enabled: true
+  project_simulation:
+    base_url: "http://localhost:5001"
+    enabled: true
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/dashboard.log"
+
+caching:
+  enabled: true
+  ttl_seconds: 300
+  max_size: 1000
+
+ui:
+  theme: "light"
+  auto_refresh_interval: 30
+  max_display_rows: 100
+
+api:
+  enable_cors: true
+  cors_origins: ["*"]
+  enable_swagger: true
+  enable_redoc: true
