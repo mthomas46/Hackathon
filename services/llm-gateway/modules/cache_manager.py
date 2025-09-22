@@ -4,15 +4,15 @@ Provides intelligent caching for LLM responses to improve performance and reduce
 Supports TTL-based expiration, pattern-based cache clearing, and cache analytics.
 """
 
+import asyncio
 import hashlib
 import json
 import time
-from typing import Dict, Any, Optional, List
-import asyncio
+from typing import Any, Dict, List, Optional
 
 from services.shared.config import get_config_value
-from services.shared.logging import fire_and_forget
 from services.shared.constants_new import ServiceNames
+from services.shared.logging import fire_and_forget
 
 
 class CacheEntry:
@@ -63,22 +63,22 @@ class CacheManager:
         # Handle both dict and object inputs
         if isinstance(request, dict):
             key_components = {
-                "prompt": request.get('prompt', ''),
-                "provider": request.get('provider', ''),
-                "model": request.get('model', ''),
-                "context": request.get('context', ''),
-                "temperature": request.get('temperature', 0.7),
-                "max_tokens": request.get('max_tokens', 1024)
+                "prompt": request.get("prompt", ""),
+                "provider": request.get("provider", ""),
+                "model": request.get("model", ""),
+                "context": request.get("context", ""),
+                "temperature": request.get("temperature", 0.7),
+                "max_tokens": request.get("max_tokens", 1024),
             }
         else:
             # Handle object inputs
             key_components = {
-                "prompt": getattr(request, 'prompt', ''),
-                "provider": getattr(request, 'provider', ''),
-                "model": getattr(request, 'model', ''),
-                "context": getattr(request, 'context', ''),
-                "temperature": getattr(request, 'temperature', 0.7),
-                "max_tokens": getattr(request, 'max_tokens', 1024)
+                "prompt": getattr(request, "prompt", ""),
+                "provider": getattr(request, "provider", ""),
+                "model": getattr(request, "model", ""),
+                "context": getattr(request, "context", ""),
+                "temperature": getattr(request, "temperature", 0.7),
+                "max_tokens": getattr(request, "max_tokens", 1024),
             }
 
         # Create a stable hash
@@ -107,8 +107,8 @@ class CacheManager:
             {
                 "cache_key_prefix": key[:8],
                 "access_count": entry.access_count,
-                "age_seconds": int(time.time() - entry.created_at)
-            }
+                "age_seconds": int(time.time() - entry.created_at),
+            },
         )
 
         return entry.response
@@ -129,11 +129,7 @@ class CacheManager:
             "llm_gateway_cache_store",
             f"Cached response for key: {key[:8]}...",
             ServiceNames.LLM_GATEWAY,
-            {
-                "cache_key_prefix": key[:8],
-                "response_length": len(response),
-                "ttl_seconds": ttl
-            }
+            {"cache_key_prefix": key[:8], "response_length": len(response), "ttl_seconds": ttl},
         )
 
     async def clear_cache(self, pattern: Optional[str] = None) -> int:
@@ -147,7 +143,7 @@ class CacheManager:
                 "llm_gateway_cache_cleared_all",
                 f"Cleared all cache entries: {cleared_count}",
                 ServiceNames.LLM_GATEWAY,
-                {"cleared_count": cleared_count}
+                {"cleared_count": cleared_count},
             )
 
             return cleared_count
@@ -168,10 +164,7 @@ class CacheManager:
                 "llm_gateway_cache_cleared_pattern",
                 f"Cleared cache entries matching '{pattern}': {cleared_count}",
                 ServiceNames.LLM_GATEWAY,
-                {
-                    "pattern": pattern,
-                    "cleared_count": cleared_count
-                }
+                {"pattern": pattern, "cleared_count": cleared_count},
             )
 
             return cleared_count
@@ -191,7 +184,7 @@ class CacheManager:
                 "llm_gateway_cache_expired_cleared",
                 f"Cleared expired cache entries: {len(expired_keys)}",
                 ServiceNames.LLM_GATEWAY,
-                {"cleared_count": len(expired_keys)}
+                {"cleared_count": len(expired_keys)},
             )
 
         return len(expired_keys)
@@ -206,10 +199,7 @@ class CacheManager:
             return
 
         # Find entries sorted by last access time (oldest first)
-        sorted_entries = sorted(
-            self.cache.items(),
-            key=lambda x: x[1].last_accessed
-        )
+        sorted_entries = sorted(self.cache.items(), key=lambda x: x[1].last_accessed)
 
         # Remove oldest 10% of entries
         entries_to_remove = max(1, len(sorted_entries) // 10)
@@ -224,7 +214,7 @@ class CacheManager:
             "llm_gateway_cache_eviction",
             f"Evicted {len(removed_keys)} oldest cache entries",
             ServiceNames.LLM_GATEWAY,
-            {"evicted_count": len(removed_keys)}
+            {"evicted_count": len(removed_keys)},
         )
 
     async def _periodic_cleanup(self):
@@ -238,7 +228,7 @@ class CacheManager:
                     "llm_gateway_cache_cleanup_error",
                     f"Cache cleanup error: {str(e)}",
                     ServiceNames.LLM_GATEWAY,
-                    {"error": str(e)}
+                    {"error": str(e)},
                 )
 
     def get_cache_stats(self) -> Dict[str, Any]:
@@ -250,10 +240,10 @@ class CacheManager:
                 "oldest_entry_age": 0,
                 "newest_entry_age": 0,
                 "average_access_count": 0.0,
-                "hit_rate_estimate": 0.0
+                "hit_rate_estimate": 0.0,
             }
 
-        total_size = sum(len(entry.response.encode('utf-8')) for entry in self.cache.values())
+        total_size = sum(len(entry.response.encode("utf-8")) for entry in self.cache.values())
         current_time = time.time()
 
         oldest_entry = min(self.cache.values(), key=lambda x: x.created_at)
@@ -273,7 +263,7 @@ class CacheManager:
             "newest_entry_age_seconds": int(newest_age),
             "average_access_count": round(average_accesses, 2),
             "max_size": self.max_size,
-            "utilization_percent": round((len(self.cache) / self.max_size) * 100, 2)
+            "utilization_percent": round((len(self.cache) / self.max_size) * 100, 2),
         }
 
     async def get_health_status(self) -> Dict[str, Any]:
@@ -286,16 +276,11 @@ class CacheManager:
                 "status": "healthy",
                 "stats": stats,
                 "expired_entries_cleared": expired_count,
-                "last_cleanup": time.time()
+                "last_cleanup": time.time(),
             }
 
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e),
-                "stats": {},
-                "expired_entries_cleared": 0
-            }
+            return {"status": "error", "error": str(e), "stats": {}, "expired_entries_cleared": 0}
 
     async def preload_cache(self, requests: List[Dict[str, Any]]):
         """Preload cache with common requests."""
@@ -324,14 +309,14 @@ class CacheManager:
                     "llm_gateway_cache_preload_error",
                     f"Cache preload error: {str(e)}",
                     ServiceNames.LLM_GATEWAY,
-                    {"error": str(e)}
+                    {"error": str(e)},
                 )
 
         fire_and_forget(
             "llm_gateway_cache_preloaded",
             f"Preloaded {preloaded_count} cache entries",
             ServiceNames.LLM_GATEWAY,
-            {"preloaded_count": preloaded_count}
+            {"preloaded_count": preloaded_count},
         )
 
         return preloaded_count

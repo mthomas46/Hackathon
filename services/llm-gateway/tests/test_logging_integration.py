@@ -1,18 +1,20 @@
 """Tests for LLM Gateway logging integration with LogCollectorClient."""
 
-import pytest
 import asyncio
-import time
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
-from fastapi import HTTPException
-import httpx
-
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import sys
+import time
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import httpx
+import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from main import app, logger_client
+
 from services.shared.utilities.logging_client import LogCollectorClient
 
 
@@ -51,10 +53,10 @@ class TestLLMGatewayLoggingIntegration:
             "prompt_eval_count": 10,
             "prompt_eval_duration": 123456,
             "eval_count": 20,
-            "eval_duration": 987654321
+            "eval_duration": 987654321,
         }
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_http_client = AsyncMock()
             mock_response = AsyncMock()
             mock_response.status_code = 200
@@ -68,7 +70,7 @@ class TestLLMGatewayLoggingIntegration:
                 "model": "llama2",
                 "provider": "ollama",
                 "max_tokens": 100,
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
             response = client.post("/query", json=request_data)
@@ -79,38 +81,41 @@ class TestLLMGatewayLoggingIntegration:
             assert mock_logger_client.log_performance_metric.call_count == 1
 
             # Check business events
-            business_calls = [call for call in mock_logger_client.log_business_event.call_args_list
-                            if call[0][0] in ['llm_query_started', 'llm_query_completed']]
+            business_calls = [
+                call
+                for call in mock_logger_client.log_business_event.call_args_list
+                if call[0][0] in ["llm_query_started", "llm_query_completed"]
+            ]
 
             assert len(business_calls) == 2
 
             # Check start event
-            start_call = next(call for call in business_calls if call[0][0] == 'llm_query_started')
+            start_call = next(call for call in business_calls if call[0][0] == "llm_query_started")
             start_data = start_call[0][1]
-            assert start_data['provider'] == 'ollama'
-            assert start_data['model'] == 'llama2'
-            assert start_data['prompt_length'] == len("Test prompt")
-            assert 'request_id' in start_data
+            assert start_data["provider"] == "ollama"
+            assert start_data["model"] == "llama2"
+            assert start_data["prompt_length"] == len("Test prompt")
+            assert "request_id" in start_data
 
             # Check completion event
-            completion_call = next(call for call in business_calls if call[0][0] == 'llm_query_completed')
+            completion_call = next(call for call in business_calls if call[0][0] == "llm_query_completed")
             completion_data = completion_call[0][1]
-            assert completion_data['provider'] == 'ollama'
-            assert completion_data['model'] == 'llama2'
-            assert completion_data['success'] is True
-            assert 'processing_time_seconds' in completion_data
-            assert 'tokens_used' in completion_data
+            assert completion_data["provider"] == "ollama"
+            assert completion_data["model"] == "llama2"
+            assert completion_data["success"] is True
+            assert "processing_time_seconds" in completion_data
+            assert "tokens_used" in completion_data
 
             # Check performance metric
             perf_call = mock_logger_client.log_performance_metric.call_args
-            assert perf_call[0][0] == 'llm_query'
-            assert 'query_success' in perf_call[0][2]
-            assert perf_call[0][2]['query_success'] is True
+            assert perf_call[0][0] == "llm_query"
+            assert "query_success" in perf_call[0][2]
+            assert perf_call[0][2]["query_success"] is True
 
     @pytest.mark.asyncio
     async def test_llm_query_failure_logging(self, client, mock_logger_client):
         """Test failed LLM query logging."""
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_http_client = AsyncMock()
             mock_response = AsyncMock()
             mock_response.status_code = 500
@@ -124,7 +129,7 @@ class TestLLMGatewayLoggingIntegration:
                 "model": "llama2",
                 "provider": "ollama",
                 "max_tokens": 100,
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
             response = client.post("/query", json=request_data)
@@ -136,19 +141,22 @@ class TestLLMGatewayLoggingIntegration:
 
             # Check error call
             error_call = mock_logger_client.log_error.call_args
-            assert 'Ollama request failed with status 500' in error_call[0][0]
-            assert error_call[0][1]['http_status_code'] == 500
-            assert error_call[0][1]['error_type'] == 'provider_error'
+            assert "Ollama request failed with status 500" in error_call[0][0]
+            assert error_call[0][1]["http_status_code"] == 500
+            assert error_call[0][1]["error_type"] == "provider_error"
 
             # Check failure business event
-            failure_events = [call for call in mock_logger_client.log_business_event.call_args_list
-                            if call[0][0] == 'llm_query_failed']
+            failure_events = [
+                call
+                for call in mock_logger_client.log_business_event.call_args_list
+                if call[0][0] == "llm_query_failed"
+            ]
             assert len(failure_events) >= 1
 
     @pytest.mark.asyncio
     async def test_llm_query_exception_logging(self, client, mock_logger_client):
         """Test LLM query exception logging."""
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_http_client = AsyncMock()
             mock_http_client.post.side_effect = Exception("Network timeout")
             mock_client_class.return_value.__aenter__.return_value = mock_http_client
@@ -159,7 +167,7 @@ class TestLLMGatewayLoggingIntegration:
                 "model": "llama2",
                 "provider": "ollama",
                 "max_tokens": 100,
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
             response = client.post("/query", json=request_data)
@@ -171,9 +179,9 @@ class TestLLMGatewayLoggingIntegration:
 
             # Check exception error call
             error_calls = mock_logger_client.log_error.call_args_list
-            exception_call = next((call for call in error_calls if 'Network timeout' in call[0][0]), None)
+            exception_call = next((call for call in error_calls if "Network timeout" in call[0][0]), None)
             assert exception_call is not None
-            assert exception_call[0][1]['error_type'] == 'Exception'
+            assert exception_call[0][1]["error_type"] == "Exception"
 
     @pytest.mark.asyncio
     async def test_unsupported_provider_logging(self, client, mock_logger_client):
@@ -184,7 +192,7 @@ class TestLLMGatewayLoggingIntegration:
             "model": "gpt-4",
             "provider": "openai",  # Not supported
             "max_tokens": 100,
-            "temperature": 0.7
+            "temperature": 0.7,
         }
 
         response = client.post("/query", json=request_data)
@@ -194,8 +202,8 @@ class TestLLMGatewayLoggingIntegration:
         assert mock_logger_client.log_error.call_count >= 1
 
         error_call = mock_logger_client.log_error.call_args
-        assert 'Unsupported provider openai' in error_call[0][0]
-        assert error_call[0][1]['error_type'] == 'unsupported_provider'
+        assert "Unsupported provider openai" in error_call[0][0]
+        assert error_call[0][1]["error_type"] == "unsupported_provider"
 
     @pytest.mark.asyncio
     async def test_startup_logging(self, mock_logger_client):
@@ -210,15 +218,15 @@ class TestLLMGatewayLoggingIntegration:
 
         # Check startup business event
         business_call = mock_logger_client.log_business_event.call_args
-        assert business_call[0][0] == 'llm_gateway_startup'
+        assert business_call[0][0] == "llm_gateway_startup"
         startup_data = business_call[0][1]
-        assert 'providers' in startup_data
-        assert 'capabilities' in startup_data
-        assert 'features' in startup_data
+        assert "providers" in startup_data
+        assert "capabilities" in startup_data
+        assert "features" in startup_data
 
         # Check info logging
         info_call = mock_logger_client.log_info.call_args
-        assert 'LLM Gateway service started' in info_call[0][0]
+        assert "LLM Gateway service started" in info_call[0][0]
 
     @pytest.mark.asyncio
     async def test_shutdown_logging(self, mock_logger_client):
@@ -235,7 +243,7 @@ class TestLLMGatewayLoggingIntegration:
         assert mock_logger_client.log_info.call_count >= 1
 
         info_call = mock_logger_client.log_info.call_args
-        assert 'LLM Gateway service shutting down' in info_call[0][0]
+        assert "LLM Gateway service shutting down" in info_call[0][0]
 
     @pytest.mark.asyncio
     async def test_logging_disabled_graceful_handling(self, client):
@@ -244,14 +252,11 @@ class TestLLMGatewayLoggingIntegration:
         global logger_client
         logger_client = None
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_http_client = AsyncMock()
             mock_response = AsyncMock()
             mock_response.status_code = 200
-            mock_response.json.return_value = {
-                "response": "Test response",
-                "done": True
-            }
+            mock_response.json.return_value = {"response": "Test response", "done": True}
             mock_http_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_http_client
 
@@ -261,7 +266,7 @@ class TestLLMGatewayLoggingIntegration:
                 "model": "llama2",
                 "provider": "ollama",
                 "max_tokens": 100,
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
             response = client.post("/query", json=request_data)
@@ -269,7 +274,7 @@ class TestLLMGatewayLoggingIntegration:
 
     def test_request_id_generation(self, client, mock_logger_client):
         """Test that request IDs are properly generated."""
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_http_client = AsyncMock()
             mock_response = AsyncMock()
             mock_response.status_code = 200
@@ -277,11 +282,7 @@ class TestLLMGatewayLoggingIntegration:
             mock_http_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_http_client
 
-            request_data = {
-                "prompt": "Test",
-                "model": "llama2",
-                "provider": "ollama"
-            }
+            request_data = {"prompt": "Test", "model": "llama2", "provider": "ollama"}
 
             client.post("/query", json=request_data)
 
@@ -293,21 +294,21 @@ class TestLLMGatewayLoggingIntegration:
             request_ids = set()
             for call in business_calls + perf_calls:
                 if len(call[0]) > 1 and isinstance(call[0][1], dict):
-                    request_id = call[0][1].get('request_id')
+                    request_id = call[0][1].get("request_id")
                     if request_id:
                         request_ids.add(request_id)
 
             # All calls should use the same request ID
             assert len(request_ids) == 1
             request_id = list(request_ids)[0]
-            assert request_id.startswith('llm_query_')
+            assert request_id.startswith("llm_query_")
 
     @pytest.mark.asyncio
     async def test_performance_metric_accuracy(self, client, mock_logger_client):
         """Test that performance metrics are accurately measured."""
         start_time = time.time()
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_http_client = AsyncMock()
             mock_response = AsyncMock()
             mock_response.status_code = 200
@@ -318,11 +319,7 @@ class TestLLMGatewayLoggingIntegration:
             # Add small delay to ensure measurable processing time
             await asyncio.sleep(0.01)
 
-            request_data = {
-                "prompt": "Test",
-                "model": "llama2",
-                "provider": "ollama"
-            }
+            request_data = {"prompt": "Test", "model": "llama2", "provider": "ollama"}
 
             response = client.post("/query", json=request_data)
             assert response.status_code == 200

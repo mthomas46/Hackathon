@@ -6,16 +6,17 @@ Provides insights into provider performance, cost optimization, and system healt
 
 import time
 from collections import defaultdict, deque
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
-from services.shared.logging import fire_and_forget
 from services.shared.constants_new import ServiceNames
+from services.shared.logging import fire_and_forget
 
 
 @dataclass
 class RequestMetrics:
     """Metrics for a single LLM request."""
+
     timestamp: float
     provider: str
     response_time: float
@@ -29,6 +30,7 @@ class RequestMetrics:
 @dataclass
 class ProviderMetrics:
     """Aggregated metrics for a provider."""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -96,11 +98,17 @@ class MetricsCollector:
         self.hourly_metrics: Dict[int, Dict[str, Any]] = {}
         self.daily_metrics: Dict[int, Dict[str, Any]] = {}
 
-    async def record_request(self, request_type: str, provider: str,
-                           response_time: float, tokens_used: int,
-                           cost: float = 0.0, success: bool = True,
-                           error_type: Optional[str] = None,
-                           user_id: Optional[str] = None):
+    async def record_request(
+        self,
+        request_type: str,
+        provider: str,
+        response_time: float,
+        tokens_used: int,
+        cost: float = 0.0,
+        success: bool = True,
+        error_type: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ):
         """Record metrics for a single LLM request."""
         try:
             metrics = RequestMetrics(
@@ -111,7 +119,7 @@ class MetricsCollector:
                 cost=cost,
                 success=success,
                 error_type=error_type,
-                user_id=user_id
+                user_id=user_id,
             )
 
             # Add to provider metrics
@@ -136,8 +144,8 @@ class MetricsCollector:
                         "cost": cost,
                         "success": success,
                         "error_type": error_type,
-                        "user_id": user_id
-                    }
+                        "user_id": user_id,
+                    },
                 )
 
         except Exception as e:
@@ -145,7 +153,7 @@ class MetricsCollector:
                 "llm_gateway_metrics_error",
                 f"Failed to record metrics: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"error": str(e)}
+                {"error": str(e)},
             )
 
     async def record_error(self, request_type: str, error: str, response_time: float):
@@ -158,7 +166,7 @@ class MetricsCollector:
                 tokens_used=0,
                 cost=0.0,
                 success=False,
-                error_type=error
+                error_type=error,
             )
 
             self.request_history.append(metrics)
@@ -167,10 +175,7 @@ class MetricsCollector:
                 "llm_gateway_error_recorded",
                 f"Error recorded: {error}",
                 ServiceNames.LLM_GATEWAY,
-                {
-                    "error": error,
-                    "response_time": response_time
-                }
+                {"error": error, "response_time": response_time},
             )
 
         except Exception as e:
@@ -189,7 +194,7 @@ class MetricsCollector:
                 "tokens": 0,
                 "cost": 0.0,
                 "errors": 0,
-                "start_time": metrics.timestamp
+                "start_time": metrics.timestamp,
             }
 
         hour_data = self.hourly_metrics[current_hour]
@@ -206,7 +211,7 @@ class MetricsCollector:
                 "tokens": 0,
                 "cost": 0.0,
                 "errors": 0,
-                "start_time": metrics.timestamp
+                "start_time": metrics.timestamp,
             }
 
         day_data = self.daily_metrics[current_day]
@@ -221,12 +226,8 @@ class MetricsCollector:
         cutoff_hour = int((current_time - 86400) // 3600)  # 24 hours ago
         cutoff_day = int((current_time - 604800) // 86400)  # 7 days ago
 
-        self.hourly_metrics = {
-            h: data for h, data in self.hourly_metrics.items() if h > cutoff_hour
-        }
-        self.daily_metrics = {
-            d: data for d, data in self.daily_metrics.items() if d > cutoff_day
-        }
+        self.hourly_metrics = {h: data for h, data in self.hourly_metrics.items() if h > cutoff_hour}
+        self.daily_metrics = {d: data for d, data in self.daily_metrics.items() if d > cutoff_day}
 
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Get comprehensive metrics summary."""
@@ -236,10 +237,7 @@ class MetricsCollector:
             total_cost = sum(pm.total_cost for pm in self.provider_metrics.values())
 
             # Provider breakdown
-            requests_by_provider = {
-                provider: pm.total_requests
-                for provider, pm in self.provider_metrics.items()
-            }
+            requests_by_provider = {provider: pm.total_requests for provider, pm in self.provider_metrics.items()}
 
             # Performance metrics
             if self.request_history:
@@ -268,7 +266,7 @@ class MetricsCollector:
                 "cache_hit_rate": round(cache_hit_rate, 3),
                 "error_rate": round(error_rate, 2),
                 "uptime_percentage": uptime_percentage,
-                "collection_period_seconds": uptime_seconds
+                "collection_period_seconds": uptime_seconds,
             }
 
         except Exception as e:
@@ -276,7 +274,7 @@ class MetricsCollector:
                 "error": f"Failed to generate metrics summary: {str(e)}",
                 "total_requests": 0,
                 "total_cost": 0.0,
-                "average_response_time": 0.0
+                "average_response_time": 0.0,
             }
 
     def get_provider_metrics(self, provider: Optional[str] = None) -> Dict[str, Any]:
@@ -297,14 +295,11 @@ class MetricsCollector:
                 "average_response_time": round(pm.get_average_response_time(), 3),
                 "average_cost_per_request": round(pm.get_average_cost_per_request(), 4),
                 "tokens_per_second": round(pm.get_tokens_per_second(), 2),
-                "error_breakdown": pm.error_counts
+                "error_breakdown": pm.error_counts,
             }
 
         # Return all providers
-        return {
-            provider: self.get_provider_metrics(provider)
-            for provider in self.provider_metrics.keys()
-        }
+        return {provider: self.get_provider_metrics(provider) for provider in self.provider_metrics.keys()}
 
     def get_performance_trends(self, hours: int = 24) -> Dict[str, Any]:
         """Get performance trends over the specified time period."""
@@ -312,10 +307,7 @@ class MetricsCollector:
         cutoff_time = current_time - (hours * 3600)
 
         # Filter recent requests
-        recent_requests = [
-            req for req in self.request_history
-            if req.timestamp > cutoff_time
-        ]
+        recent_requests = [req for req in self.request_history if req.timestamp > cutoff_time]
 
         if not recent_requests:
             return {"error": f"No requests found in the last {hours} hours"}
@@ -348,7 +340,7 @@ class MetricsCollector:
             "requests_per_hour": round(total_requests / hours, 2),
             "tokens_per_hour": round(total_tokens / hours, 2),
             "cost_per_hour": round(total_cost / hours, 4),
-            "provider_breakdown": dict(provider_stats)
+            "provider_breakdown": dict(provider_stats),
         }
 
     def get_cost_analysis(self) -> Dict[str, Any]:
@@ -359,10 +351,7 @@ class MetricsCollector:
             return {"message": "No cost data available"}
 
         # Cost by provider
-        cost_by_provider = {
-            provider: round(pm.total_cost, 4)
-            for provider, pm in self.provider_metrics.items()
-        }
+        cost_by_provider = {provider: round(pm.total_cost, 4) for provider, pm in self.provider_metrics.items()}
 
         # Cost efficiency (cost per token)
         cost_efficiency = {}
@@ -371,18 +360,14 @@ class MetricsCollector:
                 cost_efficiency[provider] = round(pm.total_cost / pm.total_tokens, 6)
 
         # Most expensive requests
-        expensive_requests = sorted(
-            self.request_history,
-            key=lambda x: x.cost,
-            reverse=True
-        )[:10]
+        expensive_requests = sorted(self.request_history, key=lambda x: x.cost, reverse=True)[:10]
 
         expensive_list = [
             {
                 "provider": req.provider,
                 "cost": round(req.cost, 4),
                 "tokens": req.tokens_used,
-                "timestamp": req.timestamp
+                "timestamp": req.timestamp,
             }
             for req in expensive_requests
             if req.cost > 0
@@ -393,7 +378,7 @@ class MetricsCollector:
             "cost_by_provider": cost_by_provider,
             "cost_efficiency_per_token": cost_efficiency,
             "most_expensive_requests": expensive_list,
-            "average_cost_per_request": round(total_cost / max(len(self.request_history), 1), 4)
+            "average_cost_per_request": round(total_cost / max(len(self.request_history), 1), 4),
         }
 
     def reset_metrics(self):
@@ -404,8 +389,4 @@ class MetricsCollector:
         self.daily_metrics.clear()
         self.start_time = time.time()
 
-        fire_and_forget(
-            "llm_gateway_metrics_reset",
-            "Metrics have been reset",
-            ServiceNames.LLM_GATEWAY
-        )
+        fire_and_forget("llm_gateway_metrics_reset", "Metrics have been reset", ServiceNames.LLM_GATEWAY)
