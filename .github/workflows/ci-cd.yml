@@ -1,0 +1,290 @@
+# 🚀 LLM Documentation Ecosystem - CI/CD Pipeline
+# ============================================================================
+# Comprehensive CI/CD pipeline with linting, testing, and deployment
+# ============================================================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, simulation ]
+  pull_request:
+    branches: [ main, develop, simulation ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  PYTHON_VERSION: '3.13'
+  NODE_VERSION: '18'
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # ============================================================================
+  # 🔍 LINTING & CODE QUALITY
+  # ============================================================================
+  linting:
+    name: "🔧 Code Quality & Linting"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 📦 Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: 📦 Install development dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: 🔍 Run isort (import sorting)
+      run: |
+        echo "🔄 Running import sorting checks..."
+        isort --profile=black --line-length=120 --check-only --diff services/ scripts/ *.py
+        echo "✅ Import sorting passed"
+
+    - name: 🎨 Run Black (code formatting)
+      run: |
+        echo "🎨 Running code formatting checks..."
+        black --line-length=120 --check --diff services/ scripts/ *.py
+        echo "✅ Code formatting passed"
+
+    - name: 🐛 Run flake8 (linting)
+      run: |
+        echo "🐛 Running comprehensive linting..."
+        flake8 services/ scripts/ *.py --max-line-length=120 --extend-ignore=E203,W503 --max-complexity=10 --count --statistics
+        echo "✅ Linting passed"
+
+    - name: 📝 Run docformatter (docstring formatting)
+      run: |
+        echo "📝 Running docstring formatting checks..."
+        docformatter --check --pre-summary-newline --recursive services/ scripts/ *.py
+        echo "✅ Docstring formatting passed"
+
+  # ============================================================================
+  # 🧪 TESTING
+  # ============================================================================
+  testing:
+    name: "🧪 Testing Suite"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: linting
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: 🧪 Run unit tests
+      run: |
+        echo "🧪 Running unit tests..."
+        python -m pytest tests/unit/ -v --tb=short --cov=services/ --cov-report=xml --cov-report=term-missing
+
+    - name: 🧪 Run integration tests
+      run: |
+        echo "🔗 Running integration tests..."
+        python -m pytest tests/integration/ -v --tb=short --durations=10
+
+    - name: 📊 Upload coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # ============================================================================
+  # 🐳 DOCKER BUILD & VALIDATION
+  # ============================================================================
+  docker-validation:
+    name: "🐳 Docker Build & Validation"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: testing
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐳 Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 🐳 Build and validate services
+      run: |
+        echo "🐳 Building and validating Docker services..."
+
+        # Build core services
+        make docker-build-core
+
+        # Validate service health
+        make validate-service-health
+
+        echo "✅ Docker validation completed"
+
+  # ============================================================================
+  # 🔒 SECURITY SCANNING
+  # ============================================================================
+  security:
+    name: "🔒 Security Scanning"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: linting
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 🔒 Run Bandit (security linting)
+      run: |
+        pip install bandit[toml]
+        echo "🔒 Running security analysis..."
+        bandit -r services/ scripts/ --exclude-dir="*/tests/*,*/test_venv/*" -f json -o security-report.json || true
+        echo "✅ Security scanning completed"
+
+    - name: 🔒 Run Safety (dependency vulnerability check)
+      run: |
+        pip install safety
+        echo "🛡️ Checking for known vulnerabilities..."
+        safety check --json | tee safety-report.json || true
+        echo "✅ Vulnerability check completed"
+
+  # ============================================================================
+  # 📊 PERFORMANCE TESTING
+  # ============================================================================
+  performance:
+    name: "⚡ Performance Testing"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: testing
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 📦 Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: ⚡ Run performance tests
+      run: |
+        echo "⚡ Running performance benchmarks..."
+        python -m pytest tests/performance/ -v --tb=short --benchmark-only --benchmark-json=performance-results.json
+
+  # ============================================================================
+  # 🚀 DEPLOYMENT (CONDITIONAL)
+  # ============================================================================
+  deploy-staging:
+    name: "🚀 Deploy to Staging"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    needs: [linting, testing, docker-validation, security]
+    environment: staging
+
+    steps:
+    - name: 🚀 Deploy to staging environment
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        # Add deployment commands here
+        echo "✅ Staging deployment completed"
+
+  deploy-production:
+    name: "🎯 Deploy to Production"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [linting, testing, docker-validation, security, performance]
+    environment: production
+
+    steps:
+    - name: 🎯 Deploy to production environment
+      run: |
+        echo "🎯 Deploying to production environment..."
+        # Add production deployment commands here
+        echo "✅ Production deployment completed"
+
+  # ============================================================================
+  # 📋 SUMMARY REPORT
+  # ============================================================================
+  summary:
+    name: "📋 Pipeline Summary"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [linting, testing, docker-validation, security, performance]
+
+    steps:
+    - name: 📋 Generate pipeline summary
+      run: |
+        echo "📋 LLM Documentation Ecosystem - CI/CD Summary"
+        echo "=================================================="
+        echo "🔧 Linting: ${{ needs.linting.result }}"
+        echo "🧪 Testing: ${{ needs.testing.result }}"
+        echo "🐳 Docker: ${{ needs.docker-validation.result }}"
+        echo "🔒 Security: ${{ needs.security.result }}"
+        echo "⚡ Performance: ${{ needs.performance.result }}"
+        echo "=================================================="
+
+        if [[ "${{ needs.linting.result }}" == "success" && "${{ needs.testing.result }}" == "success" ]]; then
+          echo "✅ Pipeline completed successfully!"
+        else
+          echo "❌ Pipeline had failures - check logs above"
+          exit 1
+        fi

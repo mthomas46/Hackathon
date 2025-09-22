@@ -10,8 +10,7 @@ from unittest.mock import Mock, patch, AsyncMock
 from services.shared.monitoring.health import (
     HealthStatus,
     HealthCheck,
-    HealthMonitor,
-    ServiceHealth,
+    HealthManager,
     SystemHealth
 )
 

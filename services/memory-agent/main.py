@@ -38,6 +38,9 @@ try:
 except Exception:
     aioredis = None
 
+# Global logger client instance
+logger_client = None
+
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================

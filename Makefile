@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status test-redis test-orchestrator test-discovery-agent test-doc-store test-prompt-store test-interpreter test-llm-gateway test-summarizer-hub test-bedrock-proxy test-github-mcp test-analysis-service test-code-analyzer test-secure-analyzer test-architecture-digitizer test-memory-agent test-notification-service test-source-agent test-cli test-mock-data-generator test-frontend test-simulation-dashboard test-data-services-dashboard test-log-collector test-project-simulation test-core-services test-document-services test-ai-services test-analysis-services test-agent-services test-utility-services test-frontend-services test-simulation-services test-all-services test-infrastructure test-business-logic test-integration-ready perf-test-project-simulation perf-test-analysis-service perf-test-all validate-service-health validate-docker-config validate-test-coverage validate-all test-ci-unit test-ci-integration test-ci-e2e test-ci-performance test-ci-full
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status test-redis test-orchestrator test-discovery-agent test-doc-store test-prompt-store test-interpreter test-llm-gateway test-summarizer-hub test-bedrock-proxy test-github-mcp test-analysis-service test-code-analyzer test-secure-analyzer test-architecture-digitizer test-memory-agent test-notification-service test-source-agent test-cli test-mock-data-generator test-frontend test-simulation-dashboard test-data-services-dashboard test-log-collector test-project-simulation test-core-services test-document-services test-ai-services test-analysis-services test-agent-services test-utility-services test-frontend-services test-simulation-services test-all-services test-infrastructure test-business-logic test-integration-ready perf-test-project-simulation perf-test-analysis-service perf-test-all validate-service-health validate-docker-config validate-test-coverage validate-all test-ci-unit test-ci-integration test-ci-e2e test-ci-performance test-ci-full lint lint-imports lint-format lint-check lint-fix lint-security
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -300,6 +300,56 @@ test-ci-performance: ## CI performance tests
 
 test-ci-full: test-ci-unit test-ci-integration test-ci-e2e test-ci-performance ## Full CI pipeline
 	@echo "$(GREEN)🎉 Full CI pipeline completed!$(NC)"
+
+# Code Quality & Linting
+# ============================================================================
+
+lint: lint-check ## Run all linting checks (alias for lint-check)
+
+lint-check: ## Run comprehensive linting checks
+	@echo "$(BLUE)🔧 Running comprehensive linting checks...$(NC)"
+	$(PYTHON) -m pip install -q -r requirements-dev.txt
+	@echo "$(YELLOW)🔄 Checking import sorting...$(NC)"
+	isort --profile=black --line-length=120 --check-only --diff services/ scripts/ *.py || (echo "$(RED)❌ Import sorting failed$(NC)" && exit 1)
+	@echo "$(YELLOW)🎨 Checking code formatting...$(NC)"
+	black --line-length=120 --check --diff services/ scripts/ *.py || (echo "$(RED)❌ Code formatting failed$(NC)" && exit 1)
+	@echo "$(YELLOW)🐛 Running linting...$(NC)"
+	flake8 services/ scripts/ *.py --max-line-length=120 --extend-ignore=E203,W503 --max-complexity=10 --count --statistics || (echo "$(RED)❌ Linting failed$(NC)" && exit 1)
+	@echo "$(YELLOW)📝 Checking docstring formatting...$(NC)"
+	docformatter --check --pre-summary-newline --recursive services/ scripts/ *.py || (echo "$(RED)❌ Docstring formatting failed$(NC)" && exit 1)
+	@echo "$(GREEN)✅ All linting checks passed!$(NC)"
+
+lint-fix: ## Automatically fix linting issues
+	@echo "$(BLUE)🔧 Running automatic linting fixes...$(NC)"
+	$(PYTHON) -m pip install -q -r requirements-dev.txt
+	@echo "$(YELLOW)🔄 Fixing import sorting...$(NC)"
+	isort --profile=black --line-length=120 services/ scripts/ *.py
+	@echo "$(YELLOW)🎨 Fixing code formatting...$(NC)"
+	black --line-length=120 services/ scripts/ *.py
+	@echo "$(YELLOW)🐛 Running linting (may show remaining issues)...$(NC)"
+	-flake8 services/ scripts/ *.py --max-line-length=120 --extend-ignore=E203,W503 --max-complexity=10 --count --statistics
+	@echo "$(YELLOW)📝 Fixing docstring formatting...$(NC)"
+	docformatter --in-place --pre-summary-newline --recursive services/ scripts/ *.py
+	@echo "$(GREEN)✅ Automatic fixes completed!$(NC)"
+
+lint-imports: ## Check and fix import sorting only
+	@echo "$(BLUE)🔄 Checking import sorting...$(NC)"
+	$(PYTHON) -m pip install -q isort
+	isort --profile=black --line-length=120 --check-only --diff services/ scripts/ *.py || (echo "$(RED)❌ Import sorting issues found$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Import sorting is correct!$(NC)"
+
+lint-format: ## Check and fix code formatting only
+	@echo "$(BLUE)🎨 Checking code formatting...$(NC)"
+	$(PYTHON) -m pip install -q black
+	black --line-length=120 --check --diff services/ scripts/ *.py || (echo "$(RED)❌ Code formatting issues found$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Code formatting is correct!$(NC)"
+
+lint-security: ## Run security analysis
+	@echo "$(BLUE)🔒 Running security analysis...$(NC)"
+	$(PYTHON) -m pip install -q bandit[toml]
+	bandit -r services/ scripts/ --exclude-dir="*/tests/*,*/test_venv/*" -f json -o security-report.json --exit-zero
+	@echo "$(YELLOW)📊 Security report saved to security-report.json$(NC)"
+	@echo "$(GREEN)✅ Security analysis completed!$(NC)"
 
 # Legacy/Compatibility Targets
 # ============================================================================
