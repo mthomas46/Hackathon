@@ -5,6 +5,7 @@ Separated from main module to eliminate circular dependencies.
 """
 
 from typing import List
+
 from services.shared.core.models.models import MemoryItem
 
 # Global memory state - centralized for all modules

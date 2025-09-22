@@ -4,15 +4,15 @@ This module contains all memory management and Redis operations,
 extracted from the main memory-agent service to improve maintainability.
 """
 
-from typing import List, Optional, Any, Dict
 import time
+from typing import Any, Dict, List, Optional
 
 # Import shared utilities from main service module
 from ..modules.shared_utils import (
-    get_memory_max_items,
-    get_memory_ttl_seconds,
     cleanup_expired_memory_items,
-    get_memory_stats_summary
+    get_memory_max_items,
+    get_memory_stats_summary,
+    get_memory_ttl_seconds,
 )
 
 # Import global state from dedicated state module to avoid circular dependencies
@@ -28,8 +28,7 @@ def _lazy_cleanup_memory():
     global _last_cleanup_time
 
     current_time = time.time()
-    if (_last_cleanup_time is None or
-        current_time - _last_cleanup_time > _CLEANUP_INTERVAL_SECONDS):
+    if _last_cleanup_time is None or current_time - _last_cleanup_time > _CLEANUP_INTERVAL_SECONDS:
         # Time to run cleanup
         ttl_seconds = get_memory_ttl_seconds()
         _memory[:] = cleanup_expired_memory_items(_memory, ttl_seconds)
@@ -48,7 +47,7 @@ def put_memory_item(item: Any) -> Dict[str, Any]:
     return {
         "count": len(_memory),
         "max_items": max_items,
-        "utilization_percent": (len(_memory) / max_items) * 100 if max_items > 0 else 0
+        "utilization_percent": (len(_memory) / max_items) * 100 if max_items > 0 else 0,
     }
 
 
