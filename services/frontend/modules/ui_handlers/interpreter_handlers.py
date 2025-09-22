@@ -3,17 +3,19 @@
 Handles interpreter service visualization, including natural language
 query interpretation, intent recognition, and workflow execution.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..interpreter_monitor import interpreter_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class InterpreterUIHandlers:
@@ -38,7 +40,7 @@ class InterpreterUIHandlers:
                 "execution_stats": status_data.get("execution_stats", {}),
                 "recent_interpretations": interpretation_history,
                 "recent_executions": execution_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -791,4 +793,6 @@ class InterpreterUIHandlers:
 """
             return create_html_response(html, "Interpreter Dashboard")
         except Exception as e:
-            return handle_frontend_error("render interpreter dashboard", e, **build_frontend_context("render_interpreter_dashboard"))
+            return handle_frontend_error(
+                "render interpreter dashboard", e, **build_frontend_context("render_interpreter_dashboard")
+            )

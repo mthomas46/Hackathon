@@ -124,82 +124,77 @@ Responsibilities:
 Dependencies: Reporting, Consistency Engine, Doc Store, Orchestrator, Log Collector, Prompt Store, Analysis Service, Code Analyzer, Bedrock Proxy, Discovery Agent, GitHub MCP, Interpreter, Memory Agent, Notification Service, Secure Analyzer, Source Agent, CLI Service; shared render helpers.
 """
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from typing import Optional
 import os
-
-# ============================================================================
-# SHARED MODULES - Leveraging centralized functionality for consistency
-# ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.constants_new import ServiceNames, EnvVars
-from services.shared.utilities import setup_common_middleware
-from services.shared.utilities.error_handling import install_error_handlers
-from services.shared.utilities.logging_client import get_log_collector_client
 import time
+from typing import Optional
+
+from fastapi import FastAPI
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+
+from services.frontend.modules.analysis_monitor import analysis_monitor
+from services.frontend.modules.bedrock_proxy_monitor import bedrock_proxy_monitor
+from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
+from services.frontend.modules.data_browser import data_browser, get_doc_store_summary, get_prompt_store_summary
+from services.frontend.modules.log_cache import (
+    analyze_log_patterns,
+    fetch_log_stats_from_collector,
+    fetch_logs_from_collector,
+    get_cached_logs_data,
+    stream_logs,
+)
+from services.frontend.modules.orchestrator_monitor import get_orchestrator_summary, orchestrator_monitor
 
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
 from services.frontend.modules.shared_utils import (
-    get_reporting_url,
-    get_doc_store_url,
-    get_consistency_engine_url,
-    get_orchestrator_url,
-    get_summarizer_hub_url,
-    get_frontend_clients,
-    create_html_response,
-    handle_frontend_error,
-    create_frontend_success_response,
     build_frontend_context,
+    create_frontend_success_response,
+    create_html_response,
     fetch_service_data,
+    get_consistency_engine_url,
+    get_doc_store_url,
+    get_frontend_clients,
+    get_orchestrator_url,
+    get_reporting_url,
     get_service_url,
+    get_summarizer_hub_url,
+    handle_frontend_error,
+    sanitize_input,
     validate_frontend_request,
-    sanitize_input
 )
+from services.frontend.modules.summarizer_cache import get_cached_summarizer_data, record_summarizer_job
 
 # ============================================================================
 # UI HANDLERS - Extracted page rendering logic
 # ============================================================================
 from services.frontend.modules.ui_handlers import ui_handlers
-from services.frontend.modules.summarizer_cache import get_cached_summarizer_data, record_summarizer_job
-from services.frontend.modules.log_cache import (
-    get_cached_logs_data,
-    fetch_logs_from_collector,
-    fetch_log_stats_from_collector,
-    stream_logs,
-    analyze_log_patterns
-)
-from services.frontend.modules.data_browser import (
-    data_browser,
-    get_doc_store_summary,
-    get_prompt_store_summary
-)
-from services.frontend.modules.orchestrator_monitor import (
-    orchestrator_monitor,
-    get_orchestrator_summary
-)
-from services.frontend.modules.analysis_monitor import analysis_monitor
-from services.frontend.modules.bedrock_proxy_monitor import bedrock_proxy_monitor
-from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
 
 # ============================================================================
 # RENDER UTILITIES - HTML rendering functions
 # ============================================================================
 from services.frontend.utils import (
-    render_index,
-    render_owner_coverage_table,
-    render_topics_html,
+    render_clusters,
     render_consolidation_list,
-    render_search_results,
+    render_counts,
     render_docs_quality,
     render_findings,
-    render_counts,
+    render_index,
+    render_owner_coverage_table,
     render_report_page,
-    render_clusters,
+    render_search_results,
+    render_topics_html,
 )
+from services.shared.core.constants_new import EnvVars, ServiceNames
+
+# ============================================================================
+# SHARED MODULES - Leveraging centralized functionality for consistency
+# ============================================================================
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.utilities import setup_common_middleware
+from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.utilities.logging_client import get_log_collector_client
 
 # Service configuration constants
 SERVICE_NAME = "frontend"
@@ -218,8 +213,9 @@ logger_client = None
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
-    description="HTML UI service for documentation consistency analysis and reporting"
+    description="HTML UI service for documentation consistency analysis and reporting",
 )
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -230,22 +226,48 @@ async def startup_event():
         service_name = getattr(ServiceNames, "FRONTEND", SERVICE_NAME)
         logger_client = await get_log_collector_client(service_name)
         if logger_client:
-            await logger_client.log_business_event("frontend_startup", {
-                "version": SERVICE_VERSION,
-                "capabilities": ["web_ui_dashboard", "real_time_monitoring", "data_visualization", "log_streaming", "service_monitoring", "user_interaction_tracking"],
-                "integrations": ["all_services", "log_collector", "websocket_communication"],
-                "ui_features": ["interactive_dashboards", "real_time_updates", "log_viewer", "service_health_monitoring", "data_browser"],
-                "supported_pages": ["main_dashboard", "findings_reports", "log_dashboard", "service_monitoring", "data_browsers"]
-            })
-            await logger_client.log_info("Frontend service started", {
-                "ui_pages_available": 19,
-                "monitoring_dashboards": 10,
-                "real_time_features": True,
-                "log_integration": True,
-                "websocket_support": True
-            })
+            await logger_client.log_business_event(
+                "frontend_startup",
+                {
+                    "version": SERVICE_VERSION,
+                    "capabilities": [
+                        "web_ui_dashboard",
+                        "real_time_monitoring",
+                        "data_visualization",
+                        "log_streaming",
+                        "service_monitoring",
+                        "user_interaction_tracking",
+                    ],
+                    "integrations": ["all_services", "log_collector", "websocket_communication"],
+                    "ui_features": [
+                        "interactive_dashboards",
+                        "real_time_updates",
+                        "log_viewer",
+                        "service_health_monitoring",
+                        "data_browser",
+                    ],
+                    "supported_pages": [
+                        "main_dashboard",
+                        "findings_reports",
+                        "log_dashboard",
+                        "service_monitoring",
+                        "data_browsers",
+                    ],
+                },
+            )
+            await logger_client.log_info(
+                "Frontend service started",
+                {
+                    "ui_pages_available": 19,
+                    "monitoring_dashboards": 10,
+                    "real_time_features": True,
+                    "log_integration": True,
+                    "websocket_support": True,
+                },
+            )
     except Exception as e:
         print(f"Failed to initialize log collector client: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -255,6 +277,7 @@ async def shutdown_event():
             await logger_client.log_info("Frontend service shutting down")
         except Exception:
             pass
+
 
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 
@@ -293,7 +316,7 @@ async def info():
                     "ANALYSIS_SERVICE_URL": get_analysis_service_url(),
                 },
             },
-            **build_frontend_context("get_info")
+            **build_frontend_context("get_info"),
         )
     except Exception as e:
         return handle_frontend_error("get service info", e, **build_frontend_context("get_info"))
@@ -318,11 +341,7 @@ async def config_effective():
             EnvVars.PROMPT_STORE_URL_ENV: get_prompt_store_url(),
             EnvVars.ANALYSIS_SERVICE_URL_ENV: get_analysis_service_url(),
         }
-        return create_frontend_success_response(
-            "config retrieved",
-            config,
-            **build_frontend_context("get_config")
-        )
+        return create_frontend_success_response("config retrieved", config, **build_frontend_context("get_config"))
     except Exception as e:
         return handle_frontend_error("get effective config", e, **build_frontend_context("get_config"))
 
@@ -338,7 +357,7 @@ async def metrics():
         return create_frontend_success_response(
             "metrics retrieved",
             {"service": ServiceNames.FRONTEND, "routes": len(app.routes)},
-            **build_frontend_context("get_metrics")
+            **build_frontend_context("get_metrics"),
         )
     except Exception as e:
         return handle_frontend_error("get metrics", e, **build_frontend_context("get_metrics"))
@@ -386,7 +405,9 @@ async def ui_confluence_consolidation():
 
 
 @app.get("/reports/jira/staleness")
-async def ui_jira_staleness(min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False):
+async def ui_jira_staleness(
+    min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False
+):
     """Render Jira staleness report page with filtering options.
 
     Shows stale Jira tickets with configurable confidence thresholds.
@@ -470,20 +491,26 @@ async def ui_logs_dashboard():
     try:
         # Log dashboard access
         if logger_client:
-            await logger_client.log_business_event("frontend_page_access", {
-                "request_id": request_id,
-                "page": "logs_dashboard",
-                "page_type": "monitoring_dashboard",
-                "features": ["log_viewer", "real_time_streaming", "statistics", "analytics"],
-                "access_type": "user_navigation"
-            })
+            await logger_client.log_business_event(
+                "frontend_page_access",
+                {
+                    "request_id": request_id,
+                    "page": "logs_dashboard",
+                    "page_type": "monitoring_dashboard",
+                    "features": ["log_viewer", "real_time_streaming", "statistics", "analytics"],
+                    "access_type": "user_navigation",
+                },
+            )
 
-            await logger_client.log_info("Logs dashboard accessed", {
-                "request_id": request_id,
-                "dashboard_type": "comprehensive_log_viewer",
-                "real_time_enabled": True,
-                "statistics_available": True
-            })
+            await logger_client.log_info(
+                "Logs dashboard accessed",
+                {
+                    "request_id": request_id,
+                    "dashboard_type": "comprehensive_log_viewer",
+                    "real_time_enabled": True,
+                    "statistics_available": True,
+                },
+            )
 
         result = ui_handlers.handle_logs_dashboard()
 
@@ -491,13 +518,16 @@ async def ui_logs_dashboard():
 
         # Log successful dashboard rendering
         if logger_client:
-            await logger_client.log_business_event("frontend_page_rendered", {
-                "request_id": request_id,
-                "page": "logs_dashboard",
-                "render_success": True,
-                "processing_time_seconds": processing_time,
-                "page_type": "monitoring_dashboard"
-            })
+            await logger_client.log_business_event(
+                "frontend_page_rendered",
+                {
+                    "request_id": request_id,
+                    "page": "logs_dashboard",
+                    "render_success": True,
+                    "processing_time_seconds": processing_time,
+                    "page_type": "monitoring_dashboard",
+                },
+            )
 
         return result
 
@@ -513,18 +543,21 @@ async def ui_logs_dashboard():
                     "page": "logs_dashboard",
                     "error_type": type(e).__name__,
                     "processing_time_seconds": error_time,
-                    "page_type": "monitoring_dashboard"
+                    "page_type": "monitoring_dashboard",
                 },
-                error=e
+                error=e,
             )
 
-            await logger_client.log_business_event("frontend_page_render_failed", {
-                "request_id": request_id,
-                "page": "logs_dashboard",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "processing_time_seconds": error_time
-            })
+            await logger_client.log_business_event(
+                "frontend_page_render_failed",
+                {
+                    "request_id": request_id,
+                    "page": "logs_dashboard",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "processing_time_seconds": error_time,
+                },
+            )
 
         raise
 
@@ -711,7 +744,7 @@ async def get_workflows_jobs_status():
             "workflows": {},
             "jobs": {},
             "infrastructure": {},
-            "performance": {}
+            "performance": {},
         }
 
         # Get available workflows
@@ -760,21 +793,27 @@ async def get_workflows_jobs_status():
         # Calculate derived status information
         status_data["summary"] = {
             "total_workflows_available": len(status_data["workflows"].get("available", {})),
-            "active_workflows": len([w for w in status_data["workflows"].get("history", []) if w.get("status") in ["running", "pending"]]),
-            "completed_workflows": len([w for w in status_data["workflows"].get("history", []) if w.get("status") == "completed"]),
-            "failed_workflows": len([w for w in status_data["workflows"].get("history", []) if w.get("status") == "failed"]),
+            "active_workflows": len(
+                [w for w in status_data["workflows"].get("history", []) if w.get("status") in ["running", "pending"]]
+            ),
+            "completed_workflows": len(
+                [w for w in status_data["workflows"].get("history", []) if w.get("status") == "completed"]
+            ),
+            "failed_workflows": len(
+                [w for w in status_data["workflows"].get("history", []) if w.get("status") == "failed"]
+            ),
             "active_sagas": len(status_data["jobs"].get("active_sagas", [])),
-            "total_services": len(status_data["infrastructure"].get("services", []))
+            "total_services": len(status_data["infrastructure"].get("services", [])),
         }
 
         return create_frontend_success_response(
-            "workflow and job status retrieved",
-            status_data,
-            **build_frontend_context("get_workflows_jobs_status")
+            "workflow and job status retrieved", status_data, **build_frontend_context("get_workflows_jobs_status")
         )
 
     except Exception as e:
-        return handle_frontend_error("get workflows/jobs status", e, **build_frontend_context("get_workflows_jobs_status"))
+        return handle_frontend_error(
+            "get workflows/jobs status", e, **build_frontend_context("get_workflows_jobs_status")
+        )
 
 
 @app.get("/api/summarizer/status")
@@ -792,10 +831,7 @@ async def get_summarizer_status():
         clients = get_frontend_clients()
         summarizer_url = get_summarizer_hub_url()
 
-        live_data = {
-            "service_status": {},
-            "config": {}
-        }
+        live_data = {"service_status": {}, "config": {}}
 
         # Get service health
         try:
@@ -813,14 +849,12 @@ async def get_summarizer_status():
                 "total_cached_jobs": len(cached_data.get("job_history", [])),
                 "active_prompts": len(cached_data.get("active_prompts", [])),
                 "models_tracked": len(cached_data.get("model_usage", [])),
-                "service_healthy": live_data["service_status"].get("status") == "healthy"
-            }
+                "service_healthy": live_data["service_status"].get("status") == "healthy",
+            },
         }
 
         return create_frontend_success_response(
-            "summarizer status retrieved",
-            status_data,
-            **build_frontend_context("get_summarizer_status")
+            "summarizer status retrieved", status_data, **build_frontend_context("get_summarizer_status")
         )
 
     except Exception as e:
@@ -844,13 +878,13 @@ async def record_summarizer_job_endpoint(job_data: dict):
             prompt=job_data.get("prompt"),
             execution_time=job_data.get("execution_time"),
             results=job_data.get("results"),
-            consistency_analysis=job_data.get("consistency_analysis")
+            consistency_analysis=job_data.get("consistency_analysis"),
         )
 
         return create_frontend_success_response(
             "job recorded successfully",
             {"job_id": job_data.get("job_id")},
-            **build_frontend_context("record_summarizer_job")
+            **build_frontend_context("record_summarizer_job"),
         )
 
     except Exception as e:
@@ -884,13 +918,11 @@ async def get_logs_status():
             "total_cached_logs": len(logs),
             "has_live_stats": "error" not in cached_data.get("live_stats", {}),
             "insights_count": len(cached_data["analysis"].get("insights", [])),
-            "services_count": len(cached_data["summary"].get("services", []))
+            "services_count": len(cached_data["summary"].get("services", [])),
         }
 
         return create_frontend_success_response(
-            "logs status retrieved",
-            cached_data,
-            **build_frontend_context("get_logs_status")
+            "logs status retrieved", cached_data, **build_frontend_context("get_logs_status")
         )
 
     except Exception as e:
@@ -898,11 +930,7 @@ async def get_logs_status():
 
 
 @app.get("/api/logs/fetch")
-async def fetch_logs(
-    service: Optional[str] = None,
-    level: Optional[str] = None,
-    limit: int = 100
-):
+async def fetch_logs(service: Optional[str] = None, level: Optional[str] = None, limit: int = 100):
     """Fetch logs from the log collector service with filtering.
 
     Retrieves fresh logs from the log collector and updates the cache
@@ -914,24 +942,30 @@ async def fetch_logs(
     try:
         # Log log fetching request
         if logger_client:
-            await logger_client.log_business_event("frontend_api_call", {
-                "request_id": request_id,
-                "api_endpoint": "fetch_logs",
-                "operation": "log_data_retrieval",
-                "filters_applied": bool(service or level),
-                "service_filter": service,
-                "level_filter": level,
-                "limit_requested": limit,
-                "data_type": "system_logs"
-            })
+            await logger_client.log_business_event(
+                "frontend_api_call",
+                {
+                    "request_id": request_id,
+                    "api_endpoint": "fetch_logs",
+                    "operation": "log_data_retrieval",
+                    "filters_applied": bool(service or level),
+                    "service_filter": service,
+                    "level_filter": level,
+                    "limit_requested": limit,
+                    "data_type": "system_logs",
+                },
+            )
 
-            await logger_client.log_info("Frontend fetching logs from collector", {
-                "request_id": request_id,
-                "service_filter": service,
-                "level_filter": level,
-                "limit": limit,
-                "log_collector_integration": True
-            })
+            await logger_client.log_info(
+                "Frontend fetching logs from collector",
+                {
+                    "request_id": request_id,
+                    "service_filter": service,
+                    "level_filter": level,
+                    "limit": limit,
+                    "log_collector_integration": True,
+                },
+            )
 
         logs = await fetch_logs_from_collector(service=service, level=level, limit=limit)
 
@@ -940,15 +974,18 @@ async def fetch_logs(
 
         # Log successful log fetching
         if logger_client:
-            await logger_client.log_business_event("frontend_api_success", {
-                "request_id": request_id,
-                "api_endpoint": "fetch_logs",
-                "logs_returned": logs_returned,
-                "processing_time_seconds": processing_time,
-                "filters_applied": bool(service or level),
-                "cache_updated": True,
-                "success": True
-            })
+            await logger_client.log_business_event(
+                "frontend_api_success",
+                {
+                    "request_id": request_id,
+                    "api_endpoint": "fetch_logs",
+                    "logs_returned": logs_returned,
+                    "processing_time_seconds": processing_time,
+                    "filters_applied": bool(service or level),
+                    "cache_updated": True,
+                    "success": True,
+                },
+            )
 
             await logger_client.log_performance_metric(
                 "frontend_log_fetch",
@@ -958,14 +995,14 @@ async def fetch_logs(
                     "logs_returned": logs_returned,
                     "filters_used": bool(service or level),
                     "fetch_success": True,
-                    "log_collector_response_time": processing_time
-                }
+                    "log_collector_response_time": processing_time,
+                },
             )
 
         return create_frontend_success_response(
             f"fetched {len(logs)} logs",
             {"logs": logs, "count": len(logs), "filters": {"service": service, "level": level, "limit": limit}},
-            **build_frontend_context("fetch_logs")
+            **build_frontend_context("fetch_logs"),
         )
 
     except Exception as e:
@@ -983,33 +1020,33 @@ async def fetch_logs(
                     "limit_requested": limit,
                     "error_type": type(e).__name__,
                     "processing_time_seconds": error_time,
-                    "log_collector_failure": True
+                    "log_collector_failure": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger_client.log_business_event("frontend_api_failed", {
-                "request_id": request_id,
-                "api_endpoint": "fetch_logs",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "processing_time_seconds": error_time
-            })
+            await logger_client.log_business_event(
+                "frontend_api_failed",
+                {
+                    "request_id": request_id,
+                    "api_endpoint": "fetch_logs",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "processing_time_seconds": error_time,
+                },
+            )
 
         return handle_frontend_error("fetch logs", e, **build_frontend_context("fetch_logs"))
 
 
 @app.get("/api/logs/stream")
-async def stream_logs_endpoint(
-    service: Optional[str] = None,
-    level: Optional[str] = None,
-    poll_interval: int = 5
-):
+async def stream_logs_endpoint(service: Optional[str] = None, level: Optional[str] = None, poll_interval: int = 5):
     """Stream logs in real-time using Server-Sent Events.
 
     Provides a continuous stream of new logs for live dashboard updates
     and real-time monitoring capabilities.
     """
+
     async def generate():
         try:
             async for log_entry in stream_logs(service=service, level=level, poll_interval=poll_interval):
@@ -1028,7 +1065,7 @@ async def stream_logs_endpoint(
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
-        }
+        },
     )
 
 
@@ -1043,9 +1080,7 @@ async def get_logs_stats():
         stats = await fetch_log_stats_from_collector()
 
         return create_frontend_success_response(
-            "log statistics retrieved",
-            stats,
-            **build_frontend_context("get_logs_stats")
+            "log statistics retrieved", stats, **build_frontend_context("get_logs_stats")
         )
 
     except Exception as e:
@@ -1063,9 +1098,7 @@ async def get_doc_store_status():
         summary = get_doc_store_summary()
 
         return create_frontend_success_response(
-            "doc_store status retrieved",
-            summary,
-            **build_frontend_context("get_doc_store_status")
+            "doc_store status retrieved", summary, **build_frontend_context("get_doc_store_status")
         )
 
     except Exception as e:
@@ -1073,26 +1106,18 @@ async def get_doc_store_status():
 
 
 @app.get("/api/doc_store/documents")
-async def get_doc_store_documents(
-    limit: int = 20,
-    offset: int = 0,
-    force_refresh: bool = False
-):
+async def get_doc_store_documents(limit: int = 20, offset: int = 0, force_refresh: bool = False):
     """Get documents from doc_store with pagination.
 
     Retrieves documents with metadata for browsing and visualization.
     """
     try:
-        result = await data_browser.get_doc_store_documents(
-            limit=limit,
-            offset=offset,
-            force_refresh=force_refresh
-        )
+        result = await data_browser.get_doc_store_documents(limit=limit, offset=offset, force_refresh=force_refresh)
 
         return create_frontend_success_response(
             f"retrieved {len(result['documents'])} documents",
             result,
-            **build_frontend_context("get_doc_store_documents")
+            **build_frontend_context("get_doc_store_documents"),
         )
 
     except Exception as e:
@@ -1110,15 +1135,11 @@ async def get_doc_store_document(doc_id: str):
 
         if result["error"]:
             return create_frontend_success_response(
-                "document retrieval failed",
-                result,
-                **build_frontend_context("get_doc_store_document")
+                "document retrieval failed", result, **build_frontend_context("get_doc_store_document")
             )
 
         return create_frontend_success_response(
-            "document retrieved",
-            result,
-            **build_frontend_context("get_doc_store_document")
+            "document retrieved", result, **build_frontend_context("get_doc_store_document")
         )
 
     except Exception as e:
@@ -1127,10 +1148,7 @@ async def get_doc_store_document(doc_id: str):
 
 @app.get("/api/doc_store/analyses")
 async def get_doc_store_analyses(
-    document_id: Optional[str] = None,
-    limit: int = 20,
-    offset: int = 0,
-    force_refresh: bool = False
+    document_id: Optional[str] = None, limit: int = 20, offset: int = 0, force_refresh: bool = False
 ):
     """Get analyses from doc_store with optional filtering.
 
@@ -1138,16 +1156,11 @@ async def get_doc_store_analyses(
     """
     try:
         result = await data_browser.get_doc_store_analyses(
-            document_id=document_id,
-            limit=limit,
-            offset=offset,
-            force_refresh=force_refresh
+            document_id=document_id, limit=limit, offset=offset, force_refresh=force_refresh
         )
 
         return create_frontend_success_response(
-            f"retrieved {len(result['analyses'])} analyses",
-            result,
-            **build_frontend_context("get_doc_store_analyses")
+            f"retrieved {len(result['analyses'])} analyses", result, **build_frontend_context("get_doc_store_analyses")
         )
 
     except Exception as e:
@@ -1164,9 +1177,7 @@ async def get_doc_store_quality(force_refresh: bool = False):
         result = await data_browser.get_doc_store_quality(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "doc_store quality metrics retrieved",
-            result,
-            **build_frontend_context("get_doc_store_quality")
+            "doc_store quality metrics retrieved", result, **build_frontend_context("get_doc_store_quality")
         )
 
     except Exception as e:
@@ -1183,13 +1194,13 @@ async def get_doc_store_style_examples(force_refresh: bool = False):
         result = await data_browser.get_doc_store_style_examples(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "doc_store style examples retrieved",
-            result,
-            **build_frontend_context("get_doc_store_style_examples")
+            "doc_store style examples retrieved", result, **build_frontend_context("get_doc_store_style_examples")
         )
 
     except Exception as e:
-        return handle_frontend_error("get doc_store style examples", e, **build_frontend_context("get_doc_store_style_examples"))
+        return handle_frontend_error(
+            "get doc_store style examples", e, **build_frontend_context("get_doc_store_style_examples")
+        )
 
 
 @app.get("/api/doc_store/search")
@@ -1202,9 +1213,7 @@ async def search_doc_store(q: str, limit: int = 20):
         result = await data_browser.get_doc_store_search(query=q, limit=limit)
 
         return create_frontend_success_response(
-            f"search completed, found {result['total']} results",
-            result,
-            **build_frontend_context("search_doc_store")
+            f"search completed, found {result['total']} results", result, **build_frontend_context("search_doc_store")
         )
 
     except Exception as e:
@@ -1222,9 +1231,7 @@ async def get_prompt_store_status():
         summary = get_prompt_store_summary()
 
         return create_frontend_success_response(
-            "prompt-store status retrieved",
-            summary,
-            **build_frontend_context("get_prompt_store_status")
+            "prompt-store status retrieved", summary, **build_frontend_context("get_prompt_store_status")
         )
 
     except Exception as e:
@@ -1233,10 +1240,7 @@ async def get_prompt_store_status():
 
 @app.get("/api/prompt-store/prompts")
 async def get_prompt_store_prompts(
-    category: Optional[str] = None,
-    limit: int = 20,
-    offset: int = 0,
-    force_refresh: bool = False
+    category: Optional[str] = None, limit: int = 20, offset: int = 0, force_refresh: bool = False
 ):
     """Get prompts from prompt-store with optional filtering.
 
@@ -1244,20 +1248,17 @@ async def get_prompt_store_prompts(
     """
     try:
         result = await data_browser.get_prompt_store_prompts(
-            category=category,
-            limit=limit,
-            offset=offset,
-            force_refresh=force_refresh
+            category=category, limit=limit, offset=offset, force_refresh=force_refresh
         )
 
         return create_frontend_success_response(
-            f"retrieved {len(result['prompts'])} prompts",
-            result,
-            **build_frontend_context("get_prompt_store_prompts")
+            f"retrieved {len(result['prompts'])} prompts", result, **build_frontend_context("get_prompt_store_prompts")
         )
 
     except Exception as e:
-        return handle_frontend_error("get prompt-store prompts", e, **build_frontend_context("get_prompt_store_prompts"))
+        return handle_frontend_error(
+            "get prompt-store prompts", e, **build_frontend_context("get_prompt_store_prompts")
+        )
 
 
 @app.get("/api/prompt-store/analytics")
@@ -1270,13 +1271,13 @@ async def get_prompt_store_analytics(force_refresh: bool = False):
         result = await data_browser.get_prompt_store_analytics(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "prompt-store analytics retrieved",
-            result,
-            **build_frontend_context("get_prompt_store_analytics")
+            "prompt-store analytics retrieved", result, **build_frontend_context("get_prompt_store_analytics")
         )
 
     except Exception as e:
-        return handle_frontend_error("get prompt-store analytics", e, **build_frontend_context("get_prompt_store_analytics"))
+        return handle_frontend_error(
+            "get prompt-store analytics", e, **build_frontend_context("get_prompt_store_analytics")
+        )
 
 
 @app.get("/api/orchestrator/status")
@@ -1290,9 +1291,7 @@ async def get_orchestrator_status():
         summary = get_orchestrator_summary()
 
         return create_frontend_success_response(
-            "orchestrator status retrieved",
-            summary,
-            **build_frontend_context("get_orchestrator_status")
+            "orchestrator status retrieved", summary, **build_frontend_context("get_orchestrator_status")
         )
 
     except Exception as e:
@@ -1310,9 +1309,7 @@ async def get_orchestrator_config(force_refresh: bool = False):
         config_data = await orchestrator_monitor.get_orchestrator_config(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "orchestrator config retrieved",
-            config_data,
-            **build_frontend_context("get_orchestrator_config")
+            "orchestrator config retrieved", config_data, **build_frontend_context("get_orchestrator_config")
         )
 
     except Exception as e:
@@ -1332,11 +1329,13 @@ async def get_orchestrator_redis_activity(force_refresh: bool = False):
         return create_frontend_success_response(
             "orchestrator Redis activity retrieved",
             activity_data,
-            **build_frontend_context("get_orchestrator_redis_activity")
+            **build_frontend_context("get_orchestrator_redis_activity"),
         )
 
     except Exception as e:
-        return handle_frontend_error("get orchestrator Redis activity", e, **build_frontend_context("get_orchestrator_redis_activity"))
+        return handle_frontend_error(
+            "get orchestrator Redis activity", e, **build_frontend_context("get_orchestrator_redis_activity")
+        )
 
 
 @app.get("/api/orchestrator/workflows")
@@ -1350,13 +1349,13 @@ async def get_orchestrator_workflows(force_refresh: bool = False):
         workflow_data = await orchestrator_monitor.get_orchestrator_workflows(force_refresh=force_refresh)
 
         return create_frontend_success_response(
-            "orchestrator workflows retrieved",
-            workflow_data,
-            **build_frontend_context("get_orchestrator_workflows")
+            "orchestrator workflows retrieved", workflow_data, **build_frontend_context("get_orchestrator_workflows")
         )
 
     except Exception as e:
-        return handle_frontend_error("get orchestrator workflows", e, **build_frontend_context("get_orchestrator_workflows"))
+        return handle_frontend_error(
+            "get orchestrator workflows", e, **build_frontend_context("get_orchestrator_workflows")
+        )
 
 
 @app.get("/api/orchestrator/health")
@@ -1369,9 +1368,7 @@ async def get_orchestrator_health():
         health_data = await orchestrator_monitor.get_service_health_status()
 
         return create_frontend_success_response(
-            "orchestrator health status retrieved",
-            health_data,
-            **build_frontend_context("get_orchestrator_health")
+            "orchestrator health status retrieved", health_data, **build_frontend_context("get_orchestrator_health")
         )
 
     except Exception as e:
@@ -1389,9 +1386,7 @@ async def get_analysis_status():
         status_data = await analysis_monitor.get_analysis_status()
 
         return create_frontend_success_response(
-            "analysis status retrieved",
-            status_data,
-            **build_frontend_context("get_analysis_status")
+            "analysis status retrieved", status_data, **build_frontend_context("get_analysis_status")
         )
 
     except Exception as e:
@@ -1404,7 +1399,7 @@ async def get_analysis_findings(
     finding_type: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    force_refresh: bool = False
+    force_refresh: bool = False,
 ):
     """Get analysis findings with filtering and pagination.
 
@@ -1413,17 +1408,11 @@ async def get_analysis_findings(
     """
     try:
         result = await analysis_monitor.get_findings(
-            severity=severity,
-            finding_type=finding_type,
-            limit=limit,
-            offset=offset,
-            force_refresh=force_refresh
+            severity=severity, finding_type=finding_type, limit=limit, offset=offset, force_refresh=force_refresh
         )
 
         return create_frontend_success_response(
-            f"retrieved {len(result['findings'])} findings",
-            result,
-            **build_frontend_context("get_analysis_findings")
+            f"retrieved {len(result['findings'])} findings", result, **build_frontend_context("get_analysis_findings")
         )
 
     except Exception as e:
@@ -1442,15 +1431,11 @@ async def get_analysis_result(analysis_id: str):
 
         if result.get("error"):
             return create_frontend_success_response(
-                "analysis result retrieval failed",
-                result,
-                **build_frontend_context("get_analysis_result")
+                "analysis result retrieval failed", result, **build_frontend_context("get_analysis_result")
             )
 
         return create_frontend_success_response(
-            "analysis result retrieved",
-            result,
-            **build_frontend_context("get_analysis_result")
+            "analysis result retrieved", result, **build_frontend_context("get_analysis_result")
         )
 
     except Exception as e:
@@ -1468,15 +1453,11 @@ async def run_analysis_endpoint(analysis_request: dict):
         result = await analysis_monitor.run_analysis(
             targets=analysis_request.get("targets", []),
             analysis_type=analysis_request.get("analysis_type", "consistency"),
-            options=analysis_request.get("options", {})
+            options=analysis_request.get("options", {}),
         )
 
         status_message = "analysis completed successfully" if result["success"] else "analysis failed"
-        return create_frontend_success_response(
-            status_message,
-            result,
-            **build_frontend_context("run_analysis")
-        )
+        return create_frontend_success_response(status_message, result, **build_frontend_context("run_analysis"))
 
     except Exception as e:
         return handle_frontend_error("run analysis", e, **build_frontend_context("run_analysis"))
@@ -1493,9 +1474,7 @@ async def get_analysis_report(report_type: str):
         report_data = await analysis_monitor.get_reports(report_type=report_type)
 
         return create_frontend_success_response(
-            f"{report_type} report retrieved",
-            report_data,
-            **build_frontend_context("get_analysis_report")
+            f"{report_type} report retrieved", report_data, **build_frontend_context("get_analysis_report")
         )
 
     except Exception as e:
@@ -1515,7 +1494,7 @@ async def get_analysis_history(limit: int = 20):
         return create_frontend_success_response(
             f"retrieved {len(history)} analysis runs from history",
             {"history": history, "limit": limit},
-            **build_frontend_context("get_analysis_history")
+            **build_frontend_context("get_analysis_history"),
         )
 
     except Exception as e:
@@ -1536,13 +1515,11 @@ async def get_finding_details(finding_id: str):
             return create_frontend_success_response(
                 "finding not found",
                 {"finding": None, "error": "Finding not found"},
-                **build_frontend_context("get_finding_details")
+                **build_frontend_context("get_finding_details"),
             )
 
         return create_frontend_success_response(
-            "finding details retrieved",
-            finding_details,
-            **build_frontend_context("get_finding_details")
+            "finding details retrieved", finding_details, **build_frontend_context("get_finding_details")
         )
 
     except Exception as e:
@@ -1556,26 +1533,21 @@ async def get_code_analyzer_status():
     try:
         status_data = await code_analyzer_monitor.get_analyzer_status()
         return create_frontend_success_response(
-            "code analyzer status retrieved",
-            status_data,
-            **build_frontend_context("get_code_analyzer_status")
+            "code analyzer status retrieved", status_data, **build_frontend_context("get_code_analyzer_status")
         )
     except Exception as e:
-        return handle_frontend_error("get code analyzer status", e, **build_frontend_context("get_code_analyzer_status"))
+        return handle_frontend_error(
+            "get code analyzer status", e, **build_frontend_context("get_code_analyzer_status")
+        )
 
 
 @app.post("/api/code-analyzer/analyze-text")
 async def analyze_text_code(req: dict):
     """Analyze text content for code quality and issues."""
     try:
-        result = await code_analyzer_monitor.analyze_text(
-            req.get("text", ""),
-            req.get("analysis_type", "general")
-        )
+        result = await code_analyzer_monitor.analyze_text(req.get("text", ""), req.get("analysis_type", "general"))
         return create_frontend_success_response(
-            "text analysis completed",
-            result,
-            **build_frontend_context("analyze_text_code")
+            "text analysis completed", result, **build_frontend_context("analyze_text_code")
         )
     except Exception as e:
         return handle_frontend_error("analyze text code", e, **build_frontend_context("analyze_text_code"))
@@ -1585,14 +1557,9 @@ async def analyze_text_code(req: dict):
 async def analyze_files_code(req: dict):
     """Analyze multiple files for code quality and issues."""
     try:
-        result = await code_analyzer_monitor.analyze_files(
-            req.get("files", []),
-            req.get("analysis_type", "general")
-        )
+        result = await code_analyzer_monitor.analyze_files(req.get("files", []), req.get("analysis_type", "general"))
         return create_frontend_success_response(
-            "files analysis completed",
-            result,
-            **build_frontend_context("analyze_files_code")
+            "files analysis completed", result, **build_frontend_context("analyze_files_code")
         )
     except Exception as e:
         return handle_frontend_error("analyze files code", e, **build_frontend_context("analyze_files_code"))
@@ -1604,9 +1571,7 @@ async def security_scan_code(req: dict):
     try:
         result = await code_analyzer_monitor.scan_security(req.get("code", ""))
         return create_frontend_success_response(
-            "security scan completed",
-            result,
-            **build_frontend_context("security_scan_code")
+            "security scan completed", result, **build_frontend_context("security_scan_code")
         )
     except Exception as e:
         return handle_frontend_error("security scan code", e, **build_frontend_context("security_scan_code"))
@@ -1616,14 +1581,9 @@ async def security_scan_code(req: dict):
 async def style_check_code(req: dict):
     """Check code style compliance."""
     try:
-        result = await code_analyzer_monitor.check_style(
-            req.get("code", ""),
-            req.get("style", "google")
-        )
+        result = await code_analyzer_monitor.check_style(req.get("code", ""), req.get("style", "google"))
         return create_frontend_success_response(
-            "style check completed",
-            result,
-            **build_frontend_context("style_check_code")
+            "style check completed", result, **build_frontend_context("style_check_code")
         )
     except Exception as e:
         return handle_frontend_error("style check code", e, **build_frontend_context("style_check_code"))
@@ -1636,17 +1596,15 @@ async def get_style_examples():
         # Mock style examples for now
         examples = {
             "python": {
-                "google": "# Google style example\\nimport os\\n\\ndef function_name(param1, param2):\\n    \\\"\\\"\\\"Function docstring.\\\"\\\"\\\"\\n    return param1 + param2",
-                "pep8": "# PEP 8 style example\\nimport os\\n\\ndef function_name(param1, param2):\\n    \\\"\\\"\\\"Function docstring.\\\"\\\"\\\"\\n    return param1 + param2"
+                "google": '# Google style example\\nimport os\\n\\ndef function_name(param1, param2):\\n    \\"\\"\\"Function docstring.\\"\\"\\"\\n    return param1 + param2',
+                "pep8": '# PEP 8 style example\\nimport os\\n\\ndef function_name(param1, param2):\\n    \\"\\"\\"Function docstring.\\"\\"\\"\\n    return param1 + param2',
             },
             "javascript": {
                 "standard": "// Standard style example\\nfunction functionName(param1, param2) {\\n  // Function body\\n  return param1 + param2;\\n}"
-            }
+            },
         }
         return create_frontend_success_response(
-            "style examples retrieved",
-            {"examples": examples},
-            **build_frontend_context("get_style_examples")
+            "style examples retrieved", {"examples": examples}, **build_frontend_context("get_style_examples")
         )
     except Exception as e:
         return handle_frontend_error("get style examples", e, **build_frontend_context("get_style_examples"))
@@ -1658,17 +1616,18 @@ async def get_code_analyzer_history():
     try:
         history = code_analyzer_monitor.get_analysis_history()
         return create_frontend_success_response(
-            "analysis history retrieved",
-            {"history": history},
-            **build_frontend_context("get_code_analyzer_history")
+            "analysis history retrieved", {"history": history}, **build_frontend_context("get_code_analyzer_history")
         )
     except Exception as e:
-        return handle_frontend_error("get code analyzer history", e, **build_frontend_context("get_code_analyzer_history"))
+        return handle_frontend_error(
+            "get code analyzer history", e, **build_frontend_context("get_code_analyzer_history")
+        )
 
 
 # ============================================================================
 # BEDROCK PROXY API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/bedrock-proxy/status")
 async def get_bedrock_proxy_status():
@@ -1680,12 +1639,12 @@ async def get_bedrock_proxy_status():
     try:
         status_data = await bedrock_proxy_monitor.get_proxy_status()
         return create_frontend_success_response(
-            "bedrock proxy status retrieved",
-            status_data,
-            **build_frontend_context("get_bedrock_proxy_status")
+            "bedrock proxy status retrieved", status_data, **build_frontend_context("get_bedrock_proxy_status")
         )
     except Exception as e:
-        return handle_frontend_error("get bedrock proxy status", e, **build_frontend_context("get_bedrock_proxy_status"))
+        return handle_frontend_error(
+            "get bedrock proxy status", e, **build_frontend_context("get_bedrock_proxy_status")
+        )
 
 
 @app.post("/api/bedrock-proxy/invoke")
@@ -1698,7 +1657,11 @@ async def invoke_bedrock_proxy(req: dict):
     try:
         prompt = req.get("prompt")
         if not prompt:
-            return handle_frontend_error("invoke bedrock proxy", ValueError("Prompt is required"), **build_frontend_context("invoke_bedrock_proxy"))
+            return handle_frontend_error(
+                "invoke bedrock proxy",
+                ValueError("Prompt is required"),
+                **build_frontend_context("invoke_bedrock_proxy"),
+            )
 
         result = await bedrock_proxy_monitor.invoke_ai(
             prompt=prompt,
@@ -1707,20 +1670,21 @@ async def invoke_bedrock_proxy(req: dict):
             title=req.get("title"),
             model=req.get("model"),
             region=req.get("region"),
-            **req.get("params", {})
+            **req.get("params", {}),
         )
 
         if result.get("success"):
             return create_frontend_success_response(
                 "bedrock proxy invocation completed",
-                {
-                    "invocation_id": result.get("invocation_id"),
-                    "response": result.get("response")
-                },
-                **build_frontend_context("invoke_bedrock_proxy")
+                {"invocation_id": result.get("invocation_id"), "response": result.get("response")},
+                **build_frontend_context("invoke_bedrock_proxy"),
             )
         else:
-            return handle_frontend_error("invoke bedrock proxy", Exception(result.get("error", "Unknown error")), **build_frontend_context("invoke_bedrock_proxy"))
+            return handle_frontend_error(
+                "invoke bedrock proxy",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("invoke_bedrock_proxy"),
+            )
 
     except Exception as e:
         return handle_frontend_error("invoke bedrock proxy", e, **build_frontend_context("invoke_bedrock_proxy"))
@@ -1736,17 +1700,18 @@ async def get_bedrock_proxy_history(limit: int = 20):
     try:
         history = bedrock_proxy_monitor.get_invocation_history(limit=limit)
         return create_frontend_success_response(
-            "bedrock proxy history retrieved",
-            history,
-            **build_frontend_context("get_bedrock_proxy_history")
+            "bedrock proxy history retrieved", history, **build_frontend_context("get_bedrock_proxy_history")
         )
     except Exception as e:
-        return handle_frontend_error("get bedrock proxy history", e, **build_frontend_context("get_bedrock_proxy_history"))
+        return handle_frontend_error(
+            "get bedrock proxy history", e, **build_frontend_context("get_bedrock_proxy_history")
+        )
 
 
 # ============================================================================
 # DISCOVERY AGENT API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/discovery-agent/status")
 async def get_discovery_agent_status():
@@ -1757,14 +1722,15 @@ async def get_discovery_agent_status():
     """
     try:
         from .modules.discovery_agent_monitor import discovery_agent_monitor
+
         status_data = await discovery_agent_monitor.get_discovery_status()
         return create_frontend_success_response(
-            "discovery agent status retrieved",
-            status_data,
-            **build_frontend_context("get_discovery_agent_status")
+            "discovery agent status retrieved", status_data, **build_frontend_context("get_discovery_agent_status")
         )
     except Exception as e:
-        return handle_frontend_error("get discovery agent status", e, **build_frontend_context("get_discovery_agent_status"))
+        return handle_frontend_error(
+            "get discovery agent status", e, **build_frontend_context("get_discovery_agent_status")
+        )
 
 
 @app.post("/api/discovery-agent/discover")
@@ -1779,13 +1745,17 @@ async def discover_service_endpoints(req: dict):
 
         service_url = req.get("service_url")
         if not service_url:
-            return handle_frontend_error("discover service endpoints", ValueError("service_url is required"), **build_frontend_context("discover_service_endpoints"))
+            return handle_frontend_error(
+                "discover service endpoints",
+                ValueError("service_url is required"),
+                **build_frontend_context("discover_service_endpoints"),
+            )
 
         result = await discovery_agent_monitor.discover_endpoints(
             service_url=service_url,
             service_name=req.get("service_name"),
             dry_run=req.get("dry_run", False),
-            spec_url=req.get("spec_url")
+            spec_url=req.get("spec_url"),
         )
 
         if result.get("success"):
@@ -1794,15 +1764,21 @@ async def discover_service_endpoints(req: dict):
                 {
                     "discovery_id": result.get("discovery_id"),
                     "endpoints_discovered": result.get("endpoints_discovered"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("discover_service_endpoints")
+                **build_frontend_context("discover_service_endpoints"),
             )
         else:
-            return handle_frontend_error("discover service endpoints", Exception(result.get("error", "Unknown error")), **build_frontend_context("discover_service_endpoints"))
+            return handle_frontend_error(
+                "discover service endpoints",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("discover_service_endpoints"),
+            )
 
     except Exception as e:
-        return handle_frontend_error("discover service endpoints", e, **build_frontend_context("discover_service_endpoints"))
+        return handle_frontend_error(
+            "discover service endpoints", e, **build_frontend_context("discover_service_endpoints")
+        )
 
 
 @app.get("/api/discovery-agent/history")
@@ -1814,19 +1790,21 @@ async def get_discovery_agent_history(limit: int = 20):
     """
     try:
         from .modules.discovery_agent_monitor import discovery_agent_monitor
+
         history = discovery_agent_monitor.get_discovery_history(limit=limit)
         return create_frontend_success_response(
-            "discovery agent history retrieved",
-            history,
-            **build_frontend_context("get_discovery_agent_history")
+            "discovery agent history retrieved", history, **build_frontend_context("get_discovery_agent_history")
         )
     except Exception as e:
-        return handle_frontend_error("get discovery agent history", e, **build_frontend_context("get_discovery_agent_history"))
+        return handle_frontend_error(
+            "get discovery agent history", e, **build_frontend_context("get_discovery_agent_history")
+        )
 
 
 # ============================================================================
 # GITHUB MCP API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/github-mcp/status")
 async def get_github_mcp_status():
@@ -1837,11 +1815,10 @@ async def get_github_mcp_status():
     """
     try:
         from .modules.github_mcp_monitor import github_mcp_monitor
+
         status_data = await github_mcp_monitor.get_mcp_status()
         return create_frontend_success_response(
-            "github-mcp status retrieved",
-            status_data,
-            **build_frontend_context("get_github_mcp_status")
+            "github-mcp status retrieved", status_data, **build_frontend_context("get_github_mcp_status")
         )
     except Exception as e:
         return handle_frontend_error("get github-mcp status", e, **build_frontend_context("get_github_mcp_status"))
@@ -1856,11 +1833,10 @@ async def get_github_mcp_tools(toolsets: Optional[str] = None):
     """
     try:
         from .modules.github_mcp_monitor import github_mcp_monitor
+
         tools = await github_mcp_monitor.get_available_tools(toolsets=toolsets)
         return create_frontend_success_response(
-            "github-mcp tools retrieved",
-            tools,
-            **build_frontend_context("get_github_mcp_tools")
+            "github-mcp tools retrieved", tools, **build_frontend_context("get_github_mcp_tools")
         )
     except Exception as e:
         return handle_frontend_error("get github-mcp tools", e, **build_frontend_context("get_github_mcp_tools"))
@@ -1878,13 +1854,17 @@ async def invoke_github_mcp_tool(req: dict):
 
         tool_name = req.get("tool_name")
         if not tool_name:
-            return handle_frontend_error("invoke github-mcp tool", ValueError("tool_name is required"), **build_frontend_context("invoke_github_mcp_tool"))
+            return handle_frontend_error(
+                "invoke github-mcp tool",
+                ValueError("tool_name is required"),
+                **build_frontend_context("invoke_github_mcp_tool"),
+            )
 
         result = await github_mcp_monitor.invoke_tool(
             tool_name=tool_name,
             arguments=req.get("arguments", {}),
             mock=req.get("mock"),
-            correlation_id=req.get("correlation_id")
+            correlation_id=req.get("correlation_id"),
         )
 
         if result.get("success"):
@@ -1893,12 +1873,16 @@ async def invoke_github_mcp_tool(req: dict):
                 {
                     "invocation_id": result.get("invocation_id"),
                     "tool": result.get("tool"),
-                    "result": result.get("result")
+                    "result": result.get("result"),
                 },
-                **build_frontend_context("invoke_github_mcp_tool")
+                **build_frontend_context("invoke_github_mcp_tool"),
             )
         else:
-            return handle_frontend_error("invoke github-mcp tool", Exception(result.get("error", "Unknown error")), **build_frontend_context("invoke_github_mcp_tool"))
+            return handle_frontend_error(
+                "invoke github-mcp tool",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("invoke_github_mcp_tool"),
+            )
 
     except Exception as e:
         return handle_frontend_error("invoke github-mcp tool", e, **build_frontend_context("invoke_github_mcp_tool"))
@@ -1913,11 +1897,10 @@ async def get_github_mcp_history(limit: int = 20):
     """
     try:
         from .modules.github_mcp_monitor import github_mcp_monitor
+
         history = github_mcp_monitor.get_invocation_history(limit=limit)
         return create_frontend_success_response(
-            "github-mcp history retrieved",
-            history,
-            **build_frontend_context("get_github_mcp_history")
+            "github-mcp history retrieved", history, **build_frontend_context("get_github_mcp_history")
         )
     except Exception as e:
         return handle_frontend_error("get github-mcp history", e, **build_frontend_context("get_github_mcp_history"))
@@ -1926,6 +1909,7 @@ async def get_github_mcp_history(limit: int = 20):
 # ============================================================================
 # INTERPRETER API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/interpreter/status")
 async def get_interpreter_status():
@@ -1936,11 +1920,10 @@ async def get_interpreter_status():
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
+
         status_data = await interpreter_monitor.get_interpreter_status()
         return create_frontend_success_response(
-            "interpreter status retrieved",
-            status_data,
-            **build_frontend_context("get_interpreter_status")
+            "interpreter status retrieved", status_data, **build_frontend_context("get_interpreter_status")
         )
     except Exception as e:
         return handle_frontend_error("get interpreter status", e, **build_frontend_context("get_interpreter_status"))
@@ -1955,11 +1938,10 @@ async def get_interpreter_intents():
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
+
         intents = await interpreter_monitor.get_supported_intents()
         return create_frontend_success_response(
-            "interpreter intents retrieved",
-            intents,
-            **build_frontend_context("get_interpreter_intents")
+            "interpreter intents retrieved", intents, **build_frontend_context("get_interpreter_intents")
         )
     except Exception as e:
         return handle_frontend_error("get interpreter intents", e, **build_frontend_context("get_interpreter_intents"))
@@ -1977,12 +1959,12 @@ async def interpret_query(req: dict):
 
         query = req.get("query")
         if not query:
-            return handle_frontend_error("interpret query", ValueError("query is required"), **build_frontend_context("interpret_query"))
+            return handle_frontend_error(
+                "interpret query", ValueError("query is required"), **build_frontend_context("interpret_query")
+            )
 
         result = await interpreter_monitor.interpret_query(
-            query=query,
-            session_id=req.get("session_id"),
-            user_id=req.get("user_id")
+            query=query, session_id=req.get("session_id"), user_id=req.get("user_id")
         )
 
         if result.get("success"):
@@ -1993,12 +1975,16 @@ async def interpret_query(req: dict):
                     "intent": result.get("intent"),
                     "confidence": result.get("confidence"),
                     "workflow": result.get("workflow"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("interpret_query")
+                **build_frontend_context("interpret_query"),
             )
         else:
-            return handle_frontend_error("interpret query", Exception(result.get("error", "Unknown error")), **build_frontend_context("interpret_query"))
+            return handle_frontend_error(
+                "interpret query",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("interpret_query"),
+            )
 
     except Exception as e:
         return handle_frontend_error("interpret query", e, **build_frontend_context("interpret_query"))
@@ -2016,12 +2002,14 @@ async def execute_interpreted_workflow(req: dict):
 
         query = req.get("query")
         if not query:
-            return handle_frontend_error("execute interpreted workflow", ValueError("query is required"), **build_frontend_context("execute_interpreted_workflow"))
+            return handle_frontend_error(
+                "execute interpreted workflow",
+                ValueError("query is required"),
+                **build_frontend_context("execute_interpreted_workflow"),
+            )
 
         result = await interpreter_monitor.execute_workflow(
-            query=query,
-            session_id=req.get("session_id"),
-            user_id=req.get("user_id")
+            query=query, session_id=req.get("session_id"), user_id=req.get("user_id")
         )
 
         if result.get("success"):
@@ -2031,15 +2019,21 @@ async def execute_interpreted_workflow(req: dict):
                     "execution_id": result.get("execution_id"),
                     "results": result.get("results"),
                     "execution_time": result.get("execution_time"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("execute_interpreted_workflow")
+                **build_frontend_context("execute_interpreted_workflow"),
             )
         else:
-            return handle_frontend_error("execute interpreted workflow", Exception(result.get("error", "Unknown error")), **build_frontend_context("execute_interpreted_workflow"))
+            return handle_frontend_error(
+                "execute interpreted workflow",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("execute_interpreted_workflow"),
+            )
 
     except Exception as e:
-        return handle_frontend_error("execute interpreted workflow", e, **build_frontend_context("execute_interpreted_workflow"))
+        return handle_frontend_error(
+            "execute interpreted workflow", e, **build_frontend_context("execute_interpreted_workflow")
+        )
 
 
 @app.get("/api/interpreter/interpretations")
@@ -2051,11 +2045,10 @@ async def get_interpreter_history(limit: int = 20):
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
+
         history = interpreter_monitor.get_interpretation_history(limit=limit)
         return create_frontend_success_response(
-            "interpreter interpretation history retrieved",
-            history,
-            **build_frontend_context("get_interpreter_history")
+            "interpreter interpretation history retrieved", history, **build_frontend_context("get_interpreter_history")
         )
     except Exception as e:
         return handle_frontend_error("get interpreter history", e, **build_frontend_context("get_interpreter_history"))
@@ -2070,11 +2063,10 @@ async def get_execution_history(limit: int = 20):
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
+
         history = interpreter_monitor.get_execution_history(limit=limit)
         return create_frontend_success_response(
-            "interpreter execution history retrieved",
-            history,
-            **build_frontend_context("get_execution_history")
+            "interpreter execution history retrieved", history, **build_frontend_context("get_execution_history")
         )
     except Exception as e:
         return handle_frontend_error("get execution history", e, **build_frontend_context("get_execution_history"))
@@ -2083,6 +2075,7 @@ async def get_execution_history(limit: int = 20):
 # ============================================================================
 # MEMORY AGENT API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/memory-agent/status")
 async def get_memory_agent_status():
@@ -2093,11 +2086,10 @@ async def get_memory_agent_status():
     """
     try:
         from .modules.memory_agent_monitor import memory_agent_monitor
+
         status_data = await memory_agent_monitor.get_memory_status()
         return create_frontend_success_response(
-            "memory agent status retrieved",
-            status_data,
-            **build_frontend_context("get_memory_agent_status")
+            "memory agent status retrieved", status_data, **build_frontend_context("get_memory_agent_status")
         )
     except Exception as e:
         return handle_frontend_error("get memory agent status", e, **build_frontend_context("get_memory_agent_status"))
@@ -2112,11 +2104,10 @@ async def get_memory_agent_items(type: Optional[str] = None, key: Optional[str] 
     """
     try:
         from .modules.memory_agent_monitor import memory_agent_monitor
+
         items = await memory_agent_monitor.list_memory_items(type=type, key=key, limit=limit)
         return create_frontend_success_response(
-            "memory agent items retrieved",
-            items,
-            **build_frontend_context("get_memory_agent_items")
+            "memory agent items retrieved", items, **build_frontend_context("get_memory_agent_items")
         )
     except Exception as e:
         return handle_frontend_error("get memory agent items", e, **build_frontend_context("get_memory_agent_items"))
@@ -2137,26 +2128,28 @@ async def store_memory_agent_item(req: dict):
         value = req.get("value")
 
         if not item_type or not key or value is None:
-            return handle_frontend_error("store memory item", ValueError("type, key, and value are required"), **build_frontend_context("store_memory_agent_item"))
+            return handle_frontend_error(
+                "store memory item",
+                ValueError("type, key, and value are required"),
+                **build_frontend_context("store_memory_agent_item"),
+            )
 
         result = await memory_agent_monitor.store_memory_item(
-            item_type=item_type,
-            key=key,
-            value=value,
-            metadata=req.get("metadata")
+            item_type=item_type, key=key, value=value, metadata=req.get("metadata")
         )
 
         if result.get("success"):
             return create_frontend_success_response(
                 "memory item stored successfully",
-                {
-                    "item_id": result.get("item_id"),
-                    "response": result.get("response")
-                },
-                **build_frontend_context("store_memory_agent_item")
+                {"item_id": result.get("item_id"), "response": result.get("response")},
+                **build_frontend_context("store_memory_agent_item"),
             )
         else:
-            return handle_frontend_error("store memory item", Exception(result.get("error", "Unknown error")), **build_frontend_context("store_memory_agent_item"))
+            return handle_frontend_error(
+                "store memory item",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("store_memory_agent_item"),
+            )
 
     except Exception as e:
         return handle_frontend_error("store memory item", e, **build_frontend_context("store_memory_agent_item"))
@@ -2171,19 +2164,21 @@ async def get_memory_agent_history(limit: int = 20):
     """
     try:
         from .modules.memory_agent_monitor import memory_agent_monitor
+
         history = memory_agent_monitor.get_memory_history(limit=limit)
         return create_frontend_success_response(
-            "memory agent history retrieved",
-            history,
-            **build_frontend_context("get_memory_agent_history")
+            "memory agent history retrieved", history, **build_frontend_context("get_memory_agent_history")
         )
     except Exception as e:
-        return handle_frontend_error("get memory agent history", e, **build_frontend_context("get_memory_agent_history"))
+        return handle_frontend_error(
+            "get memory agent history", e, **build_frontend_context("get_memory_agent_history")
+        )
 
 
 # ============================================================================
 # NOTIFICATION SERVICE API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/notification-service/status")
 async def get_notification_service_status():
@@ -2194,14 +2189,17 @@ async def get_notification_service_status():
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
+
         status_data = await notification_service_monitor.get_notification_status()
         return create_frontend_success_response(
             "notification service status retrieved",
             status_data,
-            **build_frontend_context("get_notification_service_status")
+            **build_frontend_context("get_notification_service_status"),
         )
     except Exception as e:
-        return handle_frontend_error("get notification service status", e, **build_frontend_context("get_notification_service_status"))
+        return handle_frontend_error(
+            "get notification service status", e, **build_frontend_context("get_notification_service_status")
+        )
 
 
 @app.get("/api/notification-service/dlq")
@@ -2213,11 +2211,10 @@ async def get_notification_dlq(limit: int = 50):
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
+
         dlq_entries = await notification_service_monitor.get_dlq_entries(limit=limit)
         return create_frontend_success_response(
-            "notification DLQ retrieved",
-            dlq_entries,
-            **build_frontend_context("get_notification_dlq")
+            "notification DLQ retrieved", dlq_entries, **build_frontend_context("get_notification_dlq")
         )
     except Exception as e:
         return handle_frontend_error("get notification DLQ", e, **build_frontend_context("get_notification_dlq"))
@@ -2235,7 +2232,11 @@ async def resolve_notification_owners(req: dict):
 
         owners = req.get("owners", [])
         if not owners or not isinstance(owners, list):
-            return handle_frontend_error("resolve owners", ValueError("owners must be a non-empty list"), **build_frontend_context("resolve_notification_owners"))
+            return handle_frontend_error(
+                "resolve owners",
+                ValueError("owners must be a non-empty list"),
+                **build_frontend_context("resolve_notification_owners"),
+            )
 
         result = await notification_service_monitor.resolve_owners(owners)
 
@@ -2246,12 +2247,16 @@ async def resolve_notification_owners(req: dict):
                     "resolution_id": result.get("resolution_id"),
                     "resolved_targets": result.get("resolved_targets"),
                     "resolution_count": result.get("resolution_count"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("resolve_notification_owners")
+                **build_frontend_context("resolve_notification_owners"),
             )
         else:
-            return handle_frontend_error("resolve owners", Exception(result.get("error", "Unknown error")), **build_frontend_context("resolve_notification_owners"))
+            return handle_frontend_error(
+                "resolve owners",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("resolve_notification_owners"),
+            )
 
     except Exception as e:
         return handle_frontend_error("resolve owners", e, **build_frontend_context("resolve_notification_owners"))
@@ -2273,7 +2278,11 @@ async def send_test_notification(req: dict):
         message = req.get("message")
 
         if not all([channel, target, title, message]):
-            return handle_frontend_error("send notification", ValueError("channel, target, title, and message are required"), **build_frontend_context("send_test_notification"))
+            return handle_frontend_error(
+                "send notification",
+                ValueError("channel, target, title, and message are required"),
+                **build_frontend_context("send_test_notification"),
+            )
 
         result = await notification_service_monitor.send_notification(
             channel=channel,
@@ -2281,20 +2290,21 @@ async def send_test_notification(req: dict):
             title=title,
             message=message,
             metadata=req.get("metadata"),
-            labels=req.get("labels", [])
+            labels=req.get("labels", []),
         )
 
         if result.get("success"):
             return create_frontend_success_response(
                 "notification sent successfully",
-                {
-                    "notification_id": result.get("notification_id"),
-                    "response": result.get("response")
-                },
-                **build_frontend_context("send_test_notification")
+                {"notification_id": result.get("notification_id"), "response": result.get("response")},
+                **build_frontend_context("send_test_notification"),
             )
         else:
-            return handle_frontend_error("send notification", Exception(result.get("error", "Unknown error")), **build_frontend_context("send_test_notification"))
+            return handle_frontend_error(
+                "send notification",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("send_test_notification"),
+            )
 
     except Exception as e:
         return handle_frontend_error("send notification", e, **build_frontend_context("send_test_notification"))
@@ -2309,14 +2319,15 @@ async def get_notification_history(limit: int = 20):
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
+
         history = notification_service_monitor.get_notification_history(limit=limit)
         return create_frontend_success_response(
-            "notification history retrieved",
-            history,
-            **build_frontend_context("get_notification_history")
+            "notification history retrieved", history, **build_frontend_context("get_notification_history")
         )
     except Exception as e:
-        return handle_frontend_error("get notification history", e, **build_frontend_context("get_notification_history"))
+        return handle_frontend_error(
+            "get notification history", e, **build_frontend_context("get_notification_history")
+        )
 
 
 @app.get("/api/notification-service/resolutions")
@@ -2328,19 +2339,21 @@ async def get_owner_resolution_history(limit: int = 20):
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
+
         history = notification_service_monitor.get_owner_resolution_history(limit=limit)
         return create_frontend_success_response(
-            "owner resolution history retrieved",
-            history,
-            **build_frontend_context("get_owner_resolution_history")
+            "owner resolution history retrieved", history, **build_frontend_context("get_owner_resolution_history")
         )
     except Exception as e:
-        return handle_frontend_error("get owner resolution history", e, **build_frontend_context("get_owner_resolution_history"))
+        return handle_frontend_error(
+            "get owner resolution history", e, **build_frontend_context("get_owner_resolution_history")
+        )
 
 
 # ============================================================================
 # SECURE ANALYZER API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/secure-analyzer/status")
 async def get_secure_analyzer_status():
@@ -2351,14 +2364,15 @@ async def get_secure_analyzer_status():
     """
     try:
         from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
         status_data = await secure_analyzer_monitor.get_secure_status()
         return create_frontend_success_response(
-            "secure analyzer status retrieved",
-            status_data,
-            **build_frontend_context("get_secure_analyzer_status")
+            "secure analyzer status retrieved", status_data, **build_frontend_context("get_secure_analyzer_status")
         )
     except Exception as e:
-        return handle_frontend_error("get secure analyzer status", e, **build_frontend_context("get_secure_analyzer_status"))
+        return handle_frontend_error(
+            "get secure analyzer status", e, **build_frontend_context("get_secure_analyzer_status")
+        )
 
 
 @app.post("/api/secure-analyzer/detect")
@@ -2376,12 +2390,12 @@ async def detect_secure_content(req: dict):
         keyword_document = req.get("keyword_document")
 
         if not content:
-            return handle_frontend_error("detect content", ValueError("content is required"), **build_frontend_context("detect_secure_content"))
+            return handle_frontend_error(
+                "detect content", ValueError("content is required"), **build_frontend_context("detect_secure_content")
+            )
 
         result = await secure_analyzer_monitor.detect_content(
-            content=content,
-            keywords=keywords,
-            keyword_document=keyword_document
+            content=content, keywords=keywords, keyword_document=keyword_document
         )
 
         if result.get("success"):
@@ -2392,12 +2406,16 @@ async def detect_secure_content(req: dict):
                     "sensitive": result.get("sensitive"),
                     "matches": result.get("matches"),
                     "topics": result.get("topics"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("detect_secure_content")
+                **build_frontend_context("detect_secure_content"),
             )
         else:
-            return handle_frontend_error("detect content", Exception(result.get("error", "Unknown error")), **build_frontend_context("detect_secure_content"))
+            return handle_frontend_error(
+                "detect content",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("detect_secure_content"),
+            )
 
     except Exception as e:
         return handle_frontend_error("detect content", e, **build_frontend_context("detect_secure_content"))
@@ -2418,12 +2436,12 @@ async def suggest_secure_models(req: dict):
         keyword_document = req.get("keyword_document")
 
         if not content:
-            return handle_frontend_error("suggest models", ValueError("content is required"), **build_frontend_context("suggest_secure_models"))
+            return handle_frontend_error(
+                "suggest models", ValueError("content is required"), **build_frontend_context("suggest_secure_models")
+            )
 
         result = await secure_analyzer_monitor.suggest_models(
-            content=content,
-            keywords=keywords,
-            keyword_document=keyword_document
+            content=content, keywords=keywords, keyword_document=keyword_document
         )
 
         if result.get("success"):
@@ -2434,12 +2452,16 @@ async def suggest_secure_models(req: dict):
                     "sensitive": result.get("sensitive"),
                     "allowed_models": result.get("allowed_models"),
                     "suggestion": result.get("suggestion"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("suggest_secure_models")
+                **build_frontend_context("suggest_secure_models"),
             )
         else:
-            return handle_frontend_error("suggest models", Exception(result.get("error", "Unknown error")), **build_frontend_context("suggest_secure_models"))
+            return handle_frontend_error(
+                "suggest models",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("suggest_secure_models"),
+            )
 
     except Exception as e:
         return handle_frontend_error("suggest models", e, **build_frontend_context("suggest_secure_models"))
@@ -2463,7 +2485,11 @@ async def generate_secure_summary(req: dict):
         prompt = req.get("prompt")
 
         if not content:
-            return handle_frontend_error("generate secure summary", ValueError("content is required"), **build_frontend_context("generate_secure_summary"))
+            return handle_frontend_error(
+                "generate secure summary",
+                ValueError("content is required"),
+                **build_frontend_context("generate_secure_summary"),
+            )
 
         result = await secure_analyzer_monitor.secure_summarize(
             content=content,
@@ -2471,7 +2497,7 @@ async def generate_secure_summary(req: dict):
             override_policy=override_policy,
             keywords=keywords,
             keyword_document=keyword_document,
-            prompt=prompt
+            prompt=prompt,
         )
 
         if result.get("success"):
@@ -2484,12 +2510,16 @@ async def generate_secure_summary(req: dict):
                     "confidence": result.get("confidence"),
                     "policy_enforced": result.get("policy_enforced"),
                     "topics_detected": result.get("topics_detected"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("generate_secure_summary")
+                **build_frontend_context("generate_secure_summary"),
             )
         else:
-            return handle_frontend_error("generate secure summary", Exception(result.get("error", "Unknown error")), **build_frontend_context("generate_secure_summary"))
+            return handle_frontend_error(
+                "generate secure summary",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("generate_secure_summary"),
+            )
 
     except Exception as e:
         return handle_frontend_error("generate secure summary", e, **build_frontend_context("generate_secure_summary"))
@@ -2504,11 +2534,10 @@ async def get_detection_history(limit: int = 20):
     """
     try:
         from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
         history = secure_analyzer_monitor.get_detection_history(limit=limit)
         return create_frontend_success_response(
-            "detection history retrieved",
-            history,
-            **build_frontend_context("get_detection_history")
+            "detection history retrieved", history, **build_frontend_context("get_detection_history")
         )
     except Exception as e:
         return handle_frontend_error("get detection history", e, **build_frontend_context("get_detection_history"))
@@ -2523,11 +2552,10 @@ async def get_suggestion_history(limit: int = 20):
     """
     try:
         from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
         history = secure_analyzer_monitor.get_suggestion_history(limit=limit)
         return create_frontend_success_response(
-            "suggestion history retrieved",
-            history,
-            **build_frontend_context("get_suggestion_history")
+            "suggestion history retrieved", history, **build_frontend_context("get_suggestion_history")
         )
     except Exception as e:
         return handle_frontend_error("get suggestion history", e, **build_frontend_context("get_suggestion_history"))
@@ -2542,11 +2570,10 @@ async def get_summary_history(limit: int = 20):
     """
     try:
         from .modules.secure_analyzer_monitor import secure_analyzer_monitor
+
         history = secure_analyzer_monitor.get_summary_history(limit=limit)
         return create_frontend_success_response(
-            "summary history retrieved",
-            history,
-            **build_frontend_context("get_summary_history")
+            "summary history retrieved", history, **build_frontend_context("get_summary_history")
         )
     except Exception as e:
         return handle_frontend_error("get summary history", e, **build_frontend_context("get_summary_history"))
@@ -2555,6 +2582,7 @@ async def get_summary_history(limit: int = 20):
 # ============================================================================
 # SOURCE AGENT API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/source-agent/status")
 async def get_source_agent_status():
@@ -2565,11 +2593,10 @@ async def get_source_agent_status():
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
+
         status_data = await source_agent_monitor.get_source_status()
         return create_frontend_success_response(
-            "source agent status retrieved",
-            status_data,
-            **build_frontend_context("get_source_agent_status")
+            "source agent status retrieved", status_data, **build_frontend_context("get_source_agent_status")
         )
     except Exception as e:
         return handle_frontend_error("get source agent status", e, **build_frontend_context("get_source_agent_status"))
@@ -2590,13 +2617,13 @@ async def fetch_source_document(req: dict):
         scope = req.get("scope", {})
 
         if not source or not identifier:
-            return handle_frontend_error("fetch document", ValueError("source and identifier are required"), **build_frontend_context("fetch_source_document"))
+            return handle_frontend_error(
+                "fetch document",
+                ValueError("source and identifier are required"),
+                **build_frontend_context("fetch_source_document"),
+            )
 
-        result = await source_agent_monitor.fetch_document(
-            source=source,
-            identifier=identifier,
-            scope=scope
-        )
+        result = await source_agent_monitor.fetch_document(source=source, identifier=identifier, scope=scope)
 
         if result.get("success"):
             return create_frontend_success_response(
@@ -2605,12 +2632,16 @@ async def fetch_source_document(req: dict):
                     "fetch_id": result.get("fetch_id"),
                     "source": result.get("source"),
                     "document": result.get("document"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("fetch_source_document")
+                **build_frontend_context("fetch_source_document"),
             )
         else:
-            return handle_frontend_error("fetch document", Exception(result.get("error", "Unknown error")), **build_frontend_context("fetch_source_document"))
+            return handle_frontend_error(
+                "fetch document",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("fetch_source_document"),
+            )
 
     except Exception as e:
         return handle_frontend_error("fetch document", e, **build_frontend_context("fetch_source_document"))
@@ -2631,13 +2662,13 @@ async def normalize_source_data(req: dict):
         correlation_id = req.get("correlation_id")
 
         if not source or not data:
-            return handle_frontend_error("normalize data", ValueError("source and data are required"), **build_frontend_context("normalize_source_data"))
+            return handle_frontend_error(
+                "normalize data",
+                ValueError("source and data are required"),
+                **build_frontend_context("normalize_source_data"),
+            )
 
-        result = await source_agent_monitor.normalize_data(
-            source=source,
-            data=data,
-            correlation_id=correlation_id
-        )
+        result = await source_agent_monitor.normalize_data(source=source, data=data, correlation_id=correlation_id)
 
         if result.get("success"):
             return create_frontend_success_response(
@@ -2646,12 +2677,16 @@ async def normalize_source_data(req: dict):
                     "normalization_id": result.get("normalization_id"),
                     "source": result.get("source"),
                     "envelope": result.get("envelope"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("normalize_source_data")
+                **build_frontend_context("normalize_source_data"),
             )
         else:
-            return handle_frontend_error("normalize data", Exception(result.get("error", "Unknown error")), **build_frontend_context("normalize_source_data"))
+            return handle_frontend_error(
+                "normalize data",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("normalize_source_data"),
+            )
 
     except Exception as e:
         return handle_frontend_error("normalize data", e, **build_frontend_context("normalize_source_data"))
@@ -2670,7 +2705,9 @@ async def analyze_source_code(req: dict):
         text = req.get("text")
 
         if not text:
-            return handle_frontend_error("analyze code", ValueError("text is required"), **build_frontend_context("analyze_source_code"))
+            return handle_frontend_error(
+                "analyze code", ValueError("text is required"), **build_frontend_context("analyze_source_code")
+            )
 
         result = await source_agent_monitor.analyze_code(text=text)
 
@@ -2682,12 +2719,16 @@ async def analyze_source_code(req: dict):
                     "analysis": result.get("analysis"),
                     "endpoint_count": result.get("endpoint_count"),
                     "patterns_found": result.get("patterns_found"),
-                    "response": result.get("response")
+                    "response": result.get("response"),
                 },
-                **build_frontend_context("analyze_source_code")
+                **build_frontend_context("analyze_source_code"),
             )
         else:
-            return handle_frontend_error("analyze code", Exception(result.get("error", "Unknown error")), **build_frontend_context("analyze_source_code"))
+            return handle_frontend_error(
+                "analyze code",
+                Exception(result.get("error", "Unknown error")),
+                **build_frontend_context("analyze_source_code"),
+            )
 
     except Exception as e:
         return handle_frontend_error("analyze code", e, **build_frontend_context("analyze_source_code"))
@@ -2702,11 +2743,10 @@ async def get_fetch_history(limit: int = 20):
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
+
         history = source_agent_monitor.get_fetch_history(limit=limit)
         return create_frontend_success_response(
-            "fetch history retrieved",
-            history,
-            **build_frontend_context("get_fetch_history")
+            "fetch history retrieved", history, **build_frontend_context("get_fetch_history")
         )
     except Exception as e:
         return handle_frontend_error("get fetch history", e, **build_frontend_context("get_fetch_history"))
@@ -2721,14 +2761,15 @@ async def get_normalization_history(limit: int = 20):
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
+
         history = source_agent_monitor.get_normalization_history(limit=limit)
         return create_frontend_success_response(
-            "normalization history retrieved",
-            history,
-            **build_frontend_context("get_normalization_history")
+            "normalization history retrieved", history, **build_frontend_context("get_normalization_history")
         )
     except Exception as e:
-        return handle_frontend_error("get normalization history", e, **build_frontend_context("get_normalization_history"))
+        return handle_frontend_error(
+            "get normalization history", e, **build_frontend_context("get_normalization_history")
+        )
 
 
 @app.get("/api/source-agent/analyses")
@@ -2740,11 +2781,10 @@ async def get_analysis_history(limit: int = 20):
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
+
         history = source_agent_monitor.get_analysis_history(limit=limit)
         return create_frontend_success_response(
-            "analysis history retrieved",
-            history,
-            **build_frontend_context("get_analysis_history")
+            "analysis history retrieved", history, **build_frontend_context("get_analysis_history")
         )
     except Exception as e:
         return handle_frontend_error("get analysis history", e, **build_frontend_context("get_analysis_history"))
@@ -2753,6 +2793,7 @@ async def get_analysis_history(limit: int = 20):
 # ============================================================================
 # SERVICES OVERVIEW API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/services/overview")
 async def get_services_overview():
@@ -2763,11 +2804,10 @@ async def get_services_overview():
     """
     try:
         from .modules.services_overview_monitor import services_overview_monitor
+
         overview_data = await services_overview_monitor.get_services_overview()
         return create_frontend_success_response(
-            "services overview retrieved",
-            overview_data,
-            **build_frontend_context("get_services_overview")
+            "services overview retrieved", overview_data, **build_frontend_context("get_services_overview")
         )
     except Exception as e:
         return handle_frontend_error("get services overview", e, **build_frontend_context("get_services_overview"))
@@ -2782,19 +2822,23 @@ async def get_service_health_details(service_name: str):
     """
     try:
         from .modules.services_overview_monitor import services_overview_monitor
+
         health_data = await services_overview_monitor.get_service_health_details(service_name)
         return create_frontend_success_response(
             f"service {service_name} health details retrieved",
             health_data,
-            **build_frontend_context("get_service_health_details")
+            **build_frontend_context("get_service_health_details"),
         )
     except Exception as e:
-        return handle_frontend_error("get service health details", e, **build_frontend_context("get_service_health_details"))
+        return handle_frontend_error(
+            "get service health details", e, **build_frontend_context("get_service_health_details")
+        )
 
 
 # ============================================================================
 # CLI SERVICE API ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/cli/status")
 async def get_cli_status():
@@ -2805,11 +2849,10 @@ async def get_cli_status():
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         health_data = await cli_monitor.get_cli_health()
         return create_frontend_success_response(
-            "CLI status retrieved",
-            health_data,
-            **build_frontend_context("get_cli_status")
+            "CLI status retrieved", health_data, **build_frontend_context("get_cli_status")
         )
     except Exception as e:
         return handle_frontend_error("get CLI status", e, **build_frontend_context("get_cli_status"))
@@ -2830,7 +2873,11 @@ async def execute_cli_command(req: dict):
         session_id = req.get("session_id")
 
         if not command:
-            return handle_frontend_error("execute CLI command", ValueError("command is required"), **build_frontend_context("execute_cli_command"))
+            return handle_frontend_error(
+                "execute CLI command",
+                ValueError("command is required"),
+                **build_frontend_context("execute_cli_command"),
+            )
 
         # Parse command string into command and args
         parts = command.split()
@@ -2844,9 +2891,7 @@ async def execute_cli_command(req: dict):
         result = await cli_monitor.execute_cli_command(cmd, args, session_id)
 
         return create_frontend_success_response(
-            "CLI command executed",
-            {"result": result},
-            **build_frontend_context("execute_cli_command")
+            "CLI command executed", {"result": result}, **build_frontend_context("execute_cli_command")
         )
 
     except Exception as e:
@@ -2862,11 +2907,10 @@ async def get_cli_commands():
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         commands_data = await cli_monitor.get_available_commands()
         return create_frontend_success_response(
-            "CLI commands retrieved",
-            commands_data,
-            **build_frontend_context("get_cli_commands")
+            "CLI commands retrieved", commands_data, **build_frontend_context("get_cli_commands")
         )
     except Exception as e:
         return handle_frontend_error("get CLI commands", e, **build_frontend_context("get_cli_commands"))
@@ -2881,11 +2925,10 @@ async def get_cli_command_history(limit: int = 20):
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         history = cli_monitor.get_command_history(limit=limit)
         return create_frontend_success_response(
-            "CLI command history retrieved",
-            {"history": history},
-            **build_frontend_context("get_cli_command_history")
+            "CLI command history retrieved", {"history": history}, **build_frontend_context("get_cli_command_history")
         )
     except Exception as e:
         return handle_frontend_error("get CLI command history", e, **build_frontend_context("get_cli_command_history"))
@@ -2900,14 +2943,15 @@ async def clear_cli_command_history():
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         success = cli_monitor.clear_command_history()
         return create_frontend_success_response(
-            "CLI command history cleared",
-            {"cleared": success},
-            **build_frontend_context("clear_cli_command_history")
+            "CLI command history cleared", {"cleared": success}, **build_frontend_context("clear_cli_command_history")
         )
     except Exception as e:
-        return handle_frontend_error("clear CLI command history", e, **build_frontend_context("clear_cli_command_history"))
+        return handle_frontend_error(
+            "clear CLI command history", e, **build_frontend_context("clear_cli_command_history")
+        )
 
 
 @app.get("/api/cli/prompts")
@@ -2919,11 +2963,10 @@ async def get_cli_prompts(category: Optional[str] = None):
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         result = await cli_monitor.get_prompt_list(category=category)
         return create_frontend_success_response(
-            "prompts retrieved via CLI",
-            result,
-            **build_frontend_context("get_cli_prompts")
+            "prompts retrieved via CLI", result, **build_frontend_context("get_cli_prompts")
         )
     except Exception as e:
         return handle_frontend_error("get prompts via CLI", e, **build_frontend_context("get_cli_prompts"))
@@ -2938,14 +2981,15 @@ async def get_cli_prompt_details(category: str, name: str, content: Optional[str
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         result = await cli_monitor.get_prompt_details(category=category, name=name, content=content)
         return create_frontend_success_response(
-            "prompt details retrieved via CLI",
-            result,
-            **build_frontend_context("get_cli_prompt_details")
+            "prompt details retrieved via CLI", result, **build_frontend_context("get_cli_prompt_details")
         )
     except Exception as e:
-        return handle_frontend_error("get prompt details via CLI", e, **build_frontend_context("get_cli_prompt_details"))
+        return handle_frontend_error(
+            "get prompt details via CLI", e, **build_frontend_context("get_cli_prompt_details")
+        )
 
 
 @app.post("/api/cli/test-integration")
@@ -2957,20 +3001,22 @@ async def run_cli_integration_tests():
     """
     try:
         from .modules.cli_monitor import cli_monitor
+
         result = await cli_monitor.run_integration_tests()
         return create_frontend_success_response(
-            "CLI integration tests completed",
-            result,
-            **build_frontend_context("run_cli_integration_tests")
+            "CLI integration tests completed", result, **build_frontend_context("run_cli_integration_tests")
         )
     except Exception as e:
-        return handle_frontend_error("run CLI integration tests", e, **build_frontend_context("run_cli_integration_tests"))
+        return handle_frontend_error(
+            "run CLI integration tests", e, **build_frontend_context("run_cli_integration_tests")
+        )
 
 
 if __name__ == "__main__":
     """Run the Frontend service directly."""
-    import uvicorn
     import os
+
+    import uvicorn
 
     # Enable auto-reload in development
     is_dev = os.getenv("ENVIRONMENT", "production") == "development"
@@ -2981,5 +3027,5 @@ if __name__ == "__main__":
         port=DEFAULT_PORT,
         log_level="info",
         reload=is_dev,
-        reload_dirs=["services/frontend"] if is_dev else None
+        reload_dirs=["services/frontend"] if is_dev else None,
     )

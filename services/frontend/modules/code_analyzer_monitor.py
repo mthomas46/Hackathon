@@ -3,11 +3,13 @@
 Provides visualization and monitoring capabilities for code analyzer
 service analysis results, security scans, and style checking.
 """
-from typing import Dict, Any, List, Optional
+
 import asyncio
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
+
 from .shared_utils import get_code_analyzer_url, get_frontend_clients
 
 
@@ -49,7 +51,7 @@ class CodeAnalyzerMonitor:
                 "recent_analyses": self._analyses[-10:] if self._analyses else [],
                 "recent_security_scans": self._security_scans[-10:] if self._security_scans else [],
                 "recent_style_checks": self._style_checks[-10:] if self._style_checks else [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._activity_cache["status"] = status_data
@@ -66,7 +68,7 @@ class CodeAnalyzerMonitor:
                 "recent_analyses": [],
                 "recent_security_scans": [],
                 "recent_style_checks": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     async def analyze_text(self, text: str, analysis_type: str = "general") -> Dict[str, Any]:
@@ -75,10 +77,7 @@ class CodeAnalyzerMonitor:
             clients = get_frontend_clients()
             analyzer_url = get_code_analyzer_url()
 
-            payload = {
-                "text": text,
-                "analysis_type": analysis_type
-            }
+            payload = {"text": text, "analysis_type": analysis_type}
 
             response = await clients.post_json(f"{analyzer_url}/analyze/text", payload)
 
@@ -89,25 +88,17 @@ class CodeAnalyzerMonitor:
                 "type": "text_analysis",
                 "analysis_type": analysis_type,
                 "text_length": len(text),
-                "result": response
+                "result": response,
             }
 
             self._analyses.insert(0, analysis_result)
             if len(self._analyses) > 50:
                 self._analyses = self._analyses[:50]
 
-            return {
-                "success": True,
-                "analysis_id": analysis_result["id"],
-                "result": response
-            }
+            return {"success": True, "analysis_id": analysis_result["id"], "result": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "result": None
-            }
+            return {"success": False, "error": str(e), "result": None}
 
     async def analyze_files(self, files: List[str], analysis_type: str = "general") -> Dict[str, Any]:
         """Analyze files and cache the result."""
@@ -115,10 +106,7 @@ class CodeAnalyzerMonitor:
             clients = get_frontend_clients()
             analyzer_url = get_code_analyzer_url()
 
-            payload = {
-                "files": files,
-                "analysis_type": analysis_type
-            }
+            payload = {"files": files, "analysis_type": analysis_type}
 
             response = await clients.post_json(f"{analyzer_url}/analyze/files", payload)
 
@@ -130,25 +118,17 @@ class CodeAnalyzerMonitor:
                 "analysis_type": analysis_type,
                 "file_count": len(files),
                 "files": files,
-                "result": response
+                "result": response,
             }
 
             self._analyses.insert(0, analysis_result)
             if len(self._analyses) > 50:
                 self._analyses = self._analyses[:50]
 
-            return {
-                "success": True,
-                "analysis_id": analysis_result["id"],
-                "result": response
-            }
+            return {"success": True, "analysis_id": analysis_result["id"], "result": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "result": None
-            }
+            return {"success": False, "error": str(e), "result": None}
 
     async def scan_security(self, code: str) -> Dict[str, Any]:
         """Perform security scan and cache the result."""
@@ -165,25 +145,17 @@ class CodeAnalyzerMonitor:
                 "id": f"security_scan_{utc_now().isoformat()}",
                 "timestamp": utc_now().isoformat(),
                 "code_length": len(code),
-                "result": response
+                "result": response,
             }
 
             self._security_scans.insert(0, scan_result)
             if len(self._security_scans) > 50:
                 self._security_scans = self._security_scans[:50]
 
-            return {
-                "success": True,
-                "scan_id": scan_result["id"],
-                "result": response
-            }
+            return {"success": True, "scan_id": scan_result["id"], "result": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "result": None
-            }
+            return {"success": False, "error": str(e), "result": None}
 
     async def check_style(self, code: str, style: str = "google") -> Dict[str, Any]:
         """Check code style and cache the result."""
@@ -201,25 +173,17 @@ class CodeAnalyzerMonitor:
                 "timestamp": utc_now().isoformat(),
                 "style": style,
                 "code_length": len(code),
-                "result": response
+                "result": response,
             }
 
             self._style_checks.insert(0, style_result)
             if len(self._style_checks) > 50:
                 self._style_checks = self._style_checks[:50]
 
-            return {
-                "success": True,
-                "check_id": style_result["id"],
-                "result": response
-            }
+            return {"success": True, "check_id": style_result["id"], "result": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "result": None
-            }
+            return {"success": False, "error": str(e), "result": None}
 
     def _calculate_analysis_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached analyses."""
@@ -244,7 +208,7 @@ class CodeAnalyzerMonitor:
             "total_security_scans": total_security_scans,
             "total_style_checks": total_style_checks,
             "analysis_types": analysis_types,
-            "style_breakdown": styles
+            "style_breakdown": styles,
         }
 
     def get_analysis_history(self, limit: int = 20) -> List[Dict[str, Any]]:

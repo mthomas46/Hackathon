@@ -3,12 +3,14 @@
 Provides caching and visualization capabilities for analysis service results,
 linking findings with documents and enabling deep-dive exploration.
 """
-from typing import Dict, Any, List, Optional
+
 import asyncio
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
+
 from .shared_utils import get_analysis_service_url, get_frontend_clients
 
 
@@ -48,7 +50,7 @@ class AnalysisMonitor:
                 "integration_health": integration_health,
                 "analysis_stats": self._calculate_analysis_stats(),
                 "recent_findings": self._findings_cache[-10:] if self._findings_cache else [],  # Last 10 findings
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._activity_cache["status"] = status_data
@@ -63,7 +65,7 @@ class AnalysisMonitor:
                 "integration_health": {},
                 "analysis_stats": {},
                 "recent_findings": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     async def get_findings(
@@ -72,7 +74,7 @@ class AnalysisMonitor:
         finding_type: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
-        force_refresh: bool = False
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get findings from analysis service with filtering."""
         if not force_refresh and self.is_cache_fresh("findings"):
@@ -109,10 +111,7 @@ class AnalysisMonitor:
             "total": len(findings),
             "limit": limit,
             "offset": offset,
-            "filtered_by": {
-                "severity": severity,
-                "type": finding_type
-            }
+            "filtered_by": {"severity": severity, "type": finding_type},
         }
 
     async def get_analysis_result(self, analysis_id: str) -> Dict[str, Any]:
@@ -133,25 +132,18 @@ class AnalysisMonitor:
         return {
             "analysis": enhanced_analysis,
             "linked_documents": enhanced_analysis.get("linked_documents", []),
-            "findings_count": len(enhanced_analysis.get("findings", []))
+            "findings_count": len(enhanced_analysis.get("findings", [])),
         }
 
     async def run_analysis(
-        self,
-        targets: List[str],
-        analysis_type: str = "consistency",
-        options: Optional[Dict[str, Any]] = None
+        self, targets: List[str], analysis_type: str = "consistency", options: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Run a new analysis and cache the results."""
         try:
             clients = get_frontend_clients()
             analysis_url = get_analysis_service_url()
 
-            payload = {
-                "targets": targets,
-                "analysis_type": analysis_type,
-                "options": options or {}
-            }
+            payload = {"targets": targets, "analysis_type": analysis_type, "options": options or {}}
 
             response = await clients.post_json(f"{analysis_url}/analyze", payload)
 
@@ -164,7 +156,7 @@ class AnalysisMonitor:
                     "analysis_type": analysis_type,
                     "options": options,
                     "results": response.get("data", {}),
-                    "findings": response.get("data", {}).get("findings", [])
+                    "findings": response.get("data", {}).get("findings", []),
                 }
 
                 self._analysis_results.insert(0, analysis_result)  # Add to front
@@ -185,21 +177,13 @@ class AnalysisMonitor:
                     "success": True,
                     "analysis_id": analysis_result["id"],
                     "findings_count": len(new_findings),
-                    "results": analysis_result
+                    "results": analysis_result,
                 }
 
-            return {
-                "success": False,
-                "error": response.get("message", "Analysis failed"),
-                "results": response
-            }
+            return {"success": False, "error": response.get("message", "Analysis failed"), "results": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "results": None
-            }
+            return {"success": False, "error": str(e), "results": None}
 
     async def get_reports(self, report_type: str = "summary") -> Dict[str, Any]:
         """Get analysis reports."""
@@ -223,7 +207,7 @@ class AnalysisMonitor:
             report_data = {
                 "type": report_type,
                 "data": response.get("data", response),
-                "generated_at": utc_now().isoformat()
+                "generated_at": utc_now().isoformat(),
             }
 
             self._activity_cache[cache_key] = report_data
@@ -232,12 +216,7 @@ class AnalysisMonitor:
             return report_data
 
         except Exception as e:
-            return {
-                "type": report_type,
-                "error": str(e),
-                "data": {},
-                "generated_at": utc_now().isoformat()
-            }
+            return {"type": report_type, "error": str(e), "data": {}, "generated_at": utc_now().isoformat()}
 
     async def _enhance_analysis_with_documents(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance analysis results with document information."""
@@ -268,7 +247,7 @@ class AnalysisMonitor:
                 "total_findings": 0,
                 "analysis_types": {},
                 "severity_breakdown": {},
-                "type_breakdown": {}
+                "type_breakdown": {},
             }
 
         total_findings = sum(len(result.get("findings", [])) for result in self._analysis_results)
@@ -293,7 +272,9 @@ class AnalysisMonitor:
             "analysis_types": dict(analysis_types),
             "severity_breakdown": dict(severity_breakdown),
             "type_breakdown": dict(type_breakdown),
-            "average_findings_per_analysis": total_findings / len(self._analysis_results) if self._analysis_results else 0
+            "average_findings_per_analysis": (
+                total_findings / len(self._analysis_results) if self._analysis_results else 0
+            ),
         }
 
     def get_analysis_history(self, limit: int = 20) -> List[Dict[str, Any]]:
@@ -309,7 +290,7 @@ class AnalysisMonitor:
                         "finding": finding,
                         "analysis_id": result.get("id"),
                         "analysis_timestamp": result.get("timestamp"),
-                        "targets": result.get("targets", [])
+                        "targets": result.get("targets", []),
                     }
         return None
 

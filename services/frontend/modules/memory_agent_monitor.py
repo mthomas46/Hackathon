@@ -3,11 +3,13 @@
 Provides visualization and monitoring capabilities for memory agent
 service operational context and event summary storage.
 """
-from typing import Dict, Any, List, Optional
+
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_memory_agent_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_memory_agent_url
 
 
 class MemoryAgentMonitor:
@@ -40,7 +42,7 @@ class MemoryAgentMonitor:
                 "health": health_response,
                 "memory_stats": self._calculate_memory_stats(),
                 "recent_items": self._memory_items[-10:] if self._memory_items else [],  # Last 10 items
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -54,10 +56,12 @@ class MemoryAgentMonitor:
                 "health": {},
                 "memory_stats": {},
                 "recent_items": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
-    async def list_memory_items(self, type: Optional[str] = None, key: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    async def list_memory_items(
+        self, type: Optional[str] = None, key: Optional[str] = None, limit: int = 50
+    ) -> List[Dict[str, Any]]:
         """Get memory items with filtering."""
         try:
             clients = get_frontend_clients()
@@ -89,7 +93,9 @@ class MemoryAgentMonitor:
         except Exception as e:
             return []
 
-    async def store_memory_item(self, item_type: str, key: str, value: Any, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def store_memory_item(
+        self, item_type: str, key: str, value: Any, metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Store a memory item and cache the result."""
         try:
             clients = get_frontend_clients()
@@ -100,7 +106,7 @@ class MemoryAgentMonitor:
                 "key": key,
                 "value": value,
                 "metadata": metadata or {},
-                "timestamp": utc_now().isoformat()
+                "timestamp": utc_now().isoformat(),
             }
 
             payload = {"item": memory_item}
@@ -116,7 +122,7 @@ class MemoryAgentMonitor:
                     "value": str(value)[:200] + "..." if len(str(value)) > 200 else str(value),
                     "metadata": metadata,
                     "timestamp": utc_now().isoformat(),
-                    "response": response
+                    "response": response,
                 }
 
                 self._memory_items.insert(0, stored_item)  # Add to front
@@ -124,33 +130,17 @@ class MemoryAgentMonitor:
                 if len(self._memory_items) > 100:
                     self._memory_items = self._memory_items[:100]
 
-                return {
-                    "success": True,
-                    "item_id": stored_item["id"],
-                    "response": response
-                }
+                return {"success": True, "item_id": stored_item["id"], "response": response}
 
-            return {
-                "success": False,
-                "error": "Failed to store memory item",
-                "response": response
-            }
+            return {"success": False, "error": "Failed to store memory item", "response": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
     def _calculate_memory_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached memory items."""
         if not self._memory_items:
-            return {
-                "total_items_cached": 0,
-                "unique_types": 0,
-                "most_common_type": None
-            }
+            return {"total_items_cached": 0, "unique_types": 0, "most_common_type": None}
 
         total = len(self._memory_items)
 
@@ -166,7 +156,7 @@ class MemoryAgentMonitor:
             "total_items_cached": total,
             "unique_types": len(type_counts),
             "most_common_type": most_common_type[0] if most_common_type else None,
-            "type_distribution": type_counts
+            "type_distribution": type_counts,
         }
 
     def get_memory_history(self, limit: int = 20) -> List[Dict[str, Any]]:

@@ -2,17 +2,14 @@
 
 Handles prompt store browsing and analytics.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
-from services.frontend.modules.data_browser import (
-    get_prompt_store_summary
-)
+from services.frontend.modules.data_browser import get_prompt_store_summary
+
+from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
 
 
 class PromptStoreUIHandlers:
@@ -618,4 +615,6 @@ class PromptStoreUIHandlers:
 """
             return create_html_response(html, "Prompt Store Browser")
         except Exception as e:
-            return handle_frontend_error("render prompt store browser", e, **build_frontend_context("render_prompt_store_browser"))
+            return handle_frontend_error(
+                "render prompt store browser", e, **build_frontend_context("render_prompt_store_browser")
+            )

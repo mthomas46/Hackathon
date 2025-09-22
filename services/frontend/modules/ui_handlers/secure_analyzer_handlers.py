@@ -3,17 +3,19 @@
 Handles secure analyzer service visualization, including content detection,
 policy enforcement, and secure summarization monitoring.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..secure_analyzer_monitor import secure_analyzer_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class SecureAnalyzerUIHandlers:
@@ -38,7 +40,7 @@ class SecureAnalyzerUIHandlers:
                 "recent_detections": detection_history,
                 "recent_suggestions": suggestion_history,
                 "recent_summaries": summary_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -1052,4 +1054,6 @@ class SecureAnalyzerUIHandlers:
 """
             return create_html_response(html, "Secure Analyzer Dashboard")
         except Exception as e:
-            return handle_frontend_error("render secure analyzer dashboard", e, **build_frontend_context("render_secure_analyzer_dashboard"))
+            return handle_frontend_error(
+                "render secure analyzer dashboard", e, **build_frontend_context("render_secure_analyzer_dashboard")
+            )
