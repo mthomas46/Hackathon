@@ -44,7 +44,7 @@ def test_service_health(service_name: str, config: Dict) -> Tuple[bool, Dict]:
             try:
                 data = response.json()
                 return True, data
-            except:
+            except (ValueError, TypeError):
                 return True, {"status": "healthy", "service": service_name}
         else:
             return False, {"status": "unhealthy", "status_code": response.status_code}

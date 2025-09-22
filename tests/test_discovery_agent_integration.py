@@ -318,7 +318,7 @@ async def check_service_running(base_url: str = "http://localhost:5045") -> bool
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(f"{base_url}/health")
             return response.status_code == 200
-    except:
+    except Exception:
         return False
 
 

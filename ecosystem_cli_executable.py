@@ -607,7 +607,7 @@ class EcosystemCLI:
                                 config_profile["features_enabled"].append("github-mock-mode")
                             if not config_response.get("token_present"):
                                 config_profile["features_enabled"].append("token-required")
-                except:
+                except (KeyError, AttributeError, TypeError):
                     continue
 
             print(f"✅ Mock Configuration Profile Created:")
@@ -1218,7 +1218,7 @@ class EcosystemCLI:
                         if ":" in pair:
                             key, value = pair.split(":", 1)
                             metadata_dict[key.strip()] = value.strip()
-                except:
+                except (ValueError, AttributeError):
                     print("❌ Invalid metadata format. Use: key1:value1,key2:value2")
                     return
 
@@ -1230,11 +1230,11 @@ class EcosystemCLI:
             try:
                 # Try PATCH method for metadata updates
                 response = await self.client._make_request_with_method("PATCH", url, update_data)
-            except:
+            except Exception:
                 try:
                     # Fallback to PUT method
                     response = await self.client._make_request_with_method("PUT", url, update_data)
-                except:
+                except Exception:
                     print("❌ Document metadata update endpoint not implemented yet")
                     print("   This feature will be available in a future update")
                     return
@@ -1577,7 +1577,7 @@ class EcosystemCLI:
                         if ":" in pair:
                             key, value = pair.split(":", 1)
                             metadata_dict[key.strip()] = value.strip()
-                except:
+                except (ValueError, AttributeError):
                     print("❌ Invalid metadata format. Use: key1:value1,key2:value2")
                     return
 
