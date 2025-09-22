@@ -2,7 +2,9 @@
 
 Contains all Pydantic models used for API requests and responses.
 """
-from typing import Optional, Dict, Any, List
+
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
 
 
@@ -13,6 +15,7 @@ class DiscoverRequest(BaseModel):
     - `openapi_url`: Fetch spec from URL when provided
     - `orchestrator_url`: Override orchestrator base for tests
     """
+
     name: str
     base_url: str
     openapi_url: Optional[str] = None  # e.g., http://service:port/openapi.json
@@ -30,6 +33,7 @@ class ToolDiscoveryRequest(BaseModel):
     - `tool_categories`: Categories of tools to discover (optional filter)
     - `dry_run`: Test mode without actual registration
     """
+
     service_name: str
     service_url: str
     openapi_url: Optional[str] = None

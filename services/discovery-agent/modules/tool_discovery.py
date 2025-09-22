@@ -6,7 +6,8 @@ generates appropriate tool wrappers for integration with LangGraph workflows.
 """
 
 import re
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 try:
     from services.shared.clients import ServiceClients
 except ImportError:
@@ -38,8 +39,13 @@ class ToolDiscoveryService:
         """Set the persistent storage for tool registry"""
         self.registry_storage = storage
 
-    async def discover_tools(self, service_name: str, service_url: str, openapi_url: Optional[str] = None,
-                           tool_categories: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def discover_tools(
+        self,
+        service_name: str,
+        service_url: str,
+        openapi_url: Optional[str] = None,
+        tool_categories: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """Discover LangGraph tools for a service from its OpenAPI specification.
 
         Args:
@@ -65,7 +71,7 @@ class ToolDiscoveryService:
                 "tools": tools,
                 "spec_url": spec_url,
                 "endpoint_count": len(endpoints),
-                "tool_count": len(tools)
+                "tool_count": len(tools),
             }
 
             return {
@@ -75,16 +81,17 @@ class ToolDiscoveryService:
                 "endpoints_discovered": len(endpoints),
                 "tools_discovered": len(tools),
                 "tools": tools,
-                "categories": tool_categories or []
+                "categories": tool_categories or [],
             }
 
         except Exception as e:
             error_msg = f"Failed to discover tools for {service_name}: {str(e)}"
-            fire_and_forget("error", error_msg, ServiceNames.DISCOVERY_AGENT, {
-                "service_name": service_name,
-                "service_url": service_url,
-                "openapi_url": openapi_url
-            })
+            fire_and_forget(
+                "error",
+                error_msg,
+                ServiceNames.DISCOVERY_AGENT,
+                {"service_name": service_name, "service_url": service_url, "openapi_url": openapi_url},
+            )
             raise Exception(error_msg)
 
     async def _fetch_openapi_spec(self, spec_url: str) -> Dict[str, Any]:
@@ -117,15 +124,19 @@ class ToolDiscoveryService:
                     "tags": details.get("tags", []),
                     "parameters": details.get("parameters", []),
                     "request_body": details.get("requestBody", {}),
-                    "responses": details.get("responses", {})
+                    "responses": details.get("responses", {}),
                 }
                 endpoints.append(endpoint)
 
         return endpoints
 
-    def _analyze_endpoints_for_tools(self, service_name: str, service_url: str,
-                                   endpoints: List[Dict[str, Any]],
-                                   tool_categories: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def _analyze_endpoints_for_tools(
+        self,
+        service_name: str,
+        service_url: str,
+        endpoints: List[Dict[str, Any]],
+        tool_categories: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
         """Analyze endpoints and generate LangGraph tool definitions."""
         tools = []
 
@@ -138,8 +149,9 @@ class ToolDiscoveryService:
 
         return tools
 
-    def _generate_tool_for_endpoint(self, service_name: str, service_url: str,
-                                  endpoint: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _generate_tool_for_endpoint(
+        self, service_name: str, service_url: str, endpoint: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Generate a LangGraph tool definition for an endpoint."""
         operation_id = endpoint.get("operation_id", "")
         if not operation_id:
@@ -165,10 +177,7 @@ class ToolDiscoveryService:
             "path": endpoint["path"],
             "categories": categories,
             "parameters": parameters,
-            "endpoint_info": {
-                "summary": endpoint.get("summary", ""),
-                "tags": endpoint.get("tags", [])
-            }
+            "endpoint_info": {"summary": endpoint.get("summary", ""), "tags": endpoint.get("tags", [])},
         }
 
     def _categorize_operation(self, endpoint: Dict[str, Any]) -> List[str]:
@@ -216,7 +225,7 @@ class ToolDiscoveryService:
     def _generate_tool_name(self, service_name: str, operation_id: str) -> str:
         """Generate a standardized tool name."""
         # Convert camelCase/PascalCase to snake_case
-        name = re.sub(r'(?<!^)(?=[A-Z])', '_', operation_id).lower()
+        name = re.sub(r"(?<!^)(?=[A-Z])", "_", operation_id).lower()
         return f"{service_name}_{name}"
 
     def _generate_tool_description(self, endpoint: Dict[str, Any], categories: List[str]) -> str:
@@ -236,11 +245,7 @@ class ToolDiscoveryService:
 
     def _extract_tool_parameters(self, endpoint: Dict[str, Any]) -> Dict[str, Any]:
         """Extract parameter schema for tool definition."""
-        parameters = {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
+        parameters = {"type": "object", "properties": {}, "required": []}
 
         # Extract path parameters
         for param in endpoint.get("parameters", []):
@@ -252,7 +257,7 @@ class ToolDiscoveryService:
                 if param_name:
                     parameters["properties"][param_name] = {
                         "type": param_type,
-                        "description": param.get("description", "")
+                        "description": param.get("description", ""),
                     }
                     if param_required:
                         parameters["required"].append(param_name)
@@ -267,7 +272,7 @@ class ToolDiscoveryService:
                         for prop_name, prop_info in schema["properties"].items():
                             parameters["properties"][prop_name] = {
                                 "type": prop_info.get("type", "string"),
-                                "description": prop_info.get("description", "")
+                                "description": prop_info.get("description", ""),
                             }
                             if prop_name in schema.get("required", []):
                                 parameters["required"].append(prop_name)
@@ -308,7 +313,7 @@ class ToolDiscoveryService:
             "services": {},
             "summary": {},
             "performance_metrics": [],
-            "validation_results": []
+            "validation_results": [],
         }
 
         print(f"🔍 Starting comprehensive ecosystem discovery for {len(service_configs)} services...")
@@ -323,7 +328,7 @@ class ToolDiscoveryService:
                 "health": health_result,
                 "tools": [],
                 "validation": {},
-                "performance": {}
+                "performance": {},
             }
 
             if health_result["status"] == "healthy":
@@ -344,21 +349,25 @@ class ToolDiscoveryService:
                         validation = await self._validate_tools_security(service_name, tools)
                         service_result["validation"] = validation
 
-                    print(f"   ✅ Discovered {len(tools)} tools, {len([t for t in tools if t.get('langraph_ready', False)])} LangGraph-ready")
+                    print(
+                        f"   ✅ Discovered {len(tools)} tools, {len([t for t in tools if t.get('langraph_ready', False)])} LangGraph-ready"
+                    )
 
                     # Performance tracking
                     service_result["performance"] = {
                         "discovery_time": health_result.get("response_time", 0),
                         "tool_count": len(tools),
-                        "endpoint_count": openapi_result["data"].get("endpoints_count", 0)
+                        "endpoint_count": openapi_result["data"].get("endpoints_count", 0),
                     }
 
-                    discovery_results["performance_metrics"].append({
-                        "service": service_name,
-                        "response_time": health_result.get("response_time", 0),
-                        "tools_found": len(tools),
-                        "endpoints_found": openapi_result["data"].get("endpoints_count", 0)
-                    })
+                    discovery_results["performance_metrics"].append(
+                        {
+                            "service": service_name,
+                            "response_time": health_result.get("response_time", 0),
+                            "tools_found": len(tools),
+                            "endpoints_found": openapi_result["data"].get("endpoints_count", 0),
+                        }
+                    )
 
                 else:
                     print(f"   ❌ OpenAPI discovery failed: {openapi_result.get('error')}")
@@ -376,8 +385,8 @@ class ToolDiscoveryService:
                         "service_name": service_name,
                         "health_status": health_result["status"],
                         "tools_discovered": len(service_result["tools"]),
-                        "response_time": health_result.get("response_time", 0)
-                    }
+                        "response_time": health_result.get("response_time", 0),
+                    },
                 )
 
         # Generate summary
@@ -386,7 +395,8 @@ class ToolDiscoveryService:
             "services_total": discovery_results["services_tested"],
             "health_percentage": (discovery_results["healthy_services"] / discovery_results["services_tested"]) * 100,
             "tools_discovered": discovery_results["total_tools_discovered"],
-            "avg_tools_per_service": discovery_results["total_tools_discovered"] / max(discovery_results["healthy_services"], 1)
+            "avg_tools_per_service": discovery_results["total_tools_discovered"]
+            / max(discovery_results["healthy_services"], 1),
         }
 
         # Persist to registry if available
@@ -404,23 +414,15 @@ class ToolDiscoveryService:
 
                 async with session.get(health_url, timeout=5) as response:
                     if response.status == 200:
-                        return {
-                            "status": "healthy",
-                            "response_time": 0.1,  # Placeholder
-                            "service_url": config['url']
-                        }
+                        return {"status": "healthy", "response_time": 0.1, "service_url": config["url"]}  # Placeholder
                     else:
                         return {
                             "status": "unhealthy",
                             "error": f"Health check returned {response.status}",
-                            "response_time": 0.1
+                            "response_time": 0.1,
                         }
         except Exception as e:
-            return {
-                "status": "unreachable",
-                "error": str(e),
-                "response_time": 0.1
-            }
+            return {"status": "unreachable", "error": str(e), "response_time": 0.1}
 
     async def _discover_service_openapi(self, service_name: str, config: Dict) -> Dict[str, Any]:
         """Discover OpenAPI specification for a service"""
@@ -439,7 +441,7 @@ class ToolDiscoveryService:
                             "description": spec.get("info", {}).get("description", ""),
                             "paths": list(spec.get("paths", {}).keys()),
                             "endpoints_count": len(spec.get("paths", {})),
-                            "full_spec": spec
+                            "full_spec": spec,
                         }
 
                         return {"success": True, "data": info}
@@ -467,7 +469,7 @@ class ToolDiscoveryService:
                         "description": details.get("description", ""),
                         "parameters": self._extract_parameters(details),
                         "responses": list(details.get("responses", {}).keys()),
-                        "langraph_ready": self._assess_langraph_readiness(details)
+                        "langraph_ready": self._assess_langraph_readiness(details),
                     }
                     tools.append(tool)
 
@@ -487,7 +489,7 @@ class ToolDiscoveryService:
             "tools_scanned": len(tools),
             "vulnerabilities_found": 0,
             "high_risk_tools": 0,
-            "tool_validations": []
+            "tool_validations": [],
         }
 
         print(f"🔒 Security scanning {len(tools)} tools for {service_name}...")
@@ -507,13 +509,13 @@ class ToolDiscoveryService:
 
             # Log security scan
             if self.monitoring_service:
-                await self.monitoring_service.monitor_security_scan(
-                    tool["name"],
-                    security_result
-                )
+                await self.monitoring_service.monitor_security_scan(tool["name"], security_result)
 
-        validation_results["overall_risk"] = "high" if validation_results["high_risk_tools"] > 0 else \
-                                           "medium" if validation_results["vulnerabilities_found"] > 0 else "low"
+        validation_results["overall_risk"] = (
+            "high"
+            if validation_results["high_risk_tools"] > 0
+            else "medium" if validation_results["vulnerabilities_found"] > 0 else "low"
+        )
 
         return validation_results
 
@@ -527,12 +529,15 @@ class ToolDiscoveryService:
             return
 
         # Log overall discovery metrics
-        await self.monitoring_service.log_discovery_event("discovery_batch_complete", {
-            "services_tested": discovery_results["services_tested"],
-            "healthy_services": discovery_results["healthy_services"],
-            "total_tools_discovered": discovery_results["total_tools_discovered"],
-            "discovery_duration": len(discovery_results["performance_metrics"]) * 0.5  # Estimate
-        })
+        await self.monitoring_service.log_discovery_event(
+            "discovery_batch_complete",
+            {
+                "services_tested": discovery_results["services_tested"],
+                "healthy_services": discovery_results["healthy_services"],
+                "total_tools_discovered": discovery_results["total_tools_discovered"],
+                "discovery_duration": len(discovery_results["performance_metrics"]) * 0.5,  # Estimate
+            },
+        )
 
         # Log performance metrics for each service
         for metric in discovery_results["performance_metrics"]:
