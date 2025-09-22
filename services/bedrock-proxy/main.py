@@ -11,21 +11,24 @@ Responsibilities:
 
 Dependencies: shared middlewares for request tracking and metrics.
 """
+
+import time
+from typing import Any, Dict, Optional
+
 from fastapi import FastAPI
 from pydantic import BaseModel, field_validator
-from typing import Optional, Dict, Any
 
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
-from services.shared.utilities.logging_client import get_log_collector_client
 from services.shared.core.constants_new import ServiceNames
-import time
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
 try:
     from .modules.processor import process_invoke_request
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.processor import process_invoke_request
 
@@ -40,10 +43,11 @@ logger_client = None
 app = FastAPI(
     title="Bedrock Proxy Stub",
     version=SERVICE_VERSION,
-    description="Local AI proxy service for structured response generation"
+    description="Local AI proxy service for structured response generation",
 )
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -52,19 +56,27 @@ async def startup_event():
     try:
         logger_client = await get_log_collector_client(ServiceNames.BEDROCK_PROXY)
         if logger_client:
-            await logger_client.log_business_event("bedrock_proxy_startup", {
-                "version": SERVICE_VERSION,
-                "capabilities": ["structured_response_generation", "template_based_responses", "invoke_processing", "stub_mode"],
-                "integrations": ["log_collector"],
-                "features": ["predictable_responses", "testing_support", "template_engine", "structured_output"]
-            })
-            await logger_client.log_info("Bedrock Proxy service started", {
-                "stub_mode": True,
-                "template_based_responses": True,
-                "structured_output": True
-            })
+            await logger_client.log_business_event(
+                "bedrock_proxy_startup",
+                {
+                    "version": SERVICE_VERSION,
+                    "capabilities": [
+                        "structured_response_generation",
+                        "template_based_responses",
+                        "invoke_processing",
+                        "stub_mode",
+                    ],
+                    "integrations": ["log_collector"],
+                    "features": ["predictable_responses", "testing_support", "template_engine", "structured_output"],
+                },
+            )
+            await logger_client.log_info(
+                "Bedrock Proxy service started",
+                {"stub_mode": True, "template_based_responses": True, "structured_output": True},
+            )
     except Exception as e:
         print(f"Failed to initialize log collector client: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -83,7 +95,7 @@ async def health():
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
-        "description": "Bedrock proxy stub service is operational"
+        "description": "Bedrock proxy stub service is operational",
     }
 
 
@@ -93,6 +105,7 @@ class InvokeRequest(BaseModel):
     Supports template-based response formatting for consistent AI outputs.
     All fields are optional to allow flexible usage patterns.
     """
+
     model: Optional[str] = None
     """AI model identifier (e.g., 'claude-3-sonnet', 'gpt-4')."""
 
@@ -117,56 +130,56 @@ class InvokeRequest(BaseModel):
     title: Optional[str] = None
     """Custom title for the generated response."""
 
-    @field_validator('prompt')
+    @field_validator("prompt")
     @classmethod
     def validate_prompt(cls, v):
         """Validate that prompt is a string if provided."""
         if v is not None and not isinstance(v, str):
-            raise ValueError('Prompt must be a string value')
+            raise ValueError("Prompt must be a string value")
         return v
 
-    @field_validator('template')
+    @field_validator("template")
     @classmethod
     def validate_template(cls, v):
         """Validate template is one of the supported types."""
         if v is not None:
-            valid_templates = ['summary', 'risks', 'decisions', 'pr_confidence', 'life_of_ticket']
+            valid_templates = ["summary", "risks", "decisions", "pr_confidence", "life_of_ticket"]
             if v.lower() not in valid_templates and v.strip():
                 raise ValueError(f'Invalid template "{v}". Supported templates: {", ".join(valid_templates)}')
         return v
 
-    @field_validator('format')
+    @field_validator("format")
     @classmethod
     def validate_format(cls, v):
         """Validate output format is supported."""
         if v is not None:
-            valid_formats = ['md', 'txt', 'json']
+            valid_formats = ["md", "txt", "json"]
             if v.lower() not in valid_formats:
                 raise ValueError(f'Invalid format "{v}". Supported formats: {", ".join(valid_formats)}')
         return v
 
-    @field_validator('model')
+    @field_validator("model")
     @classmethod
     def validate_model(cls, v):
         """Validate model name length."""
         if v is not None and len(v) > 100:
-            raise ValueError('Model name exceeds maximum length of 100 characters')
+            raise ValueError("Model name exceeds maximum length of 100 characters")
         return v
 
-    @field_validator('region')
+    @field_validator("region")
     @classmethod
     def validate_region(cls, v):
         """Validate region name length."""
         if v is not None and len(v) > 50:
-            raise ValueError('Region name exceeds maximum length of 50 characters')
+            raise ValueError("Region name exceeds maximum length of 50 characters")
         return v
 
-    @field_validator('title')
+    @field_validator("title")
     @classmethod
     def validate_title(cls, v):
         """Validate title length."""
         if v is not None and len(v) > 200:
-            raise ValueError('Title exceeds maximum length of 200 characters')
+            raise ValueError("Title exceeds maximum length of 200 characters")
         return v
 
 
@@ -184,25 +197,31 @@ async def invoke(req: InvokeRequest):
     try:
         # Log invoke request start
         if logger_client:
-            await logger_client.log_business_event("bedrock_invoke_started", {
-                "request_id": request_id,
-                "model": req.model,
-                "template": req.template,
-                "format": req.format,
-                "region": req.region,
-                "prompt_length": len(req.prompt) if req.prompt else 0,
-                "has_title": bool(req.title),
-                "has_params": bool(req.params),
-                "stub_mode": True
-            })
+            await logger_client.log_business_event(
+                "bedrock_invoke_started",
+                {
+                    "request_id": request_id,
+                    "model": req.model,
+                    "template": req.template,
+                    "format": req.format,
+                    "region": req.region,
+                    "prompt_length": len(req.prompt) if req.prompt else 0,
+                    "has_title": bool(req.title),
+                    "has_params": bool(req.params),
+                    "stub_mode": True,
+                },
+            )
 
-            await logger_client.log_info("Processing Bedrock invoke request", {
-                "request_id": request_id,
-                "template": req.template,
-                "format": req.format,
-                "model": req.model,
-                "prompt_preview": req.prompt[:100] + "..." if req.prompt and len(req.prompt) > 100 else req.prompt
-            })
+            await logger_client.log_info(
+                "Processing Bedrock invoke request",
+                {
+                    "request_id": request_id,
+                    "template": req.template,
+                    "format": req.format,
+                    "model": req.model,
+                    "prompt_preview": req.prompt[:100] + "..." if req.prompt and len(req.prompt) > 100 else req.prompt,
+                },
+            )
 
         result = process_invoke_request(
             prompt=req.prompt,
@@ -211,27 +230,30 @@ async def invoke(req: InvokeRequest):
             title=req.title,
             model=req.model,
             region=req.region,
-            **(req.params or {})  # Unpack additional parameters
+            **(req.params or {}),  # Unpack additional parameters
         )
 
         processing_time = time.time() - start_time
 
         # Calculate response metrics
         response_length = len(str(result)) if result else 0
-        has_structured_output = isinstance(result, dict) and 'content' in result
+        has_structured_output = isinstance(result, dict) and "content" in result
 
         # Log successful invoke completion
         if logger_client:
-            await logger_client.log_business_event("bedrock_invoke_completed", {
-                "request_id": request_id,
-                "model": req.model,
-                "template": req.template,
-                "format": req.format,
-                "response_length": response_length,
-                "processing_time_seconds": processing_time,
-                "structured_output": has_structured_output,
-                "success": True
-            })
+            await logger_client.log_business_event(
+                "bedrock_invoke_completed",
+                {
+                    "request_id": request_id,
+                    "model": req.model,
+                    "template": req.template,
+                    "format": req.format,
+                    "response_length": response_length,
+                    "processing_time_seconds": processing_time,
+                    "structured_output": has_structured_output,
+                    "success": True,
+                },
+            )
 
             await logger_client.log_performance_metric(
                 "bedrock_invoke",
@@ -242,8 +264,8 @@ async def invoke(req: InvokeRequest):
                     "template": req.template,
                     "format": req.format,
                     "invoke_success": True,
-                    "stub_mode": True
-                }
+                    "stub_mode": True,
+                },
             )
 
         return result
@@ -257,25 +279,28 @@ async def invoke(req: InvokeRequest):
                 f"Bedrock invoke failed: {str(e)}",
                 {
                     "request_id": request_id,
-                    "model": req.model if 'req' in locals() else None,
-                    "template": req.template if 'req' in locals() else None,
-                    "format": req.format if 'req' in locals() else None,
+                    "model": req.model if "req" in locals() else None,
+                    "template": req.template if "req" in locals() else None,
+                    "format": req.format if "req" in locals() else None,
                     "error_type": type(e).__name__,
                     "processing_time_seconds": error_time,
-                    "stub_mode": True
+                    "stub_mode": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger_client.log_business_event("bedrock_invoke_failed", {
-                "request_id": request_id,
-                "model": req.model if 'req' in locals() else None,
-                "template": req.template if 'req' in locals() else None,
-                "format": req.format if 'req' in locals() else None,
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "processing_time_seconds": error_time
-            })
+            await logger_client.log_business_event(
+                "bedrock_invoke_failed",
+                {
+                    "request_id": request_id,
+                    "model": req.model if "req" in locals() else None,
+                    "template": req.template if "req" in locals() else None,
+                    "format": req.format if "req" in locals() else None,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "processing_time_seconds": error_time,
+                },
+            )
 
         raise
 
@@ -283,11 +308,5 @@ async def invoke(req: InvokeRequest):
 if __name__ == "__main__":
     """Run the Bedrock Proxy service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
-
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

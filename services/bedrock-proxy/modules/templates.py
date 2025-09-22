@@ -3,17 +3,18 @@
 This module defines response templates for structured AI output generation,
 including template detection, content building, and format rendering.
 """
+
 from typing import Dict, List
 
 from .utils import bullets_from_text
 
 # Supported template types for response generation
 SUPPORTED_TEMPLATES = [
-    "summary",      # General summary with key points
-    "risks",        # Risk assessment with mitigations
-    "decisions",    # Decision documentation
-    "pr_confidence", # Pull request confidence analysis
-    "life_of_ticket" # Ticket lifecycle tracking
+    "summary",  # General summary with key points
+    "risks",  # Risk assessment with mitigations
+    "decisions",  # Decision documentation
+    "pr_confidence",  # Pull request confidence analysis
+    "life_of_ticket",  # Ticket lifecycle tracking
 ]
 
 # Supported output formats
@@ -25,7 +26,7 @@ TEMPLATES = {
     "summary": {
         "sections": {
             "Summary": lambda text: bullets_from_text(text, 5),
-            "Key Points": ["Decision captured", "Risks identified", "Actions listed"]
+            "Key Points": ["Decision captured", "Risks identified", "Actions listed"],
         }
     },
     "risks": {
@@ -39,7 +40,7 @@ TEMPLATES = {
                 "Clarify acceptance criteria with PO",
                 "Add unit/integration tests",
                 "Decouple feature flags to reduce risk",
-            ]
+            ],
         }
     },
     "decisions": {
@@ -53,7 +54,7 @@ TEMPLATES = {
                 "Fast API iteration and testability",
                 "Simple, reliable eventing",
                 "Lightweight context persistence",
-            ]
+            ],
         }
     },
     "pr_confidence": {
@@ -61,7 +62,7 @@ TEMPLATES = {
             "Inputs": ["Jira: TICKET-123", "GitHub PR: org/repo#42", "Confluence: Design v1"],
             "Extracted Endpoints": ["/hello", "/health"],
             "Confidence": ["Score: 82", "Implements 2/2 endpoints", "No extra endpoints detected"],
-            "Suggestions": ["Add negative tests", "Document error codes in OpenAPI"]
+            "Suggestions": ["Add negative tests", "Document error codes in OpenAPI"],
         }
     },
     "life_of_ticket": {
@@ -71,9 +72,9 @@ TEMPLATES = {
                 "2025-01-02T10:00Z — github — PR opened (#42)",
                 "2025-01-03T16:00Z — jira — In Review -> Done",
             ],
-            "Summary": ["Work completed", "Docs updated", "Tests passing"]
+            "Summary": ["Work completed", "Docs updated", "Tests passing"],
         }
-    }
+    },
 }
 
 # Extract valid values for validation (maintaining backward compatibility)
@@ -127,7 +128,7 @@ def generate_default_title(template: str) -> str:
         "life_of_ticket": "Life of the Ticket",
         "summary": "Summary",
         "risks": "Risk Assessment",
-        "decisions": "Decision Analysis"
+        "decisions": "Decision Analysis",
     }
     return title_map.get(template, "Bedrock Proxy Output")
 
