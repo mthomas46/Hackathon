@@ -3,10 +3,11 @@
 Provides fault tolerance by temporarily stopping requests to failing services
 to prevent cascade failures and allow recovery time.
 """
-import time
+
 import os
-from typing import Optional
+import time
 from contextlib import asynccontextmanager
+from typing import Optional
 
 # Default configuration values
 DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES = 5
@@ -21,11 +22,7 @@ class CircuitBreaker:
     allowing downstream services time to recover.
     """
 
-    def __init__(
-        self,
-        max_failures: int = 5,
-        timeout_seconds: int = 60
-    ):
+    def __init__(self, max_failures: int = 5, timeout_seconds: int = 60):
         """Initialize circuit breaker with configurable thresholds.
 
         Args:
@@ -69,8 +66,12 @@ class CircuitBreaker:
 
 # Global circuit breaker instance with environment-configurable settings
 circuit_breaker = CircuitBreaker(
-    max_failures=int(os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES", str(DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES))),
-    timeout_seconds=int(os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT", str(DEFAULT_CIRCUIT_BREAKER_TIMEOUT)))
+    max_failures=int(
+        os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES", str(DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES))
+    ),
+    timeout_seconds=int(
+        os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT", str(DEFAULT_CIRCUIT_BREAKER_TIMEOUT))
+    ),
 )
 
 
