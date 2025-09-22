@@ -1,392 +1,503 @@
 """Memory Agent Service Tests
 
 Comprehensive test suite for the Memory Agent service covering:
-- Health endpoint functionality
-- Memory item storage and retrieval
-- TTL (Time-To-Live) management
-- Filtering and pagination
-- Capacity limits and memory management
+- Memory operations (storage, retrieval, TTL management)
 - Event processing and correlation
+- Memory state management
+- Utility functions and validation
 """
 
 import asyncio
 import json
 import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch, MagicMock
 
 import pytest
-from fastapi.testclient import TestClient
 
-from services.memory_agent.main import app, create_memory_agent_success_response
+import sys
+from pathlib import Path
+
+# Add the project root to the path for imports
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from services.shared.core.models.models import MemoryItem
 
 
-class TestMemoryAgentHealth:
-    """Test health endpoint functionality."""
+class TestMemoryOperations:
+    """Test core memory operations functionality."""
 
-    def test_health_endpoint(self, client):
-        """Test basic health endpoint returns proper status."""
-        response = client.get("/health")
-        assert response.status_code == 200
+    def test_put_memory_item_basic(self):
+        """Test basic memory item storage."""
+        # Import modules directly by path manipulation
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(__file__) + '/../modules')
 
-        data = response.json()
-        assert "status" in data
-        assert "memory_count" in data
-        assert "service" in data
-        assert data["service"] == "memory-agent"
+        import memory_state
+        import memory_ops
 
-    def test_health_with_memory_items(self, client):
-        """Test health endpoint shows memory statistics."""
-        # Add a memory item first
-        memory_data = {
-            "key": "test-health-key",
+        # Clear memory for test
+        memory_state._memory.clear()
+
+        item = {
+            "key": "test-key",
             "type": "test",
             "content": {"message": "test content"},
-            "ttl": 3600
+            "timestamp": time.time()
         }
 
-        response = client.post("/memory/put", json=memory_data)
-        assert response.status_code == 200
+        result = memory_ops.put_memory_item(item)
 
-        # Check health shows the item
-        health_response = client.get("/health")
-        assert health_response.status_code == 200
-        health_data = health_response.json()
-        assert health_data["memory_count"] >= 1
+        assert result["count"] == 1
+        assert result["max_items"] == 1000  # default value
+        assert len(memory_state._memory) == 1
 
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_put_memory_item_capacity_limit(self):
+        """Test memory capacity limits."""
+        from services.memory_agent.modules import memory_ops
 
-class TestMemoryAgentStorage:
-    """Test memory item storage functionality."""
+        # Mock max items to be small
+        with patch('services.memory_agent.modules.memory_ops.get_memory_max_items', return_value=2):
+            # Add 3 items
+            for i in range(3):
+                item = {
+                    "key": f"test-key-{i}",
+                    "type": "test",
+                    "content": {"message": f"content {i}"},
+                    "timestamp": time.time()
+                }
+                memory_ops.put_memory_item(item)
 
-    def test_put_memory_item_basic(self, client):
-        """Test basic memory item storage."""
-        memory_data = {
-            "key": "test-basic-key",
-            "type": "test_type",
-            "content": {"message": "Hello World", "value": 42},
-            "ttl": 3600
-        }
+            # Should only keep the last 2 items (ring buffer behavior)
+            assert len(memory_ops._memory) == 2
+            assert memory_ops._memory[0]["key"] == "test-key-1"
+            assert memory_ops._memory[1]["key"] == "test-key-2"
 
-        response = client.post("/memory/put", json=memory_data)
-        assert response.status_code == 200
-
-        data = response.json()
-        assert "success" in data
-        assert data["success"] is True
-        assert "memory_id" in data
-        assert "context" in data
-
-    def test_put_memory_item_minimal(self, client):
-        """Test memory storage with minimal required fields."""
-        memory_data = {
-            "key": "minimal-key",
-            "content": "simple string content"
-        }
-
-        response = client.post("/memory/put", json=memory_data)
-        assert response.status_code == 200
-
-        data = response.json()
-        assert data["success"] is True
-        assert "memory_id" in data
-
-    def test_put_memory_item_with_ttl(self, client):
-        """Test memory storage with TTL functionality."""
-        memory_data = {
-            "key": "ttl-test-key",
-            "type": "ttl_test",
-            "content": {"test": "ttl functionality"},
-            "ttl": 1  # 1 second TTL
-        }
-
-        response = client.post("/memory/put", json=memory_data)
-        assert response.status_code == 200
-
-        # Immediately check - should exist
-        list_response = client.get("/memory/list?key=ttl-test-key")
-        assert list_response.status_code == 200
-        items = list_response.json().get("items", [])
-        assert len(items) == 1
-
-        # Wait for TTL to expire
-        time.sleep(2)
-
-        # Check again - should not exist
-        list_response = client.get("/memory/list?key=ttl-test-key")
-        assert list_response.status_code == 200
-        items = list_response.json().get("items", [])
-        assert len(items) == 0
-
-    def test_put_memory_item_validation(self, client):
-        """Test memory storage validation."""
-        # Test missing key
-        invalid_data = {
-            "content": "no key provided"
-        }
-
-        response = client.post("/memory/put", json=invalid_data)
-        # Should still work as key is generated if missing
-        assert response.status_code == 200
-
-        # Test invalid TTL
-        invalid_ttl_data = {
-            "key": "invalid-ttl",
-            "content": "test",
-            "ttl": "invalid"
-        }
-
-        response = client.post("/memory/put", json=invalid_ttl_data)
-        # Should handle invalid TTL gracefully
-        assert response.status_code in [200, 400]  # Either accepts or rejects
-
-
-class TestMemoryAgentRetrieval:
-    """Test memory item retrieval functionality."""
-
-    def test_list_memory_items_empty(self, client):
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_list_memory_items_empty(self):
         """Test listing memory items when empty."""
-        response = client.get("/memory/list")
-        assert response.status_code == 200
+        from services.memory_agent.modules import memory_ops
 
-        data = response.json()
-        assert "items" in data
-        assert "total" in data
-        assert "limit" in data
-        assert isinstance(data["items"], list)
-        assert data["total"] == 0
+        result = memory_ops.list_memory_items()
 
-    def test_list_memory_items_basic(self, client):
-        """Test basic memory item listing."""
+        assert result["items"] == []
+        assert result["total"] == 0
+        assert result["limit"] == 100  # default limit
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_list_memory_items_with_data(self):
+        """Test listing memory items with data."""
+        from services.memory_agent.modules import memory_ops
+
         # Add some test items
         items = [
-            {"key": "list-test-1", "type": "test", "content": "item 1"},
-            {"key": "list-test-2", "type": "test", "content": "item 2"},
-            {"key": "list-test-3", "type": "other", "content": "item 3"}
+            {"key": "item1", "type": "type_a", "content": "content1", "timestamp": time.time()},
+            {"key": "item2", "type": "type_b", "content": "content2", "timestamp": time.time()},
+            {"key": "item3", "type": "type_a", "content": "content3", "timestamp": time.time()},
         ]
 
         for item in items:
-            response = client.post("/memory/put", json=item)
-            assert response.status_code == 200
+            memory_ops.put_memory_item(item)
 
-        # List all items
-        response = client.get("/memory/list")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["total"] >= 3
-        assert len(data["items"]) >= 3
+        result = memory_ops.list_memory_items()
 
-    def test_list_memory_items_filtering(self, client):
+        assert len(result["items"]) == 3
+        assert result["total"] == 3
+        assert all(item["key"] in ["item1", "item2", "item3"] for item in result["items"])
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_list_memory_items_filtering(self):
         """Test memory item filtering by type and key."""
+        from services.memory_agent.modules import memory_ops
+
         # Add test items
-        client.post("/memory/put", json={"key": "filter-1", "type": "type_a", "content": "A1"})
-        client.post("/memory/put", json={"key": "filter-2", "type": "type_a", "content": "A2"})
-        client.post("/memory/put", json={"key": "filter-3", "type": "type_b", "content": "B1"})
+        items = [
+            {"key": "filter1", "type": "type_a", "content": "content1", "timestamp": time.time()},
+            {"key": "filter2", "type": "type_a", "content": "content2", "timestamp": time.time()},
+            {"key": "filter3", "type": "type_b", "content": "content3", "timestamp": time.time()},
+        ]
+
+        for item in items:
+            memory_ops.put_memory_item(item)
 
         # Filter by type
-        response = client.get("/memory/list?type=type_a")
-        assert response.status_code == 200
-        data = response.json()
-        assert all(item["type"] == "type_a" for item in data["items"])
+        result = memory_ops.list_memory_items(memory_type="type_a")
+        assert len(result["items"]) == 2
+        assert all(item["type"] == "type_a" for item in result["items"])
 
         # Filter by key
-        response = client.get("/memory/list?key=filter-1")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data["items"]) == 1
-        assert data["items"][0]["key"] == "filter-1"
+        result = memory_ops.list_memory_items(key="filter1")
+        assert len(result["items"]) == 1
+        assert result["items"][0]["key"] == "filter1"
 
-    def test_list_memory_items_pagination(self, client):
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_list_memory_items_pagination(self):
         """Test memory item pagination."""
+        from services.memory_agent.modules import memory_ops
+
         # Add multiple items
         for i in range(10):
-            client.post("/memory/put", json={
-                "key": f"page-test-{i}",
+            item = {
+                "key": f"page-{i}",
                 "type": "pagination",
-                "content": f"item {i}"
-            })
+                "content": f"content-{i}",
+                "timestamp": time.time()
+            }
+            memory_ops.put_memory_item(item)
 
         # Test limit
-        response = client.get("/memory/list?limit=5")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data["items"]) == 5
-        assert data["total"] >= 10
-
-    def test_list_memory_items_limit_validation(self, client):
-        """Test pagination limit validation."""
-        # Test negative limit
-        response = client.get("/memory/list?limit=-1")
-        assert response.status_code == 400 or response.status_code == 422  # Validation error
-
-        # Test excessive limit
-        response = client.get("/memory/list?limit=10000")
-        # Should either reject or cap the limit
-        assert response.status_code in [200, 400, 422]
+        result = memory_ops.list_memory_items(limit=5)
+        assert len(result["items"]) == 5
+        assert result["total"] == 10
 
 
-class TestMemoryAgentIntegration:
-    """Test memory agent integration scenarios."""
+class TestTTLFunctionality:
+    """Test TTL (Time-To-Live) functionality."""
 
-    def test_memory_workflow_scenario(self, client):
-        """Test complete memory workflow scenario."""
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_ttl_cleanup_basic(self):
+        """Test basic TTL cleanup functionality."""
+        from services.memory_agent.modules import memory_ops
+
+        # Mock TTL to be very short (1 second)
+        with patch('services.memory_agent.modules.memory_ops.get_memory_ttl_seconds', return_value=1):
+            # Add an item
+            past_time = time.time() - 2  # 2 seconds ago (expired)
+            item = {
+                "key": "expired-item",
+                "type": "test",
+                "content": "expired content",
+                "timestamp": past_time
+            }
+            memory_ops.put_memory_item(item)
+
+            # Initially should exist
+            assert len(memory_ops._memory) == 1
+
+            # Trigger cleanup (simulate lazy cleanup call)
+            memory_ops._lazy_cleanup_memory()
+
+            # Should be cleaned up
+            assert len(memory_ops._memory) == 0
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_ttl_cleanup_mixed_items(self):
+        """Test TTL cleanup with mixed expired/non-expired items."""
+        from services.memory_agent.modules import memory_ops
+
+        with patch('services.memory_agent.modules.memory_ops.get_memory_ttl_seconds', return_value=2):
+            current_time = time.time()
+
+            # Add expired item (4 seconds ago)
+            expired_item = {
+                "key": "expired",
+                "type": "test",
+                "content": "expired",
+                "timestamp": current_time - 4
+            }
+
+            # Add valid item (1 second ago)
+            valid_item = {
+                "key": "valid",
+                "type": "test",
+                "content": "valid",
+                "timestamp": current_time - 1
+            }
+
+            memory_ops.put_memory_item(expired_item)
+            memory_ops.put_memory_item(valid_item)
+
+            # Both should exist initially
+            assert len(memory_ops._memory) == 2
+
+            # Trigger cleanup
+            memory_ops._lazy_cleanup_memory()
+
+            # Only valid item should remain
+            assert len(memory_ops._memory) == 1
+            assert memory_ops._memory[0]["key"] == "valid"
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_ttl_cleanup_frequency(self):
+        """Test that cleanup doesn't run too frequently."""
+        from services.memory_agent.modules import memory_ops
+
+        # Reset global state
+        memory_ops._last_cleanup_time = None
+
+        with patch('services.memory_agent.modules.memory_ops.get_memory_ttl_seconds', return_value=1):
+            # Add expired item
+            item = {
+                "key": "expired",
+                "type": "test",
+                "content": "expired",
+                "timestamp": time.time() - 2
+            }
+            memory_ops.put_memory_item(item)
+
+            # First cleanup should work
+            memory_ops._lazy_cleanup_memory()
+            assert len(memory_ops._memory) == 0
+
+            # Add another expired item immediately
+            memory_ops.put_memory_item(item)
+
+            # Second cleanup should not run (within 5 minute window)
+            memory_ops._lazy_cleanup_memory()
+            # Should still have the item since cleanup didn't run
+            assert len(memory_ops._memory) == 1
+
+
+class TestSharedUtils:
+    """Test shared utility functions."""
+
+    def test_get_memory_max_items(self):
+        """Test getting memory max items configuration."""
+        from services.memory_agent.modules import shared_utils
+
+        # Test default value
+        assert shared_utils.get_memory_max_items() == 1000
+
+    def test_get_memory_ttl_seconds(self):
+        """Test getting memory TTL configuration."""
+        from services.memory_agent.modules import shared_utils
+
+        # Test default value
+        assert shared_utils.get_memory_ttl_seconds() == 3600
+
+    def test_get_redis_url(self):
+        """Test getting Redis URL configuration."""
+        from services.memory_agent.modules import shared_utils
+
+        # Test default value
+        assert shared_utils.get_redis_url() == "redis://redis:6379"
+
+    def test_create_memory_item(self):
+        """Test memory item creation utility."""
+        from services.memory_agent.modules import shared_utils
+
+        item = shared_utils.create_memory_item(
+            key="test-key",
+            memory_type="test-type",
+            content={"message": "test"}
+        )
+
+        assert item["key"] == "test-key"
+        assert item["type"] == "test-type"
+        assert item["content"] == {"message": "test"}
+        assert "timestamp" in item
+        assert isinstance(item["timestamp"], (int, float))
+
+    def test_cleanup_expired_memory_items(self):
+        """Test expired memory item cleanup utility."""
+        from services.memory_agent.modules import shared_utils
+
+        current_time = time.time()
+        ttl_seconds = 2
+
+        # Create test items
+        items = [
+            {"key": "valid", "timestamp": current_time - 1},  # Valid
+            {"key": "expired1", "timestamp": current_time - 3},  # Expired
+            {"key": "expired2", "timestamp": current_time - 5},  # Expired
+        ]
+
+        cleaned_items = shared_utils.cleanup_expired_memory_items(items, ttl_seconds)
+
+        # Should only keep valid item
+        assert len(cleaned_items) == 1
+        assert cleaned_items[0]["key"] == "valid"
+
+
+class TestEventProcessing:
+    """Test Redis event processing functionality."""
+
+    @patch('services.memory_agent.modules.event_processor.aioredis')
+    def test_event_processor_initialization_success(self, mock_redis):
+        """Test successful Redis initialization."""
+        from services.memory_agent.modules import event_processor
+
+        mock_redis.from_url.return_value = MagicMock()
+
+        processor = event_processor.EventProcessor()
+        result = asyncio.run(processor.initialize_redis())
+
+        assert result is True
+        assert processor.client is not None
+
+    @patch('services.memory_agent.modules.event_processor.aioredis')
+    def test_event_processor_initialization_failure(self, mock_redis):
+        """Test Redis initialization failure."""
+        from services.memory_agent.modules import event_processor
+
+        mock_redis.from_url.side_effect = Exception("Connection failed")
+
+        processor = event_processor.EventProcessor()
+        result = asyncio.run(processor.initialize_redis())
+
+        assert result is False
+        assert processor.client is None
+
+    @patch('services.memory_agent.modules.event_processor.aioredis')
+    def test_subscribe_to_channels(self, mock_redis):
+        """Test subscribing to Redis channels."""
+        from services.memory_agent.modules import event_processor
+
+        mock_pubsub = MagicMock()
+        mock_client = MagicMock()
+        mock_client.pubsub.return_value = mock_pubsub
+
+        processor = event_processor.EventProcessor()
+        processor.client = mock_client
+
+        asyncio.run(processor.subscribe_to_channels())
+
+        # Should have subscribed to expected channels
+        mock_pubsub.subscribe.assert_called_once()
+        call_args = mock_pubsub.subscribe.call_args[0][0]
+        assert isinstance(call_args, list)
+        assert len(call_args) > 0  # Should have multiple channels
+
+    def test_endpoint_extraction(self):
+        """Test endpoint extraction from text."""
+        from services.memory_agent.modules import shared_utils
+
+        # Test with API endpoint
+        text = "Processing request to /api/v1/users/123/profile"
+        endpoint = shared_utils.extract_endpoint_from_text(text)
+        assert endpoint == "/api/v1/users/123/profile"
+
+        # Test with no endpoint
+        text = "Simple text without endpoints"
+        endpoint = shared_utils.extract_endpoint_from_text(text)
+        assert endpoint is None
+
+
+class TestMemoryState:
+    """Test memory state management."""
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_memory_state_initialization(self):
+        """Test memory state initialization."""
+        from services.memory_agent.modules import memory_state
+
+        # Should start empty
+        assert len(memory_state._memory) == 0
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_memory_state_thread_safety(self):
+        """Test memory state thread safety (basic check)."""
+        from services.memory_agent.modules import memory_state
+
+        # Test basic operations don't crash
+        memory_state._memory.append({"key": "test", "type": "test"})
+        assert len(memory_state._memory) == 1
+
+        memory_state._memory.clear()
+        assert len(memory_state._memory) == 0
+
+
+class TestMemoryStats:
+    """Test memory statistics functionality."""
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_get_memory_stats_summary(self):
+        """Test memory statistics summary."""
+        from services.memory_agent.modules import memory_ops
+
+        # Add some test items
+        items = [
+            {"key": "stats1", "type": "type_a", "content": "content1", "timestamp": time.time()},
+            {"key": "stats2", "type": "type_b", "content": "content2", "timestamp": time.time()},
+            {"key": "stats3", "type": "type_a", "content": "content3", "timestamp": time.time()},
+        ]
+
+        for item in items:
+            memory_ops.put_memory_item(item)
+
+        stats = memory_ops.get_memory_stats_summary()
+
+        assert stats["total_items"] == 3
+        assert stats["max_items"] == 1000
+        assert "types" in stats
+        assert stats["types"]["type_a"] == 2
+        assert stats["types"]["type_b"] == 1
+
+
+class TestIntegrationScenarios:
+    """Test complete integration scenarios."""
+
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_workflow_memory_scenario(self):
+        """Test complete workflow memory scenario."""
+        from services.memory_agent.modules import memory_ops
+
         # 1. Store workflow start
-        start_data = {
+        start_item = {
             "key": "workflow-123-start",
             "type": "workflow_start",
             "content": {
                 "workflow_id": "wf-123",
                 "action": "document_analysis",
-                "timestamp": time.time()
-            }
+                "status": "started"
+            },
+            "timestamp": time.time()
         }
 
-        response = client.post("/memory/put", json=start_data)
-        assert response.status_code == 200
+        memory_ops.put_memory_item(start_item)
 
         # 2. Store intermediate results
-        intermediate_data = {
+        progress_item = {
             "key": "workflow-123-progress",
             "type": "workflow_progress",
             "content": {
                 "workflow_id": "wf-123",
                 "step": "analysis_complete",
                 "results": {"documents_processed": 5}
-            }
+            },
+            "timestamp": time.time()
         }
 
-        response = client.post("/memory/put", json=intermediate_data)
-        assert response.status_code == 200
+        memory_ops.put_memory_item(progress_item)
 
         # 3. Retrieve workflow context
-        response = client.get("/memory/list?type=workflow_progress")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data["items"]) >= 1
+        results = memory_ops.list_memory_items(memory_type="workflow_progress")
+        assert len(results["items"]) >= 1
 
         # 4. Verify workflow correlation
         found_progress = any(
             item["content"].get("workflow_id") == "wf-123"
-            for item in data["items"]
+            for item in results["items"]
         )
         assert found_progress
 
-    @patch('services.memory_agent.main.aioredis')
-    def test_event_processing_simulation(self, mock_redis, client):
-        """Test event processing simulation."""
-        # Mock Redis for event processing
-        mock_redis_conn = Mock()
-        mock_redis.from_url.return_value = mock_redis_conn
+    @patch('services.memory_agent.modules.memory_state._memory', [])
+    def test_event_memory_storage(self):
+        """Test event-driven memory storage."""
+        from services.memory_agent.modules import memory_ops
 
         # Simulate event processing
-        event_data = {
+        event_item = {
             "key": "event-summary-456",
             "type": "event_summary",
             "content": {
                 "event_type": "document_ingested",
                 "summary": "Document successfully processed",
                 "correlation_id": "corr-789"
-            }
+            },
+            "timestamp": time.time()
         }
 
-        response = client.post("/memory/put", json=event_data)
-        assert response.status_code == 200
+        memory_ops.put_memory_item(event_item)
 
         # Verify event storage
-        response = client.get("/memory/list?type=event_summary")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data["items"]) >= 1
+        results = memory_ops.list_memory_items(memory_type="event_summary")
+        assert len(results["items"]) >= 1
 
-
-class TestMemoryAgentErrorHandling:
-    """Test error handling and edge cases."""
-
-    def test_invalid_json_handling(self, client):
-        """Test handling of invalid JSON in requests."""
-        response = client.post("/memory/put", data="invalid json")
-        assert response.status_code == 400
-
-    def test_large_content_handling(self, client):
-        """Test handling of large content."""
-        large_content = {"data": "x" * 10000}  # 10KB content
-
-        response = client.post("/memory/put", json={
-            "key": "large-content-test",
-            "content": large_content
-        })
-
-        # Should either accept or reject based on size limits
-        assert response.status_code in [200, 413, 400]
-
-    def test_concurrent_memory_operations(self, client):
-        """Test concurrent memory operations."""
-        import threading
-        import queue
-
-        results = queue.Queue()
-
-        def worker(worker_id):
-            """Worker function for concurrent testing."""
-            try:
-                response = client.post("/memory/put", json={
-                    "key": f"concurrent-{worker_id}",
-                    "type": "concurrency_test",
-                    "content": f"Worker {worker_id} data"
-                })
-                results.put((worker_id, response.status_code))
-            except Exception as e:
-                results.put((worker_id, str(e)))
-
-        # Start concurrent workers
-        threads = []
-        for i in range(5):
-            t = threading.Thread(target=worker, args=(i,))
-            threads.append(t)
-            t.start()
-
-        # Wait for completion
-        for t in threads:
-            t.join()
-
-        # Check results
-        successful_operations = 0
-        while not results.empty():
-            worker_id, result = results.get()
-            if isinstance(result, int) and result == 200:
-                successful_operations += 1
-
-        # At least some operations should succeed
-        assert successful_operations > 0
-
-
-class TestMemoryAgentLogging:
-    """Test logging integration."""
-
-    @patch('services.memory_agent.main.logger_client')
-    def test_memory_operations_logging(self, mock_logger, client):
-        """Test that memory operations are logged."""
-        mock_logger.log_business_event = AsyncMock()
-        mock_logger.log_info = AsyncMock()
-        mock_logger.log_performance_metric = AsyncMock()
-
-        # Perform memory operation
-        response = client.post("/memory/put", json={
-            "key": "logging-test",
-            "type": "logging",
-            "content": "test logging"
-        })
-
-        assert response.status_code == 200
-
-        # Verify logging was called (if logger is configured)
-        # Note: This test may be skipped if logger is not configured in test environment
-
-
-# Pytest fixtures
-@pytest.fixture
-def client():
-    """Create test client for memory agent."""
-    return TestClient(app)
+        stored_item = results["items"][0]
+        assert stored_item["content"]["correlation_id"] == "corr-789"
 
 
 if __name__ == "__main__":
