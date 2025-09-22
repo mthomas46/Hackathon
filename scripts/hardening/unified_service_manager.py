@@ -22,33 +22,36 @@ LLM_PROCESSING_HINTS:
 """
 
 import asyncio
-import aiohttp
-import docker
 import json
-import yaml
-import time
-import psutil
+import logging
 import socket
+import subprocess
+import sys
 import threading
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Set, Tuple, Union
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
-import subprocess
-import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+import aiohttp
+import docker
+import psutil
+import yaml
 
 # Optional imports with fallbacks
 try:
     import kubernetes as k8s
     from kubernetes import client, config
+
     KUBERNETES_AVAILABLE = True
 except ImportError:
     KUBERNETES_AVAILABLE = False
 
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -56,6 +59,7 @@ except ImportError:
 
 class ServiceStatus(Enum):
     """Service health status"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -65,6 +69,7 @@ class ServiceStatus(Enum):
 
 class ServiceType(Enum):
     """Types of services in the ecosystem"""
+
     API_SERVICE = "api_service"
     DATASTORE = "datastore"
     MESSAGE_QUEUE = "message_queue"
@@ -76,6 +81,7 @@ class ServiceType(Enum):
 @dataclass
 class ServiceDefinition:
     """Complete service definition with dependencies and requirements"""
+
     name: str
     service_type: ServiceType
     host: str
@@ -95,6 +101,7 @@ class ServiceDefinition:
 @dataclass
 class ServiceHealth:
     """Real-time service health information"""
+
     service_name: str
     status: ServiceStatus
     last_check: datetime
@@ -108,6 +115,7 @@ class ServiceHealth:
 @dataclass
 class ServiceManagerConfig:
     """Configuration for the unified service manager"""
+
     workspace_path: Path
     docker_compose_file: str = "docker-compose.dev.yml"
     kubernetes_namespace: str = "default"
@@ -158,7 +166,7 @@ class UnifiedServiceManager:
             "failed_checks": 0,
             "auto_heals": 0,
             "dependency_checks": 0,
-            "resource_checks": 0
+            "resource_checks": 0,
         }
 
         self.logger = logging.getLogger("unified_service_manager")
@@ -194,7 +202,7 @@ class UnifiedServiceManager:
             return
 
         try:
-            self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+            self.redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
             self.redis_client.ping()
             self.logger.info("🔴 Redis client initialized")
         except Exception as e:
@@ -212,8 +220,9 @@ class UnifiedServiceManager:
         - Validate service definitions against schema
         """
         # Check cache validity
-        if (self.last_discovery_time and
-            datetime.now() - self.last_discovery_time < timedelta(seconds=self.config.service_discovery_interval)):
+        if self.last_discovery_time and datetime.now() - self.last_discovery_time < timedelta(
+            seconds=self.config.service_discovery_interval
+        ):
             return self.services
 
         self.logger.info("🔍 Discovering services...")
@@ -244,12 +253,12 @@ class UnifiedServiceManager:
             return {}
 
         try:
-            with open(compose_file, 'r') as f:
+            with open(compose_file, "r") as f:
                 compose_config = yaml.safe_load(f)
 
             services = {}
-            if 'services' in compose_config:
-                for service_name, service_config in compose_config['services'].items():
+            if "services" in compose_config:
+                for service_name, service_config in compose_config["services"].items():
                     service_def = self._parse_docker_service(service_name, service_config)
                     if service_def:
                         services[service_name] = service_def
@@ -264,16 +273,16 @@ class UnifiedServiceManager:
         """Parse Docker service configuration"""
         try:
             # Extract port mapping
-            ports = config.get('ports', [])
+            ports = config.get("ports", [])
             if not ports:
                 return None
 
             # Get first port mapping
             port_mapping = ports[0]
             if isinstance(port_mapping, str):
-                external_port = int(port_mapping.split(':')[0])
+                external_port = int(port_mapping.split(":")[0])
             elif isinstance(port_mapping, dict):
-                external_port = port_mapping.get('published', port_mapping.get('target'))
+                external_port = port_mapping.get("published", port_mapping.get("target"))
             else:
                 external_port = port_mapping
 
@@ -281,7 +290,7 @@ class UnifiedServiceManager:
             service_type = self._infer_service_type(name, config)
 
             # Extract dependencies
-            depends_on = config.get('depends_on', [])
+            depends_on = config.get("depends_on", [])
             if isinstance(depends_on, dict):
                 dependencies = list(depends_on.keys())
             elif isinstance(depends_on, list):
@@ -295,8 +304,8 @@ class UnifiedServiceManager:
                 host="localhost",
                 port=int(external_port),
                 dependencies=dependencies,
-                docker_container=config.get('container_name', f"hackathon-{name}-1"),
-                resource_limits=config.get('deploy', {}).get('resources', {})
+                docker_container=config.get("container_name", f"hackathon-{name}-1"),
+                resource_limits=config.get("deploy", {}).get("resources", {}),
             )
 
         except Exception as e:
@@ -307,15 +316,15 @@ class UnifiedServiceManager:
         """Infer service type from name and configuration"""
         name_lower = name.lower()
 
-        if any(keyword in name_lower for keyword in ['redis', 'postgres', 'mysql', 'mongo']):
+        if any(keyword in name_lower for keyword in ["redis", "postgres", "mysql", "mongo"]):
             return ServiceType.DATASTORE
-        elif any(keyword in name_lower for keyword in ['rabbit', 'kafka', 'queue']):
+        elif any(keyword in name_lower for keyword in ["rabbit", "kafka", "queue"]):
             return ServiceType.MESSAGE_QUEUE
-        elif any(keyword in name_lower for keyword in ['nginx', 'traefik', 'haproxy']):
+        elif any(keyword in name_lower for keyword in ["nginx", "traefik", "haproxy"]):
             return ServiceType.LOAD_BALANCER
-        elif any(keyword in name_lower for keyword in ['prometheus', 'grafana', 'monitor']):
+        elif any(keyword in name_lower for keyword in ["prometheus", "grafana", "monitor"]):
             return ServiceType.MONITORING
-        elif any(keyword in name_lower for keyword in ['worker', 'processor', 'task']):
+        elif any(keyword in name_lower for keyword in ["worker", "processor", "task"]):
             return ServiceType.BACKGROUND_WORKER
         else:
             return ServiceType.API_SERVICE
@@ -354,7 +363,7 @@ class UnifiedServiceManager:
                 service_name=service_name,
                 status=ServiceStatus.UNKNOWN,
                 last_check=datetime.now(),
-                error_message="Service not found in registry"
+                error_message="Service not found in registry",
             )
 
         service = self.services[service_name]
@@ -368,14 +377,16 @@ class UnifiedServiceManager:
                     service_name=service_name,
                     status=ServiceStatus.UNHEALTHY,
                     last_check=datetime.now(),
-                    error_message="Service not reachable"
+                    error_message="Service not reachable",
                 )
 
             # Check health endpoint
             health_url = f"http://{service.host}:{service.port}{service.health_endpoint}"
             start_time = time.time()
 
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.config.health_check_timeout)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.config.health_check_timeout)
+            ) as session:
                 async with session.get(health_url) as response:
                     response_time = time.time() - start_time
                     status_code = response.status
@@ -398,7 +409,11 @@ class UnifiedServiceManager:
                         # Update consecutive failures
                         if service_name in self.health_status:
                             current_health = self.health_status[service_name]
-                            consecutive_failures = 0 if service_status == ServiceStatus.HEALTHY else current_health.consecutive_failures + 1
+                            consecutive_failures = (
+                                0
+                                if service_status == ServiceStatus.HEALTHY
+                                else current_health.consecutive_failures + 1
+                            )
                         else:
                             consecutive_failures = 0
 
@@ -408,7 +423,7 @@ class UnifiedServiceManager:
                             last_check=datetime.now(),
                             response_time=response_time,
                             consecutive_failures=consecutive_failures,
-                            last_successful_check=datetime.now() if service_status == ServiceStatus.HEALTHY else None
+                            last_successful_check=datetime.now() if service_status == ServiceStatus.HEALTHY else None,
                         )
                     else:
                         return ServiceHealth(
@@ -416,7 +431,7 @@ class UnifiedServiceManager:
                             status=ServiceStatus.UNHEALTHY,
                             last_check=datetime.now(),
                             response_time=response_time,
-                            error_message=f"Health check returned status {status_code}"
+                            error_message=f"Health check returned status {status_code}",
                         )
 
         except Exception as e:
@@ -424,7 +439,7 @@ class UnifiedServiceManager:
                 service_name=service_name,
                 status=ServiceStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def _check_connectivity(self, service: ServiceDefinition) -> bool:
@@ -472,7 +487,7 @@ class UnifiedServiceManager:
                     service_name=service_name,
                     status=ServiceStatus.UNKNOWN,
                     last_check=datetime.now(),
-                    error_message=str(result)
+                    error_message=str(result),
                 )
             else:
                 health_status[service_name] = result
@@ -647,20 +662,12 @@ class UnifiedServiceManager:
 
         self.logger.info("🚀 Validating production readiness...")
 
-        readiness_report = {
-            "overall_ready": True,
-            "services_ready": {},
-            "issues": [],
-            "recommendations": []
-        }
+        readiness_report = {"overall_ready": True, "services_ready": {}, "issues": [], "recommendations": []}
 
         for service_name, service in self.services.items():
             service_ready, issues = self._check_service_readiness(service)
 
-            readiness_report["services_ready"][service_name] = {
-                "ready": service_ready,
-                "issues": issues
-            }
+            readiness_report["services_ready"][service_name] = {"ready": service_ready, "issues": issues}
 
             if not service_ready:
                 readiness_report["overall_ready"] = False
@@ -725,18 +732,12 @@ class UnifiedServiceManager:
             "services_monitored": len(self.health_status),
             "operation_metrics": self.operation_metrics,
             "health_summary": self._get_health_summary(),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _get_health_summary(self) -> Dict[str, int]:
         """Get summary of service health status"""
-        summary = {
-            "healthy": 0,
-            "degraded": 0,
-            "unhealthy": 0,
-            "unknown": 0,
-            "stopped": 0
-        }
+        summary = {"healthy": 0, "degraded": 0, "unhealthy": 0, "unknown": 0, "stopped": 0}
 
         for health in self.health_status.values():
             status_key = health.status.value
@@ -751,11 +752,7 @@ class UnifiedServiceManager:
             return
 
         self.monitoring_active = True
-        self.monitoring_thread = threading.Thread(
-            target=self._monitoring_loop,
-            daemon=True,
-            name="service_monitor"
-        )
+        self.monitoring_thread = threading.Thread(target=self._monitoring_loop, daemon=True, name="service_monitor")
         self.monitoring_thread.start()
         self.logger.info("📊 Service monitoring started")
 
@@ -806,7 +803,7 @@ def init_service_manager(workspace_path: Optional[str] = None) -> UnifiedService
         workspace_path=Path(workspace_path or Path.cwd()),
         enable_auto_healing=True,
         enable_dependency_validation=True,
-        enable_resource_monitoring=True
+        enable_resource_monitoring=True,
     )
     return get_service_manager(config)
 

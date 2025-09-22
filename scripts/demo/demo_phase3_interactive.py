@@ -10,8 +10,8 @@ Showcases the advanced features added in Phase 3:
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the project directory to the path
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,6 +20,7 @@ if project_dir not in sys.path:
 
 try:
     import questionary
+
     QUESTIONARY_AVAILABLE = True
 except ImportError:
     QUESTIONARY_AVAILABLE = False
@@ -54,22 +55,20 @@ async def demo_phase3_enhancements():
             None,
             lambda: questionary.select(
                 "Choose your preferred CLI style:",
-                choices=[
-                    "🎨 Full styling (recommended)",
-                    "🎯 Minimal styling",
-                    "📝 Plain text"
-                ],
-                style=questionary.Style([
-                    ('qmark', 'fg:#673ab7 bold'),       # Purple question mark
-                    ('question', 'bold'),               # Bold question text
-                    ('answer', 'fg:#ff5722 bold'),      # Orange answer highlight
-                    ('pointer', 'fg:#673ab7 bold'),     # Purple pointer
-                    ('selected', 'fg:#ff5722 bold'),    # Orange selected item
-                    ('separator', 'fg:#cc5454'),        # Red separator
-                ]),
+                choices=["🎨 Full styling (recommended)", "🎯 Minimal styling", "📝 Plain text"],
+                style=questionary.Style(
+                    [
+                        ("qmark", "fg:#673ab7 bold"),  # Purple question mark
+                        ("question", "bold"),  # Bold question text
+                        ("answer", "fg:#ff5722 bold"),  # Orange answer highlight
+                        ("pointer", "fg:#673ab7 bold"),  # Purple pointer
+                        ("selected", "fg:#ff5722 bold"),  # Orange selected item
+                        ("separator", "fg:#cc5454"),  # Red separator
+                    ]
+                ),
                 use_indicator=True,
-                use_shortcuts=True
-            ).ask()
+                use_shortcuts=True,
+            ).ask(),
         )
         console.print(f"[green]Selected: {choice}[/green]")
     except Exception as e:
@@ -94,19 +93,21 @@ async def demo_phase3_enhancements():
                 choices=[
                     "Check service status in Settings menu",
                     "Continue anyway (may cause errors)",
-                    "Go back to main menu"
+                    "Go back to main menu",
                 ],
                 default="Check service status in Settings menu",
-                style=questionary.Style([
-                    ('qmark', 'fg:#ff9800 bold'),       # Orange warning question mark
-                    ('question', 'bold fg:#ff9800'),    # Bold orange question
-                    ('answer', 'fg:#4caf50 bold'),      # Green answer
-                    ('pointer', 'fg:#ff9800 bold'),     # Orange pointer
-                    ('selected', 'fg:#4caf50 bold'),    # Green selected
-                    ('separator', 'fg:#ff9800'),        # Orange separator
-                ]),
-                use_indicator=True
-            ).ask()
+                style=questionary.Style(
+                    [
+                        ("qmark", "fg:#ff9800 bold"),  # Orange warning question mark
+                        ("question", "bold fg:#ff9800"),  # Bold orange question
+                        ("answer", "fg:#4caf50 bold"),  # Green answer
+                        ("pointer", "fg:#ff9800 bold"),  # Orange pointer
+                        ("selected", "fg:#4caf50 bold"),  # Green selected
+                        ("separator", "fg:#ff9800"),  # Orange separator
+                    ]
+                ),
+                use_indicator=True,
+            ).ask(),
         )
 
         if "Settings" in action:
@@ -125,23 +126,22 @@ async def demo_phase3_enhancements():
 
     try:
         await asyncio.get_event_loop().run_in_executor(
-            None,
-            lambda: questionary.print("✅ Operation completed successfully!", style="bold green")
+            None, lambda: questionary.print("✅ Operation completed successfully!", style="bold green")
         )
 
         # Show a helpful tip (30% chance in real usage)
         import random
+
         if random.random() < 0.5:  # 50% for demo
-            tip = random.choice([
-                "💡 Tip: Press 's' anytime for service health status",
-                "💡 Tip: Use arrow keys for quick navigation",
-                "💡 Tip: Press 'b' to go back to previous menu",
-                "💡 Tip: All interactive menus support keyboard shortcuts"
-            ])
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: questionary.print(tip, style="dim cyan")
+            tip = random.choice(
+                [
+                    "💡 Tip: Press 's' anytime for service health status",
+                    "💡 Tip: Use arrow keys for quick navigation",
+                    "💡 Tip: Press 'b' to go back to previous menu",
+                    "💡 Tip: All interactive menus support keyboard shortcuts",
+                ]
             )
+            await asyncio.get_event_loop().run_in_executor(None, lambda: questionary.print(tip, style="dim cyan"))
 
     except Exception as e:
         console.print(f"[green]✅ Operation completed successfully![/green]")

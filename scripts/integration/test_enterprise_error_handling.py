@@ -6,27 +6,32 @@ Simple test script to demonstrate the enterprise error handling capabilities.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
 
 # Mock the conflicting imports
 class MockServiceNames:
-    ORCHESTRATOR = 'orchestrator'
-    ANALYSIS_SERVICE = 'analysis-service'
-    DOC_STORE = 'doc_store'
-    PROMPT_STORE = 'prompt-store'
+    ORCHESTRATOR = "orchestrator"
+    ANALYSIS_SERVICE = "analysis-service"
+    DOC_STORE = "doc_store"
+    PROMPT_STORE = "prompt-store"
+
 
 def mock_fire_and_forget(level: str, message: str, service: str):
     """Mock logging function."""
     print(f"[{level.upper()}] {service}: {message}")
 
+
 # Monkey patch the imports
 import services.shared.enterprise_error_handling_v2 as eeh
+
 eeh.ServiceNames = MockServiceNames()
 eeh.fire_and_forget = mock_fire_and_forget
+
 
 # Mock HTTPException
 class MockHTTPException(Exception):
@@ -35,7 +40,9 @@ class MockHTTPException(Exception):
         self.detail = detail
         super().__init__(detail)
 
+
 eeh.HTTPException = MockHTTPException
+
 
 async def test_error_handling():
     """Test the enterprise error handling framework."""
@@ -51,8 +58,8 @@ async def test_error_handling():
                 "service_name": "doc_store",
                 "operation": "query",
                 "user_id": "user123",
-                "correlation_id": "corr456"
-            }
+                "correlation_id": "corr456",
+            },
         },
         {
             "name": "Validation Error",
@@ -60,18 +67,14 @@ async def test_error_handling():
             "context": {
                 "service_name": "analysis_service",
                 "operation": "analyze",
-                "request_data": {"doc_id": "invalid_format"}
-            }
+                "request_data": {"doc_id": "invalid_format"},
+            },
         },
         {
             "name": "Database Connection Error",
             "error": ConnectionError("Database connection lost"),
-            "context": {
-                "service_name": "prompt_store",
-                "operation": "get_prompt",
-                "critical_operation": True
-            }
-        }
+            "context": {"service_name": "prompt_store", "operation": "get_prompt", "critical_operation": True},
+        },
     ]
 
     for i, test_case in enumerate(test_cases, 1):
@@ -79,10 +82,7 @@ async def test_error_handling():
         print("-" * 30)
 
         try:
-            result = await eeh.enterprise_error_handler.handle_error(
-                test_case["error"],
-                test_case["context"]
-            )
+            result = await eeh.enterprise_error_handler.handle_error(test_case["error"], test_case["context"])
 
             print("✅ Error handled successfully")
             print(f"   Error ID: {result['error']['id']}")
@@ -122,6 +122,7 @@ async def test_error_handling():
     print("   ✅ Comprehensive error tracking")
     print("   ✅ User-friendly error messages")
     print("   ✅ Enterprise-grade resilience")
+
 
 if __name__ == "__main__":
     asyncio.run(test_error_handling())

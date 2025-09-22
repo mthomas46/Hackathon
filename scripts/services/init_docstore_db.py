@@ -5,21 +5,21 @@ This script initializes the Doc Store database with all required tables and inde
 and can optionally seed it with realistic test data for development and testing.
 """
 
-import os
-import sys
 import argparse
 import json
-from pathlib import Path
+import os
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.absolute()
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from services.doc_store.db.schema import init_database
 from services.doc_store.db.connection import get_doc_store_connection, return_doc_store_connection
 from services.doc_store.db.queries import execute_query
+from services.doc_store.db.schema import init_database
 
 
 def seed_test_data():
@@ -39,9 +39,9 @@ def seed_test_data():
                 "language": "markdown",
                 "category": "documentation",
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         {
             "id": "test-github-issue-001",
@@ -53,9 +53,9 @@ def seed_test_data():
                 "status": "open",
                 "labels": ["bug", "authentication", "high-priority"],
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         # Jira documents
         {
@@ -69,14 +69,14 @@ def seed_test_data():
                 "status": "in_progress",
                 "priority": "high",
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         # Confluence pages
         {
             "id": "test-confluence-page-001",
-            "content": "# API Documentation\n\n## Authentication\n\nThe API uses JWT tokens for authentication.\n\n### Getting a Token\n```bash\ncurl -X POST /api/auth/login \\\n  -d 'username=user&password=pass'\n```\n\n### Using the Token\n```bash\ncurl -H 'Authorization: Bearer <token>' /api/users\n```\n\n## Endpoints\n\n### GET /api/users\nReturns list of users.\n\n**Response:**\n```json\n[{\"id\": 1, \"name\": \"John Doe\"}]\n```",
+            "content": '# API Documentation\n\n## Authentication\n\nThe API uses JWT tokens for authentication.\n\n### Getting a Token\n```bash\ncurl -X POST /api/auth/login \\\n  -d \'username=user&password=pass\'\n```\n\n### Using the Token\n```bash\ncurl -H \'Authorization: Bearer <token>\' /api/users\n```\n\n## Endpoints\n\n### GET /api/users\nReturns list of users.\n\n**Response:**\n```json\n[{"id": 1, "name": "John Doe"}]\n```',
             "content_hash": "hash_test_confluence_001",
             "metadata": {
                 "type": "confluence_page",
@@ -85,9 +85,9 @@ def seed_test_data():
                 "title": "API Documentation",
                 "last_modified": "2024-01-15",
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         # Code files
         {
@@ -102,9 +102,9 @@ def seed_test_data():
                 "lines": 42,
                 "complexity": "medium",
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         # API documentation
         {
@@ -118,9 +118,9 @@ def seed_test_data():
                 "endpoints": 5,
                 "schemas": 3,
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         # Analysis results
         {
@@ -134,9 +134,9 @@ def seed_test_data():
                 "issues_found": 6,
                 "severity_breakdown": {"high": 1, "medium": 1, "low": 0, "info": 4},
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
+            "correlation_id": "test-session-001",
         },
         # Ensemble results
         {
@@ -150,28 +150,31 @@ def seed_test_data():
                 "confidence_level": "high",
                 "recommendations_count": 5,
                 "is_test_data": True,
-                "test_marker": "DEVELOPMENT_TEST_DATA"
+                "test_marker": "DEVELOPMENT_TEST_DATA",
             },
-            "correlation_id": "test-session-001"
-        }
+            "correlation_id": "test-session-001",
+        },
     ]
 
     # Insert test documents
     for doc in test_documents:
         try:
-            execute_query("""
+            execute_query(
+                """
                 INSERT OR REPLACE INTO documents
                 (id, content, content_hash, metadata, correlation_id, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                doc["id"],
-                doc["content"],
-                doc["content_hash"],
-                json.dumps(doc["metadata"]),  # Store as proper JSON
-                doc.get("correlation_id"),
-                datetime.now(timezone.utc).isoformat(),
-                datetime.now(timezone.utc).isoformat()
-            ))
+            """,
+                (
+                    doc["id"],
+                    doc["content"],
+                    doc["content_hash"],
+                    json.dumps(doc["metadata"]),  # Store as proper JSON
+                    doc.get("correlation_id"),
+                    datetime.now(timezone.utc).isoformat(),
+                    datetime.now(timezone.utc).isoformat(),
+                ),
+            )
             print(f"✅ Inserted test document: {doc['id']}")
         except Exception as e:
             print(f"❌ Failed to insert document {doc['id']}: {e}")
@@ -183,39 +186,42 @@ def seed_test_data():
             "analyzer": "content_quality",
             "model": "gpt-4",
             "result": '{"quality_score": 8.5, "readability": "excellent", "completeness": "good"}',
-            "score": 8.5
+            "score": 8.5,
         },
         {
             "document_id": "test-python-code-001",
             "analyzer": "code_security",
             "model": "security_scanner_v1",
             "result": '{"vulnerabilities": 1, "severity": "high", "recommendations": ["Use parameterized queries"]}',
-            "score": 2.0
+            "score": 2.0,
         },
         {
             "document_id": "test-api-spec-001",
             "analyzer": "api_completeness",
             "model": "openapi_validator",
             "result": '{"endpoints_covered": 5, "schemas_defined": 3, "documentation_complete": true}',
-            "score": 9.0
-        }
+            "score": 9.0,
+        },
     ]
 
     for analysis in analysis_records:
         try:
-            execute_query("""
+            execute_query(
+                """
                 INSERT OR REPLACE INTO analyses
                 (id, document_id, analyzer, model, result, score, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                f"{analysis['document_id']}_{analysis['analyzer']}",
-                analysis["document_id"],
-                analysis["analyzer"],
-                analysis["model"],
-                analysis["result"],
-                analysis["score"],
-                datetime.now(timezone.utc).isoformat()
-            ))
+            """,
+                (
+                    f"{analysis['document_id']}_{analysis['analyzer']}",
+                    analysis["document_id"],
+                    analysis["analyzer"],
+                    analysis["model"],
+                    analysis["result"],
+                    analysis["score"],
+                    datetime.now(timezone.utc).isoformat(),
+                ),
+            )
             print(f"✅ Inserted analysis for: {analysis['document_id']}")
         except Exception as e:
             print(f"❌ Failed to insert analysis for {analysis['document_id']}: {e}")
@@ -231,18 +237,22 @@ def clean_test_data():
 
     try:
         # Delete test documents
-        result = execute_query("""
+        result = execute_query(
+            """
             DELETE FROM documents
             WHERE json_extract(metadata, '$.is_test_data') = 1
                OR json_extract(metadata, '$.test_marker') = 'DEVELOPMENT_TEST_DATA'
-        """)
+        """
+        )
         print(f"✅ Deleted test documents")
 
         # Delete associated analyses
-        result = execute_query("""
+        result = execute_query(
+            """
             DELETE FROM analyses
             WHERE document_id LIKE 'test-%'
-        """)
+        """
+        )
         print(f"✅ Deleted associated analyses")
 
         print("🎉 Test data cleanup completed!")
@@ -253,26 +263,14 @@ def clean_test_data():
 def main():
     """Main script entry point."""
     parser = argparse.ArgumentParser(description="Doc Store Database Management")
-    parser.add_argument(
-        "--seed",
-        action="store_true",
-        help="Seed database with test data"
-    )
-    parser.add_argument(
-        "--clean",
-        action="store_true",
-        help="Clean test data from database"
-    )
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Force operation without confirmation"
-    )
+    parser.add_argument("--seed", action="store_true", help="Seed database with test data")
+    parser.add_argument("--clean", action="store_true", help="Clean test data from database")
+    parser.add_argument("--force", action="store_true", help="Force operation without confirmation")
 
     args = parser.parse_args()
 
     # Set environment
-    os.environ.setdefault('DOCSTORE_DB', str(PROJECT_ROOT / 'services' / 'doc_store' / 'db.sqlite3'))
+    os.environ.setdefault("DOCSTORE_DB", str(PROJECT_ROOT / "services" / "doc_store" / "db.sqlite3"))
 
     print("🏗️  Doc Store Database Management")
     print(f"📍 Database: {os.environ['DOCSTORE_DB']}")
@@ -290,7 +288,7 @@ def main():
     if args.clean:
         if not args.force:
             confirm = input("⚠️  This will delete all test data. Continue? (y/N): ")
-            if confirm.lower() != 'y':
+            if confirm.lower() != "y":
                 print("Operation cancelled.")
                 return
         clean_test_data()
@@ -298,7 +296,7 @@ def main():
     elif args.seed:
         if not args.force:
             confirm = input("🌱 This will add test data to the database. Continue? (y/N): ")
-            if confirm.lower() != 'y':
+            if confirm.lower() != "y":
                 print("Operation cancelled.")
                 return
         seed_test_data()

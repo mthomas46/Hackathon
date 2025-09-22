@@ -10,18 +10,20 @@ after the DDD refactor. This script validates:
 """
 
 import asyncio
-import time
 import json
-import requests
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import statistics
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+import requests
 
 
 @dataclass
 class EndpointTest:
     """Test configuration for an endpoint."""
+
     method: str
     path: str
     description: str
@@ -34,6 +36,7 @@ class EndpointTest:
 @dataclass
 class TestResult:
     """Result of testing an endpoint."""
+
     endpoint: EndpointTest
     success: bool
     status_code: int
@@ -47,7 +50,7 @@ class APIEndpointTester:
 
     def __init__(self, base_url: str = "http://localhost:5020"):
         """Initialize the tester."""
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         self.session.timeout = 30
 
@@ -68,28 +71,24 @@ class APIEndpointTester:
                 "threshold": 0.7,
                 "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
                 "similarity_metric": "cosine",
-                "options": {"include_embeddings": False}
+                "options": {"include_embeddings": False},
             },
-            "sentiment_request": {
-                "targets": ["doc:readme"],
-                "include_tone_analysis": True,
-                "language": "en"
-            },
+            "sentiment_request": {"targets": ["doc:readme"], "include_tone_analysis": True, "language": "en"},
             "quality_request": {
                 "targets": ["doc:readme"],
                 "quality_metrics": ["readability", "completeness", "consistency"],
-                "thresholds": {"readability": 0.7, "completeness": 0.8}
+                "thresholds": {"readability": 0.7, "completeness": 0.8},
             },
             "trend_request": {
                 "targets": ["doc:readme"],
                 "time_range_days": 90,
                 "metrics": ["quality_score", "finding_count"],
-                "aggregation": "weekly"
+                "aggregation": "weekly",
             },
             "risk_request": {
                 "targets": ["doc:readme"],
                 "risk_factors": ["age", "complexity", "usage"],
-                "include_recommendations": True
+                "include_recommendations": True,
             },
             "maintenance_request": {
                 "document_data": {
@@ -97,116 +96,179 @@ class APIEndpointTester:
                     "last_modified": "2024-01-01T00:00:00Z",
                     "quality_score": 0.8,
                     "finding_density": 0.5,
-                    "usage_frequency": 50
+                    "usage_frequency": 50,
                 },
-                "baseline_period_days": 90
+                "baseline_period_days": 90,
             },
             "workflow_request": {
                 "event_type": "pull_request",
                 "repository": "example/repo",
                 "branch": "main",
                 "files_changed": ["README.md", "api.py"],
-                "metadata": {"pr_number": 123, "author": "test-user"}
+                "metadata": {"pr_number": 123, "author": "test-user"},
             },
             "distributed_request": {
                 "task_type": "semantic_analysis",
                 "payload": {"targets": ["doc:readme"]},
                 "priority": "normal",
-                "timeout_seconds": 300
-            }
+                "timeout_seconds": 300,
+            },
         }
 
     def _get_all_endpoints(self) -> List[EndpointTest]:
         """Define all endpoints to test."""
         return [
             # Analysis endpoints
-            EndpointTest("POST", "/analyze", "Basic document analysis",
-                        {"targets": self.test_data["analysis_targets"], "analysis_type": "consistency"}),
-            EndpointTest("POST", "/analyze/semantic-similarity", "Semantic similarity analysis",
-                        self.test_data["semantic_request"]),
-            EndpointTest("POST", "/analyze/sentiment", "Sentiment analysis",
-                        self.test_data["sentiment_request"]),
-            EndpointTest("POST", "/analyze/tone", "Tone analysis",
-                        self.test_data["sentiment_request"]),
-            EndpointTest("POST", "/analyze/quality", "Content quality analysis",
-                        self.test_data["quality_request"]),
-            EndpointTest("POST", "/analyze/trends", "Trend analysis",
-                        self.test_data["trend_request"]),
-            EndpointTest("POST", "/analyze/trends/portfolio", "Portfolio trend analysis",
-                        {"documents": [self.test_data["trend_request"]], "group_by": "document_type"}),
-            EndpointTest("POST", "/analyze/risk", "Risk assessment",
-                        self.test_data["risk_request"]),
-            EndpointTest("POST", "/analyze/risk/portfolio", "Portfolio risk assessment",
-                        {"documents": [self.test_data["risk_request"]], "group_by": "document_type"}),
-            EndpointTest("POST", "/analyze/maintenance/forecast", "Maintenance forecasting",
-                        self.test_data["maintenance_request"]),
-            EndpointTest("POST", "/analyze/maintenance/forecast/portfolio", "Portfolio maintenance forecasting",
-                        {"documents": [self.test_data["maintenance_request"]], "group_by": "document_type"}),
-            EndpointTest("POST", "/analyze/quality/degradation", "Quality degradation detection",
-                        {"document_id": "doc-1", "analysis_history": [], "baseline_period_days": 90}),
-            EndpointTest("POST", "/analyze/quality/degradation/portfolio", "Portfolio quality degradation",
-                        {"documents": [{"document_id": "doc-1", "analysis_history": []}], "baseline_period_days": 90}),
-            EndpointTest("POST", "/analyze/change/impact", "Change impact analysis",
-                        {"targets": ["doc:readme"], "changes": ["content_update"], "scope": "repository"}),
-            EndpointTest("POST", "/analyze/change/impact/portfolio", "Portfolio change impact",
-                        {"documents": [{"document_id": "doc-1", "changes": ["content_update"]}], "scope": "organization"}),
-
+            EndpointTest(
+                "POST",
+                "/analyze",
+                "Basic document analysis",
+                {"targets": self.test_data["analysis_targets"], "analysis_type": "consistency"},
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/semantic-similarity",
+                "Semantic similarity analysis",
+                self.test_data["semantic_request"],
+            ),
+            EndpointTest("POST", "/analyze/sentiment", "Sentiment analysis", self.test_data["sentiment_request"]),
+            EndpointTest("POST", "/analyze/tone", "Tone analysis", self.test_data["sentiment_request"]),
+            EndpointTest("POST", "/analyze/quality", "Content quality analysis", self.test_data["quality_request"]),
+            EndpointTest("POST", "/analyze/trends", "Trend analysis", self.test_data["trend_request"]),
+            EndpointTest(
+                "POST",
+                "/analyze/trends/portfolio",
+                "Portfolio trend analysis",
+                {"documents": [self.test_data["trend_request"]], "group_by": "document_type"},
+            ),
+            EndpointTest("POST", "/analyze/risk", "Risk assessment", self.test_data["risk_request"]),
+            EndpointTest(
+                "POST",
+                "/analyze/risk/portfolio",
+                "Portfolio risk assessment",
+                {"documents": [self.test_data["risk_request"]], "group_by": "document_type"},
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/maintenance/forecast",
+                "Maintenance forecasting",
+                self.test_data["maintenance_request"],
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/maintenance/forecast/portfolio",
+                "Portfolio maintenance forecasting",
+                {"documents": [self.test_data["maintenance_request"]], "group_by": "document_type"},
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/quality/degradation",
+                "Quality degradation detection",
+                {"document_id": "doc-1", "analysis_history": [], "baseline_period_days": 90},
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/quality/degradation/portfolio",
+                "Portfolio quality degradation",
+                {"documents": [{"document_id": "doc-1", "analysis_history": []}], "baseline_period_days": 90},
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/change/impact",
+                "Change impact analysis",
+                {"targets": ["doc:readme"], "changes": ["content_update"], "scope": "repository"},
+            ),
+            EndpointTest(
+                "POST",
+                "/analyze/change/impact/portfolio",
+                "Portfolio change impact",
+                {"documents": [{"document_id": "doc-1", "changes": ["content_update"]}], "scope": "organization"},
+            ),
             # Distributed processing endpoints
-            EndpointTest("POST", "/distributed/tasks", "Submit distributed task",
-                        self.test_data["distributed_request"]),
-            EndpointTest("POST", "/distributed/tasks/batch", "Submit batch tasks",
-                        {"tasks": [self.test_data["distributed_request"]], "batch_id": "batch-1"}),
-            EndpointTest("GET", "/distributed/tasks/task-1", "Get task status",
-                        expected_status=404),  # Task doesn't exist
+            EndpointTest(
+                "POST", "/distributed/tasks", "Submit distributed task", self.test_data["distributed_request"]
+            ),
+            EndpointTest(
+                "POST",
+                "/distributed/tasks/batch",
+                "Submit batch tasks",
+                {"tasks": [self.test_data["distributed_request"]], "batch_id": "batch-1"},
+            ),
+            EndpointTest(
+                "GET", "/distributed/tasks/task-1", "Get task status", expected_status=404
+            ),  # Task doesn't exist
             EndpointTest("GET", "/distributed/workers", "Get worker status"),
             EndpointTest("GET", "/distributed/stats", "Get processing stats"),
             EndpointTest("GET", "/distributed/queue/status", "Get queue status"),
             EndpointTest("GET", "/distributed/load-balancing/config", "Get load balancing config"),
-
             # Repository endpoints
             EndpointTest("GET", "/repositories", "List repositories"),
-            EndpointTest("POST", "/repositories/analyze", "Analyze repositories",
-                        {"repositories": self.test_data["repository_urls"], "analysis_type": "consistency"}),
-            EndpointTest("POST", "/repositories/connectivity", "Test repository connectivity",
-                        {"repository_url": self.test_data["repository_urls"][0]}),
+            EndpointTest(
+                "POST",
+                "/repositories/analyze",
+                "Analyze repositories",
+                {"repositories": self.test_data["repository_urls"], "analysis_type": "consistency"},
+            ),
+            EndpointTest(
+                "POST",
+                "/repositories/connectivity",
+                "Test repository connectivity",
+                {"repository_url": self.test_data["repository_urls"][0]},
+            ),
             EndpointTest("GET", "/repositories/supported-connectors", "Get supported connectors"),
-
             # Workflow endpoints
-            EndpointTest("POST", "/workflows/events", "Process workflow event",
-                        self.test_data["workflow_request"]),
+            EndpointTest("POST", "/workflows/events", "Process workflow event", self.test_data["workflow_request"]),
             EndpointTest("GET", "/workflows/status", "Get workflow status"),
             EndpointTest("GET", "/workflows/queue", "Get workflow queue"),
-            EndpointTest("POST", "/workflows/webhook-config", "Configure webhook",
-                        {"repository": "example/repo", "webhook_url": "https://example.com/webhook"}),
-
+            EndpointTest(
+                "POST",
+                "/workflows/webhook-config",
+                "Configure webhook",
+                {"repository": "example/repo", "webhook_url": "https://example.com/webhook"},
+            ),
             # Remediation endpoints
-            EndpointTest("POST", "/remediate", "Automated remediation",
-                        {"targets": ["doc:readme"], "issues": ["formatting"], "strategy": "auto"}),
-            EndpointTest("POST", "/remediate/preview", "Remediation preview",
-                        {"targets": ["doc:readme"], "issues": ["formatting"]}),
-
+            EndpointTest(
+                "POST",
+                "/remediate",
+                "Automated remediation",
+                {"targets": ["doc:readme"], "issues": ["formatting"], "strategy": "auto"},
+            ),
+            EndpointTest(
+                "POST",
+                "/remediate/preview",
+                "Remediation preview",
+                {"targets": ["doc:readme"], "issues": ["formatting"]},
+            ),
             # Reports endpoints
-            EndpointTest("POST", "/reports/generate", "Generate report",
-                        {"report_type": "consistency", "targets": self.test_data["analysis_targets"]}),
+            EndpointTest(
+                "POST",
+                "/reports/generate",
+                "Generate report",
+                {"report_type": "consistency", "targets": self.test_data["analysis_targets"]},
+            ),
             EndpointTest("GET", "/reports", "List reports"),
-
             # Integration endpoints
             EndpointTest("GET", "/integration/status", "Get integration status"),
-            EndpointTest("POST", "/integration/sync", "Sync integrations",
-                        {"integration_type": "github", "sync_options": {"full_sync": False}}),
-
+            EndpointTest(
+                "POST",
+                "/integration/sync",
+                "Sync integrations",
+                {"integration_type": "github", "sync_options": {"full_sync": False}},
+            ),
             # Findings endpoints
-            EndpointTest("GET", "/findings", "Get findings",
-                        {"page": 1, "page_size": 20}),
-            EndpointTest("POST", "/findings/search", "Search findings",
-                        {"query": "consistency", "filters": {"severity": "high"}}),
+            EndpointTest("GET", "/findings", "Get findings", {"page": 1, "page_size": 20}),
+            EndpointTest(
+                "POST", "/findings/search", "Search findings", {"query": "consistency", "filters": {"severity": "high"}}
+            ),
             EndpointTest("GET", "/findings/stats", "Get findings stats"),
-
             # PR Confidence endpoints
-            EndpointTest("POST", "/pr-confidence/analyze", "Analyze PR confidence",
-                        {"pr_url": "https://github.com/example/repo/pull/123", "analysis_type": "comprehensive"}),
+            EndpointTest(
+                "POST",
+                "/pr-confidence/analyze",
+                "Analyze PR confidence",
+                {"pr_url": "https://github.com/example/repo/pull/123", "analysis_type": "comprehensive"},
+            ),
             EndpointTest("GET", "/pr-confidence/history", "Get PR confidence history"),
-
             # Health endpoints
             EndpointTest("GET", "/health", "Service health check"),
             EndpointTest("GET", "/health/detailed", "Detailed health check"),
@@ -240,14 +302,9 @@ class APIEndpointTester:
         test_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                test_results.append(TestResult(
-                    self.endpoints[i],
-                    False,
-                    0,
-                    0.0,
-                    None,
-                    f"Test execution failed: {str(result)}"
-                ))
+                test_results.append(
+                    TestResult(self.endpoints[i], False, 0, 0.0, None, f"Test execution failed: {str(result)}")
+                )
                 failed_tests += 1
             else:
                 test_results.append(result)
@@ -285,13 +342,15 @@ class APIEndpointTester:
                     "method": r.endpoint.method,
                     "path": r.endpoint.path,
                     "status_code": r.status_code,
-                    "error": r.error_message
+                    "error": r.error_message,
                 }
-                for r in test_results if not r.success
-            ]
+                for r in test_results
+                if not r.success
+            ],
         }
 
-        print("\n📈 TEST SUMMARY:"        print(f"✅ Successful: {successful_tests}/{len(self.endpoints)} ({success_rate:.1f}%)")
+        print("\n📈 TEST SUMMARY:")
+        print(f"✅ Successful: {successful_tests}/{len(self.endpoints)} ({success_rate:.1f}%)")
         print(f"❌ Failed: {failed_tests}/{len(self.endpoints)}")
         print(f"⏱️  Average Response Time: {avg_response_time:.3f}s")
         print(f"🚀 Requests/Second: {summary['requests_per_second']}")
@@ -305,10 +364,10 @@ class APIEndpointTester:
                     "success": r.success,
                     "status_code": r.status_code,
                     "response_time": round(r.response_time, 3),
-                    "description": r.endpoint.description
+                    "description": r.endpoint.description,
                 }
                 for r in test_results
-            ]
+            ],
         }
 
     async def _test_single_endpoint(self, endpoint: EndpointTest) -> TestResult:
@@ -347,7 +406,7 @@ class APIEndpointTester:
                 status_code=response.status_code,
                 response_time=response_time,
                 response_body=response_body,
-                error_message=error_message
+                error_message=error_message,
             )
 
         except requests.exceptions.RequestException as e:
@@ -357,7 +416,7 @@ class APIEndpointTester:
                 success=False,
                 status_code=0,
                 response_time=response_time,
-                error_message=f"Request failed: {str(e)}"
+                error_message=f"Request failed: {str(e)}",
             )
         except Exception as e:
             response_time = time.time() - start_time
@@ -366,7 +425,7 @@ class APIEndpointTester:
                 success=False,
                 status_code=0,
                 response_time=response_time,
-                error_message=f"Test execution failed: {str(e)}"
+                error_message=f"Test execution failed: {str(e)}",
             )
 
     def _group_results_by_category(self, results: List[TestResult]) -> Dict[str, Dict[str, Any]]:
@@ -375,8 +434,8 @@ class APIEndpointTester:
 
         for result in results:
             # Extract category from path
-            path_parts = result.endpoint.path.strip('/').split('/')
-            category = path_parts[0] if path_parts[0] else 'root'
+            path_parts = result.endpoint.path.strip("/").split("/")
+            category = path_parts[0] if path_parts[0] else "root"
 
             if category not in categories:
                 categories[category] = {
@@ -384,7 +443,7 @@ class APIEndpointTester:
                     "successful": 0,
                     "failed": 0,
                     "avg_response_time": 0,
-                    "endpoints": []
+                    "endpoints": [],
                 }
 
             categories[category]["total"] += 1
@@ -393,20 +452,21 @@ class APIEndpointTester:
             else:
                 categories[category]["failed"] += 1
 
-            categories[category]["endpoints"].append({
-                "method": result.endpoint.method,
-                "path": result.endpoint.path,
-                "success": result.success,
-                "response_time": round(result.response_time, 3)
-            })
+            categories[category]["endpoints"].append(
+                {
+                    "method": result.endpoint.method,
+                    "path": result.endpoint.path,
+                    "success": result.success,
+                    "response_time": round(result.response_time, 3),
+                }
+            )
 
         # Calculate averages
         for category_data in categories.values():
             successful_endpoints = [e for e in category_data["endpoints"] if e["success"]]
             if successful_endpoints:
                 category_data["avg_response_time"] = round(
-                    sum(e["response_time"] for e in successful_endpoints) / len(successful_endpoints),
-                    3
+                    sum(e["response_time"] for e in successful_endpoints) / len(successful_endpoints), 3
                 )
 
         return categories
@@ -423,7 +483,8 @@ async def main():
 
     args = parser.parse_args()
 
-    print("🔧 API Endpoint Testing Configuration:"    print(f"   Base URL: {args.url}")
+    print("🔧 API Endpoint Testing Configuration:")
+    print(f"   Base URL: {args.url}")
     print(f"   Concurrent Requests: {args.concurrent}")
     print(f"   Output File: {args.output}")
     print()
@@ -435,7 +496,7 @@ async def main():
     results = await tester.test_all_endpoints(args.concurrent)
 
     # Save results to file
-    with open(args.output, 'w') as f:
+    with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     print(f"\n💾 Results saved to: {args.output}")
@@ -451,8 +512,8 @@ async def main():
 
     # Show failed endpoints
     if summary["failed_endpoints"]:
-        print("
-❌ Failed Endpoints:"        for failed in summary["failed_endpoints"][:10]:  # Show first 10
+        print("\n❌ Failed Endpoints:")
+        for failed in summary["failed_endpoints"][:10]:  # Show first 10
             print(f"   {failed['method']} {failed['path']} - {failed['error']}")
 
         if len(summary["failed_endpoints"]) > 10:

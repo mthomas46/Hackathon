@@ -7,8 +7,8 @@ with the new RedisManager and WorkflowEventBridge.
 """
 
 import asyncio
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add services to path
@@ -17,21 +17,19 @@ if str(services_path) not in sys.path:
     sys.path.insert(0, str(services_path))
 
 from services.orchestrator.modules.redis_manager import (
-    redis_manager,
+    get_redis_health,
+    get_redis_metrics,
     initialize_redis_manager,
     publish_orchestrator_event,
-    get_redis_health,
-    get_redis_metrics
+    redis_manager,
 )
-
 from services.orchestrator.modules.workflow_event_bridge import (
-    workflow_event_bridge,
-    emit_workflow_created_event,
-    emit_workflow_started_event,
     emit_workflow_completed_event,
-    emit_workflow_failed_event
+    emit_workflow_created_event,
+    emit_workflow_failed_event,
+    emit_workflow_started_event,
+    workflow_event_bridge,
 )
-
 from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
 from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
@@ -50,11 +48,7 @@ async def test_redis_manager():
     print(f"   Metrics: {metrics}")
 
     # Test event publishing
-    success = await publish_orchestrator_event(
-        "test_event",
-        {"message": "Hello Redis!"},
-        "test-user-123"
-    )
+    success = await publish_orchestrator_event("test_event", {"message": "Hello Redis!"}, "test-user-123")
     print(f"   Event published: {success}")
 
     print("✅ Redis Manager test completed")
@@ -71,38 +65,27 @@ async def test_workflow_event_bridge():
             "name": "Test Workflow",
             "description": "Test workflow for event emission",
             "parameters": [{"name": "input", "type": "string"}],
-            "actions": [{"action_id": "test", "action_type": "notification", "name": "Test Action"}]
+            "actions": [{"action_id": "test", "action_type": "notification", "name": "Test Action"}],
         },
-        "test-user-123"
+        "test-user-123",
     )
     print(f"   Created event emitted: {success}")
 
     # Test workflow started event
     success = await emit_workflow_started_event(
-        "test-workflow-123",
-        "exec-456",
-        {"input": "test value"},
-        "test-user-123"
+        "test-workflow-123", "exec-456", {"input": "test value"}, "test-user-123"
     )
     print(f"   Started event emitted: {success}")
 
     # Test workflow completed event
     success = await emit_workflow_completed_event(
-        "test-workflow-123",
-        "exec-456",
-        {"result": "success", "output": "test output"},
-        2.5,
-        "test-user-123"
+        "test-workflow-123", "exec-456", {"result": "success", "output": "test output"}, 2.5, "test-user-123"
     )
     print(f"   Completed event emitted: {success}")
 
     # Test workflow failed event
     success = await emit_workflow_failed_event(
-        "test-workflow-123",
-        "exec-789",
-        "Test error occurred",
-        1.2,
-        "test-user-123"
+        "test-workflow-123", "exec-789", "Test error occurred", 1.2, "test-user-123"
     )
     print(f"   Failed event emitted: {success}")
 
@@ -121,12 +104,7 @@ async def test_workflow_service_integration():
         "name": "Redis Test Workflow",
         "description": "Workflow for testing Redis event emission",
         "parameters": [
-            {
-                "name": "test_input",
-                "type": "string",
-                "description": "Test input parameter",
-                "required": True
-            }
+            {"name": "test_input", "type": "string", "description": "Test input parameter", "required": True}
         ],
         "actions": [
             {
@@ -134,18 +112,14 @@ async def test_workflow_service_integration():
                 "action_type": "notification",
                 "name": "Test Notification",
                 "description": "Test notification action",
-                "config": {
-                    "message": "{{test_input}}"
-                }
+                "config": {"message": "{{test_input}}"},
             }
-        ]
+        ],
     }
 
     # Create workflow (should emit created event)
     print("   Creating workflow...")
-    success, message, workflow = await workflow_service.create_workflow(
-        workflow_data, "test-user-redis"
-    )
+    success, message, workflow = await workflow_service.create_workflow(workflow_data, "test-user-redis")
 
     if success:
         print(f"   ✅ Workflow created: {workflow.workflow_id}")
@@ -153,9 +127,7 @@ async def test_workflow_service_integration():
         # Execute workflow (should emit started and completed events)
         print("   Executing workflow...")
         success, message, execution = await workflow_service.execute_workflow(
-            workflow.workflow_id,
-            {"test_input": "Hello from Redis test!"},
-            "test-user-redis"
+            workflow.workflow_id, {"test_input": "Hello from Redis test!"}, "test-user-redis"
         )
 
         if success:
@@ -247,6 +219,7 @@ async def main():
     except Exception as e:
         print(f"❌ Test suite failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

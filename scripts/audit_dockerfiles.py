@@ -10,6 +10,7 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
+
 import yaml
 
 
@@ -26,7 +27,7 @@ class DockerfileAuditor:
         results = {}
 
         for service_dir in self.services_dir.iterdir():
-            if service_dir.is_dir() and not service_dir.name.startswith('_'):
+            if service_dir.is_dir() and not service_dir.name.startswith("_"):
                 dockerfile_path = service_dir / "Dockerfile"
                 if dockerfile_path.exists():
                     service_name = service_dir.name
@@ -40,29 +41,29 @@ class DockerfileAuditor:
         warnings = []
         hardening_needed = []
 
-        with open(dockerfile_path, 'r') as f:
+        with open(dockerfile_path, "r") as f:
             content = f.read()
 
         # Check for security issues
-        if 'USER root' in content or 'sudo' in content:
+        if "USER root" in content or "sudo" in content:
             issues.append("Root user or sudo usage detected")
 
-        if 'RUN apt-get update && apt-get install' in content:
-            if 'rm -rf /var/lib/apt/lists/*' not in content:
+        if "RUN apt-get update && apt-get install" in content:
+            if "rm -rf /var/lib/apt/lists/*" not in content:
                 issues.append("Package cache not cleaned after apt-get install")
 
         # Check for best practices
-        if 'HEALTHCHECK' not in content:
+        if "HEALTHCHECK" not in content:
             warnings.append("No HEALTHCHECK defined")
         else:
             # Check healthcheck quality
-            if '--start-period=' not in content:
+            if "--start-period=" not in content:
                 warnings.append("HEALTHCHECK missing start-period")
 
         # Check for consistent structure
-        required_labels = ['maintainer', 'service', 'version', 'description']
+        required_labels = ["maintainer", "service", "version", "description"]
         for label in required_labels:
-            if f'LABEL {label}=' not in content:
+            if f"LABEL {label}=" not in content:
                 hardening_needed.append(f"Missing LABEL {label}")
 
         # Check port consistency with docker-compose
@@ -75,24 +76,24 @@ class DockerfileAuditor:
                 issues.append(f"Port mismatch: LABEL port={label_port}, docker-compose port={compose_port}")
 
         # Check environment variables
-        if 'ENV PYTHONPATH=/app' not in content:
+        if "ENV PYTHONPATH=/app" not in content:
             hardening_needed.append("Missing PYTHONPATH environment variable")
 
         # Check for non-root user
-        if 'useradd' not in content and 'USER ' not in content:
+        if "useradd" not in content and "USER " not in content:
             issues.append("No non-root user created")
-        elif 'USER ' in content and 'useradd' not in content:
+        elif "USER " in content and "useradd" not in content:
             warnings.append("USER directive without proper user creation")
 
         # Check for security hardening
-        if '--no-cache-dir' not in content:
+        if "--no-cache-dir" not in content:
             warnings.append("Not using --no-cache-dir for pip installs")
 
         return {
-            'issues': issues,
-            'warnings': warnings,
-            'hardening_needed': hardening_needed,
-            'security_score': self.calculate_security_score(issues, warnings)
+            "issues": issues,
+            "warnings": warnings,
+            "hardening_needed": hardening_needed,
+            "security_score": self.calculate_security_score(issues, warnings),
         }
 
     def get_service_port_from_compose(self, service_name: str) -> str:
@@ -101,20 +102,20 @@ class DockerfileAuditor:
         if not compose_file.exists():
             return None
 
-        with open(compose_file, 'r') as f:
+        with open(compose_file, "r") as f:
             compose_data = yaml.safe_load(f)
 
-        services = compose_data.get('services', {})
+        services = compose_data.get("services", {})
         if service_name in services:
             service_config = services[service_name]
-            ports = service_config.get('ports', [])
+            ports = service_config.get("ports", [])
             if ports and isinstance(ports, list) and len(ports) > 0:
                 port_mapping = str(ports[0])
-                if ':' in port_mapping:
+                if ":" in port_mapping:
                     # Format: "external:internal"
-                    parts = port_mapping.split(':')
+                    parts = port_mapping.split(":")
                     if len(parts) == 2:
-                        return parts[1].strip('"\'')
+                        return parts[1].strip("\"'")
 
         return None
 
@@ -140,12 +141,12 @@ class DockerfileAuditor:
         average_score = 0
 
         for service_name, audit_result in results.items():
-            score = audit_result['security_score']
+            score = audit_result["security_score"]
             average_score += score
 
-            issues = audit_result['issues']
-            warnings = audit_result['warnings']
-            hardening = audit_result['hardening_needed']
+            issues = audit_result["issues"]
+            warnings = audit_result["warnings"]
+            hardening = audit_result["hardening_needed"]
 
             if issues:
                 critical_issues += len(issues)
@@ -199,12 +200,12 @@ class DockerfileAuditor:
         for service_name, audit_result in results.items():
             dockerfile_path = self.services_dir / service_name / "Dockerfile"
 
-            if audit_result['issues'] or audit_result['hardening_needed']:
+            if audit_result["issues"] or audit_result["hardening_needed"]:
                 self.harden_dockerfile(service_name, dockerfile_path, audit_result)
 
     def harden_dockerfile(self, service_name: str, dockerfile_path: Path, audit_result: Dict) -> None:
         """Apply hardening fixes to a specific Dockerfile."""
-        with open(dockerfile_path, 'r') as f:
+        with open(dockerfile_path, "r") as f:
             content = f.read()
 
         original_content = content
@@ -215,42 +216,42 @@ class DockerfileAuditor:
             # Update LABEL port
             content = re.sub(r'LABEL port="\d+"', f'LABEL port="{compose_port}"', content)
             # Update ENV SERVICE_PORT
-            content = re.sub(r'ENV SERVICE_PORT=\d+', f'ENV SERVICE_PORT={compose_port}', content)
+            content = re.sub(r"ENV SERVICE_PORT=\d+", f"ENV SERVICE_PORT={compose_port}", content)
             # Update HEALTHCHECK port
-            content = re.sub(r'http://localhost:\d+/health', f'http://localhost:{compose_port}/health', content)
+            content = re.sub(r"http://localhost:\d+/health", f"http://localhost:{compose_port}/health", content)
             # Update EXPOSE port
-            content = re.sub(r'EXPOSE \d+', f'EXPOSE {compose_port}', content)
+            content = re.sub(r"EXPOSE \d+", f"EXPOSE {compose_port}", content)
 
         # Add missing environment variables
-        if 'ENV PYTHONPATH=/app' not in content:
+        if "ENV PYTHONPATH=/app" not in content:
             # Find a good place to insert it (after other ENV statements)
-            env_match = re.search(r'(ENV [^\n]+\n)+', content)
+            env_match = re.search(r"(ENV [^\n]+\n)+", content)
             if env_match:
                 insert_pos = env_match.end()
-                content = content[:insert_pos] + 'ENV PYTHONPATH=/app\n' + content[insert_pos:]
+                content = content[:insert_pos] + "ENV PYTHONPATH=/app\n" + content[insert_pos:]
 
         # Ensure proper USER directive placement
-        if 'USER appuser' in content:
+        if "USER appuser" in content:
             # Make sure USER comes after EXPOSE
-            lines = content.split('\n')
+            lines = content.split("\n")
             expose_idx = -1
             user_idx = -1
 
             for i, line in enumerate(lines):
-                if line.startswith('EXPOSE'):
+                if line.startswith("EXPOSE"):
                     expose_idx = i
-                elif line.startswith('USER'):
+                elif line.startswith("USER"):
                     user_idx = i
 
             if expose_idx > user_idx and user_idx != -1:
                 # Move USER after EXPOSE
                 user_line = lines.pop(user_idx)
                 lines.insert(expose_idx + 1, user_line)
-                content = '\n'.join(lines)
+                content = "\n".join(lines)
 
         # Save the hardened Dockerfile
         if content != original_content:
-            with open(dockerfile_path, 'w') as f:
+            with open(dockerfile_path, "w") as f:
                 f.write(content)
             print(f"✅ Hardened {service_name} Dockerfile")
         else:

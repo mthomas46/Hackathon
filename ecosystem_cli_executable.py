@@ -6,47 +6,43 @@ Production-ready CLI for interacting with the LLM Documentation Ecosystem.
 Provides direct access to all service endpoints through standardized adapters.
 """
 
-import asyncio
-import sys
-import json
 import argparse
+import asyncio
+import json
 import os
 import subprocess
-from typing import Dict, List, Any, Optional
-import urllib.request
+import sys
+import urllib.error
 
 # Simple HTTP client for container environment
 import urllib.parse
-import urllib.error
+import urllib.request
+from typing import Any, Dict, List, Optional
 
 
 class SimpleServiceClient:
     """Simple HTTP client for container environment"""
-    
+
     def __init__(self, timeout: int = 10):
         self.timeout = timeout
-    
+
     async def get_json(self, url: str) -> Optional[Dict]:
         """Perform GET request and return JSON"""
         try:
             with urllib.request.urlopen(url, timeout=self.timeout) as response:
-                data = response.read().decode('utf-8')
+                data = response.read().decode("utf-8")
                 return json.loads(data)
         except Exception as e:
             print(f"GET request failed for {url}: {e}")
             return None
-    
+
     async def post_json(self, url: str, data: Dict) -> Optional[Dict]:
         """Perform POST request with JSON data"""
         try:
-            json_data = json.dumps(data).encode('utf-8')
-            req = urllib.request.Request(
-                url, 
-                data=json_data,
-                headers={'Content-Type': 'application/json'}
-            )
+            json_data = json.dumps(data).encode("utf-8")
+            req = urllib.request.Request(url, data=json_data, headers={"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                response_data = response.read().decode('utf-8')
+                response_data = response.read().decode("utf-8")
                 return json.loads(response_data)
         except Exception as e:
             print(f"POST request failed for {url}: {e}")
@@ -56,18 +52,15 @@ class SimpleServiceClient:
         """Make HTTP request with specific method"""
         try:
             if data:
-                json_data = json.dumps(data).encode('utf-8')
+                json_data = json.dumps(data).encode("utf-8")
                 req = urllib.request.Request(
-                    url,
-                    data=json_data,
-                    headers={'Content-Type': 'application/json'},
-                    method=method
+                    url, data=json_data, headers={"Content-Type": "application/json"}, method=method
                 )
             else:
                 req = urllib.request.Request(url, method=method)
 
             with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                response_data = response.read().decode('utf-8')
+                response_data = response.read().decode("utf-8")
                 return json.loads(response_data)
         except Exception as e:
             print(f"{method} request failed for {url}: {e}")
@@ -76,7 +69,7 @@ class SimpleServiceClient:
 
 class EcosystemCLI:
     """Production-ready Ecosystem CLI"""
-    
+
     def __init__(self):
         self.client = SimpleServiceClient()
         # Environment-aware service URLs
@@ -86,16 +79,16 @@ class EcosystemCLI:
         """Detect runtime environment"""
         # Check for Docker
         try:
-            with open('/.dockerenv', 'r') as f:
-                return 'docker'
+            with open("/.dockerenv", "r") as f:
+                return "docker"
         except FileNotFoundError:
             pass
 
         # Check for Kubernetes
-        if 'KUBERNETES_SERVICE_HOST' in os.environ:
-            return 'kubernetes'
+        if "KUBERNETES_SERVICE_HOST" in os.environ:
+            return "kubernetes"
 
-        return 'local'
+        return "local"
 
     def _create_service_mappings(self) -> Dict[str, str]:
         """Create environment-appropriate service mappings"""
@@ -120,57 +113,57 @@ class EcosystemCLI:
             "frontend": "http://localhost:3000",
             "llm-gateway": "http://localhost:5055",
             "summarizer-hub": "http://localhost:5160",
-            "code-analyzer": "http://localhost:5025"
+            "code-analyzer": "http://localhost:5025",
         }
 
         # Override for Docker environment
-        if environment == 'docker':
+        if environment == "docker":
             # Use Docker service names for inter-container communication
             docker_services = {
-            "analysis-service": "http://hackathon-analysis-service-1:5020",
-            "orchestrator": "http://hackathon-orchestrator-1:5099",
-            "source-agent": "http://hackathon-source-agent-1:5000",
-            "github-mcp": "http://hackathon-github-mcp-1:5072",
-            "memory-agent": "http://hackathon-memory-agent-1:5040",
-            "discovery-agent": "http://hackathon-discovery-agent-1:5045",
-            "architecture-digitizer": "http://hackathon-architecture-digitizer-1:5105",
-            "log-collector": "http://hackathon-log-collector-1:5080",
-            "prompt_store": "http://hackathon-prompt_store-1:5110",
-            "interpreter": "http://hackathon-interpreter-1:5120",
-            "notification-service": "http://hackathon-notification-service-1:5095",
-            "secure-analyzer": "http://hackathon-secure-analyzer-1:5070",
-            "bedrock-proxy": "http://hackathon-bedrock-proxy-1:7090",
-            "doc_store": "http://hackathon-doc_store-1:5010",
+                "analysis-service": "http://hackathon-analysis-service-1:5020",
+                "orchestrator": "http://hackathon-orchestrator-1:5099",
+                "source-agent": "http://hackathon-source-agent-1:5000",
+                "github-mcp": "http://hackathon-github-mcp-1:5072",
+                "memory-agent": "http://hackathon-memory-agent-1:5040",
+                "discovery-agent": "http://hackathon-discovery-agent-1:5045",
+                "architecture-digitizer": "http://hackathon-architecture-digitizer-1:5105",
+                "log-collector": "http://hackathon-log-collector-1:5080",
+                "prompt_store": "http://hackathon-prompt_store-1:5110",
+                "interpreter": "http://hackathon-interpreter-1:5120",
+                "notification-service": "http://hackathon-notification-service-1:5095",
+                "secure-analyzer": "http://hackathon-secure-analyzer-1:5070",
+                "bedrock-proxy": "http://hackathon-bedrock-proxy-1:7090",
+                "doc_store": "http://hackathon-doc_store-1:5010",
                 "frontend": "http://hackathon-frontend-1:5090",
                 "llm-gateway": "http://hackathon-llm-gateway-1:5055",
                 "summarizer-hub": "http://hackathon-summarizer-hub-1:5160",
-                "code-analyzer": "http://hackathon-code-analyzer-1:5025"
-        }
+                "code-analyzer": "http://hackathon-code-analyzer-1:5025",
+            }
             services.update(docker_services)
 
         return services
-    
+
     async def health_check_all(self):
         """Check health of all services"""
         print("🔍 ECOSYSTEM HEALTH CHECK")
         print("=" * 40)
-        
+
         healthy_count = 0
         total_count = len(self.services)
-        
+
         for service_name, base_url in self.services.items():
             health_url = f"{base_url}/health"
             response = await self.client.get_json(health_url)
-            
-            if response and response.get('status') == 'healthy':
+
+            if response and response.get("status") == "healthy":
                 print(f"✅ {service_name}: HEALTHY")
                 healthy_count += 1
             else:
                 print(f"❌ {service_name}: UNHEALTHY")
-        
+
         success_rate = (healthy_count / total_count) * 100
         print(f"\n📊 Health Summary: {healthy_count}/{total_count} services healthy ({success_rate:.1f}%)")
-        
+
         if success_rate >= 90:
             print("🎉 Ecosystem Status: EXCELLENT")
         elif success_rate >= 75:
@@ -179,12 +172,12 @@ class EcosystemCLI:
             print("⚠️  Ecosystem Status: FAIR")
         else:
             print("❌ Ecosystem Status: POOR")
-    
+
     async def config_check_all(self):
         """Check configuration of all services"""
         print("⚙️  ECOSYSTEM CONFIGURATION OVERVIEW")
         print("=" * 50)
-        
+
         config_services = {
             "analysis-service": self.analysis_service_command,
             "orchestrator": self.orchestrator_command,
@@ -193,9 +186,9 @@ class EcosystemCLI:
             "doc_store": self.doc_store_command,
             "frontend": self.frontend_command,
             "discovery-agent": self.discovery_agent_command,
-            "interpreter": self.interpreter_command
+            "interpreter": self.interpreter_command,
         }
-        
+
         for service_name, command_func in config_services.items():
             print(f"\n🔧 {service_name.upper()} Configuration:")
             print("-" * 30)
@@ -203,20 +196,20 @@ class EcosystemCLI:
                 await command_func("config")
             except Exception as e:
                 print(f"❌ Failed to get {service_name} config: {str(e)}")
-        
+
         print(f"\n📊 Configuration Summary:")
         print(f"   Services with config access: {len(config_services)}")
         print(f"   Generic health-based configs: {len(self.services) - len(config_services)}")
         print(f"   Total services: {len(self.services)}")
         print(f"\n💡 Use 'python cli.py <service> config' for individual service configuration")
-    
+
     async def test_ecosystem_workflows(self):
         """Test comprehensive ecosystem workflows and integration"""
         print("🧪 ECOSYSTEM WORKFLOW TESTING")
         print("=" * 50)
-        
+
         test_results = []
-        
+
         # Test 1: Analysis Service Integration
         print(f"\n🔬 Test 1: Analysis Service Workflow")
         print("-" * 30)
@@ -232,7 +225,7 @@ class EcosystemCLI:
         except Exception as e:
             print(f"❌ Analysis Service: {str(e)}")
             test_results.append({"test": "analysis-service", "status": "error", "error": str(e)})
-        
+
         # Test 2: Cross-Service Communication
         print(f"\n🔗 Test 2: Cross-Service Communication")
         print("-" * 30)
@@ -250,7 +243,7 @@ class EcosystemCLI:
         except Exception as e:
             print(f"❌ Cross-Service Communication: {str(e)}")
             test_results.append({"test": "cross-service", "status": "error", "error": str(e)})
-        
+
         # Test 3: Service Discovery Workflow
         print(f"\n🔍 Test 3: Service Discovery Workflow")
         print("-" * 30)
@@ -260,14 +253,16 @@ class EcosystemCLI:
             discovery_response = await self.client.get_json(discovery_url)
             if discovery_response and discovery_response.get("status") == "healthy":
                 print(f"✅ Discovery Agent: Ready for service registration")
-                test_results.append({"test": "discovery", "status": "pass", "service": discovery_response.get("service")})
+                test_results.append(
+                    {"test": "discovery", "status": "pass", "service": discovery_response.get("service")}
+                )
             else:
                 print(f"❌ Discovery Agent: Not ready")
                 test_results.append({"test": "discovery", "status": "fail"})
         except Exception as e:
             print(f"❌ Discovery Agent: {str(e)}")
             test_results.append({"test": "discovery", "status": "error", "error": str(e)})
-        
+
         # Test 4: AI Integration Readiness
         print(f"\n🤖 Test 4: AI Integration Readiness")
         print("-" * 30)
@@ -286,7 +281,7 @@ class EcosystemCLI:
         except Exception as e:
             print(f"❌ AI Integration: {str(e)}")
             test_results.append({"test": "ai-integration", "status": "error", "error": str(e)})
-        
+
         # Test Summary
         print(f"\n📊 WORKFLOW TEST SUMMARY")
         print("=" * 30)
@@ -294,16 +289,16 @@ class EcosystemCLI:
         total = len(test_results)
         print(f"Tests Passed: {passed}/{total}")
         print(f"Success Rate: {(passed/total)*100:.1f}%")
-        
+
         if passed == total:
             print(f"🎉 All ecosystem workflows operational!")
         elif passed >= total * 0.75:
             print(f"👍 Most ecosystem workflows operational")
         else:
             print(f"⚠️  Some ecosystem workflows need attention")
-        
+
         return test_results
-    
+
     async def list_containers(self):
         """List all Docker containers in the ecosystem"""
         print("🐳 ECOSYSTEM CONTAINER STATUS")
@@ -312,10 +307,17 @@ class EcosystemCLI:
         try:
             # Run docker-compose ps to get container status
             result = subprocess.run(
-                ['docker-compose', '-f', 'docker-compose.dev.yml', 'ps', '--format', 'table {{.Name}}\t{{.Service}}\t{{.Status}}\t{{.Ports}}'],
+                [
+                    "docker-compose",
+                    "-f",
+                    "docker-compose.dev.yml",
+                    "ps",
+                    "--format",
+                    "table {{.Name}}\t{{.Service}}\t{{.Status}}\t{{.Ports}}",
+                ],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             if result.returncode == 0:
@@ -335,10 +337,10 @@ class EcosystemCLI:
 
         try:
             result = subprocess.run(
-                ['docker-compose', '-f', 'docker-compose.dev.yml', 'restart', service_name],
+                ["docker-compose", "-f", "docker-compose.dev.yml", "restart", service_name],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             if result.returncode == 0:
@@ -363,18 +365,18 @@ class EcosystemCLI:
             # First stop the container
             print(f"Stopping {service_name}...")
             subprocess.run(
-                ['docker-compose', '-f', 'docker-compose.dev.yml', 'stop', service_name],
+                ["docker-compose", "-f", "docker-compose.dev.yml", "stop", service_name],
                 capture_output=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             # Rebuild the container
             print(f"Building {service_name}...")
             result = subprocess.run(
-                ['docker-compose', '-f', 'docker-compose.dev.yml', 'build', service_name],
+                ["docker-compose", "-f", "docker-compose.dev.yml", "build", service_name],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             if result.returncode == 0:
@@ -383,10 +385,10 @@ class EcosystemCLI:
                 # Start the container
                 print(f"Starting {service_name}...")
                 start_result = subprocess.run(
-                    ['docker-compose', '-f', 'docker-compose.dev.yml', 'up', '-d', service_name],
+                    ["docker-compose", "-f", "docker-compose.dev.yml", "up", "-d", service_name],
                     capture_output=True,
                     text=True,
-                    cwd=os.path.dirname(os.path.abspath(__file__))
+                    cwd=os.path.dirname(os.path.abspath(__file__)),
                 )
 
                 if start_result.returncode == 0:
@@ -408,11 +410,11 @@ class EcosystemCLI:
         print("-" * 40)
 
         try:
-            cmd = ['docker-compose', '-f', 'docker-compose.dev.yml', 'logs']
+            cmd = ["docker-compose", "-f", "docker-compose.dev.yml", "logs"]
             if follow:
-                cmd.append('-f')
+                cmd.append("-f")
             if lines:
-                cmd.extend(['--tail', str(lines)])
+                cmd.extend(["--tail", str(lines)])
             cmd.append(service_name)
 
             if follow:
@@ -421,10 +423,7 @@ class EcosystemCLI:
                 subprocess.run(cmd, cwd=os.path.dirname(os.path.abspath(__file__)))
             else:
                 result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    cwd=os.path.dirname(os.path.abspath(__file__))
+                    cmd, capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__))
                 )
 
                 if result.returncode == 0:
@@ -449,10 +448,16 @@ class EcosystemCLI:
 
         try:
             result = subprocess.run(
-                ['docker', 'stats', '--no-stream', '--format', 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}'],
+                [
+                    "docker",
+                    "stats",
+                    "--no-stream",
+                    "--format",
+                    "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}",
+                ],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             if result.returncode == 0:
@@ -470,10 +475,10 @@ class EcosystemCLI:
 
         try:
             result = subprocess.run(
-                ['docker-compose', '-f', 'docker-compose.dev.yml', 'stop', service_name],
+                ["docker-compose", "-f", "docker-compose.dev.yml", "stop", service_name],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             if result.returncode == 0:
@@ -493,10 +498,10 @@ class EcosystemCLI:
 
         try:
             result = subprocess.run(
-                ['docker-compose', '-f', 'docker-compose.dev.yml', 'up', '-d', service_name],
+                ["docker-compose", "-f", "docker-compose.dev.yml", "up", "-d", service_name],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.abspath(__file__))
+                cwd=os.path.dirname(os.path.abspath(__file__)),
             )
 
             if result.returncode == 0:
@@ -508,14 +513,14 @@ class EcosystemCLI:
 
         except Exception as e:
             print(f"❌ Error starting container: {str(e)}")
-    
+
     async def create_mock_data(self):
         """Create mock documents and prompts to test ecosystem data flow"""
         print("📝 CREATING MOCK ECOSYSTEM DATA")
         print("=" * 50)
-        
+
         creation_results = []
-        
+
         # Create mock analysis data via Analysis Service
         print(f"\n📊 Creating Mock Analysis Data")
         print("-" * 30)
@@ -525,19 +530,21 @@ class EcosystemCLI:
             if response and response.get("success"):
                 print(f"✅ Mock Analysis Data: Service ready for data creation")
                 print(f"   Message: {response.get('data', {}).get('message', 'Service operational')}")
-                creation_results.append({
-                    "type": "analysis-data",
-                    "status": "ready",
-                    "service": "analysis-service",
-                    "timestamp": response.get("timestamp")
-                })
+                creation_results.append(
+                    {
+                        "type": "analysis-data",
+                        "status": "ready",
+                        "service": "analysis-service",
+                        "timestamp": response.get("timestamp"),
+                    }
+                )
             else:
                 print(f"❌ Analysis Data Creation: Service not ready")
                 creation_results.append({"type": "analysis-data", "status": "failed"})
         except Exception as e:
             print(f"❌ Analysis Data Creation: {str(e)}")
             creation_results.append({"type": "analysis-data", "status": "error", "error": str(e)})
-        
+
         # Create mock source data via Source Agent
         print(f"\n📁 Creating Mock Source Data")
         print("-" * 30)
@@ -548,25 +555,22 @@ class EcosystemCLI:
                 sources_data = sources_response.get("data", {})
                 sources = sources_data.get("sources", [])
                 capabilities = sources_data.get("capabilities", {})
-                
+
                 print(f"✅ Mock Source Data Created:")
                 for source in sources:
                     caps = capabilities.get(source, [])
                     print(f"   📂 {source}: {', '.join(caps)}")
-                
-                creation_results.append({
-                    "type": "source-data",
-                    "status": "created",
-                    "sources": sources,
-                    "capabilities": capabilities
-                })
+
+                creation_results.append(
+                    {"type": "source-data", "status": "created", "sources": sources, "capabilities": capabilities}
+                )
             else:
                 print(f"❌ Source Data Creation: Failed")
                 creation_results.append({"type": "source-data", "status": "failed"})
         except Exception as e:
             print(f"❌ Source Data Creation: {str(e)}")
             creation_results.append({"type": "source-data", "status": "error", "error": str(e)})
-        
+
         # Create mock configuration data
         print(f"\n⚙️  Creating Mock Configuration Profile")
         print("-" * 30)
@@ -576,9 +580,9 @@ class EcosystemCLI:
                 "created_via": "cli-mock-data",
                 "timestamp": "2025-09-17T21:25:00Z",
                 "services_configured": [],
-                "features_enabled": []
+                "features_enabled": [],
             }
-            
+
             # Collect service configurations
             for service_name in ["analysis-service", "github-mcp", "source-agent"]:
                 try:
@@ -586,15 +590,17 @@ class EcosystemCLI:
                         config_url = f"{self.services[service_name]}/info"
                     else:
                         config_url = f"{self.services[service_name]}/health"
-                    
+
                     config_response = await self.client.get_json(config_url)
                     if config_response:
-                        config_profile["services_configured"].append({
-                            "service": service_name,
-                            "version": config_response.get("version", "unknown"),
-                            "status": config_response.get("status", "unknown")
-                        })
-                        
+                        config_profile["services_configured"].append(
+                            {
+                                "service": service_name,
+                                "version": config_response.get("version", "unknown"),
+                                "status": config_response.get("status", "unknown"),
+                            }
+                        )
+
                         # Add GitHub MCP specific features
                         if service_name == "github-mcp":
                             if config_response.get("mock_mode_default"):
@@ -603,40 +609,36 @@ class EcosystemCLI:
                                 config_profile["features_enabled"].append("token-required")
                 except:
                     continue
-            
+
             print(f"✅ Mock Configuration Profile Created:")
             print(f"   Services: {len(config_profile['services_configured'])}")
             print(f"   Features: {', '.join(config_profile['features_enabled'])}")
-            
-            creation_results.append({
-                "type": "config-profile",
-                "status": "created",
-                "profile": config_profile
-            })
+
+            creation_results.append({"type": "config-profile", "status": "created", "profile": config_profile})
         except Exception as e:
             print(f"❌ Configuration Profile Creation: {str(e)}")
             creation_results.append({"type": "config-profile", "status": "error", "error": str(e)})
-        
+
         # Summary
         print(f"\n📊 MOCK DATA CREATION SUMMARY")
         print("=" * 35)
         created = len([r for r in creation_results if r.get("status") in ["ready", "created"]])
         total = len(creation_results)
         print(f"Data Types Created: {created}/{total}")
-        
+
         if created > 0:
             print(f"🎉 Mock ecosystem data successfully created!")
             print(f"💡 Use 'python cli.py source-agent sources' to view source data")
             print(f"💡 Use 'python cli.py config-all' to view configuration data")
         else:
             print(f"⚠️  No mock data could be created")
-        
+
         return creation_results
-    
+
     async def analysis_service_command(self, command: str, **kwargs):
         """Execute Analysis Service commands"""
         base_url = self.services["analysis-service"]
-        
+
         if command == "status":
             url = f"{base_url}/api/analysis/status"
             response = await self.client.get_json(url)
@@ -645,7 +647,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to get analysis service status")
-        
+
         elif command == "analyze":
             url = f"{base_url}/api/analysis/analyze"
             response = await self.client.post_json(url, kwargs)
@@ -654,7 +656,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Analysis failed")
-        
+
         elif command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -663,7 +665,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -675,20 +677,20 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         else:
             print(f"❌ Unknown analysis command: {command}")
             print("Available commands: status, analyze, health, config")
-    
+
     async def orchestrator_command(self, command: str, **kwargs):
         """Execute Orchestrator commands"""
         base_url = self.services["orchestrator"]
-        
+
         if command == "peers":
             # Try peers endpoint first, fallback to workflows since peers is not implemented
             url = f"{base_url}/peers"
@@ -698,13 +700,13 @@ class EcosystemCLI:
                 print("⚠️  Peers endpoint not available, using workflows endpoint as fallback")
                 url = f"{base_url}/workflows"
                 response = await self.client.get_json(url)
-                
+
             if response:
                 print(f"🤝 Orchestrator Data (workflows endpoint):")
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to get orchestrator data")
-        
+
         elif command == "sync":
             url = f"{base_url}/registry/sync-peers"
             response = await self.client.post_json(url, {})
@@ -713,7 +715,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Peer sync failed")
-        
+
         elif command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -722,7 +724,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -734,29 +736,29 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         elif command == "create-workflow":
             # Create a workflow that generates mock documents and prompts
             workflow_type = kwargs.get("type", "mock-data")
-            
+
             if workflow_type == "mock-data":
                 print(f"🔄 Orchestrator: Creating mock data workflow...")
-                
+
                 # Simulate orchestrator workflow by calling multiple services
                 workflow_results = []
-                
+
                 # Step 1: Get analysis service status
                 analysis_url = f"http://localhost:5080/"
                 analysis_response = await self.client.get_json(analysis_url)
                 if analysis_response:
                     workflow_results.append({"step": "analysis", "status": "success", "data": analysis_response})
                     print(f"   ✅ Analysis Service: Ready")
-                
+
                 # Step 2: Get source data
                 source_url = f"http://localhost:5085/sources"
                 source_response = await self.client.get_json(source_url)
@@ -764,7 +766,7 @@ class EcosystemCLI:
                     workflow_results.append({"step": "sources", "status": "success", "data": source_response})
                     sources = source_response.get("data", {}).get("sources", [])
                     print(f"   ✅ Source Agent: Found {len(sources)} sources")
-                
+
                 # Step 3: Generate mock documents based on sources
                 print(f"   📄 Generating mock documents...")
                 mock_documents = []
@@ -775,20 +777,23 @@ class EcosystemCLI:
                         "content": f"This is a mock document created from {source} source via orchestrator workflow.",
                         "source": source,
                         "created_via": "orchestrator-workflow",
-                        "timestamp": "2025-09-17T21:30:00Z"
+                        "timestamp": "2025-09-17T21:30:00Z",
                     }
                     mock_documents.append(mock_doc)
                     print(f"     📝 Created: {mock_doc['title']}")
-                
+
                 # Step 4: Generate mock prompts
                 print(f"   🎯 Generating mock prompts...")
                 mock_prompts = []
                 prompt_templates = [
-                    {"name": "analysis-prompt", "content": "Analyze the following document for key insights: {document}"},
+                    {
+                        "name": "analysis-prompt",
+                        "content": "Analyze the following document for key insights: {document}",
+                    },
                     {"name": "summary-prompt", "content": "Provide a concise summary of: {content}"},
-                    {"name": "qa-prompt", "content": "Generate questions and answers based on: {source_material}"}
+                    {"name": "qa-prompt", "content": "Generate questions and answers based on: {source_material}"},
                 ]
-                
+
                 for i, template in enumerate(prompt_templates, 1):
                     mock_prompt = {
                         "id": f"prompt_{i}",
@@ -796,23 +801,29 @@ class EcosystemCLI:
                         "content": template["content"],
                         "category": "orchestrator-generated",
                         "created_via": "orchestrator-workflow",
-                        "timestamp": "2025-09-17T21:30:00Z"
+                        "timestamp": "2025-09-17T21:30:00Z",
                     }
                     mock_prompts.append(mock_prompt)
                     print(f"     🎯 Created: {mock_prompt['name']}")
-                
-                workflow_results.append({"step": "mock-generation", "status": "success", 
-                                       "documents": mock_documents, "prompts": mock_prompts})
-                
+
+                workflow_results.append(
+                    {
+                        "step": "mock-generation",
+                        "status": "success",
+                        "documents": mock_documents,
+                        "prompts": mock_prompts,
+                    }
+                )
+
                 print(f"🎉 Orchestrator Workflow Complete:")
                 print(f"   📄 Mock Documents: {len(mock_documents)}")
                 print(f"   🎯 Mock Prompts: {len(mock_prompts)}")
                 print(f"   🔄 Workflow Steps: {len(workflow_results)}")
-                
+
             else:
                 print(f"❌ Unknown workflow type: {workflow_type}")
                 print("Available types: mock-data")
-        
+
         elif command == "execute":
             # Execute a workflow by ID or definition
             workflow_id = kwargs.get("id", "")
@@ -822,7 +833,7 @@ class EcosystemCLI:
                 print("❌ Workflow execution requires --id or --definition parameter")
                 print("Examples:")
                 print("  execute --id 'workflow-uuid'")
-                print("  execute --definition '{\"name\":\"test\",\"steps\":[...]}'")
+                print('  execute --definition \'{"name":"test","steps":[...]}\'')
                 return
 
             if workflow_id:
@@ -962,7 +973,7 @@ class EcosystemCLI:
             workflow_data = {
                 "template": template_name,
                 "name": name or f"{template_name}-workflow",
-                "parameters": params
+                "parameters": params,
             }
 
             url = f"{base_url}/api/v1/workflows/from-template"
@@ -979,10 +990,12 @@ class EcosystemCLI:
                     print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to create workflow from template")
-        
+
         else:
             print(f"❌ Unknown orchestrator command: {command}")
-            print("Available commands: peers, sync, health, config, create-workflow, execute, list-executions, execution-status, cancel-execution, workflow-templates, create-template")
+            print(
+                "Available commands: peers, sync, health, config, create-workflow, execute, list-executions, execution-status, cancel-execution, workflow-templates, create-template"
+            )
             print("\nExamples:")
             print("  create-workflow --type mock-data")
             print("  execute --id 'workflow-uuid'")
@@ -990,11 +1003,11 @@ class EcosystemCLI:
             print("  execution-status --id 'execution-uuid'")
             print("  workflow-templates")
             print("  create-template --template 'document-analysis' --name 'My Analysis'")
-    
+
     async def github_mcp_command(self, command: str, **kwargs):
         """Execute GitHub MCP commands"""
         base_url = self.services["github-mcp"]
-        
+
         if command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -1003,7 +1016,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "config":
             # GitHub MCP has rich config data in /info endpoint
             url = f"{base_url}/info"
@@ -1013,16 +1026,16 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         else:
             print(f"❌ Unknown github-mcp command: {command}")
             print("Available commands: health, config")
             print("Note: GitHub MCP adapter endpoints may require authentication")
-    
+
     async def source_agent_command(self, command: str, **kwargs):
         """Execute Source Agent commands"""
         base_url = self.services["source-agent"]
-        
+
         if command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -1031,7 +1044,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "sources":
             # Get available sources from the /sources endpoint
             url = f"{base_url}/sources"
@@ -1041,7 +1054,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to get sources")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -1053,20 +1066,20 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         else:
             print(f"❌ Unknown source-agent command: {command}")
             print("Available commands: health, sources, config")
-    
+
     async def doc_store_command(self, command: str, **kwargs):
         """Execute Doc Store commands"""
         base_url = self.services["doc_store"]
-        
+
         if command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -1075,7 +1088,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -1087,12 +1100,12 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         elif command == "list":
             # List documents with pagination
             limit = kwargs.get("limit", 50)
@@ -1123,11 +1136,7 @@ class EcosystemCLI:
             content = kwargs.get("content", "This document was created via CLI")
             tags = kwargs.get("tags", "").split(",") if kwargs.get("tags") else []
 
-            doc_data = {
-                "title": title,
-                "content": content,
-                "tags": tags
-            }
+            doc_data = {"title": title, "content": content, "tags": tags}
 
             url = f"{base_url}/api/v1/documents"
             response = await self.client.post_json(url, doc_data)
@@ -1182,7 +1191,8 @@ class EcosystemCLI:
             # For DELETE, we'll use a simple approach
             try:
                 import urllib.request
-                req = urllib.request.Request(url, method='DELETE')
+
+                req = urllib.request.Request(url, method="DELETE")
                 with urllib.request.urlopen(req, timeout=10) as response:
                     if response.status == 200:
                         print(f"✅ Document {doc_id} deleted successfully")
@@ -1219,11 +1229,11 @@ class EcosystemCLI:
             response = None
             try:
                 # Try PATCH method for metadata updates
-                response = await self.client._make_request_with_method('PATCH', url, update_data)
+                response = await self.client._make_request_with_method("PATCH", url, update_data)
             except:
                 try:
                     # Fallback to PUT method
-                    response = await self.client._make_request_with_method('PUT', url, update_data)
+                    response = await self.client._make_request_with_method("PUT", url, update_data)
                 except:
                     print("❌ Document metadata update endpoint not implemented yet")
                     print("   This feature will be available in a future update")
@@ -1234,7 +1244,7 @@ class EcosystemCLI:
                 print(json.dumps(metadata_dict, indent=2))
             else:
                 print("❌ Failed to update document metadata")
-        
+
         else:
             print(f"❌ Unknown doc_store command: {command}")
             print("Available commands: health, config, list, create, search, delete, update")
@@ -1269,7 +1279,7 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
@@ -1323,7 +1333,7 @@ class EcosystemCLI:
                 "category": category,
                 "author": author,
                 "tags": tags,
-                "description": description
+                "description": description,
             }
 
             url = f"{base_url}/api/v1/prompts"
@@ -1444,7 +1454,8 @@ class EcosystemCLI:
             # For DELETE, use the synchronous method
             try:
                 import urllib.request
-                req = urllib.request.Request(url, method='DELETE')
+
+                req = urllib.request.Request(url, method="DELETE")
                 with urllib.request.urlopen(req, timeout=10) as response:
                     if response.status == 200 or response.status == 204:
                         print(f"✅ Prompt {prompt_id} deleted successfully")
@@ -1503,7 +1514,7 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
@@ -1553,7 +1564,9 @@ class EcosystemCLI:
             metadata = kwargs.get("metadata", "")
 
             if not recipient:
-                print("❌ Recipient required. Use: send --recipient 'user@domain.com' --title 'Title' --message 'Message'")
+                print(
+                    "❌ Recipient required. Use: send --recipient 'user@domain.com' --title 'Title' --message 'Message'"
+                )
                 return
 
             # Parse metadata string like "key1:value1,key2:value2"
@@ -1574,7 +1587,7 @@ class EcosystemCLI:
                 "recipient": recipient,
                 "priority": priority,
                 "category": category,
-                "metadata": metadata_dict
+                "metadata": metadata_dict,
             }
 
             url = f"{base_url}/api/v1/notifications"
@@ -1677,11 +1690,11 @@ class EcosystemCLI:
             print("  history --recipient 'user@email.com' --limit 10")
             print("  stats")
             print("  update --id 'notification-uuid' --status 'read'")
-    
+
     async def frontend_command(self, command: str, **kwargs):
         """Execute Frontend commands"""
         base_url = self.services["frontend"]
-        
+
         if command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -1690,7 +1703,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -1702,12 +1715,12 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         elif command == "status":
             # Get frontend application status
             url = f"{base_url}/api/status"
@@ -1718,9 +1731,9 @@ class EcosystemCLI:
                 print(f"   Version: {response.get('version', 'unknown')}")
                 print(f"   Environment: {response.get('environment', 'unknown')}")
                 print(f"   Uptime: {response.get('uptime', 'unknown')}")
-                if 'active_connections' in response:
+                if "active_connections" in response:
                     print(f"   Active Connections: {response['active_connections']}")
-                if 'memory_usage' in response:
+                if "memory_usage" in response:
                     print(f"   Memory Usage: {response['memory_usage']}")
             else:
                 # Fallback to basic health check
@@ -1820,7 +1833,7 @@ class EcosystemCLI:
                     print(json.dumps(response, indent=2))
             else:
                 print("❌ Failed to get frontend routes")
-        
+
         else:
             print(f"❌ Unknown frontend command: {command}")
             print("Available commands: health, config, status, logs, restart, metrics, routes")
@@ -1830,11 +1843,11 @@ class EcosystemCLI:
             print("  restart")
             print("  metrics")
             print("  routes")
-    
+
     async def discovery_agent_command(self, command: str, **kwargs):
         """Execute Discovery Agent commands"""
         base_url = self.services["discovery-agent"]
-        
+
         if command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -1843,17 +1856,19 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "discover":
             # Discovery service registration
             name = kwargs.get("name")
             base_url_param = kwargs.get("base_url") or kwargs.get("url")
-            
+
             if not name or not base_url_param:
                 print("❌ Discovery requires --name and --base_url parameters")
-                print("Example: python cli.py discovery-agent discover --name my-service --base_url http://service:8080")
+                print(
+                    "Example: python cli.py discovery-agent discover --name my-service --base_url http://service:8080"
+                )
                 return
-            
+
             url = f"{base_url}/discover"
             payload = {"name": name, "base_url": base_url_param}
             response = await self.client.post_json(url, payload)
@@ -1862,7 +1877,7 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Service discovery failed")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -1874,21 +1889,21 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         else:
             print(f"❌ Unknown discovery-agent command: {command}")
             print("Available commands: health, discover, config")
             print("Usage: discover --name <service_name> --base_url <url>")
-    
+
     async def interpreter_command(self, command: str, **kwargs):
         """Execute Interpreter commands"""
         base_url = self.services["interpreter"]
-        
+
         if command == "health":
             url = f"{base_url}/health"
             response = await self.client.get_json(url)
@@ -1897,29 +1912,31 @@ class EcosystemCLI:
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Health check failed")
-        
+
         elif command == "execute":
             # Code execution
             query = kwargs.get("query")
             code = kwargs.get("code")
-            
+
             if not query:
                 print("❌ Code execution requires --query parameter")
-                print("Example: python cli.py interpreter execute --query 'test python' --code 'print(\"Hello World\")'")
+                print(
+                    "Example: python cli.py interpreter execute --query 'test python' --code 'print(\"Hello World\")'"
+                )
                 return
-            
+
             url = f"{base_url}/execute"
             payload = {"query": query}
             if code:
                 payload["code"] = code
-            
+
             response = await self.client.post_json(url, payload)
             if response:
                 print(f"⚡ Code Execution Results:")
                 print(json.dumps(response, indent=2))
             else:
                 print("❌ Code execution failed")
-        
+
         elif command == "config":
             # Get configuration from health endpoint
             url = f"{base_url}/health"
@@ -1931,17 +1948,17 @@ class EcosystemCLI:
                     "version": response.get("version", "unknown"),
                     "environment": response.get("environment", "unknown"),
                     "timestamp": response.get("timestamp", "unknown"),
-                    "uptime_seconds": response.get("uptime_seconds", 0)
+                    "uptime_seconds": response.get("uptime_seconds", 0),
                 }
                 print(json.dumps(config_data, indent=2))
             else:
                 print("❌ Failed to get configuration")
-        
+
         else:
             print(f"❌ Unknown interpreter command: {command}")
             print("Available commands: health, execute, config")
             print("Usage: execute --query <description> [--code <code_to_run>]")
-    
+
     async def execute_service_command(self, service: str, command: str, **kwargs):
         """Execute command on specific service"""
         if service == "analysis-service":
@@ -1977,7 +1994,7 @@ class EcosystemCLI:
             else:
                 print(f"❌ Service '{service}' not supported or command '{command}' not available")
                 print(f"Available services: {', '.join(self.services.keys())}")
-    
+
     def show_help(self):
         """Show help information"""
         print("🌐 ECOSYSTEM CLI HELP")
@@ -2011,8 +2028,8 @@ class EcosystemCLI:
 async def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(description="Ecosystem CLI")
-    parser.add_argument("command", nargs='?', help="Command to execute")
-    parser.add_argument("subcommand", nargs='?', help="Subcommand for service")
+    parser.add_argument("command", nargs="?", help="Command to execute")
+    parser.add_argument("subcommand", nargs="?", help="Subcommand for service")
     parser.add_argument("--help-cli", action="store_true", help="Show CLI help")
 
     # Add support for additional arguments
@@ -2040,31 +2057,31 @@ async def main():
     parser.add_argument("--template", help="Workflow template name")
     parser.add_argument("--service", help="Service/container name for container management")
     parser.add_argument("--follow", action="store_true", help="Follow logs in real-time")
-    
+
     args = parser.parse_args()
-    
+
     cli = EcosystemCLI()
-    
+
     if args.help_cli:
         cli.show_help()
         return 0
-    
+
     if not args.command:
         cli.show_help()
         return 1
-    
+
     if args.command == "health":
         await cli.health_check_all()
         return 0
-    
+
     if args.command == "config-all":
         await cli.config_check_all()
         return 0
-    
+
     if args.command == "test-ecosystem":
         await cli.test_ecosystem_workflows()
         return 0
-        
+
     if args.command == "create-mock-data":
         await cli.create_mock_data()
         return 0
@@ -2079,98 +2096,98 @@ async def main():
         return 0
 
     if args.command == "restart":
-        if not hasattr(args, 'service') or not args.service:
+        if not hasattr(args, "service") or not args.service:
             print("❌ Service name required. Use: restart --service <service_name>")
             return 1
         await cli.restart_container(args.service)
         return 0
 
     if args.command == "rebuild":
-        if not hasattr(args, 'service') or not args.service:
+        if not hasattr(args, "service") or not args.service:
             print("❌ Service name required. Use: rebuild --service <service_name>")
             return 1
         await cli.rebuild_container(args.service)
         return 0
 
     if args.command == "logs":
-        if not hasattr(args, 'service') or not args.service:
+        if not hasattr(args, "service") or not args.service:
             print("❌ Service name required. Use: logs --service <service_name>")
             return 1
-        follow = hasattr(args, 'follow') and args.follow
-        lines = (args.lines if hasattr(args, 'lines') and args.lines else 50)
+        follow = hasattr(args, "follow") and args.follow
+        lines = args.lines if hasattr(args, "lines") and args.lines else 50
         await cli.show_container_logs(args.service, lines, follow)
         return 0
 
     if args.command == "stop":
-        if not hasattr(args, 'service') or not args.service:
+        if not hasattr(args, "service") or not args.service:
             print("❌ Service name required. Use: stop --service <service_name>")
             return 1
         await cli.stop_container(args.service)
         return 0
 
     if args.command == "start":
-        if not hasattr(args, 'service') or not args.service:
+        if not hasattr(args, "service") or not args.service:
             print("❌ Service name required. Use: start --service <service_name>")
             return 1
         await cli.start_container(args.service)
         return 0
-    
+
     if args.subcommand:
         # Collect additional arguments as kwargs
         kwargs = {}
-        if hasattr(args, 'limit') and args.limit is not None:
-            kwargs['limit'] = args.limit
-        if hasattr(args, 'offset') and args.offset is not None:
-            kwargs['offset'] = args.offset
-        if hasattr(args, 'query') and args.query:
-            kwargs['query'] = args.query
-        if hasattr(args, 'title') and args.title:
-            kwargs['title'] = args.title
-        if hasattr(args, 'content') and args.content:
-            kwargs['content'] = args.content
-        if hasattr(args, 'tags') and args.tags:
-            kwargs['tags'] = args.tags
-        if hasattr(args, 'id') and args.id:
-            kwargs['id'] = args.id
-        if hasattr(args, 'metadata') and args.metadata:
-            kwargs['metadata'] = args.metadata
-        if hasattr(args, 'code') and args.code:
-            kwargs['code'] = args.code
-        if hasattr(args, 'type') and args.type:
-            kwargs['type'] = args.type
-        if hasattr(args, 'name') and args.name:
-            kwargs['name'] = args.name
-        if hasattr(args, 'category') and args.category:
-            kwargs['category'] = args.category
-        if hasattr(args, 'author') and args.author:
-            kwargs['author'] = args.author
-        if hasattr(args, 'description') and args.description:
-            kwargs['description'] = args.description
-        if hasattr(args, 'message') and args.message:
-            kwargs['message'] = args.message
-        if hasattr(args, 'recipient') and args.recipient:
-            kwargs['recipient'] = args.recipient
-        if hasattr(args, 'priority') and args.priority:
-            kwargs['priority'] = args.priority
-        if hasattr(args, 'status') and args.status:
-            kwargs['status'] = args.status
-        if hasattr(args, 'lines') and args.lines is not None:
-            kwargs['lines'] = args.lines
-        if hasattr(args, 'level') and args.level:
-            kwargs['level'] = args.level
-        if hasattr(args, 'definition') and args.definition:
-            kwargs['definition'] = args.definition
-        if hasattr(args, 'template') and args.template:
-            kwargs['template'] = args.template
+        if hasattr(args, "limit") and args.limit is not None:
+            kwargs["limit"] = args.limit
+        if hasattr(args, "offset") and args.offset is not None:
+            kwargs["offset"] = args.offset
+        if hasattr(args, "query") and args.query:
+            kwargs["query"] = args.query
+        if hasattr(args, "title") and args.title:
+            kwargs["title"] = args.title
+        if hasattr(args, "content") and args.content:
+            kwargs["content"] = args.content
+        if hasattr(args, "tags") and args.tags:
+            kwargs["tags"] = args.tags
+        if hasattr(args, "id") and args.id:
+            kwargs["id"] = args.id
+        if hasattr(args, "metadata") and args.metadata:
+            kwargs["metadata"] = args.metadata
+        if hasattr(args, "code") and args.code:
+            kwargs["code"] = args.code
+        if hasattr(args, "type") and args.type:
+            kwargs["type"] = args.type
+        if hasattr(args, "name") and args.name:
+            kwargs["name"] = args.name
+        if hasattr(args, "category") and args.category:
+            kwargs["category"] = args.category
+        if hasattr(args, "author") and args.author:
+            kwargs["author"] = args.author
+        if hasattr(args, "description") and args.description:
+            kwargs["description"] = args.description
+        if hasattr(args, "message") and args.message:
+            kwargs["message"] = args.message
+        if hasattr(args, "recipient") and args.recipient:
+            kwargs["recipient"] = args.recipient
+        if hasattr(args, "priority") and args.priority:
+            kwargs["priority"] = args.priority
+        if hasattr(args, "status") and args.status:
+            kwargs["status"] = args.status
+        if hasattr(args, "lines") and args.lines is not None:
+            kwargs["lines"] = args.lines
+        if hasattr(args, "level") and args.level:
+            kwargs["level"] = args.level
+        if hasattr(args, "definition") and args.definition:
+            kwargs["definition"] = args.definition
+        if hasattr(args, "template") and args.template:
+            kwargs["template"] = args.template
 
         await cli.execute_service_command(args.command, args.subcommand, **kwargs)
         return 0
-    
+
     # If no subcommand, assume health check for the service
     if args.command in cli.services:
         await cli.execute_service_command(args.command, "health")
         return 0
-    
+
     print(f"❌ Unknown command: {args.command}")
     cli.show_help()
     return 1

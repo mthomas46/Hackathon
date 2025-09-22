@@ -40,14 +40,15 @@ WORKFLOW STEPS:
 """
 
 import asyncio
-import httpx
 import json
 import os
+import shutil
 import sys
 from datetime import datetime
-from typing import Dict, Any, List, Optional
 from pathlib import Path
-import shutil
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 
 class WorkflowDemo:
@@ -60,7 +61,7 @@ class WorkflowDemo:
             "WARNING": "\033[93m",
             "INFO": "\033[94m",
             "RESET": "\033[0m",
-            "BOLD": "\033[1m"
+            "BOLD": "\033[1m",
         }
 
         self.config = {
@@ -72,7 +73,7 @@ class WorkflowDemo:
             "timeout": 30.0,
             "demo_mode": os.getenv("DEMO_MODE", "full"),  # full, analysis_only, simulation_only
             "reports_dir": os.getenv("REPORTS_DIR", "./reports"),
-            "download_reports": os.getenv("DOWNLOAD_REPORTS", "true").lower() == "true"
+            "download_reports": os.getenv("DOWNLOAD_REPORTS", "true").lower() == "true",
         }
 
         # Create reports directory if it doesn't exist
@@ -106,7 +107,9 @@ class WorkflowDemo:
         """Print an info message."""
         print(f"{self.colors['INFO']}ℹ️ {message}{self.colors['RESET']}")
 
-    def generate_report_filename(self, service_name: str, report_type: str, timestamp: str = None, format: str = "md") -> str:
+    def generate_report_filename(
+        self, service_name: str, report_type: str, timestamp: str = None, format: str = "md"
+    ) -> str:
         """Generate a standardized filename for reports."""
         if timestamp is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -195,12 +198,7 @@ class WorkflowDemo:
         timestamp = data.get("timestamp", datetime.now().timestamp())
 
         # Status emoji
-        status_emoji = {
-            "healthy": "🟢",
-            "warning": "🟡",
-            "error": "🔴",
-            "unknown": "⚪"
-        }.get(status, "⚪")
+        status_emoji = {"healthy": "🟢", "warning": "🟡", "error": "🔴", "unknown": "⚪"}.get(status, "⚪")
 
         # Format timestamp
         try:
@@ -284,27 +282,28 @@ class WorkflowDemo:
             "by_category": category_distribution,
             "by_tag": tag_distribution,
             "total_categories": len(category_distribution),
-            "total_tags": len(tag_distribution)
+            "total_tags": len(tag_distribution),
         }
 
-    def _generate_cross_document_insights(self, documents: List[Dict[str, Any]], summaries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _generate_cross_document_insights(
+        self, documents: List[Dict[str, Any]], summaries: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Generate insights from cross-document analysis."""
-        insights = {
-            "similarity_patterns": [],
-            "category_relationships": {},
-            "content_clusters": []
-        }
+        insights = {"similarity_patterns": [], "category_relationships": {}, "content_clusters": []}
 
         # Simple similarity detection based on tags
         for i, doc1 in enumerate(documents):
-            for doc2 in documents[i+1:]:
+            for doc2 in documents[i + 1 :]:
                 shared_tags = set(doc1.get("tags", [])) & set(doc2.get("tags", []))
                 if len(shared_tags) > 1:
-                    insights["similarity_patterns"].append({
-                        "documents": [doc1["id"], doc2["id"]],
-                        "shared_tags": list(shared_tags),
-                        "similarity_score": len(shared_tags) / max(len(set(doc1.get("tags", []))), len(set(doc2.get("tags", []))))
-                    })
+                    insights["similarity_patterns"].append(
+                        {
+                            "documents": [doc1["id"], doc2["id"]],
+                            "shared_tags": list(shared_tags),
+                            "similarity_score": len(shared_tags)
+                            / max(len(set(doc1.get("tags", []))), len(set(doc2.get("tags", [])))),
+                        }
+                    )
 
         # Category relationships
         categories = {}
@@ -318,34 +317,48 @@ class WorkflowDemo:
 
         return insights
 
-    def _generate_multi_document_recommendations(self, documents: List[Dict[str, Any]], summaries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _generate_multi_document_recommendations(
+        self, documents: List[Dict[str, Any]], summaries: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Generate recommendations based on multi-document analysis."""
         recommendations = []
 
         # Check for missing categories
         existing_categories = set(doc.get("category", "uncategorized") for doc in documents)
-        required_categories = {"requirements", "architecture", "development", "security", "deployment", "testing", "api"}
+        required_categories = {
+            "requirements",
+            "architecture",
+            "development",
+            "security",
+            "deployment",
+            "testing",
+            "api",
+        }
         missing_categories = required_categories - existing_categories
 
         if missing_categories:
-            recommendations.append({
-                "type": "gap_analysis",
-                "priority": "high",
-                "description": f"Missing documentation categories: {', '.join(missing_categories)}. Consider creating documentation for these critical areas.",
-                "confidence": 0.9,
-                "affected_categories": list(missing_categories)
-            })
+            recommendations.append(
+                {
+                    "type": "gap_analysis",
+                    "priority": "high",
+                    "description": f"Missing documentation categories: {', '.join(missing_categories)}. Consider creating documentation for these critical areas.",
+                    "confidence": 0.9,
+                    "affected_categories": list(missing_categories),
+                }
+            )
 
         # Check document count adequacy
         if len(documents) < 10:
-            recommendations.append({
-                "type": "documentation_completeness",
-                "priority": "medium",
-                "description": f"Only {len(documents)} documents found. For comprehensive coverage, consider expanding to 15-20 documents.",
-                "confidence": 0.8,
-                "current_count": len(documents),
-                "recommended_minimum": 15
-            })
+            recommendations.append(
+                {
+                    "type": "documentation_completeness",
+                    "priority": "medium",
+                    "description": f"Only {len(documents)} documents found. For comprehensive coverage, consider expanding to 15-20 documents.",
+                    "confidence": 0.8,
+                    "current_count": len(documents),
+                    "recommended_minimum": 15,
+                }
+            )
 
         # Check for category balance
         category_counts = {}
@@ -355,13 +368,15 @@ class WorkflowDemo:
 
         unbalanced_categories = [cat for cat, count in category_counts.items() if count == 1]
         if unbalanced_categories:
-            recommendations.append({
-                "type": "category_balance",
-                "priority": "low",
-                "description": f"Categories with only one document: {', '.join(unbalanced_categories)}. Consider adding more documents to these categories.",
-                "confidence": 0.7,
-                "unbalanced_categories": unbalanced_categories
-            })
+            recommendations.append(
+                {
+                    "type": "category_balance",
+                    "priority": "low",
+                    "description": f"Categories with only one document: {', '.join(unbalanced_categories)}. Consider adding more documents to these categories.",
+                    "confidence": 0.7,
+                    "unbalanced_categories": unbalanced_categories,
+                }
+            )
 
         return recommendations
 
@@ -373,7 +388,7 @@ class WorkflowDemo:
         evolution = {
             "chronological_order": [doc["id"] for doc in sorted_docs],
             "creation_dates": [doc["dateCreated"] for doc in sorted_docs],
-            "category_evolution": {}
+            "category_evolution": {},
         }
 
         # Track category evolution
@@ -385,7 +400,9 @@ class WorkflowDemo:
 
         return evolution
 
-    def _calculate_quality_metrics(self, documents: List[Dict[str, Any]], summaries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_quality_metrics(
+        self, documents: List[Dict[str, Any]], summaries: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Calculate quality metrics for the document set."""
         metrics = {
             "total_documents": len(documents),
@@ -393,16 +410,18 @@ class WorkflowDemo:
             "processing_success_rate": len(summaries) / len(documents) * 100 if documents else 0,
             "categories_covered": len(set(doc.get("category", "uncategorized") for doc in documents)),
             "total_tags": len(set(tag for doc in documents for tag in doc.get("tags", []))),
-            "average_tags_per_document": sum(len(doc.get("tags", [])) for doc in documents) / len(documents) if documents else 0,
-            "quality_score": 0.0
+            "average_tags_per_document": (
+                sum(len(doc.get("tags", [])) for doc in documents) / len(documents) if documents else 0
+            ),
+            "quality_score": 0.0,
         }
 
         # Calculate quality score based on various factors
         quality_factors = [
             min(metrics["processing_success_rate"] / 100, 1.0) * 0.4,  # 40% weight on processing success
-            min(metrics["categories_covered"] / 7, 1.0) * 0.3,         # 30% weight on category coverage
-            min(metrics["total_tags"] / 20, 1.0) * 0.2,                 # 20% weight on tag diversity
-            min(len(documents) / 15, 1.0) * 0.1                         # 10% weight on document count
+            min(metrics["categories_covered"] / 7, 1.0) * 0.3,  # 30% weight on category coverage
+            min(metrics["total_tags"] / 20, 1.0) * 0.2,  # 20% weight on tag diversity
+            min(len(documents) / 15, 1.0) * 0.1,  # 10% weight on document count
         ]
 
         metrics["quality_score"] = sum(quality_factors) * 100
@@ -421,7 +440,7 @@ class WorkflowDemo:
             ("simulation_details", f"/api/v1/simulations/{simulation_id}"),
             ("simulation_status", f"/api/v1/simulations/{simulation_id}/status"),
             ("simulation_metrics", f"/api/v1/simulations/{simulation_id}/metrics"),
-            ("simulation_analysis", f"/api/v1/simulations/{simulation_id}/analysis")
+            ("simulation_analysis", f"/api/v1/simulations/{simulation_id}/analysis"),
         ]
 
         for report_type, endpoint in report_endpoints:
@@ -433,11 +452,13 @@ class WorkflowDemo:
                         filename = self.generate_report_filename("simulation", report_type, timestamp)
                         filepath = self.reports_path / filename
 
-                        with open(filepath, 'w') as f:
-                            if response.headers.get('content-type', '').startswith('application/json'):
+                        with open(filepath, "w") as f:
+                            if response.headers.get("content-type", "").startswith("application/json"):
                                 data = response.json()
                                 title = f"Simulation {report_type.replace('_', ' ').title()} Report"
-                                markdown_content = self.format_json_to_markdown(data, title, "Project Simulation Service")
+                                markdown_content = self.format_json_to_markdown(
+                                    data, title, "Project Simulation Service"
+                                )
                                 f.write(markdown_content)
                             else:
                                 # Convert text responses to basic Markdown format
@@ -463,10 +484,7 @@ class WorkflowDemo:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Try to download analysis capabilities and status
-        report_endpoints = [
-            ("capabilities", "/capabilities"),
-            ("health_status", "/health")
-        ]
+        report_endpoints = [("capabilities", "/capabilities"), ("health_status", "/health")]
 
         for report_type, endpoint in report_endpoints:
             try:
@@ -477,8 +495,8 @@ class WorkflowDemo:
                         filename = self.generate_report_filename("summarizer", report_type, timestamp)
                         filepath = self.reports_path / filename
 
-                        with open(filepath, 'w') as f:
-                            if response.headers.get('content-type', '').startswith('application/json'):
+                        with open(filepath, "w") as f:
+                            if response.headers.get("content-type", "").startswith("application/json"):
                                 data = response.json()
                                 if report_type == "capabilities":
                                     markdown_content = self.format_capabilities_report_markdown(data)
@@ -486,7 +504,9 @@ class WorkflowDemo:
                                     markdown_content = self.format_health_report_markdown(data)
                                 else:
                                     title = f"Summarizer {report_type.replace('_', ' ').title()} Report"
-                                    markdown_content = self.format_json_to_markdown(data, title, "Summarizer Hub Service")
+                                    markdown_content = self.format_json_to_markdown(
+                                        data, title, "Summarizer Hub Service"
+                                    )
                                 f.write(markdown_content)
                             else:
                                 # Convert text responses to basic Markdown format
@@ -505,7 +525,7 @@ class WorkflowDemo:
             filename = self.generate_report_filename("summarizer", "analysis_results", timestamp)
             filepath = self.reports_path / filename
 
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 title = "Comprehensive Analysis Results Report"
                 markdown_content = self.format_json_to_markdown(analysis_data, title, "Summarizer Hub Service")
                 f.write(markdown_content)
@@ -526,7 +546,7 @@ class WorkflowDemo:
         report_endpoints = [
             ("service_registry", "/api/v1/service-registry/services"),
             ("workflows", "/api/v1/workflows"),
-            ("queries_history", "/api/v1/queries/history")
+            ("queries_history", "/api/v1/queries/history"),
         ]
 
         for report_type, endpoint in report_endpoints:
@@ -538,8 +558,8 @@ class WorkflowDemo:
                         filename = self.generate_report_filename("orchestrator", report_type, timestamp)
                         filepath = self.reports_path / filename
 
-                        with open(filepath, 'w') as f:
-                            if response.headers.get('content-type', '').startswith('application/json'):
+                        with open(filepath, "w") as f:
+                            if response.headers.get("content-type", "").startswith("application/json"):
                                 data = response.json()
                                 title = f"Orchestrator {report_type.replace('_', ' ').title()} Report"
                                 markdown_content = self.format_json_to_markdown(data, title, "Orchestrator Service")
@@ -570,27 +590,25 @@ class WorkflowDemo:
         services_to_log = [
             ("interpreter", self.config["interpreter_url"]),
             ("orchestrator", self.config["orchestrator_url"]),
-            ("summarizer", self.config["summarizer_url"])
+            ("summarizer", self.config["summarizer_url"]),
         ]
 
         for service_name, service_url in services_to_log:
             try:
                 # Try to get service logs via Docker
                 import subprocess
+
                 container_name = f"hackathon-{service_name}-1"
 
                 result = subprocess.run(
-                    ["docker", "logs", "--tail", "100", container_name],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
+                    ["docker", "logs", "--tail", "100", container_name], capture_output=True, text=True, timeout=10
                 )
 
                 if result.returncode == 0:
                     filename = self.generate_report_filename(service_name, "logs", timestamp)
                     filepath = self.reports_path / filename
 
-                    with open(filepath, 'w') as f:
+                    with open(filepath, "w") as f:
                         markdown_content = f"""# 📋 Service Logs Report
 
 ## Service Information
@@ -648,24 +666,26 @@ class WorkflowDemo:
         else:
             self.print_warning("No reports were successfully downloaded.")
 
-    async def generate_workflow_summary_report(self, analysis_result: Dict[str, Any], context_documents: List[Dict[str, Any]]):
+    async def generate_workflow_summary_report(
+        self, analysis_result: Dict[str, Any], context_documents: List[Dict[str, Any]]
+    ):
         """Generate a comprehensive workflow summary report."""
         try:
             self.print_info("Generating comprehensive workflow summary report...")
 
             # Extract key metrics from analysis result
             doc_count = len(context_documents)  # Use actual document count from context
-            recommendations = analysis_result.get('recommendations', [])
-            quality_metrics = analysis_result.get('quality_metrics', {})
-            alignment_analysis = analysis_result.get('alignment_analysis', {})
+            recommendations = analysis_result.get("recommendations", [])
+            quality_metrics = analysis_result.get("quality_metrics", {})
+            alignment_analysis = analysis_result.get("alignment_analysis", {})
 
             # Count recommendation types
             rec_types = {}
-            priorities = {'high': 0, 'medium': 0, 'low': 0, 'critical': 0}
+            priorities = {"high": 0, "medium": 0, "low": 0, "critical": 0}
             for rec in recommendations:
-                rec_type = rec.get('type', 'unknown')
+                rec_type = rec.get("type", "unknown")
                 rec_types[rec_type] = rec_types.get(rec_type, 0) + 1
-                priority = rec.get('priority', 'medium').lower()
+                priority = rec.get("priority", "medium").lower()
                 if priority in priorities:
                     priorities[priority] += 1
 
@@ -689,7 +709,9 @@ This report summarizes the complete Interpreter → Orchestrator → Simulation 
 """
 
             for rec_type, count in rec_types.items():
-                report_content += f"- **{rec_type.replace('_', ' ').title()}**: {count} recommendation{'s' if count != 1 else ''}\n"
+                report_content += (
+                    f"- **{rec_type.replace('_', ' ').title()}**: {count} recommendation{'s' if count != 1 else ''}\n"
+                )
 
             report_content += f"""
 ### 🎯 Priority Distribution
@@ -715,7 +737,7 @@ This report summarizes the complete Interpreter → Orchestrator → Simulation 
             # Count document types
             doc_types = {}
             for doc in context_documents:
-                doc_type = doc.get('type', 'unknown')
+                doc_type = doc.get("type", "unknown")
                 doc_types[doc_type] = doc_types.get(doc_type, 0) + 1
 
             for doc_type, count in doc_types.items():
@@ -748,7 +770,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
             report_filename = self.generate_report_filename("workflow_summary", "report", format="md")
             report_path = self.reports_path / report_filename
 
-            with open(report_path, 'w', encoding='utf-8') as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 f.write(report_content)
 
             self.print_success(f"Workflow summary report generated and saved: {report_path}")
@@ -775,7 +797,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
             "simulation": "Simulation execution reports and metrics",
             "orchestrator": "Workflow coordination reports",
             "logs": "Service logs and debug information",
-            "all": "Download all additional reports"
+            "all": "Download all additional reports",
         }
 
         self.print_info("Additional optional report types:")
@@ -830,7 +852,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
         services = [
             ("Interpreter", self.config["interpreter_url"]),
             ("Orchestrator", self.config["orchestrator_url"]),
-            ("Summarizer", self.config["summarizer_url"])
+            ("Summarizer", self.config["summarizer_url"]),
         ]
 
         # Check simulation service separately (optional for demo)
@@ -882,13 +904,13 @@ The system successfully demonstrated enterprise-grade document analysis capabili
             async with httpx.AsyncClient(timeout=self.config["timeout"]) as client:
                 context_request = {
                     "query": sample_query,
-                    "context": {"demo_mode": True, "request_type": "document_analysis"}
+                    "context": {"demo_mode": True, "request_type": "document_analysis"},
                 }
 
                 context_response = await client.post(
                     f"{self.config['interpreter_url']}/documents/sample/context",
                     json=context_request,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if context_response.status_code == 200:
@@ -914,9 +936,9 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                 "duration_weeks": 10,
                 "complexity": "high",
                 "technologies": ["React", "Node.js", "Python", "PostgreSQL", "Docker", "Kubernetes"],
-                "sample_documents": relevant_documents
+                "sample_documents": relevant_documents,
             },
-            "context_documents": relevant_documents
+            "context_documents": relevant_documents,
         }
 
         self.print_success("Query interpreted successfully")
@@ -935,7 +957,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
             "context": {"source": "demo_workflow", "user_id": "demo_user"},
             "simulation_config": interpreted_data["parameters"],
             "generate_mock_data": True,
-            "analysis_types": ["consolidation", "duplicate", "outdated", "quality"]
+            "analysis_types": ["consolidation", "duplicate", "outdated", "quality"],
         }
 
         try:
@@ -947,9 +969,9 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                         "query_text": interpreted_data["original_query"],
                         "context": simulation_request["context"],
                         "max_results": 50,
-                        "include_explanation": True
+                        "include_explanation": True,
                     },
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -979,13 +1001,13 @@ The system successfully demonstrated enterprise-grade document analysis capabili
             "duration_weeks": 10,
             "budget": 250000,
             "team_size": 6,
-            "technologies": ["React", "Node.js", "Python", "PostgreSQL", "Docker"]
+            "technologies": ["React", "Node.js", "Python", "PostgreSQL", "Docker"],
         }
 
         interpreter_request = {
             "query": "Build an e-commerce platform with microservices",
             "context": {"demo": True, "workflow_step": "simulation_creation"},
-            "simulation_config": simulation_config
+            "simulation_config": simulation_config,
         }
 
         try:
@@ -994,7 +1016,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                 response = await client.post(
                     f"{self.config['simulation_url']}/api/v1/interpreter/simulate",
                     json=interpreter_request,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -1012,7 +1034,9 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                             self.print_info("Analysis Results:")
                             self.print_info(f"  📊 Documents analyzed: {len(analysis.get('document_analysis', []))}")
                             self.print_info(f"  👥 Team analysis: {analysis.get('team_analysis', 'N/A')}")
-                            self.print_info(f"  📅 Timeline analysis: {'Available' if analysis.get('timeline_analysis') else 'N/A'}")
+                            self.print_info(
+                                f"  📅 Timeline analysis: {'Available' if analysis.get('timeline_analysis') else 'N/A'}"
+                            )
 
                     return result
                 elif response.status_code == 503:
@@ -1028,11 +1052,11 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                         "analysis_results": {
                             "document_analysis": [
                                 {"id": "req_doc", "title": "Requirements", "status": "analyzed"},
-                                {"id": "arch_doc", "title": "Architecture", "status": "analyzed"}
+                                {"id": "arch_doc", "title": "Architecture", "status": "analyzed"},
                             ],
                             "team_analysis": "6-member team with full-stack capabilities",
-                            "timeline_analysis": {"phases": 3, "duration_weeks": 10}
-                        }
+                            "timeline_analysis": {"phases": 3, "duration_weeks": 10},
+                        },
                     }
                     self.print_success("Mock simulation completed successfully")
                     self.print_info(f"Simulation ID: {mock_result['simulation_id']}")
@@ -1056,11 +1080,11 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                 "analysis_results": {
                     "document_analysis": [
                         {"id": "req_doc", "title": "Requirements", "status": "analyzed"},
-                        {"id": "arch_doc", "title": "Architecture", "status": "analyzed"}
+                        {"id": "arch_doc", "title": "Architecture", "status": "analyzed"},
                     ],
                     "team_analysis": "6-member team with full-stack capabilities",
-                    "timeline_analysis": {"phases": 3, "duration_weeks": 10}
-                }
+                    "timeline_analysis": {"phases": 3, "duration_weeks": 10},
+                },
             }
             self.print_success("Mock simulation completed successfully")
             self.print_info(f"Simulation ID: {mock_result['simulation_id']}")
@@ -1088,129 +1112,127 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                     "category": "architecture",
                     "tags": ["architecture", "microservices", "security", "performance"],
                     "author": "Sarah Johnson",
-                    "status": "published"
+                    "status": "published",
                 },
-            # JIRA TICKET
-            {
-                "id": "jira_001",
-                "type": "jira",
-                "title": "Implement User Authentication System",
-                "content": "As a user, I want to be able to securely log into the mobile banking app so that I can access my account information.\n\n## Acceptance Criteria\n- Users can register with email and password\n- Users can login with email and password\n- Password must be at least 8 characters with special characters\n- Implement password reset functionality\n- Multi-factor authentication support\n- Session management with automatic logout",
-                "dateCreated": "2024-01-10T09:15:00Z",
-                "dateUpdated": "2024-02-20T14:30:00Z",
-                "category": "feature",
-                "tags": ["authentication", "security", "mobile"],
-                "author": "Sarah Johnson",
-                "assignee": "Mike Chen",
-                "status": "in_progress",
-                "priority": "high",
-                "comments": [
-                    {
-                        "author": "Mike Chen",
-                        "timestamp": "2024-01-12T10:30:00Z",
-                        "content": "Started implementation of OAuth2 flow. Need to clarify MFA requirements."
-                    },
-                    {
-                        "author": "Sarah Johnson",
-                        "timestamp": "2024-01-12T14:15:00Z",
-                        "content": "MFA is required for all users. Please implement SMS-based 2FA initially."
-                    }
-                ]
-            },
-            # PULL REQUEST
-            {
-                "id": "pr_001",
-                "type": "pull_request",
-                "title": "Implement OAuth2 Authentication System",
-                "content": "This PR implements OAuth2 authentication with JWT tokens for the mobile banking application.\n\n## Changes Made\n\n### Backend Changes\n- Added OAuth2 configuration in Spring Security\n- Implemented JWT token generation and validation\n- Added user authentication endpoints\n- Created password hashing utilities\n\n### Database Changes\n- Added user_credentials table\n- Added user_sessions table\n- Added oauth_tokens table",
-                "dateCreated": "2024-01-15T14:30:00Z",
-                "dateUpdated": "2024-01-22T09:45:00Z",
-                "category": "feature",
-                "tags": ["authentication", "oauth2", "security", "jwt"],
-                "author": "Mike Chen",
-                "status": "merged",
-                "comments": [
-                    {
-                        "author": "Sarah Johnson",
-                        "timestamp": "2024-01-18T10:20:00Z",
-                        "content": "Code looks good. Can you add more comprehensive error handling for OAuth2 exceptions?"
-                    },
-                    {
-                        "author": "Mike Chen",
-                        "timestamp": "2024-01-18T14:15:00Z",
-                        "content": "Added comprehensive error handling and proper HTTP status codes for OAuth2 errors."
-                    }
-                ]
-            },
-            # CONTRADICTORY DOCUMENT - Conflicts with data retention policy
-            {
-                "id": "conf_conflict_001",
-                "type": "confluence",
-                "title": "Updated Data Retention Policy",
-                "content": "# Updated Data Retention Policy\n\n## Overview\nThis document outlines the updated data retention policies for compliance and operational efficiency.\n\n## Retention Periods\n\n### Customer Data\n- **Active Accounts**: Retained indefinitely\n- **Closed Accounts**: Retained for 7 days after closure\n- **Failed Login Attempts**: Retained for 1 day\n\n### Transaction Data\n- **All Transactions**: Retained for 7 days\n- **Transaction Logs**: Retained for 1 day\n- **Audit Logs**: Retained for 30 days\n\n## Note: This conflicts with the main data retention policy which specifies 7 years retention for transaction data.",
-                "dateCreated": "2024-02-01T10:00:00Z",
-                "dateUpdated": "2024-02-15T14:20:00Z",
-                "category": "compliance",
-                "tags": ["data_retention", "gdpr", "compliance", "conflict"],
-                "author": "Emma Wilson",
-                "status": "published"
-            },
-            # SPARSE DOCUMENT - Very minimal content
-            {
-                "id": "conf_sparse_001",
-                "type": "confluence",
-                "title": "Mobile App Design Guidelines",
-                "content": "Use Material Design. Keep it simple.",
-                "dateCreated": "2024-02-10T15:45:00Z",
-                "dateUpdated": "2024-02-10T15:45:00Z",
-                "category": "design",
-                "tags": ["mobile", "design"],
-                "author": "Alex Thompson",
-                "status": "draft"
-            },
-
-            # BLANK DOCUMENT - Completely empty content
-            {
-                "id": "conf_blank_001",
-                "type": "confluence",
-                "title": "Third-Party Integration Documentation",
-                "content": "",  # BLANK DOCUMENT
-                "dateCreated": "2024-02-14T11:10:00Z",
-                "dateUpdated": "2024-02-14T11:10:00Z",
-                "category": "integration",
-                "tags": ["integration", "third_party"],
-                "author": "Robert Davis",
-                "status": "draft"
-            },
-
-            # GAP IDENTIFICATION DOCUMENT
-            {
-                "id": "jira_gap_001",
-                "type": "jira",
-                "title": "Mobile App Deployment Strategy",
-                "content": "We need to define and implement a deployment strategy for our mobile applications.\n\n## Current Problem\n- No automated deployment pipeline for mobile apps\n- Manual deployment process taking 2-3 days\n- No beta testing infrastructure\n- Missing app store deployment automation\n\n## Requirements\n- Automated build and deployment for iOS and Android\n- Beta testing distribution\n- App store submission automation\n- Rollback capabilities\n- Performance monitoring\n\n## Blocked By\n- Mobile architecture not finalized\n- Code signing certificates not procured\n- App store developer accounts not set up\n\n## Note: This represents a significant gap in our development infrastructure.",
-                "dateCreated": "2024-02-15T13:20:00Z",
-                "dateUpdated": "2024-03-01T09:30:00Z",
-                "category": "infrastructure",
-                "tags": ["mobile", "deployment", "ci_cd", "gap"],
-                "author": "Mike Chen",
-                "assignee": "David Kim",
-                "status": "blocked",
-                "priority": "high",
-                "comments": [
-                    {
-                        "author": "Mike Chen",
-                        "timestamp": "2024-02-16T11:45:00Z",
-                        "content": "This is a critical gap in our mobile strategy."
-                    },
-                    {
-                        "author": "David Kim",
-                        "timestamp": "2024-02-20T15:20:00Z",
-                        "content": "Agreed. We need this for our Q2 mobile app release."
-                    }
-                ]
-            }
-        ]
+                # JIRA TICKET
+                {
+                    "id": "jira_001",
+                    "type": "jira",
+                    "title": "Implement User Authentication System",
+                    "content": "As a user, I want to be able to securely log into the mobile banking app so that I can access my account information.\n\n## Acceptance Criteria\n- Users can register with email and password\n- Users can login with email and password\n- Password must be at least 8 characters with special characters\n- Implement password reset functionality\n- Multi-factor authentication support\n- Session management with automatic logout",
+                    "dateCreated": "2024-01-10T09:15:00Z",
+                    "dateUpdated": "2024-02-20T14:30:00Z",
+                    "category": "feature",
+                    "tags": ["authentication", "security", "mobile"],
+                    "author": "Sarah Johnson",
+                    "assignee": "Mike Chen",
+                    "status": "in_progress",
+                    "priority": "high",
+                    "comments": [
+                        {
+                            "author": "Mike Chen",
+                            "timestamp": "2024-01-12T10:30:00Z",
+                            "content": "Started implementation of OAuth2 flow. Need to clarify MFA requirements.",
+                        },
+                        {
+                            "author": "Sarah Johnson",
+                            "timestamp": "2024-01-12T14:15:00Z",
+                            "content": "MFA is required for all users. Please implement SMS-based 2FA initially.",
+                        },
+                    ],
+                },
+                # PULL REQUEST
+                {
+                    "id": "pr_001",
+                    "type": "pull_request",
+                    "title": "Implement OAuth2 Authentication System",
+                    "content": "This PR implements OAuth2 authentication with JWT tokens for the mobile banking application.\n\n## Changes Made\n\n### Backend Changes\n- Added OAuth2 configuration in Spring Security\n- Implemented JWT token generation and validation\n- Added user authentication endpoints\n- Created password hashing utilities\n\n### Database Changes\n- Added user_credentials table\n- Added user_sessions table\n- Added oauth_tokens table",
+                    "dateCreated": "2024-01-15T14:30:00Z",
+                    "dateUpdated": "2024-01-22T09:45:00Z",
+                    "category": "feature",
+                    "tags": ["authentication", "oauth2", "security", "jwt"],
+                    "author": "Mike Chen",
+                    "status": "merged",
+                    "comments": [
+                        {
+                            "author": "Sarah Johnson",
+                            "timestamp": "2024-01-18T10:20:00Z",
+                            "content": "Code looks good. Can you add more comprehensive error handling for OAuth2 exceptions?",
+                        },
+                        {
+                            "author": "Mike Chen",
+                            "timestamp": "2024-01-18T14:15:00Z",
+                            "content": "Added comprehensive error handling and proper HTTP status codes for OAuth2 errors.",
+                        },
+                    ],
+                },
+                # CONTRADICTORY DOCUMENT - Conflicts with data retention policy
+                {
+                    "id": "conf_conflict_001",
+                    "type": "confluence",
+                    "title": "Updated Data Retention Policy",
+                    "content": "# Updated Data Retention Policy\n\n## Overview\nThis document outlines the updated data retention policies for compliance and operational efficiency.\n\n## Retention Periods\n\n### Customer Data\n- **Active Accounts**: Retained indefinitely\n- **Closed Accounts**: Retained for 7 days after closure\n- **Failed Login Attempts**: Retained for 1 day\n\n### Transaction Data\n- **All Transactions**: Retained for 7 days\n- **Transaction Logs**: Retained for 1 day\n- **Audit Logs**: Retained for 30 days\n\n## Note: This conflicts with the main data retention policy which specifies 7 years retention for transaction data.",
+                    "dateCreated": "2024-02-01T10:00:00Z",
+                    "dateUpdated": "2024-02-15T14:20:00Z",
+                    "category": "compliance",
+                    "tags": ["data_retention", "gdpr", "compliance", "conflict"],
+                    "author": "Emma Wilson",
+                    "status": "published",
+                },
+                # SPARSE DOCUMENT - Very minimal content
+                {
+                    "id": "conf_sparse_001",
+                    "type": "confluence",
+                    "title": "Mobile App Design Guidelines",
+                    "content": "Use Material Design. Keep it simple.",
+                    "dateCreated": "2024-02-10T15:45:00Z",
+                    "dateUpdated": "2024-02-10T15:45:00Z",
+                    "category": "design",
+                    "tags": ["mobile", "design"],
+                    "author": "Alex Thompson",
+                    "status": "draft",
+                },
+                # BLANK DOCUMENT - Completely empty content
+                {
+                    "id": "conf_blank_001",
+                    "type": "confluence",
+                    "title": "Third-Party Integration Documentation",
+                    "content": "",  # BLANK DOCUMENT
+                    "dateCreated": "2024-02-14T11:10:00Z",
+                    "dateUpdated": "2024-02-14T11:10:00Z",
+                    "category": "integration",
+                    "tags": ["integration", "third_party"],
+                    "author": "Robert Davis",
+                    "status": "draft",
+                },
+                # GAP IDENTIFICATION DOCUMENT
+                {
+                    "id": "jira_gap_001",
+                    "type": "jira",
+                    "title": "Mobile App Deployment Strategy",
+                    "content": "We need to define and implement a deployment strategy for our mobile applications.\n\n## Current Problem\n- No automated deployment pipeline for mobile apps\n- Manual deployment process taking 2-3 days\n- No beta testing infrastructure\n- Missing app store deployment automation\n\n## Requirements\n- Automated build and deployment for iOS and Android\n- Beta testing distribution\n- App store submission automation\n- Rollback capabilities\n- Performance monitoring\n\n## Blocked By\n- Mobile architecture not finalized\n- Code signing certificates not procured\n- App store developer accounts not set up\n\n## Note: This represents a significant gap in our development infrastructure.",
+                    "dateCreated": "2024-02-15T13:20:00Z",
+                    "dateUpdated": "2024-03-01T09:30:00Z",
+                    "category": "infrastructure",
+                    "tags": ["mobile", "deployment", "ci_cd", "gap"],
+                    "author": "Mike Chen",
+                    "assignee": "David Kim",
+                    "status": "blocked",
+                    "priority": "high",
+                    "comments": [
+                        {
+                            "author": "Mike Chen",
+                            "timestamp": "2024-02-16T11:45:00Z",
+                            "content": "This is a critical gap in our mobile strategy.",
+                        },
+                        {
+                            "author": "David Kim",
+                            "timestamp": "2024-02-20T15:20:00Z",
+                            "content": "Agreed. We need this for our Q2 mobile app release.",
+                        },
+                    ],
+                },
+            ]
 
         # Sample timeline
         sample_timeline = {
@@ -1218,7 +1240,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                 {"name": "Planning", "start_week": 0, "duration_weeks": 2},
                 {"name": "Design", "start_week": 2, "duration_weeks": 2},
                 {"name": "Development", "start_week": 4, "duration_weeks": 4},
-                {"name": "Testing", "start_week": 8, "duration_weeks": 2}
+                {"name": "Testing", "start_week": 8, "duration_weeks": 2},
             ]
         }
 
@@ -1229,7 +1251,7 @@ The system successfully demonstrated enterprise-grade document analysis capabili
             "include_jira_suggestions": True,
             "create_jira_tickets": False,  # Don't actually create tickets in demo
             "jira_project_key": "DEMO",
-            "timeline": sample_timeline
+            "timeline": sample_timeline,
         }
 
         try:
@@ -1239,18 +1261,15 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                 # Use batch processing for multiple documents
                 batch_requests = []
                 for doc in sample_documents:
-                    batch_requests.append({
-                        "content": doc["content"],
-                        "format": "markdown",
-                        "max_length": 300,
-                        "style": "professional"
-                    })
+                    batch_requests.append(
+                        {"content": doc["content"], "format": "markdown", "max_length": 300, "style": "professional"}
+                    )
 
                 # First, perform batch summarization
                 response = await client.post(
                     f"{self.config['summarizer_url']}/batch/summarize",
                     json=batch_requests,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 # Then, perform alignment analysis
@@ -1259,9 +1278,9 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                     json={
                         "documents": sample_documents,
                         "analysis_types": ["terminology", "consistency", "patterns", "conflicts"],
-                        "strictness_level": "medium"
+                        "strictness_level": "medium",
                     },
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -1272,7 +1291,9 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                     if alignment_response.status_code == 200:
                         alignment_result = alignment_response.json()
                         self.print_success("Alignment analysis completed successfully")
-                        self.print_info(f"Overall alignment score: {alignment_result.get('overall_alignment_score', 0):.1f}%")
+                        self.print_info(
+                            f"Overall alignment score: {alignment_result.get('overall_alignment_score', 0):.1f}%"
+                        )
                     else:
                         self.print_warning(f"Alignment analysis failed: {alignment_response.status_code}")
 
@@ -1287,19 +1308,23 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                     for i, (doc, result) in enumerate(zip(sample_documents, batch_result.get("batch_results", []))):
                         if result.get("success"):
                             data = result.get("data", {})
-                            analysis_results.append({
-                                "document_id": doc["id"],
-                                "title": doc["title"],
-                                "category": doc.get("category", "uncategorized"),
-                                "tags": doc.get("tags", []),
-                                "summary": data.get("summary", "Summary not available"),
-                                "category_detected": data.get("category", "Unknown"),
-                                "confidence": data.get("confidence", 0.0),
-                                "processing_time": data.get("processing_time", 0.0)
-                            })
+                            analysis_results.append(
+                                {
+                                    "document_id": doc["id"],
+                                    "title": doc["title"],
+                                    "category": doc.get("category", "uncategorized"),
+                                    "tags": doc.get("tags", []),
+                                    "summary": data.get("summary", "Summary not available"),
+                                    "category_detected": data.get("category", "Unknown"),
+                                    "confidence": data.get("confidence", 0.0),
+                                    "processing_time": data.get("processing_time", 0.0),
+                                }
+                            )
                             total_processing_time += data.get("processing_time", 0.0)
                         else:
-                            self.print_warning(f"Failed to process document {doc['id']}: {result.get('error', 'Unknown error')}")
+                            self.print_warning(
+                                f"Failed to process document {doc['id']}: {result.get('error', 'Unknown error')}"
+                            )
 
                     # Create comprehensive multi-document analysis result
                     if analysis_results:
@@ -1309,29 +1334,37 @@ The system successfully demonstrated enterprise-grade document analysis capabili
                                 "total_requested": len(batch_requests),
                                 "total_processed": batch_result.get("total_processed", 0),
                                 "successful": batch_result.get("successful", 0),
-                                "failed": batch_result.get("failed", 0)
+                                "failed": batch_result.get("failed", 0),
                             },
                             "total_documents": len(sample_documents),
                             "processed_documents": len(analysis_results),
                             "processing_time": total_processing_time,
                             "document_summaries": analysis_results,
                             "multi_document_analysis": {
-                                "categories_found": list(set(doc.get("category", "uncategorized") for doc in sample_documents)),
+                                "categories_found": list(
+                                    set(doc.get("category", "uncategorized") for doc in sample_documents)
+                                ),
                                 "total_tags": len(set(tag for doc in sample_documents for tag in doc.get("tags", []))),
                                 "document_distribution": self._analyze_document_distribution(sample_documents),
-                                "cross_document_insights": self._generate_cross_document_insights(sample_documents, analysis_results)
+                                "cross_document_insights": self._generate_cross_document_insights(
+                                    sample_documents, analysis_results
+                                ),
                             },
-                            "recommendations": self._generate_multi_document_recommendations(sample_documents, analysis_results),
-                            "recommendations_count": len(self._generate_multi_document_recommendations(sample_documents, analysis_results)),
+                            "recommendations": self._generate_multi_document_recommendations(
+                                sample_documents, analysis_results
+                            ),
+                            "recommendations_count": len(
+                                self._generate_multi_document_recommendations(sample_documents, analysis_results)
+                            ),
                             "timeline_analysis": {
                                 "total_phases": len(sample_timeline["phases"]),
                                 "documents_per_phase": len(sample_documents) // len(sample_timeline["phases"]),
                                 "timeline_coverage": "Multi-document batch analysis",
-                                "document_evolution": self._analyze_document_evolution(sample_documents)
+                                "document_evolution": self._analyze_document_evolution(sample_documents),
                             },
                             "quality_metrics": self._calculate_quality_metrics(sample_documents, analysis_results),
                             "alignment_analysis": alignment_result if alignment_result else {},
-                            "document_dump": document_dump_result if document_dump_result else {}
+                            "document_dump": document_dump_result if document_dump_result else {},
                         }
 
                         self.print_success("Multi-document analysis completed successfully")
@@ -1457,21 +1490,21 @@ The system successfully demonstrated enterprise-grade document analysis capabili
         self.print_info(f"Found {len(jira_tickets)} suggested Jira tickets")
 
         # Ask user if they want to create actual tickets
-        create_tickets = input("\nCreate actual Jira tickets? (y/N): ").lower().strip() == 'y'
+        create_tickets = input("\nCreate actual Jira tickets? (y/N): ").lower().strip() == "y"
 
         if create_tickets:
             try:
                 async with httpx.AsyncClient(timeout=self.config["timeout"]) as client:
                     jira_request = {
                         "suggested_tickets": jira_tickets[:2],  # Create first 2 tickets only
-                        "project_key": "DEMO"
+                        "project_key": "DEMO",
                     }
 
                     self.print_info("Creating Jira tickets...")
                     response = await client.post(
                         f"{self.config['summarizer_url']}/jira/create-tickets",
                         json=jira_request,
-                        headers={"Content-Type": "application/json"}
+                        headers={"Content-Type": "application/json"},
                     )
 
                     if response.status_code == 200:
@@ -1629,18 +1662,18 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     report_content += f"**Status:** {doc.get('status', 'N/A')}\n"
                     report_content += f"**Category:** {doc.get('category', 'N/A')}\n"
 
-                    if doc.get('tags'):
+                    if doc.get("tags"):
                         report_content += f"**Tags:** {', '.join(doc['tags'])}\n"
 
-                    if doc_type == 'jira' and doc.get('assignee'):
+                    if doc_type == "jira" and doc.get("assignee"):
                         report_content += f"**Assignee:** {doc['assignee']}\n"
                         report_content += f"**Priority:** {doc.get('priority', 'N/A')}\n"
 
-                    if doc.get('comments'):
+                    if doc.get("comments"):
                         report_content += f"**Comments:** {len(doc['comments'])}\n"
 
                     report_content += "\n**Content:**\n"
-                    content = doc.get('content', '')
+                    content = doc.get("content", "")
                     if content:
                         # Format content as markdown code block
                         report_content += f"```\n{content}\n```\n\n"
@@ -1648,9 +1681,9 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                         report_content += "*No content available*\n\n"
 
                     # Add comments if available
-                    if doc.get('comments'):
+                    if doc.get("comments"):
                         report_content += "**Comments:**\n"
-                        for comment in doc['comments']:
+                        for comment in doc["comments"]:
                             report_content += f"- **{comment.get('author', 'Unknown')}** ({comment.get('timestamp', 'N/A')}): {comment.get('content', '')}\n"
                         report_content += "\n"
 
@@ -1658,7 +1691,7 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             report_filename = self.generate_report_filename("document_dump", "analysis_dump", format="md")
             report_path = self.reports_path / report_filename
 
-            with open(report_path, 'w', encoding='utf-8') as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 f.write(report_content)
 
             self.print_success(f"Document dump report generated and saved: {report_path}")
@@ -1674,8 +1707,8 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     "total_documents": len(documents),
                     "document_types": list(grouped_docs.keys()),
                     "sorted_by": "dateCreated",
-                    "sort_order": "desc"
-                }
+                    "sort_order": "desc",
+                },
             }
 
             return result
@@ -1728,7 +1761,6 @@ if __name__ == "__main__":
         print("  orchestrator - Workflow coordination reports")
         print("  logs         - Service logs and debug information")
         sys.exit(0)
-
 
     # Run the demo
     exit_code = asyncio.run(main())

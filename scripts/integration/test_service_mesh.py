@@ -6,25 +6,29 @@ Isolated test script to demonstrate the enterprise service mesh capabilities.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
 
 # Mock the conflicting imports
 class MockServiceNames:
-    ORCHESTRATOR = 'orchestrator'
-    ANALYSIS_SERVICE = 'analysis-service'
-    DOC_STORE = 'doc_store'
-    PROMPT_STORE = 'prompt-store'
+    ORCHESTRATOR = "orchestrator"
+    ANALYSIS_SERVICE = "analysis-service"
+    DOC_STORE = "doc_store"
+    PROMPT_STORE = "prompt-store"
+
 
 def mock_fire_and_forget(level: str, message: str, service: str):
     """Mock logging function."""
     print(f"[{level.upper()}] {service}: {message}")
 
+
 # Import and patch the service mesh
 from services.shared.enterprise_service_mesh import EnterpriseServiceMesh
+
 
 # Create a standalone test instance
 async def test_service_mesh_standalone():
@@ -57,7 +61,7 @@ async def test_service_mesh_standalone():
         target_service="analysis-service",
         endpoint_path="/analyze",
         method="POST",
-        headers={"Authorization": "Bearer mock_token"}
+        headers={"Authorization": "Bearer mock_token"},
     )
 
     print("🔍 Processing test request...")
@@ -83,6 +87,7 @@ async def test_service_mesh_standalone():
     print("   ✅ Request processing and routing")
     print("   ✅ Comprehensive security policies")
     print("   ✅ Real-time monitoring and metrics")
+
 
 if __name__ == "__main__":
     asyncio.run(test_service_mesh_standalone())

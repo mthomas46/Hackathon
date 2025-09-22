@@ -6,12 +6,12 @@ Simple verification of enterprise integration components.
 """
 
 import asyncio
-import sys
 import os
+import sys
 from datetime import datetime
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
 
 
 async def verify_service_mesh():
@@ -19,15 +19,12 @@ async def verify_service_mesh():
     print("🔐 Verifying Service Mesh Integration...")
     try:
         from services.shared.enterprise_service_mesh import EnterpriseServiceMesh, ServiceIdentity
+
         mesh = EnterpriseServiceMesh()
         print("✅ Service mesh module imported successfully")
 
         # Test basic functionality
-        service_id = ServiceIdentity(
-            service_name="test_service",
-            service_version="1.0.0",
-            environment="test"
-        )
+        service_id = ServiceIdentity(service_name="test_service", service_version="1.0.0", environment="test")
         print("✅ Service identity created successfully")
         return True
     except Exception as e:
@@ -39,16 +36,14 @@ async def verify_event_streaming():
     """Verify event streaming."""
     print("📡 Verifying Event Streaming...")
     try:
-        from services.shared.event_streaming import EventStreamProcessor, StreamEvent, EventType
+        from services.shared.event_streaming import EventStreamProcessor, EventType, StreamEvent
+
         stream = EventStreamProcessor()
         print("✅ Event streaming module imported successfully")
 
         # Test basic functionality
         event = StreamEvent(
-            event_id="test-event-001",
-            event_type=EventType.SYSTEM,
-            source_service="verifier",
-            payload={"test": "data"}
+            event_id="test-event-001", event_type=EventType.SYSTEM, source_service="verifier", payload={"test": "data"}
         )
         print("✅ Event created successfully")
         return True
@@ -89,15 +84,12 @@ async def verify_health_monitoring():
     """Verify health monitoring."""
     print("🏥 Verifying Health Monitoring...")
     try:
-        from services.shared.health import HealthStatus, DependencyHealth, SystemHealth
+        from services.shared.health import DependencyHealth, HealthStatus, SystemHealth
+
         print("✅ Health monitoring modules imported successfully")
 
         # Test basic functionality
-        health = HealthStatus(
-            status="healthy",
-            service="test_service",
-            version="1.0.0"
-        )
+        health = HealthStatus(status="healthy", service="test_service", version="1.0.0")
         print("✅ Health status created successfully")
         return True
     except Exception as e:
@@ -110,12 +102,13 @@ async def verify_restful_api():
     print("🔗 Verifying RESTful API...")
     try:
         from services.orchestrator.modules.workflow_management.api import router as workflow_router
+
         print("✅ Workflow API router imported successfully")
 
         # Count endpoints
         routes = []
         for route in workflow_router.routes:
-            if hasattr(route, 'methods'):
+            if hasattr(route, "methods"):
                 for method in route.methods:
                     routes.append(f"{method} {route.path}")
 
@@ -139,6 +132,7 @@ async def verify_enterprise_integration():
     print("🏢 Verifying Enterprise Integration...")
     try:
         from services.shared.enterprise_integration import EnterpriseIntegrationManager
+
         print("✅ Enterprise integration module imported successfully")
 
         # Test basic functionality
@@ -162,7 +156,7 @@ async def main():
         ("Database Persistence", verify_database_persistence),
         ("Health Monitoring", verify_health_monitoring),
         ("RESTful API", verify_restful_api),
-        ("Enterprise Integration", verify_enterprise_integration)
+        ("Enterprise Integration", verify_enterprise_integration),
     ]
 
     results = {}

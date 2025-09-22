@@ -17,21 +17,22 @@ Features:
 Author: Ecosystem Hardening Framework
 """
 
-import json
-import yaml
-import requests
 import asyncio
-import aiohttp
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Set, Tuple, Union
-from dataclasses import dataclass, field
-from datetime import datetime
+import hashlib
+import json
 import logging
 import re
-from urllib.parse import urljoin, urlparse
-import hashlib
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from urllib.parse import urljoin, urlparse
+
+import aiohttp
+import requests
+import yaml
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +42,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class APIEndpoint:
     """Represents an API endpoint"""
+
     service_name: str
     path: str
     method: str
@@ -56,8 +58,9 @@ class APIEndpoint:
 @dataclass
 class ContractViolation:
     """Represents an API contract violation"""
+
     violation_type: str  # "breaking_change", "missing_endpoint", "schema_change", "parameter_change"
-    severity: str        # "breaking", "warning", "info"
+    severity: str  # "breaking", "warning", "info"
     service_name: str
     endpoint_path: str
     endpoint_method: str
@@ -71,6 +74,7 @@ class ContractViolation:
 @dataclass
 class ContractValidationReport:
     """Comprehensive API contract validation report"""
+
     total_services: int
     total_endpoints: int
     total_violations: int
@@ -104,9 +108,17 @@ class APIContractValidator:
 
         # Common OpenAPI/Swagger spec file patterns
         self.spec_patterns = [
-            "openapi*.yaml", "openapi*.yml", "swagger*.yaml", "swagger*.yml",
-            "api*.yaml", "api*.yml", "*.swagger.json", "*.openapi.json",
-            "docs/api*.yaml", "docs/swagger*.yaml", "docs/openapi*.yaml"
+            "openapi*.yaml",
+            "openapi*.yml",
+            "swagger*.yaml",
+            "swagger*.yml",
+            "api*.yaml",
+            "api*.yml",
+            "*.swagger.json",
+            "*.openapi.json",
+            "docs/api*.yaml",
+            "docs/swagger*.yaml",
+            "docs/openapi*.yaml",
         ]
 
         # Breaking change patterns
@@ -117,7 +129,7 @@ class APIContractValidator:
             "parameter_type_changed": "Parameter type changed",
             "response_removed": "Response code removed from endpoint",
             "response_schema_changed": "Response schema changed for successful responses",
-            "request_schema_changed": "Request body schema changed"
+            "request_schema_changed": "Request body schema changed",
         }
 
         logger.info("🔗 API Contract Validator initialized")
@@ -137,7 +149,7 @@ class APIContractValidator:
         services_dir = self.workspace_path / "services"
         if services_dir.exists():
             for service_dir in services_dir.iterdir():
-                if service_dir.is_dir() and not service_dir.name.startswith('.'):
+                if service_dir.is_dir() and not service_dir.name.startswith("."):
                     service_name = service_dir.name
                     api_spec = self._find_api_spec(service_dir)
                     if api_spec:
@@ -146,7 +158,7 @@ class APIContractValidator:
                             "directory": service_dir,
                             "api_spec": api_spec,
                             "spec_path": api_spec["path"],
-                            "spec_format": api_spec["format"]
+                            "spec_format": api_spec["format"],
                         }
                         logger.info(f"✅ Found API spec for service: {service_name}")
                     else:
@@ -156,7 +168,7 @@ class APIContractValidator:
                             "directory": service_dir,
                             "api_spec": None,
                             "spec_path": None,
-                            "spec_format": None
+                            "spec_format": None,
                         }
                         logger.info(f"⚠️ No API spec found for service: {service_name}")
 
@@ -178,11 +190,11 @@ class APIContractValidator:
         for pattern in self.spec_patterns:
             for spec_file in service_dir.rglob(pattern):
                 try:
-                    if spec_file.suffix in ['.yaml', '.yml']:
-                        with open(spec_file, 'r', encoding='utf-8') as f:
+                    if spec_file.suffix in [".yaml", ".yml"]:
+                        with open(spec_file, "r", encoding="utf-8") as f:
                             spec_content = yaml.safe_load(f)
-                    elif spec_file.suffix == '.json':
-                        with open(spec_file, 'r', encoding='utf-8') as f:
+                    elif spec_file.suffix == ".json":
+                        with open(spec_file, "r", encoding="utf-8") as f:
                             spec_content = json.load(f)
 
                     if self._is_valid_api_spec(spec_content):
@@ -190,7 +202,7 @@ class APIContractValidator:
                             "path": spec_file,
                             "format": spec_file.suffix[1:],
                             "content": spec_content,
-                            "version": spec_content.get("openapi", spec_content.get("swagger", "unknown"))
+                            "version": spec_content.get("openapi", spec_content.get("swagger", "unknown")),
                         }
                 except Exception as e:
                     logger.warning(f"⚠️ Failed to parse {spec_file}: {e}")
@@ -208,7 +220,7 @@ class APIContractValidator:
                             "format": "json",
                             "content": spec_content,
                             "version": spec_content.get("openapi", spec_content.get("swagger", "unknown")),
-                            "from_service": True
+                            "from_service": True,
                         }
             except Exception as e:
                 logger.warning(f"⚠️ Failed to fetch OpenAPI from {openapi_url}: {e}")
@@ -226,11 +238,11 @@ class APIContractValidator:
             Specification content or None if failed
         """
         try:
-            if spec_path.suffix in ['.yaml', '.yml']:
-                with open(spec_path, 'r', encoding='utf-8') as f:
+            if spec_path.suffix in [".yaml", ".yml"]:
+                with open(spec_path, "r", encoding="utf-8") as f:
                     return yaml.safe_load(f)
-            elif spec_path.suffix == '.json':
-                with open(spec_path, 'r', encoding='utf-8') as f:
+            elif spec_path.suffix == ".json":
+                with open(spec_path, "r", encoding="utf-8") as f:
                     return json.load(f)
         except Exception as e:
             logger.error(f"❌ Failed to load spec file {spec_path}: {e}")
@@ -261,7 +273,7 @@ class APIContractValidator:
             main_path = service_dir / main_file
             if main_path.exists():
                 try:
-                    with open(main_path, 'r', encoding='utf-8') as f:
+                    with open(main_path, "r", encoding="utf-8") as f:
                         content = f.read()
 
                     # Look for common patterns
@@ -270,7 +282,7 @@ class APIContractValidator:
                         return f"http://localhost:8000/openapi.json"
 
                     # Look for port configuration
-                    port_match = re.search(r'port\s*=\s*(\d+)', content)
+                    port_match = re.search(r"port\s*=\s*(\d+)", content)
                     if port_match:
                         port = port_match.group(1)
                         return f"http://localhost:{port}/openapi.json"
@@ -314,8 +326,9 @@ class APIContractValidator:
         logger.info(f"🔍 Total parsed endpoints: {sum(len(eps) for eps in endpoints.values())}")
         return endpoints
 
-    def _parse_operation(self, service_name: str, path: str, method: str,
-                        operation: Dict[str, Any], spec: Dict[str, Any]) -> APIEndpoint:
+    def _parse_operation(
+        self, service_name: str, path: str, method: str, operation: Dict[str, Any], spec: Dict[str, Any]
+    ) -> APIEndpoint:
         """Parse a single API operation"""
         endpoint = APIEndpoint(
             service_name=service_name,
@@ -326,7 +339,7 @@ class APIContractValidator:
             parameters=operation.get("parameters", []),
             responses=operation.get("responses", {}),
             tags=operation.get("tags", []),
-            deprecated=operation.get("deprecated", False)
+            deprecated=operation.get("deprecated", False),
         )
 
         # Parse request body
@@ -384,16 +397,18 @@ class APIContractValidator:
         # Check for missing required parameters
         for param in endpoint.parameters:
             if param.get("required", False) and not param.get("schema"):
-                violations.append(ContractViolation(
-                    violation_type="parameter_change",
-                    severity="breaking",
-                    service_name=endpoint.service_name,
-                    endpoint_path=endpoint.path,
-                    endpoint_method=endpoint.method,
-                    description=f"Required parameter '{param.get('name', 'unknown')}' missing schema",
-                    breaking_change=True,
-                    suggested_fix="Add schema definition for required parameter"
-                ))
+                violations.append(
+                    ContractViolation(
+                        violation_type="parameter_change",
+                        severity="breaking",
+                        service_name=endpoint.service_name,
+                        endpoint_path=endpoint.path,
+                        endpoint_method=endpoint.method,
+                        description=f"Required parameter '{param.get('name', 'unknown')}' missing schema",
+                        breaking_change=True,
+                        suggested_fix="Add schema definition for required parameter",
+                    )
+                )
 
         # Check for responses without schemas (for successful responses)
         for status_code, response in endpoint.responses.items():
@@ -402,29 +417,33 @@ class APIContractValidator:
                 if content_types and "application/json" in content_types:
                     json_content = response["content"]["application/json"]
                     if "schema" not in json_content:
-                        violations.append(ContractViolation(
-                            violation_type="response_schema_changed",
-                            severity="warning",
-                            service_name=endpoint.service_name,
-                            endpoint_path=endpoint.path,
-                            endpoint_method=endpoint.method,
-                            description=f"Successful response ({status_code}) missing schema",
-                            breaking_change=False,
-                            suggested_fix="Add response schema for successful responses"
-                        ))
+                        violations.append(
+                            ContractViolation(
+                                violation_type="response_schema_changed",
+                                severity="warning",
+                                service_name=endpoint.service_name,
+                                endpoint_path=endpoint.path,
+                                endpoint_method=endpoint.method,
+                                description=f"Successful response ({status_code}) missing schema",
+                                breaking_change=False,
+                                suggested_fix="Add response schema for successful responses",
+                            )
+                        )
 
         # Check for deprecated endpoints
         if endpoint.deprecated:
-            violations.append(ContractViolation(
-                violation_type="breaking_change",
-                severity="info",
-                service_name=endpoint.service_name,
-                endpoint_path=endpoint.path,
-                endpoint_method=endpoint.method,
-                description="Endpoint is marked as deprecated",
-                breaking_change=False,
-                suggested_fix="Consider removing deprecated endpoint or updating clients"
-            ))
+            violations.append(
+                ContractViolation(
+                    violation_type="breaking_change",
+                    severity="info",
+                    service_name=endpoint.service_name,
+                    endpoint_path=endpoint.path,
+                    endpoint_method=endpoint.method,
+                    description="Endpoint is marked as deprecated",
+                    breaking_change=False,
+                    suggested_fix="Consider removing deprecated endpoint or updating clients",
+                )
+            )
 
         return violations
 
@@ -447,25 +466,27 @@ class APIContractValidator:
             if len(service_endpoints) > 1:
                 methods = set(ep.method for _, ep in service_endpoints)
                 if len(methods) > 1:
-                    violations.append(ContractViolation(
-                        violation_type="breaking_change",
-                        severity="warning",
-                        service_name="multiple",
-                        endpoint_path=base_path,
-                        endpoint_method=",".join(methods),
-                        description=f"Inconsistent HTTP methods for path pattern '{base_path}'",
-                        breaking_change=False,
-                        suggested_fix="Standardize HTTP methods across similar endpoints"
-                    ))
+                    violations.append(
+                        ContractViolation(
+                            violation_type="breaking_change",
+                            severity="warning",
+                            service_name="multiple",
+                            endpoint_path=base_path,
+                            endpoint_method=",".join(methods),
+                            description=f"Inconsistent HTTP methods for path pattern '{base_path}'",
+                            breaking_change=False,
+                            suggested_fix="Standardize HTTP methods across similar endpoints",
+                        )
+                    )
 
         return violations
 
     def _extract_base_path(self, path: str) -> str:
         """Extract base path pattern by removing dynamic parts"""
         # Remove path parameters like /users/{id} -> /users
-        base_path = re.sub(r'/{[^}]+}', '', path)
+        base_path = re.sub(r"/{[^}]+}", "", path)
         # Remove query parameters
-        base_path = base_path.split('?')[0]
+        base_path = base_path.split("?")[0]
         return base_path
 
     def _validate_schema_compliance(self) -> List[ContractViolation]:
@@ -475,22 +496,25 @@ class APIContractValidator:
         for service_name, endpoints in self.endpoints.items():
             for endpoint in endpoints:
                 # Check for missing operation IDs
-                if not hasattr(endpoint, 'operationId') or not endpoint.summary:
-                    violations.append(ContractViolation(
-                        violation_type="schema_change",
-                        severity="info",
-                        service_name=endpoint.service_name,
-                        endpoint_path=endpoint.path,
-                        endpoint_method=endpoint.method,
-                        description="Endpoint missing summary or operationId",
-                        breaking_change=False,
-                        suggested_fix="Add summary and operationId to endpoint"
-                    ))
+                if not hasattr(endpoint, "operationId") or not endpoint.summary:
+                    violations.append(
+                        ContractViolation(
+                            violation_type="schema_change",
+                            severity="info",
+                            service_name=endpoint.service_name,
+                            endpoint_path=endpoint.path,
+                            endpoint_method=endpoint.method,
+                            description="Endpoint missing summary or operationId",
+                            breaking_change=False,
+                            suggested_fix="Add summary and operationId to endpoint",
+                        )
+                    )
 
         return violations
 
-    def compare_contracts(self, old_spec: Dict[str, Any], new_spec: Dict[str, Any],
-                         service_name: str) -> List[ContractViolation]:
+    def compare_contracts(
+        self, old_spec: Dict[str, Any], new_spec: Dict[str, Any], service_name: str
+    ) -> List[ContractViolation]:
         """
         Compare two API specifications for breaking changes.
 
@@ -511,16 +535,18 @@ class APIContractValidator:
         # Removed endpoints
         removed_paths = old_paths - new_paths
         for path in removed_paths:
-            violations.append(ContractViolation(
-                violation_type="breaking_change",
-                severity="breaking",
-                service_name=service_name,
-                endpoint_path=path,
-                endpoint_method="any",
-                description=f"API endpoint '{path}' has been removed",
-                breaking_change=True,
-                suggested_fix="Restore removed endpoint or provide migration guide"
-            ))
+            violations.append(
+                ContractViolation(
+                    violation_type="breaking_change",
+                    severity="breaking",
+                    service_name=service_name,
+                    endpoint_path=path,
+                    endpoint_method="any",
+                    description=f"API endpoint '{path}' has been removed",
+                    breaking_change=True,
+                    suggested_fix="Restore removed endpoint or provide migration guide",
+                )
+            )
 
         # Compare common endpoints
         common_paths = old_paths & new_paths
@@ -533,8 +559,9 @@ class APIContractValidator:
 
         return violations
 
-    def _compare_path_spec(self, path: str, old_spec: Dict[str, Any],
-                          new_spec: Dict[str, Any], service_name: str) -> List[ContractViolation]:
+    def _compare_path_spec(
+        self, path: str, old_spec: Dict[str, Any], new_spec: Dict[str, Any], service_name: str
+    ) -> List[ContractViolation]:
         """Compare path specifications for breaking changes"""
         violations = []
 
@@ -544,16 +571,18 @@ class APIContractValidator:
         # Removed methods
         removed_methods = old_methods - new_methods
         for method in removed_methods:
-            violations.append(ContractViolation(
-                violation_type="method_changed",
-                severity="breaking",
-                service_name=service_name,
-                endpoint_path=path,
-                endpoint_method=method.upper(),
-                description=f"HTTP method '{method.upper()}' removed from endpoint '{path}'",
-                breaking_change=True,
-                suggested_fix="Restore HTTP method or update client code"
-            ))
+            violations.append(
+                ContractViolation(
+                    violation_type="method_changed",
+                    severity="breaking",
+                    service_name=service_name,
+                    endpoint_path=path,
+                    endpoint_method=method.upper(),
+                    description=f"HTTP method '{method.upper()}' removed from endpoint '{path}'",
+                    breaking_change=True,
+                    suggested_fix="Restore HTTP method or update client code",
+                )
+            )
 
         # Compare common methods
         common_methods = old_methods & new_methods
@@ -565,8 +594,9 @@ class APIContractValidator:
 
         return violations
 
-    def _compare_method_spec(self, path: str, method: str, old_spec: Dict[str, Any],
-                           new_spec: Dict[str, Any], service_name: str) -> List[ContractViolation]:
+    def _compare_method_spec(
+        self, path: str, method: str, old_spec: Dict[str, Any], new_spec: Dict[str, Any], service_name: str
+    ) -> List[ContractViolation]:
         """Compare method specifications for breaking changes"""
         violations = []
 
@@ -578,16 +608,18 @@ class APIContractValidator:
         for param_name, param_spec in old_params.items():
             if param_spec.get("required", False):
                 if param_name not in new_params:
-                    violations.append(ContractViolation(
-                        violation_type="parameter_removed",
-                        severity="breaking",
-                        service_name=service_name,
-                        endpoint_path=path,
-                        endpoint_method=method.upper(),
-                        description=f"Required parameter '{param_name}' removed",
-                        breaking_change=True,
-                        suggested_fix="Restore required parameter or make it optional"
-                    ))
+                    violations.append(
+                        ContractViolation(
+                            violation_type="parameter_removed",
+                            severity="breaking",
+                            service_name=service_name,
+                            endpoint_path=path,
+                            endpoint_method=method.upper(),
+                            description=f"Required parameter '{param_name}' removed",
+                            breaking_change=True,
+                            suggested_fix="Restore required parameter or make it optional",
+                        )
+                    )
 
         # Changed parameter types
         for param_name in set(old_params.keys()) & set(new_params.keys()):
@@ -595,16 +627,18 @@ class APIContractValidator:
             new_type = self._extract_param_type(new_params[param_name])
 
             if old_type != new_type:
-                violations.append(ContractViolation(
-                    violation_type="parameter_type_changed",
-                    severity="breaking",
-                    service_name=service_name,
-                    endpoint_path=path,
-                    endpoint_method=method.upper(),
-                    description=f"Parameter '{param_name}' type changed: {old_type} -> {new_type}",
-                    breaking_change=True,
-                    suggested_fix="Revert parameter type or update client code"
-                ))
+                violations.append(
+                    ContractViolation(
+                        violation_type="parameter_type_changed",
+                        severity="breaking",
+                        service_name=service_name,
+                        endpoint_path=path,
+                        endpoint_method=method.upper(),
+                        description=f"Parameter '{param_name}' type changed: {old_type} -> {new_type}",
+                        breaking_change=True,
+                        suggested_fix="Revert parameter type or update client code",
+                    )
+                )
 
         # Compare responses
         old_responses = old_spec.get("responses", {})
@@ -616,16 +650,18 @@ class APIContractValidator:
 
         removed_codes = old_success_codes - new_success_codes
         for code in removed_codes:
-            violations.append(ContractViolation(
-                violation_type="response_removed",
-                severity="breaking",
-                service_name=service_name,
-                endpoint_path=path,
-                endpoint_method=method.upper(),
-                description=f"Success response code '{code}' removed",
-                breaking_change=True,
-                suggested_fix="Restore response code or update client expectations"
-            ))
+            violations.append(
+                ContractViolation(
+                    violation_type="response_removed",
+                    severity="breaking",
+                    service_name=service_name,
+                    endpoint_path=path,
+                    endpoint_method=method.upper(),
+                    description=f"Success response code '{code}' removed",
+                    breaking_change=True,
+                    suggested_fix="Restore response code or update client expectations",
+                )
+            )
 
         return violations
 
@@ -684,7 +720,7 @@ class APIContractValidator:
             services_analyzed=list(self.services.keys()),
             violations_by_service=violations_by_service,
             violations_by_type=violations_by_type,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         return report
@@ -714,13 +750,15 @@ class APIContractValidator:
             recommendations.append("⚡ HTTP methods changed - update API calls")
 
         # General recommendations
-        recommendations.extend([
-            "📋 Implement API versioning for breaking changes",
-            "🔒 Use OpenAPI specifications for all services",
-            "🧪 Add contract tests to CI/CD pipeline",
-            "📊 Monitor API usage patterns for deprecated endpoints",
-            "🔄 Implement gradual migration strategies for breaking changes"
-        ])
+        recommendations.extend(
+            [
+                "📋 Implement API versioning for breaking changes",
+                "🔒 Use OpenAPI specifications for all services",
+                "🧪 Add contract tests to CI/CD pipeline",
+                "📊 Monitor API usage patterns for deprecated endpoints",
+                "🔄 Implement gradual migration strategies for breaking changes",
+            ]
+        )
 
         return recommendations
 
@@ -732,9 +770,9 @@ class APIContractValidator:
             report: ContractValidationReport to print
             verbose: Whether to include detailed violation information
         """
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("🔗 API CONTRACT VALIDATION REPORT")
-        print("="*80)
+        print("=" * 80)
         print(f"🏗️  Services Analyzed: {report.total_services}")
         print(f"🔗 Endpoints Found: {report.total_endpoints}")
         print(f"⚠️  Total Violations: {report.total_violations}")
@@ -751,16 +789,24 @@ class APIContractValidator:
             print("\n🔍 Top Violations:")
             # Show top 10 most critical violations
             sorted_violations = sorted(
-                report.violations_by_service.get("multiple", []) +
-                [v for service_violations in report.violations_by_service.values()
-                 for v in service_violations if service_violations != "multiple"],
+                report.violations_by_service.get("multiple", [])
+                + [
+                    v
+                    for service_violations in report.violations_by_service.values()
+                    for v in service_violations
+                    if service_violations != "multiple"
+                ],
                 key=lambda x: (x.breaking_change, {"breaking": 3, "warning": 2, "info": 1}[x.severity]),
-                reverse=True
+                reverse=True,
             )
 
             for i, violation in enumerate(sorted_violations[:10]):
-                severity_icon = "🔴" if violation.breaking_change else {"warning": "🟡", "info": "ℹ️"}.get(violation.severity, "❓")
-                print(f"  {i+1}. {severity_icon} [{violation.service_name}] {violation.endpoint_method} {violation.endpoint_path}")
+                severity_icon = (
+                    "🔴" if violation.breaking_change else {"warning": "🟡", "info": "ℹ️"}.get(violation.severity, "❓")
+                )
+                print(
+                    f"  {i+1}. {severity_icon} [{violation.service_name}] {violation.endpoint_method} {violation.endpoint_path}"
+                )
                 print(f"      {violation.description}")
 
         if report.recommendations:
@@ -768,7 +814,7 @@ class APIContractValidator:
             for rec in report.recommendations:
                 print(f"  • {rec}")
 
-        print("="*80)
+        print("=" * 80)
 
     def save_report(self, report: ContractValidationReport, filename: Optional[str] = None) -> Path:
         """
@@ -800,20 +846,23 @@ class APIContractValidator:
             "validation_duration": report.validation_duration,
             "recommendations": report.recommendations,
             "violations_by_type": {
-                violation_type: [{
-                    "service_name": v.service_name,
-                    "endpoint_path": v.endpoint_path,
-                    "endpoint_method": v.endpoint_method,
-                    "severity": v.severity,
-                    "breaking_change": v.breaking_change,
-                    "description": v.description,
-                    "suggested_fix": v.suggested_fix
-                } for v in violations]
+                violation_type: [
+                    {
+                        "service_name": v.service_name,
+                        "endpoint_path": v.endpoint_path,
+                        "endpoint_method": v.endpoint_method,
+                        "severity": v.severity,
+                        "breaking_change": v.breaking_change,
+                        "description": v.description,
+                        "suggested_fix": v.suggested_fix,
+                    }
+                    for v in violations
+                ]
                 for violation_type, violations in report.violations_by_type.items()
-            }
+            },
         }
 
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(report_dict, f, indent=2, default=str)
 
         logger.info(f"💾 Report saved to: {report_path}")
@@ -827,8 +876,7 @@ def main():
     parser = argparse.ArgumentParser(description="API Contract Validator")
     parser.add_argument("--workspace", help="Workspace path")
     parser.add_argument("--service", help="Specific service to validate")
-    parser.add_argument("--compare", nargs=2, metavar=("OLD_SPEC", "NEW_SPEC"),
-                       help="Compare two API specifications")
+    parser.add_argument("--compare", nargs=2, metavar=("OLD_SPEC", "NEW_SPEC"), help="Compare two API specifications")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--save-report", action="store_true", help="Save detailed report")
     parser.add_argument("--report-file", help="Custom report filename")

@@ -11,14 +11,16 @@ This script demonstrates:
 """
 
 import asyncio
-import time
-from unittest.mock import Mock, AsyncMock
-from rich.console import Console
+import os
 
 # Import the interactive overlay
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import time
+from unittest.mock import AsyncMock, Mock
+
+from rich.console import Console
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from services.cli.modules.interactive_overlay import InteractiveOverlay
 
@@ -37,7 +39,7 @@ class MockManager:
             ("2", "Service Registry"),
             ("3", "Job Operations"),
             ("4", "System Health"),
-            ("5", "Configuration")
+            ("5", "Configuration"),
         ]
 
     async def handle_submenu_choice(self, choice):
@@ -116,7 +118,9 @@ async def demo_ux_enhancements():
     overlay.add_to_favorites("OrchestratorManager", "Workflow Management")
     overlay.add_to_favorites("OrchestratorManager", "System Health")
 
-    console.print(f"  Is 'Workflow Management' favorited: {overlay.is_favorite('OrchestratorManager', 'Workflow Management')}")
+    console.print(
+        f"  Is 'Workflow Management' favorited: {overlay.is_favorite('OrchestratorManager', 'Workflow Management')}"
+    )
     console.print(f"  Is 'Configuration' favorited: {overlay.is_favorite('OrchestratorManager', 'Configuration')}")
 
     # Demo 4: Enhanced success feedback
@@ -150,16 +154,14 @@ async def demo_visual_enhancements():
         header_text.append(f"  {key}", style="bold green")
         header_text.append(f" → {desc}\n", style="white")
 
-    header_text.append("\n[dim]💡 Navigation: ↑↓ arrows, Enter to select | Type option key directly | 'b' for back | '/' to search[/dim]", style="dim cyan")
+    header_text.append(
+        "\n[dim]💡 Navigation: ↑↓ arrows, Enter to select | Type option key directly | 'b' for back | '/' to search[/dim]",
+        style="dim cyan",
+    )
     header_text.append("\n[dim]⭐ Popular: menu_selection_1[/dim]", style="dim yellow")
     header_text.append(" [dim]🟢 Cached[/dim]", style="dim green")
 
-    panel = Panel(
-        header_text,
-        title="[bold blue]🎮 Interactive Menu[/bold blue]",
-        border_style="blue",
-        padding=(1, 2)
-    )
+    panel = Panel(header_text, title="[bold blue]🎮 Interactive Menu[/bold blue]", border_style="blue", padding=(1, 2))
 
     console.print(panel)
 
@@ -194,6 +196,7 @@ async def main():
     except Exception as e:
         console.print(f"[red]❌ Demo failed: {e}[/red]")
         import traceback
+
         traceback.print_exc()
 
 

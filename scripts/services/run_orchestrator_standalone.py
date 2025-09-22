@@ -8,33 +8,32 @@ Provides a terminal-based interface for testing and interacting with the orchest
 
 import asyncio
 import json
-import sys
 import os
+import sys
 import time
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
+from services.frontend.modules.realtime_interface import RealTimeCollaborationEngine
+
+# Import Phase 2 modules for standalone testing
+from services.interpreter.modules.advanced_nlp_engine import AdvancedIntentRecognizer, ConversationMemoryManager
 
 # Import orchestrator and related services
 from services.orchestrator.main import app as orchestrator_app
-from services.orchestrator.modules.workflow_handlers import handle_workflow_run
 from services.orchestrator.modules.langgraph.engine import LangGraphWorkflowEngine
-from services.orchestrator.modules.langgraph.tools import initialize_service_tools
 from services.orchestrator.modules.langgraph.state import create_workflow_state
-
-# Import Phase 2 modules for standalone testing
-from services.interpreter.modules.advanced_nlp_engine import (
-    ConversationMemoryManager, AdvancedIntentRecognizer
-)
-from services.source_agent.modules.intelligent_ingestion import IntelligentIngestionEngine
-from services.summarizer_hub.modules.multi_model_summarization import MultiModelSummarizer
-from services.frontend.modules.realtime_interface import RealTimeCollaborationEngine
+from services.orchestrator.modules.langgraph.tools import initialize_service_tools
+from services.orchestrator.modules.workflow_handlers import handle_workflow_run
 
 # Import shared components
 from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
+from services.source_agent.modules.intelligent_ingestion import IntelligentIngestionEngine
+from services.summarizer_hub.modules.multi_model_summarization import MultiModelSummarizer
 
 
 class OrchestratorStandaloneRunner:
@@ -60,30 +59,36 @@ class OrchestratorStandaloneRunner:
             # Initialize Phase 2 components
             print("📝 Initializing Advanced NLP Engine...")
             from services.interpreter.modules.advanced_nlp_engine import initialize_advanced_nlp
+
             await initialize_advanced_nlp()
 
             print("🔄 Initializing Intelligent Data Ingestion...")
             from services.source_agent.modules.intelligent_ingestion import initialize_intelligent_ingestion
+
             await initialize_intelligent_ingestion()
 
             print("📝 Initializing Multi-Model Summarization...")
             from services.summarizer_hub.modules.multi_model_summarization import initialize_multi_model_summarization
+
             await initialize_multi_model_summarization()
 
             print("🔗 Initializing Real-Time Collaboration...")
             from services.frontend.modules.realtime_interface import initialize_realtime_interface
+
             await initialize_realtime_interface()
 
             # Initialize workflow engine
             print("⚙️  Initializing Workflow Engine...")
-            await self.workflow_engine.initialize_tools([
-                ServiceNames.ANALYSIS_SERVICE,
-                ServiceNames.DOC_STORE,
-                ServiceNames.PROMPT_STORE,
-                ServiceNames.INTERPRETER,
-                ServiceNames.SOURCE_AGENT,
-                ServiceNames.SUMMARIZER_HUB
-            ])
+            await self.workflow_engine.initialize_tools(
+                [
+                    ServiceNames.ANALYSIS_SERVICE,
+                    ServiceNames.DOC_STORE,
+                    ServiceNames.PROMPT_STORE,
+                    ServiceNames.INTERPRETER,
+                    ServiceNames.SOURCE_AGENT,
+                    ServiceNames.SUMMARIZER_HUB,
+                ]
+            )
 
             print("✅ All services initialized successfully!")
             print()
@@ -209,7 +214,9 @@ class OrchestratorStandaloneRunner:
         # Component status
         print("⚙️  Component Status:")
         print(f"   • Workflow Engine: ✅ Active ({len(self.workflow_engine.workflows)} workflows)")
-        print(f"   • Conversation Memory: ✅ Active ({self.conversation_memory.get_active_conversations_count()} conversations)")
+        print(
+            f"   • Conversation Memory: ✅ Active ({self.conversation_memory.get_active_conversations_count()} conversations)"
+        )
         print(f"   • Ingestion Engine: ✅ Active ({len(self.ingestion_engine.ingestion_jobs)} jobs)")
         print("   • Summarizer: ✅ Active")
         print(f"   • Collaboration Engine: ✅ Active ({len(self.collaboration_engine.active_sessions)} sessions)")
@@ -237,22 +244,15 @@ class OrchestratorStandaloneRunner:
                 workflow_input = {
                     "content": "Sample document for analysis",
                     "document_type": "technical",
-                    "analysis_type": "comprehensive"
+                    "analysis_type": "comprehensive",
                 }
             else:  # pr_analysis
-                workflow_input = {
-                    "pr_number": "123",
-                    "repository": "test/repo",
-                    "jira_ticket": "PROJ-456"
-                }
+                workflow_input = {"pr_number": "123", "repository": "test/repo", "jira_ticket": "PROJ-456"}
 
             # Execute workflow
             start_time = time.time()
             result = await self.workflow_engine.execute_workflow(
-                workflow_type,
-                workflow_input,
-                [],  # No additional tools needed for basic test
-                "standalone_user"
+                workflow_type, workflow_input, [], "standalone_user"  # No additional tools needed for basic test
             )
 
             duration = time.time() - start_time
@@ -290,10 +290,9 @@ class OrchestratorStandaloneRunner:
                 print(f"   • Clarification Needed: {intent_result.clarification_question}")
 
             # Add response to conversation
-            conversation.add_message({
-                "intent": intent_result.intent,
-                "confidence": intent_result.confidence_score
-            }, "assistant")
+            conversation.add_message(
+                {"intent": intent_result.intent, "confidence": intent_result.confidence_score}, "assistant"
+            )
 
         except Exception as e:
             print(f"❌ NLP processing failed: {e}")
@@ -319,11 +318,7 @@ class OrchestratorStandaloneRunner:
                 print(f"❌ Unsupported source: {source}")
                 return
 
-            job_id = await self.ingestion_engine.create_ingestion_job(
-                data_source,
-                config,
-                {"target": "doc_store"}
-            )
+            job_id = await self.ingestion_engine.create_ingestion_job(data_source, config, {"target": "doc_store"})
 
             # Execute job
             result = await self.ingestion_engine.execute_ingestion_job(job_id)
@@ -345,13 +340,13 @@ class OrchestratorStandaloneRunner:
 
         try:
             from services.summarizer_hub.modules.multi_model_summarization import (
-                SummarizationRequest, ContentType, SummarizationStrategy
+                ContentType,
+                SummarizationRequest,
+                SummarizationStrategy,
             )
 
             request = SummarizationRequest(
-                content=text,
-                content_type=ContentType.GENERAL_TEXT,
-                strategy=SummarizationStrategy.ENSEMBLE
+                content=text, content_type=ContentType.GENERAL_TEXT, strategy=SummarizationStrategy.ENSEMBLE
             )
 
             result = await self.summarizer.summarize_content(request)
@@ -374,16 +369,12 @@ class OrchestratorStandaloneRunner:
 
         try:
             # Create user session
-            user_session = await self.collaboration_engine.create_user_session(
-                "standalone_user", "Standalone User"
-            )
+            user_session = await self.collaboration_engine.create_user_session("standalone_user", "Standalone User")
 
             print("✅ User session created")
 
             # Join document
-            success = await self.collaboration_engine.join_document(
-                user_session.session_id, "standalone_doc"
-            )
+            success = await self.collaboration_engine.join_document(user_session.session_id, "standalone_doc")
 
             if success:
                 print("✅ Joined collaborative document")
@@ -396,7 +387,7 @@ class OrchestratorStandaloneRunner:
                     document_id="standalone_doc",
                     operation_type=OperationType.INSERT,
                     position=0,
-                    content="Standalone collaboration test content"
+                    content="Standalone collaboration test content",
                 )
 
                 success = await self.collaboration_engine.apply_operation(operation)
@@ -446,11 +437,7 @@ class OrchestratorStandaloneRunner:
         """Run system diagnostics."""
         print("🔍 Running system diagnostics...")
 
-        diagnostics = {
-            "services": {},
-            "performance": {},
-            "connectivity": {}
-        }
+        diagnostics = {"services": {}, "performance": {}, "connectivity": {}}
 
         # Test service availability
         services_to_test = [
@@ -458,7 +445,7 @@ class OrchestratorStandaloneRunner:
             ("ingestion_engine", self.ingestion_engine),
             ("summarizer", self.summarizer),
             ("collaboration_engine", self.collaboration_engine),
-            ("workflow_engine", self.workflow_engine)
+            ("workflow_engine", self.workflow_engine),
         ]
 
         for service_name, service in services_to_test:
@@ -473,18 +460,20 @@ class OrchestratorStandaloneRunner:
             "active_conversations": self.conversation_memory.get_active_conversations_count(),
             "ingestion_jobs": len(self.ingestion_engine.ingestion_jobs),
             "active_sessions": len(self.collaboration_engine.active_sessions),
-            "loaded_workflows": len(self.workflow_engine.workflows)
+            "loaded_workflows": len(self.workflow_engine.workflows),
         }
 
         # Connectivity (simplified)
         diagnostics["connectivity"] = {
             "internal_services": "connected",
             "external_apis": "simulated",
-            "database": "available"
+            "database": "available",
         }
 
         print("✅ Diagnostics completed:")
-        print(f"   • Services: {len([s for s in diagnostics['services'].values() if s == 'healthy'])}/{len(diagnostics['services'])} healthy")
+        print(
+            f"   • Services: {len([s for s in diagnostics['services'].values() if s == 'healthy'])}/{len(diagnostics['services'])} healthy"
+        )
         print(f"   • Active conversations: {diagnostics['performance']['active_conversations']}")
         print(f"   • Ingestion jobs: {diagnostics['performance']['ingestion_jobs']}")
         print(f"   • Active sessions: {diagnostics['performance']['active_sessions']}")
@@ -530,6 +519,7 @@ if __name__ == "__main__":
         if command == "--test":
             print("🧪 Running Phase 2 integration tests...")
             from test_phase2_implementation import run_phase2_integration_test
+
             asyncio.run(run_phase2_integration_test())
         elif command == "--help":
             print("🎯 Orchestrator Standalone Runner")

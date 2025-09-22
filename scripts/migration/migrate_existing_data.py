@@ -4,12 +4,12 @@ Migrates existing data from the old schema to the new DDD schema.
 This script handles the transition from the monolithic approach to domain-driven design.
 """
 
-import sqlite3
+import hashlib
 import json
+import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import hashlib
+from typing import Any, Dict, List, Optional
 
 
 class DataMigrator:
@@ -19,12 +19,7 @@ class DataMigrator:
         """Initialize migrator."""
         self.old_db_path = Path(old_db_path)
         self.new_db_path = Path(new_db_path)
-        self.migration_stats = {
-            "documents_migrated": 0,
-            "analyses_migrated": 0,
-            "findings_migrated": 0,
-            "errors": []
-        }
+        self.migration_stats = {"documents_migrated": 0, "analyses_migrated": 0, "findings_migrated": 0, "errors": []}
 
     def migrate_all_data(self) -> Dict[str, Any]:
         """Perform complete data migration."""
@@ -35,11 +30,7 @@ class DataMigrator:
 
         if not self.old_db_path.exists():
             print("⚠️  No existing database found - starting fresh")
-            return {
-                "status": "completed",
-                "message": "No existing data to migrate",
-                "stats": self.migration_stats
-            }
+            return {"status": "completed", "message": "No existing data to migrate", "stats": self.migration_stats}
 
         try:
             # Connect to both databases
@@ -71,7 +62,7 @@ class DataMigrator:
             return {
                 "status": "completed",
                 "stats": self.migration_stats,
-                "migration_timestamp": datetime.now().isoformat()
+                "migration_timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -79,11 +70,7 @@ class DataMigrator:
             print(f"❌ {error_msg}")
             self.migration_stats["errors"].append(error_msg)
 
-            return {
-                "status": "failed",
-                "error": error_msg,
-                "stats": self.migration_stats
-            }
+            return {"status": "failed", "error": error_msg, "stats": self.migration_stats}
 
     def _migrate_documents(self, old_conn: sqlite3.Connection, new_conn: sqlite3.Connection):
         """Migrate documents from old to new schema."""
@@ -103,7 +90,8 @@ class DataMigrator:
                 new_doc = self._transform_document(old_doc)
 
                 # Insert into new schema
-                new_cursor.execute("""
+                new_cursor.execute(
+                    """
                     INSERT INTO documents (
                         id, title, content_text, content_format, content_hash,
                         author_id, author_name, author_email,
@@ -113,33 +101,35 @@ class DataMigrator:
                         last_analyzed_at, analysis_count, quality_score,
                         metadata, domain_events
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_doc["id"],
-                    new_doc["title"],
-                    new_doc["content_text"],
-                    new_doc["content_format"],
-                    new_doc["content_hash"],
-                    new_doc["author_id"],
-                    new_doc["author_name"],
-                    new_doc["author_email"],
-                    new_doc["repository_id"],
-                    new_doc["repository_name"],
-                    new_doc["repository_url"],
-                    new_doc["branch"],
-                    new_doc["commit_hash"],
-                    new_doc["file_path"],
-                    new_doc["tags"],
-                    new_doc["categories"],
-                    new_doc["version"],
-                    new_doc["status"],
-                    new_doc["created_at"],
-                    new_doc["updated_at"],
-                    new_doc["last_analyzed_at"],
-                    new_doc["analysis_count"],
-                    new_doc["quality_score"],
-                    new_doc["metadata"],
-                    new_doc["domain_events"]
-                ))
+                """,
+                    (
+                        new_doc["id"],
+                        new_doc["title"],
+                        new_doc["content_text"],
+                        new_doc["content_format"],
+                        new_doc["content_hash"],
+                        new_doc["author_id"],
+                        new_doc["author_name"],
+                        new_doc["author_email"],
+                        new_doc["repository_id"],
+                        new_doc["repository_name"],
+                        new_doc["repository_url"],
+                        new_doc["branch"],
+                        new_doc["commit_hash"],
+                        new_doc["file_path"],
+                        new_doc["tags"],
+                        new_doc["categories"],
+                        new_doc["version"],
+                        new_doc["status"],
+                        new_doc["created_at"],
+                        new_doc["updated_at"],
+                        new_doc["last_analyzed_at"],
+                        new_doc["analysis_count"],
+                        new_doc["quality_score"],
+                        new_doc["metadata"],
+                        new_doc["domain_events"],
+                    ),
+                )
 
                 migrated_count += 1
 
@@ -174,32 +164,35 @@ class DataMigrator:
                 new_analysis = self._transform_analysis(old_analysis)
 
                 # Insert into new schema
-                new_cursor.execute("""
+                new_cursor.execute(
+                    """
                     INSERT INTO analyses (
                         id, document_id, analysis_type, status, priority,
                         configuration, results, error_message, started_at, completed_at,
                         duration_seconds, worker_id, correlation_id, created_by,
                         created_at, updated_at, metadata
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_analysis["id"],
-                    new_analysis["document_id"],
-                    new_analysis["analysis_type"],
-                    new_analysis["status"],
-                    new_analysis["priority"],
-                    new_analysis["configuration"],
-                    new_analysis["results"],
-                    new_analysis["error_message"],
-                    new_analysis["started_at"],
-                    new_analysis["completed_at"],
-                    new_analysis["duration_seconds"],
-                    new_analysis["worker_id"],
-                    new_analysis["correlation_id"],
-                    new_analysis["created_by"],
-                    new_analysis["created_at"],
-                    new_analysis["updated_at"],
-                    new_analysis["metadata"]
-                ))
+                """,
+                    (
+                        new_analysis["id"],
+                        new_analysis["document_id"],
+                        new_analysis["analysis_type"],
+                        new_analysis["status"],
+                        new_analysis["priority"],
+                        new_analysis["configuration"],
+                        new_analysis["results"],
+                        new_analysis["error_message"],
+                        new_analysis["started_at"],
+                        new_analysis["completed_at"],
+                        new_analysis["duration_seconds"],
+                        new_analysis["worker_id"],
+                        new_analysis["correlation_id"],
+                        new_analysis["created_by"],
+                        new_analysis["created_at"],
+                        new_analysis["updated_at"],
+                        new_analysis["metadata"],
+                    ),
+                )
 
                 migrated_count += 1
 
@@ -234,34 +227,37 @@ class DataMigrator:
                 new_finding = self._transform_finding(old_finding)
 
                 # Insert into new schema
-                new_cursor.execute("""
+                new_cursor.execute(
+                    """
                     INSERT INTO findings (
                         id, analysis_id, document_id, finding_type, severity,
                         title, description, location, evidence, recommendation,
                         confidence, tags, status, assigned_to, resolved_at,
                         resolved_by, created_at, updated_at, metadata
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_finding["id"],
-                    new_finding["analysis_id"],
-                    new_finding["document_id"],
-                    new_finding["finding_type"],
-                    new_finding["severity"],
-                    new_finding["title"],
-                    new_finding["description"],
-                    new_finding["location"],
-                    new_finding["evidence"],
-                    new_finding["recommendation"],
-                    new_finding["confidence"],
-                    new_finding["tags"],
-                    new_finding["status"],
-                    new_finding["assigned_to"],
-                    new_finding["resolved_at"],
-                    new_finding["resolved_by"],
-                    new_finding["created_at"],
-                    new_finding["updated_at"],
-                    new_finding["metadata"]
-                ))
+                """,
+                    (
+                        new_finding["id"],
+                        new_finding["analysis_id"],
+                        new_finding["document_id"],
+                        new_finding["finding_type"],
+                        new_finding["severity"],
+                        new_finding["title"],
+                        new_finding["description"],
+                        new_finding["location"],
+                        new_finding["evidence"],
+                        new_finding["recommendation"],
+                        new_finding["confidence"],
+                        new_finding["tags"],
+                        new_finding["status"],
+                        new_finding["assigned_to"],
+                        new_finding["resolved_at"],
+                        new_finding["resolved_by"],
+                        new_finding["created_at"],
+                        new_finding["updated_at"],
+                        new_finding["metadata"],
+                    ),
+                )
 
                 migrated_count += 1
 
@@ -282,11 +278,13 @@ class DataMigrator:
         new_cursor = new_conn.cursor()
 
         # Extract unique repositories from documents
-        old_cursor.execute("""
+        old_cursor.execute(
+            """
             SELECT DISTINCT repository_id, repository_name, repository_url
             FROM documents
             WHERE repository_id IS NOT NULL
-        """)
+        """
+        )
 
         repositories = old_cursor.fetchall()
         migrated_count = 0
@@ -301,22 +299,25 @@ class DataMigrator:
                     "repository_type": "github",
                     "created_at": datetime.now().isoformat(),
                     "updated_at": datetime.now().isoformat(),
-                    "metadata": json.dumps({"migrated": True, "source": "document_extraction"})
+                    "metadata": json.dumps({"migrated": True, "source": "document_extraction"}),
                 }
 
-                new_cursor.execute("""
+                new_cursor.execute(
+                    """
                     INSERT OR IGNORE INTO repositories (
                         id, name, url, repository_type, created_at, updated_at, metadata
                     ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    repo_data["id"],
-                    repo_data["name"],
-                    repo_data["url"],
-                    repo_data["repository_type"],
-                    repo_data["created_at"],
-                    repo_data["updated_at"],
-                    repo_data["metadata"]
-                ))
+                """,
+                    (
+                        repo_data["id"],
+                        repo_data["name"],
+                        repo_data["url"],
+                        repo_data["repository_type"],
+                        repo_data["created_at"],
+                        repo_data["updated_at"],
+                        repo_data["metadata"],
+                    ),
+                )
 
                 migrated_count += 1
 
@@ -340,21 +341,18 @@ class DataMigrator:
             ("system.version", "1.0.0", "string"),
             ("migration.completed", "true", "boolean"),
             ("migration.timestamp", datetime.now().isoformat(), "string"),
-            ("system.initialized", "true", "boolean")
+            ("system.initialized", "true", "boolean"),
         ]
 
         for key, value, value_type in default_settings:
-            new_cursor.execute("""
+            new_cursor.execute(
+                """
                 INSERT OR REPLACE INTO system_configuration (
                     config_key, config_value, config_type, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?)
-            """, (
-                key,
-                json.dumps(value),
-                value_type,
-                datetime.now().isoformat(),
-                datetime.now().isoformat()
-            ))
+            """,
+                (key, json.dumps(value), value_type, datetime.now().isoformat(), datetime.now().isoformat()),
+            )
 
         new_conn.commit()
         print("✅ System settings initialized")
@@ -377,10 +375,7 @@ class DataMigrator:
             "migrated": True,
             "original_format": "legacy",
             "migration_date": datetime.now().isoformat(),
-            "legacy_fields": {
-                "old_id": old_doc.get("id"),
-                "old_format": old_doc.get("content_format", "markdown")
-            }
+            "legacy_fields": {"old_id": old_doc.get("id"), "old_format": old_doc.get("content_format", "markdown")},
         }
 
         return {
@@ -408,7 +403,7 @@ class DataMigrator:
             "analysis_count": 0,
             "quality_score": old_doc.get("quality_score"),
             "metadata": json.dumps(metadata),
-            "domain_events": json.dumps([])
+            "domain_events": json.dumps([]),
         }
 
     def _transform_analysis(self, old_analysis) -> Dict[str, Any]:
@@ -417,10 +412,7 @@ class DataMigrator:
         analysis_id = old_analysis.get("id") or f"analysis_{hash(str(old_analysis)) % 10000}"
 
         # Create configuration JSON
-        config = {
-            "legacy_analysis": True,
-            "original_type": old_analysis.get("analysis_type", "unknown")
-        }
+        config = {"legacy_analysis": True, "original_type": old_analysis.get("analysis_type", "unknown")}
 
         # Create results JSON
         results = old_analysis.get("results", {})
@@ -447,7 +439,7 @@ class DataMigrator:
             "created_by": old_analysis.get("created_by"),
             "created_at": old_analysis.get("created_at", datetime.now().isoformat()),
             "updated_at": old_analysis.get("updated_at", datetime.now().isoformat()),
-            "metadata": json.dumps({"migrated": True})
+            "metadata": json.dumps({"migrated": True}),
         }
 
     def _transform_finding(self, old_finding) -> Dict[str, Any]:
@@ -474,7 +466,7 @@ class DataMigrator:
             "resolved_by": old_finding.get("resolved_by"),
             "created_at": old_finding.get("created_at", datetime.now().isoformat()),
             "updated_at": old_finding.get("updated_at", datetime.now().isoformat()),
-            "metadata": json.dumps({"migrated": True})
+            "metadata": json.dumps({"migrated": True}),
         }
 
     def _record_migration_completion(self, new_conn: sqlite3.Connection):
@@ -487,25 +479,30 @@ class DataMigrator:
             "executed_at": datetime.now().isoformat(),
             "execution_time_seconds": 0.0,
             "status": "completed",
-            "metadata": json.dumps({
-                "description": "Migrated existing data to new DDD schema",
-                "stats": self.migration_stats,
-                "migration_type": "data_migration"
-            })
+            "metadata": json.dumps(
+                {
+                    "description": "Migrated existing data to new DDD schema",
+                    "stats": self.migration_stats,
+                    "migration_type": "data_migration",
+                }
+            ),
         }
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO schema_migrations
             (migration_id, migration_name, executed_at, execution_time_seconds, status, metadata)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            migration_data["migration_id"],
-            migration_data["migration_name"],
-            migration_data["executed_at"],
-            migration_data["execution_time_seconds"],
-            migration_data["status"],
-            migration_data["metadata"]
-        ))
+        """,
+            (
+                migration_data["migration_id"],
+                migration_data["migration_name"],
+                migration_data["executed_at"],
+                migration_data["execution_time_seconds"],
+                migration_data["status"],
+                migration_data["metadata"],
+            ),
+        )
 
         new_conn.commit()
 
@@ -515,10 +512,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Data Migration Script")
-    parser.add_argument("--old-db", default="../data/analysis.db",
-                       help="Path to old database file")
-    parser.add_argument("--new-db", default="../data/analysis_ddd.db",
-                       help="Path to new DDD database file")
+    parser.add_argument("--old-db", default="../data/analysis.db", help="Path to old database file")
+    parser.add_argument("--new-db", default="../data/analysis_ddd.db", help="Path to new DDD database file")
 
     args = parser.parse_args()
 
@@ -557,4 +552,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

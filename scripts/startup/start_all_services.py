@@ -4,21 +4,23 @@ Master Startup Script for LLM Documentation Ecosystem
 Starts all services locally with CLI as the main interface
 """
 
-import os
-import sys
 import asyncio
+import os
 import signal
-import time
 import subprocess
+import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Optional
+
+import requests
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-import requests
+from rich.table import Table
 
 console = Console()
+
 
 class ServiceManager:
     """Manages all services in the ecosystem."""
@@ -41,13 +43,13 @@ class ServiceManager:
             "code_analyzer",
             "secure_analyzer",
             "log_collector",
-            "cli"
+            "cli",
         ]
 
     def define_services(self):
         """Define all services with their configurations."""
         base_env = os.environ.copy()
-        base_env['PYTHONPATH'] = str(self.project_root)
+        base_env["PYTHONPATH"] = str(self.project_root)
 
         self.services = {
             "redis": {
@@ -57,7 +59,7 @@ class ServiceManager:
                 "health_url": None,
                 "port": 6379,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "doc_store": {
                 "name": "Doc Store",
@@ -66,7 +68,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5010/health",
                 "port": 5010,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "analysis_service": {
                 "name": "Analysis Service",
@@ -75,7 +77,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5020/health",
                 "port": 5020,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "orchestrator": {
                 "name": "Orchestrator",
@@ -84,7 +86,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5099/health/system",
                 "port": 5099,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "prompt_store": {
                 "name": "Prompt Store",
@@ -93,7 +95,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5110/health",
                 "port": 5110,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "summarizer_hub": {
                 "name": "Summarizer Hub",
@@ -102,7 +104,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5060/health",
                 "port": 5060,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "architecture_digitizer": {
                 "name": "Architecture Digitizer",
@@ -111,7 +113,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5105/health",
                 "port": 5105,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "bedrock_proxy": {
                 "name": "Bedrock Proxy",
@@ -120,7 +122,7 @@ class ServiceManager:
                 "health_url": "http://localhost:7090/health",
                 "port": 7090,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "github_mcp": {
                 "name": "GitHub MCP",
@@ -129,7 +131,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5072/health",
                 "port": 5072,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "interpreter": {
                 "name": "Interpreter",
@@ -138,7 +140,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5120/health",
                 "port": 5120,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "code_analyzer": {
                 "name": "Code Analyzer",
@@ -147,7 +149,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5085/health",
                 "port": 5085,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "secure_analyzer": {
                 "name": "Secure Analyzer",
@@ -156,7 +158,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5070/health",
                 "port": 5070,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "log_collector": {
                 "name": "Log Collector",
@@ -165,7 +167,7 @@ class ServiceManager:
                 "health_url": "http://localhost:5080/health",
                 "port": 5080,
                 "env": base_env.copy(),
-                "working_dir": str(self.project_root)
+                "working_dir": str(self.project_root),
             },
             "cli": {
                 "name": "CLI",
@@ -175,8 +177,8 @@ class ServiceManager:
                 "port": None,
                 "env": base_env.copy(),
                 "working_dir": str(self.project_root),
-                "interactive": True
-            }
+                "interactive": True,
+            },
         }
 
     async def check_service_health(self, service_id: str, timeout: int = 30) -> bool:
@@ -227,7 +229,7 @@ class ServiceManager:
                 cwd=service["working_dir"],
                 stdout=subprocess.PIPE if not service.get("interactive") else None,
                 stderr=subprocess.PIPE if not service.get("interactive") else None,
-                universal_newlines=True
+                universal_newlines=True,
             )
 
             self.processes[service_id] = process
@@ -261,10 +263,12 @@ class ServiceManager:
 
     async def start_all_services(self, skip_cli: bool = False):
         """Start all services in dependency order."""
-        console.print(Panel.fit(
-            "[bold blue]🚀 Starting LLM Documentation Ecosystem[/bold blue]\n"
-            "[dim]All services will be started in dependency order[/dim]"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold blue]🚀 Starting LLM Documentation Ecosystem[/bold blue]\n"
+                "[dim]All services will be started in dependency order[/dim]"
+            )
+        )
 
         self.define_services()
 
@@ -272,9 +276,7 @@ class ServiceManager:
         failed_services = []
 
         with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
         ) as progress:
             task = progress.add_task("Starting services...", total=len(self.service_order))
 
@@ -298,15 +300,15 @@ class ServiceManager:
                 progress.update(task, advance=1)
 
         # Summary
-        console.print("\n" + "="*60)
+        console.print("\n" + "=" * 60)
         console.print("📊 STARTUP SUMMARY")
-        console.print("="*60)
+        console.print("=" * 60)
 
         if started_services:
             console.print(f"[green]✅ Services Started ({len(started_services)}):[/green]")
             for service_id in started_services:
                 service = self.services[service_id]
-                port_info = f" (port {service['port']})" if service['port'] else ""
+                port_info = f" (port {service['port']})" if service["port"] else ""
                 console.print(f"   • {service['name']}{port_info}")
 
         if failed_services:
@@ -358,10 +360,15 @@ class ServiceManager:
         for service_id in self.service_order:
             service = self.services[service_id]
             port = service.get("port", "N/A")
-            status = "🟢 Running" if service_id in self.processes and self.processes[service_id].poll() is None else "🔴 Stopped"
+            status = (
+                "🟢 Running"
+                if service_id in self.processes and self.processes[service_id].poll() is None
+                else "🔴 Stopped"
+            )
             table.add_row(service["name"], str(port), service["description"], status)
 
         console.print(table)
+
 
 async def main():
     """Main function."""
@@ -399,6 +406,7 @@ async def main():
                 console.print(f"\n[green]🎉 All services started successfully![/green]")
                 if not args.skip_cli:
                     console.print(f"\n[blue]💻 CLI is now running. Press Ctrl+C to stop all services.[/blue]")
+
                     # Keep running to maintain services
                     def signal_handler(signum, frame):
                         console.print(f"\n[yellow]⚠️  Shutdown signal received...[/yellow]")
@@ -427,6 +435,7 @@ async def main():
 
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

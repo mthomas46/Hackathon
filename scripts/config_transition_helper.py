@@ -8,8 +8,9 @@ Helps transition services from hardcoded environment variables to proper config 
 import os
 import re
 from pathlib import Path
-import yaml
 from typing import Dict, List
+
+import yaml
 
 
 class ConfigTransitionHelper:
@@ -25,7 +26,7 @@ class ConfigTransitionHelper:
             return {}
 
         try:
-            with open(config_files[0], 'r') as f:
+            with open(config_files[0], "r") as f:
                 return yaml.safe_load(f) or {}
         except Exception:
             return {}
@@ -39,36 +40,40 @@ class ConfigTransitionHelper:
         python_files.extend(list(service_dir.glob("*.py")))
 
         for py_file in python_files:
-            if 'test' in str(py_file) or '__pycache__' in str(py_file):
+            if "test" in str(py_file) or "__pycache__" in str(py_file):
                 continue
 
             try:
-                with open(py_file, 'r') as f:
+                with open(py_file, "r") as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
 
                 for line_num, line in enumerate(lines, 1):
                     # Find os.getenv and os.environ.get patterns
-                    env_matches = re.finditer(r'os\.getenv\([^,)]+, [^\)]+\)', line)
-                    environ_matches = re.finditer(r'os\.environ\.get\([^,)]+, [^\)]+\)', line)
+                    env_matches = re.finditer(r"os\.getenv\([^,)]+, [^\)]+\)", line)
+                    environ_matches = re.finditer(r"os\.environ\.get\([^,)]+, [^\)]+\)", line)
 
                     for match in env_matches:
                         var_code = match.group(0)
-                        hardcoded_vars.append({
-                            'file': str(py_file.relative_to(service_dir)),
-                            'line': line_num,
-                            'code': var_code,
-                            'type': 'os.getenv'
-                        })
+                        hardcoded_vars.append(
+                            {
+                                "file": str(py_file.relative_to(service_dir)),
+                                "line": line_num,
+                                "code": var_code,
+                                "type": "os.getenv",
+                            }
+                        )
 
                     for match in environ_matches:
                         var_code = match.group(0)
-                        hardcoded_vars.append({
-                            'file': str(py_file.relative_to(service_dir)),
-                            'line': line_num,
-                            'code': var_code,
-                            'type': 'os.environ.get'
-                        })
+                        hardcoded_vars.append(
+                            {
+                                "file": str(py_file.relative_to(service_dir)),
+                                "line": line_num,
+                                "code": var_code,
+                                "type": "os.environ.get",
+                            }
+                        )
 
             except Exception as e:
                 print(f"Error reading {py_file}: {e}")
@@ -81,7 +86,7 @@ class ConfigTransitionHelper:
 
         # Extract variable names from hardcoded calls
         for var in hardcoded_vars:
-            code = var['code']
+            code = var["code"]
             # Extract variable name from patterns like os.getenv("VAR_NAME", "default")
             match = re.search(r'["\']([^"\']+)["\']', code)
             if match:
@@ -97,7 +102,7 @@ class ConfigTransitionHelper:
             "from pathlib import Path",
             "",
             "def load_config() -> dict:",
-            "    \"\"\"Load service configuration from config file.\"\"\"",
+            '    """Load service configuration from config file."""',
             "    config_path = Path(__file__).parent / 'config.yaml'",
             "    if config_path.exists():",
             "        with open(config_path, 'r') as f:",
@@ -111,7 +116,9 @@ class ConfigTransitionHelper:
         ]
 
         for var_name in sorted(config_vars):
-            code_lines.append(f"{var_name} = os.getenv('{var_name}', config.get('{var_name.lower().replace('_', '-')}', 'default_value'))")
+            code_lines.append(
+                f"{var_name} = os.getenv('{var_name}', config.get('{var_name.lower().replace('_', '-')}', 'default_value'))"
+            )
 
         return "\n".join(code_lines)
 
@@ -136,7 +143,7 @@ class ConfigTransitionHelper:
 
         if config_code:
             # Find main service file
-            main_files = ['main.py', 'app.py', '__main__.py']
+            main_files = ["main.py", "app.py", "__main__.py"]
             main_file = None
 
             for main_candidate in main_files:
@@ -147,13 +154,13 @@ class ConfigTransitionHelper:
 
             if main_file:
                 # Read current content
-                with open(main_file, 'r') as f:
+                with open(main_file, "r") as f:
                     content = f.read()
 
                 # Check if config loading already exists
-                if 'load_config()' not in content:
+                if "load_config()" not in content:
                     # Add config loading after imports
-                    import_end_pattern = r'(?m)^import|^from.*import'
+                    import_end_pattern = r"(?m)^import|^from.*import"
                     matches = list(re.finditer(import_end_pattern, content))
 
                     if matches:
@@ -161,14 +168,14 @@ class ConfigTransitionHelper:
                         insert_pos = last_import.end()
 
                         # Find next non-empty line
-                        lines = content.split('\n')
-                        for i in range(last_import.end() // len(content.split('\n')[0]) + 1, len(lines)):
+                        lines = content.split("\n")
+                        for i in range(last_import.end() // len(content.split("\n")[0]) + 1, len(lines)):
                             if lines[i].strip():
                                 insert_pos = sum(len(lines[j]) + 1 for j in range(i))
                                 break
 
-                        new_content = content[:insert_pos] + '\n\n' + config_code + '\n\n' + content[insert_pos:]
-                        with open(main_file, 'w') as f:
+                        new_content = content[:insert_pos] + "\n\n" + config_code + "\n\n" + content[insert_pos:]
+                        with open(main_file, "w") as f:
                             f.write(new_content)
 
                         print(f"✅ Added config loading to {main_file}")
@@ -184,12 +191,12 @@ class ConfigTransitionHelper:
     def transition_critical_services(self) -> None:
         """Transition the most critical services first."""
         critical_services = [
-            'llm-gateway',  # Most complex config
-            'orchestrator',  # Core service
-            'analysis-service',  # Complex service
-            'doc_store',  # Data service
-            'prompt_store',  # Data service
-            'summarizer-hub',  # AI service
+            "llm-gateway",  # Most complex config
+            "orchestrator",  # Core service
+            "analysis-service",  # Complex service
+            "doc_store",  # Data service
+            "prompt_store",  # Data service
+            "summarizer-hub",  # AI service
         ]
 
         for service in critical_services:

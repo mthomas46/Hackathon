@@ -4,21 +4,23 @@ Benchmarks the performance of key components before and after the DDD refactor
 to ensure the architectural changes haven't introduced performance regressions.
 """
 
-import time
 import asyncio
-import psutil
+import gc
 import os
 import sys
-from typing import Dict, List, Any, Optional
+import time
+import tracemalloc
 from dataclasses import dataclass
 from statistics import mean, median, stdev
-import tracemalloc
-import gc
+from typing import Any, Dict, List, Optional
+
+import psutil
 
 
 @dataclass
 class BenchmarkResult:
     """Result of a benchmark run."""
+
     operation: str
     iterations: int
     total_time: float
@@ -40,7 +42,7 @@ class BenchmarkResult:
             "min_time": self.min_time,
             "max_time": self.max_time,
             "memory_usage_mb": self.memory_usage_mb,
-            "cpu_percent": self.cpu_percent
+            "cpu_percent": self.cpu_percent,
         }
 
 
@@ -67,7 +69,7 @@ class PerformanceBenchmarker:
             ("cross_repository", self._benchmark_cross_repository),
             ("distributed_processing", self._benchmark_distributed_processing),
             ("memory_usage", self._benchmark_memory_usage),
-            ("import_performance", self._benchmark_import_performance)
+            ("import_performance", self._benchmark_import_performance),
         ]
 
         results = []
@@ -79,11 +81,7 @@ class PerformanceBenchmarker:
                 print(".3f")
             except Exception as e:
                 print(f"❌ Failed: {e}")
-                results.append({
-                    "operation": name,
-                    "error": str(e),
-                    "status": "failed"
-                })
+                results.append({"operation": name, "error": str(e), "status": "failed"})
 
         # Calculate summary statistics
         successful_results = [r for r in results if isinstance(r, BenchmarkResult)]
@@ -93,7 +91,7 @@ class PerformanceBenchmarker:
             "summary": summary,
             "detailed_results": [r.to_dict() if isinstance(r, BenchmarkResult) else r for r in results],
             "system_info": self._get_system_info(),
-            "benchmark_timestamp": time.time()
+            "benchmark_timestamp": time.time(),
         }
 
         print("\n📈 BENCHMARK SUMMARY:")
@@ -114,13 +112,13 @@ class PerformanceBenchmarker:
                 "This is a test document about API design",
                 "This document discusses REST API patterns",
                 "Here we talk about database architecture",
-                "This covers microservices design principles"
+                "This covers microservices design principles",
             ]
 
             return self._run_benchmark(
                 "semantic_similarity",
                 lambda: analyzer.calculate_similarity(test_texts[0], test_texts[1]),
-                iterations=50
+                iterations=50,
             )
         except Exception as e:
             raise Exception(f"Semantic analyzer benchmark failed: {e}")
@@ -134,9 +132,7 @@ class PerformanceBenchmarker:
             test_text = "This documentation is excellent and very helpful for developers."
 
             return self._run_benchmark(
-                "sentiment_analysis",
-                lambda: analyzer.analyze_sentiment(test_text),
-                iterations=100
+                "sentiment_analysis", lambda: analyzer.analyze_sentiment(test_text), iterations=100
             )
         except Exception as e:
             raise Exception(f"Sentiment analyzer benchmark failed: {e}")
@@ -147,17 +143,10 @@ class PerformanceBenchmarker:
             from services.analysis_service.modules.risk_assessor import RiskAssessor
 
             assessor = RiskAssessor()
-            test_data = {
-                "document_age": 365,
-                "complexity_score": 0.7,
-                "quality_score": 0.8,
-                "change_frequency": 12
-            }
+            test_data = {"document_age": 365, "complexity_score": 0.7, "quality_score": 0.8, "change_frequency": 12}
 
             return self._run_benchmark(
-                "risk_assessment",
-                lambda: assessor._assess_individual_risks(test_data),
-                iterations=50
+                "risk_assessment", lambda: assessor._assess_individual_risks(test_data), iterations=50
             )
         except Exception as e:
             raise Exception(f"Risk assessment benchmark failed: {e}")
@@ -168,16 +157,10 @@ class PerformanceBenchmarker:
             from services.analysis_service.modules.maintenance_forecaster import MaintenanceForecaster
 
             forecaster = MaintenanceForecaster()
-            test_data = {
-                "document_age": 180,
-                "quality_score": 0.75,
-                "usage_frequency": 25
-            }
+            test_data = {"document_age": 180, "quality_score": 0.75, "usage_frequency": 25}
 
             return self._run_benchmark(
-                "maintenance_forecast",
-                lambda: forecaster._forecast_maintenance_schedule(test_data),
-                iterations=30
+                "maintenance_forecast", lambda: forecaster._forecast_maintenance_schedule(test_data), iterations=30
             )
         except Exception as e:
             raise Exception(f"Maintenance forecast benchmark failed: {e}")
@@ -188,15 +171,12 @@ class PerformanceBenchmarker:
             from services.analysis_service.modules.quality_degradation_detector import QualityDegradationDetector
 
             detector = QualityDegradationDetector()
-            test_history = [
-                {"quality_score": 0.9, "timestamp": time.time() - i * 86400}
-                for i in range(10)
-            ]
+            test_history = [{"quality_score": 0.9, "timestamp": time.time() - i * 86400} for i in range(10)]
 
             return self._run_benchmark(
                 "quality_degradation",
                 lambda: detector._calculate_trend_analysis(pd.Series([h["quality_score"] for h in test_history])),
-                iterations=20
+                iterations=20,
             )
         except Exception as e:
             raise Exception(f"Quality degradation benchmark failed: {e}")
@@ -209,13 +189,11 @@ class PerformanceBenchmarker:
             analyzer = CrossRepositoryAnalyzer()
             test_repos = [
                 {"repo_id": "repo1", "name": "test-repo-1", "url": "https://github.com/test/repo1"},
-                {"repo_id": "repo2", "name": "test-repo-2", "url": "https://github.com/test/repo2"}
+                {"repo_id": "repo2", "name": "test-repo-2", "url": "https://github.com/test/repo2"},
             ]
 
             return self._run_benchmark(
-                "cross_repository",
-                lambda: asyncio.run(analyzer.analyze_repositories(test_repos)),
-                iterations=5
+                "cross_repository", lambda: asyncio.run(analyzer.analyze_repositories(test_repos)), iterations=5
             )
         except Exception as e:
             raise Exception(f"Cross-repository benchmark failed: {e}")
@@ -226,16 +204,10 @@ class PerformanceBenchmarker:
             from services.analysis_service.modules.distributed_processor import DistributedProcessor
 
             processor = DistributedProcessor()
-            test_task = {
-                "task_type": "analysis",
-                "payload": {"data": "test"},
-                "priority": "normal"
-            }
+            test_task = {"task_type": "analysis", "payload": {"data": "test"}, "priority": "normal"}
 
             return self._run_benchmark(
-                "distributed_processing",
-                lambda: asyncio.run(processor.submit_task(test_task)),
-                iterations=10
+                "distributed_processing", lambda: asyncio.run(processor.submit_task(test_task)), iterations=10
             )
         except Exception as e:
             raise Exception(f"Distributed processing benchmark failed: {e}")
@@ -258,18 +230,20 @@ class PerformanceBenchmarker:
             # Process the data
             processed = []
             for item in large_data:
-                processed.append({
-                    "id": item["metadata"]["id"],
-                    "size": len(item["data"]),
-                    "complexity": len(item["metadata"]["complex"])
-                })
+                processed.append(
+                    {
+                        "id": item["metadata"]["id"],
+                        "size": len(item["data"]),
+                        "complexity": len(item["metadata"]["complex"]),
+                    }
+                )
 
             # Measure memory usage
             current_snapshot = tracemalloc.take_snapshot()
             tracemalloc.stop()
 
             # Calculate memory difference
-            stats = current_snapshot.compare_to(baseline_snapshot, 'lineno')
+            stats = current_snapshot.compare_to(baseline_snapshot, "lineno")
             total_memory = sum(stat.size_diff for stat in stats[:10])  # Top 10 memory users
 
             return BenchmarkResult(
@@ -281,19 +255,20 @@ class PerformanceBenchmarker:
                 min_time=0.0,
                 max_time=0.0,
                 memory_usage_mb=total_memory / (1024 * 1024),
-                cpu_percent=self.process.cpu_percent()
+                cpu_percent=self.process.cpu_percent(),
             )
         except Exception as e:
             raise Exception(f"Memory usage benchmark failed: {e}")
 
     def _benchmark_import_performance(self) -> BenchmarkResult:
         """Benchmark module import performance."""
+
         def import_operation():
             # Clear modules to force re-import
             modules_to_clear = [
-                'services.analysis_service.modules.semantic_analyzer',
-                'services.analysis_service.modules.sentiment_analyzer',
-                'services.analysis_service.modules.risk_assessor'
+                "services.analysis_service.modules.semantic_analyzer",
+                "services.analysis_service.modules.sentiment_analyzer",
+                "services.analysis_service.modules.risk_assessor",
             ]
 
             for module in modules_to_clear:
@@ -301,15 +276,11 @@ class PerformanceBenchmarker:
                     del sys.modules[module]
 
             # Import modules
+            import services.analysis_service.modules.risk_assessor
             import services.analysis_service.modules.semantic_analyzer
             import services.analysis_service.modules.sentiment_analyzer
-            import services.analysis_service.modules.risk_assessor
 
-        return self._run_benchmark(
-            "import_performance",
-            import_operation,
-            iterations=10
-        )
+        return self._run_benchmark("import_performance", import_operation, iterations=10)
 
     def _run_benchmark(self, operation: str, func, iterations: int = 100) -> BenchmarkResult:
         """Run a benchmark operation multiple times."""
@@ -355,7 +326,7 @@ class PerformanceBenchmarker:
             min_time=min_time,
             max_time=max_time,
             memory_usage_mb=memory_usage_mb,
-            cpu_percent=cpu_percent
+            cpu_percent=cpu_percent,
         )
 
     def _calculate_summary_stats(self, results: List[BenchmarkResult]) -> Dict[str, Any]:
@@ -381,7 +352,7 @@ class PerformanceBenchmarker:
             "median_response_time": median(avg_times),
             "avg_memory_mb": avg_memory,
             "avg_cpu_percent": avg_cpu,
-            "performance_score": self._calculate_performance_score(results)
+            "performance_score": self._calculate_performance_score(results),
         }
 
     def _calculate_performance_score(self, results: List[BenchmarkResult]) -> float:
@@ -430,10 +401,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Performance Benchmarking")
-    parser.add_argument("--output", default="performance_benchmark_results.json",
-                       help="Output file for results")
-    parser.add_argument("--iterations", type=int, default=50,
-                       help="Default number of iterations per benchmark")
+    parser.add_argument("--output", default="performance_benchmark_results.json", help="Output file for results")
+    parser.add_argument("--iterations", type=int, default=50, help="Default number of iterations per benchmark")
 
     args = parser.parse_args()
 
@@ -445,7 +414,8 @@ def main():
 
     # Save results
     import json
-    with open(args.output, 'w') as f:
+
+    with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     print(f"\n💾 Results saved to: {args.output}")

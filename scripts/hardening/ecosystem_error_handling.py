@@ -5,15 +5,15 @@ Standardized error handling, circuit breakers, and recovery mechanisms
 """
 
 import asyncio
-import time
-import logging
 import functools
-from typing import Dict, List, Any, Optional, Callable, Union
+import json
+import logging
+import threading
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
-import json
-import threading
-from contextlib import contextmanager
+from typing import Any, Callable, Dict, List, Optional, Union
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ErrorSeverity(Enum):
     """Error severity levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -30,6 +31,7 @@ class ErrorSeverity(Enum):
 
 class RecoveryStrategy(Enum):
     """Recovery strategy types"""
+
     RETRY = "retry"
     CIRCUIT_BREAKER = "circuit_breaker"
     FALLBACK = "fallback"
@@ -40,6 +42,7 @@ class RecoveryStrategy(Enum):
 @dataclass
 class ErrorContext:
     """Context information for errors"""
+
     service_name: str
     operation: str
     timestamp: float = field(default_factory=time.time)
@@ -53,6 +56,7 @@ class ErrorContext:
 @dataclass
 class CircuitBreakerState:
     """Circuit breaker state management"""
+
     failures: int = 0
     last_failure_time: float = 0
     state: str = "closed"  # closed, open, half_open
@@ -63,8 +67,9 @@ class CircuitBreakerState:
 class CircuitBreaker:
     """Circuit breaker implementation for service protection"""
 
-    def __init__(self, service_name: str, failure_threshold: int = 5,
-                 recovery_timeout: int = 60, success_threshold: int = 3):
+    def __init__(
+        self, service_name: str, failure_threshold: int = 5, recovery_timeout: int = 60, success_threshold: int = 3
+    ):
         self.service_name = service_name
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
@@ -132,8 +137,9 @@ class CircuitBreaker:
 class RetryMechanism:
     """Retry mechanism with exponential backoff"""
 
-    def __init__(self, max_attempts: int = 3, base_delay: float = 1.0,
-                 max_delay: float = 60.0, backoff_factor: float = 2.0):
+    def __init__(
+        self, max_attempts: int = 3, base_delay: float = 1.0, max_delay: float = 60.0, backoff_factor: float = 2.0
+    ):
         self.max_attempts = max_attempts
         self.base_delay = base_delay
         self.max_delay = max_delay
@@ -141,7 +147,7 @@ class RetryMechanism:
 
     def calculate_delay(self, attempt: int) -> float:
         """Calculate delay for retry attempt"""
-        delay = self.base_delay * (self.backoff_factor ** attempt)
+        delay = self.base_delay * (self.backoff_factor**attempt)
         return min(delay, self.max_delay)
 
     async def execute_with_retry(self, operation: Callable, *args, **kwargs) -> Any:
@@ -155,7 +161,9 @@ class RetryMechanism:
                 last_exception = e
                 if attempt < self.max_attempts - 1:
                     delay = self.calculate_delay(attempt)
-                    logger.warning(f"Attempt {attempt + 1} failed for operation {operation.__name__}: {e}. Retrying in {delay}s...")
+                    logger.warning(
+                        f"Attempt {attempt + 1} failed for operation {operation.__name__}: {e}. Retrying in {delay}s..."
+                    )
                     await asyncio.sleep(delay)
                 else:
                     logger.error(f"All {self.max_attempts} attempts failed for operation {operation.__name__}: {e}")
@@ -218,7 +226,9 @@ class ErrorHandler:
         if len(self.error_history) > 1000:
             self.error_history = self.error_history[-1000:]
 
-        logger.error(f"Error recorded: {error_context.service_name}:{error_context.operation} - {error_context.error_message}")
+        logger.error(
+            f"Error recorded: {error_context.service_name}:{error_context.operation} - {error_context.error_message}"
+        )
 
         # Trigger recovery actions based on error patterns
         self._trigger_recovery_actions(error_context)
@@ -235,8 +245,9 @@ class ErrorHandler:
             except Exception as e:
                 logger.error(f"Recovery action failed for {error_key}: {e}")
 
-    async def execute_with_protection(self, service_name: str, operation_name: str,
-                                    operation: Callable, *args, **kwargs) -> Any:
+    async def execute_with_protection(
+        self, service_name: str, operation_name: str, operation: Callable, *args, **kwargs
+    ) -> Any:
         """Execute operation with full error handling protection"""
         circuit_breaker = self.circuit_breakers.get(service_name)
         retry_mechanism = self.retry_mechanisms.get(operation_name)
@@ -246,19 +257,23 @@ class ErrorHandler:
         if circuit_breaker:
             with circuit_breaker.execute_context():
                 return await self._execute_with_retry_and_fallback(
-                    service_name, operation_name, operation,
-                    retry_mechanism, fallback_mechanism, *args, **kwargs
+                    service_name, operation_name, operation, retry_mechanism, fallback_mechanism, *args, **kwargs
                 )
         else:
             return await self._execute_with_retry_and_fallback(
-                service_name, operation_name, operation,
-                retry_mechanism, fallback_mechanism, *args, **kwargs
+                service_name, operation_name, operation, retry_mechanism, fallback_mechanism, *args, **kwargs
             )
 
-    async def _execute_with_retry_and_fallback(self, service_name: str, operation_name: str,
-                                             operation: Callable, retry_mechanism: Optional[RetryMechanism],
-                                             fallback_mechanism: Optional[FallbackMechanism],
-                                             *args, **kwargs) -> Any:
+    async def _execute_with_retry_and_fallback(
+        self,
+        service_name: str,
+        operation_name: str,
+        operation: Callable,
+        retry_mechanism: Optional[RetryMechanism],
+        fallback_mechanism: Optional[FallbackMechanism],
+        *args,
+        **kwargs,
+    ) -> Any:
         """Execute with retry and fallback protection"""
         try:
             if retry_mechanism:
@@ -272,7 +287,7 @@ class ErrorHandler:
                 operation=operation_name,
                 error_message=str(e),
                 error_type=type(e).__name__,
-                severity=ErrorSeverity.MEDIUM
+                severity=ErrorSeverity.MEDIUM,
             )
             self.record_error(error_context)
 
@@ -315,9 +330,7 @@ class ErrorHandler:
             "errors_by_service": service_errors,
             "errors_by_type": type_errors,
             "errors_by_severity": severity_counts,
-            "circuit_breaker_states": {
-                name: cb.state.state for name, cb in self.circuit_breakers.items()
-            }
+            "circuit_breaker_states": {name: cb.state.state for name, cb in self.circuit_breakers.items()},
         }
 
 
@@ -326,21 +339,24 @@ error_handler = ErrorHandler()
 
 
 # Decorators for easy error handling integration
-def with_error_handling(service_name: str, operation_name: str,
-                       recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY):
+def with_error_handling(
+    service_name: str, operation_name: str, recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY
+):
     """Decorator to add error handling to functions"""
+
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
-            return await error_handler.execute_with_protection(
-                service_name, operation_name, func, *args, **kwargs
-            )
+            return await error_handler.execute_with_protection(service_name, operation_name, func, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 def circuit_breaker(service_name: str, failure_threshold: int = 5, recovery_timeout: int = 60):
     """Decorator to add circuit breaker protection"""
+
     def decorator(func):
         cb = CircuitBreaker(service_name, failure_threshold, recovery_timeout)
         error_handler.register_circuit_breaker(service_name, cb)
@@ -349,7 +365,9 @@ def circuit_breaker(service_name: str, failure_threshold: int = 5, recovery_time
         async def wrapper(*args, **kwargs):
             with cb.execute_context():
                 return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -414,15 +432,11 @@ if __name__ == "__main__":
 
         try:
             # Test successful execution
-            result = await error_handler.execute_with_protection(
-                "doc_store", "api_call", successful_operation
-            )
+            result = await error_handler.execute_with_protection("doc_store", "api_call", successful_operation)
             print(f"Successful operation result: {result}")
 
             # Test error handling
-            result = await error_handler.execute_with_protection(
-                "llm-gateway", "api_call", failing_operation
-            )
+            result = await error_handler.execute_with_protection("llm-gateway", "api_call", failing_operation)
         except Exception as e:
             print(f"Expected error caught: {e}")
 

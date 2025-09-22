@@ -4,10 +4,11 @@ Startup script for Doc Store service
 """
 
 import os
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
+
 
 def main():
     """Start Doc Store service."""
@@ -22,27 +23,18 @@ def main():
     # Set PYTHONPATH
     pythonpath = str(project_root)
     env = os.environ.copy()
-    env['PYTHONPATH'] = pythonpath
+    env["PYTHONPATH"] = pythonpath
 
     # Start service
     try:
-        cmd = [
-            sys.executable,
-            "-m", "services.doc_store.main",
-            "--host", "0.0.0.0",
-            "--port", "5010"
-        ]
+        cmd = [sys.executable, "-m", "services.doc_store.main", "--host", "0.0.0.0", "--port", "5010"]
 
         print(f"🔄 Command: {' '.join(cmd)}")
         print(f"📁 Working directory: {os.getcwd()}")
         print(f"🐍 PYTHONPATH: {pythonpath}")
 
         process = subprocess.Popen(
-            cmd,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True
+            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
         )
 
         print(f"✅ Doc Store started (PID: {process.pid}) on http://localhost:5010")
@@ -84,6 +76,7 @@ def main():
     except Exception as e:
         print(f"❌ Error starting Doc Store: {e}")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

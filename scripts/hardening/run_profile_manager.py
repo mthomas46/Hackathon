@@ -11,20 +11,21 @@ Features:
 - Profile validation and monitoring
 """
 
-import os
 import asyncio
-import aiohttp
+import os
 import time
-from typing import Dict, Any, Optional, List, Callable
 from contextlib import asynccontextmanager
+from typing import Any, Callable, Dict, List, Optional
+
+import aiohttp
 
 from .environment_detector import (
-    EnvironmentDetector,
     Environment,
-    RunProfile,
+    EnvironmentDetector,
     HTTPConfig,
+    RunProfile,
     ServiceDiscoveryConfig,
-    get_current_environment
+    get_current_environment,
 )
 
 
@@ -36,7 +37,7 @@ class HTTPClientManager:
         self._clients: Dict[str, aiohttp.ClientSession] = {}
         self._client_configs: Dict[str, HTTPConfig] = {}
 
-    def get_client_config(self, profile_name: str = 'default') -> HTTPConfig:
+    def get_client_config(self, profile_name: str = "default") -> HTTPConfig:
         """Get HTTP configuration for a profile."""
         if profile_name not in self._client_configs:
             profile = self.detector.detect_environment()
@@ -44,7 +45,7 @@ class HTTPClientManager:
 
         return self._client_configs[profile_name]
 
-    def create_client_session(self, profile_name: str = 'default') -> aiohttp.ClientSession:
+    def create_client_session(self, profile_name: str = "default") -> aiohttp.ClientSession:
         """Create an optimized HTTP client session."""
         config = self.get_client_config(profile_name)
 
@@ -55,25 +56,17 @@ class HTTPClientManager:
             use_dns_cache=True,
             keepalive_timeout=config.max_keepalive,
             enable_cleanup_closed=True,
-            force_close=False
+            force_close=False,
         )
 
-        timeout = aiohttp.ClientTimeout(
-            total=config.timeout,
-            connect=config.timeout / 3,
-            sock_read=config.timeout / 2
-        )
+        timeout = aiohttp.ClientTimeout(total=config.timeout, connect=config.timeout / 3, sock_read=config.timeout / 2)
 
-        session = aiohttp.ClientSession(
-            connector=connector,
-            timeout=timeout,
-            headers={'User-Agent': config.user_agent}
-        )
+        session = aiohttp.ClientSession(connector=connector, timeout=timeout, headers={"User-Agent": config.user_agent})
 
         return session
 
     @asynccontextmanager
-    async def get_client(self, profile_name: str = 'default'):
+    async def get_client(self, profile_name: str = "default"):
         """Context manager for HTTP client sessions."""
         session_key = f"{profile_name}_{id(asyncio.current_task())}"
 
@@ -90,9 +83,9 @@ class HTTPClientManager:
                 await self._clients[session_key].close()
                 del self._clients[session_key]
 
-    async def make_request(self, method: str, url: str,
-                          profile_name: str = 'default',
-                          **kwargs) -> aiohttp.ClientResponse:
+    async def make_request(
+        self, method: str, url: str, profile_name: str = "default", **kwargs
+    ) -> aiohttp.ClientResponse:
         """Make an HTTP request with optimized configuration."""
         config = self.get_client_config(profile_name)
 
@@ -104,7 +97,7 @@ class HTTPClientManager:
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     if attempt == config.retries:
                         raise e
-                    await asyncio.sleep(0.1 * (2 ** attempt))  # Exponential backoff
+                    await asyncio.sleep(0.1 * (2**attempt))  # Exponential backoff
 
 
 class ServiceDiscoveryManager:
@@ -154,14 +147,16 @@ class ServiceDiscoveryManager:
         current_time = time.time()
 
         # Check cache
-        if (cache_key in self._health_checks and
-            current_time - self._cache_timestamps.get(cache_key, 0) < config.health_check_interval):
+        if (
+            cache_key in self._health_checks
+            and current_time - self._cache_timestamps.get(cache_key, 0) < config.health_check_interval
+        ):
             return self._health_checks[cache_key]
 
         # Perform health check
         try:
             http_manager = HTTPClientManager()
-            response = await http_manager.make_request('GET', f"{url}/health")
+            response = await http_manager.make_request("GET", f"{url}/health")
             healthy = response.status == 200
         except:
             healthy = False
@@ -202,24 +197,25 @@ class RunProfileManager:
         profile = self.detector.detect_environment()
 
         return {
-            'environment': profile.environment.value,
-            'run_profile': profile.run_profile.value,
-            'http_config': {
-                'timeout': profile.http_config.timeout,
-                'retries': profile.http_config.retries,
-                'pool_connections': profile.http_config.pool_connections
+            "environment": profile.environment.value,
+            "run_profile": profile.run_profile.value,
+            "http_config": {
+                "timeout": profile.http_config.timeout,
+                "retries": profile.http_config.retries,
+                "pool_connections": profile.http_config.pool_connections,
             },
-            'discovery_config': {
-                'use_dns': profile.discovery_config.use_dns,
-                'use_health_checks': profile.discovery_config.use_health_checks,
-                'health_check_interval': profile.discovery_config.health_check_interval
+            "discovery_config": {
+                "use_dns": profile.discovery_config.use_dns,
+                "use_health_checks": profile.discovery_config.use_health_checks,
+                "health_check_interval": profile.discovery_config.health_check_interval,
             },
-            'service_count': len(profile.service_mappings),
-            'network_info': profile.network_info
+            "service_count": len(profile.service_mappings),
+            "network_info": profile.network_info,
         }
 
-    async def make_service_request(self, service_name: str, endpoint: str,
-                                  method: str = 'GET', **kwargs) -> aiohttp.ClientResponse:
+    async def make_service_request(
+        self, service_name: str, endpoint: str, method: str = "GET", **kwargs
+    ) -> aiohttp.ClientResponse:
         """Make a request to a service using optimized configuration."""
         url = self.discovery_manager.get_service_url(service_name)
         if not url:
@@ -228,8 +224,7 @@ class RunProfileManager:
         full_url = f"{url}{endpoint}"
         return await self.http_manager.make_request(method, full_url, **kwargs)
 
-    async def call_service_method(self, service_name: str, method_name: str,
-                                 parameters: Dict[str, Any] = None) -> Any:
+    async def call_service_method(self, service_name: str, method_name: str, parameters: Dict[str, Any] = None) -> Any:
         """Call a service method with automatic discovery and optimization."""
         if parameters is None:
             parameters = {}
@@ -238,12 +233,7 @@ class RunProfileManager:
         endpoint = f"/api/v1/{method_name}"
 
         # Make request
-        response = await self.make_service_request(
-            service_name,
-            endpoint,
-            method='POST',
-            json=parameters
-        )
+        response = await self.make_service_request(service_name, endpoint, method="POST", json=parameters)
 
         if response.status == 200:
             return await response.json()
@@ -256,20 +246,14 @@ class RunProfileManager:
         print("🔍 Validating Ecosystem Configuration")
         print("=" * 50)
 
-        results = {
-            'environment': {},
-            'services': {},
-            'connectivity': {},
-            'performance': {},
-            'recommendations': []
-        }
+        results = {"environment": {}, "services": {}, "connectivity": {}, "performance": {}, "recommendations": []}
 
         # Environment validation
         profile = self.detector.detect_environment()
-        results['environment'] = {
-            'type': profile.environment.value,
-            'run_profile': profile.run_profile.value,
-            'detected_services': len(profile.service_mappings)
+        results["environment"] = {
+            "type": profile.environment.value,
+            "run_profile": profile.run_profile.value,
+            "detected_services": len(profile.service_mappings),
         }
 
         print(f"📋 Environment: {profile.environment.value}")
@@ -280,10 +264,10 @@ class RunProfileManager:
         healthy_services = await self.discovery_manager.get_healthy_services()
         all_services = await self.discovery_manager.discover_services()
 
-        results['services'] = {
-            'total': len(all_services),
-            'healthy': len(healthy_services),
-            'unhealthy': len(all_services) - len(healthy_services)
+        results["services"] = {
+            "total": len(all_services),
+            "healthy": len(healthy_services),
+            "unhealthy": len(all_services) - len(healthy_services),
         }
 
         for name, url in all_services.items():
@@ -297,44 +281,39 @@ class RunProfileManager:
         for name, url in all_services.items():
             try:
                 start_time = time.time()
-                response = await self.http_manager.make_request('GET', f"{url}/health")
+                response = await self.http_manager.make_request("GET", f"{url}/health")
                 response_time = time.time() - start_time
-                connectivity_results.append({
-                    'service': name,
-                    'status': 'success',
-                    'response_time': round(response_time, 3)
-                })
+                connectivity_results.append(
+                    {"service": name, "status": "success", "response_time": round(response_time, 3)}
+                )
                 print(f"   ✅ {name}: {response_time:.3f}s")
             except Exception as e:
-                connectivity_results.append({
-                    'service': name,
-                    'status': 'failed',
-                    'error': str(e)
-                })
+                connectivity_results.append({"service": name, "status": "failed", "error": str(e)})
                 print(f"   ❌ {name}: Failed")
 
-        results['connectivity'] = connectivity_results
+        results["connectivity"] = connectivity_results
 
         # Performance analysis
-        response_times = [r['response_time'] for r in connectivity_results
-                         if r['status'] == 'success' and 'response_time' in r]
+        response_times = [
+            r["response_time"] for r in connectivity_results if r["status"] == "success" and "response_time" in r
+        ]
 
         if response_times:
-            results['performance'] = {
-                'avg_response_time': round(sum(response_times) / len(response_times), 3),
-                'min_response_time': min(response_times),
-                'max_response_time': max(response_times),
-                'total_tests': len(connectivity_results)
+            results["performance"] = {
+                "avg_response_time": round(sum(response_times) / len(response_times), 3),
+                "min_response_time": min(response_times),
+                "max_response_time": max(response_times),
+                "total_tests": len(connectivity_results),
             }
 
         # Generate recommendations
-        if results['services']['healthy'] < results['services']['total']:
-            results['recommendations'].append(
+        if results["services"]["healthy"] < results["services"]["total"]:
+            results["recommendations"].append(
                 f"Improve service health: {results['services']['healthy']}/{results['services']['total']} services healthy"
             )
 
-        if results['performance'].get('avg_response_time', 0) > 1.0:
-            results['recommendations'].append(
+        if results["performance"].get("avg_response_time", 0) > 1.0:
+            results["recommendations"].append(
                 f"Optimize response times: average {results['performance']['avg_response_time']}s"
             )
 
@@ -342,13 +321,13 @@ class RunProfileManager:
         print("\n📊 VALIDATION SUMMARY")
         print(f"🏥 Services: {results['services']['healthy']}/{results['services']['total']} healthy")
 
-        if results['performance']:
-            perf = results['performance']
+        if results["performance"]:
+            perf = results["performance"]
             print(f"⚡ Performance: {perf['avg_response_time']}s avg")
 
-        if results['recommendations']:
+        if results["recommendations"]:
             print("\n💡 RECOMMENDATIONS:")
-            for rec in results['recommendations']:
+            for rec in results["recommendations"]:
                 print(f"   • {rec}")
 
         return results
@@ -374,7 +353,7 @@ async def get_service_url(service_name: str) -> Optional[str]:
     return profile_manager.discovery_manager.get_service_url(service_name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Test the profile manager
     async def test_profile_manager():
         print("🧪 Run Profile Manager Test")

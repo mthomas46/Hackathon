@@ -3,33 +3,31 @@
 Test script to verify the modified _generate_dynamic_documents function
 """
 
-import sys
-import os
 import json
+import os
+import sys
 from datetime import datetime
 
 # Add the services directory to the path so we can import
-sys.path.append(os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "services"))
 
 try:
     from interpreter.main import _generate_dynamic_documents
+
     print("✅ Successfully imported _generate_dynamic_documents")
 except ImportError as e:
     print(f"❌ Failed to import function: {e}")
     sys.exit(1)
 
+
 def test_document_generation():
     """Test the document generation function."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING DYNAMIC DOCUMENT GENERATION")
-    print("="*60)
+    print("=" * 60)
 
     # Test context
-    test_context = {
-        "project_type": "ecommerce",
-        "tech_stack": "React/Node.js",
-        "query_id": "test_12345"
-    }
+    test_context = {"project_type": "ecommerce", "tech_stack": "React/Node.js", "query_id": "test_12345"}
 
     # Test query
     test_query = "Create a comprehensive documentation ecosystem for an e-commerce platform"
@@ -64,19 +62,19 @@ def test_document_generation():
 
         for doc in documents:
             # Count document types
-            doc_type = doc.get('type', 'unknown')
+            doc_type = doc.get("type", "unknown")
             doc_types[doc_type] = doc_types.get(doc_type, 0) + 1
 
             # Count categories
-            category = doc.get('category', 'unknown')
+            category = doc.get("category", "unknown")
             categories[category] = categories.get(category, 0) + 1
 
             # Count authors
-            author = doc.get('author', 'unknown')
+            author = doc.get("author", "unknown")
             authors[author] = authors.get(author, 0) + 1
 
             # Count statuses
-            status = doc.get('status', 'unknown')
+            status = doc.get("status", "unknown")
             statuses[status] = statuses.get(status, 0) + 1
 
         print("📈 DOCUMENT ANALYSIS")
@@ -123,12 +121,12 @@ def test_document_generation():
             print("⚠️  Limited diversity in categories")
 
         # Check content quality
-        avg_content_length = sum(len(doc['content']) for doc in documents) / len(documents)
+        avg_content_length = sum(len(doc["content"]) for doc in documents) / len(documents)
         print("\n📝 CONTENT QUALITY")
         print("-" * 18)
         print(f"Average content length: {avg_content_length:.0f} characters")
 
-        long_docs = len([doc for doc in documents if len(doc['content']) > 500])
+        long_docs = len([doc for doc in documents if len(doc["content"]) > 500])
         print(f"Documents with detailed content (>500 chars): {long_docs} ({long_docs/len(documents)*100:.1f}%)")
 
         if avg_content_length > 300:
@@ -141,23 +139,21 @@ def test_document_generation():
     except Exception as e:
         print(f"❌ ERROR during document generation: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
 
+
 def test_multiple_runs():
     """Test multiple runs to ensure consistency."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TESTING MULTIPLE RUNS")
-    print("="*60)
+    print("=" * 60)
 
     results = []
     for i in range(3):
         print(f"\n🏃 Run {i+1}:")
-        context = {
-            "project_type": f"project_{i}",
-            "tech_stack": "React/Node.js",
-            "query_id": f"query_{i}"
-        }
+        context = {"project_type": f"project_{i}", "tech_stack": "React/Node.js", "query_id": f"query_{i}"}
         documents = _generate_dynamic_documents("Test query", context)
         results.append(len(documents))
         print(f"   Generated: {len(documents)} documents")
@@ -174,16 +170,17 @@ def test_multiple_runs():
         print("❌ Some runs generated fewer than 25 documents")
         return False
 
+
 if __name__ == "__main__":
     print("🚀 Starting Dynamic Document Generation Tests")
-    print("="*60)
+    print("=" * 60)
 
     success1 = test_document_generation()
     success2 = test_multiple_runs()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("FINAL RESULTS")
-    print("="*60)
+    print("=" * 60)
 
     if success1 and success2:
         print("🎉 ALL TESTS PASSED!")
@@ -198,4 +195,4 @@ if __name__ == "__main__":
         if not success2:
             print("❌ Multiple runs test failed")
 
-    print("="*60)
+    print("=" * 60)

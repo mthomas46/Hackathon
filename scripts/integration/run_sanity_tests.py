@@ -5,11 +5,12 @@ Script to run sanity tests for live services.
 This demonstrates how to test the actual running services rather than mocks.
 """
 
-import subprocess
-import time
-import sys
 import os
+import subprocess
+import sys
+import time
 from pathlib import Path
+
 
 def run_command(cmd, cwd=None):
     """Run a command and return success status."""
@@ -19,14 +20,17 @@ def run_command(cmd, cwd=None):
     except Exception as e:
         return False, "", str(e)
 
+
 def check_service_health(service_name, port):
     """Check if a service is healthy."""
     import requests
+
     try:
         response = requests.get(f"http://localhost:{port}/health", timeout=5)
         return response.status_code == 200
     except:
         return False
+
 
 def main():
     """Main function to run sanity tests."""
@@ -69,8 +73,7 @@ def main():
         print(f"   Output: {stdout[:200]}...")
 
     # Test 3: Run integration tests with mocks
-    print("
-3. Running Integration Tests with Mocks...")
+    print("\n3. Running Integration Tests with Mocks...")
     success, stdout, stderr = run_command("python -m pytest tests/integration/ -v --tb=short -k 'not live'")
 
     if success:
@@ -78,14 +81,13 @@ def main():
     else:
         print("   ⚠️  Some integration tests failed")
         # Count passed/failed
-        lines = stdout.split('\n')
-        passed = sum(1 for line in lines if 'PASSED' in line)
-        failed = sum(1 for line in lines if 'FAILED' in line)
+        lines = stdout.split("\n")
+        passed = sum(1 for line in lines if "PASSED" in line)
+        failed = sum(1 for line in lines if "FAILED" in line)
         print(f"   Results: {passed} passed, {failed} failed")
 
     # Test 4: Run sanity tests (these work with or without live services)
-    print("
-4. Running Sanity Tests...")
+    print("\n4. Running Sanity Tests...")
     success, stdout, stderr = run_command("python -m pytest tests/sanity/ -v --tb=short")
 
     if success:
@@ -95,15 +97,14 @@ def main():
         print(f"   Output: {stdout[:300]}...")
 
     # Test 5: Check if services can be started (optional)
-    print("
-5. Testing Service Startup Capability...")
+    print("\n5. Testing Service Startup Capability...")
 
     for service in importable_services[:2]:  # Test first 2 services
         print(f"   Testing {service} startup...")
         # Check if we can at least validate the service code
         success, stdout, stderr = run_command(
             f"cd services/{service} && python -c 'import main; print(\"✅ Service code is valid\")'",
-            cwd=f"services/{service}"
+            cwd=f"services/{service}",
         )
 
         if success:
@@ -117,4 +118,3 @@ def main():
     else:
         print("   ⚠️  Unit tests had issues (this is normal if services aren't running)")
         print(f"   Output: {stdout[:200]}...")
-

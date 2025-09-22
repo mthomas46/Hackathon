@@ -15,18 +15,19 @@ Usage:
     python scripts/benchmark_prompt_store.py --load-test
 """
 
-import asyncio
-import time
-import statistics
-import psutil
 import argparse
-import sys
+import asyncio
 import json
-from typing import List, Dict, Any, Optional
+import statistics
+import sys
+import time
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import aiohttp
 import matplotlib.pyplot as plt
 import numpy as np
+import psutil
 
 
 class PerformanceBenchmarker:
@@ -46,8 +47,7 @@ class PerformanceBenchmarker:
         if self.session:
             await self.session.close()
 
-    async def make_request(self, method: str, endpoint: str,
-                          data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def make_request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make HTTP request with timing."""
         if not self.session:
             raise RuntimeError("Use async context manager")
@@ -106,11 +106,13 @@ class PerformanceBenchmarker:
 
         if response_times:
             stats = self.calculate_stats(response_times)
-            stats.update({
-                "total_requests": iterations,
-                "successful_requests": success_count,
-                "success_rate": success_count / iterations
-            })
+            stats.update(
+                {
+                    "total_requests": iterations,
+                    "successful_requests": success_count,
+                    "success_rate": success_count / iterations,
+                }
+            )
             return stats
         else:
             return {"error": "No successful requests"}
@@ -122,7 +124,7 @@ class PerformanceBenchmarker:
         results = {
             "create": {"times": [], "successes": 0},
             "read": {"times": [], "successes": 0},
-            "update": {"times": [], "successes": 0}
+            "update": {"times": [], "successes": 0},
         }
 
         created_prompts = []
@@ -133,7 +135,7 @@ class PerformanceBenchmarker:
                 "name": f"bench_prompt_{int(time.time() * 1000)}_{i}",
                 "category": "benchmark",
                 "content": f"This is benchmark prompt {i} for performance testing.",
-                "created_by": "benchmark_script"
+                "created_by": "benchmark_script",
             }
 
             result = await self.make_request("POST", "/api/v1/prompts", prompt_data)
@@ -145,18 +147,15 @@ class PerformanceBenchmarker:
                 print(f"  Created {i + 1}/{iterations} prompts")
 
         # Read prompts
-        for prompt_id in created_prompts[:min(20, len(created_prompts))]:  # Test first 20 reads
+        for prompt_id in created_prompts[: min(20, len(created_prompts))]:  # Test first 20 reads
             result = await self.make_request("GET", f"/api/v1/prompts/{prompt_id}")
             if result["success"]:
                 results["read"]["times"].append(result["response_time"])
                 results["read"]["successes"] += 1
 
         # Update prompts
-        for prompt_id in created_prompts[:min(20, len(created_prompts))]:  # Test first 20 updates
-            update_data = {
-                "content": "Updated content for benchmark testing.",
-                "updated_by": "benchmark_script"
-            }
+        for prompt_id in created_prompts[: min(20, len(created_prompts))]:  # Test first 20 updates
+            update_data = {"content": "Updated content for benchmark testing.", "updated_by": "benchmark_script"}
             result = await self.make_request("PUT", f"/api/v1/prompts/{prompt_id}", update_data)
             if result["success"]:
                 results["update"]["times"].append(result["response_time"])
@@ -169,8 +168,9 @@ class PerformanceBenchmarker:
 
         return results
 
-    async def load_test_concurrent_requests(self, concurrent_users: int = 10,
-                                          duration_seconds: int = 30) -> Dict[str, Any]:
+    async def load_test_concurrent_requests(
+        self, concurrent_users: int = 10, duration_seconds: int = 30
+    ) -> Dict[str, Any]:
         """Perform load testing with concurrent users."""
         self.log(f"Load testing with {concurrent_users} concurrent users for {duration_seconds}s...")
 
@@ -194,7 +194,7 @@ class PerformanceBenchmarker:
                         "name": f"load_test_{user_id}_{int(time.time() * 1000)}",
                         "category": "load_test",
                         "content": f"Load test prompt from user {user_id}",
-                        "created_by": f"user_{user_id}"
+                        "created_by": f"user_{user_id}",
                     }
                     result = await self.make_request("POST", "/api/v1/prompts", prompt_data)
                 else:
@@ -226,7 +226,7 @@ class PerformanceBenchmarker:
             "actual_duration": actual_duration,
             "total_requests": total_requests,
             "requests_per_second": total_requests / actual_duration,
-            "successful_requests": len(all_response_times)
+            "successful_requests": len(all_response_times),
         }
 
         if all_response_times:
@@ -251,7 +251,7 @@ class PerformanceBenchmarker:
             "99th_percentile": sorted_times[int(len(times) * 0.99)],
             "p50": statistics.median(times),
             "p95": sorted_times[int(len(times) * 0.95)],
-            "p99": sorted_times[int(len(times) * 0.99)]
+            "p99": sorted_times[int(len(times) * 0.99)],
         }
 
     def monitor_memory_usage(self, operation_name: str) -> Dict[str, float]:
@@ -262,7 +262,7 @@ class PerformanceBenchmarker:
             "rss_mb": memory_info.rss / 1024 / 1024,
             "vms_mb": memory_info.vms / 1024 / 1024,
             "operation": operation_name,
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
     async def run_quick_benchmark(self) -> Dict[str, Any]:
@@ -374,11 +374,8 @@ class PerformanceBenchmarker:
         timestamp = int(time.time())
         filepath = Path(f"benchmark_results_{timestamp}.json")
 
-        with open(filepath, 'w') as f:
-            json.dump({
-                "timestamp": timestamp,
-                "results": results
-            }, f, indent=2, default=str)
+        with open(filepath, "w") as f:
+            json.dump({"timestamp": timestamp, "results": results}, f, indent=2, default=str)
 
         print(f"\n📊 Results saved to {filepath}")
 
@@ -386,18 +383,12 @@ class PerformanceBenchmarker:
 async def main():
     """Main benchmarking function."""
     parser = argparse.ArgumentParser(description="Prompt Store Performance Benchmarking")
-    parser.add_argument("--url", default="http://localhost:5110",
-                       help="Base URL of prompt_store service")
-    parser.add_argument("--quick", action="store_true",
-                       help="Run quick benchmark (fast, basic metrics)")
-    parser.add_argument("--full", action="store_true",
-                       help="Run full benchmark (comprehensive, takes longer)")
-    parser.add_argument("--load-test", action="store_true",
-                       help="Run load testing (stress testing with concurrency)")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Enable verbose output")
-    parser.add_argument("--save", action="store_true",
-                       help="Save results to JSON file")
+    parser.add_argument("--url", default="http://localhost:5110", help="Base URL of prompt_store service")
+    parser.add_argument("--quick", action="store_true", help="Run quick benchmark (fast, basic metrics)")
+    parser.add_argument("--full", action="store_true", help="Run full benchmark (comprehensive, takes longer)")
+    parser.add_argument("--load-test", action="store_true", help="Run load testing (stress testing with concurrency)")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
+    parser.add_argument("--save", action="store_true", help="Save results to JSON file")
 
     args = parser.parse_args()
 
@@ -422,6 +413,7 @@ async def main():
             print(f"\n❌ Benchmark failed: {e}")
             if args.verbose:
                 import traceback
+
                 traceback.print_exc()
 
 

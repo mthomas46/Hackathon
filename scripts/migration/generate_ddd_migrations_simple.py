@@ -5,8 +5,8 @@ architecture without complex dependencies.
 """
 
 import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 class SimpleMigrationGenerator:
@@ -395,6 +395,17 @@ def create_ddd_schema(connection):
     connection.commit()
     print("✅ DDD schema created successfully!")
 
+    # Add the actual migration functions
+    script_content += "\n\n" + create_ddd_schema.__code__.co_filename.split('/')[-1] + " functions:\n\n"
+    script_content += f'''
+
+
+create_ddd_schema = {create_ddd_schema.__name__}
+migrate_existing_data = {migrate_existing_data.__name__}
+'''
+
+    return script_content
+
 
 def migrate_existing_data(connection):
     """Migrate existing data if any exists."""
@@ -417,7 +428,7 @@ def migrate_existing_data(connection):
 def create_migration_script():
     """Create the complete migration script."""
 
-    script_content = '''#!/usr/bin/env python3
+    script_content = '''  #!/usr/bin/env python3
 """DDD Schema Migration Script
 
 Run this script to migrate the database to the new Domain-Driven Design schema.
@@ -464,22 +475,12 @@ def main():
         sys.exit(1)
 
     finally:
-        if 'conn' in locals():
+        if "conn" in locals():
             conn.close()
 
 
 if __name__ == "__main__":
     main()
-'''
-
-    # Add the actual migration functions
-    script_content += "\n\n" + create_ddd_schema.__code__.co_filename.split('/')[-1] + " functions:\n\n"
-    script_content += f'''
-{create_ddd_schema.__code__.co_name} = {create_ddd_schema.__name__}
-{migrate_existing_data.__code__.co_name} = {migrate_existing_data.__name__}
-'''
-
-    return script_content
 
 
 def main():
@@ -495,7 +496,7 @@ def main():
 
     # Write migration script
     output_path = generator.output_dir / "migrate_ddd_schema.py"
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(migration_script)
 
     print(f"✅ Generated DDD migration script: {output_path}")

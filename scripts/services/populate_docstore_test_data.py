@@ -19,13 +19,13 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 # Add services to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from services.shared.utilities import utc_now, stable_hash
 from services.shared.envelopes import DocumentEnvelope
+from services.shared.utilities import stable_hash, utc_now
 
 
 def generate_content_hash(content: str) -> str:
@@ -84,8 +84,8 @@ Environment variables:
                 "repo": "main",
                 "url": "https://github.com/hackathon-project/main",
                 "language": "Markdown",
-                "size": 2048
-            }
+                "size": 2048,
+            },
         },
         {
             "id": "github:hackathon-project:issue-123",
@@ -120,8 +120,8 @@ The current CLI is functional but lacks modern interactive features that would i
                 "title": "Implement Interactive CLI Features",
                 "labels": ["enhancement", "cli", "ux"],
                 "assignee": "developer1",
-                "milestone": "v2.0.0"
-            }
+                "milestone": "v2.0.0",
+            },
         },
         {
             "id": "github:hackathon-project:pr-456",
@@ -163,9 +163,9 @@ Closes #123""",
                 "author": "developer2",
                 "additions": 1200,
                 "deletions": 300,
-                "changed_files": 5
-            }
-        }
+                "changed_files": 5,
+            },
+        },
     ]
 
 
@@ -209,8 +209,8 @@ The current microservices architecture needs modernization to support scaling re
                 "reporter": "product-owner",
                 "story_points": 21,
                 "epic_link": "PROJ-100",
-                "url": "https://company.atlassian.net/browse/PROJ-123"
-            }
+                "url": "https://company.atlassian.net/browse/PROJ-123",
+            },
         },
         {
             "id": "jira:PROJ-124",
@@ -245,9 +245,9 @@ Migrate from SQLite to PostgreSQL for production readiness and improved performa
                 "assignee": "backend-dev",
                 "story_points": 8,
                 "epic_link": "PROJ-123",
-                "labels": ["database", "migration", "postgres"]
-            }
-        }
+                "labels": ["database", "migration", "postgres"],
+            },
+        },
     ]
 
 
@@ -348,8 +348,8 @@ Error responses include a JSON body:
                 "version": 5,
                 "last_modified": "2024-01-15T10:30:00Z",
                 "author": "tech-writer",
-                "url": "https://company.atlassian.net/wiki/spaces/API/pages/789/API+Documentation"
-            }
+                "url": "https://company.atlassian.net/wiki/spaces/API/pages/789/API+Documentation",
+            },
         }
     ]
 
@@ -407,8 +407,8 @@ if __name__ == "__main__":
                 "path": "services/cli/main.py",
                 "lines": 35,
                 "size": 1024,
-                "complexity": "low"
-            }
+                "complexity": "low",
+            },
         },
         {
             "id": "code:services/shared/config.py",
@@ -486,9 +486,9 @@ def get_config_value(key: str, default: Any = None, section: Optional[str] = Non
                 "path": "services/shared/config.py",
                 "lines": 67,
                 "size": 2048,
-                "complexity": "medium"
-            }
-        }
+                "complexity": "medium",
+            },
+        },
     ]
 
 
@@ -600,8 +600,8 @@ Get document quality metrics.
                 "service": "doc_store",
                 "version": "v1.0",
                 "endpoints": 15,
-                "format": "OpenAPI-like"
-            }
+                "format": "OpenAPI-like",
+            },
         }
     ]
 
@@ -659,8 +659,8 @@ Confidence Score: 0.94""",
                 "issues_found": 2,
                 "processing_time": 2.3,
                 "tokens_used": 1247,
-                "confidence": 0.94
-            }
+                "confidence": 0.94,
+            },
         },
         {
             "id": "analysis:security:code:services/cli/main.py",
@@ -715,8 +715,8 @@ COMPLIANCE CHECKS
                 "score": 0.88,
                 "vulnerabilities": {"medium": 1, "high": 0, "critical": 0},
                 "cvss_score": 5.3,
-                "compliance": {"secrets": True, "imports": True, "paths": False, "sql": True}
-            }
+                "compliance": {"secrets": True, "imports": True, "paths": False, "sql": True},
+            },
         },
         {
             "id": "analysis:quality:confluence:page-789",
@@ -777,17 +777,12 @@ Cross-references: 85% complete""",
                 "model": "gpt-4-turbo",
                 "document_id": "confluence:page-789",
                 "score": 0.95,
-                "metrics": {
-                    "readability": 0.97,
-                    "completeness": 0.93,
-                    "accuracy": 0.96,
-                    "consistency": 0.94
-                },
+                "metrics": {"readability": 0.97, "completeness": 0.93, "accuracy": 0.96, "consistency": 0.94},
                 "word_count": 1247,
                 "code_examples": 12,
-                "sections": 8
-            }
-        }
+                "sections": 8,
+            },
+        },
     ]
 
 
@@ -855,8 +850,8 @@ Style (v1.5): Score 0.93, Confidence 0.89
                 "confidence": 0.96,
                 "agreement_level": "high",
                 "processing_time": 8.7,
-                "recommendations": ["consistency_checks", "security_review", "style_updates"]
-            }
+                "recommendations": ["consistency_checks", "security_review", "style_updates"],
+            },
         }
     ]
 
@@ -912,8 +907,8 @@ def create_style_examples() -> List[Dict[str, Any]]:
                 "category": "documentation",
                 "style_guide": "PEP 257",
                 "complexity": "advanced",
-                "tags": ["docstring", "type_hints", "examples", "error_handling"]
-            }
+                "tags": ["docstring", "type_hints", "examples", "error_handling"],
+            },
         },
         {
             "id": "style:typescript:interface_design",
@@ -1001,9 +996,9 @@ export function createAnalysisConfig(params: {
                 "category": "interfaces",
                 "style_guide": "TypeScript Handbook",
                 "complexity": "advanced",
-                "tags": ["interfaces", "documentation", "validation", "type_safety"]
-            }
-        }
+                "tags": ["interfaces", "documentation", "validation", "type_safety"],
+            },
+        },
     ]
 
 
@@ -1013,9 +1008,10 @@ async def populate_docstore():
 
     # For now, populate directly to SQLite database
     # This allows us to test the data without needing the service running
-    import sqlite3
     import json
     import os
+    import sqlite3
+
     from services.shared.utilities import stable_hash, utc_now
 
     # Get database path from config or default
@@ -1026,7 +1022,8 @@ async def populate_docstore():
     conn.execute("PRAGMA journal_mode=WAL;")
 
     # Ensure tables exist
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS documents (
           id TEXT PRIMARY KEY,
           content TEXT,
@@ -1034,9 +1031,11 @@ async def populate_docstore():
           metadata TEXT,
           created_at TEXT
         )
-    """)
+    """
+    )
 
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS analyses (
           id TEXT PRIMARY KEY,
           document_id TEXT,
@@ -1049,7 +1048,8 @@ async def populate_docstore():
           created_at TEXT,
           FOREIGN KEY(document_id) REFERENCES documents(id)
         )
-    """)
+    """
+    )
 
     # Collect all test documents
     all_documents = []
@@ -1064,7 +1064,9 @@ async def populate_docstore():
     ensembles = create_ensemble_documents()
     style_examples = create_style_examples()
 
-    print(f"📄 Creating {len(all_documents)} documents, {len(analyses)} analyses, {len(ensembles)} ensembles, {len(style_examples)} style examples...")
+    print(
+        f"📄 Creating {len(all_documents)} documents, {len(analyses)} analyses, {len(ensembles)} ensembles, {len(style_examples)} style examples..."
+    )
 
     success_count = 0
     error_count = 0
@@ -1076,10 +1078,13 @@ async def populate_docstore():
             content_hash = stable_hash(doc["content"])
             metadata_json = json.dumps(doc["metadata"])
 
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO documents (id, content, content_hash, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?)
-            """, (doc["id"], doc["content"], content_hash, metadata_json, now))
+            """,
+                (doc["id"], doc["content"], content_hash, metadata_json, now),
+            )
 
             success_count += 1
             doc_type = doc["metadata"].get("type", "unknown")
@@ -1103,10 +1108,13 @@ async def populate_docstore():
             # Use content hash of analysis content as prompt_hash for simplicity
             prompt_hash = stable_hash(analysis["content"])[:16]
 
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO analyses (id, document_id, analyzer, model, prompt_hash, result, score, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (analysis_id, doc_id, analyzer, model, prompt_hash, analysis["content"], score, metadata_json, now))
+            """,
+                (analysis_id, doc_id, analyzer, model, prompt_hash, analysis["content"], score, metadata_json, now),
+            )
 
             success_count += 1
             analysis_type = analysis["metadata"].get("type", "unknown")
@@ -1122,10 +1130,13 @@ async def populate_docstore():
             content_hash = stable_hash(ensemble["content"])
             metadata_json = json.dumps(ensemble["metadata"])
 
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO documents (id, content, content_hash, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?)
-            """, (ensemble["id"], ensemble["content"], content_hash, metadata_json, now))
+            """,
+                (ensemble["id"], ensemble["content"], content_hash, metadata_json, now),
+            )
 
             success_count += 1
             print(f"  ✅ Created ensemble - {ensemble['id']}")
@@ -1140,10 +1151,13 @@ async def populate_docstore():
             content_hash = stable_hash(style["content"])
             metadata_json = json.dumps(style["metadata"])
 
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO documents (id, content, content_hash, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?)
-            """, (style["id"], style["content"], content_hash, metadata_json, now))
+            """,
+                (style["id"], style["content"], content_hash, metadata_json, now),
+            )
 
             success_count += 1
             style_type = style["metadata"].get("type", "unknown")

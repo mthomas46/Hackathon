@@ -5,11 +5,11 @@ This validates the module structure and import dependencies without requiring
 the full service to be running.
 """
 
-import sys
 import importlib
+import sys
 import traceback
-from typing import Dict, List, Any
 from pathlib import Path
+from typing import Any, Dict, List
 
 
 class ServiceImportValidator:
@@ -53,9 +53,7 @@ class ServiceImportValidator:
             "failed_imports": failed_imports,
             "success_rate": round(success_rate, 2),
             "import_results": import_results,
-            "failed_modules": [
-                r for r in import_results if not r["success"]
-            ]
+            "failed_modules": [r for r in import_results if not r["success"]],
         }
 
         print("\n📊 IMPORT VALIDATION SUMMARY:")
@@ -82,26 +80,22 @@ class ServiceImportValidator:
             "services.analysis-service.domain.factories.document_factory",
             "services.analysis-service.domain.factories.analysis_factory",
             "services.analysis-service.domain.factories.finding_factory",
-
             # Application layer
             "services.analysis-service.application.use_cases.perform_analysis_use_case",
             "services.analysis-service.application.dto.request_dtos",
             "services.analysis-service.application.dto.response_dtos",
             "services.analysis-service.application.services.application_service",
-
             # Infrastructure layer
             "services.analysis-service.infrastructure.repositories.sqlite_document_repository",
             "services.analysis-service.infrastructure.repositories.sqlite_analysis_repository",
             "services.analysis-service.infrastructure.repositories.sqlite_finding_repository",
             "services.analysis-service.infrastructure.config.infrastructure_config",
-
             # Presentation layer
             "services.analysis-service.presentation.controllers.analysis_controller",
             "services.analysis-service.presentation.controllers.workflow_controller",
             "services.analysis-service.presentation.controllers.distributed_controller",
             "services.analysis-service.presentation.models.analysis",
             "services.analysis-service.presentation.models.base",
-
             # Core modules
             "services.analysis-service.modules.semantic_analyzer",
             "services.analysis-service.modules.sentiment_analyzer",
@@ -113,9 +107,8 @@ class ServiceImportValidator:
             "services.analysis-service.modules.workflow_trigger",
             "services.analysis-service.modules.distributed_processor",
             "services.analysis-service.modules.change_impact_analyzer",
-
             # Main service
-            "services.analysis-service.main_new"
+            "services.analysis-service.main_new",
         ]
 
     def _test_module_import(self, module_path: str) -> Dict[str, Any]:
@@ -132,7 +125,7 @@ class ServiceImportValidator:
                 "module": module_path,
                 "success": True,
                 "error": None,
-                "has_classes": hasattr(module, '__all__') or len(dir(module)) > 0
+                "has_classes": hasattr(module, "__all__") or len(dir(module)) > 0,
             }
 
         except ImportError as e:
@@ -140,14 +133,14 @@ class ServiceImportValidator:
                 "module": module_path,
                 "success": False,
                 "error": f"ImportError: {str(e)}",
-                "traceback": traceback.format_exc()
+                "traceback": traceback.format_exc(),
             }
         except Exception as e:
             return {
                 "module": module_path,
                 "success": False,
                 "error": f"Error: {str(e)}",
-                "traceback": traceback.format_exc()
+                "traceback": traceback.format_exc(),
             }
 
 
@@ -159,14 +152,7 @@ def validate_service_structure(service_path: str) -> Dict[str, Any]:
     structure_issues = []
 
     # Check required directories exist
-    required_dirs = [
-        "domain",
-        "application",
-        "infrastructure",
-        "presentation",
-        "modules",
-        "tests"
-    ]
+    required_dirs = ["domain", "application", "infrastructure", "presentation", "modules", "tests"]
 
     for dir_name in required_dirs:
         dir_path = service_dir / dir_name
@@ -187,7 +173,7 @@ def validate_service_structure(service_path: str) -> Dict[str, Any]:
         "infrastructure/repositories",
         "infrastructure/config",
         "presentation/controllers",
-        "presentation/models"
+        "presentation/models",
     ]
 
     for ddd_path in ddd_dirs:
@@ -208,7 +194,7 @@ def validate_service_structure(service_path: str) -> Dict[str, Any]:
     return {
         "structure_valid": len(structure_issues) == 0,
         "issues": structure_issues,
-        "missing_init_files": init_files_missing
+        "missing_init_files": init_files_missing,
     }
 
 
@@ -217,10 +203,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Service Import Validation")
-    parser.add_argument("--service", default="services/analysis-service",
-                       help="Path to service directory")
-    parser.add_argument("--output", default="import_validation_results.json",
-                       help="Output file for results")
+    parser.add_argument("--service", default="services/analysis-service", help="Path to service directory")
+    parser.add_argument("--output", default="import_validation_results.json", help="Output file for results")
 
     args = parser.parse_args()
 
@@ -248,7 +232,7 @@ def main():
         "structure_validation": structure_result,
         "import_validation": import_result,
         "overall_success": structure_result["structure_valid"] and import_result["success_rate"] >= 95,
-        "recommendations": []
+        "recommendations": [],
     }
 
     # Generate recommendations
@@ -259,7 +243,8 @@ def main():
 
     # Save results
     import json
-    with open(args.output, 'w') as f:
+
+    with open(args.output, "w") as f:
         json.dump(final_result, f, indent=2, default=str)
 
     print(f"\n💾 Results saved to: {args.output}")

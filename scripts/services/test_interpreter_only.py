@@ -6,11 +6,11 @@ Test the successfully implemented advanced NLP engine.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
 
 # Import the working interpreter module
 from services.interpreter.modules.advanced_nlp_engine import test_advanced_nlp

@@ -17,20 +17,21 @@ Features:
 Author: Ecosystem Hardening Framework
 """
 
-import json
-import yaml
-import os
 import hashlib
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Set, Tuple, Union
+import json
+import logging
+import os
+import re
+import sys
+import tomllib
+from collections import defaultdict
+from configparser import ConfigParser
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
-from configparser import ConfigParser
-import tomllib
-import re
-from collections import defaultdict
-import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+import yaml
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ConfigFile:
     """Represents a configuration file with metadata"""
+
     path: Path
     format: str
     content: Dict[str, Any]
@@ -52,8 +54,9 @@ class ConfigFile:
 @dataclass
 class DriftIssue:
     """Represents a configuration drift issue"""
+
     issue_type: str  # "missing", "inconsistent", "redundant", "outdated"
-    severity: str    # "critical", "warning", "info"
+    severity: str  # "critical", "warning", "info"
     file_a: ConfigFile
     key_path: str
     file_b: Optional[ConfigFile] = None
@@ -66,6 +69,7 @@ class DriftIssue:
 @dataclass
 class DriftReport:
     """Comprehensive configuration drift report"""
+
     total_files_scanned: int
     total_issues_found: int
     critical_issues: int
@@ -102,14 +106,14 @@ class ConfigDriftDetector:
             "env": [".env*", "*.env"],
             "ini": ["*.ini", "*.cfg", "*.conf"],
             "toml": ["*.toml"],
-            "properties": ["*.properties"]
+            "properties": ["*.properties"],
         }
 
         # Environment-specific directories
         self.environment_dirs = {
             "development": ["config", "docker-compose.dev.yml"],
             "staging": ["config.staging", "docker-compose.staging.yml"],
-            "production": ["config.prod", "docker-compose.prod.yml"]
+            "production": ["config.prod", "docker-compose.prod.yml"],
         }
 
         # Critical configuration keys that should be consistent
@@ -117,7 +121,7 @@ class ConfigDriftDetector:
             "database": ["host", "port", "name", "user"],
             "redis": ["host", "port", "db"],
             "services": ["ports", "dependencies", "environment"],
-            "security": ["secret_key", "jwt_secret", "api_keys"]
+            "security": ["secret_key", "jwt_secret", "api_keys"],
         }
 
         logger.info("🔍 Configuration Drift Detector initialized")
@@ -138,9 +142,7 @@ class ConfigDriftDetector:
             for pattern in patterns:
                 for file_path in self.workspace_path.rglob(pattern):
                     # Skip certain directories
-                    if any(skip in str(file_path) for skip in [
-                        "__pycache__", ".git", "node_modules", ".venv", "venv"
-                    ]):
+                    if any(skip in str(file_path) for skip in ["__pycache__", ".git", "node_modules", ".venv", "venv"]):
                         continue
 
                     try:
@@ -175,11 +177,11 @@ class ConfigDriftDetector:
             content = {}
 
             if format_type == "yaml":
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = yaml.safe_load(f) or {}
 
             elif format_type == "json":
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = json.load(f)
 
             elif format_type == "env":
@@ -189,14 +191,14 @@ class ConfigDriftDetector:
                 content = self._parse_ini_file(file_path)
 
             elif format_type == "toml":
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     content = tomllib.load(f)
 
             elif format_type == "properties":
                 content = self._parse_properties_file(file_path)
 
             # Generate checksum
-            file_content = file_path.read_text(encoding='utf-8')
+            file_content = file_path.read_text(encoding="utf-8")
             checksum = hashlib.md5(file_content.encode()).hexdigest()
 
             # Get modification time
@@ -204,11 +206,7 @@ class ConfigDriftDetector:
             last_modified = datetime.fromtimestamp(stat.st_mtime)
 
             return ConfigFile(
-                path=file_path,
-                format=format_type,
-                content=content,
-                checksum=checksum,
-                last_modified=last_modified
+                path=file_path, format=format_type, content=content, checksum=checksum, last_modified=last_modified
             )
 
         except Exception as e:
@@ -218,13 +216,13 @@ class ConfigDriftDetector:
     def _parse_env_file(self, file_path: Path) -> Dict[str, str]:
         """Parse .env file format"""
         env_vars = {}
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith('#'):
-                    if '=' in line:
-                        key, value = line.split('=', 1)
-                        env_vars[key.strip()] = value.strip().strip('"\'')
+                if line and not line.startswith("#"):
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        env_vars[key.strip()] = value.strip().strip("\"'")
         return env_vars
 
     def _parse_ini_file(self, file_path: Path) -> Dict[str, Any]:
@@ -243,11 +241,11 @@ class ConfigDriftDetector:
     def _parse_properties_file(self, file_path: Path) -> Dict[str, str]:
         """Parse Java properties file"""
         properties = {}
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
                     properties[key.strip()] = value.strip()
         return properties
 
@@ -278,7 +276,11 @@ class ConfigDriftDetector:
         # Check if file is in a service directory
         for parent in file_path.parents:
             if parent.name.startswith("service") or parent.name in [
-                "orchestrator", "doc_store", "llm_gateway", "frontend", "redis"
+                "orchestrator",
+                "doc_store",
+                "llm_gateway",
+                "frontend",
+                "redis",
             ]:
                 return parent.name
 
@@ -289,7 +291,7 @@ class ConfigDriftDetector:
             "doc_store": ["doc", "document"],
             "llm_gateway": ["llm", "gateway"],
             "frontend": ["frontend", "ui", "web"],
-            "redis": ["redis", "cache"]
+            "redis": ["redis", "cache"],
         }
 
         for service, indicators in service_indicators.items():
@@ -342,7 +344,7 @@ class ConfigDriftDetector:
         # Compare development vs staging vs production
         environments = ["development", "staging", "production"]
         for i, env_a in enumerate(environments[:-1]):
-            for env_b in environments[i+1:]:
+            for env_b in environments[i + 1 :]:
                 if env_a in files_by_env and env_b in files_by_env:
                     env_a_files = files_by_env[env_a]
                     env_b_files = files_by_env[env_b]
@@ -364,7 +366,7 @@ class ConfigDriftDetector:
             if len(files) > 1:
                 # Compare all files for the same service
                 for i, file_a in enumerate(files[:-1]):
-                    for file_b in files[i+1:]:
+                    for file_b in files[i + 1 :]:
                         drift_issues = self._compare_config_files(file_a, file_b)
                         issues.extend(drift_issues)
 
@@ -391,26 +393,30 @@ class ConfigDriftDetector:
         missing_in_a = keys_b - keys_a
 
         for key in missing_in_b:
-            issues.append(DriftIssue(
-                issue_type="missing",
-                severity="warning",
-                file_a=file_a,
-                key_path=key,
-                file_b=file_b,
-                description=f"Key '{key}' exists in {file_a.path.name} but missing in {file_b.path.name}",
-                suggestion=f"Add '{key}' to {file_b.path.name}"
-            ))
+            issues.append(
+                DriftIssue(
+                    issue_type="missing",
+                    severity="warning",
+                    file_a=file_a,
+                    key_path=key,
+                    file_b=file_b,
+                    description=f"Key '{key}' exists in {file_a.path.name} but missing in {file_b.path.name}",
+                    suggestion=f"Add '{key}' to {file_b.path.name}",
+                )
+            )
 
         for key in missing_in_a:
-            issues.append(DriftIssue(
-                issue_type="missing",
-                severity="warning",
-                file_a=file_b,
-                key_path=key,
-                file_b=file_a,
-                description=f"Key '{key}' exists in {file_b.path.name} but missing in {file_a.path.name}",
-                suggestion=f"Add '{key}' to {file_a.path.name}"
-            ))
+            issues.append(
+                DriftIssue(
+                    issue_type="missing",
+                    severity="warning",
+                    file_a=file_b,
+                    key_path=key,
+                    file_b=file_a,
+                    description=f"Key '{key}' exists in {file_b.path.name} but missing in {file_a.path.name}",
+                    suggestion=f"Add '{key}' to {file_a.path.name}",
+                )
+            )
 
         # Find inconsistent values
         common_keys = keys_a & keys_b
@@ -420,17 +426,19 @@ class ConfigDriftDetector:
 
             if self._values_differ(value_a, value_b):
                 severity = "critical" if self._is_critical_key(key) else "warning"
-                issues.append(DriftIssue(
-                    issue_type="inconsistent",
-                    severity=severity,
-                    file_a=file_a,
-                    key_path=key,
-                    file_b=file_b,
-                    expected_value=value_a,
-                    actual_value=value_b,
-                    description=f"Inconsistent value for '{key}': {value_a} vs {value_b}",
-                    suggestion=f"Standardize value for '{key}' across environments"
-                ))
+                issues.append(
+                    DriftIssue(
+                        issue_type="inconsistent",
+                        severity=severity,
+                        file_a=file_a,
+                        key_path=key,
+                        file_b=file_b,
+                        expected_value=value_a,
+                        actual_value=value_b,
+                        description=f"Inconsistent value for '{key}': {value_a} vs {value_b}",
+                        suggestion=f"Standardize value for '{key}' across environments",
+                    )
+                )
 
         return issues
 
@@ -455,14 +463,14 @@ class ConfigDriftDetector:
 
     def _get_nested_value(self, data: Any, key_path: str) -> Any:
         """Get value from nested dictionary using dot notation"""
-        keys = key_path.split('.')
+        keys = key_path.split(".")
         current = data
 
         for key in keys:
-            if '[' in key and ']' in key:
+            if "[" in key and "]" in key:
                 # Handle array indexing
-                base_key, index = key.split('[', 1)
-                index = int(index.rstrip(']'))
+                base_key, index = key.split("[", 1)
+                index = int(index.rstrip("]"))
                 if base_key in current and isinstance(current[base_key], list):
                     current = current[base_key][index]
                 else:
@@ -527,17 +535,19 @@ class ConfigDriftDetector:
                         first_value = values[0][1]
                         for file, value in values[1:]:
                             if self._values_differ(first_value, value):
-                                issues.append(DriftIssue(
-                                    issue_type="inconsistent",
-                                    severity="critical",
-                                    file_a=values[0][0],
-                                    key_path=key,
-                                    file_b=file,
-                                    expected_value=first_value,
-                                    actual_value=value,
-                                    description=f"Critical config '{key}' differs across {service} files",
-                                    suggestion=f"Ensure '{key}' is consistent across all {service} configuration files"
-                                ))
+                                issues.append(
+                                    DriftIssue(
+                                        issue_type="inconsistent",
+                                        severity="critical",
+                                        file_a=values[0][0],
+                                        key_path=key,
+                                        file_b=file,
+                                        expected_value=first_value,
+                                        actual_value=value,
+                                        description=f"Critical config '{key}' differs across {service} files",
+                                        suggestion=f"Ensure '{key}' is consistent across all {service} configuration files",
+                                    )
+                                )
 
         return issues
 
@@ -554,28 +564,32 @@ class ConfigDriftDetector:
             if len(files) > 1:
                 # Multiple files with same content
                 for i in range(1, len(files)):
-                    issues.append(DriftIssue(
-                        issue_type="redundant",
-                        severity="info",
-                        file_a=files[0],
-                        key_path="",
-                        file_b=files[i],
-                        description=f"Duplicate configuration content in {files[i].path.name}",
-                        suggestion=f"Consider consolidating duplicate configuration files"
-                    ))
+                    issues.append(
+                        DriftIssue(
+                            issue_type="redundant",
+                            severity="info",
+                            file_a=files[0],
+                            key_path="",
+                            file_b=files[i],
+                            description=f"Duplicate configuration content in {files[i].path.name}",
+                            suggestion=f"Consider consolidating duplicate configuration files",
+                        )
+                    )
 
         # Check for potentially outdated files
         for config_file in self.config_files:
             days_old = (datetime.now() - config_file.last_modified).days
             if days_old > 90:  # Older than 3 months
-                issues.append(DriftIssue(
-                    issue_type="outdated",
-                    severity="warning",
-                    file_a=config_file,
-                    key_path="",
-                    description=f"Configuration file {config_file.path.name} hasn't been modified in {days_old} days",
-                    suggestion="Review if this configuration file is still needed"
-                ))
+                issues.append(
+                    DriftIssue(
+                        issue_type="outdated",
+                        severity="warning",
+                        file_a=config_file,
+                        key_path="",
+                        description=f"Configuration file {config_file.path.name} hasn't been modified in {days_old} days",
+                        suggestion="Review if this configuration file is still needed",
+                    )
+                )
 
         return issues
 
@@ -616,7 +630,7 @@ class ConfigDriftDetector:
             files_by_environment=dict(files_by_environment),
             issues_by_type=dict(issues_by_type),
             issues_by_file=dict(issues_by_file),
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         return report
@@ -631,7 +645,9 @@ class ConfigDriftDetector:
 
         critical_count = sum(1 for issue in self.drift_issues if issue.severity == "critical")
         if critical_count > 0:
-            recommendations.append(f"🔴 CRITICAL: {critical_count} critical configuration issues found - fix immediately")
+            recommendations.append(
+                f"🔴 CRITICAL: {critical_count} critical configuration issues found - fix immediately"
+            )
 
         # Environment-specific recommendations
         env_issues = defaultdict(int)
@@ -655,12 +671,14 @@ class ConfigDriftDetector:
             recommendations.append("🗑️ Review and remove outdated configuration files")
 
         # General recommendations
-        recommendations.extend([
-            "📊 Implement automated configuration drift monitoring in CI/CD",
-            "🔒 Use configuration management tools (Ansible, Terraform, etc.)",
-            "📝 Document configuration standards and best practices",
-            "🔄 Regular configuration audits and cleanup"
-        ])
+        recommendations.extend(
+            [
+                "📊 Implement automated configuration drift monitoring in CI/CD",
+                "🔒 Use configuration management tools (Ansible, Terraform, etc.)",
+                "📝 Document configuration standards and best practices",
+                "🔄 Regular configuration audits and cleanup",
+            ]
+        )
 
         return recommendations
 
@@ -672,9 +690,9 @@ class ConfigDriftDetector:
             report: DriftReport to print
             verbose: Whether to include detailed issue information
         """
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("📊 CONFIGURATION DRIFT DETECTION REPORT")
-        print("="*80)
+        print("=" * 80)
         print(f"📁 Total Files Scanned: {report.total_files_scanned}")
         print(f"⚠️  Total Issues Found: {report.total_issues_found}")
         print(f"🔴 Critical Issues: {report.critical_issues}")
@@ -695,11 +713,11 @@ class ConfigDriftDetector:
             print("\n🔍 Top Issues:")
             # Show top 10 most critical issues
             sorted_issues = sorted(
-                report.issues_by_type.get("critical", []) +
-                report.issues_by_type.get("warning", []) +
-                report.issues_by_type.get("info", []),
+                report.issues_by_type.get("critical", [])
+                + report.issues_by_type.get("warning", [])
+                + report.issues_by_type.get("info", []),
                 key=lambda x: {"critical": 3, "warning": 2, "info": 1}[x.severity],
-                reverse=True
+                reverse=True,
             )
 
             for i, issue in enumerate(sorted_issues[:10]):
@@ -711,7 +729,7 @@ class ConfigDriftDetector:
             for rec in report.recommendations:
                 print(f"  • {rec}")
 
-        print("="*80)
+        print("=" * 80)
 
     def save_report(self, report: DriftReport, filename: Optional[str] = None) -> Path:
         """
@@ -741,24 +759,26 @@ class ConfigDriftDetector:
             "scan_duration": report.scan_duration,
             "recommendations": report.recommendations,
             "files_by_environment": {
-                env: [{"path": str(f.path), "format": f.format, "checksum": f.checksum}
-                     for f in files]
+                env: [{"path": str(f.path), "format": f.format, "checksum": f.checksum} for f in files]
                 for env, files in report.files_by_environment.items()
             },
             "issues_by_type": {
-                issue_type: [{
-                    "severity": issue.severity,
-                    "file_a": str(issue.file_a.path),
-                    "file_b": str(issue.file_b.path) if issue.file_b else None,
-                    "key_path": issue.key_path,
-                    "description": issue.description,
-                    "suggestion": issue.suggestion
-                } for issue in issues]
+                issue_type: [
+                    {
+                        "severity": issue.severity,
+                        "file_a": str(issue.file_a.path),
+                        "file_b": str(issue.file_b.path) if issue.file_b else None,
+                        "key_path": issue.key_path,
+                        "description": issue.description,
+                        "suggestion": issue.suggestion,
+                    }
+                    for issue in issues
+                ]
                 for issue_type, issues in report.issues_by_type.items()
-            }
+            },
         }
 
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(report_dict, f, indent=2, default=str)
 
         logger.info(f"💾 Report saved to: {report_path}")
@@ -781,7 +801,7 @@ class ConfigDriftDetector:
             "total_corrections_attempted": 0,
             "successful_corrections": 0,
             "failed_corrections": 0,
-            "corrections": []
+            "corrections": [],
         }
 
         for issue in issues:
@@ -795,11 +815,9 @@ class ConfigDriftDetector:
                 else:
                     results["failed_corrections"] += 1
 
-                results["corrections"].append({
-                    "issue": issue.description,
-                    "action": "add_missing_key",
-                    "success": success
-                })
+                results["corrections"].append(
+                    {"issue": issue.description, "action": "add_missing_key", "success": success}
+                )
 
         logger.info(f"🔧 Applied {results['successful_corrections']} corrections")
         return results
@@ -819,7 +837,7 @@ class ConfigDriftDetector:
                 return False
 
             # Load current content
-            with open(issue.file_a.path, 'r', encoding='utf-8') as f:
+            with open(issue.file_a.path, "r", encoding="utf-8") as f:
                 if issue.file_a.format == "yaml":
                     content = yaml.safe_load(f) or {}
                 elif issue.file_a.format == "json":
@@ -831,7 +849,7 @@ class ConfigDriftDetector:
             self._set_nested_value(content, issue.key_path, issue.expected_value)
 
             # Write back to file
-            with open(issue.file_a.path, 'w', encoding='utf-8') as f:
+            with open(issue.file_a.path, "w", encoding="utf-8") as f:
                 if issue.file_a.format == "yaml":
                     yaml.dump(content, f, default_flow_style=False)
                 elif issue.file_a.format == "json":
@@ -846,7 +864,7 @@ class ConfigDriftDetector:
 
     def _set_nested_value(self, data: Dict[str, Any], key_path: str, value: Any):
         """Set a value in nested dictionary using dot notation"""
-        keys = key_path.split('.')
+        keys = key_path.split(".")
         current = data
 
         for key in keys[:-1]:

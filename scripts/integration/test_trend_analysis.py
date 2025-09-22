@@ -4,22 +4,25 @@
 Validates that the trend analyzer works correctly.
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timedelta
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 def test_trend_analyzer_import():
     """Test that the trend analyzer module can be imported."""
     try:
         from services.analysis_service.modules.trend_analyzer import TrendAnalyzer, analyze_document_trends
+
         print("✅ Trend analyzer module imported successfully")
         return True
     except ImportError as e:
         print(f"❌ Failed to import trend analyzer module: {e}")
         return False
+
 
 def test_trend_analyzer_initialization():
     """Test that the trend analyzer can be initialized."""
@@ -33,6 +36,7 @@ def test_trend_analyzer_initialization():
     except Exception as e:
         print(f"❌ Failed to initialize trend analyzer: {e}")
         return False
+
 
 def test_extract_historical_data():
     """Test extraction of historical data."""
@@ -49,15 +53,15 @@ def test_extract_historical_data():
                 "timestamp": (base_date - timedelta(days=10)).isoformat(),
                 "total_findings": 5,
                 "quality_score": 0.75,
-                "findings": [{"type": "drift", "severity": "high"}]
+                "findings": [{"type": "drift", "severity": "high"}],
             },
             {
                 "document_id": "doc1",
                 "timestamp": (base_date - timedelta(days=5)).isoformat(),
                 "total_findings": 3,
                 "quality_score": 0.82,
-                "findings": [{"type": "consistency", "severity": "medium"}]
-            }
+                "findings": [{"type": "consistency", "severity": "medium"}],
+            },
         ]
 
         df = analyzer._extract_historical_data(sample_results)
@@ -71,6 +75,7 @@ def test_extract_historical_data():
     except Exception as e:
         print(f"❌ Historical data extraction failed: {e}")
         return False
+
 
 def test_trend_pattern_analysis():
     """Test trend pattern analysis."""
@@ -86,26 +91,21 @@ def test_trend_pattern_analysis():
                 "document_id": "doc1",
                 "timestamp": (base_date - timedelta(days=30)).isoformat(),
                 "quality_score": 0.70,
-                "total_findings": 8
+                "total_findings": 8,
             },
             {
                 "document_id": "doc1",
                 "timestamp": (base_date - timedelta(days=20)).isoformat(),
                 "quality_score": 0.75,
-                "total_findings": 6
+                "total_findings": 6,
             },
             {
                 "document_id": "doc1",
                 "timestamp": (base_date - timedelta(days=10)).isoformat(),
                 "quality_score": 0.80,
-                "total_findings": 4
+                "total_findings": 4,
             },
-            {
-                "document_id": "doc1",
-                "timestamp": base_date.isoformat(),
-                "quality_score": 0.85,
-                "total_findings": 2
-            }
+            {"document_id": "doc1", "timestamp": base_date.isoformat(), "quality_score": 0.85, "total_findings": 2},
         ]
 
         df = analyzer._extract_historical_data(sample_results)
@@ -122,6 +122,7 @@ def test_trend_pattern_analysis():
         print(f"❌ Trend pattern analysis failed: {e}")
         return False
 
+
 def test_future_issue_prediction():
     """Test future issue prediction."""
     try:
@@ -137,22 +138,22 @@ def test_future_issue_prediction():
                 "timestamp": (base_date - timedelta(days=20)).isoformat(),
                 "quality_score": 0.75,
                 "total_findings": 6,
-                "findings": [{"type": "drift"}, {"type": "drift"}]
+                "findings": [{"type": "drift"}, {"type": "drift"}],
             },
             {
                 "document_id": "doc1",
                 "timestamp": (base_date - timedelta(days=10)).isoformat(),
                 "quality_score": 0.80,
                 "total_findings": 4,
-                "findings": [{"type": "drift"}]
+                "findings": [{"type": "drift"}],
             },
             {
                 "document_id": "doc1",
                 "timestamp": base_date.isoformat(),
                 "quality_score": 0.85,
                 "total_findings": 2,
-                "findings": []
-            }
+                "findings": [],
+            },
         ]
 
         df = analyzer._extract_historical_data(sample_results)
@@ -162,7 +163,7 @@ def test_future_issue_prediction():
         print(f"   Prediction confidence: {predictions['confidence']:.2f}")
         print(f"   Prediction horizon: {predictions['prediction_horizon_days']} days")
 
-        quality_pred = predictions['predictions'].get('quality_score', {})
+        quality_pred = predictions["predictions"].get("quality_score", {})
         if quality_pred:
             print(f"   Quality trend: {quality_pred.get('current_trend', 'unknown')}")
             print(f"   Predicted final value: {quality_pred.get('predicted_values', [-1])[-1]:.2f}")
@@ -171,6 +172,7 @@ def test_future_issue_prediction():
     except Exception as e:
         print(f"❌ Future issue prediction failed: {e}")
         return False
+
 
 def test_risk_area_identification():
     """Test risk area identification."""
@@ -182,26 +184,13 @@ def test_risk_area_identification():
         # Create sample data with declining trend
         base_date = datetime.now()
         sample_results = [
-            {
-                "document_id": "doc1",
-                "timestamp": (base_date - timedelta(days=10)).isoformat(),
-                "quality_score": 0.85
-            },
-            {
-                "document_id": "doc1",
-                "timestamp": base_date.isoformat(),
-                "quality_score": 0.75
-            }
+            {"document_id": "doc1", "timestamp": (base_date - timedelta(days=10)).isoformat(), "quality_score": 0.85},
+            {"document_id": "doc1", "timestamp": base_date.isoformat(), "quality_score": 0.75},
         ]
 
         df = analyzer._extract_historical_data(sample_results)
         predictions = {
-            'predictions': {
-                'quality_score': {
-                    'current_trend': 'declining',
-                    'predicted_values': [0.65, 0.60]
-                }
-            }
+            "predictions": {"quality_score": {"current_trend": "declining", "predicted_values": [0.65, 0.60]}}
         }
 
         risk_areas = analyzer._identify_risk_areas(df, predictions)
@@ -218,6 +207,7 @@ def test_risk_area_identification():
         print(f"❌ Risk area identification failed: {e}")
         return False
 
+
 async def test_full_trend_analysis():
     """Test the complete trend analysis pipeline."""
     try:
@@ -233,36 +223,33 @@ async def test_full_trend_analysis():
                 "timestamp": (base_date - timedelta(days=30)).isoformat(),
                 "total_findings": 8,
                 "quality_score": 0.70,
-                "findings": [{"type": "drift"}, {"type": "consistency"}]
+                "findings": [{"type": "drift"}, {"type": "consistency"}],
             },
             {
                 "document_id": "test_doc",
                 "timestamp": (base_date - timedelta(days=20)).isoformat(),
                 "total_findings": 6,
                 "quality_score": 0.75,
-                "findings": [{"type": "drift"}]
+                "findings": [{"type": "drift"}],
             },
             {
                 "document_id": "test_doc",
                 "timestamp": (base_date - timedelta(days=10)).isoformat(),
                 "total_findings": 4,
                 "quality_score": 0.80,
-                "findings": [{"type": "consistency"}]
+                "findings": [{"type": "consistency"}],
             },
             {
                 "document_id": "test_doc",
                 "timestamp": base_date.isoformat(),
                 "total_findings": 2,
                 "quality_score": 0.85,
-                "findings": []
-            }
+                "findings": [],
+            },
         ]
 
         result = await analyzer.analyze_documentation_trends(
-            document_id="test_doc",
-            analysis_results=sample_results,
-            prediction_days=14,
-            include_predictions=True
+            document_id="test_doc", analysis_results=sample_results, prediction_days=14, include_predictions=True
         )
 
         print("✅ Full trend analysis pipeline working")
@@ -273,9 +260,9 @@ async def test_full_trend_analysis():
         print(f"   Risk areas: {len(result['risk_areas'])}")
         print(f"   Processing time: {result['processing_time']:.2f}s")
 
-        if result['insights']:
+        if result["insights"]:
             print(f"   Insights ({len(result['insights'])}):")
-            for insight in result['insights'][:2]:  # Show first 2
+            for insight in result["insights"][:2]:  # Show first 2
                 print(f"     - {insight}")
 
         return True
@@ -283,12 +270,14 @@ async def test_full_trend_analysis():
         print(f"❌ Full trend analysis failed: {e}")
         return False
 
+
 def test_main_app_import():
     """Test that the main app can be imported with trend analysis endpoints."""
     try:
         from services.analysis_service.main import app
-        routes = [route.path for route in app.routes if hasattr(route, 'path')]
-        trend_routes = [r for r in routes if 'trends' in r]
+
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
+        trend_routes = [r for r in routes if "trends" in r]
 
         print("✅ Main app imported successfully")
         print(f"✅ Found {len(trend_routes)} trend analysis routes:")
@@ -299,6 +288,7 @@ def test_main_app_import():
     except Exception as e:
         print(f"❌ Failed to import main app: {e}")
         return False
+
 
 def main():
     """Run all tests."""
@@ -322,8 +312,9 @@ def main():
     for test in tests:
         print(f"\n🧪 Running {test.__name__}...")
         try:
-            if test.__name__ == 'test_full_trend_analysis':
+            if test.__name__ == "test_full_trend_analysis":
                 import asyncio
+
                 result = asyncio.run(test())
             else:
                 result = test()
@@ -342,6 +333,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Check the output above for details.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

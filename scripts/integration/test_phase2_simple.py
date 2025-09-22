@@ -6,16 +6,17 @@ Test the core Phase 2 components we've successfully implemented.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
+from services.frontend.modules.realtime_interface import test_realtime_collaboration
 
 # Import available Phase 2 modules
 from services.interpreter.modules.advanced_nlp_engine import test_advanced_nlp
 from services.summarizer_hub.modules.multi_model_summarization import test_multi_model_summarization
-from services.frontend.modules.realtime_interface import test_realtime_collaboration
 
 
 async def run_simplified_phase2_test():
@@ -45,7 +46,10 @@ async def run_simplified_phase2_test():
     print("-" * 50)
     try:
         await test_multi_model_summarization()
-        test_results["summarizer_hub"] = {"passed": True, "message": "Multi-Model Summarization test completed successfully"}
+        test_results["summarizer_hub"] = {
+            "passed": True,
+            "message": "Multi-Model Summarization test completed successfully",
+        }
         print("✅ Summarizer Hub test completed successfully")
     except Exception as e:
         test_results["summarizer_hub"] = {"passed": False, "message": f"Summarizer Hub test failed: {e}"}
@@ -58,7 +62,10 @@ async def run_simplified_phase2_test():
     print("-" * 50)
     try:
         await test_realtime_collaboration()
-        test_results["frontend"] = {"passed": True, "message": "Real-Time Collaborative Interface test completed successfully"}
+        test_results["frontend"] = {
+            "passed": True,
+            "message": "Real-Time Collaborative Interface test completed successfully",
+        }
         print("✅ Frontend test completed successfully")
     except Exception as e:
         test_results["frontend"] = {"passed": False, "message": f"Frontend test failed: {e}"}

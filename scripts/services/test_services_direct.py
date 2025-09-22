@@ -5,14 +5,15 @@ Direct test script to validate services after shared directory restructuring.
 This script directly executes service main files to test imports.
 """
 
-import sys
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
+
 
 def test_service_direct(service_path, service_name):
     """Test a service by directly executing its main file."""
@@ -52,18 +53,13 @@ except Exception as e:
 """
 
         # Run the test script
-        result = subprocess.run(
-            [sys.executable, '-c', test_script],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        result = subprocess.run([sys.executable, "-c", test_script], capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             output = result.stdout.strip()
-            if output == 'SUCCESS':
+            if output == "SUCCESS":
                 return True, None
-            elif output == 'NO_APP_OBJECT':
+            elif output == "NO_APP_OBJECT":
                 return False, "No main app object found"
             else:
                 return True, None  # Unexpected success
@@ -76,35 +72,32 @@ except Exception as e:
     except Exception as e:
         return False, str(e)
 
+
 def main():
     """Main entry point."""
     # Map of service names to their directory paths
     services = {
-        'analysis-service': 'services/analysis-service',
-        'doc_store': 'services/doc_store',
-        'orchestrator': 'services/orchestrator',
-        'source-agent': 'services/source-agent',
-        'frontend': 'services/frontend',
-        'interpreter': 'services/interpreter',
-        'prompt-store': 'services/prompt_store',
-        'cli': 'services/cli',
-        'notification-service': 'services/notification-service',
-        'memory-agent': 'services/memory-agent',
-        'discovery-agent': 'services/discovery-agent',
-        'github-mcp': 'services/github-mcp',
-        'bedrock-proxy': 'services/bedrock-proxy',
-        'architecture-digitizer': 'services/architecture-digitizer',
-        'summarizer-hub': 'services/summarizer-hub',
-        'secure-analyzer': 'services/secure-analyzer',
-        'code-analyzer': 'services/code-analyzer',
-        'log-collector': 'services/log-collector',
+        "analysis-service": "services/analysis-service",
+        "doc_store": "services/doc_store",
+        "orchestrator": "services/orchestrator",
+        "source-agent": "services/source-agent",
+        "frontend": "services/frontend",
+        "interpreter": "services/interpreter",
+        "prompt-store": "services/prompt_store",
+        "cli": "services/cli",
+        "notification-service": "services/notification-service",
+        "memory-agent": "services/memory-agent",
+        "discovery-agent": "services/discovery-agent",
+        "github-mcp": "services/github-mcp",
+        "bedrock-proxy": "services/bedrock-proxy",
+        "architecture-digitizer": "services/architecture-digitizer",
+        "summarizer-hub": "services/summarizer-hub",
+        "secure-analyzer": "services/secure-analyzer",
+        "code-analyzer": "services/code-analyzer",
+        "log-collector": "services/log-collector",
     }
 
-    results = {
-        'passed': [],
-        'failed': [],
-        'skipped': []
-    }
+    results = {"passed": [], "failed": [], "skipped": []}
 
     print("🔍 Testing service imports after shared directory restructuring...\n")
 
@@ -112,12 +105,12 @@ def main():
         full_path = project_root / service_path
 
         if not full_path.exists():
-            results['skipped'].append(service_name)
+            results["skipped"].append(service_name)
             print(f"⏭️  {service_name} - Directory not found")
             continue
 
-        if not (full_path / 'main.py').exists():
-            results['skipped'].append(service_name)
+        if not (full_path / "main.py").exists():
+            results["skipped"].append(service_name)
             print(f"⏭️  {service_name} - main.py not found")
             continue
 
@@ -126,57 +119,58 @@ def main():
         success, error = test_service_direct(full_path, service_name)
 
         if success:
-            results['passed'].append(service_name)
+            results["passed"].append(service_name)
             print(f"  ✅ {service_name} imports successfully")
         else:
-            results['failed'].append((service_name, error))
+            results["failed"].append((service_name, error))
             print(f"  ❌ {service_name} - {error}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("📊 TEST RESULTS SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     print(f"\n✅ PASSED ({len(results['passed'])}):")
-    for service in results['passed']:
+    for service in results["passed"]:
         print(f"  • {service}")
 
-    if results['failed']:
+    if results["failed"]:
         print(f"\n❌ FAILED ({len(results['failed'])}):")
-        for service, error in results['failed']:
+        for service, error in results["failed"]:
             print(f"  • {service}: {error}")
 
-    if results['skipped']:
+    if results["skipped"]:
         print(f"\n⏭️  SKIPPED ({len(results['skipped'])}):")
-        for service in results['skipped']:
+        for service in results["skipped"]:
             print(f"  • {service}")
 
-    total_tested = len(results['passed']) + len(results['failed']) + len(results['skipped'])
-    success_rate = (len(results['passed']) / total_tested * 100) if total_tested > 0 else 0
+    total_tested = len(results["passed"]) + len(results["failed"]) + len(results["skipped"])
+    success_rate = (len(results["passed"]) / total_tested * 100) if total_tested > 0 else 0
 
     print(f"\n📈 Success Rate: {success_rate:.1f}% ({len(results['passed'])}/{total_tested})")
 
     # Save detailed results to file
-    with open(project_root / 'service_test_results.txt', 'w') as f:
+    with open(project_root / "service_test_results.txt", "w") as f:
         f.write("SERVICE IMPORT TEST RESULTS\n")
-        f.write("="*40 + "\n\n")
+        f.write("=" * 40 + "\n\n")
 
         f.write(f"PASSED ({len(results['passed'])}):\n")
-        for service in results['passed']:
+        for service in results["passed"]:
             f.write(f"  • {service}\n")
 
-        if results['failed']:
+        if results["failed"]:
             f.write(f"\nFAILED ({len(results['failed'])}):\n")
-            for service, error in results['failed']:
+            for service, error in results["failed"]:
                 f.write(f"  • {service}: {error}\n")
 
-        if results['skipped']:
+        if results["skipped"]:
             f.write(f"\nSKIPPED ({len(results['skipped'])}):\n")
-            for service in results['skipped']:
+            for service in results["skipped"]:
                 f.write(f"  • {service}\n")
 
         f.write(f"\nSuccess Rate: {success_rate:.1f}% ({len(results['passed'])}/{total_tested})\n")
 
     return results
+
 
 if __name__ == "__main__":
     main()

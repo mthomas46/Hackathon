@@ -4,21 +4,21 @@ Comprehensive CLI Test Suite
 Tests all CLI functionality against live services
 """
 
-import os
-import sys
 import asyncio
 import json
+import os
 import subprocess
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.core.constants_new import ServiceNames
+from services.shared.integrations.clients.clients import ServiceClients
 
 
 class CLIComprehensiveTester:
@@ -101,22 +101,18 @@ class CLIComprehensiveTester:
                 self.test_results["analysis_service_cli"] = {
                     "success": True,
                     "actions_count": len(actions),
-                    "error": None
+                    "error": None,
                 }
                 print(f"✅ Analysis Service CLI: {len(actions)} actions available")
             else:
                 self.test_results["analysis_service_cli"] = {
                     "success": False,
                     "actions_count": 0,
-                    "error": "Analyze action not found"
+                    "error": "Analyze action not found",
                 }
                 print("❌ Analysis Service CLI: Analyze action not found")
         except Exception as e:
-            self.test_results["analysis_service_cli"] = {
-                "success": False,
-                "actions_count": 0,
-                "error": str(e)
-            }
+            self.test_results["analysis_service_cli"] = {"success": False, "actions_count": 0, "error": str(e)}
             print(f"❌ Analysis Service CLI error: {e}")
 
     async def test_doc_store_cli(self):
@@ -139,18 +135,10 @@ class CLIComprehensiveTester:
         actions = build_actions(None, self.clients)
 
         try:
-            self.test_results["doc_store_cli"] = {
-                "success": True,
-                "actions_count": len(actions),
-                "error": None
-            }
+            self.test_results["doc_store_cli"] = {"success": True, "actions_count": len(actions), "error": None}
             print(f"✅ Doc Store CLI: {len(actions)} actions available")
         except Exception as e:
-            self.test_results["doc_store_cli"] = {
-                "success": False,
-                "actions_count": 0,
-                "error": str(e)
-            }
+            self.test_results["doc_store_cli"] = {"success": False, "actions_count": 0, "error": str(e)}
             print(f"❌ Doc Store CLI error: {e}")
 
     async def test_summarizer_cli(self):
@@ -173,18 +161,10 @@ class CLIComprehensiveTester:
         actions = build_actions(None, self.clients)
 
         try:
-            self.test_results["summarizer_cli"] = {
-                "success": True,
-                "actions_count": len(actions),
-                "error": None
-            }
+            self.test_results["summarizer_cli"] = {"success": True, "actions_count": len(actions), "error": None}
             print(f"✅ Summarizer CLI: {len(actions)} actions available")
         except Exception as e:
-            self.test_results["summarizer_cli"] = {
-                "success": False,
-                "actions_count": 0,
-                "error": str(e)
-            }
+            self.test_results["summarizer_cli"] = {"success": False, "actions_count": 0, "error": str(e)}
             print(f"❌ Summarizer CLI error: {e}")
 
     async def test_interpreter_cli(self):
@@ -207,18 +187,10 @@ class CLIComprehensiveTester:
         actions = build_actions(None, self.clients)
 
         try:
-            self.test_results["interpreter_cli"] = {
-                "success": True,
-                "actions_count": len(actions),
-                "error": None
-            }
+            self.test_results["interpreter_cli"] = {"success": True, "actions_count": len(actions), "error": None}
             print(f"✅ Interpreter CLI: {len(actions)} actions available")
         except Exception as e:
-            self.test_results["interpreter_cli"] = {
-                "success": False,
-                "actions_count": 0,
-                "error": str(e)
-            }
+            self.test_results["interpreter_cli"] = {"success": False, "actions_count": 0, "error": str(e)}
             print(f"❌ Interpreter CLI error: {e}")
 
     async def test_prompt_store_cli(self):
@@ -241,18 +213,10 @@ class CLIComprehensiveTester:
         actions = build_actions(None, self.clients)
 
         try:
-            self.test_results["prompt_store_cli"] = {
-                "success": True,
-                "actions_count": len(actions),
-                "error": None
-            }
+            self.test_results["prompt_store_cli"] = {"success": True, "actions_count": len(actions), "error": None}
             print(f"✅ Prompt Store CLI: {len(actions)} actions available")
         except Exception as e:
-            self.test_results["prompt_store_cli"] = {
-                "success": False,
-                "actions_count": 0,
-                "error": str(e)
-            }
+            self.test_results["prompt_store_cli"] = {"success": False, "actions_count": 0, "error": str(e)}
             print(f"❌ Prompt Store CLI error: {e}")
 
     async def test_cli_health_endpoints(self):
@@ -262,6 +226,7 @@ class CLIComprehensiveTester:
         # Test service health checking
         try:
             from services.cli.modules.cli_commands import CLICommands
+
             cli = CLICommands()
             health_data = await cli.check_service_health()
 
@@ -273,7 +238,7 @@ class CLIComprehensiveTester:
                 "success": success,
                 "healthy_services": successful_checks,
                 "total_services": total_checks,
-                "error": None
+                "error": None,
             }
             print(f"✅ CLI Health Endpoints: {successful_checks}/{total_checks} services healthy")
         except Exception as e:
@@ -281,7 +246,7 @@ class CLIComprehensiveTester:
                 "success": False,
                 "healthy_services": 0,
                 "total_services": 0,
-                "error": str(e)
+                "error": str(e),
             }
             print(f"❌ CLI Health Endpoints error: {e}")
 
@@ -291,6 +256,7 @@ class CLIComprehensiveTester:
 
         try:
             from services.cli.modules.cli_commands import CLICommands
+
             cli = CLICommands()
 
             # Run integration tests (this will test multiple services)
@@ -304,7 +270,7 @@ class CLIComprehensiveTester:
                 "success": success,
                 "passed_tests": successful_tests,
                 "total_tests": total_tests,
-                "error": None
+                "error": None,
             }
             print(f"✅ CLI Integration Tests: {successful_tests}/{total_tests} tests passed")
         except Exception as e:
@@ -312,7 +278,7 @@ class CLIComprehensiveTester:
                 "success": False,
                 "passed_tests": 0,
                 "total_tests": 0,
-                "error": str(e)
+                "error": str(e),
             }
             print(f"❌ CLI Integration Tests error: {e}")
 
@@ -322,22 +288,17 @@ class CLIComprehensiveTester:
 
         try:
             from services.cli.modules.cli_commands import CLICommands
+
             cli = CLICommands()
 
             # Test that menus can be created without errors
             cli.print_menu()
             cli.print_header()
 
-            self.test_results["cli_menu_system"] = {
-                "success": True,
-                "error": None
-            }
+            self.test_results["cli_menu_system"] = {"success": True, "error": None}
             print("✅ CLI Menu System: Working")
         except Exception as e:
-            self.test_results["cli_menu_system"] = {
-                "success": False,
-                "error": str(e)
-            }
+            self.test_results["cli_menu_system"] = {"success": False, "error": str(e)}
             print(f"❌ CLI Menu System error: {e}")
 
     async def run_comprehensive_tests(self):
@@ -378,14 +339,14 @@ class CLIComprehensiveTester:
         print(f"Services Available: {sum(self.services_status.values())}/{len(self.services_status)}")
 
         # CLI Functionality Summary
-        cli_tests = {k: v for k, v in self.test_results.items() if k.endswith('_cli')}
+        cli_tests = {k: v for k, v in self.test_results.items() if k.endswith("_cli")}
         total_cli_tests = len(cli_tests)
         passed_cli_tests = sum(1 for result in cli_tests.values() if result["success"])
 
         print(f"\nCLI Functionality Tests: {passed_cli_tests}/{total_cli_tests} passed")
 
         # Integration Tests
-        integration_tests = {k: v for k, v in self.test_results.items() if 'integration' in k or 'health' in k}
+        integration_tests = {k: v for k, v in self.test_results.items() if "integration" in k or "health" in k}
         total_integration_tests = len(integration_tests)
         passed_integration_tests = sum(1 for result in integration_tests.values() if result["success"])
 
@@ -419,18 +380,18 @@ class CLIComprehensiveTester:
                 "passed_tests": passed_tests,
                 "failed_tests": failed_tests,
                 "cli_functionality": f"{passed_cli_tests}/{total_cli_tests}",
-                "integration_tests": f"{passed_integration_tests}/{total_integration_tests}"
-            }
+                "integration_tests": f"{passed_integration_tests}/{total_integration_tests}",
+            },
         }
 
-        with open(results_file, 'w') as f:
+        with open(results_file, "w") as f:
             json.dump(results_data, f, indent=2, default=str)
 
         print(f"\n📄 Detailed results saved to: {results_file}")
 
         # Generate simple report
         report_file = project_root / "scripts" / "test" / "cli_test_report.txt"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             f.write("CLI COMPREHENSIVE TEST REPORT\n")
             f.write("=" * 40 + "\n\n")
             f.write(f"Test Date: {end_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -458,10 +419,8 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="CLI Comprehensive Test Suite")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Enable verbose output")
-    parser.add_argument("--services-only", action="store_true",
-                       help="Only test service availability, skip CLI tests")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
+    parser.add_argument("--services-only", action="store_true", help="Only test service availability, skip CLI tests")
 
     args = parser.parse_args()
 

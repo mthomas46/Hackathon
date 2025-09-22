@@ -6,9 +6,9 @@ architecture, including all entities, relationships, and performance optimizatio
 
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any
+from pathlib import Path
+from typing import Any, Dict, List
 
 # Add the service directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "services" / "analysis-service"))
@@ -257,7 +257,7 @@ class Migration001CreateCoreDomainTables(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -457,7 +457,7 @@ class Migration002CreateAnalysisTables(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -640,7 +640,7 @@ class Migration003CreateRepositoryTables(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -829,7 +829,7 @@ class Migration004CreateDistributedProcessingTables(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -1022,7 +1022,7 @@ class Migration005CreateWorkflowEventTables(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -1210,7 +1210,7 @@ class Migration006CreateAuditMetadataTables(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -1391,7 +1391,7 @@ class Migration007CreatePerformanceIndexes(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -1624,7 +1624,7 @@ class Migration008CreateDataMigrationTriggers(Migration):
 
         # Write migration file
         output_path = self.output_dir / f"{migration_id}.py"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(migration_code)
 
         return str(output_path)
@@ -1635,8 +1635,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="DDD Schema Migration Generator")
-    parser.add_argument("--output", default="migrations/ddd_schema",
-                       help="Output directory for migration files")
+    parser.add_argument("--output", default="migrations/ddd_schema", help="Output directory for migration files")
 
     args = parser.parse_args()
 
@@ -1669,4 +1668,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

@@ -5,22 +5,25 @@ Comprehensive dependency analysis and conflict resolution
 """
 
 import json
-import yaml
+import logging
 import subprocess
 import time
-from typing import Dict, List, Any, Optional, Set, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import yaml
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class DependencyInfo:
     """Service dependency information"""
+
     service_name: str
     dependencies: List[str] = field(default_factory=list)
     dependents: List[str] = field(default_factory=list)
@@ -28,9 +31,11 @@ class DependencyInfo:
     startup_time: float = 0
     ready_time: float = 0
 
+
 @dataclass
 class DependencyIssue:
     """Dependency-related issue"""
+
     severity: str  # 'error', 'warning', 'info'
     category: str  # 'missing', 'circular', 'unhealthy', 'timeout'
     service_name: str
@@ -39,19 +44,25 @@ class DependencyIssue:
     suggestion: str
     auto_fix_available: bool = False
 
+
 @dataclass
 class DependencyGraph:
     """Complete dependency graph for the ecosystem"""
+
     services: Dict[str, DependencyInfo] = field(default_factory=dict)
     issues: List[DependencyIssue] = field(default_factory=list)
     startup_order: List[str] = field(default_factory=list)
     circular_dependencies: List[List[str]] = field(default_factory=list)
 
+
 class DependencyValidator:
     """Comprehensive service dependency validation system"""
 
-    def __init__(self, docker_compose_file: str = "docker-compose.dev.yml",
-                 port_registry_file: str = "config/standardized/port_registry.json"):
+    def __init__(
+        self,
+        docker_compose_file: str = "docker-compose.dev.yml",
+        port_registry_file: str = "config/standardized/port_registry.json",
+    ):
         self.docker_compose_file = Path(docker_compose_file)
         self.port_registry_file = Path(port_registry_file)
         self.timeout_seconds = 300  # 5 minutes timeout for service startup
@@ -79,22 +90,23 @@ class DependencyValidator:
 
         return graph
 
-    def _build_dependency_graph(self, compose_config: Dict[str, Any],
-                               port_registry: Dict[str, Any]) -> Dict[str, DependencyInfo]:
+    def _build_dependency_graph(
+        self, compose_config: Dict[str, Any], port_registry: Dict[str, Any]
+    ) -> Dict[str, DependencyInfo]:
         """Build complete dependency graph from configurations"""
         services = {}
 
-        if 'services' not in compose_config:
+        if "services" not in compose_config:
             return services
 
         # First pass: Create service nodes
-        for service_name in compose_config['services'].keys():
+        for service_name in compose_config["services"].keys():
             services[service_name] = DependencyInfo(service_name=service_name)
 
         # Second pass: Add dependencies
-        for service_name, service_config in compose_config['services'].items():
-            if 'depends_on' in service_config:
-                depends_on = service_config['depends_on']
+        for service_name, service_config in compose_config["services"].items():
+            if "depends_on" in service_config:
+                depends_on = service_config["depends_on"]
                 if isinstance(depends_on, list):
                     services[service_name].dependencies = depends_on
                 elif isinstance(depends_on, dict):
@@ -103,8 +115,8 @@ class DependencyValidator:
 
         # Third pass: Add port registry dependencies
         for service_name, registry_info in port_registry.items():
-            if service_name in services and 'dependencies' in registry_info:
-                registry_deps = registry_info['dependencies']
+            if service_name in services and "dependencies" in registry_info:
+                registry_deps = registry_info["dependencies"]
                 if isinstance(registry_deps, list):
                     # Merge with existing dependencies
                     existing = set(services[service_name].dependencies)
@@ -165,36 +177,42 @@ class DependencyValidator:
             # Check if dependencies exist
             for dep in service_info.dependencies:
                 if dep not in services:
-                    issues.append(DependencyIssue(
-                        severity='error',
-                        category='missing',
-                        service_name=service_name,
-                        dependency_name=dep,
-                        message=f"Service '{service_name}' depends on non-existent service '{dep}'",
-                        suggestion="Remove dependency or ensure dependent service exists"
-                    ))
+                    issues.append(
+                        DependencyIssue(
+                            severity="error",
+                            category="missing",
+                            service_name=service_name,
+                            dependency_name=dep,
+                            message=f"Service '{service_name}' depends on non-existent service '{dep}'",
+                            suggestion="Remove dependency or ensure dependent service exists",
+                        )
+                    )
 
             # Check for services with no dependencies but many dependents (potential bottlenecks)
             if len(service_info.dependencies) == 0 and len(service_info.dependents) > 3:
-                issues.append(DependencyIssue(
-                    severity='info',
-                    category='bottleneck',
-                    service_name=service_name,
-                    dependency_name='',
-                    message=f"Service '{service_name}' has {len(service_info.dependents)} dependents but no dependencies",
-                    suggestion="Consider if this service should have infrastructure dependencies"
-                ))
+                issues.append(
+                    DependencyIssue(
+                        severity="info",
+                        category="bottleneck",
+                        service_name=service_name,
+                        dependency_name="",
+                        message=f"Service '{service_name}' has {len(service_info.dependents)} dependents but no dependencies",
+                        suggestion="Consider if this service should have infrastructure dependencies",
+                    )
+                )
 
             # Check for over-dependency
             if len(service_info.dependencies) > 5:
-                issues.append(DependencyIssue(
-                    severity='warning',
-                    category='complexity',
-                    service_name=service_name,
-                    dependency_name='',
-                    message=f"Service '{service_name}' has {len(service_info.dependencies)} dependencies",
-                    suggestion="Consider reducing coupling by introducing intermediary services"
-                ))
+                issues.append(
+                    DependencyIssue(
+                        severity="warning",
+                        category="complexity",
+                        service_name=service_name,
+                        dependency_name="",
+                        message=f"Service '{service_name}' has {len(service_info.dependencies)} dependencies",
+                        suggestion="Consider reducing coupling by introducing intermediary services",
+                    )
+                )
 
         return issues
 
@@ -244,14 +262,16 @@ class DependencyValidator:
                     if dep in startup_order:
                         dep_index = startup_order.index(dep)
                         if dep_index >= i:
-                            issues.append(DependencyIssue(
-                                severity='warning',
-                                category='startup_order',
-                                service_name=service_name,
-                                dependency_name=dep,
-                                message=f"Dependency '{dep}' starts after dependent service '{service_name}'",
-                                suggestion="Re-evaluate startup order or dependency requirements"
-                            ))
+                            issues.append(
+                                DependencyIssue(
+                                    severity="warning",
+                                    category="startup_order",
+                                    service_name=service_name,
+                                    dependency_name=dep,
+                                    message=f"Dependency '{dep}' starts after dependent service '{service_name}'",
+                                    suggestion="Re-evaluate startup order or dependency requirements",
+                                )
+                            )
 
         return issues
 
@@ -297,7 +317,7 @@ class DependencyValidator:
         if graph.issues:
             report_lines.append("## Issues Found")
             for issue in graph.issues:
-                severity_icon = "🔴" if issue.severity == 'error' else "🟡" if issue.severity == 'warning' else "ℹ️"
+                severity_icon = "🔴" if issue.severity == "error" else "🟡" if issue.severity == "warning" else "ℹ️"
                 report_lines.append(f"- {severity_icon} **{issue.service_name}**: {issue.message}")
                 if issue.suggestion:
                     report_lines.append(f"  *Suggestion: {issue.suggestion}*")
@@ -320,33 +340,26 @@ class DependencyValidator:
                 # Get port from port registry
                 port_registry = self._load_port_registry()
                 if service_name in port_registry:
-                    external_port = port_registry[service_name].get('external_port')
+                    external_port = port_registry[service_name].get("external_port")
                     if external_port:
                         # Try to connect to the service
                         import socket
+
                         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         sock.settimeout(5)
-                        result = sock.connect_ex(('localhost', external_port))
+                        result = sock.connect_ex(("localhost", external_port))
                         sock.close()
 
                         return {
-                            'healthy': result == 0,
-                            'port': external_port,
-                            'error': None if result == 0 else f"Connection failed to port {external_port}"
+                            "healthy": result == 0,
+                            "port": external_port,
+                            "error": None if result == 0 else f"Connection failed to port {external_port}",
                         }
 
-                return {
-                    'healthy': False,
-                    'port': None,
-                    'error': 'Port not found in registry'
-                }
+                return {"healthy": False, "port": None, "error": "Port not found in registry"}
 
             except Exception as e:
-                return {
-                    'healthy': False,
-                    'port': None,
-                    'error': str(e)
-                }
+                return {"healthy": False, "port": None, "error": str(e)}
 
         # Check health for all services
         with ThreadPoolExecutor(max_workers=5) as executor:
@@ -360,44 +373,40 @@ class DependencyValidator:
                 try:
                     health_results[service_name] = future.result()
                 except Exception as e:
-                    health_results[service_name] = {
-                        'healthy': False,
-                        'error': str(e)
-                    }
+                    health_results[service_name] = {"healthy": False, "error": str(e)}
 
         return health_results
 
     def auto_fix_dependency_issues(self, graph: DependencyGraph) -> Dict[str, Any]:
         """Attempt to automatically fix dependency issues"""
-        fixes_applied = {
-            'fixed': [],
-            'failed': [],
-            'suggestions': []
-        }
+        fixes_applied = {"fixed": [], "failed": [], "suggestions": []}
 
         # Try to fix missing dependencies by suggesting alternatives
         for issue in graph.issues:
-            if issue.category == 'missing' and issue.auto_fix_available:
+            if issue.category == "missing" and issue.auto_fix_available:
                 # Look for similar service names
                 missing_dep = issue.dependency_name
                 similar_services = [
-                    name for name in graph.services.keys()
+                    name
+                    for name in graph.services.keys()
                     if missing_dep.lower() in name.lower() or name.lower() in missing_dep.lower()
                 ]
 
                 if similar_services:
-                    fixes_applied['suggestions'].append({
-                        'service': issue.service_name,
-                        'missing_dependency': missing_dep,
-                        'suggestions': similar_services
-                    })
+                    fixes_applied["suggestions"].append(
+                        {
+                            "service": issue.service_name,
+                            "missing_dependency": missing_dep,
+                            "suggestions": similar_services,
+                        }
+                    )
 
         return fixes_applied
 
     def _load_docker_compose_config(self) -> Dict[str, Any]:
         """Load docker-compose configuration"""
         try:
-            with open(self.docker_compose_file, 'r') as f:
+            with open(self.docker_compose_file, "r") as f:
                 return yaml.safe_load(f)
         except Exception as e:
             logger.error(f"Failed to load docker-compose config: {e}")
@@ -406,7 +415,7 @@ class DependencyValidator:
     def _load_port_registry(self) -> Dict[str, Any]:
         """Load port registry"""
         try:
-            with open(self.port_registry_file, 'r') as f:
+            with open(self.port_registry_file, "r") as f:
                 return json.load(f)
         except Exception as e:
             logger.warning(f"Failed to load port registry: {e}")
@@ -414,9 +423,9 @@ class DependencyValidator:
 
     def print_analysis_report(self, graph: DependencyGraph):
         """Print comprehensive dependency analysis report"""
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("🔗 SERVICE DEPENDENCY ANALYSIS REPORT")
-        print("="*80)
+        print("=" * 80)
 
         print(f"\n📊 SUMMARY")
         print(f"  Services Analyzed: {len(graph.services)}")
@@ -438,7 +447,7 @@ class DependencyValidator:
         if graph.issues:
             print(f"\n🚨 DEPENDENCY ISSUES")
             for issue in graph.issues:
-                severity_icon = "🔴" if issue.severity == 'error' else "🟡" if issue.severity == 'warning' else "ℹ️"
+                severity_icon = "🔴" if issue.severity == "error" else "🟡" if issue.severity == "warning" else "ℹ️"
                 print(f"  {severity_icon} {issue.service_name}: {issue.message}")
 
         if graph.circular_dependencies:
@@ -446,35 +455,35 @@ class DependencyValidator:
             for cycle in graph.circular_dependencies:
                 print(f"  🔄 {' → '.join(cycle)}")
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
 
     def export_dependency_graph(self, graph: DependencyGraph, output_file: str = "dependency_graph.json"):
         """Export dependency graph to JSON file"""
         graph_data = {
-            'services': {},
-            'startup_order': graph.startup_order,
-            'circular_dependencies': graph.circular_dependencies,
-            'issues': [
+            "services": {},
+            "startup_order": graph.startup_order,
+            "circular_dependencies": graph.circular_dependencies,
+            "issues": [
                 {
-                    'severity': issue.severity,
-                    'category': issue.category,
-                    'service': issue.service_name,
-                    'dependency': issue.dependency_name,
-                    'message': issue.message,
-                    'suggestion': issue.suggestion
+                    "severity": issue.severity,
+                    "category": issue.category,
+                    "service": issue.service_name,
+                    "dependency": issue.dependency_name,
+                    "message": issue.message,
+                    "suggestion": issue.suggestion,
                 }
                 for issue in graph.issues
-            ]
+            ],
         }
 
         for service_name, service_info in graph.services.items():
-            graph_data['services'][service_name] = {
-                'dependencies': service_info.dependencies,
-                'dependents': service_info.dependents,
-                'health_status': service_info.health_status
+            graph_data["services"][service_name] = {
+                "dependencies": service_info.dependencies,
+                "dependents": service_info.dependents,
+                "health_status": service_info.health_status,
             }
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(graph_data, f, indent=2)
 
         print(f"✅ Dependency graph exported to: {output_file}")
@@ -502,7 +511,7 @@ def main():
         print(f"\n📝 Detailed report saved to: dependency_analysis_report.md")
 
         # Check for critical issues
-        critical_issues = [issue for issue in graph.issues if issue.severity == 'error']
+        critical_issues = [issue for issue in graph.issues if issue.severity == "error"]
         if critical_issues:
             print(f"\n❌ Found {len(critical_issues)} critical dependency issues!")
             exit(1)

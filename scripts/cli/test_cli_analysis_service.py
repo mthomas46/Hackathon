@@ -4,20 +4,20 @@ Test suite for CLI Analysis Service functionality
 Tests all new CLI commands against live services
 """
 
+import asyncio
+import json
 import os
 import sys
-import asyncio
 import time
-import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.core.constants_new import ServiceNames
+from services.shared.integrations.clients.clients import ServiceClients
 
 
 class CLIAnalysisServiceTester:
@@ -25,7 +25,7 @@ class CLIAnalysisServiceTester:
 
     def __init__(self, base_url: str = "http://localhost:5020"):
         """Initialize tester with Analysis Service URL."""
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.clients = ServiceClients()
         self.test_results: Dict[str, Dict[str, Any]] = {}
         self.test_document_ids: List[str] = []
@@ -38,18 +38,18 @@ class CLIAnalysisServiceTester:
             {
                 "id": "test_doc_1",
                 "content": "This is a test document about machine learning and AI technologies.",
-                "metadata": {"type": "documentation", "category": "technical"}
+                "metadata": {"type": "documentation", "category": "technical"},
             },
             {
                 "id": "test_doc_2",
                 "content": "Another test document covering cloud computing and DevOps practices.",
-                "metadata": {"type": "documentation", "category": "infrastructure"}
+                "metadata": {"type": "documentation", "category": "infrastructure"},
             },
             {
                 "id": "test_doc_3",
                 "content": "Final test document discussing cybersecurity and data protection.",
-                "metadata": {"type": "documentation", "category": "security"}
-            }
+                "metadata": {"type": "documentation", "category": "security"},
+            },
         ]
 
         for doc in test_docs:
@@ -76,24 +76,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/analyze"
-            payload = {
-                "targets": [self.test_document_ids[0]],
-                "analysis_type": "consistency"
-            }
+            payload = {"targets": [self.test_document_ids[0]], "analysis_type": "consistency"}
             response = await self.clients.post_json(url, payload)
             success = response and "findings" in response
             self.test_results["basic_analysis"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing findings in response"
+                "error": None if success else "Missing findings in response",
             }
             print(f"✅ Basic analysis: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["basic_analysis"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["basic_analysis"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Basic analysis: FAIL - {e}")
 
     async def test_semantic_similarity(self):
@@ -102,24 +95,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/analyze/semantic-similarity"
-            payload = {
-                "targets": self.test_document_ids[:2],
-                "threshold": 0.7
-            }
+            payload = {"targets": self.test_document_ids[:2], "threshold": 0.7}
             response = await self.clients.post_json(url, payload)
             success = response and "results" in response
             self.test_results["semantic_similarity"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing results in response"
+                "error": None if success else "Missing results in response",
             }
             print(f"✅ Semantic similarity: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["semantic_similarity"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["semantic_similarity"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Semantic similarity: FAIL - {e}")
 
     async def test_sentiment_analysis(self):
@@ -134,15 +120,11 @@ class CLIAnalysisServiceTester:
             self.test_results["sentiment_analysis"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing results in response"
+                "error": None if success else "Missing results in response",
             }
             print(f"✅ Sentiment analysis: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["sentiment_analysis"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["sentiment_analysis"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Sentiment analysis: FAIL - {e}")
 
     async def test_quality_analysis(self):
@@ -157,15 +139,11 @@ class CLIAnalysisServiceTester:
             self.test_results["quality_analysis"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing results in response"
+                "error": None if success else "Missing results in response",
             }
             print(f"✅ Quality analysis: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["quality_analysis"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["quality_analysis"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Quality analysis: FAIL - {e}")
 
     async def test_trend_analysis(self):
@@ -174,24 +152,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/analyze/trends"
-            payload = {
-                "targets": self.test_document_ids,
-                "timeframe_days": 30
-            }
+            payload = {"targets": self.test_document_ids, "timeframe_days": 30}
             response = await self.clients.post_json(url, payload)
             success = response and "results" in response
             self.test_results["trend_analysis"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing results in response"
+                "error": None if success else "Missing results in response",
             }
             print(f"✅ Trend analysis: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["trend_analysis"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["trend_analysis"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Trend analysis: FAIL - {e}")
 
     async def test_risk_assessment(self):
@@ -206,15 +177,11 @@ class CLIAnalysisServiceTester:
             self.test_results["risk_assessment"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing results in response"
+                "error": None if success else "Missing results in response",
             }
             print(f"✅ Risk assessment: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["risk_assessment"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["risk_assessment"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Risk assessment: FAIL - {e}")
 
     async def test_remediation(self):
@@ -223,24 +190,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/remediate"
-            payload = {
-                "targets": [self.test_document_ids[0]],
-                "issue_type": "quality"
-            }
+            payload = {"targets": [self.test_document_ids[0]], "issue_type": "quality"}
             response = await self.clients.post_json(url, payload)
             success = response and "remediation_plan" in response
             self.test_results["remediation"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing remediation_plan in response"
+                "error": None if success else "Missing remediation_plan in response",
             }
             print(f"✅ Remediation: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["remediation"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["remediation"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Remediation: FAIL - {e}")
 
     async def test_workflow_events(self):
@@ -253,22 +213,18 @@ class CLIAnalysisServiceTester:
                 "event_type": "pr.created",
                 "entity_type": "pr",
                 "entity_id": "test-pr-123",
-                "metadata": {"source": "cli-test"}
+                "metadata": {"source": "cli-test"},
             }
             response = await self.clients.post_json(url, payload)
             success = response and "workflow_id" in response
             self.test_results["workflow_events"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing workflow_id in response"
+                "error": None if success else "Missing workflow_id in response",
             }
             print(f"✅ Workflow events: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["workflow_events"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["workflow_events"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Workflow events: FAIL - {e}")
 
     async def test_distributed_processing(self):
@@ -277,25 +233,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/distributed/tasks"
-            payload = {
-                "task_type": "analysis",
-                "targets": [self.test_document_ids[0]],
-                "priority": "normal"
-            }
+            payload = {"task_type": "analysis", "targets": [self.test_document_ids[0]], "priority": "normal"}
             response = await self.clients.post_json(url, payload)
             success = response and "task_id" in response
             self.test_results["distributed_processing"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing task_id in response"
+                "error": None if success else "Missing task_id in response",
             }
             print(f"✅ Distributed processing: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["distributed_processing"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["distributed_processing"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Distributed processing: FAIL - {e}")
 
     async def test_report_generation(self):
@@ -304,24 +252,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/reports/generate"
-            payload = {
-                "kind": "summary",
-                "format": "json"
-            }
+            payload = {"kind": "summary", "format": "json"}
             response = await self.clients.post_json(url, payload)
             success = response and "report_id" in response
             self.test_results["report_generation"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing report_id in response"
+                "error": None if success else "Missing report_id in response",
             }
             print(f"✅ Report generation: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["report_generation"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["report_generation"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ Report generation: FAIL - {e}")
 
     async def test_findings_and_detectors(self):
@@ -351,7 +292,7 @@ class CLIAnalysisServiceTester:
             "success": success,
             "findings_success": findings_success,
             "detectors_success": detectors_success,
-            "error": None if success else "One or more endpoints failed"
+            "error": None if success else "One or more endpoints failed",
         }
         print(f"✅ Findings & Detectors: {'PASS' if success else 'FAIL'}")
 
@@ -373,7 +314,7 @@ class CLIAnalysisServiceTester:
             url = f"{self.base_url}/integration/natural-language-analysis"
             payload = {
                 "query": "analyze the quality of these documents",
-                "context": {"document_ids": self.test_document_ids}
+                "context": {"document_ids": self.test_document_ids},
             }
             response = await self.clients.post_json(url, payload)
             nlp_success = response and "results" in response
@@ -386,7 +327,7 @@ class CLIAnalysisServiceTester:
             "success": success,
             "health_success": health_success,
             "nlp_success": nlp_success,
-            "error": None if success else "One or more integration endpoints failed"
+            "error": None if success else "One or more integration endpoints failed",
         }
         print(f"✅ Integration endpoints: {'PASS' if success else 'FAIL'}")
 
@@ -396,24 +337,17 @@ class CLIAnalysisServiceTester:
 
         try:
             url = f"{self.base_url}/pr-confidence/analyze"
-            payload = {
-                "pr_id": "test-pr-123",
-                "analysis_type": "quick"
-            }
+            payload = {"pr_id": "test-pr-123", "analysis_type": "quick"}
             response = await self.clients.post_json(url, payload)
             success = response and "confidence_score" in response
             self.test_results["pr_confidence"] = {
                 "success": success,
                 "response": response,
-                "error": None if success else "Missing confidence_score in response"
+                "error": None if success else "Missing confidence_score in response",
             }
             print(f"✅ PR confidence: {'PASS' if success else 'FAIL'}")
         except Exception as e:
-            self.test_results["pr_confidence"] = {
-                "success": False,
-                "response": None,
-                "error": str(e)
-            }
+            self.test_results["pr_confidence"] = {"success": False, "response": None, "error": str(e)}
             print(f"❌ PR confidence: FAIL - {e}")
 
     async def run_all_tests(self):
@@ -467,7 +401,7 @@ class CLIAnalysisServiceTester:
 
         # Save results to file
         results_file = project_root / "scripts" / "test" / "cli_analysis_service_test_results.json"
-        with open(results_file, 'w') as f:
+        with open(results_file, "w") as f:
             json.dump(self.test_results, f, indent=2, default=str)
         print(f"\n📄 Detailed results saved to: {results_file}")
 
@@ -477,10 +411,10 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="CLI Analysis Service Test Suite")
-    parser.add_argument("--url", default="http://localhost:5020",
-                       help="Analysis Service URL (default: http://localhost:5020)")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Enable verbose output")
+    parser.add_argument(
+        "--url", default="http://localhost:5020", help="Analysis Service URL (default: http://localhost:5020)"
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
 
     args = parser.parse_args()
 

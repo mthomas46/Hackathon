@@ -4,21 +4,27 @@
 Validates that the content quality scorer works correctly.
 """
 
-import sys
 import os
+import sys
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 def test_content_quality_scorer_import():
     """Test that the content quality scorer module can be imported."""
     try:
-        from services.analysis_service.modules.content_quality_scorer import ContentQualityScorer, assess_document_quality
+        from services.analysis_service.modules.content_quality_scorer import (
+            ContentQualityScorer,
+            assess_document_quality,
+        )
+
         print("✅ Content quality scorer module imported successfully")
         return True
     except ImportError as e:
         print(f"❌ Failed to import content quality scorer module: {e}")
         return False
+
 
 def test_content_quality_scorer_initialization():
     """Test that the content quality scorer can be initialized."""
@@ -32,6 +38,7 @@ def test_content_quality_scorer_initialization():
     except Exception as e:
         print(f"❌ Failed to initialize content quality scorer: {e}")
         return False
+
 
 def test_readability_metrics():
     """Test readability metrics calculation."""
@@ -55,6 +62,7 @@ def test_readability_metrics():
         print(f"❌ Readability metrics calculation failed: {e}")
         return False
 
+
 def test_content_structure_assessment():
     """Test content structure assessment."""
     try:
@@ -63,7 +71,7 @@ def test_content_structure_assessment():
         scorer = ContentQualityScorer()
 
         text = "# Introduction\n\nThis guide provides essential information.\n\n## Getting Started\n\nFollow these steps:\n- Step 1: Install requirements\n- Step 2: Configure settings\n\n## Advanced Usage\n\nFor more complex scenarios..."
-        sentences = [s.strip() for s in text.split('.') if s.strip()]
+        sentences = [s.strip() for s in text.split(".") if s.strip()]
 
         result = scorer._assess_content_structure(text, sentences)
 
@@ -78,6 +86,7 @@ def test_content_structure_assessment():
         print(f"❌ Content structure assessment failed: {e}")
         return False
 
+
 def test_completeness_assessment():
     """Test content completeness assessment."""
     try:
@@ -86,11 +95,7 @@ def test_completeness_assessment():
         scorer = ContentQualityScorer()
 
         text = "Welcome to our API guide. This documentation covers authentication, data retrieval, and error handling. You'll need an API key to get started. Here are some examples of how to use the endpoints."
-        doc = {
-            "id": "test_doc",
-            "title": "API Guide",
-            "metadata": {"type": "documentation"}
-        }
+        doc = {"id": "test_doc", "title": "API Guide", "metadata": {"type": "documentation"}}
 
         result = scorer._assess_content_completeness(text, doc)
 
@@ -104,6 +109,7 @@ def test_completeness_assessment():
     except Exception as e:
         print(f"❌ Content completeness assessment failed: {e}")
         return False
+
 
 def test_technical_accuracy_assessment():
     """Test technical accuracy assessment."""
@@ -127,6 +133,7 @@ def test_technical_accuracy_assessment():
     except Exception as e:
         print(f"❌ Technical accuracy assessment failed: {e}")
         return False
+
 
 def test_overall_quality_calculation():
     """Test overall quality score calculation."""
@@ -156,6 +163,7 @@ def test_overall_quality_calculation():
         print(f"❌ Overall quality calculation failed: {e}")
         return False
 
+
 async def test_full_quality_assessment():
     """Test the complete quality assessment pipeline."""
     try:
@@ -167,10 +175,7 @@ async def test_full_quality_assessment():
             "id": "test_doc",
             "title": "Getting Started Guide",
             "content": "# Welcome\n\nThis comprehensive guide helps you get started with our platform. You'll learn about installation, configuration, and basic usage.\n\n## Installation\n\nFirst, install the required dependencies. Then, follow the setup wizard.\n\n## Examples\n\nHere are some code examples to help you understand the concepts.\n\n## Troubleshooting\n\nCommon issues and their solutions are covered here.",
-            "metadata": {
-                "author": "Test Author",
-                "type": "documentation"
-            }
+            "metadata": {"author": "Test Author", "type": "documentation"},
         }
 
         result = await scorer.assess_content_quality(document)
@@ -182,9 +187,9 @@ async def test_full_quality_assessment():
         print(f"   Description: {result['quality_assessment']['description']}")
         print(f"   Processing time: {result['processing_time']:.2f}s")
 
-        if result['recommendations']:
+        if result["recommendations"]:
             print(f"   Recommendations ({len(result['recommendations'])}):")
-            for rec in result['recommendations'][:3]:  # Show first 3
+            for rec in result["recommendations"][:3]:  # Show first 3
                 print(f"     - {rec}")
 
         return True
@@ -192,12 +197,14 @@ async def test_full_quality_assessment():
         print(f"❌ Full quality assessment failed: {e}")
         return False
 
+
 def test_main_app_import():
     """Test that the main app can be imported with quality assessment endpoints."""
     try:
         from services.analysis_service.main import app
-        routes = [route.path for route in app.routes if hasattr(route, 'path')]
-        quality_routes = [r for r in routes if 'quality' in r]
+
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
+        quality_routes = [r for r in routes if "quality" in r]
 
         print("✅ Main app imported successfully")
         print(f"✅ Found {len(quality_routes)} quality assessment routes:")
@@ -208,6 +215,7 @@ def test_main_app_import():
     except Exception as e:
         print(f"❌ Failed to import main app: {e}")
         return False
+
 
 async def main():
     """Run all tests."""
@@ -252,6 +260,8 @@ async def main():
         print("⚠️  Some tests failed. Check the output above for details.")
         return 1
 
+
 if __name__ == "__main__":
     import asyncio
+
     sys.exit(asyncio.run(main()))

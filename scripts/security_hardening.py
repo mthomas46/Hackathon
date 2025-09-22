@@ -9,6 +9,7 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List
+
 import yaml
 
 
@@ -20,44 +21,44 @@ class SecurityHardener:
 
     def harden_dockerfile(self, service_name: str, dockerfile_path: Path) -> bool:
         """Apply security hardening to a Dockerfile."""
-        with open(dockerfile_path, 'r') as f:
+        with open(dockerfile_path, "r") as f:
             content = f.read()
 
         original_content = content
         changes_made = []
 
         # Ensure non-root user creation
-        if 'useradd' not in content:
+        if "useradd" not in content:
             # Add user creation before USER directive
-            user_creation = '\n# Create non-root user for security\nRUN useradd -m -u 1000 -s /bin/bash appuser && \\\n    mkdir -p /app && \\\n    chown -R appuser:appuser /app\n'
-            content = content.replace('EXPOSE', user_creation + 'EXPOSE', 1)
+            user_creation = "\n# Create non-root user for security\nRUN useradd -m -u 1000 -s /bin/bash appuser && \\\n    mkdir -p /app && \\\n    chown -R appuser:appuser /app\n"
+            content = content.replace("EXPOSE", user_creation + "EXPOSE", 1)
             changes_made.append("Added non-root user creation")
 
         # Ensure USER directive exists
-        if 'USER appuser' not in content:
+        if "USER appuser" not in content:
             # Add USER directive at the end
-            content += '\n# Run as non-root user\nUSER appuser\n'
+            content += "\n# Run as non-root user\nUSER appuser\n"
             changes_made.append("Added USER appuser directive")
 
         # Ensure proper permissions on copied files
-        if 'COPY' in content and 'chown' not in content:
+        if "COPY" in content and "chown" not in content:
             # Add chown to COPY commands that copy to /app
-            lines = content.split('\n')
+            lines = content.split("\n")
             for i, line in enumerate(lines):
-                if line.strip().startswith('COPY') and '/app' in line:
-                    if 'services/' in line and not '--chown' in line:
-                        lines[i] = line.replace('COPY', 'COPY --chown=appuser:appuser')
+                if line.strip().startswith("COPY") and "/app" in line:
+                    if "services/" in line and not "--chown" in line:
+                        lines[i] = line.replace("COPY", "COPY --chown=appuser:appuser")
                         changes_made.append("Added --chown to COPY commands")
 
-            content = '\n'.join(lines)
+            content = "\n".join(lines)
 
         # Add security-related environment variables
         security_env = [
-            'ENV PYTHONUNBUFFERED=1',
-            'ENV PYTHONDONTWRITEBYTECODE=1',
-            'ENV PYTHONHASHSEED=random',
-            'ENV PIP_NO_CACHE_DIR=1',
-            'ENV PIP_DISABLE_PIP_VERSION_CHECK=1'
+            "ENV PYTHONUNBUFFERED=1",
+            "ENV PYTHONDONTWRITEBYTECODE=1",
+            "ENV PYTHONHASHSEED=random",
+            "ENV PIP_NO_CACHE_DIR=1",
+            "ENV PIP_DISABLE_PIP_VERSION_CHECK=1",
         ]
 
         env_section = []
@@ -67,39 +68,41 @@ class SecurityHardener:
 
         if env_section:
             # Find where to insert security env vars
-            if 'ENV PYTHONPATH=/app' in content:
-                content = content.replace('ENV PYTHONPATH=/app', 'ENV PYTHONPATH=/app\n' + '\n'.join(env_section))
+            if "ENV PYTHONPATH=/app" in content:
+                content = content.replace("ENV PYTHONPATH=/app", "ENV PYTHONPATH=/app\n" + "\n".join(env_section))
             else:
-                content = content.replace('WORKDIR /app', 'WORKDIR /app\n\n# Security hardening\n' + '\n'.join(env_section))
+                content = content.replace(
+                    "WORKDIR /app", "WORKDIR /app\n\n# Security hardening\n" + "\n".join(env_section)
+                )
 
             changes_made.append("Added security environment variables")
 
         # Ensure apt cache is cleaned
-        if 'apt-get install' in content and 'rm -rf /var/lib/apt/lists/*' not in content:
+        if "apt-get install" in content and "rm -rf /var/lib/apt/lists/*" not in content:
             apt_lines = []
             in_apt_block = False
-            for line in content.split('\n'):
+            for line in content.split("\n"):
                 apt_lines.append(line)
-                if 'apt-get install' in line:
+                if "apt-get install" in line:
                     in_apt_block = True
-                elif in_apt_block and line.strip() == '' or line.startswith('RUN') or line.startswith('COPY'):
-                    apt_lines.insert(len(apt_lines) - 1, '    && rm -rf /var/lib/apt/lists/* \\\n    && apt-get clean')
+                elif in_apt_block and line.strip() == "" or line.startswith("RUN") or line.startswith("COPY"):
+                    apt_lines.insert(len(apt_lines) - 1, "    && rm -rf /var/lib/apt/lists/* \\\n    && apt-get clean")
                     in_apt_block = False
                     changes_made.append("Added apt cache cleanup")
 
             if in_apt_block:
-                apt_lines.append('    && rm -rf /var/lib/apt/lists/* \\\n    && apt-get clean')
+                apt_lines.append("    && rm -rf /var/lib/apt/lists/* \\\n    && apt-get clean")
 
-            content = '\n'.join(apt_lines)
+            content = "\n".join(apt_lines)
 
         # Remove unnecessary packages after installation
-        if 'apt-get install' in content and '--no-install-recommends' not in content:
-            content = re.sub(r'apt-get install -y', 'apt-get install -y --no-install-recommends', content)
+        if "apt-get install" in content and "--no-install-recommends" not in content:
+            content = re.sub(r"apt-get install -y", "apt-get install -y --no-install-recommends", content)
             changes_made.append("Added --no-install-recommends to apt-get")
 
         # Save hardened Dockerfile
         if content != original_content:
-            with open(dockerfile_path, 'w') as f:
+            with open(dockerfile_path, "w") as f:
                 f.write(content)
 
             print(f"🔒 Hardened {service_name} Dockerfile:")
@@ -111,14 +114,14 @@ class SecurityHardener:
 
     def harden_makefile(self, service_name: str, makefile_path: Path) -> bool:
         """Apply security hardening to a Makefile."""
-        with open(makefile_path, 'r') as f:
+        with open(makefile_path, "r") as f:
             content = f.read()
 
         original_content = content
         changes_made = []
 
         # Add security-related targets
-        security_targets = '''
+        security_targets = """
 
 .PHONY: security-scan
 security-scan: ## Run security scan on dependencies
@@ -150,27 +153,27 @@ lint-security: ## Run security-focused linting
 .PHONY: security-check
 security-check: security-scan audit-dependencies lint-security ## Run all security checks
 	@echo "$(GREEN)✅ Security checks completed$(NC)"
-'''
+"""
 
-        if 'security-check:' not in content:
+        if "security-check:" not in content:
             content += security_targets
             changes_made.append("Added security check targets")
 
         # Add security-focused CI target
-        ci_security = '''
+        ci_security = """
 .PHONY: ci-security
 ci-security: security-check test ## CI pipeline with security checks
 	@echo "$(BLUE)🔄 Running CI with security...$(NC)"
 	@echo "$(GREEN)✅ CI security pipeline complete$(NC)"
-'''
+"""
 
-        if 'ci-security:' not in content:
+        if "ci-security:" not in content:
             content += ci_security
             changes_made.append("Added CI security pipeline")
 
         # Save hardened Makefile
         if content != original_content:
-            with open(makefile_path, 'w') as f:
+            with open(makefile_path, "w") as f:
                 f.write(content)
 
             print(f"🛡️  Hardened {service_name} Makefile:")
@@ -191,7 +194,7 @@ ci-security: security-check test ## CI pipeline with security checks
         config_file = config_files[0]
 
         try:
-            with open(config_file, 'r') as f:
+            with open(config_file, "r") as f:
                 config = yaml.safe_load(f) or {}
         except Exception:
             config = {}
@@ -199,33 +202,33 @@ ci-security: security-check test ## CI pipeline with security checks
         changes_made = []
 
         # Add security section if it doesn't exist
-        if 'security' not in config:
-            config['security'] = {
-                'enable_ssl': '${SSL_ENABLED:-false}',
-                'ssl_cert_path': '${SSL_CERT_PATH:-}',
-                'ssl_key_path': '${SSL_KEY_PATH:-}',
-                'cors_origins': '${CORS_ORIGINS:-http://localhost:3000}',
-                'rate_limiting_enabled': '${RATE_LIMITING_ENABLED:-true}',
-                'max_request_size': '${MAX_REQUEST_SIZE:-10485760}',  # 10MB
-                'timeout_seconds': '${TIMEOUT_SECONDS:-30}',
-                'enable_request_logging': '${REQUEST_LOGGING:-false}',
-                'enable_metrics': '${METRICS_ENABLED:-true}'
+        if "security" not in config:
+            config["security"] = {
+                "enable_ssl": "${SSL_ENABLED:-false}",
+                "ssl_cert_path": "${SSL_CERT_PATH:-}",
+                "ssl_key_path": "${SSL_KEY_PATH:-}",
+                "cors_origins": "${CORS_ORIGINS:-http://localhost:3000}",
+                "rate_limiting_enabled": "${RATE_LIMITING_ENABLED:-true}",
+                "max_request_size": "${MAX_REQUEST_SIZE:-10485760}",  # 10MB
+                "timeout_seconds": "${TIMEOUT_SECONDS:-30}",
+                "enable_request_logging": "${REQUEST_LOGGING:-false}",
+                "enable_metrics": "${METRICS_ENABLED:-true}",
             }
             changes_made.append("Added security configuration section")
 
         # Add development security settings
-        if 'development' not in config:
-            config['development'] = {
-                'debug_mode': '${DEBUG_MODE:-false}',
-                'enable_cors': '${ENABLE_CORS:-true}',
-                'mock_external_services': '${MOCK_EXTERNAL:-false}',
-                'log_level': '${LOG_LEVEL:-INFO}'
+        if "development" not in config:
+            config["development"] = {
+                "debug_mode": "${DEBUG_MODE:-false}",
+                "enable_cors": "${ENABLE_CORS:-true}",
+                "mock_external_services": "${MOCK_EXTERNAL:-false}",
+                "log_level": "${LOG_LEVEL:-INFO}",
             }
             changes_made.append("Added development configuration section")
 
         # Save updated config
         if changes_made:
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
             print(f"🔐 Enhanced {service_name} config with security settings:")
@@ -237,8 +240,11 @@ ci-security: security-check test ## CI pipeline with security checks
 
     def harden_all_services(self) -> None:
         """Apply security hardening to all services."""
-        services = [d.name for d in self.services_dir.iterdir()
-                   if d.is_dir() and not d.name.startswith('_') and d.name not in ['redis', 'ollama']]
+        services = [
+            d.name
+            for d in self.services_dir.iterdir()
+            if d.is_dir() and not d.name.startswith("_") and d.name not in ["redis", "ollama"]
+        ]
 
         print("🔒 Applying security hardening to all services...")
         print("=" * 60)

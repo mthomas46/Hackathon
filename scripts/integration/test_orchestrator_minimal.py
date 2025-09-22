@@ -5,13 +5,14 @@ Minimal Orchestrator Test
 Basic test to verify orchestrator workflow management works.
 """
 
-import sys
 import os
+import sys
+
 import pytest
 import pytest_asyncio
 
 # Add services to path
-sys.path.insert(0, '/Users/mykalthomas/Documents/work/Hackathon/services')
+sys.path.insert(0, "/Users/mykalthomas/Documents/work/Hackathon/services")
 
 from orchestrator.modules.workflow_management.service import WorkflowManagementService
 
@@ -29,23 +30,15 @@ async def test_basic_workflow_creation(workflow_service):
     workflow_data = {
         "name": "Minimal Test Workflow",
         "description": "Basic workflow for testing",
-        "parameters": [
-            {
-                "name": "input_value",
-                "type": "string",
-                "required": True
-            }
-        ],
+        "parameters": [{"name": "input_value", "type": "string", "required": True}],
         "actions": [
             {
                 "action_id": "test_action",
                 "action_type": "notification",
                 "name": "Test Action",
-                "config": {
-                    "message": "Processing input"
-                }
+                "config": {"message": "Processing input"},
             }
-        ]
+        ],
     }
 
     success, message, workflow = await workflow_service.create_workflow(workflow_data, "test_user")
@@ -68,7 +61,7 @@ async def test_workflow_retrieval(workflow_service):
         "name": "Retrieval Test Workflow",
         "description": "Workflow for retrieval testing",
         "parameters": [],
-        "actions": []
+        "actions": [],
     }
 
     success, message, workflow = await workflow_service.create_workflow(workflow_data, "test_user")

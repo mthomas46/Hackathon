@@ -1,0 +1,69 @@
+# Development and Linting Dependencies
+# Tools for code quality, formatting, and static analysis
+
+# ========================================
+# CODE FORMATTING & LINTING
+# ========================================
+
+# Code formatting
+black>=23.12.0
+
+# Import sorting
+isort>=5.13.0
+
+# Style and error checking
+flake8>=7.0.0
+
+# Type checking
+mypy>=1.8.0
+
+# Additional flake8 plugins
+flake8-bugbear>=23.0.0
+flake8-comprehensions>=3.14.0
+flake8-docstrings>=1.7.0
+flake8-import-order>=0.18.0
+flake8-todo>=0.7.0
+
+# ========================================
+# TESTING & COVERAGE
+# ========================================
+
+# Testing framework (if not already in main requirements)
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-mock>=3.12.0
+pytest-xdist>=3.5.0
+pytest-cov>=4.1.0
+
+# Coverage reporting
+coverage>=7.4.0
+
+# ========================================
+# DEVELOPMENT TOOLS
+# ========================================
+
+# Pre-commit hooks
+pre-commit>=3.6.0
+
+# Interactive development
+ipython>=8.20.0
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=1.3.0
+
+# ========================================
+# OPTIONAL TOOLS
+# ========================================
+
+# Bandit for security linting
+bandit>=1.7.0
+
+# Safety for dependency vulnerability checking
+safety>=2.4.0
+
+# Radon for complexity analysis
+radon>=6.0.0
+
+# Vulture for dead code detection
+vulture>=2.10.0

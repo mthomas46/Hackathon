@@ -8,8 +8,8 @@ with detailed integration patterns and recommendations.
 
 import json
 from datetime import datetime
-from typing import Dict, Any, List
 from enum import Enum
+from typing import Any, Dict, List
 
 
 class ServiceMaturity(Enum):
@@ -42,10 +42,9 @@ SERVICES = {
         "integration_opportunities": [
             "Real-time document analysis pipeline",
             "Cross-service analysis correlation",
-            "AI-powered analysis optimization"
-        ]
+            "AI-powered analysis optimization",
+        ],
     },
-
     "doc_store": {
         "name": "Document Store",
         "maturity": ServiceMaturity.PRODUCTION,
@@ -59,10 +58,9 @@ SERVICES = {
         "integration_opportunities": [
             "Distributed document synchronization",
             "Real-time collaboration features",
-            "Advanced search with AI ranking"
-        ]
+            "Advanced search with AI ranking",
+        ],
     },
-
     "prompt_store": {
         "name": "Prompt Store",
         "maturity": ServiceMaturity.PRODUCTION,
@@ -76,10 +74,9 @@ SERVICES = {
         "integration_opportunities": [
             "Dynamic prompt optimization",
             "AI-powered prompt generation",
-            "Real-time performance analytics"
-        ]
+            "Real-time performance analytics",
+        ],
     },
-
     "orchestrator": {
         "name": "Orchestrator",
         "maturity": ServiceMaturity.ENTERPRISE,
@@ -93,10 +90,9 @@ SERVICES = {
         "integration_opportunities": [
             "Intelligent workflow prediction",
             "Advanced state management",
-            "Multi-agent coordination"
-        ]
+            "Multi-agent coordination",
+        ],
     },
-
     "interpreter": {
         "name": "Interpreter",
         "maturity": ServiceMaturity.STABLE,
@@ -110,10 +106,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced conversation management",
             "Multi-modal query processing",
-            "Context-aware intent recognition"
-        ]
+            "Context-aware intent recognition",
+        ],
     },
-
     "source_agent": {
         "name": "Source Agent",
         "maturity": ServiceMaturity.STABLE,
@@ -127,10 +122,9 @@ SERVICES = {
         "integration_opportunities": [
             "Real-time data synchronization",
             "Advanced conflict resolution",
-            "Predictive data ingestion"
-        ]
+            "Predictive data ingestion",
+        ],
     },
-
     "discovery_agent": {
         "name": "Discovery Agent",
         "maturity": ServiceMaturity.DEVELOPMENT,
@@ -144,10 +138,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced service introspection",
             "Dynamic capability discovery",
-            "Service mesh integration"
-        ]
+            "Service mesh integration",
+        ],
     },
-
     "summarizer_hub": {
         "name": "Summarizer Hub",
         "maturity": ServiceMaturity.STABLE,
@@ -161,10 +154,9 @@ SERVICES = {
         "integration_opportunities": [
             "Dynamic model selection",
             "Real-time summarization optimization",
-            "Multi-language support"
-        ]
+            "Multi-language support",
+        ],
     },
-
     "secure_analyzer": {
         "name": "Secure Analyzer",
         "maturity": ServiceMaturity.DEVELOPMENT,
@@ -178,10 +170,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced threat detection",
             "Real-time security monitoring",
-            "Compliance automation"
-        ]
+            "Compliance automation",
+        ],
     },
-
     "code_analyzer": {
         "name": "Code Analyzer",
         "maturity": ServiceMaturity.DEVELOPMENT,
@@ -195,10 +186,9 @@ SERVICES = {
         "integration_opportunities": [
             "Multi-language code analysis",
             "Real-time code review",
-            "Automated refactoring suggestions"
-        ]
+            "Automated refactoring suggestions",
+        ],
     },
-
     "architecture_digitizer": {
         "name": "Architecture Digitizer",
         "maturity": ServiceMaturity.PROTOTYPE,
@@ -212,10 +202,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced diagram recognition",
             "Architecture validation",
-            "Change impact analysis"
-        ]
+            "Change impact analysis",
+        ],
     },
-
     "memory_agent": {
         "name": "Memory Agent",
         "maturity": ServiceMaturity.DEVELOPMENT,
@@ -229,10 +218,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced memory consolidation",
             "Context-aware memory retrieval",
-            "Memory optimization"
-        ]
+            "Memory optimization",
+        ],
     },
-
     "notification_service": {
         "name": "Notification Service",
         "maturity": ServiceMaturity.STABLE,
@@ -246,10 +234,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced notification routing",
             "Real-time notification delivery",
-            "Notification analytics"
-        ]
+            "Notification analytics",
+        ],
     },
-
     "log_collector": {
         "name": "Log Collector",
         "maturity": ServiceMaturity.DEVELOPMENT,
@@ -263,10 +250,9 @@ SERVICES = {
         "integration_opportunities": [
             "Advanced log correlation",
             "Real-time log analysis",
-            "Log-based anomaly detection"
-        ]
+            "Log-based anomaly detection",
+        ],
     },
-
     "bedrock_proxy": {
         "name": "Bedrock Proxy",
         "maturity": ServiceMaturity.DEVELOPMENT,
@@ -277,13 +263,8 @@ SERVICES = {
         "dependencies": ["orchestrator"],
         "ports": [],
         "current_issues": ["Limited model support"],
-        "integration_opportunities": [
-            "Advanced model routing",
-            "Usage analytics",
-            "Cost optimization"
-        ]
+        "integration_opportunities": ["Advanced model routing", "Usage analytics", "Cost optimization"],
     },
-
     "github_mcp": {
         "name": "GitHub MCP",
         "maturity": ServiceMaturity.PROTOTYPE,
@@ -294,13 +275,8 @@ SERVICES = {
         "dependencies": ["source_agent"],
         "ports": [],
         "current_issues": ["Basic integration", "Limited automation"],
-        "integration_opportunities": [
-            "Advanced PR analysis",
-            "Automated code review",
-            "Repository analytics"
-        ]
+        "integration_opportunities": ["Advanced PR analysis", "Automated code review", "Repository analytics"],
     },
-
     "frontend": {
         "name": "Frontend",
         "maturity": ServiceMaturity.STABLE,
@@ -314,10 +290,9 @@ SERVICES = {
         "integration_opportunities": [
             "Real-time collaboration",
             "Advanced visualization",
-            "Progressive web app features"
-        ]
+            "Progressive web app features",
+        ],
     },
-
     "cli": {
         "name": "CLI",
         "maturity": ServiceMaturity.STABLE,
@@ -328,12 +303,8 @@ SERVICES = {
         "dependencies": ["orchestrator"],
         "ports": [],
         "current_issues": ["Limited interactive features"],
-        "integration_opportunities": [
-            "Advanced shell integration",
-            "Interactive workflows",
-            "Script automation"
-        ]
-    }
+        "integration_opportunities": ["Advanced shell integration", "Interactive workflows", "Script automation"],
+    },
 }
 
 
@@ -358,12 +329,11 @@ class DeepIntegrationPlanner:
                     "Add event handlers for data ingestion",
                     "Create real-time processing workflows",
                     "Add event correlation and aggregation",
-                    "Implement event-driven alerting"
+                    "Implement event-driven alerting",
                 ],
                 "technologies": ["Apache Kafka", "Redis Streams", "WebSocket"],
-                "monitoring_requirements": ["event_throughput", "processing_latency", "error_rates"]
+                "monitoring_requirements": ["event_throughput", "processing_latency", "error_rates"],
             },
-
             "ai_powered_orchestration": {
                 "name": "AI-Powered Intelligent Orchestration",
                 "description": "Machine learning enhanced workflow orchestration",
@@ -376,12 +346,11 @@ class DeepIntegrationPlanner:
                     "Add intelligent service routing",
                     "Create predictive resource allocation",
                     "Implement automated optimization",
-                    "Add ML-based anomaly detection"
+                    "Add ML-based anomaly detection",
                 ],
                 "technologies": ["TensorFlow", "scikit-learn", "Prometheus"],
-                "monitoring_requirements": ["prediction_accuracy", "optimization_impact", "resource_efficiency"]
+                "monitoring_requirements": ["prediction_accuracy", "optimization_impact", "resource_efficiency"],
             },
-
             "distributed_state_management": {
                 "name": "Distributed State Management",
                 "description": "Distributed state synchronization across services",
@@ -394,12 +363,11 @@ class DeepIntegrationPlanner:
                     "Add state synchronization protocols",
                     "Create conflict resolution strategies",
                     "Implement state migration tools",
-                    "Add state consistency monitoring"
+                    "Add state consistency monitoring",
                 ],
                 "technologies": ["Apache Zookeeper", "etcd", "Raft consensus"],
-                "monitoring_requirements": ["state_consistency", "sync_latency", "conflict_resolution_rate"]
+                "monitoring_requirements": ["state_consistency", "sync_latency", "conflict_resolution_rate"],
             },
-
             "real_time_collaboration": {
                 "name": "Real-Time Collaboration Platform",
                 "description": "Real-time collaborative features across services",
@@ -412,12 +380,11 @@ class DeepIntegrationPlanner:
                     "Add collaborative editing features",
                     "Create presence and activity indicators",
                     "Implement conflict-free replicated data types",
-                    "Add real-time notification system"
+                    "Add real-time notification system",
                 ],
                 "technologies": ["WebSocket", "Operational Transforms", "CRDTs"],
-                "monitoring_requirements": ["collaboration_metrics", "real_time_latency", "conflict_resolution"]
+                "monitoring_requirements": ["collaboration_metrics", "real_time_latency", "conflict_resolution"],
             },
-
             "enterprise_security_mesh": {
                 "name": "Enterprise Security Service Mesh",
                 "description": "Comprehensive security across all service interactions",
@@ -430,12 +397,11 @@ class DeepIntegrationPlanner:
                     "Add comprehensive authentication",
                     "Implement authorization policies",
                     "Create audit logging system",
-                    "Add security monitoring and alerting"
+                    "Add security monitoring and alerting",
                 ],
                 "technologies": ["Istio", "OAuth2", "JWT", "OPA"],
-                "monitoring_requirements": ["security_events", "authentication_failures", "policy_violations"]
+                "monitoring_requirements": ["security_events", "authentication_failures", "policy_violations"],
             },
-
             "advanced_monitoring_observability": {
                 "name": "Advanced Monitoring & Observability",
                 "description": "Enterprise-grade monitoring and observability platform",
@@ -448,12 +414,11 @@ class DeepIntegrationPlanner:
                     "Add comprehensive metrics collection",
                     "Create custom dashboards",
                     "Implement log correlation",
-                    "Add predictive alerting"
+                    "Add predictive alerting",
                 ],
                 "technologies": ["Jaeger", "Prometheus", "Grafana", "ELK Stack"],
-                "monitoring_requirements": ["system_metrics", "application_metrics", "business_metrics"]
+                "monitoring_requirements": ["system_metrics", "application_metrics", "business_metrics"],
             },
-
             "intelligent_resource_management": {
                 "name": "Intelligent Resource Management",
                 "description": "AI-powered resource allocation and optimization",
@@ -466,12 +431,11 @@ class DeepIntegrationPlanner:
                     "Add dynamic resource allocation",
                     "Create resource optimization algorithms",
                     "Implement auto-scaling policies",
-                    "Add resource usage analytics"
+                    "Add resource usage analytics",
                 ],
                 "technologies": ["Kubernetes HPA", "Prometheus", "Custom ML models"],
-                "monitoring_requirements": ["resource_utilization", "scaling_events", "cost_optimization"]
+                "monitoring_requirements": ["resource_utilization", "scaling_events", "cost_optimization"],
             },
-
             "cross_service_workflow_composition": {
                 "name": "Cross-Service Workflow Composition",
                 "description": "Dynamic workflow composition from multiple services",
@@ -484,11 +448,11 @@ class DeepIntegrationPlanner:
                     "Implement service capability discovery",
                     "Add dynamic workflow generation",
                     "Create workflow template system",
-                    "Implement workflow optimization"
+                    "Implement workflow optimization",
                 ],
                 "technologies": ["DSL", "Graph algorithms", "Template engine"],
-                "monitoring_requirements": ["composition_success_rate", "workflow_performance", "template_usage"]
-            }
+                "monitoring_requirements": ["composition_success_rate", "workflow_performance", "template_usage"],
+            },
         }
 
     def plan_service_integration(self, service_name: str) -> Dict[str, Any]:
@@ -501,13 +465,13 @@ class DeepIntegrationPlanner:
                 "maturity_level": service_info["maturity"].value,
                 "integration_depth": service_info["current_depth"].value,
                 "key_features": service_info["key_features"],
-                "dependencies": service_info["dependencies"]
+                "dependencies": service_info["dependencies"],
             },
             "integration_opportunities": service_info["integration_opportunities"],
             "recommended_patterns": self._recommend_patterns_for_service(service_name),
             "implementation_priorities": self._calculate_implementation_priorities(service_name),
             "risk_assessment": self._assess_integration_risks(service_name),
-            "business_value": self._calculate_business_value(service_name)
+            "business_value": self._calculate_business_value(service_name),
         }
 
         return integration_plan
@@ -521,7 +485,10 @@ class DeepIntegrationPlanner:
         if service_info["maturity"] in [ServiceMaturity.PRODUCTION, ServiceMaturity.ENTERPRISE]:
             if "real-time" in str(service_info["integration_opportunities"]).lower():
                 recommendations.append(self.integration_patterns["event_driven_pipeline"])
-            if "ai" in str(service_info["integration_opportunities"]).lower() or "optimization" in str(service_info["integration_opportunities"]).lower():
+            if (
+                "ai" in str(service_info["integration_opportunities"]).lower()
+                or "optimization" in str(service_info["integration_opportunities"]).lower()
+            ):
                 recommendations.append(self.integration_patterns["ai_powered_orchestration"])
 
         if service_name in ["orchestrator", "doc_store", "memory_agent"]:
@@ -547,13 +514,16 @@ class DeepIntegrationPlanner:
 
         priorities = {
             "immediate": [],  # Critical for business continuity
-            "high": [],       # High business value, moderate effort
-            "medium": [],     # Good value, moderate effort
-            "low": []         # Nice to have, high effort
+            "high": [],  # High business value, moderate effort
+            "medium": [],  # Good value, moderate effort
+            "low": [],  # Nice to have, high effort
         }
 
         # Immediate priorities
-        if service_info["maturity"] == ServiceMaturity.PRODUCTION and service_info["current_depth"] != IntegrationDepth.ENTERPRISE:
+        if (
+            service_info["maturity"] == ServiceMaturity.PRODUCTION
+            and service_info["current_depth"] != IntegrationDepth.ENTERPRISE
+        ):
             priorities["immediate"].append("Upgrade to enterprise integration depth")
 
         if "real-time" in str(service_info["integration_opportunities"]).lower():
@@ -583,7 +553,7 @@ class DeepIntegrationPlanner:
             "technical_risks": [],
             "business_risks": [],
             "operational_risks": [],
-            "mitigation_strategies": []
+            "mitigation_strategies": [],
         }
 
         # Technical risks
@@ -607,7 +577,7 @@ class DeepIntegrationPlanner:
             "Use feature flags for gradual rollout",
             "Prepare rollback procedures",
             "Monitor integration health metrics",
-            "Conduct thorough security assessment"
+            "Conduct thorough security assessment",
         ]
 
         return risk_assessment
@@ -624,7 +594,7 @@ class DeepIntegrationPlanner:
             ServiceMaturity.DEVELOPMENT: 0.5,
             ServiceMaturity.STABLE: 0.7,
             ServiceMaturity.PRODUCTION: 0.9,
-            ServiceMaturity.ENTERPRISE: 1.0
+            ServiceMaturity.ENTERPRISE: 1.0,
         }
         base_value *= maturity_multipliers[service_info["maturity"]]
 
@@ -633,7 +603,7 @@ class DeepIntegrationPlanner:
             IntegrationDepth.BASIC: 0.4,
             IntegrationDepth.INTERMEDIATE: 0.6,
             IntegrationDepth.ADVANCED: 0.8,
-            IntegrationDepth.ENTERPRISE: 1.0
+            IntegrationDepth.ENTERPRISE: 1.0,
         }
         base_value *= depth_multipliers[service_info["current_depth"]]
 
@@ -646,7 +616,7 @@ class DeepIntegrationPlanner:
             "maturity_contribution": maturity_multipliers[service_info["maturity"]],
             "depth_contribution": depth_multipliers[service_info["current_depth"]],
             "dependency_contribution": dependency_multiplier,
-            "value_classification": "high" if base_value > 0.8 else "medium" if base_value > 0.6 else "low"
+            "value_classification": "high" if base_value > 0.8 else "medium" if base_value > 0.6 else "low",
         }
 
 
@@ -664,7 +634,7 @@ def generate_comprehensive_integration_report():
         "detailed_plans": {},
         "implementation_roadmap": {},
         "business_value_analysis": {},
-        "risk_assessment": {}
+        "risk_assessment": {},
     }
 
     # Analyze each service
@@ -706,7 +676,7 @@ def generate_comprehensive_integration_report():
     print(f"  • Business Value: {roadmap['total_business_value']:.2f}")
 
     # Save detailed report
-    with open('/tmp/deep_integration_report.json', 'w') as f:
+    with open("/tmp/deep_integration_report.json", "w") as f:
         json.dump(report, f, indent=2, default=str)
 
     print(f"\n💾 Detailed report saved to: /tmp/deep_integration_report.json")
@@ -722,7 +692,7 @@ def generate_implementation_roadmap(detailed_plans: Dict[str, Any]) -> Dict[str,
         "medium": [],
         "low": [],
         "total_effort_days": 0,
-        "total_business_value": 0.0
+        "total_business_value": 0.0,
     }
 
     for service_name, plan in detailed_plans.items():
@@ -730,11 +700,9 @@ def generate_implementation_roadmap(detailed_plans: Dict[str, Any]) -> Dict[str,
 
         for priority_level, items in priorities.items():
             if items:  # Only add if there are items
-                roadmap[priority_level].append({
-                    "service": service_name,
-                    "items": items,
-                    "business_value": plan["business_value"]["overall_score"]
-                })
+                roadmap[priority_level].append(
+                    {"service": service_name, "items": items, "business_value": plan["business_value"]["overall_score"]}
+                )
 
                 # Add effort estimate (rough estimate)
                 effort_per_item = 5 if priority_level == "immediate" else 3
@@ -753,7 +721,7 @@ def analyze_business_value(detailed_plans: Dict[str, Any]) -> Dict[str, Any]:
         "low_value_services": 0,
         "average_business_value": 0.0,
         "top_value_services": [],
-        "value_distribution": {}
+        "value_distribution": {},
     }
 
     total_value = 0
@@ -767,11 +735,13 @@ def analyze_business_value(detailed_plans: Dict[str, Any]) -> Dict[str, Any]:
         value_counts[value_class] += 1
 
         if value_class == "high":
-            analysis["top_value_services"].append({
-                "service": service_name,
-                "value_score": value_score,
-                "maturity": plan["current_state"]["maturity_level"]
-            })
+            analysis["top_value_services"].append(
+                {
+                    "service": service_name,
+                    "value_score": value_score,
+                    "maturity": plan["current_state"]["maturity_level"],
+                }
+            )
 
     analysis["high_value_services"] = value_counts["high"]
     analysis["medium_value_services"] = value_counts["medium"]
@@ -795,7 +765,7 @@ def analyze_integration_risks(detailed_plans: Dict[str, Any]) -> Dict[str, Any]:
         "low_risk_services": 0,
         "common_risks": {},
         "risk_mitigation_strategies": set(),
-        "critical_path_services": []
+        "critical_path_services": [],
     }
 
     risk_counts = {"high": 0, "medium": 0, "low": 0}
@@ -805,21 +775,20 @@ def analyze_integration_risks(detailed_plans: Dict[str, Any]) -> Dict[str, Any]:
         risk_counts[risk_level] += 1
 
         # Collect common risks
-        for risk in plan["risk_assessment"]["technical_risks"] + \
-                   plan["risk_assessment"]["business_risks"] + \
-                   plan["risk_assessment"]["operational_risks"]:
+        for risk in (
+            plan["risk_assessment"]["technical_risks"]
+            + plan["risk_assessment"]["business_risks"]
+            + plan["risk_assessment"]["operational_risks"]
+        ):
             if risk not in risk_analysis["common_risks"]:
                 risk_analysis["common_risks"][risk] = 0
             risk_analysis["common_risks"][risk] += 1
 
         # Collect mitigation strategies
-        risk_analysis["risk_mitigation_strategies"].update(
-            plan["risk_assessment"]["mitigation_strategies"]
-        )
+        risk_analysis["risk_mitigation_strategies"].update(plan["risk_assessment"]["mitigation_strategies"])
 
         # Identify critical path services
-        if plan["current_state"]["maturity_level"] in ["production", "enterprise"] and \
-           risk_level == "high":
+        if plan["current_state"]["maturity_level"] in ["production", "enterprise"] and risk_level == "high":
             risk_analysis["critical_path_services"].append(service_name)
 
     risk_analysis["high_risk_services"] = risk_counts["high"]

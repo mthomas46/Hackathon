@@ -4,9 +4,10 @@ Test Interactive CLI - Test the overlay integration with the actual CLI
 """
 
 import os
-import sys
 import subprocess
+import sys
 import time
+
 
 def test_cli_with_interactive_overlay():
     """Test that the CLI launches and shows the interactive settings menu."""
@@ -21,8 +22,7 @@ def test_cli_with_interactive_overlay():
     # Test 1: CLI help (should work)
     print("\n📋 Test 1: CLI Help Command")
     try:
-        result = subprocess.run([sys.executable, 'run_cli.py', '--help'],
-                              capture_output=True, text=True, timeout=10)
+        result = subprocess.run([sys.executable, "run_cli.py", "--help"], capture_output=True, text=True, timeout=10)
         if result.returncode == 0 and "interactive" in result.stdout:
             print("✅ CLI help working")
         else:
@@ -35,12 +35,11 @@ def test_cli_with_interactive_overlay():
     # Test 2: Health command (should work)
     print("\n📋 Test 2: CLI Health Command")
     try:
-        result = subprocess.run([sys.executable, 'run_cli.py', 'health'],
-                              capture_output=True, text=True, timeout=15)
+        result = subprocess.run([sys.executable, "run_cli.py", "health"], capture_output=True, text=True, timeout=15)
         if result.returncode == 0 and "Service Health Status" in result.stdout:
             print("✅ CLI health command working")
             # Show a snippet of the output
-            lines = result.stdout.split('\n')
+            lines = result.stdout.split("\n")
             for line in lines[:10]:  # First 10 lines
                 if line.strip():
                     print(f"   {line}")
@@ -57,9 +56,9 @@ def test_cli_with_interactive_overlay():
     print("\n📋 Test 3: CLI Interactive Mode Startup")
     try:
         # Start interactive mode and kill it quickly to see if it starts
-        proc = subprocess.Popen([sys.executable, 'run_cli.py', 'interactive'],
-                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              text=True)
+        proc = subprocess.Popen(
+            [sys.executable, "run_cli.py", "interactive"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
 
         # Wait a bit for startup
         time.sleep(3)
@@ -85,9 +84,11 @@ def test_cli_with_interactive_overlay():
     print("\n🎯 Interactive Overlay Status:")
     try:
         import questionary
+
         print("✅ Questionary available")
         try:
             from services.cli.modules.interactive_overlay import InteractiveOverlay
+
             print("✅ Interactive overlay module available")
         except ImportError as e:
             print(f"❌ Interactive overlay import error: {e}")
@@ -100,6 +101,7 @@ def test_cli_with_interactive_overlay():
     print("2. Press 's' to access Settings with interactive overlay")
     print("3. Test arrow key navigation and selection")
     print("4. Gradually enable on other managers")
+
 
 if __name__ == "__main__":
     test_cli_with_interactive_overlay()
