@@ -5,18 +5,15 @@ for communication between bounded contexts.
 """
 
 import asyncio
-import json
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Awaitable, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 from streaming.event_streaming import EventPublisher
 
-from ...domain.events import DomainEvent, event_from_dict
-from ...domain.value_objects import ServiceHealth
+from ...domain.events import DomainEvent
 from ..clients.ecosystem_clients import get_ecosystem_client
 from ..logging import get_simulation_logger
 
@@ -211,16 +208,6 @@ class DomainEventBus:
     async def _register_default_handlers(self) -> None:
         """Register default event handlers."""
         # Import here to avoid circular imports
-        from ...domain.events import (
-            DocumentGenerated,
-            ProjectCreated,
-            ProjectPhaseCompleted,
-            ProjectStatusChanged,
-            SimulationCompleted,
-            SimulationFailed,
-            SimulationStarted,
-            WorkflowExecuted,
-        )
 
         # Project events
         self.publisher.subscribe("ProjectCreated", self._handle_project_created)

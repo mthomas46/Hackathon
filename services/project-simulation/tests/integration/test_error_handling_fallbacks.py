@@ -5,17 +5,14 @@ mechanisms, authentication/authorization, and service mesh resilience.
 """
 
 import asyncio
-from typing import Any, Dict, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
 from simulation.domain.value_objects import ServiceEndpoint
-from simulation.domain.value_objects import ServiceHealth as DomainServiceHealth
-from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceClient, EcosystemServiceRegistry
+from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceClient
 from simulation.infrastructure.config.discovery import FallbackServiceClient, LocalServiceDiscovery, ServiceHealth
 from simulation.infrastructure.resilience.circuit_breaker import (
-    EcosystemCircuitBreakerRegistry,
     ResilientServiceClient,
     ServiceCircuitBreaker,
 )

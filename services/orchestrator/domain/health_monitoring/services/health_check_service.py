@@ -2,8 +2,7 @@
 
 import asyncio
 import time
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 
 from ..value_objects.health_check_result import HealthCheckResult
 from ..value_objects.health_status import HealthStatus

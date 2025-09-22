@@ -6,9 +6,8 @@ Enhanced with ecosystem context awareness for project-specific understanding.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
-from services.shared.core.models.models import Document, Finding
 
 from .ecosystem_context import ecosystem_context
 

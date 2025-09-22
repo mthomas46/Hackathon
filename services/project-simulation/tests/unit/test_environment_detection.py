@@ -6,8 +6,7 @@ These tests verify that the simulation service correctly detects its runtime env
 and configures service URLs appropriately for Docker vs local development.
 """
 
-import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer

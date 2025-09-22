@@ -3,7 +3,6 @@
 import os
 import sys
 
-import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
@@ -11,14 +10,12 @@ from pages.prompt_browser import (
     analyze_prompt_content,
     analyze_version_differences,
     apply_ai_tuning,
-    display_performance_results,
     estimate_token_count,
     extract_variables_from_prompt,
     format_prompt_content,
     generate_mock_version_history,
     get_mock_version_content,
     highlight_variables_in_text,
-    render_variable_manager,
     run_prompt_performance_test,
 )
 

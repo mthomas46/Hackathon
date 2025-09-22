@@ -4,12 +4,10 @@ Monitors documentation quality over time and detects when quality is degrading,
 providing alerts, analysis, and recommendations for quality maintenance.
 """
 
-import json
 import logging
 import time
-from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
 try:
     import warnings
@@ -36,8 +34,6 @@ except ImportError:
     stats = None
     find_peaks = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 

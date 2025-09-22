@@ -1,13 +1,12 @@
 """Logger Service - Enterprise-grade structured logging with correlation IDs."""
 
-import json
 import logging
 import sys
 import threading
 from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from ..di.services import ILoggerService
 

@@ -54,9 +54,8 @@ result = await analyzer.analyze_documents(targets, "consistency")
 - **Type Safety**: Full type checking and IDE support.
 """
 
-from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, Dict, Generic, List, Optional, Protocol, TypeVar, Union
+from abc import ABC
+from typing import Any, Dict, List, Optional, Protocol, TypeVar
 
 T = TypeVar("T")
 

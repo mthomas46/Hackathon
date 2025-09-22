@@ -3,10 +3,9 @@
 Handles notification processing and webhook management.
 """
 
-import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from ...core.entities import NotificationEvent, Webhook
+from ...core.entities import NotificationEvent
 from ...core.service import BaseService
 from .repository import NotificationsRepository
 

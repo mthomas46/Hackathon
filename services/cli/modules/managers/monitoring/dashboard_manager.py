@@ -10,7 +10,6 @@ from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class DashboardManager(BaseManager):

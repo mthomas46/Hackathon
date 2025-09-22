@@ -2,15 +2,13 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..models import (
-    ForecastData,
     PortfolioTrendAnalysisRequest,
     PortfolioTrendAnalysisResponse,
     TrendAnalysisRequest,
     TrendAnalysisResponse,
-    TrendData,
 )
 from .base_handler import AnalysisResult, BaseAnalysisHandler
 

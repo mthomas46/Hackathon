@@ -5,7 +5,7 @@ for system health, service status, and operational metrics.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 import numpy as np
 import pandas as pd

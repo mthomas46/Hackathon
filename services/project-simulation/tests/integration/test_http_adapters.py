@@ -7,7 +7,6 @@ connection pooling, retry logic, timeout handling, and resilience patterns.
 import asyncio
 import time
 from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
@@ -354,7 +353,6 @@ async def create_mock_http_server():
     """Create a mock HTTP server for testing."""
     # This would create a test server for more controlled testing
     # For now, we use real HTTP services for integration tests
-    pass
 
 
 def verify_http_response_format(response: Dict[str, Any]):

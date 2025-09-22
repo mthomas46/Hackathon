@@ -6,7 +6,6 @@ and provenance features without complex import dependencies.
 
 import asyncio
 import json
-import re
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional

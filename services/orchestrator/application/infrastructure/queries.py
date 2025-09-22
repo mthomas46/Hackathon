@@ -1,8 +1,7 @@
 """Infrastructure Application Queries"""
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 
 @dataclass

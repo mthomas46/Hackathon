@@ -4,8 +4,7 @@ This module provides security scanning capabilities for discovered tools
 using the secure-analyzer service integration.
 """
 
-import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 try:
     from services.shared.clients import ServiceClients

@@ -6,7 +6,7 @@ for GitHub tool invocation, repository operations, and GitHub API interactions.
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 

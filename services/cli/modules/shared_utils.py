@@ -5,7 +5,7 @@ to eliminate code duplication and ensure consistency.
 """
 
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from rich.console import Console
 from rich.panel import Panel
@@ -17,13 +17,10 @@ from services.shared.core.responses.responses import create_error_response, crea
 # Import shared utilities
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities import utc_now
-from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.utilities.error_handling import ValidationException
 
 # Import new base classes and utilities
-from .base import BaseFormatter, BaseHandler, BaseManager
-from .formatters import DisplayManager, StatusFormatter, TableFormatter
-from .utils import APIClient, CacheManager, handle_cli_error, log_cli_command, log_cli_operation
+from .utils import handle_cli_error
 
 # Global configuration for CLI service
 _DEFAULT_TIMEOUT = 30

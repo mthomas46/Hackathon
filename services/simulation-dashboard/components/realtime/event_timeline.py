@@ -14,14 +14,12 @@ Key Features:
 - Export capabilities for event analysis
 """
 
-import asyncio
 import json
-import re
 import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import plotly.express as px

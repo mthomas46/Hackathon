@@ -3,7 +3,6 @@
 Handles workflow and job status visualization.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 

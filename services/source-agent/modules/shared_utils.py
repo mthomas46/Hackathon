@@ -4,19 +4,17 @@ This module contains common utilities used across all source-agent modules
 to eliminate code duplication and ensure consistency.
 """
 
-import os
 import re
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
 
-from services.shared.auth.credentials import get_secret as get_secret
 from services.shared.core.config.config import get_config_value
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.core.models.models import Document
 from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities import clean_string, generate_id, stable_hash, utc_now
+from services.shared.utilities import clean_string, utc_now
 from services.shared.utilities.error_handling import ServiceException
 
 

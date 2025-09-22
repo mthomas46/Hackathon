@@ -1,11 +1,9 @@
 """Pytest configuration and fixtures for Data Services Dashboard testing."""
 
 import asyncio
-import json
 import os
 import sys
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 

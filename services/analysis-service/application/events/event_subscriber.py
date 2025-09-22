@@ -4,7 +4,7 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .application_events import ApplicationEvent, EventType
 
@@ -17,13 +17,11 @@ class EventHandler(ABC):
     @abstractmethod
     async def handle(self, event: ApplicationEvent) -> None:
         """Handle an event."""
-        pass
 
     @property
     @abstractmethod
     def event_types(self) -> List[EventType]:
         """Return list of event types this handler can process."""
-        pass
 
 
 class EventSubscriber:

@@ -5,16 +5,12 @@ simulation workflows, cross-service data consistency, and ecosystem integration.
 """
 
 import asyncio
-import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock
 
-import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

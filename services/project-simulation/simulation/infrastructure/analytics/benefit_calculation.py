@@ -5,13 +5,12 @@ the value and impact of the Project Simulation Service using comprehensive metri
 from across the ecosystem, providing data-driven insights into ROI and effectiveness.
 """
 
-import json
 import statistics
 import sys
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))

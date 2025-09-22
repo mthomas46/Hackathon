@@ -4,13 +4,12 @@ This module contains the WorkflowBuilder class and related functionality,
 extracted from the main interpreter service to improve maintainability.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import utc_now
 
 # Import shared configuration utilities
-from .shared_utils import get_default_timeout, get_interpreter_clients
+from .shared_utils import get_interpreter_clients
 
 if TYPE_CHECKING:
     from services.interpreter.main import InterpretedWorkflow, WorkflowStep

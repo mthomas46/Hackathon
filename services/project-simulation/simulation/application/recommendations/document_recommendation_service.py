@@ -4,9 +4,8 @@ Following DDD application layer patterns with clean separation of concerns.
 """
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
 from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
 
 

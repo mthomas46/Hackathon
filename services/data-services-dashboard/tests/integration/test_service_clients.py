@@ -1,9 +1,7 @@
 """Integration tests for service client interactions."""
 
-import asyncio
 import os
 import sys
-from unittest.mock import Mock, patch
 
 import pytest
 

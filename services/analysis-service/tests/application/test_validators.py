@@ -1,7 +1,5 @@
 """Tests for Application Validators."""
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -21,7 +19,7 @@ from ...application.validators.command_validators import CreateDocumentCommandVa
 from ...application.validators.query_validators import GetDocumentQueryValidator, GetDocumentsQueryValidator
 from ...application.validators.validation_pipeline import ValidationPipeline
 from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
+from ...domain.entities.document import Document
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence

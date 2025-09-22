@@ -3,11 +3,9 @@
 Handles code analyzer service visualization.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
-from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
 
 from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
 

@@ -87,14 +87,12 @@ This container integrates with the broader service ecosystem:
 - Base services for common functionality injection.
 """
 
-import asyncio
 import inspect
 import threading
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, Type, TypeVar
 from weakref import WeakValueDictionary
 
 T = TypeVar("T")

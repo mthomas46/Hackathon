@@ -3,7 +3,7 @@
 Handles lifecycle policy evaluation and automated transitions.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import LifecyclePolicy

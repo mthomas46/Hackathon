@@ -6,15 +6,11 @@ Tests cover script execution, argument parsing, error handling,
 and user experience aspects of CLI tools.
 """
 
-import json
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
-import pytest
 
 
 class TestCLIScriptExecution:
@@ -242,7 +238,6 @@ class TestCLISecurity:
     def test_scripts_handle_sensitive_data_securely(self):
         """Test that scripts handle sensitive data securely."""
         # This would test for secure handling of API keys, passwords, etc.
-        pass
 
 
 class TestCLIIntegration:
@@ -251,17 +246,14 @@ class TestCLIIntegration:
     def test_cli_scripts_can_connect_to_api(self):
         """Test that CLI scripts can connect to the API."""
         # This would test actual API connectivity
-        pass
 
     def test_cli_scripts_handle_api_errors_gracefully(self):
         """Test that CLI scripts handle API errors gracefully."""
         # Test error handling when API is unavailable
-        pass
 
     def test_cli_scripts_support_json_output_format(self):
         """Test that CLI scripts support JSON output format."""
         # Test --json or similar output formatting options
-        pass
 
 
 class TestCLIDocumentation:
@@ -283,7 +275,6 @@ class TestCLIDocumentation:
     def test_scripts_have_usage_examples(self):
         """Test that scripts include usage examples."""
         # Check for comments or docstrings with examples
-        pass
 
     def test_scripts_validate_required_arguments(self):
         """Test that scripts validate required arguments."""

@@ -1,7 +1,7 @@
 """Summarization Service Domain Service"""
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.summarization_request import SummarizationRequest
 

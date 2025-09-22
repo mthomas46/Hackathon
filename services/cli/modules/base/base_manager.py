@@ -1,12 +1,9 @@
 """Base manager class providing common functionality for all CLI managers."""
 
-import asyncio
-import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
@@ -30,12 +27,10 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
     @abstractmethod
     async def get_main_menu(self) -> List[Tuple[str, str]]:
         """Return the main menu items for this manager."""
-        pass
 
     @abstractmethod
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
-        pass
 
     def get_required_services(self) -> List[str]:
         """Return list of services required by this manager.

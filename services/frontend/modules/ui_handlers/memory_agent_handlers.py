@@ -4,7 +4,6 @@ Handles memory agent service visualization, including operational
 context storage, event summaries, and memory item management.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..memory_agent_monitor import memory_agent_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )

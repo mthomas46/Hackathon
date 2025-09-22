@@ -1,9 +1,8 @@
 """End-to-end tests for dashboard workflows."""
 
-import asyncio
 import os
 import sys
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 

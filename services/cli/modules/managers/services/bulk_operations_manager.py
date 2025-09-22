@@ -7,7 +7,6 @@ including mass analysis, notifications, quality recalculations, and data operati
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 

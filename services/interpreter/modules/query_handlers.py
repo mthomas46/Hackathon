@@ -7,7 +7,7 @@ import time
 from typing import Any, Dict
 
 from .intent_recognizer import IntentRecognizer
-from .models import InterpretedIntent, InterpretedWorkflow, WorkflowStep
+from .models import InterpretedIntent
 from .shared_utils import (
     build_interpreter_context,
     create_interpreter_success_response,

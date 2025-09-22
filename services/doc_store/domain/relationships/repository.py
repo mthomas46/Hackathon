@@ -5,7 +5,7 @@ Handles relationship data queries and graph operations.
 
 from typing import Any, Dict, List, Optional
 
-from ...core.entities import DocumentRelationship, GraphEdge, GraphNode
+from ...core.entities import DocumentRelationship
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
 

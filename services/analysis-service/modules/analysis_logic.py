@@ -30,7 +30,6 @@ from .shared_utils import (
     get_high_priority_score,
     get_medium_priority_score,
     handle_analysis_error,
-    validate_analysis_targets,
 )
 
 # Constants for analysis thresholds and scoring (using shared configuration)

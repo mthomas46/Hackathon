@@ -4,7 +4,6 @@ Handles terminal pass-through interface for CLI service operations,
 providing a web-based terminal for full CLI functionality.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..cli_monitor import cli_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )

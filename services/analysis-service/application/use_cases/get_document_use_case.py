@@ -6,7 +6,7 @@ from typing import Optional
 from ...domain.entities import Document
 from ...domain.exceptions import DocumentNotFoundException
 from ...infrastructure.repositories import DocumentRepository
-from ..dto import DocumentListResponse, DocumentResponse, GetDocumentsRequest
+from ..dto import DocumentListResponse, DocumentResponse
 
 
 @dataclass

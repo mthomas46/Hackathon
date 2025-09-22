@@ -21,12 +21,9 @@ New endpoints:
 - POST /orchestrator/create-workflow: Create AI workflows
 """
 
-import asyncio
-import os
 import re
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import Body, FastAPI, HTTPException, Query
@@ -39,7 +36,7 @@ from services.shared.core.responses.responses import create_error_response, crea
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities import setup_common_middleware
 
 from .modules.ai_tool_selector import AIToolSelector
 from .modules.monitoring_service import DiscoveryAgentMonitoring

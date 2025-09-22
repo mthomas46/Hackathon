@@ -2,8 +2,6 @@
 
 from typing import Any, Dict, List, Optional
 
-from rich.prompt import Confirm, Prompt
-from rich.table import Table
 
 from ...base.base_manager import BaseManager
 from .docker_manager import DockerManager

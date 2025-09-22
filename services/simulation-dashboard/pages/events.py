@@ -4,18 +4,14 @@ This module provides the event timeline and replay visualization interface,
 allowing users to explore simulation events chronologically and replay event sequences.
 """
 
-import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from infrastructure.config.config import get_config
-from plotly.subplots import make_subplots
 
-from services.clients.simulation_client import SimulationClient
 
 
 def render_events_page():

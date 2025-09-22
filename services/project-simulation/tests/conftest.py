@@ -7,8 +7,8 @@ Follows established ecosystem testing patterns for consistency and maintainabili
 import asyncio
 import sys
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -200,7 +200,6 @@ def setup_test_environment():
     yield
 
     # Cleanup environment variables after all tests
-    pass
 
 
 @pytest.fixture

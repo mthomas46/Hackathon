@@ -6,7 +6,7 @@ This module provides a comprehensive interface for managing documents in the Doc
 import asyncio
 import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st

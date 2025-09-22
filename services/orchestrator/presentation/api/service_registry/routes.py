@@ -7,9 +7,9 @@ Provides endpoints for:
 """
 
 import time
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from services.shared.core.constants_new import ServiceNames
 from services.shared.utilities.logging_client import get_log_collector_client
@@ -17,7 +17,6 @@ from services.shared.utilities.logging_client import get_log_collector_client
 from ....main import container
 from .dtos import (
     PollOpenAPIRequest,
-    RegistryEntryResponse,
     ServiceInfoResponse,
     ServiceListResponse,
     ServiceRegistrationRequest,

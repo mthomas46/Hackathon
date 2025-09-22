@@ -6,8 +6,7 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock
 
 import httpx
 import pytest
@@ -253,10 +252,8 @@ class TestDiscoveryAgentIntegration:
         # 2. Service registry storage
         # 3. Health checking
         # 4. Endpoint validation
-        pass
 
     @pytest.mark.asyncio
     async def test_cross_service_communication(self):
         """Test communication between orchestrator and simulation service via discovery."""
         # This would test end-to-end communication flow
-        pass

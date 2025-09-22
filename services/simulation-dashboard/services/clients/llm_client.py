@@ -4,8 +4,6 @@ This module provides a client for interacting with the LLM Gateway service,
 enabling AI-powered insights and intelligent analysis in the dashboard.
 """
 
-import asyncio
-import json
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional

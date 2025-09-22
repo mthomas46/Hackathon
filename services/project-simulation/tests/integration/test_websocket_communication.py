@@ -6,14 +6,11 @@ Tests cover connection handling, message routing, and error scenarios.
 """
 
 import asyncio
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-import websockets
-from simulation.presentation.websockets.simulation_websocket import SimulationWebSocketHandler, WebSocketEventType
+from simulation.presentation.websockets.simulation_websocket import SimulationWebSocketHandler
 from starlette.websockets import WebSocketDisconnect
 
 
@@ -268,19 +265,16 @@ class TestWebSocketSecurity:
     async def test_websocket_origin_validation(self):
         """Test WebSocket origin validation for security."""
         # This would test CORS-like validation for WebSocket connections
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_rate_limiting(self):
         """Test rate limiting for WebSocket messages."""
         # Test that rapid message sending is limited
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_authentication(self):
         """Test WebSocket authentication and authorization."""
         # Test that only authenticated users can connect
-        pass
 
 
 class TestWebSocketPerformance:

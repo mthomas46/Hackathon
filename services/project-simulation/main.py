@@ -221,7 +221,7 @@ except ImportError:
 
 
 try:
-    import time
+    pass
 
     from services.shared.core.constants_new import ServiceNames
     from services.shared.utilities.error_handling import register_exception_handlers
@@ -275,16 +275,12 @@ from simulation.infrastructure.redis_integration import (
     publish_prompt_event,
 )
 from simulation.presentation.api.hateoas import (
-    HealthResource,
     RootResource,
     SimulationResource,
     create_hateoas_response,
 )
 from simulation.presentation.websockets.simulation_websocket import (
     get_websocket_handler,
-    notify_ecosystem_status,
-    notify_simulation_event,
-    notify_simulation_progress,
 )
 
 
@@ -453,7 +449,6 @@ except Exception as e:
     from simulation.application.services.simulation_application_service import SimulationApplicationService
     from simulation.infrastructure.repositories.in_memory_repositories import (
         InMemoryProjectRepository,
-        InMemorySimulationRepository,
         InMemoryTeamRepository,
         InMemoryTimelineRepository,
     )

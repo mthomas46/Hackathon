@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 
-from ...domain.service_registry import Service, ServiceDiscoveryService, ServiceId, ServiceRegistrationService
+from ...domain.service_registry import Service, ServiceDiscoveryService, ServiceRegistrationService
 from ...shared.application import UseCase
 from ...shared.domain import DomainResult
 from .commands import *

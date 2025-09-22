@@ -4,15 +4,11 @@ This module contains performance benchmarking tests for the testing framework it
 measuring execution speed, memory usage, and scalability of the test suite.
 """
 
-import os
-import statistics
-import subprocess
 import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List
 
 import psutil
 import pytest
@@ -132,8 +128,6 @@ class TestTestFrameworkOverhead:
         """Test overhead of importing pytest."""
         start_time = time.time()
 
-        import _pytest
-        import pytest
 
         import_time = time.time() - start_time
 
@@ -178,7 +172,7 @@ class TestMockPerformance:
 
     def test_mock_creation_performance(self):
         """Test performance of creating mocks."""
-        from unittest.mock import MagicMock, Mock
+        from unittest.mock import Mock
 
         start_time = time.time()
 

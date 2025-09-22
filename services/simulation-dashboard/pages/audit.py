@@ -4,19 +4,13 @@ This module provides comprehensive auditing capabilities for simulation operatio
 including event tracking, compliance reporting, and audit trail management.
 """
 
-import asyncio
 import json
-import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
-from infrastructure.config.config import get_config
-from plotly.subplots import make_subplots
 
-from services.clients.simulation_client import SimulationClient
 
 
 def render_audit_page():

@@ -40,9 +40,8 @@ LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", config.get("llm-gateway-url", "de
 SERVICE_PORT = os.getenv("SERVICE_PORT", config.get("service-port", "default_value"))
 
 import base64
-import json
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from services.shared.core.constants_new import ServiceNames
 

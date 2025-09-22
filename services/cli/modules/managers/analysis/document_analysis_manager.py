@@ -3,10 +3,9 @@
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Prompt
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class DocumentAnalysisManager(BaseManager):

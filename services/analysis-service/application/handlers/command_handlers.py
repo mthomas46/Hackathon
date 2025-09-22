@@ -8,7 +8,6 @@ from ...domain.factories import DocumentFactory, FindingFactory
 from ...domain.services import AnalysisService, DocumentService, FindingService
 from ...domain.validation import DocumentValidator, FindingValidator
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
-from ..use_cases import CreateDocumentUseCase, CreateFindingUseCase, PerformAnalysisUseCase
 from .commands import (
     CancelAnalysisCommand,
     CreateDocumentCommand,
@@ -16,7 +15,6 @@ from .commands import (
     DeleteDocumentCommand,
     DeleteFindingCommand,
     PerformAnalysisCommand,
-    RetryAnalysisCommand,
     UpdateDocumentCommand,
     UpdateFindingCommand,
 )
@@ -28,7 +26,6 @@ class CommandHandler(ABC):
     @abstractmethod
     async def handle(self, command):
         """Handle the command."""
-        pass
 
 
 class CreateDocumentCommandHandler(CommandHandler):

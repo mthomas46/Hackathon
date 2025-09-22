@@ -5,7 +5,6 @@ This script runs the Data Services Dashboard, a unified interface for managing
 Memory Agent, Prompt Store, and Document Store services.
 """
 
-import os
 import sys
 from pathlib import Path
 

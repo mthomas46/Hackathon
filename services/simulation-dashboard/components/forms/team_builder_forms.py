@@ -4,7 +4,7 @@ This module provides form components for building and configuring project teams,
 including role assignment, skill selection, and team optimization.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pandas as pd
 import streamlit as st

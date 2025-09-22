@@ -1,6 +1,5 @@
 """Orchestrator Service Client for external service communication."""
 
-import asyncio
 from typing import Any, Dict, Optional
 
 from services.shared.integrations.clients.clients import ServiceClients

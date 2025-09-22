@@ -15,9 +15,7 @@ from services.shared.core.constants_new import ServiceNames
 from services.shared.integrations.clients.clients import ServiceClients
 
 from ..shared_utils import (
-    add_menu_rows,
     create_menu_table,
-    print_panel,
 )
 from ..utils.display_helpers import print_kv as _print_kv
 from ..utils.display_helpers import print_list as _print_list

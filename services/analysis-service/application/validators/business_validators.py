@@ -1,12 +1,11 @@
 """Business rule validators for application layer."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 
 from ...domain.entities.analysis import Analysis
 from ...domain.entities.document import Document
 from ...domain.entities.finding import Finding
-from .base_validator import BaseValidator, ValidationError, ValidationResult, ValidationSeverity
+from .base_validator import BaseValidator, ValidationResult
 
 
 class DocumentBusinessValidator(BaseValidator):

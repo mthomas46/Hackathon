@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
-from .event_status import EventStatus
 
 
 class DLQEvent:

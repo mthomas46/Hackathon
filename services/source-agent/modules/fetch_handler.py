@@ -7,7 +7,6 @@ import base64
 import os
 from typing import Any, Dict
 
-from fastapi import HTTPException
 
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import cached_get

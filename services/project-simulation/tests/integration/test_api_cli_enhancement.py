@@ -6,17 +6,13 @@ including HATEOAS, WebSocket streaming, and command-line interface validation.
 
 import asyncio
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import AsyncMock
 
 import pytest
-import websockets
-from fastapi import WebSocket
-from fastapi.testclient import TestClient
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

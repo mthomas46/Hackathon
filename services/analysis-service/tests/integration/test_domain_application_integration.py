@@ -1,9 +1,6 @@
 """Integration tests for Domain + Application layer interaction."""
 
-import asyncio
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -18,9 +15,9 @@ from ...application.use_cases.create_document_use_case import CreateDocumentUseC
 from ...application.use_cases.get_document_use_case import GetDocumentUseCase
 from ...application.use_cases.get_findings_use_case import GetFindingsUseCase
 from ...application.use_cases.perform_analysis_use_case import PerformAnalysisCommand, PerformAnalysisUseCase
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
+from ...domain.entities.document import DocumentStatus
+from ...domain.entities.finding import FindingSeverity
 from ...domain.services.analysis_service import AnalysisService
 from ...domain.services.document_service import DocumentService
 from ...domain.services.finding_service import FindingService

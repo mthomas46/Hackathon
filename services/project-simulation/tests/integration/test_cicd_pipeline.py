@@ -4,16 +4,11 @@ This module contains comprehensive tests for CI/CD pipeline validation,
 build process verification, and deployment pipeline testing.
 """
 
-import json
 import os
-import subprocess
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import docker
 import pytest
-import yaml
 
 
 class TestCIBuildProcess:

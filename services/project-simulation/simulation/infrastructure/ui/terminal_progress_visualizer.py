@@ -5,17 +5,15 @@ with progress bars, real-time status updates, interactive elements, and rich
 visualization of simulation progress, document generation, and workflow execution.
 """
 
-import asyncio
 import os
 import sys
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))

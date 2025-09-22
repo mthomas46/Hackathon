@@ -112,7 +112,6 @@ def render_performance_info():
     st.markdown("**⚡ Performance**")
 
     # Calculate some basic metrics
-    import time
 
     import streamlit.runtime.caching as caching
 

@@ -4,7 +4,6 @@ import asyncio
 import json
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from .application_events import ApplicationEvent
@@ -18,17 +17,14 @@ class EventPublisher(ABC):
     @abstractmethod
     async def publish(self, event: ApplicationEvent) -> None:
         """Publish a single event."""
-        pass
 
     @abstractmethod
     async def publish_batch(self, events: List[ApplicationEvent]) -> None:
         """Publish multiple events in batch."""
-        pass
 
     @abstractmethod
     async def close(self) -> None:
         """Close the publisher and cleanup resources."""
-        pass
 
 
 class InMemoryEventPublisher(EventPublisher):

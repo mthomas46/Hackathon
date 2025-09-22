@@ -9,11 +9,10 @@ import json
 import statistics
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))

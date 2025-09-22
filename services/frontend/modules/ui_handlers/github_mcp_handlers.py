@@ -4,7 +4,6 @@ Handles github-mcp service visualization, including tool invocation
 monitoring, GitHub operations, and MCP tool testing.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..github_mcp_monitor import github_mcp_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )

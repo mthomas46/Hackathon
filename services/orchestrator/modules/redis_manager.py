@@ -13,10 +13,9 @@ Provides robust Redis connection management with:
 import asyncio
 import json
 import time
-import traceback
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 

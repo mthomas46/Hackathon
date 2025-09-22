@@ -5,14 +5,10 @@ for state persistence, session management, and distributed caching to ensure con
 and optimal performance across the simulation service.
 """
 
-import asyncio
-import json
-import pickle
 import sys
-import threading
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Optional, Union
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -22,7 +18,7 @@ from simulation.infrastructure.utilities.simulation_utilities import get_simulat
 
 # Import Redis patterns (with fallbacks)
 try:
-    import redis.asyncio as redis
+    pass
 
     from services.shared.cache.distributed_lock import DistributedLock
     from services.shared.cache.redis_manager import CacheConfig, CacheStrategy, RedisManager

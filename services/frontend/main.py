@@ -129,7 +129,7 @@ import time
 from typing import Optional
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from services.frontend.modules.analysis_monitor import analysis_monitor
@@ -151,18 +151,13 @@ from services.frontend.modules.orchestrator_monitor import get_orchestrator_summ
 from services.frontend.modules.shared_utils import (
     build_frontend_context,
     create_frontend_success_response,
-    create_html_response,
-    fetch_service_data,
     get_consistency_engine_url,
     get_doc_store_url,
     get_frontend_clients,
     get_orchestrator_url,
     get_reporting_url,
-    get_service_url,
     get_summarizer_hub_url,
     handle_frontend_error,
-    sanitize_input,
-    validate_frontend_request,
 )
 from services.frontend.modules.summarizer_cache import get_cached_summarizer_data, record_summarizer_job
 
@@ -174,18 +169,6 @@ from services.frontend.modules.ui_handlers import ui_handlers
 # ============================================================================
 # RENDER UTILITIES - HTML rendering functions
 # ============================================================================
-from services.frontend.utils import (
-    render_clusters,
-    render_consolidation_list,
-    render_counts,
-    render_docs_quality,
-    render_findings,
-    render_index,
-    render_owner_coverage_table,
-    render_report_page,
-    render_search_results,
-    render_topics_html,
-)
 from services.shared.core.constants_new import EnvVars, ServiceNames
 
 # ============================================================================

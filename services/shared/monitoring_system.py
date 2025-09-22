@@ -18,17 +18,13 @@ Author: Ecosystem Hardening Framework
 """
 
 import json
-import logging
-import sys
 import threading
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import requests
 from standardized_logger import StandardizedLogger, get_all_loggers
 
 

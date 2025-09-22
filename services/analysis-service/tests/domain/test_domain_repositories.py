@@ -1,17 +1,15 @@
 """Tests for domain repositories."""
 
-from typing import List
 
 import pytest
 
 from ...domain.entities.analysis import Analysis, AnalysisStatus
 from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.finding import FindingSeverity
 from ...domain.repositories.analysis_repository import AnalysisRepository
 from ...domain.repositories.document_repository import DocumentRepository
 from ...domain.repositories.finding_repository import FindingRepository
 from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
 from ...infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
 from ...infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository
 from ...infrastructure.repositories.in_memory.finding_repository import InMemoryFindingRepository

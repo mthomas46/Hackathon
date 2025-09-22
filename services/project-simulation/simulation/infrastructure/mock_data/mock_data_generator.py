@@ -3,7 +3,6 @@ Mock Data Generator for Project Simulations.
 Following TDD principles with clean, testable code.
 """
 
-import random
 from datetime import datetime
 from typing import Any, Dict, List
 

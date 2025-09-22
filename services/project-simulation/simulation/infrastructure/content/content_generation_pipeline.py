@@ -7,17 +7,15 @@ This module implements a comprehensive content generation pipeline that:
 4. Tracks generation metrics and provides insights
 """
 
-import asyncio
 import json
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.domain.value_objects import ComplexityLevel, ProjectType, SimulationStatus
 from simulation.infrastructure.clients.ecosystem_clients import (
     get_analysis_service_client,
     get_doc_store_client,

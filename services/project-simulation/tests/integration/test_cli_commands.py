@@ -4,13 +4,9 @@ This module contains comprehensive tests for CLI commands, script functionality,
 and command-line interface validation in the Project Simulation Service.
 """
 
-import json
 import os
-import subprocess
-import sys
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -219,7 +215,6 @@ class TestCLIErrorHandling:
     def test_script_file_not_found_handling(self):
         """Test how scripts handle missing files or directories."""
         # Scripts should handle file system errors gracefully
-        pass
 
 
 class TestCLIOutputFormatting:
@@ -259,7 +254,6 @@ class TestCLIOutputFormatting:
 
         # May have color codes or formatting
         # This is optional but good to check
-        pass
 
 
 class TestCLIIntegration:

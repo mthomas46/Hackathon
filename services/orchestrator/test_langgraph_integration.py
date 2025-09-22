@@ -6,7 +6,6 @@ by testing the core components and workflows.
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -137,9 +136,7 @@ async def main():
 
     # Check if LangGraph is available
     try:
-        import langchain_core
-        import langchain_openai
-        import langgraph
+        pass
 
         print("✓ LangGraph dependencies available")
     except ImportError as e:

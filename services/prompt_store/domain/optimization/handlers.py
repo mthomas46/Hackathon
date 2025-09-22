@@ -1,6 +1,6 @@
 """Optimization handlers for A/B testing and automated prompt improvement."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from services.shared.core.responses.responses import create_error_response, create_success_response
 

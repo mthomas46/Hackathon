@@ -9,21 +9,15 @@ import os
 import signal
 import time
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from rich.console import Console
-from rich.live import Live
-from rich.panel import Panel
-from rich.progress import Progress, TaskID
-from rich.prompt import Confirm, Prompt
-from rich.spinner import Spinner
+from rich.prompt import Prompt
 from rich.table import Table
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 
-from .handlers.service_actions import ServiceActions
 from .managers.analysis.analysis_service_manager import AnalysisServiceManager
 from .managers.config.config_manager import ConfigManager
 from .managers.config.settings_manager import SettingsManager
@@ -53,7 +47,6 @@ from .shared_utils import (
     create_menu_table,
     get_cli_clients,
     get_service_health_url,
-    log_cli_metrics,
     print_panel,
 )
 

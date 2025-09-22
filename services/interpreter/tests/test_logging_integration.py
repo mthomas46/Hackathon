@@ -1,10 +1,9 @@
 """Tests for interpreter service logging integration."""
 
-import asyncio
 import os
 import sys
 import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -162,14 +161,12 @@ class TestInterpreterLoggingIntegration:
         """Test that service startup is logged."""
         # This would typically be tested by checking the startup event
         # For now, we verify the logger_client is initialized
-        from main import logger_client
 
         # logger_client will be None in tests unless startup event runs
         # This is expected behavior for testing
 
     def test_concurrent_requests_logging(self, client, mock_log_collector):
         """Test logging with concurrent requests."""
-        import asyncio
         import threading
 
         results = []
@@ -362,7 +359,7 @@ class TestInterpreterLoggingConfiguration:
         """Test fallback behavior when log collector is unavailable."""
         # This tests the import fallback logic
         try:
-            from services.shared.utilities.logging_client import get_log_collector_client
+            pass
 
             # If import succeeds, client should be available
             client_available = True

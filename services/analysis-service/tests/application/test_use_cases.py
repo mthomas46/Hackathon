@@ -1,9 +1,6 @@
 """Tests for Application Use Cases."""
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock
-from uuid import uuid4
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -16,12 +13,7 @@ from ...application.use_cases.perform_analysis_use_case import (
     PerformAnalysisResult,
     PerformAnalysisUseCase,
 )
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
-from ...domain.exceptions import AnalysisExecutionException, DocumentNotFoundException
-from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
+from ...domain.exceptions import DocumentNotFoundException
 
 
 class TestPerformAnalysisUseCase:

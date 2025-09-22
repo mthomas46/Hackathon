@@ -1,7 +1,7 @@
 """Dynamic prompt orchestration service for conditional chains and pipelines."""
 
 import asyncio
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now

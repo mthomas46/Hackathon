@@ -1,16 +1,14 @@
 """Test Utilities - Mock factories and test helpers."""
 
 import asyncio
-import json
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, AsyncIterator, Awaitable, Callable, Dict, Iterator, List, Optional, Type, TypeVar, Union
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any, AsyncIterator, Awaitable, Callable, Dict, List, Optional, TypeVar
+from unittest.mock import AsyncMock, Mock
 
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
+from ...domain.entities.finding import FindingSeverity
 from ...domain.services import AnalysisService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
 

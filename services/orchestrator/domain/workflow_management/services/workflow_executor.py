@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 from ..entities.workflow import Workflow
 from ..entities.workflow_action import WorkflowAction
 from ..entities.workflow_execution import WorkflowExecution
-from ..value_objects.action_result import ActionResult, ActionStatus
+from ..value_objects.action_result import ActionResult
 
 
 class WorkflowExecutor:

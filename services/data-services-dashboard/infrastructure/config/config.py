@@ -4,7 +4,6 @@ This module provides centralized configuration management for the dashboard serv
 following environment-aware patterns consistent with the ecosystem.
 """
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator

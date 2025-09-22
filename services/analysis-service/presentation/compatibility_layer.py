@@ -10,14 +10,12 @@
 
 import logging
 import warnings
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException
 
 from ..domain.models import (
     AnalysisRequest,
-    AnalysisResponse,
     ArchitectureAnalysisRequest,
     ChangeImpactRequest,
     ContentQualityRequest,

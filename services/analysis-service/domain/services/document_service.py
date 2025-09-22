@@ -1,6 +1,6 @@
 """Document domain service."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ..entities import Content, Document, DocumentId, Metadata

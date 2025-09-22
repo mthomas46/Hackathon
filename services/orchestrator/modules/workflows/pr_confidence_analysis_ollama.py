@@ -5,21 +5,15 @@ Enhanced version that uses local Ollama LLM for real AI analysis
 instead of simulation methods.
 """
 
-import asyncio
 import json
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import httpx
 from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
 from ..langgraph.tools import (
-    analyze_document_tool,
-    get_optimal_prompt_tool,
-    ingest_github_repo_tool,
-    ingest_jira_issues_tool,
-    search_documents_tool,
     send_notification_tool,
     store_document_tool,
 )

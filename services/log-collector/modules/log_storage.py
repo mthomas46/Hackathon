@@ -7,11 +7,10 @@ persistent storage options and advanced search capabilities.
 
 import asyncio
 import json
-import os
 import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class LogStorage:

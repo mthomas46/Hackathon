@@ -6,11 +6,10 @@ Value objects are immutable and compared by value, not identity.
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 
 class ProjectType(Enum):

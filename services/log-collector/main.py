@@ -37,7 +37,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
 
-from services.shared.standardized_logger import StandardizedLogger, performance_monitor
+from services.shared.standardized_logger import StandardizedLogger
 from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
 try:

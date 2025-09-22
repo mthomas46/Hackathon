@@ -110,14 +110,10 @@ Responsibilities:
 Dependencies: Document Store, Prompt Store, Interpreter, Source Agent, Orchestrator.
 """
 
-import asyncio
-import json
 import os
-import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, field_validator
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.core.responses import create_error_response, create_success_response
@@ -127,14 +123,12 @@ from services.shared.core.responses import create_error_response, create_success
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.utilities.error_handling import install_error_handlers
 from services.shared.utilities.logging_client import get_log_collector_client
 from services.shared.utilities.utilities import (
     attach_self_register,
-    generate_id,
     get_service_client,
     setup_common_middleware,
-    utc_now,
 )
 
 try:
@@ -142,7 +136,6 @@ try:
 except Exception:
     aioredis = None
 
-from services.shared.core.models import Document, Finding
 
 # Create shared client instance for all analysis operations
 service_client = get_service_client(timeout=30)
@@ -170,7 +163,6 @@ from .modules.models import (
     CrossRepositoryAnalysisRequest,
     DistributedTaskRequest,
     DocumentDumpRequest,
-    FindingsResponse,
     LoadBalancingConfigRequest,
     LoadBalancingStrategyRequest,
     MaintenanceForecastRequest,
@@ -194,7 +186,6 @@ from .modules.models import (
     TrendAnalysisRequest,
     WebhookConfigRequest,
     WorkflowEventRequest,
-    WorkflowStatusRequest,
 )
 from .modules.report_handlers import report_handlers
 
@@ -273,10 +264,6 @@ attach_self_register(app, ServiceNames.ANALYSIS_SERVICE)
 # Import shared utilities for consistency
 from .modules.shared_utils import (
     _create_analysis_error_response,
-    build_analysis_context,
-    create_analysis_success_response,
-    handle_analysis_error,
-    validate_analysis_targets,
 )
 
 # API Endpoints
@@ -3920,7 +3907,6 @@ async def get_analysis_status():
 @app.get("/health")
 async def custom_analysis_health():
     """Custom analysis-service health endpoint with models_loaded field."""
-    from datetime import datetime, timezone
 
     from services.shared.monitoring.health import healthy_response
 

@@ -4,7 +4,7 @@ import base64
 import json
 import pickle
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 from .event_bus import DomainEvent, EventEnvelope
 
@@ -15,17 +15,14 @@ class EventSerializer(ABC):
     @abstractmethod
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope to string."""
-        pass
 
     @abstractmethod
     def deserialize(self, data: str) -> EventEnvelope:
         """Deserialize string to event envelope."""
-        pass
 
     @abstractmethod
     def get_content_type(self) -> str:
         """Get content type identifier."""
-        pass
 
 
 class JSONEventSerializer(EventSerializer):

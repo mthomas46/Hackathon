@@ -4,11 +4,9 @@ This module provides Phase 5 performance optimization and tool dependency
 mapping capabilities to enhance discovery efficiency and tool orchestration.
 """
 
-import asyncio
 import statistics
-import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 
 class PerformanceOptimizer:

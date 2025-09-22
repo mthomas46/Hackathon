@@ -4,12 +4,11 @@ Provides predictive analytics for documentation quality trends, identifying patt
 in historical analysis results and forecasting future documentation issues.
 """
 
-import json
 import logging
 import time
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List
 
 try:
     import warnings
@@ -18,7 +17,6 @@ try:
     import pandas as pd
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
     from sklearn.preprocessing import StandardScaler
     from statsmodels.tsa.arima.model import ARIMA
     from statsmodels.tsa.seasonal import seasonal_decompose
@@ -37,8 +35,6 @@ except ImportError:
     adfuller = None
     seasonal_decompose = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 

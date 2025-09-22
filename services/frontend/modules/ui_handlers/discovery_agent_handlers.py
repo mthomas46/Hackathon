@@ -4,7 +4,6 @@ Handles discovery agent service visualization, including endpoint
 registration monitoring, OpenAPI parsing, and service discovery operations.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..discovery_agent_monitor import discovery_agent_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )

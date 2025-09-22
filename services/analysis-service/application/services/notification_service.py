@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any, Dict, List, Optional
 
-from .application_service import ApplicationService, ServiceContext
+from .application_service import ApplicationService
 
 
 @dataclass
@@ -47,17 +47,14 @@ class NotificationChannel(ABC):
     @abstractmethod
     async def send(self, message: NotificationMessage) -> bool:
         """Send notification message."""
-        pass
 
     @abstractmethod
     def get_channel_type(self) -> str:
         """Get channel type identifier."""
-        pass
 
     @abstractmethod
     def is_available(self) -> bool:
         """Check if channel is available."""
-        pass
 
 
 class EmailNotificationChannel(NotificationChannel):
@@ -226,7 +223,6 @@ class ConsoleNotificationChannel(NotificationChannel):
 
     def __init__(self):
         """Initialize console notification channel."""
-        pass
 
     def get_channel_type(self) -> str:
         """Get channel type."""

@@ -4,7 +4,6 @@ Handles notification service visualization, including owner resolution,
 notification delivery monitoring, and dead letter queue management.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..notification_service_monitor import notification_service_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )

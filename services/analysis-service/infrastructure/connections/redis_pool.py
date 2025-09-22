@@ -1,10 +1,9 @@
 """Redis Connection Pool - Redis connection pooling for caching and messaging."""
 
 import asyncio
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from .connection_pool import ConnectionPool, ConnectionPoolConfig, PooledConnection
+from .connection_pool import ConnectionPool, ConnectionPoolConfig
 
 
 class RedisConnectionPool(ConnectionPool):

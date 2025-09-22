@@ -4,10 +4,8 @@ This module provides a client for interacting with the Memory Agent service,
 enabling browsing and management of conversation memory and operational context.
 """
 
-import asyncio
 import json
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx

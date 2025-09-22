@@ -4,7 +4,6 @@ Tests database operations, service communication, Redis pub/sub,
 and cross-service integration.
 """
 
-import asyncio
 import json
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -98,7 +97,6 @@ class TestApplicationServiceIntegration:
         # Use in-memory SQLite for testing
         from unittest.mock import MagicMock
 
-        from simulation.infrastructure.repositories.sqlite_repositories import get_sqlite_simulation_repository
 
         # Mock the factory to return in-memory database
         with patch(

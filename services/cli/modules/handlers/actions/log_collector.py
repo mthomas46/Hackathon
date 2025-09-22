@@ -1,12 +1,12 @@
 import json
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Tuple
+from datetime import datetime
+from typing import Any, Callable, List, Tuple
 
 from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
 
-from ...utils.display_helpers import print_kv, print_list
+from ...utils.display_helpers import print_kv
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:

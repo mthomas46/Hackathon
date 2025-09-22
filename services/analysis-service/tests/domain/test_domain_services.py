@@ -1,13 +1,11 @@
 """Tests for domain services."""
 
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
+from ...domain.entities.document import DocumentStatus
+from ...domain.entities.finding import FindingSeverity
 from ...domain.services.analysis_service import AnalysisService
 from ...domain.services.document_service import DocumentService
 from ...domain.services.finding_service import FindingService

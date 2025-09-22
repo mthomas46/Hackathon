@@ -4,8 +4,7 @@ This module contains integration tests for typed client adapters for all
 21+ ecosystem services, testing client functionality and error handling.
 """
 
-from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest
@@ -24,7 +23,6 @@ from simulation.infrastructure.clients.ecosystem_clients import (
     SourceAgentClient,
     SummarizerHubClient,
     get_ecosystem_client,
-    get_ecosystem_service_registry,
 )
 
 

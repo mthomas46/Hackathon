@@ -4,18 +4,15 @@ This module contains integration tests for timeline management, event ordering,
 and temporal workflow orchestration in the simulation system.
 """
 
-import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Dict, List
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from simulation.domain.entities.timeline import Timeline, TimelinePhase
-from simulation.domain.events import PhaseDelayed, PhaseStarted, ProjectPhaseCompleted, TimelineEventOccurred
+from simulation.domain.events import TimelineEventOccurred
 from simulation.infrastructure.content.timeline_based_generation import (
     TemporalRelationship,
     TimelineAwareContentGenerator,
-    TimelineEventType,
 )
 
 

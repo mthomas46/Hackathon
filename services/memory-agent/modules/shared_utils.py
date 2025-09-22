@@ -6,7 +6,7 @@ to eliminate code duplication and ensure consistency.
 
 import json
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames

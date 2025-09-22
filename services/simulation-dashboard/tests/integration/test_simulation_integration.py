@@ -1,8 +1,7 @@
 """Integration tests for simulation service integration."""
 
 import asyncio
-import time
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient

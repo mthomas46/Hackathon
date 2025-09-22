@@ -1,9 +1,8 @@
 """System Monitoring Domain Service"""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..value_objects.health_status import HealthStatus
 from ..value_objects.service_health import ServiceHealth
 from ..value_objects.system_health import SystemHealth
 from .health_check_service import HealthCheckService

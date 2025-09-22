@@ -4,10 +4,8 @@ This module provides chart components for displaying ML predictions,
 forecasts, and predictive analytics visualizations.
 """
 
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st

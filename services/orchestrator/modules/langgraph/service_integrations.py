@@ -4,16 +4,12 @@ This module provides comprehensive LangGraph integration patterns for all servic
 in the ecosystem, enabling seamless workflow orchestration and AI-powered capabilities.
 """
 
-import asyncio
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import get_service_client
 
 
@@ -29,12 +25,10 @@ class LangGraphServiceIntegration(ABC):
     @abstractmethod
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize LangGraph tools for this service."""
-        pass
 
     @abstractmethod
     async def create_service_workflows(self) -> Dict[str, Callable]:
         """Create service-specific workflows."""
-        pass
 
     def get_service_info(self) -> Dict[str, Any]:
         """Get service information for LangGraph context."""
@@ -49,7 +43,6 @@ class LangGraphServiceIntegration(ABC):
     @abstractmethod
     def get_capabilities(self) -> List[str]:
         """Get service capabilities for LangGraph context."""
-        pass
 
 
 class AnalysisServiceIntegration(LangGraphServiceIntegration):

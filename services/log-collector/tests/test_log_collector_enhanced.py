@@ -6,7 +6,6 @@ import os
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -14,7 +13,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from modules.log_stats import calculate_log_statistics
-from modules.log_storage import LogStorage, persistent_log_storage
+from modules.log_storage import LogStorage
 
 
 class TestEnhancedLogStorage:

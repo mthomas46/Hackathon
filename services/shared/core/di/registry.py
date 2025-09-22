@@ -1,12 +1,10 @@
 """Service Registry - Central service registration and configuration."""
 
 import os
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional, Type
 
 from .container import DependencyContainer, ServiceLifetime, get_global_container
 from .services import (
-    BaseRepository,
-    BaseService,
     IAnalysisRepository,
     IAnalysisService,
     ICacheService,

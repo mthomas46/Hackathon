@@ -7,19 +7,17 @@ and service mesh compatibility for the entire ecosystem.
 """
 
 import asyncio
-import base64
 import hashlib
-import hmac
 import json
 import uuid
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 
 # import jwt  # Optional dependency for JWT token validation
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import redis.asyncio as redis
@@ -609,7 +607,6 @@ class StandardizedAPIManager:
 
     async def initialize(self):
         """Initialize API manager."""
-        pass
 
     def create_response(self, success: bool, message: str, data: Any = None, **kwargs) -> StandardizedAPIResponse:
         """Create standardized API response."""
@@ -624,7 +621,6 @@ class ContextPropagationManager:
 
     async def initialize(self):
         """Initialize context manager."""
-        pass
 
     def get_current_context(self) -> Optional[RequestContext]:
         """Get current request context."""

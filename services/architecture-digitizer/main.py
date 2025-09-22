@@ -15,14 +15,11 @@ Dependencies: None (standalone service with external API calls)
 """
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import httpx
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from pydantic import BaseModel, field_validator
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.constants_new import ServiceNames
 
 # ============================================================================
 # SHARED MODULES - Following ecosystem patterns
@@ -53,7 +50,6 @@ except ImportError:
     from modules.normalizers import get_file_normalizer, get_normalizer
 try:
     from .modules.models import (
-        FileNormalizeRequest,
         FileNormalizeResponse,
         NormalizeRequest,
         NormalizeResponse,
@@ -67,7 +63,6 @@ except ImportError:
 
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.models import (
-        FileNormalizeRequest,
         FileNormalizeResponse,
         NormalizeRequest,
         NormalizeResponse,

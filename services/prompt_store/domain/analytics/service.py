@@ -1,13 +1,9 @@
 """Advanced analytics service for prompt performance, optimization, and insights."""
 
-import asyncio
-import statistics
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import generate_id
 
 from ...core.service import BaseService
 from ...infrastructure.cache import prompt_store_cache

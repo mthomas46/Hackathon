@@ -4,7 +4,6 @@ Handles intelligent routing of LLM requests to appropriate providers based on
 content analysis, availability, cost optimization, and performance requirements.
 """
 
-import asyncio
 import time
 from typing import Any, Dict, List, Optional
 
@@ -12,8 +11,6 @@ import httpx
 
 from services.shared.clients import ServiceClients
 from services.shared.config import get_config_value
-from services.shared.constants_new import ServiceNames
-from services.shared.logging import fire_and_forget
 
 # Import service integrations for enhanced provider selection
 try:

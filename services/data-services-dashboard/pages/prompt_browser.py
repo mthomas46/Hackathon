@@ -4,9 +4,8 @@ This module provides a comprehensive interface for managing prompts in the Promp
 """
 
 import asyncio
-import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st
@@ -1032,7 +1031,6 @@ def apply_ai_tuning(content: str, options: Dict[str, bool]) -> str:
 def run_prompt_performance_test(content: str, iterations: int, metrics: List[str]) -> Dict[str, Any]:
     """Test prompt performance with mock results."""
     import random
-    import time
 
     results = {"iterations": iterations, "metrics": {}, "summary": {}}
 

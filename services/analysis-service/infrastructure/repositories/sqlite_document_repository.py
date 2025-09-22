@@ -3,7 +3,7 @@
 import json
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from ...domain.entities import Content, Document, DocumentId, Metadata
 from .document_repository import DocumentRepository

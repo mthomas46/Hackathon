@@ -1,7 +1,7 @@
 """Query Interpreter Service Domain Service"""
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from ..value_objects.natural_language_query import NaturalLanguageQuery
 from ..value_objects.query_confidence import QueryConfidence

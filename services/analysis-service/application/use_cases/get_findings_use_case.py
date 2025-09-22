@@ -6,7 +6,7 @@ from typing import List, Optional
 from ...domain.entities import Finding
 from ...domain.services import FindingService
 from ...infrastructure.repositories import FindingRepository
-from ..dto import FindingListResponse, FindingResponse, GetFindingsRequest
+from ..dto import FindingListResponse, FindingResponse
 
 
 @dataclass

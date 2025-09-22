@@ -25,13 +25,8 @@ Usage:
 """
 
 import asyncio
-import json
 import logging
-import threading
-import time
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from queue import Queue
 from typing import Any, Dict, List, Optional
 
 import httpx

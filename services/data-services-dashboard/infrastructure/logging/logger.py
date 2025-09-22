@@ -5,11 +5,9 @@ This module provides centralized logging setup following ecosystem patterns.
 
 import logging
 import sys
-from pathlib import Path
-from typing import Any, Dict, Optional
 
 try:
-    import structlog
+    pass
 
     STRUCTLOG_AVAILABLE = True
 except ImportError:

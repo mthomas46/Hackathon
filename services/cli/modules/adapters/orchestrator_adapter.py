@@ -6,7 +6,7 @@ for workflow management, service registry, peer synchronization, and orchestrati
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 

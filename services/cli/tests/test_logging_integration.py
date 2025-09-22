@@ -3,8 +3,7 @@
 import asyncio
 import os
 import sys
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -24,7 +23,7 @@ with patch("services.cli.main.get_log_collector_client") as mock_get_client:
     # Now import the CLI module
     # Override the logger client
     import main
-    from main import cli, logger_client
+    from main import cli
 
     main.logger_client = mock_logger_client
 

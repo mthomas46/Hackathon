@@ -4,7 +4,6 @@ Handles semantic tagging, content analysis, and taxonomy management.
 """
 
 import re
-import uuid
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import DocumentTag, SemanticEntity, TaxonomyNode

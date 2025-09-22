@@ -35,7 +35,6 @@ class DomainEvent(ABC):
     @abstractmethod
     def get_aggregate_id(self) -> str:
         """Get the aggregate ID this event relates to."""
-        pass
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert event to dictionary for serialization."""

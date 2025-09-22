@@ -16,7 +16,7 @@ proper error handling, and excellent developer experience.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field
 

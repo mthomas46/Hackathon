@@ -4,17 +4,16 @@ Generates realistic mock data for testing the LLM Documentation Ecosystem.
 Integrates with LLM Gateway for intelligent content generation.
 """
 
-import asyncio
 import json
 import os
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from services.shared.core.constants_new import ServiceNames

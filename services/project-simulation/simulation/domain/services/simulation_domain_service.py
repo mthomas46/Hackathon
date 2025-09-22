@@ -6,9 +6,7 @@ business rules and operations that don't naturally belong to a single aggregate.
 """
 
 import sys
-import uuid
 from datetime import datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -18,17 +16,9 @@ sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "service
 from typing import Any, Dict, List
 
 from simulation.domain.entities.project import Project
-from simulation.domain.entities.team import Team, TeamMemberEntity, TeamRole
+from simulation.domain.entities.team import Team, TeamRole
 from simulation.domain.entities.timeline import Timeline
-from simulation.domain.events import (
-    DocumentGenerated,
-    ProjectCreated,
-    ProjectPhaseCompleted,
-    ProjectStatusChanged,
-    SimulationCompleted,
-    SimulationStarted,
-)
-from simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType, SimulationStatus
+from simulation.domain.value_objects import ComplexityLevel, ProjectType
 from simulation.infrastructure.logging import get_simulation_logger
 
 # Define TimelineEvent as a simple type alias for now

@@ -5,15 +5,11 @@ the shared utilities from services/shared/utilities/ for consistency and reusabi
 """
 
 import asyncio
-import hashlib
 import json
-import re
 import sys
-import uuid
-from datetime import datetime, timedelta
-from functools import lru_cache, wraps
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -22,17 +18,16 @@ from simulation.infrastructure.logging import get_simulation_logger
 
 # Import shared utilities (with fallbacks)
 try:
-    from shared.utilities.async_utils import AsyncTaskManager, TaskConfig
+    from shared.utilities.async_utils import AsyncTaskManager
     from shared.utilities.caching import CacheConfig, CacheManager
-    from shared.utilities.error_handling import ErrorContext, ErrorHandler
-    from shared.utilities.formatting import DataFormatter, FormatTemplate
+    from shared.utilities.error_handling import ErrorHandler
+    from shared.utilities.formatting import DataFormatter
     from shared.utilities.metrics import MetricConfig, PerformanceTracker
     from shared.utilities.retry import RetryConfig, RetryManager
-    from shared.utilities.validation import DataValidator, ValidationResult, ValidationRule
+    from shared.utilities.validation import DataValidator, ValidationResult
 except ImportError:
     # Fallback implementations for shared utilities
     from dataclasses import dataclass
-    from enum import Enum
 
     class ValidationResult:
         def __init__(self, is_valid: bool, errors: List[str] = None, warnings: List[str] = None):

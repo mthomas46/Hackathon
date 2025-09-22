@@ -4,8 +4,6 @@ This module contains comprehensive tests for API error handling, edge cases,
 and robust error response validation in the Project Simulation Service.
 """
 
-import json
-from typing import Any, Dict, List
 
 import pytest
 from fastapi.testclient import TestClient
@@ -146,10 +144,7 @@ class TestAPIConcurrency:
 
     def test_concurrent_requests_handling(self, test_client: TestClient):
         """Test handling of concurrent requests."""
-        import asyncio
-        from concurrent.futures import ThreadPoolExecutor
 
-        import httpx
 
         # Make multiple concurrent requests
         def make_request():

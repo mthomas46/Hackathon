@@ -1,6 +1,6 @@
 import base64
 import os
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, List, Tuple
 
 import httpx
 from rich.prompt import Prompt

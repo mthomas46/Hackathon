@@ -4,7 +4,6 @@ Following DDD infrastructure patterns with clean separation of concerns.
 """
 
 import time
-from datetime import datetime
 from typing import List, Optional
 
 import httpx

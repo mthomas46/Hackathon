@@ -13,16 +13,13 @@ Key Features:
 - Multi-workflow concurrent monitoring
 """
 
-import asyncio
 import random
-import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -456,7 +453,6 @@ class RealTimeWorkflowVisualizer:
     def add_workflow_event_handler(self, event_type: str, handler: Callable) -> None:
         """Add an event handler for workflow events."""
         # This would integrate with the WebSocket event system
-        pass
 
     def export_workflow_data(self, format: str = "json") -> str:
         """Export workflow data for external analysis."""

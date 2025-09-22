@@ -9,10 +9,9 @@ enterprise-grade features across the entire ecosystem.
 import asyncio
 import json
 import signal
-import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..caching.intelligent_caching import get_service_cache, shutdown_all_caches
 from ..core.constants_new import ServiceNames
@@ -21,14 +20,11 @@ from ..operational.operational_excellence import (
     health_monitor,
     initialize_operational_excellence,
     performance_dashboard,
-    service_discovery,
     shutdown_operational_excellence,
 )
 from .enterprise_integration import (
     initialize_enterprise_integration,
-    service_mesh_middleware,
     service_registry,
-    workflow_context_middleware,
 )
 from .error_handling.error_handling import enterprise_error_handler
 

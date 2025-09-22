@@ -2,8 +2,7 @@
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,7 +16,6 @@ from ...presentation.models.common import (
     ProcessingStatsResponse,
     QueueStatusResponse,
     ScaleWorkersRequest,
-    TaskStatusRequest,
     WorkersStatusResponse,
 )
 

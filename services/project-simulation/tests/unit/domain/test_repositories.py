@@ -4,12 +4,10 @@ This module contains comprehensive unit tests for repository interfaces,
 testing data access patterns, contract compliance, and repository behavior.
 """
 
-from abc import ABC
-from typing import List, Optional
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
-from simulation.domain.entities.project import Project, ProjectId, TeamMember
+from simulation.domain.entities.project import Project, ProjectId
 from simulation.domain.entities.simulation import Simulation, SimulationId
 from simulation.domain.entities.team import Team, TeamId
 from simulation.domain.entities.timeline import Timeline, TimelineId
@@ -372,19 +370,16 @@ class TestRepositoryLifecycle:
         """Test repository proper initialization."""
         # This would test that repositories are properly configured
         # with database connections, connection pools, etc.
-        pass
 
     def test_repository_cleanup(self):
         """Test repository proper cleanup."""
         # This would test that repositories properly close connections,
         # release resources, etc.
-        pass
 
     def test_repository_connection_pooling(self):
         """Test repository connection pooling behavior."""
         # This would test that repositories efficiently manage
         # database connections
-        pass
 
 
 class TestRepositorySecurity:
@@ -406,12 +401,10 @@ class TestRepositorySecurity:
     def test_repository_access_control(self):
         """Test repository access control mechanisms."""
         # This would test that repositories enforce proper access controls
-        pass
 
     def test_repository_audit_logging(self):
         """Test repository audit logging capabilities."""
         # This would test that repositories log important operations
-        pass
 
 
 # Helper functions for creating test data
@@ -460,10 +453,8 @@ def create_test_simulation() -> Simulation:
 class ConcurrentModificationError(Exception):
     """Exception for concurrent modification scenarios."""
 
-    pass
 
 
 class ConnectionError(Exception):
     """Exception for database connection issues."""
 
-    pass

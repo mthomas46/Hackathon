@@ -5,7 +5,7 @@ memory items stored by the Memory Agent service.
 """
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st

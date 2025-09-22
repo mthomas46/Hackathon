@@ -4,13 +4,11 @@ Handles HTTP requests and responses for document operations.
 """
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import HTTPException
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
-from services.shared.utilities import utc_now
 from services.shared.utilities.logging_client import get_log_collector_client
 
 from ...core.models import (

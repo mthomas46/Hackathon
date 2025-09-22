@@ -6,29 +6,21 @@ and live event streaming.
 """
 
 import asyncio
-import json
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from components.charts.anomaly_charts import render_anomaly_chart
-from components.charts.performance_charts import render_performance_chart
 
 # Import chart components
-from components.charts.timeline_charts import render_timeline_chart
-from components.realtime.event_stream import render_event_stream
-from components.realtime.event_timeline import RealTimeEventTimeline, create_event_timeline
+from components.realtime.event_timeline import create_event_timeline
 
 # Import real-time components
 from components.realtime.live_metrics import render_live_metrics
-from components.realtime.progress_indicators import render_progress_indicator
-from components.realtime.status_dashboard import render_status_dashboard
-from components.realtime.workflow_visualizer import RealTimeWorkflowVisualizer, create_workflow_visualizer
+from components.realtime.workflow_visualizer import create_workflow_visualizer
 from infrastructure.config.config import get_config
 
 from services.clients.llm_client import LLMGatewayClient

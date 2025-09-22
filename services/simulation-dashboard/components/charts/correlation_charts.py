@@ -4,17 +4,15 @@ This module provides chart components for displaying correlation analysis,
 relationship visualization, and dependency mapping.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 try:
     import plotly.express as px
-    import plotly.figure_factory as ff
 
     PLOTLY_AVAILABLE = True
 except ImportError:

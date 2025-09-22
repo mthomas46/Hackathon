@@ -4,7 +4,6 @@ Provides visualization and monitoring capabilities for github-mcp
 service tool invocations and GitHub data operations.
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now

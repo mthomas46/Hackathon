@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Configuration loading
 import yaml
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -30,11 +30,10 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", config.get("environment", "default_value"
 OLLAMA_ENDPOINT = os.getenv("OLLAMA_ENDPOINT", config.get("ollama-endpoint", "default_value"))
 REDIS_HOST = os.getenv("REDIS_HOST", config.get("redis-host", "default_value"))
 
-import asyncio
 import json
 import os
 import time
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, List, Optional
 
 import httpx
 

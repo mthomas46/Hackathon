@@ -1,9 +1,7 @@
 """Tests for CQRS Implementation - Command and Query Handlers."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock
-from uuid import uuid4
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -11,9 +9,7 @@ from ...application.cqrs.command_bus import CommandBus
 from ...application.cqrs.query_bus import QueryBus
 from ...application.handlers.command_handlers import (
     CreateDocumentCommandHandler,
-    DeleteDocumentCommandHandler,
     PerformAnalysisCommandHandler,
-    UpdateDocumentCommandHandler,
 )
 from ...application.handlers.commands import (
     CancelAnalysisCommand,
@@ -35,10 +31,8 @@ from ...application.handlers.query_handlers import (
     GetDocumentsQueryHandler,
     GetFindingsQueryHandler,
 )
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
-from ...domain.value_objects.analysis_type import AnalysisType
+from ...domain.entities.analysis import AnalysisStatus
+from ...domain.entities.finding import FindingSeverity
 
 
 class TestCommandBus:

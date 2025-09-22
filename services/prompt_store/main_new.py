@@ -3,7 +3,6 @@
 Main service entry point using the new domain-driven architecture.
 """
 
-import asyncio
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI
@@ -13,10 +12,8 @@ from fastapi import FastAPI
 # ============================================================================
 from services.prompt_store.core.models import (
     ABTestCreate,
-    BulkOperationCreate,
     PromptCreate,
     PromptRelationshipCreate,
-    PromptSearchFilters,
     PromptUpdate,
     WebhookCreate,
 )
@@ -33,7 +30,7 @@ from services.shared.core.responses.responses import create_error_response, crea
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.utilities import attach_self_register, setup_common_middleware
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.utilities.error_handling import install_error_handlers
 
 # ============================================================================
 # SERVICE CONFIGURATION

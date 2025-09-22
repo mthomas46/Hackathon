@@ -4,13 +4,12 @@ Handles business logic for bulk operations on prompts.
 """
 
 import asyncio
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import BulkOperation
 from services.prompt_store.core.service import BaseService
 from services.prompt_store.domain.bulk.repository import BulkOperationRepository
 from services.prompt_store.domain.prompts.service import PromptService
-from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.utilities import generate_id, utc_now
 
 

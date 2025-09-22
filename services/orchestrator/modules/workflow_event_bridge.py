@@ -6,9 +6,8 @@ Connects the workflow management system with the event-driven orchestration fram
 Provides seamless integration between workflow operations and event emission/persistence.
 """
 
-import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
@@ -18,7 +17,6 @@ from .event_driven_orchestration import EventType, WorkflowEvent, event_store
 from .redis_manager import publish_orchestrator_event
 
 try:
-    from services.shared.event_streaming import EventType as StreamEventType
     from services.shared.event_streaming import StreamEvent, event_stream_processor
 
     EVENT_STREAMING_AVAILABLE = True

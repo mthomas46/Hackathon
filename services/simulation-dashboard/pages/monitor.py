@@ -5,13 +5,11 @@ and simulation event visualization using WebSocket integration.
 """
 
 import asyncio
-import json
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
-from infrastructure.config.config import get_config
 
 from services.clients.simulation_client import SimulationClient
 from services.clients.websocket_client import get_websocket_manager

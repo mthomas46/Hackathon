@@ -3,22 +3,18 @@
 import asyncio
 import os
 import tempfile
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from ...application.services.analysis_application_service import AnalysisApplicationService
-from ...application.services.application_service import ApplicationService
 from ...application.services.caching_service import CachingService
 from ...application.services.logging_service import LoggingService
 from ...application.services.monitoring_service import MonitoringService
 from ...application.services.transaction_service import TransactionService
 from ...application.use_cases.create_document_use_case import CreateDocumentUseCase
-from ...application.use_cases.perform_analysis_use_case import PerformAnalysisUseCase
 from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
+from ...domain.entities.document import Document
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence

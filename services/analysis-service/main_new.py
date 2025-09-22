@@ -12,15 +12,14 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses import create_error_response, create_success_response
+from services.shared.core.constants_new import ServiceNames
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
-from services.shared.utilities.utilities import attach_self_register, generate_id, setup_common_middleware, utc_now
+from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
 
 # ============================================================================
 # CONTROLLERS - Clean separation of endpoint responsibilities

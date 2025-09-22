@@ -2,10 +2,8 @@
 
 import asyncio
 import json
-from typing import Any, Dict
 
 import httpx
-import pytest
 
 
 class TestSampleDocumentsAPI:
@@ -172,7 +170,6 @@ class TestDirectImportInContainer:
         print("\nTesting direct import in container...")
 
         import subprocess
-        import sys
 
         try:
             # Test the import directly in the container

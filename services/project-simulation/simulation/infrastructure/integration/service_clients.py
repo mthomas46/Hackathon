@@ -5,12 +5,10 @@ providing a consistent, resilient service mesh communication layer following
 enterprise patterns with circuit breaker, retry, and monitoring capabilities.
 """
 
-import asyncio
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 import httpx
 
@@ -39,19 +37,16 @@ class ServiceClientError(Exception):
 class ServiceUnavailableError(ServiceClientError):
     """Exception raised when a service is unavailable."""
 
-    pass
 
 
 class ServiceTimeoutError(ServiceClientError):
     """Exception raised when a service request times out."""
 
-    pass
 
 
 class ServiceResponseError(ServiceClientError):
     """Exception raised when a service returns an error response."""
 
-    pass
 
 
 class BaseServiceClient:

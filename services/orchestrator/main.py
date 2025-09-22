@@ -5,10 +5,8 @@ Central control plane for the LLM Documentation Ecosystem following DDD principl
 Organized into bounded contexts with clear separation of concerns.
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI
 
@@ -17,16 +15,12 @@ parent_dir = str(Path(__file__).parent.parent.parent)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-import asyncio
-import time
 
 from services.shared.core.constants_new import ServiceNames
 
 # Shared utilities
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities.error_handling import register_exception_handlers
 from services.shared.utilities.logging_client import get_log_collector_client
-from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.utilities import setup_common_middleware
 
 from .domain.health_monitoring.services import HealthCheckService, SystemMonitoringService
 from .domain.infrastructure.services import DLQService, EventStreamingService, SagaService, TracingService

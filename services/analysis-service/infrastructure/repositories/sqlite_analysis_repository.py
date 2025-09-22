@@ -3,10 +3,9 @@
 import json
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from ...domain.entities import Analysis, AnalysisId, DocumentId
-from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
 from .analysis_repository import AnalysisRepository
 
 

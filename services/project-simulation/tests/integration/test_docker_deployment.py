@@ -4,12 +4,7 @@ This module contains comprehensive tests for Docker container functionality,
 deployment validation, and containerized environment testing.
 """
 
-import json
-import os
-import subprocess
-import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import docker
 import pytest

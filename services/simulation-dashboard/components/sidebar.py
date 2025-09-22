@@ -4,7 +4,7 @@ This module provides the sidebar navigation component for the dashboard,
 including page selection, theme switching, and quick actions.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import streamlit as st
 from infrastructure.config.config import get_config

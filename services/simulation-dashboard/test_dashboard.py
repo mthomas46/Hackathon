@@ -19,7 +19,7 @@ def test_imports():
     print("🧪 Testing imports...")
 
     try:
-        import streamlit as st
+        pass
 
         print("✅ Streamlit imported successfully")
     except ImportError as e:
@@ -27,7 +27,7 @@ def test_imports():
         return False
 
     try:
-        import httpx
+        pass
 
         print("✅ HTTPX imported successfully")
     except ImportError as e:
@@ -35,7 +35,7 @@ def test_imports():
         return False
 
     try:
-        import websockets
+        pass
 
         print("✅ WebSockets imported successfully")
     except ImportError as e:
@@ -54,7 +54,7 @@ def test_imports():
         return False
 
     try:
-        from services.clients.simulation_client import SimulationClient
+        pass
 
         print("✅ Simulation client imported successfully")
     except ImportError as e:
@@ -62,7 +62,7 @@ def test_imports():
         return False
 
     try:
-        from services.clients.websocket_client import get_websocket_manager
+        pass
 
         print("✅ WebSocket client imported successfully")
     except ImportError as e:

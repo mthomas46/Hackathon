@@ -1,20 +1,18 @@
 """Performance Tests - Validate system performance and scalability."""
 
 import asyncio
-import os
 import statistics
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List, Tuple
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Tuple
+from unittest.mock import patch
 
 import psutil
 import pytest
 
-from ...main import app
 from ...presentation.models.analysis import SemanticSimilarityRequest, SemanticSimilarityResponse
 from ..fixtures.test_data import TestDataFactory
-from ..fixtures.test_utilities import AsyncMockHelper, PerformanceMonitor
+from ..fixtures.test_utilities import PerformanceMonitor
 
 
 class TestPerformanceValidation:

@@ -1,6 +1,5 @@
 """Workflow Created Event"""
 
-from typing import Any, Dict
 
 from .base_event import DomainEvent
 

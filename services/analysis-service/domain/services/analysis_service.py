@@ -2,9 +2,9 @@
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from ..entities import Analysis, AnalysisId, AnalysisStatus, Document
+from ..entities import Analysis, AnalysisId, Document
 from ..entities.value_objects import AnalysisConfiguration, AnalysisType
 
 
@@ -92,20 +92,16 @@ class AnalysisEngine(ABC):
     @abstractmethod
     def execute(self, analysis: Analysis) -> Dict[str, Any]:
         """Execute the analysis."""
-        pass
 
     @abstractmethod
     def validate_configuration(self, configuration: AnalysisConfiguration) -> bool:
         """Validate analysis configuration."""
-        pass
 
     @abstractmethod
     def estimate_execution_time(self, document_size: int) -> float:
         """Estimate execution time based on document size."""
-        pass
 
     @property
     @abstractmethod
     def name(self) -> str:
         """Get engine name."""
-        pass

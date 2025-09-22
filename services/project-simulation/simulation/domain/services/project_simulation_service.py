@@ -6,9 +6,8 @@ multiple aggregates in the project simulation domain.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
 from ..entities.project import Project
@@ -257,7 +256,7 @@ class ProjectSimulationService:
 
     def _create_timeline_from_config(self, config: Dict[str, Any], project_id: str) -> Timeline:
         """Create Timeline aggregate from configuration."""
-        from ..entities.timeline import Milestone, Timeline, TimelineId, TimelinePhase
+        from ..entities.timeline import Timeline, TimelineId, TimelinePhase
 
         timeline = Timeline(id=TimelineId(), project_id=str(project_id.value))
 

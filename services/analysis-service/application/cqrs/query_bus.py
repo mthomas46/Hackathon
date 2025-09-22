@@ -1,6 +1,5 @@
 """Query bus for CQRS pattern."""
 
-from abc import ABC, abstractmethod
 from typing import Any, Dict, Type
 
 from ..handlers.queries import (

@@ -5,20 +5,17 @@ realistic team interactions, communication styles, and content variations based 
 individual team member personalities and their influence on project documentation.
 """
 
-import json
 import random
 import sys
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.infrastructure.content.context_aware_generation import (
     CommunicationStyle,
-    ContentContext,
     ContextAwareDocumentGenerator,
     PersonalityTrait,
 )

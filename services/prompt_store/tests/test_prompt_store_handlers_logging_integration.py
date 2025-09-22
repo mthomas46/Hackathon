@@ -3,7 +3,6 @@
 import asyncio
 import os
 import sys
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

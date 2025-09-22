@@ -3,7 +3,6 @@
 Handles the complex logic for different UI pages and endpoints.
 """
 
-from typing import Any, Dict, Optional
 
 from fastapi.responses import HTMLResponse
 

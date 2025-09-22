@@ -19,24 +19,19 @@ import asyncio
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.constants_new import ServiceNames
 from services.shared.core.models.models import MemoryItem
-from services.shared.core.responses.responses import create_success_response
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ServiceException
 from services.shared.utilities.logging_client import get_log_collector_client
-from services.shared.utilities.utilities import attach_self_register, setup_common_middleware, utc_now
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
 
 try:
     import redis.asyncio as aioredis  # type: ignore
@@ -47,20 +42,11 @@ except Exception:
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
 try:
-    from .modules.memory_ops import cleanup_expired_items, get_memory_stats, list_memory_items, put_memory_item
+    from .modules.memory_ops import get_memory_stats, list_memory_items, put_memory_item
     from .modules.shared_utils import (
         build_memory_agent_context,
-        cleanup_expired_memory_items,
         create_memory_agent_success_response,
-        create_memory_item,
-        deserialize_memory_value,
-        extract_endpoint_from_text,
-        get_memory_max_items,
-        get_memory_stats_summary,
-        get_memory_ttl_seconds,
-        get_redis_url,
         handle_memory_agent_error,
-        serialize_memory_value,
         validate_memory_item,
     )
 except ImportError:
@@ -70,26 +56,16 @@ except ImportError:
 
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.shared_utils import (
-        get_memory_max_items,
-        get_memory_ttl_seconds,
-        get_redis_url,
         handle_memory_agent_error,
         create_memory_agent_success_response,
         build_memory_agent_context,
-        create_memory_item,
-        serialize_memory_value,
-        deserialize_memory_value,
-        cleanup_expired_memory_items,
-        get_memory_stats_summary,
         validate_memory_item,
-        extract_endpoint_from_text,
     )
-    from modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
+    from modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats
 
 from .modules.event_processor import event_processor
 
 # Import global memory state from dedicated module to avoid circular dependencies
-from .modules.memory_state import _memory
 
 # ============================================================================
 # GLOBAL STATE MANAGEMENT - Centralized memory state

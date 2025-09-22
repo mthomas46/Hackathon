@@ -7,7 +7,6 @@ extracted from the main CLI service to improve maintainability.
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
 from services.shared.auth.credentials import get_secret

@@ -1,7 +1,7 @@
 """Security middleware for adding security headers and protection."""
 
 import re
-from typing import Dict, List, Optional, Set
+from typing import List, Optional
 
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware

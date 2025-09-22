@@ -6,11 +6,10 @@ Simulation Service.
 """
 
 import json
-import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 
@@ -344,7 +343,6 @@ class ConfigManager:
         """Apply configuration data to the config object."""
         # This would map the flat config data to the nested dataclass structure
         # Implementation would depend on the structure of the config files
-        pass
 
     def _validate_config(self):
         """Validate the loaded configuration."""

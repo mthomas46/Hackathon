@@ -3,13 +3,11 @@
 Handles document store browsing and exploration.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
-from services.frontend.modules.data_browser import get_doc_store_summary
 
-from ..shared_utils import build_frontend_context, create_html_response, get_frontend_clients, handle_frontend_error
+from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
 
 
 class DocStoreUIHandlers:

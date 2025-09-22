@@ -7,8 +7,7 @@ and machine learning pipeline validation.
 
 import os
 import sys
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -24,10 +23,7 @@ from pages.ai_insights import (
     get_model_performance_metrics,
     initialize_ai_insights_state,
     perform_pattern_analysis,
-    render_ai_anomaly_detection,
     render_ai_insights_page,
-    render_pattern_recognition,
-    render_predictive_optimization,
     train_anomaly_detection_model,
     update_model_with_new_data,
 )

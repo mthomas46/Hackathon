@@ -87,4 +87,3 @@ class APIClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         # Cleanup if needed
-        pass

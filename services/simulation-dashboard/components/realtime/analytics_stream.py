@@ -5,14 +5,12 @@ to multiple ecosystem services to provide live data analytics and insights.
 """
 
 import asyncio
-import json
-import logging
 import queue
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 import httpx
 import pandas as pd

@@ -6,7 +6,6 @@ following consistent patterns with the broader ecosystem.
 
 import logging
 import sys
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 try:

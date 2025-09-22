@@ -3,15 +3,13 @@
 import asyncio
 import os
 import sys
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from modules.analysis_handlers import AnalysisHandlers, logger_client
+from modules.analysis_handlers import AnalysisHandlers
 
 from services.shared.utilities.logging_client import LogCollectorClient
 

@@ -16,15 +16,10 @@ Responsibilities:
 Dependencies: shared middlewares/logging, ServiceClients, httpx for external calls.
 """
 
-import asyncio
 import os
-import re
-import signal
 import time
-from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
-import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
@@ -37,7 +32,6 @@ try:
     from .modules.circuit_breaker import circuit_breaker, operation_timeout_context
     from .modules.content_detector import content_detector
     from .modules.policy_enforcer import policy_enforcer
-    from .modules.validation import validate_content, validate_keywords, validate_providers
 except ImportError:
     # Fallback for when running as script
     import os
@@ -47,7 +41,6 @@ except ImportError:
     from modules.circuit_breaker import circuit_breaker, operation_timeout_context
     from modules.content_detector import content_detector
     from modules.policy_enforcer import policy_enforcer
-    from modules.validation import validate_content, validate_keywords, validate_providers
 
 # Service configuration constants
 SERVICE_NAME = "secure-analyzer"

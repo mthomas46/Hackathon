@@ -1,12 +1,10 @@
 """Migration Manager - Orchestrates migration execution and state management."""
 
 import asyncio
-import hashlib
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from .migration import Migration, MigrationDependency, MigrationExecutionContext, MigrationResult, MigrationStatus
+from .migration import Migration, MigrationExecutionContext, MigrationResult, MigrationStatus
 
 
 class MigrationManager:

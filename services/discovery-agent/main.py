@@ -4,17 +4,13 @@ This version ensures all enhanced endpoints are properly registered with FastAPI
 and can handle the test requirements for ecosystem registration.
 """
 
-import asyncio
-import json
-import os
 import re
 import time
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames

@@ -5,7 +5,6 @@ including title, status indicators, and global actions.
 """
 
 from datetime import datetime
-from typing import Optional
 
 import streamlit as st
 from infrastructure.config.config import get_config

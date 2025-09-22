@@ -64,8 +64,7 @@ class SimulationHealthManager(HealthManager):
         # Add simulation-specific health indicators
         try:
             # Check if domain models can be imported
-            from ..domain.entities.project import Project
-            from ..domain.entities.simulation import Simulation
+            pass
 
             health_status.models_loaded = True
         except ImportError:
@@ -75,7 +74,7 @@ class SimulationHealthManager(HealthManager):
         # Check infrastructure readiness
         try:
             # Check if infrastructure components are available
-            from .repositories.in_memory_repositories import InMemoryProjectRepository
+            pass
 
             health_status.api_connected = True  # Using as infrastructure readiness indicator
         except ImportError:

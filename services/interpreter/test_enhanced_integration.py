@@ -6,19 +6,16 @@ LangGraph workflow discovery, and prompt engineering.
 """
 
 import asyncio
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from modules.ecosystem_context import ecosystem_context
 from modules.langgraph_discovery import langgraph_discovery
 
 # Import the enhanced modules
-from modules.models import UserQuery
 from modules.orchestrator_integration import orchestrator_integration
 from modules.prompt_engineering import prompt_engineer
 
-from services.shared.constants_new import ServiceNames
 
 
 class TestEcosystemContextIntegration:

@@ -1,32 +1,20 @@
 """Tests for Analysis API Endpoints."""
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
-from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
 from ...main import app
 from ...presentation.models.analysis import (
     AnalysisRequest,
-    AnalysisResponse,
-    ContentQualityRequest,
     ContentQualityResponse,
     SemanticSimilarityRequest,
     SemanticSimilarityResponse,
-    SentimentAnalysisRequest,
     SentimentAnalysisResponse,
-    TrendAnalysisRequest,
     TrendAnalysisResponse,
 )
-from ...presentation.models.base import ErrorResponse, SuccessResponse
 
 
 class TestAnalysisEndpoints:

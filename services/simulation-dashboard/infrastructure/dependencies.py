@@ -6,10 +6,9 @@ features are not available.
 """
 
 import importlib
-import sys
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from infrastructure.logging.logger import get_dashboard_logger
 

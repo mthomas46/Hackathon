@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 class ValidationSeverity(Enum):
@@ -90,7 +90,6 @@ class BaseValidator(ABC):
     @abstractmethod
     async def validate(self, data: Any) -> ValidationResult:
         """Validate the given data."""
-        pass
 
     async def validate_field(self, field_name: str, field_value: Any) -> List[ValidationError]:
         """Validate a specific field. Override in subclasses as needed."""

@@ -7,7 +7,6 @@ import psutil
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ...shared.logging import fire_and_forget
 
 
 class MetricsCollector:

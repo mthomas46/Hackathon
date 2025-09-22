@@ -8,19 +8,12 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
-from core.responses.responses import (
-    BaseResponse,
-    ErrorResponse,
-    SuccessResponse,
-    create_error_response,
-    create_success_response,
-)
 
-from .hateoas import Link, Links
+from .hateoas import Links
 
 
 class HTTPStatus(Enum):

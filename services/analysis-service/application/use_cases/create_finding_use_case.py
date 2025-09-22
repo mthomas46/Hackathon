@@ -7,7 +7,7 @@ from ...domain.exceptions import DocumentNotFoundException
 from ...domain.services import FindingService
 from ...domain.validation import FindingValidator
 from ...infrastructure.repositories import DocumentRepository, FindingRepository
-from ..dto import CreateFindingRequest, FindingResponse
+from ..dto import FindingResponse
 
 
 @dataclass

@@ -5,7 +5,7 @@ for generating prompts from code repositories.
 """
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from fastapi import FastAPI
 from pydantic import BaseModel

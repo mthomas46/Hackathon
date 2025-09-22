@@ -115,12 +115,9 @@ import asyncio
 import os
 import signal
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 
 import click
 from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
 # ============================================================================
@@ -128,7 +125,6 @@ from rich.table import Table
 # ============================================================================
 try:
     from services.shared.core.constants_new import ErrorCodes, ServiceNames
-    from services.shared.monitoring.health import register_health_endpoints
 except ImportError:
     # Fallback for when imports fail
     print("Warning: Some shared modules not available, using fallbacks")
@@ -202,57 +198,11 @@ except ImportError:
 try:
     # Try relative imports first (for module execution)
     from .modules.cli_commands import CLICommands
-    from .modules.managers.workflow_manager import WorkflowManager
     from .modules.prompt_manager import PromptManager
-    from .modules.shared_utils import (
-        add_menu_rows,
-        build_cli_context,
-        create_cli_success_response,
-        create_health_status_display,
-        create_integration_test_table,
-        create_menu_table,
-        create_prompt_table,
-        create_search_results_table,
-        create_service_health_table,
-        create_workflow_status_table,
-        extract_variables_from_content,
-        format_analytics_display,
-        format_prompt_details,
-        get_cli_clients,
-        get_service_health_url,
-        handle_cli_error,
-        log_cli_metrics,
-        parse_tags_input,
-        print_panel,
-        validate_prompt_data,
-    )
 except ImportError:
     # Fall back to absolute imports (for standalone execution)
     from services.cli.modules.cli_commands import CLICommands
-    from services.cli.modules.managers.workflow_manager import WorkflowManager
     from services.cli.modules.prompt_manager import PromptManager
-    from services.cli.modules.shared_utils import (
-        add_menu_rows,
-        build_cli_context,
-        create_cli_success_response,
-        create_health_status_display,
-        create_integration_test_table,
-        create_menu_table,
-        create_prompt_table,
-        create_search_results_table,
-        create_service_health_table,
-        create_workflow_status_table,
-        extract_variables_from_content,
-        format_analytics_display,
-        format_prompt_details,
-        get_cli_clients,
-        get_service_health_url,
-        handle_cli_error,
-        log_cli_metrics,
-        parse_tags_input,
-        print_panel,
-        validate_prompt_data,
-    )
 
 # Service configuration constants
 SERVICE_NAME = "cli"

@@ -5,9 +5,8 @@ that runs when the ecosystem starts up. It ensures that all services are
 discovered and their LangGraph tools are registered with the orchestrator.
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from services.shared.core.constants_new import ServiceNames
 from services.shared.integrations.clients.clients import ServiceClients

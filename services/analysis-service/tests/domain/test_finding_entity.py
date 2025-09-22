@@ -4,7 +4,6 @@ import os
 import sys
 from datetime import datetime, timezone
 
-import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -233,7 +232,6 @@ class TestFindingEntity:
     def test_finding_age_days(self, finding_entity):
         """Test calculating finding age in days."""
         # Mock the created_at to be older
-        import time
         from unittest.mock import patch
 
         past_time = datetime.now(timezone.utc).timestamp() - (5 * 24 * 60 * 60)  # 5 days ago

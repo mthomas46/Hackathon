@@ -6,7 +6,7 @@ to provide confidence scores and recommendations for PR approval.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from langgraph.graph import END, StateGraph
 
@@ -14,9 +14,6 @@ from ..langgraph.state import WorkflowState
 from ..langgraph.tools import (
     analyze_document_tool,
     get_optimal_prompt_tool,
-    ingest_github_repo_tool,
-    ingest_jira_issues_tool,
-    search_documents_tool,
     send_notification_tool,
     store_document_tool,
 )

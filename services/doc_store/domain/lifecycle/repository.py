@@ -5,7 +5,7 @@ Handles lifecycle policy and document lifecycle data operations.
 
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ...core.entities import LifecyclePolicy
 from ...core.repository import BaseRepository

@@ -1,11 +1,10 @@
 """Test configuration and shared fixtures for the analysis service test suite."""
 
 import asyncio
-import os
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pytest
 
@@ -26,7 +25,7 @@ from ..domain.services.document_service import DocumentService
 from ..domain.services.finding_service import FindingService
 from ..domain.value_objects.analysis_type import AnalysisType
 from ..domain.value_objects.confidence import Confidence
-from ..domain.value_objects.location import CodeLocation, FileLocation, Location
+from ..domain.value_objects.location import CodeLocation, FileLocation
 from ..domain.value_objects.metrics import AnalysisMetrics, QualityMetrics
 from ..infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
 from ..infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository

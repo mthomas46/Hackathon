@@ -1,9 +1,8 @@
 """Migration Templates - Generates migration templates and boilerplate code."""
 
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 
 class MigrationTemplateGenerator:

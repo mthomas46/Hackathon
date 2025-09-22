@@ -8,10 +8,8 @@ Provides endpoints for:
 """
 
 import time
-from datetime import datetime
-from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from services.shared.core.constants_new import ServiceNames
 from services.shared.utilities.logging_client import get_log_collector_client
@@ -23,7 +21,6 @@ from .dtos import (
     EventClearRequest,
     EventHistoryResponse,
     EventReplayRequest,
-    PeerInfoResponse,
     SagaDetailResponse,
     SagaStatsResponse,
     TraceDetailResponse,

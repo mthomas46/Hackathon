@@ -7,7 +7,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
 

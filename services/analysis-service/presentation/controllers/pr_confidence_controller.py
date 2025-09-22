@@ -2,7 +2,7 @@
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from ...modules.pr_confidence_analysis import pr_confidence_analyzer
 

@@ -11,17 +11,15 @@ Implements advanced multi-model summarization capabilities with:
 
 import asyncio
 import hashlib
-import json
 import random
 import re
-import threading
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from services.shared.core.constants_new import ServiceNames
 from services.shared.intelligent_caching import get_service_cache

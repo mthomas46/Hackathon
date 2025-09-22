@@ -1,12 +1,11 @@
 """Base Application Service - Foundation for cross-cutting concerns."""
 
-import asyncio
 import logging
 import time
-from abc import ABC, abstractmethod
+from abc import ABC
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Optional, TypeVar
+from typing import Any, Dict, Optional, TypeVar
 
 from ..events import EventBus
 

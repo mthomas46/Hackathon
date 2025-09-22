@@ -1,7 +1,6 @@
 """Circuit Breaker - Resilient connection handling with failure protection."""
 
 import asyncio
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -192,7 +191,6 @@ class CircuitBreaker:
 class CircuitBreakerOpenException(Exception):
     """Exception raised when circuit breaker is open."""
 
-    pass
 
 
 class CircuitBreakerRegistry:

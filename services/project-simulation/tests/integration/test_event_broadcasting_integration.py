@@ -5,18 +5,13 @@ including WebSocket connections, event distribution, real-time updates,
 and integration with the simulation event system.
 """
 
-import asyncio
 import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-import websockets
-from fastapi import WebSocket
-from fastapi.testclient import TestClient
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -404,7 +399,7 @@ class TestEventBroadcastingIntegration:
             return None
 
         # Test transformation
-        from simulation.domain.events import ProjectCreated, SimulationCompleted
+        from simulation.domain.events import ProjectCreated
 
         project_event = ProjectCreated(project_id="proj-123", name="Test Project", complexity="complex", team_size=5)
 

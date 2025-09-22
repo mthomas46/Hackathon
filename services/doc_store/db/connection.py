@@ -6,7 +6,6 @@ Provides connection pooling and secure database access.
 import os
 import sqlite3
 from contextlib import contextmanager
-from typing import Any, Optional
 
 
 def _validate_db_path(db_path: str) -> str:

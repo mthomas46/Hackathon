@@ -3,15 +3,14 @@ Bedrock Proxy Service Adapter for CLI interaction
 Handles AWS Bedrock API interactions and LLM model access
 """
 
-import asyncio
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 
 class BedrockProxyAdapter(BaseServiceAdapter):

@@ -14,10 +14,7 @@ Usage:
 """
 
 import argparse
-import json
-import os
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import requests

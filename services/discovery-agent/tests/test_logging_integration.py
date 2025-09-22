@@ -1,12 +1,9 @@
 """Tests for Discovery Agent logging integration with LogCollectorClient."""
 
-import asyncio
 import os
 import sys
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import httpx
 import pytest
 from fastapi.testclient import TestClient
 

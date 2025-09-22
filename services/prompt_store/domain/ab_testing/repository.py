@@ -3,7 +3,7 @@
 Handles database operations for A/B testing entities.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import ABTest, ABTestResult
 from services.prompt_store.core.repository import BaseRepository

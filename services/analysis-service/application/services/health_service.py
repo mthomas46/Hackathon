@@ -3,12 +3,12 @@
 import asyncio
 import time
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import psutil
 
-from .application_service import ApplicationService, ServiceContext, service_registry
+from .application_service import ApplicationService, service_registry
 
 
 class HealthCheck(ABC):
@@ -25,7 +25,6 @@ class HealthCheck(ABC):
     @abstractmethod
     async def check(self) -> Dict[str, Any]:
         """Perform health check."""
-        pass
 
     def get_status(self) -> str:
         """Get health check status."""
