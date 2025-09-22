@@ -4,22 +4,24 @@ This module handles the generation of various output formats (JSON, PDF, CSV, ma
 from workflow execution results, enabling users to get tangible deliverables from their queries.
 """
 
-import json
 import csv
-import zipfile
-import tempfile
+import json
 import os
+import tempfile
 import uuid
+import zipfile
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Union, BinaryIO
+from io import BytesIO, StringIO
 from pathlib import Path
-from io import StringIO, BytesIO
+from typing import Any, BinaryIO, Dict, List, Optional, Union
+
 import markdown
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
 from services.shared.clients import ServiceClients
 from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
@@ -33,15 +35,15 @@ class OutputGenerator:
         self.client = ServiceClients()
         self.doc_store_url = "http://doc-store:5087"
         self.prompt_store_url = "http://prompt-store:5110"
-        
+
         # Output storage configuration (fallback for temporary files)
         self.output_directory = Path("/tmp/interpreter_outputs")
         self.output_directory.mkdir(exist_ok=True)
-        
+
         # File retention settings
         self.file_retention = timedelta(hours=24)
         self.max_file_size = 100 * 1024 * 1024  # 100MB
-        
+
         # Output format configurations
         self.supported_formats = {
             "json": self._generate_json,
@@ -49,22 +51,24 @@ class OutputGenerator:
             "csv": self._generate_csv,
             "markdown": self._generate_markdown,
             "zip": self._generate_zip,
-            "txt": self._generate_text
+            "txt": self._generate_text,
         }
-        
+
         # PDF styling
         self.pdf_styles = getSampleStyleSheet()
-        self.pdf_styles.add(ParagraphStyle(
-            name='CustomTitle',
-            parent=self.pdf_styles['Heading1'],
-            fontSize=16,
-            textColor=colors.darkblue,
-            spaceAfter=12
-        ))
+        self.pdf_styles.add(
+            ParagraphStyle(
+                name="CustomTitle",
+                parent=self.pdf_styles["Heading1"],
+                fontSize=16,
+                textColor=colors.darkblue,
+                spaceAfter=12,
+            )
+        )
 
-    async def generate_output(self, workflow_result: Dict[str, Any], 
-                            output_format: str = "json",
-                            filename_prefix: str = None) -> Dict[str, Any]:
+    async def generate_output(
+        self, workflow_result: Dict[str, Any], output_format: str = "json", filename_prefix: str = None
+    ) -> Dict[str, Any]:
         """Generate output file from workflow result and store in doc_store."""
         try:
             if output_format not in self.supported_formats:
@@ -73,7 +77,7 @@ class OutputGenerator:
             # Generate unique identifiers
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             file_id = str(uuid.uuid4())[:8]
-            
+
             if filename_prefix:
                 filename = f"{filename_prefix}_{timestamp}_{file_id}.{output_format}"
             else:
@@ -82,15 +86,15 @@ class OutputGenerator:
 
             # Generate content in memory first
             content = await self._generate_content(workflow_result, output_format)
-            
+
             # Create comprehensive provenance metadata
             provenance = await self._create_workflow_provenance(workflow_result)
-            
+
             # Store in doc_store for persistence
             doc_store_result = await self._store_document_in_doc_store(
                 content, filename, output_format, workflow_result, provenance
             )
-            
+
             # Create enhanced metadata with doc_store integration
             download_info = {
                 "file_id": file_id,
@@ -111,8 +115,8 @@ class OutputGenerator:
                     "execution_time": workflow_result.get("execution_time"),
                     "status": workflow_result.get("status", "completed"),
                     "persistent": True,
-                    "document_type": f"workflow_output_{output_format}"
-                }
+                    "document_type": f"workflow_output_{output_format}",
+                },
             }
 
             fire_and_forget(
@@ -125,8 +129,8 @@ class OutputGenerator:
                     "format": output_format,
                     "size_bytes": download_info["size_bytes"],
                     "workflow": workflow_result.get("workflow_name"),
-                    "storage": "doc_store"
-                }
+                    "storage": "doc_store",
+                },
             )
 
             return download_info
@@ -136,11 +140,7 @@ class OutputGenerator:
                 "output_generation_error",
                 f"Failed to generate {output_format} output: {str(e)}",
                 ServiceNames.INTERPRETER,
-                {
-                    "format": output_format,
-                    "error": str(e),
-                    "workflow": workflow_result.get("workflow_name")
-                }
+                {"format": output_format, "error": str(e), "workflow": workflow_result.get("workflow_name")},
             )
             raise
 
@@ -174,36 +174,36 @@ class OutputGenerator:
                 "started_at": workflow_result.get("started_at"),
                 "completed_at": datetime.utcnow().isoformat(),
                 "execution_time": workflow_result.get("execution_time"),
-                "status": workflow_result.get("status")
+                "status": workflow_result.get("status"),
             },
             "services_chain": workflow_result.get("services_used", []),
             "user_context": {
                 "user_id": workflow_result.get("user_id"),
                 "query": workflow_result.get("original_query"),
                 "intent": workflow_result.get("intent"),
-                "entities": workflow_result.get("entities", {})
+                "entities": workflow_result.get("entities", {}),
             },
             "prompts_used": await self._extract_prompts_from_workflow(workflow_result),
             "data_lineage": await self._create_data_lineage(workflow_result),
             "quality_metrics": {
                 "confidence": workflow_result.get("confidence", 0.0),
                 "completeness": 1.0,  # All steps completed
-                "accuracy": workflow_result.get("accuracy", 0.0)
+                "accuracy": workflow_result.get("accuracy", 0.0),
             },
             "created_by": "interpreter_service",
             "creation_timestamp": datetime.utcnow().isoformat(),
-            "version": "1.0.0"
+            "version": "1.0.0",
         }
-        
+
         return provenance
 
     async def _extract_prompts_from_workflow(self, workflow_result: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Extract all prompts used in the workflow execution."""
         prompts_used = []
-        
+
         # Get steps from workflow result
         steps = workflow_result.get("steps_executed", [])
-        
+
         for step in steps:
             if "prompt_id" in step or "prompt_template" in step:
                 prompt_info = {
@@ -213,10 +213,10 @@ class OutputGenerator:
                     "prompt_id": step.get("prompt_id"),
                     "prompt_template": step.get("prompt_template"),
                     "prompt_variables": step.get("prompt_variables", {}),
-                    "timestamp": step.get("timestamp")
+                    "timestamp": step.get("timestamp"),
                 }
                 prompts_used.append(prompt_info)
-        
+
         # Try to get additional prompt information from prompt_store
         try:
             for prompt_info in prompts_used:
@@ -228,9 +228,9 @@ class OutputGenerator:
                 "prompt_details_error",
                 f"Failed to get prompt details: {str(e)}",
                 ServiceNames.INTERPRETER,
-                {"error": str(e)}
+                {"error": str(e)},
             )
-        
+
         return prompts_used
 
     async def _get_prompt_details(self, prompt_id: str) -> Dict[str, Any]:
@@ -242,20 +242,15 @@ class OutputGenerator:
                 "prompt_category": response.get("category", ""),
                 "prompt_version": response.get("version", ""),
                 "prompt_author": response.get("author", ""),
-                "prompt_description": response.get("description", "")
+                "prompt_description": response.get("description", ""),
             }
         except Exception:
             return {}
 
     async def _create_data_lineage(self, workflow_result: Dict[str, Any]) -> Dict[str, Any]:
         """Create data lineage information showing data flow through workflow."""
-        lineage = {
-            "input_sources": [],
-            "processing_steps": [],
-            "output_artifacts": [],
-            "transformations": []
-        }
-        
+        lineage = {"input_sources": [], "processing_steps": [], "output_artifacts": [], "transformations": []}
+
         # Extract data sources from workflow steps
         steps = workflow_result.get("steps_executed", [])
         for step in steps:
@@ -266,15 +261,20 @@ class OutputGenerator:
                 "inputs": step.get("inputs", []),
                 "outputs": step.get("outputs", []),
                 "transformations": step.get("transformations", []),
-                "timestamp": step.get("timestamp")
+                "timestamp": step.get("timestamp"),
             }
             lineage["processing_steps"].append(step_lineage)
-        
+
         return lineage
 
-    async def _store_document_in_doc_store(self, content: Union[str, bytes], filename: str, 
-                                         format_type: str, workflow_result: Dict[str, Any], 
-                                         provenance: Dict[str, Any]) -> Dict[str, Any]:
+    async def _store_document_in_doc_store(
+        self,
+        content: Union[str, bytes],
+        filename: str,
+        format_type: str,
+        workflow_result: Dict[str, Any],
+        provenance: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Store the generated document in doc_store for persistence."""
         try:
             # Create document metadata for doc_store
@@ -289,7 +289,7 @@ class OutputGenerator:
                     "workflow_generated",
                     f"format_{format_type}",
                     f"workflow_{workflow_result.get('workflow_name', 'unknown')}",
-                    f"user_{workflow_result.get('user_id', 'anonymous')}"
+                    f"user_{workflow_result.get('user_id', 'anonymous')}",
                 ],
                 "author": workflow_result.get("user_id", "system"),
                 "source": "interpreter_workflow_execution",
@@ -299,51 +299,44 @@ class OutputGenerator:
                     "execution_id": workflow_result.get("execution_id"),
                     "services_used": workflow_result.get("services_used", []),
                     "execution_time": workflow_result.get("execution_time"),
-                    "generated_at": datetime.utcnow().isoformat()
-                }
+                    "generated_at": datetime.utcnow().isoformat(),
+                },
             }
-            
+
             # Convert content to appropriate format for storage
             if isinstance(content, bytes):
                 # For binary content (PDFs, ZIPs), encode as base64
                 import base64
-                content_for_storage = base64.b64encode(content).decode('utf-8')
+
+                content_for_storage = base64.b64encode(content).decode("utf-8")
                 document_metadata["content_encoding"] = "base64"
             else:
                 content_for_storage = content
                 document_metadata["content_encoding"] = "utf-8"
-            
+
             # Store in doc_store
-            store_request = {
-                "content": content_for_storage,
-                "metadata": document_metadata
-            }
-            
+            store_request = {"content": content_for_storage, "metadata": document_metadata}
+
             response = await self.client.post_json(f"{self.doc_store_url}/documents", store_request)
-            
+
             if response.get("success"):
                 return {
                     "document_id": response.get("document_id"),
                     "storage_url": f"{self.doc_store_url}/documents/{response.get('document_id')}",
-                    "stored_at": datetime.utcnow().isoformat()
+                    "stored_at": datetime.utcnow().isoformat(),
                 }
             else:
                 raise Exception(f"Doc store failed: {response.get('error', 'Unknown error')}")
-                
+
         except Exception as e:
             fire_and_forget(
                 "doc_store_error",
                 f"Failed to store document in doc_store: {str(e)}",
                 ServiceNames.INTERPRETER,
-                {"error": str(e), "filename": filename}
+                {"error": str(e), "filename": filename},
             )
             # Fallback: return temporary file info
-            return {
-                "document_id": None,
-                "storage_url": None,
-                "error": str(e),
-                "fallback": True
-            }
+            return {"document_id": None, "storage_url": None, "error": str(e), "fallback": True}
 
     def _get_content_type(self, format_type: str) -> str:
         """Get MIME content type for format."""
@@ -353,7 +346,7 @@ class OutputGenerator:
             "csv": "text/csv",
             "markdown": "text/markdown",
             "txt": "text/plain",
-            "zip": "application/zip"
+            "zip": "application/zip",
         }
         return content_types.get(format_type, "application/octet-stream")
 
@@ -369,56 +362,60 @@ class OutputGenerator:
                 "format": "json",
                 "workflow_name": workflow_result.get("workflow_name"),
                 "execution_id": workflow_result.get("execution_id"),
-                "status": workflow_result.get("status")
+                "status": workflow_result.get("status"),
             },
             "execution_summary": {
                 "services_used": workflow_result.get("services_used", []),
                 "execution_time": workflow_result.get("execution_time"),
                 "confidence": workflow_result.get("confidence"),
-                "entities_extracted": workflow_result.get("entities", {})
+                "entities_extracted": workflow_result.get("entities", {}),
             },
             "results": workflow_result.get("results", {}),
-            "raw_data": workflow_result
+            "raw_data": workflow_result,
         }
         return json.dumps(output_data, indent=2, ensure_ascii=False)
 
     async def _generate_pdf_content(self, workflow_result: Dict[str, Any]) -> bytes:
         """Generate PDF content in memory."""
         from io import BytesIO
-        
+
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4)
         story = []
 
         # Title
         workflow_name = workflow_result.get("workflow_name", "Workflow Report")
-        title = Paragraph(workflow_name.replace("_", " ").title(), self.pdf_styles['CustomTitle'])
+        title = Paragraph(workflow_name.replace("_", " ").title(), self.pdf_styles["CustomTitle"])
         story.append(title)
         story.append(Spacer(1, 12))
 
         # Execution Summary
-        story.append(Paragraph("Execution Summary", self.pdf_styles['Heading2']))
-        
+        story.append(Paragraph("Execution Summary", self.pdf_styles["Heading2"]))
+
         summary_data = [
             ["Property", "Value"],
             ["Execution ID", workflow_result.get("execution_id", "N/A")],
             ["Status", workflow_result.get("status", "Unknown")],
             ["Execution Time", workflow_result.get("execution_time", "N/A")],
             ["Confidence", f"{workflow_result.get('confidence', 0):.2f}"],
-            ["Services Used", ", ".join(workflow_result.get("services_used", []))]
+            ["Services Used", ", ".join(workflow_result.get("services_used", []))],
         ]
 
         summary_table = Table(summary_data)
-        summary_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+        summary_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, 0), 12),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
 
         story.append(summary_table)
         story.append(Spacer(1, 12))
@@ -426,20 +423,22 @@ class OutputGenerator:
         # Results Section
         results = workflow_result.get("results", {})
         if results:
-            story.append(Paragraph("Results", self.pdf_styles['Heading2']))
-            
+            story.append(Paragraph("Results", self.pdf_styles["Heading2"]))
+
             if isinstance(results, dict):
                 for key, value in results.items():
-                    story.append(Paragraph(f"<b>{key}:</b>", self.pdf_styles['Normal']))
-                    story.append(Paragraph(str(value), self.pdf_styles['Normal']))
+                    story.append(Paragraph(f"<b>{key}:</b>", self.pdf_styles["Normal"]))
+                    story.append(Paragraph(str(value), self.pdf_styles["Normal"]))
                     story.append(Spacer(1, 6))
             else:
-                story.append(Paragraph(str(results), self.pdf_styles['Normal']))
+                story.append(Paragraph(str(results), self.pdf_styles["Normal"]))
 
         # Generation Footer
         story.append(Spacer(1, 24))
-        footer_text = f"Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem"
-        story.append(Paragraph(footer_text, self.pdf_styles['Normal']))
+        footer_text = (
+            f"Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem"
+        )
+        story.append(Paragraph(footer_text, self.pdf_styles["Normal"]))
 
         doc.build(story)
         buffer.seek(0)
@@ -449,7 +448,7 @@ class OutputGenerator:
         """Generate CSV content in memory."""
         output = StringIO()
         writer = csv.writer(output)
-        
+
         # Write metadata headers
         writer.writerow(["Metadata"])
         writer.writerow(["Workflow Name", workflow_result.get("workflow_name", "")])
@@ -481,7 +480,7 @@ class OutputGenerator:
     async def _generate_markdown_content(self, workflow_result: Dict[str, Any]) -> str:
         """Generate markdown content in memory."""
         md_content = []
-        
+
         # Title
         workflow_name = workflow_result.get("workflow_name", "Workflow Report")
         md_content.append(f"# {workflow_name.replace('_', ' ').title()}")
@@ -502,7 +501,7 @@ class OutputGenerator:
         if results:
             md_content.append("## Results")
             md_content.append("")
-            
+
             if isinstance(results, dict):
                 for key, value in results.items():
                     md_content.append(f"### {key}")
@@ -515,14 +514,16 @@ class OutputGenerator:
 
         # Footer
         md_content.append("---")
-        md_content.append(f"*Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem*")
+        md_content.append(
+            f"*Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem*"
+        )
 
         return "\n".join(md_content)
 
     async def _generate_text_content(self, workflow_result: Dict[str, Any]) -> str:
         """Generate plain text content in memory."""
         content = []
-        
+
         # Header
         workflow_name = workflow_result.get("workflow_name", "Workflow Report")
         content.append(f"{workflow_name.replace('_', ' ').title()}")
@@ -556,10 +557,10 @@ class OutputGenerator:
     async def _generate_zip_content(self, workflow_result: Dict[str, Any]) -> bytes:
         """Generate ZIP archive content in memory."""
         from io import BytesIO
-        
+
         zip_buffer = BytesIO()
-        
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
             # Generate and add JSON
             json_content = await self._generate_json_content(workflow_result)
             zipf.writestr("results.json", json_content)
@@ -584,19 +585,19 @@ class OutputGenerator:
                 "contents": [
                     "results.json - Complete workflow results in JSON format",
                     "report.md - Formatted markdown report",
-                    "data.csv - Structured data in CSV format", 
-                    "summary.txt - Plain text summary"
-                ]
+                    "data.csv - Structured data in CSV format",
+                    "summary.txt - Plain text summary",
+                ],
             }
-            
+
             readme_content = f"LLM Documentation Ecosystem - Workflow Results Archive\n"
             readme_content += f"Generated: {metadata['archive_created']}\n"
             readme_content += f"Workflow: {metadata['workflow_name']}\n"
             readme_content += f"Execution ID: {metadata['execution_id']}\n\n"
             readme_content += "Contents:\n"
-            for item in metadata['contents']:
+            for item in metadata["contents"]:
                 readme_content += f"- {item}\n"
-            
+
             zipf.writestr("README.txt", readme_content)
 
         zip_buffer.seek(0)
@@ -611,19 +612,19 @@ class OutputGenerator:
                 "format": "json",
                 "workflow_name": workflow_result.get("workflow_name"),
                 "execution_id": workflow_result.get("execution_id"),
-                "status": workflow_result.get("status")
+                "status": workflow_result.get("status"),
             },
             "execution_summary": {
                 "services_used": workflow_result.get("services_used", []),
                 "execution_time": workflow_result.get("execution_time"),
                 "confidence": workflow_result.get("confidence"),
-                "entities_extracted": workflow_result.get("entities", {})
+                "entities_extracted": workflow_result.get("entities", {}),
             },
             "results": workflow_result.get("results", {}),
-            "raw_data": workflow_result
+            "raw_data": workflow_result,
         }
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
 
         return filepath.stat().st_size
@@ -635,33 +636,37 @@ class OutputGenerator:
 
         # Title
         workflow_name = workflow_result.get("workflow_name", "Workflow Report")
-        title = Paragraph(workflow_name.replace("_", " ").title(), self.pdf_styles['CustomTitle'])
+        title = Paragraph(workflow_name.replace("_", " ").title(), self.pdf_styles["CustomTitle"])
         story.append(title)
         story.append(Spacer(1, 12))
 
         # Execution Summary
-        story.append(Paragraph("Execution Summary", self.pdf_styles['Heading2']))
-        
+        story.append(Paragraph("Execution Summary", self.pdf_styles["Heading2"]))
+
         summary_data = [
             ["Property", "Value"],
             ["Execution ID", workflow_result.get("execution_id", "N/A")],
             ["Status", workflow_result.get("status", "Unknown")],
             ["Execution Time", workflow_result.get("execution_time", "N/A")],
             ["Confidence", f"{workflow_result.get('confidence', 0):.2f}"],
-            ["Services Used", ", ".join(workflow_result.get("services_used", []))]
+            ["Services Used", ", ".join(workflow_result.get("services_used", []))],
         ]
 
         summary_table = Table(summary_data)
-        summary_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+        summary_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, 0), 12),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
 
         story.append(summary_table)
         story.append(Spacer(1, 12))
@@ -669,38 +674,40 @@ class OutputGenerator:
         # Results Section
         results = workflow_result.get("results", {})
         if results:
-            story.append(Paragraph("Results", self.pdf_styles['Heading2']))
-            
+            story.append(Paragraph("Results", self.pdf_styles["Heading2"]))
+
             if isinstance(results, dict):
                 for key, value in results.items():
-                    story.append(Paragraph(f"<b>{key}:</b>", self.pdf_styles['Normal']))
-                    story.append(Paragraph(str(value), self.pdf_styles['Normal']))
+                    story.append(Paragraph(f"<b>{key}:</b>", self.pdf_styles["Normal"]))
+                    story.append(Paragraph(str(value), self.pdf_styles["Normal"]))
                     story.append(Spacer(1, 6))
             else:
-                story.append(Paragraph(str(results), self.pdf_styles['Normal']))
+                story.append(Paragraph(str(results), self.pdf_styles["Normal"]))
 
         # Entities Section
         entities = workflow_result.get("entities", {})
         if entities:
             story.append(Spacer(1, 12))
-            story.append(Paragraph("Extracted Entities", self.pdf_styles['Heading2']))
-            
+            story.append(Paragraph("Extracted Entities", self.pdf_styles["Heading2"]))
+
             for entity_type, entity_list in entities.items():
-                story.append(Paragraph(f"<b>{entity_type}:</b> {', '.join(entity_list)}", self.pdf_styles['Normal']))
+                story.append(Paragraph(f"<b>{entity_type}:</b> {', '.join(entity_list)}", self.pdf_styles["Normal"]))
 
         # Generation Footer
         story.append(Spacer(1, 24))
-        footer_text = f"Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem"
-        story.append(Paragraph(footer_text, self.pdf_styles['Normal']))
+        footer_text = (
+            f"Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem"
+        )
+        story.append(Paragraph(footer_text, self.pdf_styles["Normal"]))
 
         doc.build(story)
         return filepath.stat().st_size
 
     async def _generate_csv(self, workflow_result: Dict[str, Any], filepath: Path) -> int:
         """Generate CSV output."""
-        with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
+        with open(filepath, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
-            
+
             # Write metadata headers
             writer.writerow(["Metadata"])
             writer.writerow(["Workflow Name", workflow_result.get("workflow_name", "")])
@@ -732,7 +739,7 @@ class OutputGenerator:
     async def _generate_markdown(self, workflow_result: Dict[str, Any], filepath: Path) -> int:
         """Generate markdown output."""
         md_content = []
-        
+
         # Title
         workflow_name = workflow_result.get("workflow_name", "Workflow Report")
         md_content.append(f"# {workflow_name.replace('_', ' ').title()}")
@@ -753,7 +760,7 @@ class OutputGenerator:
         if results:
             md_content.append("## Results")
             md_content.append("")
-            
+
             if isinstance(results, dict):
                 for key, value in results.items():
                     md_content.append(f"### {key}")
@@ -769,16 +776,18 @@ class OutputGenerator:
         if entities:
             md_content.append("## Extracted Entities")
             md_content.append("")
-            
+
             for entity_type, entity_list in entities.items():
                 md_content.append(f"- **{entity_type}**: {', '.join(entity_list)}")
             md_content.append("")
 
         # Footer
         md_content.append("---")
-        md_content.append(f"*Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem*")
+        md_content.append(
+            f"*Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem*"
+        )
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(md_content))
 
         return filepath.stat().st_size
@@ -786,7 +795,7 @@ class OutputGenerator:
     async def _generate_text(self, workflow_result: Dict[str, Any], filepath: Path) -> int:
         """Generate plain text output."""
         content = []
-        
+
         # Header
         workflow_name = workflow_result.get("workflow_name", "Workflow Report")
         content.append(f"{workflow_name.replace('_', ' ').title()}")
@@ -824,17 +833,17 @@ class OutputGenerator:
         content.append(f"Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         content.append("by LLM Documentation Ecosystem")
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(content))
 
         return filepath.stat().st_size
 
     async def _generate_zip(self, workflow_result: Dict[str, Any], filepath: Path) -> int:
         """Generate ZIP archive with multiple formats."""
-        with zipfile.ZipFile(filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(filepath, "w", zipfile.ZIP_DEFLATED) as zipf:
             # Generate temporary files for each format
             temp_dir = Path(tempfile.mkdtemp())
-            
+
             try:
                 # Generate JSON
                 json_path = temp_dir / "results.json"
@@ -864,21 +873,21 @@ class OutputGenerator:
                     "contents": [
                         "results.json - Complete workflow results in JSON format",
                         "report.md - Formatted markdown report",
-                        "data.csv - Structured data in CSV format", 
-                        "summary.txt - Plain text summary"
-                    ]
+                        "data.csv - Structured data in CSV format",
+                        "summary.txt - Plain text summary",
+                    ],
                 }
-                
+
                 metadata_path = temp_dir / "README.txt"
-                with open(metadata_path, 'w') as f:
+                with open(metadata_path, "w") as f:
                     f.write(f"LLM Documentation Ecosystem - Workflow Results Archive\n")
                     f.write(f"Generated: {metadata['archive_created']}\n")
                     f.write(f"Workflow: {metadata['workflow_name']}\n")
                     f.write(f"Execution ID: {metadata['execution_id']}\n\n")
                     f.write("Contents:\n")
-                    for item in metadata['contents']:
+                    for item in metadata["contents"]:
                         f.write(f"- {item}\n")
-                
+
                 zipf.write(metadata_path, "README.txt")
 
             finally:
@@ -901,7 +910,7 @@ class OutputGenerator:
                 "format": filepath.suffix[1:],  # Remove the dot
                 "size_bytes": stat.st_size,
                 "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
-                "exists": True
+                "exists": True,
             }
         return None
 
@@ -921,7 +930,7 @@ class OutputGenerator:
                     "file_cleanup_error",
                     f"Error cleaning up file {filepath}: {str(e)}",
                     ServiceNames.INTERPRETER,
-                    {"filepath": str(filepath), "error": str(e)}
+                    {"filepath": str(filepath), "error": str(e)},
                 )
 
         if cleaned_count > 0:
@@ -929,7 +938,7 @@ class OutputGenerator:
                 "file_cleanup_completed",
                 f"Cleaned up {cleaned_count} expired output files",
                 ServiceNames.INTERPRETER,
-                {"cleaned_count": cleaned_count}
+                {"cleaned_count": cleaned_count},
             )
 
     def get_supported_formats(self) -> List[str]:

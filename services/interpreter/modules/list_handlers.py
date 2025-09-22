@@ -2,13 +2,14 @@
 
 Handles the logic for list and info endpoints.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
 
 from .shared_utils import (
-    get_supported_intents,
-    create_interpreter_success_response,
     build_interpreter_context,
-    handle_interpreter_error
+    create_interpreter_success_response,
+    get_supported_intents,
+    handle_interpreter_error,
 )
 
 
@@ -27,9 +28,7 @@ class ListHandlers:
             )
         except Exception as e:
             return handle_interpreter_error(
-                "list supported intents",
-                e,
-                **build_interpreter_context("list_intents_error")
+                "list supported intents", e, **build_interpreter_context("list_intents_error")
             )
 
 

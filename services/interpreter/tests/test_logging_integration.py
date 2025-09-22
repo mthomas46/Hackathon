@@ -1,17 +1,18 @@
 """Tests for interpreter service logging integration."""
 
-import pytest
 import asyncio
-import time
-from unittest.mock import Mock, patch, AsyncMock
-import sys
 import os
+import sys
+import time
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Add the parent directory to sys.path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from main import app
 from fastapi.testclient import TestClient
+from main import app
 
 
 class TestInterpreterLoggingIntegration:
@@ -31,22 +32,21 @@ class TestInterpreterLoggingIntegration:
         mock_client.log_business_event = AsyncMock()
         mock_client.log_performance_metric = AsyncMock()
 
-        with patch('main.logger_client', mock_client):
+        with patch("main.logger_client", mock_client):
             yield mock_client
 
     def test_sample_documents_endpoint_logging_success(self, client, mock_log_collector):
         """Test that successful document queries are logged."""
         # Mock sample_documents to return some results
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = [
                 {"type": "api_docs", "content": "Sample API doc", "title": "Test API"}
             ]
 
             # Make request
-            response = client.post("/documents/sample/context", json={
-                "query": "test query",
-                "context": {"user": "test_user"}
-            })
+            response = client.post(
+                "/documents/sample/context", json={"query": "test query", "context": {"user": "test_user"}}
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -58,19 +58,14 @@ class TestInterpreterLoggingIntegration:
 
             # Verify logging was called
             mock_log_collector.log_info.assert_called()
-            mock_log_collector.log_business_event.assert_called_with(
-                "document_query_processed",
-                pytest.any(dict)
-            )
+            mock_log_collector.log_business_event.assert_called_with("document_query_processed", pytest.any(dict))
             mock_log_collector.log_performance_metric.assert_called()
 
     def test_sample_documents_endpoint_logging_error(self, client, mock_log_collector):
         """Test that errors in document queries are logged."""
         # Mock sample_documents to be None (service unavailable)
-        with patch('main.sample_documents', None):
-            response = client.post("/documents/sample/context", json={
-                "query": "test query"
-            })
+        with patch("main.sample_documents", None):
+            response = client.post("/documents/sample/context", json={"query": "test query"})
 
             assert response.status_code == 200  # Returns error in response body
             data = response.json()
@@ -82,10 +77,8 @@ class TestInterpreterLoggingIntegration:
     def test_document_types_endpoint_logging(self, client, mock_log_collector):
         """Test that document types requests are logged."""
         # Mock sample_documents
-        with patch('main.sample_documents') as mock_sample_docs:
-            mock_sample_docs.get_documents_by_type.return_value = [
-                {"type": "api_docs", "title": "Test"}
-            ]
+        with patch("main.sample_documents") as mock_sample_docs:
+            mock_sample_docs.get_documents_by_type.return_value = [{"type": "api_docs", "title": "Test"}]
             mock_sample_docs.get_recent_documents.return_value = []
             mock_sample_docs.get_high_priority_documents.return_value = []
 
@@ -94,19 +87,14 @@ class TestInterpreterLoggingIntegration:
 
             # Verify logging was called
             mock_log_collector.log_info.assert_called()
-            mock_log_collector.log_business_event.assert_called_with(
-                "document_types_retrieved",
-                pytest.any(dict)
-            )
+            mock_log_collector.log_business_event.assert_called_with("document_types_retrieved", pytest.any(dict))
 
     def test_request_id_generation(self, client):
         """Test that request IDs are properly generated."""
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = []
 
-            response = client.post("/documents/sample/context", json={
-                "query": "test"
-            })
+            response = client.post("/documents/sample/context", json={"query": "test"})
 
             data = response.json()
             assert "request_id" in data
@@ -114,14 +102,10 @@ class TestInterpreterLoggingIntegration:
 
     def test_performance_metrics_logging(self, client, mock_log_collector):
         """Test that performance metrics are logged correctly."""
-        with patch('main.sample_documents') as mock_sample_docs:
-            mock_sample_docs.get_documents_for_query.return_value = [
-                {"type": "api_docs", "content": "Test content"}
-            ]
+        with patch("main.sample_documents") as mock_sample_docs:
+            mock_sample_docs.get_documents_for_query.return_value = [{"type": "api_docs", "content": "Test content"}]
 
-            response = client.post("/documents/sample/context", json={
-                "query": "performance test query"
-            })
+            response = client.post("/documents/sample/context", json={"query": "performance test query"})
 
             assert response.status_code == 200
 
@@ -138,25 +122,22 @@ class TestInterpreterLoggingIntegration:
 
     def test_business_event_logging_details(self, client, mock_log_collector):
         """Test that business events contain proper details."""
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = [
                 {"type": "api_docs", "category": "reference"},
                 {"type": "jira", "category": "issue"},
-                {"type": "confluence", "category": "documentation"}
+                {"type": "confluence", "category": "documentation"},
             ]
 
-            response = client.post("/documents/sample/context", json={
-                "query": "complex test query",
-                "context": {"user_id": 123, "session": "abc"}
-            })
+            response = client.post(
+                "/documents/sample/context",
+                json={"query": "complex test query", "context": {"user_id": 123, "session": "abc"}},
+            )
 
             assert response.status_code == 200
 
             # Verify business event details
-            mock_log_collector.log_business_event.assert_called_with(
-                "document_query_processed",
-                pytest.any(dict)
-            )
+            mock_log_collector.log_business_event.assert_called_with("document_query_processed", pytest.any(dict))
 
             call_args = mock_log_collector.log_business_event.call_args
             event_data = call_args[0][1]
@@ -182,6 +163,7 @@ class TestInterpreterLoggingIntegration:
         # This would typically be tested by checking the startup event
         # For now, we verify the logger_client is initialized
         from main import logger_client
+
         # logger_client will be None in tests unless startup event runs
         # This is expected behavior for testing
 
@@ -193,13 +175,13 @@ class TestInterpreterLoggingIntegration:
         results = []
 
         def make_request(request_id):
-            response = client.post("/documents/sample/context", json={
-                "query": f"concurrent query {request_id}",
-                "request_id": f"test_req_{request_id}"
-            })
+            response = client.post(
+                "/documents/sample/context",
+                json={"query": f"concurrent query {request_id}", "request_id": f"test_req_{request_id}"},
+            )
             results.append(response.json())
 
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = []
 
             # Make concurrent requests
@@ -223,18 +205,16 @@ class TestInterpreterLoggingIntegration:
             ("simple", "simple query"),
             ("complex", "this is a much longer and more complex query with many words"),
             ("simple", "api docs"),
-            ("complex", "find all documentation related to user authentication and authorization patterns")
+            ("complex", "find all documentation related to user authentication and authorization patterns"),
         ]
 
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = []
 
             for expected_complexity, query in test_cases:
                 mock_log_collector.reset_mock()
 
-                response = client.post("/documents/sample/context", json={
-                    "query": query
-                })
+                response = client.post("/documents/sample/context", json={"query": query})
 
                 assert response.status_code == 200
 
@@ -251,13 +231,11 @@ class TestInterpreterServiceMetrics:
 
     def test_response_time_tracking(self, client):
         """Test that response times are properly tracked."""
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = []
 
             start_time = time.time()
-            response = client.post("/documents/sample/context", json={
-                "query": "timing test"
-            })
+            response = client.post("/documents/sample/context", json={"query": "timing test"})
             end_time = time.time()
 
             assert response.status_code == 200
@@ -270,16 +248,14 @@ class TestInterpreterServiceMetrics:
 
     def test_document_statistics_tracking(self, client, mock_log_collector):
         """Test that document statistics are tracked."""
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = [
                 {"type": "api_docs", "category": "reference", "title": "API Reference"},
                 {"type": "api_docs", "category": "reference", "title": "API Guide"},
                 {"type": "jira", "category": "issue", "title": "Bug Report"},
             ]
 
-            response = client.post("/documents/sample/context", json={
-                "query": "api documentation"
-            })
+            response = client.post("/documents/sample/context", json={"query": "api documentation"})
 
             assert response.status_code == 200
             data = response.json()
@@ -297,7 +273,7 @@ class TestInterpreterServiceMetrics:
             {"query": "test with empty context", "context": {}},
         ]
 
-        with patch('main.sample_documents') as mock_sample_docs:
+        with patch("main.sample_documents") as mock_sample_docs:
             mock_sample_docs.get_documents_for_query.return_value = []
 
             for query_data in test_cases:
@@ -331,19 +307,15 @@ class TestInterpreterServiceMetrics:
         success_count = 0
 
         for should_succeed, query in test_cases:
-            with patch('main.sample_documents') as mock_sample_docs:
+            with patch("main.sample_documents") as mock_sample_docs:
                 if should_succeed:
-                    mock_sample_docs.get_documents_for_query.return_value = [
-                        {"type": "api_docs", "content": "test"}
-                    ]
+                    mock_sample_docs.get_documents_for_query.return_value = [{"type": "api_docs", "content": "test"}]
                     success_count += 1
                 else:
                     mock_sample_docs.get_documents_for_query.side_effect = Exception("Test error")
                     error_count += 1
 
-                response = client.post("/documents/sample/context", json={
-                    "query": query
-                })
+                response = client.post("/documents/sample/context", json={"query": query})
 
                 # All requests should return 200 (errors in response body)
                 assert response.status_code == 200
@@ -361,22 +333,21 @@ class TestInterpreterLoggingConfiguration:
 
         # In test environment, logger_client might be None if startup didn't run
         # This is expected behavior
-        assert logger_client is None or hasattr(logger_client, 'log_info')
+        assert logger_client is None or hasattr(logger_client, "log_info")
 
     def test_graceful_degradation_without_logger(self, client):
         """Test that service works even when logger is unavailable."""
         # Temporarily set logger_client to None
-        from main import logger_client as original_logger
         import main
+        from main import logger_client as original_logger
+
         main.logger_client = None
 
         try:
-            with patch('main.sample_documents') as mock_sample_docs:
+            with patch("main.sample_documents") as mock_sample_docs:
                 mock_sample_docs.get_documents_for_query.return_value = []
 
-                response = client.post("/documents/sample/context", json={
-                    "query": "test query"
-                })
+                response = client.post("/documents/sample/context", json={"query": "test query"})
 
                 # Should still work without logger
                 assert response.status_code == 200
@@ -392,6 +363,7 @@ class TestInterpreterLoggingConfiguration:
         # This tests the import fallback logic
         try:
             from services.shared.utilities.logging_client import get_log_collector_client
+
             # If import succeeds, client should be available
             client_available = True
         except ImportError:

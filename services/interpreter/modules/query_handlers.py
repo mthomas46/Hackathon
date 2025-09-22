@@ -2,17 +2,18 @@
 
 Handles the complex logic for query interpretation and execution endpoints.
 """
-import time
-from typing import Dict, Any
 
+import time
+from typing import Any, Dict
+
+from .intent_recognizer import IntentRecognizer
 from .models import InterpretedIntent, InterpretedWorkflow, WorkflowStep
 from .shared_utils import (
-    validate_user_query,
     build_interpreter_context,
+    create_interpreter_success_response,
     log_interpretation_metrics,
-    create_interpreter_success_response
+    validate_user_query,
 )
-from .intent_recognizer import IntentRecognizer
 from .workflow_builder import WorkflowBuilder
 
 
@@ -40,8 +41,9 @@ class QueryHandlers:
                 try:
                     workflow = await self.workflow_builder.build_workflow(intent, entities)
                 except Exception as e:
-                    from services.shared.monitoring.logging import fire_and_forget
                     from services.shared.core.constants_new import ServiceNames
+                    from services.shared.monitoring.logging import fire_and_forget
+
                     fire_and_forget("error", f"Workflow build error: {e}", ServiceNames.INTERPRETER)
 
             # Generate response text
@@ -56,7 +58,7 @@ class QueryHandlers:
                 confidence=confidence,
                 entities=entities,
                 workflow=workflow.dict() if workflow else None,
-                response_text=response_text
+                response_text=response_text,
             )
 
         except Exception as e:
@@ -64,10 +66,9 @@ class QueryHandlers:
             log_interpretation_metrics(query.query, "error", 0.0, processing_time)
 
             from .shared_utils import handle_interpreter_error
+
             raise handle_interpreter_error(
-                "interpret query",
-                e,
-                **build_interpreter_context("interpret", query_length=len(query.query))
+                "interpret query", e, **build_interpreter_context("interpret", query_length=len(query.query))
             )
 
     async def handle_execute_workflow(self, query) -> Dict[str, Any]:
@@ -82,31 +83,24 @@ class QueryHandlers:
                     {
                         "status": "no_workflow",
                         "message": "Could not generate a workflow for this query",
-                        "interpretation": interpretation.dict()
+                        "interpretation": interpretation.dict(),
                     },
-                    **build_interpreter_context("execute_no_workflow")
+                    **build_interpreter_context("execute_no_workflow"),
                 )
 
             # Execute the workflow
             workflow_data = interpretation.workflow
             results = []
             from .shared_utils import get_interpreter_clients
+
             clients = get_interpreter_clients()
 
             for step in workflow_data.get("steps", []):
                 try:
                     result = await self._execute_workflow_step(step, clients)
-                    results.append({
-                        "step_id": step["step_id"],
-                        "status": "success",
-                        "result": result
-                    })
+                    results.append({"step_id": step["step_id"], "status": "success", "result": result})
                 except Exception as e:
-                    results.append({
-                        "step_id": step["step_id"],
-                        "status": "error",
-                        "error": str(e)
-                    })
+                    results.append({"step_id": step["step_id"], "status": "error", "error": str(e)})
 
             return create_interpreter_success_response(
                 "workflow executed",
@@ -114,23 +108,21 @@ class QueryHandlers:
                     "status": "completed",
                     "workflow_id": workflow_data.get("workflow_id"),
                     "results": results,
-                    "interpretation": interpretation.dict()
+                    "interpretation": interpretation.dict(),
                 },
-                **build_interpreter_context("execute_workflow", step_count=len(results))
+                **build_interpreter_context("execute_workflow", step_count=len(results)),
             )
 
         except Exception as e:
             from .shared_utils import handle_interpreter_error
-            raise handle_interpreter_error(
-                "execute workflow",
-                e,
-                **build_interpreter_context("execute_error")
-            )
+
+            raise handle_interpreter_error("execute workflow", e, **build_interpreter_context("execute_error"))
 
     async def _execute_workflow_step(self, step: Dict[str, Any], clients=None) -> Any:
         """Execute a single workflow step."""
         if clients is None:
             from .shared_utils import get_interpreter_clients
+
             clients = get_interpreter_clients()
 
         service = step["service"]
@@ -167,14 +159,15 @@ class QueryHandlers:
 
         # Default: return success for unknown services/actions
         from services.shared.core.responses.responses import create_success_response
+
         return create_success_response(
-            "Workflow step executed successfully",
-            {"service": service, "action": action, "parameters": parameters}
+            "Workflow step executed successfully", {"service": service, "action": action, "parameters": parameters}
         )
 
     def _generate_response_text(self, intent: str, confidence: float, entities: Dict[str, Any], workflow) -> str:
         """Generate human-readable response text based on interpretation."""
         from .shared_utils import generate_response_text
+
         return generate_response_text(intent, confidence, entities, workflow)
 
 
