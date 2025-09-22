@@ -4,21 +4,15 @@ Provides interactive management of architecture diagram digitization,
 supporting both API-based fetching and file upload processing.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from ...base.base_manager import BaseManager
-from ...shared_utils import (
-    
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...shared_utils import add_menu_rows, create_menu_table, get_cli_clients, log_cli_metrics, print_panel
 
 
 class ArchitectureDigitizerManager(BaseManager):
@@ -33,11 +27,7 @@ class ArchitectureDigitizerManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for architecture digitizer operations."""
-        return [
-            ("1", "Architecture Analysis"),
-            ("2", "System Modeling"),
-            ("3", "Documentation Generation")
-        ]
+        return [("1", "Architecture Analysis"), ("2", "System Modeling"), ("3", "Documentation Generation")]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -48,14 +38,17 @@ class ArchitectureDigitizerManager(BaseManager):
         """Main architecture digitizer menu."""
         while True:
             menu = create_menu_table("Architecture Digitizer", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Normalize from API (Miro, FigJam, Lucid, Confluence)"),
-                ("2", "Upload & Normalize File"),
-                ("3", "View Supported Systems"),
-                ("4", "View Supported File Formats"),
-                ("5", "View Digitization History"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Normalize from API (Miro, FigJam, Lucid, Confluence)"),
+                    ("2", "Upload & Normalize File"),
+                    ("3", "View Supported Systems"),
+                    ("4", "View Supported File Formats"),
+                    ("5", "View Digitization History"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -85,13 +78,16 @@ class ArchitectureDigitizerManager(BaseManager):
             systems = await self._get_supported_systems()
 
             menu = create_menu_table("Normalize from API", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Miro Board"),
-                ("2", "Figma FigJam"),
-                ("3", "Lucidchart"),
-                ("4", "Confluence Page"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Miro Board"),
+                    ("2", "Figma FigJam"),
+                    ("3", "Lucidchart"),
+                    ("4", "Confluence Page"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select system[/bold green]")
@@ -121,11 +117,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
         try:
             with self.console.status("[bold green]Normalizing Miro board...") as status:
-                response = await self.clients.post_json("architecture-digitizer/normalize", {
-                    "system": "miro",
-                    "board_id": board_id,
-                    "token": token
-                })
+                response = await self.clients.post_json(
+                    "architecture-digitizer/normalize", {"system": "miro", "board_id": board_id, "token": token}
+                )
 
             self._display_normalization_result(response)
 
@@ -144,11 +138,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
         try:
             with self.console.status("[bold green]Normalizing FigJam board...") as status:
-                response = await self.clients.post_json("architecture-digitizer/normalize", {
-                    "system": "figjam",
-                    "board_id": board_id,
-                    "token": token
-                })
+                response = await self.clients.post_json(
+                    "architecture-digitizer/normalize", {"system": "figjam", "board_id": board_id, "token": token}
+                )
 
             self._display_normalization_result(response)
 
@@ -167,11 +159,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
         try:
             with self.console.status("[bold green]Normalizing Lucid document...") as status:
-                response = await self.clients.post_json("architecture-digitizer/normalize", {
-                    "system": "lucid",
-                    "board_id": board_id,
-                    "token": token
-                })
+                response = await self.clients.post_json(
+                    "architecture-digitizer/normalize", {"system": "lucid", "board_id": board_id, "token": token}
+                )
 
             self._display_normalization_result(response)
 
@@ -190,11 +180,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
         try:
             with self.console.status("[bold green]Normalizing Confluence page...") as status:
-                response = await self.clients.post_json("architecture-digitizer/normalize", {
-                    "system": "confluence",
-                    "board_id": page_id,
-                    "token": token
-                })
+                response = await self.clients.post_json(
+                    "architecture-digitizer/normalize", {"system": "confluence", "board_id": page_id, "token": token}
+                )
 
             self._display_normalization_result(response)
 
@@ -208,13 +196,16 @@ class ArchitectureDigitizerManager(BaseManager):
             systems = await self._get_supported_systems()
 
             menu = create_menu_table("Upload & Normalize File", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Upload Miro Export (JSON)"),
-                ("2", "Upload FigJam Export (JSON)"),
-                ("3", "Upload Lucid Export (JSON)"),
-                ("4", "Upload Confluence Export (XML/HTML)"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Upload Miro Export (JSON)"),
+                    ("2", "Upload FigJam Export (JSON)"),
+                    ("3", "Upload Lucid Export (JSON)"),
+                    ("4", "Upload Confluence Export (XML/HTML)"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select system[/bold green]")
@@ -224,7 +215,7 @@ class ArchitectureDigitizerManager(BaseManager):
                     "1": ("miro", "json"),
                     "2": ("figjam", "json"),
                     "3": ("lucid", "json"),
-                    "4": ("confluence", "xml")
+                    "4": ("confluence", "xml"),
                 }
                 system, file_format = system_map[choice]
                 await self.upload_and_normalize_file(system, file_format)
@@ -254,7 +245,7 @@ class ArchitectureDigitizerManager(BaseManager):
 
         try:
             # Read file content
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 file_content = f.read()
 
             with self.console.status(f"[bold green]Uploading and normalizing {system} file...") as status:
@@ -263,9 +254,9 @@ class ArchitectureDigitizerManager(BaseManager):
                 from aiohttp import FormData
 
                 data = FormData()
-                data.add_field('file', file_content, filename=os.path.basename(file_path))
-                data.add_field('system', system)
-                data.add_field('file_format', file_format)
+                data.add_field("file", file_content, filename=os.path.basename(file_path))
+                data.add_field("system", system)
+                data.add_field("file_format", file_format)
 
                 # Use raw HTTP client for multipart upload
                 async with aiohttp.ClientSession() as session:
@@ -294,9 +285,7 @@ class ArchitectureDigitizerManager(BaseManager):
 
             for system in response.get("systems", []):
                 table.add_row(
-                    system.get("name", "").title(),
-                    system.get("description", ""),
-                    system.get("auth_type", "")
+                    system.get("name", "").title(), system.get("description", ""), system.get("auth_type", "")
                 )
 
             self.console.print(table)
@@ -323,7 +312,7 @@ class ArchitectureDigitizerManager(BaseManager):
                             system.title(),
                             fmt.get("format", "").upper(),
                             fmt.get("description", ""),
-                            fmt.get("export_method", "")
+                            fmt.get("export_method", ""),
                         )
                 except Exception:
                     # If API call fails, continue with next system
@@ -406,8 +395,8 @@ class ArchitectureDigitizerManager(BaseManager):
         # Try cache first
         if cache_key in self.cache:
             cached = self.cache[cache_key]
-            if time.time() - cached['timestamp'] < 300:  # 5 min TTL
-                return cached['data']
+            if time.time() - cached["timestamp"] < 300:  # 5 min TTL
+                return cached["data"]
 
         # Fetch from API
         try:
@@ -415,10 +404,7 @@ class ArchitectureDigitizerManager(BaseManager):
             systems = [s.get("name") for s in response.get("systems", [])]
 
             # Cache result
-            self.cache[cache_key] = {
-                'data': systems,
-                'timestamp': time.time()
-            }
+            self.cache[cache_key] = {"data": systems, "timestamp": time.time()}
 
             return systems
         except Exception:
@@ -426,6 +412,7 @@ class ArchitectureDigitizerManager(BaseManager):
             return ["miro", "figjam", "lucid", "confluence"]
 
 
+import os
+
 # Import time for timestamp operations
 import time
-import os

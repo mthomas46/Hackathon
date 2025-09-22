@@ -4,11 +4,12 @@ Provides power-user operations for bulk processing across multiple services
 including mass analysis, notifications, quality recalculations, and data operations.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from ...base.base_manager import BaseManager
 
@@ -27,7 +28,7 @@ class BulkOperationsManager(BaseManager):
             ("3", "Batch Notifications"),
             ("4", "Bulk Data Operations"),
             ("5", "Cross-Service Workflows"),
-            ("6", "Bulk Reporting")
+            ("6", "Bulk Reporting"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -52,14 +53,17 @@ class BulkOperationsManager(BaseManager):
         """Mass document analysis submenu."""
         while True:
             menu = create_menu_table("Mass Document Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Analyze All Documents"),
-                ("2", "Analyze by Quality Score"),
-                ("3", "Analyze by Document Type"),
-                ("4", "Analyze Recently Modified"),
-                ("5", "Custom Analysis Criteria"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Analyze All Documents"),
+                    ("2", "Analyze by Quality Score"),
+                    ("3", "Analyze by Document Type"),
+                    ("4", "Analyze Recently Modified"),
+                    ("5", "Custom Analysis Criteria"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -82,18 +86,22 @@ class BulkOperationsManager(BaseManager):
     async def analyze_all_documents(self):
         """Analyze all documents."""
         try:
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]",
-                                     choices=["quality", "consistency", "security", "all"], default="quality")
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "security", "all"],
+                default="quality",
+            )
             batch_size = Prompt.ask("[bold cyan]Batch size[/bold cyan]", default="50")
 
-            confirm = Confirm.ask(f"[bold yellow]This will analyze ALL documents with {analysis_type} analysis in batches of {batch_size}. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will analyze ALL documents with {analysis_type} analysis in batches of {batch_size}. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting mass {analysis_type} analysis...") as status:
-                    response = await self.clients.post_json("bulk/analysis/all", {
-                        "analysis_type": analysis_type,
-                        "batch_size": int(batch_size)
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/analysis/all", {"analysis_type": analysis_type, "batch_size": int(batch_size)}
+                    )
 
                 if response.get("bulk_analysis_id"):
                     analysis_id = response["bulk_analysis_id"]
@@ -115,18 +123,22 @@ class BulkOperationsManager(BaseManager):
         try:
             min_score = float(Prompt.ask("[bold cyan]Minimum quality score[/bold cyan]", default="0"))
             max_score = float(Prompt.ask("[bold cyan]Maximum quality score[/bold cyan]", default="5"))
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]",
-                                     choices=["quality", "consistency", "security"], default="consistency")
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "security"],
+                default="consistency",
+            )
 
-            confirm = Confirm.ask(f"[bold yellow]This will analyze documents with quality scores between {min_score} and {max_score}. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will analyze documents with quality scores between {min_score} and {max_score}. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting quality-based {analysis_type} analysis...") as status:
-                    response = await self.clients.post_json("bulk/analysis/quality", {
-                        "min_quality": min_score,
-                        "max_quality": max_score,
-                        "analysis_type": analysis_type
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/analysis/quality",
+                        {"min_quality": min_score, "max_quality": max_score, "analysis_type": analysis_type},
+                    )
 
                 if response.get("bulk_analysis_id"):
                     analysis_id = response["bulk_analysis_id"]
@@ -145,20 +157,26 @@ class BulkOperationsManager(BaseManager):
     async def analyze_by_type(self):
         """Analyze documents by type."""
         try:
-            doc_types = Prompt.ask("[bold cyan]Document types (comma-separated)[/bold cyan]", default="article,documentation")
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]",
-                                     choices=["quality", "consistency", "security"], default="quality")
+            doc_types = Prompt.ask(
+                "[bold cyan]Document types (comma-separated)[/bold cyan]", default="article,documentation"
+            )
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "security"],
+                default="quality",
+            )
 
             type_list = [t.strip() for t in doc_types.split(",")]
 
-            confirm = Confirm.ask(f"[bold yellow]This will analyze all {', '.join(type_list)} documents. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will analyze all {', '.join(type_list)} documents. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting type-based {analysis_type} analysis...") as status:
-                    response = await self.clients.post_json("bulk/analysis/type", {
-                        "document_types": type_list,
-                        "analysis_type": analysis_type
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/analysis/type", {"document_types": type_list, "analysis_type": analysis_type}
+                    )
 
                 if response.get("bulk_analysis_id"):
                     analysis_id = response["bulk_analysis_id"]
@@ -178,17 +196,21 @@ class BulkOperationsManager(BaseManager):
         """Analyze recently modified documents."""
         try:
             hours = int(Prompt.ask("[bold cyan]Modified within (hours)[/bold cyan]", default="24"))
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]",
-                                     choices=["quality", "consistency", "security"], default="quality")
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "security"],
+                default="quality",
+            )
 
-            confirm = Confirm.ask(f"[bold yellow]This will analyze documents modified within the last {hours} hours. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will analyze documents modified within the last {hours} hours. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting recent document {analysis_type} analysis...") as status:
-                    response = await self.clients.post_json("bulk/analysis/recent", {
-                        "hours": hours,
-                        "analysis_type": analysis_type
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/analysis/recent", {"hours": hours, "analysis_type": analysis_type}
+                    )
 
                 if response.get("bulk_analysis_id"):
                     analysis_id = response["bulk_analysis_id"]
@@ -207,22 +229,28 @@ class BulkOperationsManager(BaseManager):
     async def analyze_custom_criteria(self):
         """Analyze documents with custom criteria."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Selection criteria (JSON)[/bold cyan]",
-                                      default='{"metadata.tags": {"$exists": true}}')
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]",
-                                     choices=["quality", "consistency", "security"], default="quality")
+            criteria_input = Prompt.ask(
+                "[bold cyan]Selection criteria (JSON)[/bold cyan]", default='{"metadata.tags": {"$exists": true}}'
+            )
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "security"],
+                default="quality",
+            )
 
             import json
+
             criteria = json.loads(criteria_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will analyze documents matching custom criteria. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will analyze documents matching custom criteria. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting custom criteria {analysis_type} analysis...") as status:
-                    response = await self.clients.post_json("bulk/analysis/custom", {
-                        "criteria": criteria,
-                        "analysis_type": analysis_type
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/analysis/custom", {"criteria": criteria, "analysis_type": analysis_type}
+                    )
 
                 if response.get("bulk_analysis_id"):
                     analysis_id = response["bulk_analysis_id"]
@@ -242,13 +270,16 @@ class BulkOperationsManager(BaseManager):
         """Bulk quality recalculation submenu."""
         while True:
             menu = create_menu_table("Bulk Quality Recalculation", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Recalculate All Documents"),
-                ("2", "Recalculate by Type"),
-                ("3", "Recalculate Low-Quality Only"),
-                ("4", "Recalculate Custom Criteria"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Recalculate All Documents"),
+                    ("2", "Recalculate by Type"),
+                    ("3", "Recalculate Low-Quality Only"),
+                    ("4", "Recalculate Custom Criteria"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -269,7 +300,9 @@ class BulkOperationsManager(BaseManager):
     async def recalculate_all_quality(self):
         """Recalculate quality for all documents."""
         try:
-            confirm = Confirm.ask("[bold red]This will recalculate quality scores for ALL documents. This is a heavy operation. Continue?[/bold red]")
+            confirm = Confirm.ask(
+                "[bold red]This will recalculate quality scores for ALL documents. This is a heavy operation. Continue?[/bold red]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Starting bulk quality recalculation...") as status:
@@ -292,17 +325,21 @@ class BulkOperationsManager(BaseManager):
     async def recalculate_by_type(self):
         """Recalculate quality by document type."""
         try:
-            doc_types = Prompt.ask("[bold cyan]Document types (comma-separated)[/bold cyan]", default="article,documentation")
+            doc_types = Prompt.ask(
+                "[bold cyan]Document types (comma-separated)[/bold cyan]", default="article,documentation"
+            )
 
             type_list = [t.strip() for t in doc_types.split(",")]
 
-            confirm = Confirm.ask(f"[bold yellow]This will recalculate quality for {', '.join(type_list)} documents. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will recalculate quality for {', '.join(type_list)} documents. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting type-based quality recalculation...") as status:
-                    response = await self.clients.post_json("bulk/quality/recalculate/type", {
-                        "document_types": type_list
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/quality/recalculate/type", {"document_types": type_list}
+                    )
 
                 if response.get("bulk_operation_id"):
                     operation_id = response["bulk_operation_id"]
@@ -323,13 +360,15 @@ class BulkOperationsManager(BaseManager):
         try:
             threshold = float(Prompt.ask("[bold cyan]Quality threshold[/bold cyan]", default="5.0"))
 
-            confirm = Confirm.ask(f"[bold yellow]This will recalculate quality for documents with scores below {threshold}. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will recalculate quality for documents with scores below {threshold}. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting low-quality document recalculation...") as status:
-                    response = await self.clients.post_json("bulk/quality/recalculate/low", {
-                        "quality_threshold": threshold
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/quality/recalculate/low", {"quality_threshold": threshold}
+                    )
 
                 if response.get("bulk_operation_id"):
                     operation_id = response["bulk_operation_id"]
@@ -348,19 +387,21 @@ class BulkOperationsManager(BaseManager):
     async def recalculate_custom_criteria(self):
         """Recalculate quality with custom criteria."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Selection criteria (JSON)[/bold cyan]",
-                                      default='{"updated_at": {"$lt": "2024-01-01"}}')
+            criteria_input = Prompt.ask(
+                "[bold cyan]Selection criteria (JSON)[/bold cyan]", default='{"updated_at": {"$lt": "2024-01-01"}}'
+            )
 
             import json
+
             criteria = json.loads(criteria_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will recalculate quality for documents matching custom criteria. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will recalculate quality for documents matching custom criteria. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Starting custom criteria quality recalculation...") as status:
-                    response = await self.clients.post_json("bulk/quality/recalculate/custom", {
-                        "criteria": criteria
-                    })
+                    response = await self.clients.post_json("bulk/quality/recalculate/custom", {"criteria": criteria})
 
                 if response.get("bulk_operation_id"):
                     operation_id = response["bulk_operation_id"]
@@ -380,13 +421,16 @@ class BulkOperationsManager(BaseManager):
         """Batch notifications submenu."""
         while True:
             menu = create_menu_table("Batch Notifications", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Notify Document Owners"),
-                ("2", "Send Bulk Alerts"),
-                ("3", "Notification Templates"),
-                ("4", "Notification History"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Notify Document Owners"),
+                    ("2", "Send Bulk Alerts"),
+                    ("3", "Notification Templates"),
+                    ("4", "Notification History"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -409,22 +453,26 @@ class BulkOperationsManager(BaseManager):
     async def notify_document_owners(self):
         """Notify document owners."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Document selection criteria (JSON)[/bold cyan]",
-                                      default='{"quality_score": {"$lt": 3}}')
-            message = Prompt.ask("[bold cyan]Notification message[/bold cyan]",
-                               default="Your document quality score needs improvement.")
+            criteria_input = Prompt.ask(
+                "[bold cyan]Document selection criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 3}}'
+            )
+            message = Prompt.ask(
+                "[bold cyan]Notification message[/bold cyan]", default="Your document quality score needs improvement."
+            )
 
             import json
+
             criteria = json.loads(criteria_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will notify owners of documents matching the criteria. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will notify owners of documents matching the criteria. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Sending owner notifications...") as status:
-                    response = await self.clients.post_json("bulk/notifications/owners", {
-                        "criteria": criteria,
-                        "message": message
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/notifications/owners", {"criteria": criteria, "message": message}
+                    )
 
                 if response.get("notification_batch_id"):
                     batch_id = response["notification_batch_id"]
@@ -445,20 +493,22 @@ class BulkOperationsManager(BaseManager):
             recipients_input = Prompt.ask("[bold cyan]Recipients (comma-separated emails)[/bold cyan]")
             subject = Prompt.ask("[bold cyan]Alert subject[/bold cyan]")
             message = Prompt.ask("[bold cyan]Alert message[/bold cyan]")
-            priority = Prompt.ask("[bold cyan]Priority[/bold cyan]", choices=["low", "medium", "high", "critical"], default="medium")
+            priority = Prompt.ask(
+                "[bold cyan]Priority[/bold cyan]", choices=["low", "medium", "high", "critical"], default="medium"
+            )
 
             recipients = [email.strip() for email in recipients_input.split(",")]
 
-            confirm = Confirm.ask(f"[bold yellow]This will send alerts to {len(recipients)} recipients. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will send alerts to {len(recipients)} recipients. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Sending bulk alerts...") as status:
-                    response = await self.clients.post_json("bulk/notifications/alerts", {
-                        "recipients": recipients,
-                        "subject": subject,
-                        "message": message,
-                        "priority": priority
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/notifications/alerts",
+                        {"recipients": recipients, "subject": subject, "message": message, "priority": priority},
+                    )
 
                 if response.get("alert_batch_id"):
                     batch_id = response["alert_batch_id"]
@@ -490,7 +540,7 @@ class BulkOperationsManager(BaseManager):
                         template.get("id", "N/A")[:8],
                         template.get("name", "unknown"),
                         template.get("type", "unknown"),
-                        template.get("description", "No description")[:50]
+                        template.get("description", "No description")[:50],
                     )
 
                 self.console.print(table)
@@ -517,18 +567,16 @@ class BulkOperationsManager(BaseManager):
                 table.add_column("Sent", style="blue")
 
                 for notification in response["notifications"]:
-                    status_color = {
-                        "sent": "green",
-                        "pending": "yellow",
-                        "failed": "red"
-                    }.get(notification.get("status", "unknown"), "white")
+                    status_color = {"sent": "green", "pending": "yellow", "failed": "red"}.get(
+                        notification.get("status", "unknown"), "white"
+                    )
 
                     table.add_row(
                         notification.get("id", "N/A")[:8],
                         notification.get("type", "unknown"),
                         str(notification.get("recipient_count", 0)),
                         f"[{status_color}]{notification.get('status', 'unknown')}[/{status_color}]",
-                        notification.get("sent_at", "unknown")[:19]
+                        notification.get("sent_at", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -542,14 +590,17 @@ class BulkOperationsManager(BaseManager):
         """Bulk data operations submenu."""
         while True:
             menu = create_menu_table("Bulk Data Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Bulk Export Documents"),
-                ("2", "Bulk Import Documents"),
-                ("3", "Bulk Update Metadata"),
-                ("4", "Bulk Delete Documents"),
-                ("5", "Data Migration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Bulk Export Documents"),
+                    ("2", "Bulk Import Documents"),
+                    ("3", "Bulk Update Metadata"),
+                    ("4", "Bulk Delete Documents"),
+                    ("5", "Data Migration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -573,28 +624,30 @@ class BulkOperationsManager(BaseManager):
         """Bulk export documents."""
         try:
             criteria_input = Prompt.ask("[bold cyan]Export criteria (JSON)[/bold cyan]", default="{}")
-            format_type = Prompt.ask("[bold cyan]Export format[/bold cyan]",
-                                   choices=["json", "csv", "xml", "markdown"], default="json")
+            format_type = Prompt.ask(
+                "[bold cyan]Export format[/bold cyan]", choices=["json", "csv", "xml", "markdown"], default="json"
+            )
             filename = Prompt.ask("[bold cyan]Output filename[/bold cyan]")
 
             import json
+
             criteria = json.loads(criteria_input)
 
             confirm = Confirm.ask(f"[bold yellow]This will export documents to {filename}. Continue?[/bold yellow]")
 
             if confirm:
                 with self.console.status(f"[bold green]Exporting documents to {filename}...") as status:
-                    response = await self.clients.post_json("bulk/data/export", {
-                        "criteria": criteria,
-                        "format": format_type,
-                        "filename": filename
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/data/export", {"criteria": criteria, "format": format_type, "filename": filename}
+                    )
 
                 if response.get("export_id"):
                     export_id = response["export_id"]
                     self.console.print(f"[green]✅ Bulk export started: {export_id}[/green]")
                     self.console.print(f"[yellow]Documents to export: {response.get('document_count', 0)}[/yellow]")
-                    self.console.print(f"[yellow]Estimated file size: {response.get('estimated_size_mb', 0):.2f} MB[/yellow]")
+                    self.console.print(
+                        f"[yellow]Estimated file size: {response.get('estimated_size_mb', 0):.2f} MB[/yellow]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to start bulk export[/red]")
             else:
@@ -607,19 +660,19 @@ class BulkOperationsManager(BaseManager):
         """Bulk import documents."""
         try:
             filename = Prompt.ask("[bold cyan]Import file path[/bold cyan]")
-            format_type = Prompt.ask("[bold cyan]Import format[/bold cyan]",
-                                   choices=["json", "csv", "xml", "markdown"], default="json")
+            format_type = Prompt.ask(
+                "[bold cyan]Import format[/bold cyan]", choices=["json", "csv", "xml", "markdown"], default="json"
+            )
             update_existing = Confirm.ask("[bold cyan]Update existing documents?[/bold cyan]", default=False)
 
             confirm = Confirm.ask(f"[bold yellow]This will import documents from {filename}. Continue?[/bold yellow]")
 
             if confirm:
                 with self.console.status(f"[bold green]Importing documents from {filename}...") as status:
-                    response = await self.clients.post_json("bulk/data/import", {
-                        "filename": filename,
-                        "format": format_type,
-                        "update_existing": update_existing
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/data/import",
+                        {"filename": filename, "format": format_type, "update_existing": update_existing},
+                    )
 
                 if response.get("import_id"):
                     import_id = response["import_id"]
@@ -641,17 +694,19 @@ class BulkOperationsManager(BaseManager):
             updates_input = Prompt.ask("[bold cyan]Metadata updates (JSON)[/bold cyan]")
 
             import json
+
             criteria = json.loads(criteria_input)
             updates = json.loads(updates_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will update metadata for documents matching the criteria. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will update metadata for documents matching the criteria. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Updating document metadata...") as status:
-                    response = await self.clients.post_json("bulk/data/update-metadata", {
-                        "criteria": criteria,
-                        "updates": updates
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/data/update-metadata", {"criteria": criteria, "updates": updates}
+                    )
 
                 if response.get("update_id"):
                     update_id = response["update_id"]
@@ -668,23 +723,27 @@ class BulkOperationsManager(BaseManager):
     async def bulk_delete_documents(self):
         """Bulk delete documents."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Deletion criteria (JSON)[/bold cyan]",
-                                      default='{"quality_score": {"$lt": 2}}')
+            criteria_input = Prompt.ask(
+                "[bold cyan]Deletion criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 2}}'
+            )
 
             import json
+
             criteria = json.loads(criteria_input)
 
-            confirm = Confirm.ask(f"[bold red]This will PERMANENTLY DELETE documents matching the criteria. Continue?[/bold red]")
+            confirm = Confirm.ask(
+                f"[bold red]This will PERMANENTLY DELETE documents matching the criteria. Continue?[/bold red]"
+            )
 
             if confirm:
                 # Double confirmation for destructive operation
-                double_confirm = Confirm.ask("[bold red]ARE YOU ABSOLUTELY SURE? This action cannot be undone![/bold red]")
+                double_confirm = Confirm.ask(
+                    "[bold red]ARE YOU ABSOLUTELY SURE? This action cannot be undone![/bold red]"
+                )
 
                 if double_confirm:
                     with self.console.status("[bold green]Deleting documents...") as status:
-                        response = await self.clients.post_json("bulk/data/delete", {
-                            "criteria": criteria
-                        })
+                        response = await self.clients.post_json("bulk/data/delete", {"criteria": criteria})
 
                     if response.get("delete_id"):
                         delete_id = response["delete_id"]
@@ -705,23 +764,29 @@ class BulkOperationsManager(BaseManager):
         """Data migration operations."""
         try:
             source_criteria_input = Prompt.ask("[bold cyan]Source selection criteria (JSON)[/bold cyan]")
-            target_service = Prompt.ask("[bold cyan]Target service[/bold cyan]",
-                                      choices=["doc_store", "analysis-service", "external"])
-            migration_type = Prompt.ask("[bold cyan]Migration type[/bold cyan]",
-                                      choices=["copy", "move", "transform"], default="copy")
+            target_service = Prompt.ask(
+                "[bold cyan]Target service[/bold cyan]", choices=["doc_store", "analysis-service", "external"]
+            )
+            migration_type = Prompt.ask(
+                "[bold cyan]Migration type[/bold cyan]", choices=["copy", "move", "transform"], default="copy"
+            )
 
             import json
+
             source_criteria = json.loads(source_criteria_input)
 
             confirm = Confirm.ask(f"[bold yellow]This will migrate data to {target_service}. Continue?[/bold yellow]")
 
             if confirm:
                 with self.console.status(f"[bold green]Starting data migration to {target_service}...") as status:
-                    response = await self.clients.post_json("bulk/data/migrate", {
-                        "source_criteria": source_criteria,
-                        "target_service": target_service,
-                        "migration_type": migration_type
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/data/migrate",
+                        {
+                            "source_criteria": source_criteria,
+                            "target_service": target_service,
+                            "migration_type": migration_type,
+                        },
+                    )
 
                 if response.get("migration_id"):
                     migration_id = response["migration_id"]
@@ -740,14 +805,17 @@ class BulkOperationsManager(BaseManager):
         """Cross-service workflows submenu."""
         while True:
             menu = create_menu_table("Cross-Service Workflows", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Document Processing Pipeline"),
-                ("2", "Quality Assurance Workflow"),
-                ("3", "Content Synchronization"),
-                ("4", "Automated Reporting Chain"),
-                ("5", "Custom Workflow Builder"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Document Processing Pipeline"),
+                    ("2", "Quality Assurance Workflow"),
+                    ("3", "Content Synchronization"),
+                    ("4", "Automated Reporting Chain"),
+                    ("5", "Custom Workflow Builder"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -775,11 +843,13 @@ class BulkOperationsManager(BaseManager):
                     {"service": "source-agent", "action": "fetch"},
                     {"service": "source-agent", "action": "normalize"},
                     {"service": "doc_store", "action": "store"},
-                    {"service": "analysis-service", "action": "analyze"}
+                    {"service": "analysis-service", "action": "analyze"},
                 ]
             }
 
-            confirm = Confirm.ask("[bold yellow]This will run the complete document processing pipeline. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                "[bold yellow]This will run the complete document processing pipeline. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Starting document processing pipeline...") as status:
@@ -800,13 +870,11 @@ class BulkOperationsManager(BaseManager):
     async def quality_assurance_workflow(self):
         """Quality assurance workflow."""
         try:
-            qa_config = {
-                "quality_threshold": 7.0,
-                "auto_fix": False,
-                "notification_enabled": True
-            }
+            qa_config = {"quality_threshold": 7.0, "auto_fix": False, "notification_enabled": True}
 
-            confirm = Confirm.ask("[bold yellow]This will run quality assurance on all documents. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                "[bold yellow]This will run quality assurance on all documents. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Starting quality assurance workflow...") as status:
@@ -831,7 +899,7 @@ class BulkOperationsManager(BaseManager):
             sync_config = {
                 "source_services": ["doc_store", "source-agent"],
                 "target_services": ["analysis-service", "search-index"],
-                "sync_mode": "incremental"
+                "sync_mode": "incremental",
             }
 
             confirm = Confirm.ask("[bold yellow]This will synchronize content across services. Continue?[/bold yellow]")
@@ -858,7 +926,7 @@ class BulkOperationsManager(BaseManager):
             reporting_config = {
                 "report_types": ["quality", "consistency", "usage"],
                 "schedule": "daily",
-                "recipients": []
+                "recipients": [],
             }
 
             confirm = Confirm.ask("[bold yellow]This will set up automated reporting. Continue?[/bold yellow]")
@@ -882,20 +950,24 @@ class BulkOperationsManager(BaseManager):
         """Custom workflow builder."""
         try:
             workflow_name = Prompt.ask("[bold cyan]Workflow name[/bold cyan]")
-            steps_input = Prompt.ask("[bold cyan]Workflow steps (JSON)[/bold cyan]",
-                                   default='[{"service": "doc_store", "action": "analyze"}]')
+            steps_input = Prompt.ask(
+                "[bold cyan]Workflow steps (JSON)[/bold cyan]",
+                default='[{"service": "doc_store", "action": "analyze"}]',
+            )
 
             import json
+
             steps = json.loads(steps_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will create a custom workflow '{workflow_name}'. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will create a custom workflow '{workflow_name}'. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Building custom workflow '{workflow_name}'...") as status:
-                    response = await self.clients.post_json("bulk/workflows/custom", {
-                        "name": workflow_name,
-                        "steps": steps
-                    })
+                    response = await self.clients.post_json(
+                        "bulk/workflows/custom", {"name": workflow_name, "steps": steps}
+                    )
 
                 if response.get("workflow_id"):
                     workflow_id = response["workflow_id"]
@@ -912,14 +984,17 @@ class BulkOperationsManager(BaseManager):
         """Bulk reporting submenu."""
         while True:
             menu = create_menu_table("Bulk Reporting", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Generate All Reports"),
-                ("2", "Quality Reports Batch"),
-                ("3", "Service Usage Reports"),
-                ("4", "Custom Report Generation"),
-                ("5", "Scheduled Report Setup"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Generate All Reports"),
+                    ("2", "Quality Reports Batch"),
+                    ("3", "Service Usage Reports"),
+                    ("4", "Custom Report Generation"),
+                    ("5", "Scheduled Report Setup"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -944,13 +1019,13 @@ class BulkOperationsManager(BaseManager):
         try:
             report_types = ["quality", "consistency", "usage", "performance", "error"]
 
-            confirm = Confirm.ask(f"[bold yellow]This will generate {len(report_types)} types of reports. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will generate {len(report_types)} types of reports. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Generating all reports...") as status:
-                    response = await self.clients.post_json("bulk/reports/generate-all", {
-                        "report_types": report_types
-                    })
+                    response = await self.clients.post_json("bulk/reports/generate-all", {"report_types": report_types})
 
                 if response.get("report_batch_id"):
                     batch_id = response["report_batch_id"]
@@ -967,10 +1042,7 @@ class BulkOperationsManager(BaseManager):
     async def quality_reports_batch(self):
         """Quality reports batch."""
         try:
-            quality_config = {
-                "metrics": ["overall", "by_type", "trends", "recommendations"],
-                "time_range": "30d"
-            }
+            quality_config = {"metrics": ["overall", "by_type", "trends", "recommendations"], "time_range": "30d"}
 
             confirm = Confirm.ask("[bold yellow]This will generate quality reports batch. Continue?[/bold yellow]")
 
@@ -995,7 +1067,7 @@ class BulkOperationsManager(BaseManager):
             usage_config = {
                 "services": ["all"],
                 "metrics": ["requests", "errors", "performance", "usage"],
-                "time_range": "7d"
+                "time_range": "7d",
             }
 
             confirm = Confirm.ask("[bold yellow]This will generate service usage reports. Continue?[/bold yellow]")
@@ -1018,10 +1090,13 @@ class BulkOperationsManager(BaseManager):
     async def custom_report_generation(self):
         """Custom report generation."""
         try:
-            report_config_input = Prompt.ask("[bold cyan]Report configuration (JSON)[/bold cyan]",
-                                           default='{"type": "custom", "metrics": ["quality"], "filters": {}}')
+            report_config_input = Prompt.ask(
+                "[bold cyan]Report configuration (JSON)[/bold cyan]",
+                default='{"type": "custom", "metrics": ["quality"], "filters": {}}',
+            )
 
             import json
+
             report_config = json.loads(report_config_input)
 
             confirm = Confirm.ask("[bold yellow]This will generate a custom report. Continue?[/bold yellow]")
@@ -1048,7 +1123,7 @@ class BulkOperationsManager(BaseManager):
                 "frequency": "daily",
                 "report_types": ["quality", "usage"],
                 "time": "09:00",
-                "recipients": []
+                "recipients": [],
             }
 
             confirm = Confirm.ask("[bold yellow]This will set up scheduled reports. Continue?[/bold yellow]")
@@ -1086,9 +1161,13 @@ class BulkOperationsManager(BaseManager):
                     if response.get("completed"):
                         status = response.get("status", "unknown")
                         if status == "success":
-                            self.console.print(f"[green]✅ {operation_type.title()} operation {operation_id} completed successfully![/green]")
+                            self.console.print(
+                                f"[green]✅ {operation_type.title()} operation {operation_id} completed successfully![/green]"
+                            )
                         else:
-                            self.console.print(f"[red]❌ {operation_type.title()} operation {operation_id} failed: {response.get('error', 'Unknown error')}[/red]")
+                            self.console.print(
+                                f"[red]❌ {operation_type.title()} operation {operation_id} failed: {response.get('error', 'Unknown error')}[/red]"
+                            )
                         break
                     else:
                         progress = response.get("progress", 0)

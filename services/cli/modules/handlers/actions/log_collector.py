@@ -1,9 +1,11 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import json
 from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Tuple
+
+from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
+
 from ...utils.display_helpers import print_kv, print_list
 
 
@@ -33,11 +35,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             except:
                 console.print("[yellow]⚠️  Invalid JSON context, ignoring[/yellow]")
 
-        payload = {
-            "service": service,
-            "level": level,
-            "message": message
-        }
+        payload = {"service": service, "level": level, "message": message}
         if context:
             payload["context"] = context
 
@@ -68,12 +66,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 console.print(f"[yellow]⚠️  Skipping empty message {i+1}[/yellow]")
                 continue
 
-            logs.append({
-                "service": service,
-                "level": level,
-                "message": message,
-                "timestamp": datetime.now().isoformat()
-            })
+            logs.append(
+                {"service": service, "level": level, "message": message, "timestamp": datetime.now().isoformat()}
+            )
 
         if not logs:
             console.print("[red]❌ No valid log entries to submit[/red]")
@@ -120,7 +115,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "Email notification sent successfully",
             "Cache cleared for performance optimization",
             "SSL certificate renewed automatically",
-            "Backup process completed successfully"
+            "Backup process completed successfully",
         ]
 
         import random
@@ -131,16 +126,15 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             message = random.choice(test_messages)
             timestamp = datetime.now().isoformat()
 
-            logs.append({
-                "service": service,
-                "level": level,
-                "message": f"[{i+1}] {message}",
-                "timestamp": timestamp,
-                "context": {
-                    "test_id": f"test_{i+1}",
-                    "generated": True
+            logs.append(
+                {
+                    "service": service,
+                    "level": level,
+                    "message": f"[{i+1}] {message}",
+                    "timestamp": timestamp,
+                    "context": {"test_id": f"test_{i+1}", "generated": True},
                 }
-            })
+            )
 
         console.print(f"📝 Generated {len(logs)} test log entries")
 
@@ -182,6 +176,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             console.print(f"\n[bold green]📝 Retrieved {len(logs)} log entries[/bold green]")
 
             from rich.table import Table
+
             table = Table(title="Log Entries")
             table.add_column("Timestamp", style="cyan", max_width=20)
             table.add_column("Service", style="white", max_width=15)
@@ -216,8 +211,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 level = log.get("level", "unknown")
                 level_counts[level] = level_counts.get(level, 0) + 1
 
-            console.print("
-[bold blue]📊 Summary by Level:[/bold blue]"            for level, count in level_counts.items():
+            console.print("\n[bold blue]📊 Summary by Level:[/bold blue]")
+            for level, count in level_counts.items():
                 console.print(f"  {level.upper()}: {count}")
 
         else:
@@ -240,16 +235,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             # Level distribution
             if stats.get("level_distribution"):
-                console.print("
-[bold blue]📈 Level Distribution:[/bold blue]"                level_dist = stats["level_distribution"]
+                console.print("\n[bold blue]📈 Level Distribution:[/bold blue]")
+                level_dist = stats["level_distribution"]
                 for level, count in level_dist.items():
                     percentage = (count / stats["total_logs"]) * 100 if stats["total_logs"] > 0 else 0
                     console.print(f"  {level.upper()}: {count} ({percentage:.1f}%)")
 
             # Service distribution
             if stats.get("service_distribution"):
-                console.print("
-[bold blue]🏢 Service Distribution:[/bold blue]"                service_dist = stats["service_distribution"]
+                console.print("\n[bold blue]🏢 Service Distribution:[/bold blue]")
+                service_dist = stats["service_distribution"]
                 for service, count in list(service_dist.items())[:10]:  # Show top 10
                     percentage = (count / stats["total_logs"]) * 100 if stats["total_logs"] > 0 else 0
                     console.print(f"  {service}: {count} ({percentage:.1f}%)")
@@ -260,15 +255,15 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Time-based stats
             if stats.get("time_range"):
                 time_range = stats["time_range"]
-                console.print("
-[bold blue]⏰ Time Range:[/bold blue]"                print_kv(console, "Earliest", time_range.get("earliest", "unknown"))
+                console.print("\n[bold blue]⏰ Time Range:[/bold blue]")
+                print_kv(console, "Earliest", time_range.get("earliest", "unknown"))
                 print_kv(console, "Latest", time_range.get("latest", "unknown"))
 
             # Recent activity
             if stats.get("recent_activity"):
                 recent = stats["recent_activity"]
-                console.print("
-[bold blue]📅 Recent Activity:[/bold blue]"                print_kv(console, "Last hour", recent.get("last_hour", 0))
+                console.print("\n[bold blue]📅 Recent Activity:[/bold blue]")
+                print_kv(console, "Last hour", recent.get("last_hour", 0))
                 print_kv(console, "Last 24 hours", recent.get("last_24_hours", 0))
                 print_kv(console, "Last 7 days", recent.get("last_7_days", 0))
 
@@ -328,6 +323,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                         last_count = len(new_logs)
 
                 import asyncio
+
                 await asyncio.sleep(5)  # Check every 5 seconds
 
         except KeyboardInterrupt:
@@ -350,7 +346,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "level_pattern": level_pattern,
             "message_pattern": message_pattern,
             "threshold": int(threshold),
-            "time_window_minutes": 1
+            "time_window_minutes": 1,
         }
 
         console.print("[green]✅ Alert configuration created (would be saved to backend)[/green]")
@@ -382,10 +378,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         console.print("[bold blue]⚡ Log Operations Benchmark[/bold blue]")
 
         # Test data
-        test_logs = [
-            {"service": "benchmark", "level": "info", "message": f"Benchmark log {i}"}
-            for i in range(10)
-        ]
+        test_logs = [{"service": "benchmark", "level": "info", "message": f"Benchmark log {i}"} for i in range(10)]
 
         import time
 
@@ -416,13 +409,14 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         retrieve_avg = sum(retrieve_times) / len(retrieve_times) if retrieve_times else 0
 
         # Display results
-        console.print("
-[bold green]📊 Benchmark Results[/bold green]"        console.print("Submission Performance:"        console.print(f"  Average time: {submit_avg:.3f}s per log")
+        console.print("\n\n[bold green]📊 Benchmark Results[/bold green]")
+        console.print("Submission Performance:")
+        console.print(f"  Average time: {submit_avg:.3f}s per log")
         console.print(f"  Total logs submitted: {len(test_logs)}")
         console.print(f"  Throughput: {len(test_logs)/sum(submit_times):.1f} logs/second")
 
-        console.print("
-Retrieval Performance:"        console.print(f"  Average time: {retrieve_avg:.3f}s per query")
+        console.print("\n\nRetrieval Performance:")
+        console.print(f"  Average time: {retrieve_avg:.3f}s per query")
         console.print(f"  Records per query: 50")
         console.print(f"  Throughput: {50/retrieve_avg:.1f} records/second")
 
@@ -435,15 +429,12 @@ Retrieval Performance:"        console.print(f"  Average time: {retrieve_avg:.3f
         ("📝 Submit single log", submit_log),
         ("📦 Submit batch logs", submit_batch_logs),
         ("🧪 Generate test logs", generate_test_logs),
-
         # Log Retrieval
         ("📋 View logs", view_logs),
         ("📊 View statistics", view_log_stats),
-
         # Monitoring
         ("👀 Monitor logs real-time", monitor_logs),
         ("🚨 Setup alerts (conceptual)", setup_log_alerts),
-
         # Testing & Diagnostics
         ("🩺 Service health check", test_log_collector_health),
         ("⚡ Benchmark operations", benchmark_log_operations),

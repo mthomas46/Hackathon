@@ -1,12 +1,14 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import base64
-import httpx
-
-from services.shared.integrations.clients.clients import ServiceClients
-from ...utils.display_helpers import print_kv, print_list, save_data
-from services.shared.auth.credentials import get_secret
 import os
+from typing import Any, Callable, Dict, List, Tuple
+
+import httpx
+from rich.prompt import Prompt
+
+from services.shared.auth.credentials import get_secret
+from services.shared.integrations.clients.clients import ServiceClients
+
+from ...utils.display_helpers import print_kv, print_list, save_data
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
@@ -21,6 +23,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         source = Prompt.ask("Source", default="github")
         data_raw = Prompt.ask("Source data JSON")
         import json
+
         try:
             data = json.loads(data_raw)
         except Exception:
@@ -93,7 +96,10 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                     url = f"{api}/orgs/{owner}/repos"
                     r = await client.get(url, headers=headers, params={"per_page": 25})
                     repos = r.json() if r.status_code < 400 else []
-                items = [{"name": it.get("name"), "full_name": it.get("full_name"), "private": it.get("private")} for it in repos]
+                items = [
+                    {"name": it.get("name"), "full_name": it.get("full_name"), "private": it.get("private")}
+                    for it in repos
+                ]
                 print_list(console, "GitHub Repos", items)
             except Exception as e:
                 print_kv(console, "Error", {"error": str(e)})
@@ -150,9 +156,11 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         while True:
             try:
                 async with httpx.AsyncClient(timeout=15) as client:
-                    r = await client.get(f"{base}/rest/api/3/project/search", auth=(email, token), params={"maxResults": 25})
+                    r = await client.get(
+                        f"{base}/rest/api/3/project/search", auth=(email, token), params={"maxResults": 25}
+                    )
                     projects = r.json().get("values", []) if r.status_code < 400 else []
-                items = [{"key": it.get("key"), "name": it.get("name") } for it in projects]
+                items = [{"key": it.get("key"), "name": it.get("name")} for it in projects]
                 print_list(console, "Jira Projects", items)
             except Exception as e:
                 print_kv(console, "Error", {"error": str(e)})
@@ -161,9 +169,19 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 break
             try:
                 async with httpx.AsyncClient(timeout=15) as client:
-                    r = await client.get(f"{base}/rest/api/3/search", auth=(email, token), params={"jql": f"project={pkey}", "maxResults": 25})
+                    r = await client.get(
+                        f"{base}/rest/api/3/search",
+                        auth=(email, token),
+                        params={"jql": f"project={pkey}", "maxResults": 25},
+                    )
                     issues = r.json().get("issues", []) if r.status_code < 400 else []
-                items = [{"key": it.get("key"), "summary": (it.get("fields", {}).get("summary") if isinstance(it.get("fields"), dict) else "")} for it in issues]
+                items = [
+                    {
+                        "key": it.get("key"),
+                        "summary": (it.get("fields", {}).get("summary") if isinstance(it.get("fields"), dict) else ""),
+                    }
+                    for it in issues
+                ]
                 print_list(console, f"Jira Issues ({pkey})", items)
                 ikey = Prompt.ask("Enter issue key to save JSON, or 'b' to back", default="b")
                 if ikey.lower() == "b":
@@ -215,7 +233,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 async with httpx.AsyncClient(timeout=15) as client:
                     r = await client.get(f"{base}/rest/api/space", auth=(email, token), params={"limit": 25})
                     spaces = r.json().get("results", []) if r.status_code < 400 else []
-                items = [{"key": it.get("key"), "name": it.get("name") } for it in spaces]
+                items = [{"key": it.get("key"), "name": it.get("name")} for it in spaces]
                 print_list(console, "Confluence Spaces", items)
             except Exception as e:
                 print_kv(console, "Error", {"error": str(e)})
@@ -224,15 +242,23 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 break
             try:
                 async with httpx.AsyncClient(timeout=15) as client:
-                    r = await client.get(f"{base}/rest/api/content", auth=(email, token), params={"spaceKey": skey, "limit": 25, "expand": "body.storage"})
+                    r = await client.get(
+                        f"{base}/rest/api/content",
+                        auth=(email, token),
+                        params={"spaceKey": skey, "limit": 25, "expand": "body.storage"},
+                    )
                     pages = r.json().get("results", []) if r.status_code < 400 else []
-                items = [{"id": it.get("id"), "title": it.get("title") } for it in pages]
+                items = [{"id": it.get("id"), "title": it.get("title")} for it in pages]
                 print_list(console, f"Confluence Pages ({skey})", items)
                 pid = Prompt.ask("Enter page id to save, or 'b' to back", default="b")
                 if pid.lower() == "b":
                     continue
                 page = next((p for p in pages if str(p.get("id")) == pid), None)
-                body = (((page or {}).get("body") or {}).get("storage") or {}).get("value") if isinstance(page, dict) else ""
+                body = (
+                    (((page or {}).get("body") or {}).get("storage") or {}).get("value")
+                    if isinstance(page, dict)
+                    else ""
+                )
                 path = Prompt.ask("Save path", default=f"./confluence_{pid}.md")
                 await save_data(console, {"content": body}, "md", path, content_key="content")
             except Exception as e:
@@ -250,5 +276,3 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("Test Confluence credentials", test_confluence_credentials),
         ("Browse Confluence", browse_confluence),
     ]
-
-

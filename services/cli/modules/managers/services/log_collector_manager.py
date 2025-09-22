@@ -4,27 +4,20 @@ Provides power-user operations for log collector including
 log aggregation, streaming, pattern analysis, and stats.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
+import asyncio
 import json
 import os
-from ...base.base_manager import BaseManager
-import asyncio
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-    
-from ...shared_utils import (
-    
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+from rich.text import Text
+
+from ...base.base_manager import BaseManager
+from ...shared_utils import add_menu_rows, create_menu_table, get_cli_clients, log_cli_metrics, print_panel
 
 
 class LogCollectorManager(BaseManager):
@@ -35,11 +28,7 @@ class LogCollectorManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for log collector operations."""
-        return [
-            ("1", "Log Collection"),
-            ("2", "Log Analysis"),
-            ("3", "Log Storage")
-        ]
+        return [("1", "Log Collection"), ("2", "Log Analysis"), ("3", "Log Storage")]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -50,16 +39,19 @@ class LogCollectorManager(BaseManager):
         """Main log collector menu."""
         while True:
             menu = create_menu_table("Log Collector Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Log Submission (Store individual and batch logs)"),
-                ("2", "Log Querying (Search, filter, and retrieve logs)"),
-                ("3", "Log Statistics & Analytics"),
-                ("4", "Log Monitoring & Alerting"),
-                ("5", "Log Export & Archiving"),
-                ("6", "Log Pattern Analysis"),
-                ("7", "Log Collector Health & Configuration"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Log Submission (Store individual and batch logs)"),
+                    ("2", "Log Querying (Search, filter, and retrieve logs)"),
+                    ("3", "Log Statistics & Analytics"),
+                    ("4", "Log Monitoring & Alerting"),
+                    ("5", "Log Export & Archiving"),
+                    ("6", "Log Pattern Analysis"),
+                    ("7", "Log Collector Health & Configuration"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -87,14 +79,17 @@ class LogCollectorManager(BaseManager):
         """Log submission submenu."""
         while True:
             menu = create_menu_table("Log Submission", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Submit Individual Log Entry"),
-                ("2", "Submit Batch Log Entries"),
-                ("3", "Import Logs from File"),
-                ("4", "Generate Test Logs"),
-                ("5", "Log Submission Templates"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Submit Individual Log Entry"),
+                    ("2", "Submit Batch Log Entries"),
+                    ("3", "Import Logs from File"),
+                    ("4", "Generate Test Logs"),
+                    ("5", "Log Submission Templates"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -135,12 +130,7 @@ class LogCollectorManager(BaseManager):
                 except json.JSONDecodeError:
                     self.console.print("[yellow]Invalid JSON, using empty context[/yellow]")
 
-            log_entry = {
-                "service": service,
-                "level": level,
-                "message": message,
-                "context": context
-            }
+            log_entry = {"service": service, "level": level, "message": message, "context": context}
 
             with self.console.status("[bold green]Submitting log entry...[/bold green]") as status:
                 response = await self.clients.post_json("log-collector/logs", log_entry)
@@ -162,15 +152,15 @@ class LogCollectorManager(BaseManager):
 
             batch_entries = []
             for i in range(batch_size):
-                service = Prompt.ask(f"[bold cyan]Service name for entry {i+1}[/bold cyan]", default=f"test-service-{i+1}")
+                service = Prompt.ask(
+                    f"[bold cyan]Service name for entry {i+1}[/bold cyan]", default=f"test-service-{i+1}"
+                )
                 level = Prompt.ask(f"[bold cyan]Log level for entry {i+1}[/bold cyan]", default="info")
-                message = Prompt.ask(f"[bold cyan]Message for entry {i+1}[/bold cyan]", default=f"Test log message {i+1}")
+                message = Prompt.ask(
+                    f"[bold cyan]Message for entry {i+1}[/bold cyan]", default=f"Test log message {i+1}"
+                )
 
-                batch_entries.append({
-                    "service": service,
-                    "level": level,
-                    "message": message
-                })
+                batch_entries.append({"service": service, "level": level, "message": message})
 
             self.console.print(f"[yellow]Created {len(batch_entries)} log entries for batch submission[/yellow]")
 
@@ -185,7 +175,9 @@ class LogCollectorManager(BaseManager):
                 if response:
                     self.console.print("[green]✅ Batch logs submitted successfully[/green]")
                     if response.get("count") and response.get("added"):
-                        self.console.print(f"[green]Added {response['added']} logs, total stored: {response['count']}[/green]")
+                        self.console.print(
+                            f"[green]Added {response['added']} logs, total stored: {response['count']}[/green]"
+                        )
                 else:
                     self.console.print("[red]❌ Failed to submit batch logs[/red]")
 
@@ -201,7 +193,7 @@ class LogCollectorManager(BaseManager):
                 self.console.print(f"[red]File not found: {file_path}[/red]")
                 return
 
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 log_data = json.load(f)
 
             # Handle both single log and array of logs
@@ -226,7 +218,9 @@ class LogCollectorManager(BaseManager):
                 if response:
                     self.console.print("[green]✅ Logs imported successfully[/green]")
                     if response.get("count") and response.get("added"):
-                        self.console.print(f"[green]Added {response['added']} logs, total stored: {response['count']}[/green]")
+                        self.console.print(
+                            f"[green]Added {response['added']} logs, total stored: {response['count']}[/green]"
+                        )
                 else:
                     self.console.print("[red]❌ Failed to import logs[/red]")
 
@@ -243,15 +237,14 @@ class LogCollectorManager(BaseManager):
             levels = ["debug", "info", "warning", "error"]
 
             for i in range(count):
-                test_logs.append({
-                    "service": service,
-                    "level": levels[i % len(levels)],
-                    "message": f"Test log message {i+1} - {datetime.now().isoformat()}",
-                    "context": {
-                        "test_id": i + 1,
-                        "generated_by": "cli_test_generator"
+                test_logs.append(
+                    {
+                        "service": service,
+                        "level": levels[i % len(levels)],
+                        "message": f"Test log message {i+1} - {datetime.now().isoformat()}",
+                        "context": {"test_id": i + 1, "generated_by": "cli_test_generator"},
                     }
-                })
+                )
 
             batch_request = {"items": test_logs}
 
@@ -261,7 +254,9 @@ class LogCollectorManager(BaseManager):
             if response:
                 self.console.print("[green]✅ Test logs generated successfully[/green]")
                 if response.get("count") and response.get("added"):
-                    self.console.print(f"[green]Added {response['added']} test logs, total stored: {response['count']}[/green]")
+                    self.console.print(
+                        f"[green]Added {response['added']} test logs, total stored: {response['count']}[/green]"
+                    )
             else:
                 self.console.print("[red]❌ Failed to generate test logs[/red]")
 
@@ -281,15 +276,18 @@ class LogCollectorManager(BaseManager):
         """Log querying submenu."""
         while True:
             menu = create_menu_table("Log Querying", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Query All Logs"),
-                ("2", "Filter by Service"),
-                ("3", "Filter by Log Level"),
-                ("4", "Advanced Filtering"),
-                ("5", "Search Log Messages"),
-                ("6", "Real-time Log Streaming"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Query All Logs"),
+                    ("2", "Filter by Service"),
+                    ("3", "Filter by Log Level"),
+                    ("4", "Advanced Filtering"),
+                    ("5", "Search Log Messages"),
+                    ("6", "Real-time Log Streaming"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -453,7 +451,7 @@ class LogCollectorManager(BaseManager):
                 "info": "green",
                 "warning": "yellow",
                 "error": "red",
-                "fatal": "red bold"
+                "fatal": "red bold",
             }.get(level, "white")
 
             message = log.get("message", "")
@@ -465,10 +463,7 @@ class LogCollectorManager(BaseManager):
                 timestamp = timestamp[:19]  # Truncate to fit
 
             table.add_row(
-                log.get("service", "unknown"),
-                f"[{level_color}]{level.upper()}[/{level_color}]",
-                message,
-                timestamp
+                log.get("service", "unknown"), f"[{level_color}]{level.upper()}[/{level_color}]", message, timestamp
             )
 
         self.console.print(table)
@@ -480,15 +475,18 @@ class LogCollectorManager(BaseManager):
         """Log statistics and analytics submenu."""
         while True:
             menu = create_menu_table("Log Statistics & Analytics", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Overall Statistics"),
-                ("2", "Service-wise Statistics"),
-                ("3", "Level Distribution Analysis"),
-                ("4", "Error Rate Analysis"),
-                ("5", "Time-based Analytics"),
-                ("6", "Log Volume Trends"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Overall Statistics"),
+                    ("2", "Service-wise Statistics"),
+                    ("3", "Level Distribution Analysis"),
+                    ("4", "Error Rate Analysis"),
+                    ("5", "Time-based Analytics"),
+                    ("6", "Log Volume Trends"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -537,13 +535,13 @@ class LogCollectorManager(BaseManager):
         if level_distribution:
             content += "\n[bold green]Log Levels:[/bold green]\n"
             for level, count in sorted(level_distribution.items(), key=lambda x: x[1], reverse=True):
-                percentage = (count / stats.get('total_logs', 1)) * 100
+                percentage = (count / stats.get("total_logs", 1)) * 100
                 level_color = {
                     "debug": "dim",
                     "info": "green",
                     "warning": "yellow",
                     "error": "red",
-                    "fatal": "red bold"
+                    "fatal": "red bold",
                 }.get(level, "white")
                 content += f"• [{level_color}]{level}[/{level_color}]: {count} ({percentage:.1f}%)\n"
 
@@ -553,7 +551,7 @@ class LogCollectorManager(BaseManager):
             content += "\n[bold cyan]Top Services:[/bold cyan]\n"
             top_services = sorted(service_distribution.items(), key=lambda x: x[1], reverse=True)[:5]
             for service, count in top_services:
-                percentage = (count / stats.get('total_logs', 1)) * 100
+                percentage = (count / stats.get("total_logs", 1)) * 100
                 content += f"• {service}: {count} ({percentage:.1f}%)\n"
 
         # Error metrics
@@ -636,7 +634,7 @@ class LogCollectorManager(BaseManager):
                             "info": "green",
                             "warning": "yellow",
                             "error": "red",
-                            "fatal": "red bold"
+                            "fatal": "red bold",
                         }.get(level, "white")
 
                         content += f"[{level_color}]{level.upper():<8}[/{level_color}] {bar} {count:>4} ({percentage:>5.1f}%)\n"
@@ -708,14 +706,17 @@ class LogCollectorManager(BaseManager):
         """Log monitoring and alerting submenu."""
         while True:
             menu = create_menu_table("Log Monitoring & Alerting", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Set up Log Alerts"),
-                ("2", "Monitor Error Rates"),
-                ("3", "Service Health Monitoring"),
-                ("4", "Anomaly Detection"),
-                ("5", "Alert History"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Set up Log Alerts"),
+                    ("2", "Monitor Error Rates"),
+                    ("3", "Service Health Monitoring"),
+                    ("4", "Anomaly Detection"),
+                    ("5", "Alert History"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -784,14 +785,17 @@ class LogCollectorManager(BaseManager):
         """Log export and archiving submenu."""
         while True:
             menu = create_menu_table("Log Export & Archiving", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Export Logs to JSON"),
-                ("2", "Export Logs to CSV"),
-                ("3", "Filtered Log Export"),
-                ("4", "Log Archiving"),
-                ("5", "Bulk Log Operations"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Export Logs to JSON"),
+                    ("2", "Export Logs to CSV"),
+                    ("3", "Filtered Log Export"),
+                    ("4", "Log Archiving"),
+                    ("5", "Bulk Log Operations"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -823,7 +827,7 @@ class LogCollectorManager(BaseManager):
             if response and "items" in response:
                 logs = response["items"]
 
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     json.dump(logs, f, indent=2, default=str)
 
                 self.console.print(f"[green]✅ Exported {len(logs)} logs to {file_path}[/green]")
@@ -847,12 +851,13 @@ class LogCollectorManager(BaseManager):
 
                 if logs:
                     import csv
+
                     fieldnames = ["service", "level", "message", "timestamp"]
                     # Add context fields if they exist
                     if any(log.get("context") for log in logs):
                         fieldnames.append("context")
 
-                    with open(file_path, 'w', newline='') as f:
+                    with open(file_path, "w", newline="") as f:
                         writer = csv.DictWriter(f, fieldnames=fieldnames)
                         writer.writeheader()
 
@@ -902,14 +907,17 @@ class LogCollectorManager(BaseManager):
         """Log pattern analysis submenu."""
         while True:
             menu = create_menu_table("Log Pattern Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Identify Common Patterns"),
-                ("2", "Error Pattern Analysis"),
-                ("3", "Service Interaction Analysis"),
-                ("4", "Performance Pattern Detection"),
-                ("5", "Custom Pattern Matching"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Identify Common Patterns"),
+                    ("2", "Error Pattern Analysis"),
+                    ("3", "Service Interaction Analysis"),
+                    ("4", "Performance Pattern Detection"),
+                    ("5", "Custom Pattern Matching"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -978,14 +986,17 @@ class LogCollectorManager(BaseManager):
         """Log collector health and configuration submenu."""
         while True:
             menu = create_menu_table("Log Collector Health & Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Service Health"),
-                ("2", "Storage Capacity Monitoring"),
-                ("3", "Performance Metrics"),
-                ("4", "Configuration Settings"),
-                ("5", "Service Logs"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Service Health"),
+                    ("2", "Storage Capacity Monitoring"),
+                    ("3", "Performance Metrics"),
+                    ("4", "Configuration Settings"),
+                    ("5", "Service Logs"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -1035,7 +1046,7 @@ class LogCollectorManager(BaseManager):
             response = await self.clients.get_json("log-collector/health")
 
             if response:
-                total_logs = response.get('count', 0)
+                total_logs = response.get("count", 0)
                 capacity = 5000  # Default max logs
                 usage_percent = (total_logs / capacity) * 100
 
@@ -1060,7 +1071,11 @@ class LogCollectorManager(BaseManager):
                     content += "• Storage utilization is critical\n"
                     content += "• Immediate log cleanup required"
 
-                print_panel(self.console, content, border_style="red" if usage_percent > 90 else "yellow" if usage_percent > 70 else "green")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="red" if usage_percent > 90 else "yellow" if usage_percent > 70 else "green",
+                )
             else:
                 self.console.print("[red]Failed to retrieve storage information[/red]")
 

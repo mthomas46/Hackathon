@@ -9,9 +9,11 @@ Usage:
     python -m services.cli.main [command] [args...]
 """
 
+import os
+
 # Handle import path issues when running as standalone script
 import sys
-import os
+
 if __name__ == "__main__":
     # Add parent directory to path for imports when running as script
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -109,36 +111,41 @@ Features:
 Dependencies: All ecosystem services via HTTP clients, Rich library for UI.
 """
 
+import asyncio
 import os
 import signal
-import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
 try:
+    from services.shared.core.constants_new import ErrorCodes, ServiceNames
     from services.shared.monitoring.health import register_health_endpoints
-    from services.shared.core.constants_new import ServiceNames, ErrorCodes
 except ImportError:
     # Fallback for when imports fail
     print("Warning: Some shared modules not available, using fallbacks")
+
     class ServiceNames:
         CLI = "cli"
+
     class ErrorCodes:
         VALIDATION_ERROR = "VALIDATION_ERROR"
+
 
 # ============================================================================
 # LOGGING CLIENT INITIALIZATION
 # ============================================================================
 try:
     from services.shared.utilities.logging_client import get_log_collector_client
+
     logger_client = None
 
     async def initialize_logger():
@@ -147,19 +154,42 @@ try:
             try:
                 logger_client = await get_log_collector_client(ServiceNames.CLI)
                 if logger_client:
-                    await logger_client.log_business_event("cli_service_startup", {
-                        "version": "2.0.0",
-                        "capabilities": ["interactive_mode", "command_execution", "service_management", "bulk_operations", "workflow_execution", "data_analysis"],
-                        "integrations": ["all_services", "log_collector", "doc_store", "prompt_store"],
-                        "commands": ["interactive", "health", "analyze-docs", "workflow-run", "bulk-export", "interpret-query"],
-                        "features": ["rich_console_output", "progress_tracking", "error_handling", "bulk_operations"]
-                    })
+                    await logger_client.log_business_event(
+                        "cli_service_startup",
+                        {
+                            "version": "2.0.0",
+                            "capabilities": [
+                                "interactive_mode",
+                                "command_execution",
+                                "service_management",
+                                "bulk_operations",
+                                "workflow_execution",
+                                "data_analysis",
+                            ],
+                            "integrations": ["all_services", "log_collector", "doc_store", "prompt_store"],
+                            "commands": [
+                                "interactive",
+                                "health",
+                                "analyze-docs",
+                                "workflow-run",
+                                "bulk-export",
+                                "interpret-query",
+                            ],
+                            "features": [
+                                "rich_console_output",
+                                "progress_tracking",
+                                "error_handling",
+                                "bulk_operations",
+                            ],
+                        },
+                    )
                     print("✅ CLI logging initialized")
             except Exception as e:
                 print(f"Failed to initialize CLI logger: {e}")
 
     # Initialize logger on import
     import asyncio
+
     asyncio.run(initialize_logger())
 
 except ImportError:
@@ -171,58 +201,58 @@ except ImportError:
 # ============================================================================
 try:
     # Try relative imports first (for module execution)
+    from .modules.cli_commands import CLICommands
+    from .modules.managers.workflow_manager import WorkflowManager
+    from .modules.prompt_manager import PromptManager
     from .modules.shared_utils import (
-        get_cli_clients,
-        handle_cli_error,
-        create_cli_success_response,
-        build_cli_context,
-        create_menu_table,
         add_menu_rows,
-        print_panel,
-        get_service_health_url,
-        create_service_health_table,
-        create_workflow_status_table,
+        build_cli_context,
+        create_cli_success_response,
+        create_health_status_display,
+        create_integration_test_table,
+        create_menu_table,
         create_prompt_table,
         create_search_results_table,
-        create_integration_test_table,
-        validate_prompt_data,
+        create_service_health_table,
+        create_workflow_status_table,
         extract_variables_from_content,
-        format_prompt_details,
         format_analytics_display,
+        format_prompt_details,
+        get_cli_clients,
+        get_service_health_url,
+        handle_cli_error,
+        log_cli_metrics,
         parse_tags_input,
-        create_health_status_display,
-        log_cli_metrics
+        print_panel,
+        validate_prompt_data,
     )
-    from .modules.cli_commands import CLICommands
-    from .modules.prompt_manager import PromptManager
-    from .modules.managers.workflow_manager import WorkflowManager
 except ImportError:
     # Fall back to absolute imports (for standalone execution)
+    from services.cli.modules.cli_commands import CLICommands
+    from services.cli.modules.managers.workflow_manager import WorkflowManager
+    from services.cli.modules.prompt_manager import PromptManager
     from services.cli.modules.shared_utils import (
-        get_cli_clients,
-        handle_cli_error,
-        create_cli_success_response,
-        build_cli_context,
-        create_menu_table,
         add_menu_rows,
-        print_panel,
-        get_service_health_url,
-        create_service_health_table,
-        create_workflow_status_table,
+        build_cli_context,
+        create_cli_success_response,
+        create_health_status_display,
+        create_integration_test_table,
+        create_menu_table,
         create_prompt_table,
         create_search_results_table,
-        create_integration_test_table,
-        validate_prompt_data,
+        create_service_health_table,
+        create_workflow_status_table,
         extract_variables_from_content,
-        format_prompt_details,
         format_analytics_display,
+        format_prompt_details,
+        get_cli_clients,
+        get_service_health_url,
+        handle_cli_error,
+        log_cli_metrics,
         parse_tags_input,
-        create_health_status_display,
-        log_cli_metrics
+        print_panel,
+        validate_prompt_data,
     )
-    from services.cli.modules.cli_commands import CLICommands
-    from services.cli.modules.prompt_manager import PromptManager
-    from services.cli.modules.managers.workflow_manager import WorkflowManager
 
 # Service configuration constants
 SERVICE_NAME = "cli"
@@ -240,14 +270,16 @@ cli_service = CLICommands()
 # CLI COMMANDS - Using modular CLI service
 # ============================================================================
 
+
 @click.group()
-@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output with detailed information')
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output with detailed information")
 @click.pass_context
 def cli(ctx, verbose):
     """LLM Documentation Ecosystem CLI - Interactive command-line interface for ecosystem management"""
     ctx.ensure_object(dict)
-    ctx.obj['VERBOSE'] = verbose
-    ctx.obj['cli_service'] = cli_service
+    ctx.obj["VERBOSE"] = verbose
+    ctx.obj["cli_service"] = cli_service
+
 
 @cli.command()
 @click.pass_context
@@ -259,12 +291,18 @@ def interactive(ctx):
     # Log interactive session start
     if logger_client:
         import asyncio
-        asyncio.run(logger_client.log_business_event("cli_interactive_session_started", {
-            "session_id": session_id,
-            "command": "interactive",
-            "mode": "menu_driven",
-            "capabilities": ["service_management", "bulk_operations", "workflow_execution", "data_analysis"]
-        }))
+
+        asyncio.run(
+            logger_client.log_business_event(
+                "cli_interactive_session_started",
+                {
+                    "session_id": session_id,
+                    "command": "interactive",
+                    "mode": "menu_driven",
+                    "capabilities": ["service_management", "bulk_operations", "workflow_execution", "data_analysis"],
+                },
+            )
+        )
 
     # Setup interrupt handling for graceful shutdown
     def signal_handler(signum, frame):
@@ -274,12 +312,18 @@ def interactive(ctx):
         # Log session interruption
         if logger_client:
             import asyncio
+
             session_duration = time.time() - start_time
-            asyncio.run(logger_client.log_business_event("cli_interactive_session_interrupted", {
-                "session_id": session_id,
-                "duration_seconds": session_duration,
-                "interruption_type": "signal_interrupt"
-            }))
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_interactive_session_interrupted",
+                    {
+                        "session_id": session_id,
+                        "duration_seconds": session_duration,
+                        "interruption_type": "signal_interrupt",
+                    },
+                )
+            )
 
         # Force exit for immediate termination
         os._exit(1)
@@ -294,12 +338,18 @@ def interactive(ctx):
         session_duration = time.time() - start_time
         if logger_client:
             import asyncio
-            asyncio.run(logger_client.log_business_event("cli_interactive_session_completed", {
-                "session_id": session_id,
-                "duration_seconds": session_duration,
-                "exit_type": "normal_exit",
-                "success": True
-            }))
+
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_interactive_session_completed",
+                    {
+                        "session_id": session_id,
+                        "duration_seconds": session_duration,
+                        "exit_type": "normal_exit",
+                        "success": True,
+                    },
+                )
+            )
 
     except KeyboardInterrupt:
         console = Console()
@@ -309,12 +359,18 @@ def interactive(ctx):
         session_duration = time.time() - start_time
         if logger_client:
             import asyncio
-            asyncio.run(logger_client.log_business_event("cli_interactive_session_interrupted", {
-                "session_id": session_id,
-                "duration_seconds": session_duration,
-                "interruption_type": "user_interrupt",
-                "exit_type": "keyboard_interrupt"
-            }))
+
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_interactive_session_interrupted",
+                    {
+                        "session_id": session_id,
+                        "duration_seconds": session_duration,
+                        "interruption_type": "user_interrupt",
+                        "exit_type": "keyboard_interrupt",
+                    },
+                )
+            )
 
     except Exception as e:
         console = Console()
@@ -324,44 +380,54 @@ def interactive(ctx):
         session_duration = time.time() - start_time
         if logger_client:
             import asyncio
-            asyncio.run(logger_client.log_business_event("cli_interactive_session_failed", {
-                "session_id": session_id,
-                "duration_seconds": session_duration,
-                "exit_type": "fatal_error",
-                "error_message": str(e)
-            }))
+
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_interactive_session_failed",
+                    {
+                        "session_id": session_id,
+                        "duration_seconds": session_duration,
+                        "exit_type": "fatal_error",
+                        "error_message": str(e),
+                    },
+                )
+            )
+
 
 @cli.command()
-@click.argument('category')
-@click.argument('name')
-@click.option('--content', '-c', help='Content variable value for prompt template substitution')
+@click.argument("category")
+@click.argument("name")
+@click.option("--content", "-c", help="Content variable value for prompt template substitution")
 @click.pass_context
 def get_prompt(ctx, category, name, content):
     """Retrieve and display a prompt from the Prompt Store with optional variable substitution"""
+
     async def _get_prompt():
         try:
             variables = {}
             if content:
-                variables['content'] = content
+                variables["content"] = content
 
             response = await cli_service.clients.get_json(f"prompt-store/prompts/search/{category}/{name}", **variables)
 
             console = Console()
             console.print(f"[bold green]Prompt: {category}.{name}[/bold green]")
-            console.print(response.get('prompt', 'No prompt found'))
+            console.print(response.get("prompt", "No prompt found"))
 
         except Exception as e:
             console = Console()
             from services.shared.core.responses.responses import create_error_response
+
             error_response = create_error_response(
                 "Failed to retrieve prompt",
                 error_code=ErrorCodes.PROMPT_RETRIEVAL_FAILED,
-                details={"category": category, "name": name, "error": str(e)}
+                details={"category": category, "name": name, "error": str(e)},
             )
             console.print(f"[red]Error: {error_response['message']}[/red]")
             console.print(f"[dim]Error Code: {error_response['error_code']}[/dim]")
 
     asyncio.run(_get_prompt())
+
 
 @cli.command()
 @click.pass_context
@@ -374,12 +440,18 @@ def health(ctx):
         # Log health check start
         if logger_client:
             import asyncio
-            asyncio.run(logger_client.log_business_event("cli_health_check_started", {
-                "command_id": command_id,
-                "command": "health",
-                "scope": "all_services",
-                "check_type": "connectivity_and_status"
-            }))
+
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_health_check_started",
+                    {
+                        "command_id": command_id,
+                        "command": "health",
+                        "scope": "all_services",
+                        "check_type": "connectivity_and_status",
+                    },
+                )
+            )
 
         result = asyncio.run(cli_service.display_health_status())
         processing_time = time.time() - start_time
@@ -387,22 +459,26 @@ def health(ctx):
         # Log successful health check completion
         if logger_client:
             import asyncio
-            asyncio.run(logger_client.log_business_event("cli_health_check_completed", {
-                "command_id": command_id,
-                "processing_time_seconds": processing_time,
-                "success": True,
-                "services_checked": ["all_ecosystem_services"]
-            }))
 
-            asyncio.run(logger_client.log_performance_metric(
-                "cli_health_check",
-                processing_time,
-                {
-                    "command_id": command_id,
-                    "command": "health",
-                    "check_success": True
-                }
-            ))
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_health_check_completed",
+                    {
+                        "command_id": command_id,
+                        "processing_time_seconds": processing_time,
+                        "success": True,
+                        "services_checked": ["all_ecosystem_services"],
+                    },
+                )
+            )
+
+            asyncio.run(
+                logger_client.log_performance_metric(
+                    "cli_health_check",
+                    processing_time,
+                    {"command_id": command_id, "command": "health", "check_success": True},
+                )
+            )
 
         return result
 
@@ -412,33 +488,43 @@ def health(ctx):
         # Log health check failure
         if logger_client:
             import asyncio
-            asyncio.run(logger_client.log_error(
-                f"CLI health check failed: {str(e)}",
-                {
-                    "command_id": command_id,
-                    "command": "health",
-                    "error_type": type(e).__name__,
-                    "processing_time_seconds": error_time
-                },
-                error=e
-            ))
 
-            asyncio.run(logger_client.log_business_event("cli_health_check_failed", {
-                "command_id": command_id,
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "processing_time_seconds": error_time
-            }))
+            asyncio.run(
+                logger_client.log_error(
+                    f"CLI health check failed: {str(e)}",
+                    {
+                        "command_id": command_id,
+                        "command": "health",
+                        "error_type": type(e).__name__,
+                        "processing_time_seconds": error_time,
+                    },
+                    error=e,
+                )
+            )
+
+            asyncio.run(
+                logger_client.log_business_event(
+                    "cli_health_check_failed",
+                    {
+                        "command_id": command_id,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                        "processing_time_seconds": error_time,
+                    },
+                )
+            )
 
         raise
 
+
 @cli.command()
-@click.option('--category', '-c', help='Filter prompts by specific category (e.g., analysis, consistency)')
+@click.option("--category", "-c", help="Filter prompts by specific category (e.g., analysis, consistency)")
 @click.pass_context
 def list_prompts(ctx, category):
     """List all available prompts from Prompt Store with optional category filtering"""
     prompt_manager = PromptManager(cli_service.console, cli_service.clients)
     asyncio.run(prompt_manager.list_prompts())
+
 
 @cli.command()
 @click.pass_context
@@ -451,14 +537,16 @@ def test_integration(ctx):
 # POWER USER COMMANDS - Advanced operations for experienced users
 # ============================================================================
 
+
 @cli.command()
-@click.option('--type', '-t', help='Analysis type (quality, consistency, security, all)')
-@click.option('--criteria', '-c', help='Selection criteria as JSON string')
+@click.option("--type", "-t", help="Analysis type (quality, consistency, security, all)")
+@click.option("--criteria", "-c", help="Selection criteria as JSON string")
 @click.pass_context
 def analyze_docs(ctx, type, criteria):
     """Perform mass document analysis across the ecosystem"""
     try:
         import json
+
         analysis_criteria = json.loads(criteria) if criteria else {}
 
         bulk_manager = cli_service.bulk_operations_manager
@@ -469,8 +557,8 @@ def analyze_docs(ctx, type, criteria):
 
 
 @cli.command()
-@click.option('--type', help='Document type filter')
-@click.option('--threshold', type=float, help='Quality threshold for low-quality recalc')
+@click.option("--type", help="Document type filter")
+@click.option("--threshold", type=float, help="Quality threshold for low-quality recalc")
 @click.pass_context
 def quality_recalc(ctx, type, threshold):
     """Perform bulk quality score recalculation"""
@@ -488,14 +576,15 @@ def quality_recalc(ctx, type, threshold):
 
 
 @cli.command()
-@click.option('--format', '-f', required=True, help='Export format (json, csv, xml)')
-@click.option('--criteria', '-c', help='Selection criteria as JSON string')
-@click.option('--filename', help='Output filename')
+@click.option("--format", "-f", required=True, help="Export format (json, csv, xml)")
+@click.option("--criteria", "-c", help="Selection criteria as JSON string")
+@click.option("--filename", help="Output filename")
 @click.pass_context
 def bulk_export(ctx, format, criteria, filename):
     """Export documents in bulk"""
     try:
         import json
+
         export_criteria = json.loads(criteria) if criteria else {}
         output_filename = filename or f"documents_export.{format}"
 
@@ -507,9 +596,9 @@ def bulk_export(ctx, format, criteria, filename):
 
 
 @cli.command()
-@click.option('--file', '-f', required=True, help='Import file path')
-@click.option('--format', required=True, help='Import format (json, csv, xml)')
-@click.option('--update-existing', is_flag=True, help='Update existing documents')
+@click.option("--file", "-f", required=True, help="Import file path")
+@click.option("--format", required=True, help="Import format (json, csv, xml)")
+@click.option("--update-existing", is_flag=True, help="Update existing documents")
 @click.pass_context
 def bulk_import(ctx, file, format, update_existing):
     """Import documents in bulk"""
@@ -522,13 +611,14 @@ def bulk_import(ctx, file, format, update_existing):
 
 
 @cli.command()
-@click.option('--criteria', '-c', required=True, help='Selection criteria as JSON string')
-@click.option('--message', '-m', required=True, help='Notification message')
+@click.option("--criteria", "-c", required=True, help="Selection criteria as JSON string")
+@click.option("--message", "-m", required=True, help="Notification message")
 @click.pass_context
 def notify_owners(ctx, criteria, message):
     """Send notifications to document owners"""
     try:
         import json
+
         selection_criteria = json.loads(criteria)
 
         bulk_manager = cli_service.bulk_operations_manager
@@ -539,13 +629,14 @@ def notify_owners(ctx, criteria, message):
 
 
 @cli.command()
-@click.option('--type', '-t', required=True, help='Workflow type')
-@click.option('--config', '-c', help='Workflow configuration as JSON string')
+@click.option("--type", "-t", required=True, help="Workflow type")
+@click.option("--config", "-c", help="Workflow configuration as JSON string")
 @click.pass_context
 def workflow_run(ctx, type, config):
     """Execute orchestrator workflows"""
     try:
         import json
+
         workflow_config = json.loads(config) if config else {}
 
         orchestrator_manager = cli_service.orchestrator_manager
@@ -592,12 +683,13 @@ def saga_monitor(ctx):
 
 
 @cli.command()
-@click.option('--criteria', '-c', required=True, help='Search criteria as JSON string')
+@click.option("--criteria", "-c", required=True, help="Search criteria as JSON string")
 @click.pass_context
 def tracing_search(ctx, criteria):
     """Search distributed traces"""
     try:
         import json
+
         search_criteria = json.loads(criteria)
 
         infra_manager = cli_service.infrastructure_manager
@@ -611,16 +703,18 @@ def tracing_search(ctx, criteria):
 # INTERPRETER SERVICE COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('query')
-@click.option('--user-id', help='User ID for context')
-@click.option('--session-id', help='Session ID for context')
-@click.option('--context', '-c', help='Additional context as JSON string')
+@click.argument("query")
+@click.option("--user-id", help="User ID for context")
+@click.option("--session-id", help="Session ID for context")
+@click.option("--context", "-c", help="Additional context as JSON string")
 @click.pass_context
 def interpret_query(ctx, query, user_id, session_id, context):
     """Interpret a natural language query and show intent analysis"""
     try:
         import json
+
         query_data = {"query": query}
 
         if user_id:
@@ -638,15 +732,16 @@ def interpret_query(ctx, query, user_id, session_id, context):
 
 
 @cli.command()
-@click.argument('query')
-@click.option('--user-id', help='User ID for context')
-@click.option('--session-id', help='Session ID for context')
-@click.option('--context', '-c', help='Additional context as JSON string')
+@click.argument("query")
+@click.option("--user-id", help="User ID for context")
+@click.option("--session-id", help="Session ID for context")
+@click.option("--context", "-c", help="Additional context as JSON string")
 @click.pass_context
 def execute_workflow(ctx, query, user_id, session_id, context):
     """Interpret a query and execute the resulting workflow"""
     try:
         import json
+
         query_data = {"query": query}
 
         if user_id:
@@ -691,6 +786,7 @@ def execute_direct_workflow(ctx, name, params, format, download, user_id, filena
     """Direct workflow execution with output generation"""
     try:
         import json
+
         parameters = json.loads(params) if params else {}
         asyncio.run(_execute_direct_workflow_async(name, parameters, format, download, user_id, filename_prefix))
     except Exception as e:
@@ -799,21 +895,18 @@ def list_intents(ctx):
 # DISCOVERY AGENT COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.option('--name', '-n', required=True, help='Service name')
-@click.option('--url', '-u', required=True, help='Service base URL')
-@click.option('--spec', '-s', help='Path to OpenAPI spec file')
-@click.option('--openapi-url', '-o', help='OpenAPI spec URL')
-@click.option('--dry-run', is_flag=True, help='Dry run (no registration)')
+@click.option("--name", "-n", required=True, help="Service name")
+@click.option("--url", "-u", required=True, help="Service base URL")
+@click.option("--spec", "-s", help="Path to OpenAPI spec file")
+@click.option("--openapi-url", "-o", help="OpenAPI spec URL")
+@click.option("--dry-run", is_flag=True, help="Dry run (no registration)")
 @click.pass_context
 def discover_service(ctx, name, url, spec, openapi_url, dry_run):
     """Discover and optionally register service endpoints from OpenAPI spec"""
     try:
-        discover_request = {
-            "name": name,
-            "base_url": url,
-            "dry_run": dry_run
-        }
+        discover_request = {"name": name, "base_url": url, "dry_run": dry_run}
 
         # Load spec from file or URL
         if spec:
@@ -821,7 +914,7 @@ def discover_service(ctx, name, url, spec, openapi_url, dry_run):
                 console = Console()
                 console.print(f"[red]Spec file not found: {spec}[/red]")
                 return
-            with open(spec, 'r') as f:
+            with open(spec, "r") as f:
                 discover_request["spec"] = json.load(f)
         elif openapi_url:
             discover_request["openapi_url"] = openapi_url
@@ -830,11 +923,7 @@ def discover_service(ctx, name, url, spec, openapi_url, dry_run):
             discover_request["spec"] = {
                 "openapi": "3.0.0",
                 "info": {"title": name.title(), "version": "1.0.0"},
-                "paths": {
-                    "/health": {
-                        "get": {"summary": "Health check", "responses": {"200": {"description": "OK"}}}
-                    }
-                }
+                "paths": {"/health": {"get": {"summary": "Health check", "responses": {"200": {"description": "OK"}}}}},
             }
 
         discovery_manager = cli_service.discovery_agent_manager
@@ -848,11 +937,14 @@ def discover_service(ctx, name, url, spec, openapi_url, dry_run):
 # MEMORY AGENT COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.option('--type', '-t', required=True, help='Memory item type (operation|llm_summary|doc_summary|api_summary|finding)')
-@click.option('--key', '-k', required=True, help='Memory key (correlation_id, doc id, etc.)')
-@click.option('--summary', '-s', required=True, help='Summary of the memory item')
-@click.option('--data', '-d', help='JSON data payload')
+@click.option(
+    "--type", "-t", required=True, help="Memory item type (operation|llm_summary|doc_summary|api_summary|finding)"
+)
+@click.option("--key", "-k", required=True, help="Memory key (correlation_id, doc id, etc.)")
+@click.option("--summary", "-s", required=True, help="Summary of the memory item")
+@click.option("--data", "-d", help="JSON data payload")
 @click.pass_context
 def store_memory(ctx, type, key, summary, data):
     """Store operational context and event summaries in memory"""
@@ -866,7 +958,7 @@ def store_memory(ctx, type, key, summary, data):
             "type": type,
             "key": key,
             "summary": summary,
-            "data": memory_data
+            "data": memory_data,
         }
 
         memory_request = {"item": memory_item}
@@ -881,9 +973,9 @@ def store_memory(ctx, type, key, summary, data):
 
 
 @cli.command()
-@click.option('--type', '-t', help='Filter by memory type')
-@click.option('--key', '-k', help='Filter by memory key')
-@click.option('--limit', '-l', default=50, help='Maximum items to retrieve')
+@click.option("--type", "-t", help="Filter by memory type")
+@click.option("--key", "-k", help="Filter by memory key")
+@click.option("--limit", "-l", default=50, help="Maximum items to retrieve")
 @click.pass_context
 def list_memory(ctx, type, key, limit):
     """List stored memory items with optional filtering"""
@@ -896,7 +988,9 @@ def list_memory(ctx, type, key, limit):
         # Use the list_memory_items method directly to get items
         # This is a bit of a workaround since we need to access the API
         # For now, we'll show a placeholder
-        console.print(f"[yellow]Listing memory items (type: {type or 'all'}, key: {key or 'all'}, limit: {limit})[/yellow]")
+        console.print(
+            f"[yellow]Listing memory items (type: {type or 'all'}, key: {key or 'all'}, limit: {limit})[/yellow]"
+        )
         console.print("[yellow]This would display memory items from the memory agent[/yellow]")
 
         # In a real implementation, we'd call the API and display results
@@ -911,9 +1005,10 @@ def list_memory(ctx, type, key, limit):
 # SECURE ANALYZER COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('content')
-@click.option('--keywords', '-k', help='Comma-separated list of additional keywords to detect')
+@click.argument("content")
+@click.option("--keywords", "-k", help="Comma-separated list of additional keywords to detect")
 @click.pass_context
 def detect_content(ctx, content, keywords):
     """Analyze content for sensitive information and security risks"""
@@ -931,7 +1026,7 @@ def detect_content(ctx, content, keywords):
 
 
 @cli.command()
-@click.argument('content')
+@click.argument("content")
 @click.pass_context
 def suggest_models(ctx, content):
     """Get AI model recommendations based on content sensitivity"""
@@ -946,17 +1041,14 @@ def suggest_models(ctx, content):
 
 
 @cli.command()
-@click.argument('content')
-@click.option('--override-policy', '-o', is_flag=True, help='Override security policy restrictions')
-@click.option('--prompt', '-p', help='Custom summarization prompt')
+@click.argument("content")
+@click.option("--override-policy", "-o", is_flag=True, help="Override security policy restrictions")
+@click.option("--prompt", "-p", help="Custom summarization prompt")
 @click.pass_context
 def secure_summarize(ctx, content, override_policy, prompt):
     """Generate secure summary with policy-based provider filtering"""
     try:
-        summarize_request = {
-            "content": content,
-            "override_policy": override_policy
-        }
+        summarize_request = {"content": content, "override_policy": override_policy}
 
         if prompt:
             summarize_request["prompt"] = prompt
@@ -972,11 +1064,14 @@ def secure_summarize(ctx, content, override_policy, prompt):
 # SUMMARIZER HUB COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('content')
-@click.option('--providers', '-p', required=True, help='Comma-separated list of providers (ollama,openai,anthropic,grok,bedrock)')
-@click.option('--prompt', help='Custom summarization prompt')
-@click.option('--hub-config', is_flag=True, help='Use hub configuration defaults')
+@click.argument("content")
+@click.option(
+    "--providers", "-p", required=True, help="Comma-separated list of providers (ollama,openai,anthropic,grok,bedrock)"
+)
+@click.option("--prompt", help="Custom summarization prompt")
+@click.option("--hub-config", is_flag=True, help="Use hub configuration defaults")
 @click.pass_context
 def ensemble_summarize(ctx, content, providers, prompt, hub_config):
     """Generate ensemble summaries using multiple AI providers"""
@@ -1007,11 +1102,7 @@ def ensemble_summarize(ctx, content, providers, prompt, hub_config):
 
             provider_configs.append(config)
 
-        summarize_request = {
-            "text": content,
-            "providers": provider_configs,
-            "use_hub_config": hub_config
-        }
+        summarize_request = {"text": content, "providers": provider_configs, "use_hub_config": hub_config}
 
         if prompt:
             summarize_request["prompt"] = prompt
@@ -1024,7 +1115,7 @@ def ensemble_summarize(ctx, content, providers, prompt, hub_config):
 
 
 @cli.command()
-@click.argument('provider')
+@click.argument("provider")
 @click.pass_context
 def test_provider(ctx, provider):
     """Test connectivity to an AI provider"""
@@ -1047,7 +1138,7 @@ def test_provider(ctx, provider):
         test_request = {
             "text": "Hello world. This is a test message for provider connectivity.",
             "providers": [test_config],
-            "use_hub_config": False
+            "use_hub_config": False,
         }
 
         summarizer_manager = cli_service.summarizer_hub_manager
@@ -1064,11 +1155,12 @@ def test_provider(ctx, provider):
 # CODE ANALYZER COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('content')
-@click.option('--language', '-l', help='Programming language (python, javascript, etc.)')
-@click.option('--repo', '-r', help='Repository name')
-@click.option('--path', '-p', help='File path within repository')
+@click.argument("content")
+@click.option("--language", "-l", help="Programming language (python, javascript, etc.)")
+@click.option("--repo", "-r", help="Repository name")
+@click.option("--path", "-p", help="File path within repository")
 @click.pass_context
 def analyze_code(ctx, content, language, repo, path):
     """Analyze code for API endpoints and programming patterns"""
@@ -1090,8 +1182,8 @@ def analyze_code(ctx, content, language, repo, path):
 
 
 @cli.command()
-@click.argument('content')
-@click.option('--keywords', '-k', help='Comma-separated list of additional keywords to detect')
+@click.argument("content")
+@click.option("--keywords", "-k", help="Comma-separated list of additional keywords to detect")
 @click.pass_context
 def scan_security(ctx, content, keywords):
     """Scan code for security vulnerabilities and sensitive information"""
@@ -1112,10 +1204,11 @@ def scan_security(ctx, content, keywords):
 # NOTIFICATION SERVICE COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.option('--id', '-i', required=True, help='Entity ID to update')
-@click.option('--owner', '-o', help='Owner name')
-@click.option('--team', '-t', help='Team name')
+@click.option("--id", "-i", required=True, help="Entity ID to update")
+@click.option("--owner", "-o", help="Owner name")
+@click.option("--team", "-t", help="Team name")
 @click.pass_context
 def update_owner(ctx, id, owner, team):
     """Update owner information in the notification service"""
@@ -1135,7 +1228,7 @@ def update_owner(ctx, id, owner, team):
 
 
 @cli.command()
-@click.argument('owners')
+@click.argument("owners")
 @click.pass_context
 def resolve_owners(ctx, owners):
     """Resolve owner names to notification targets"""
@@ -1157,12 +1250,12 @@ def resolve_owners(ctx, owners):
 
 
 @cli.command()
-@click.option('--channel', '-c', required=True, help='Notification channel (webhook/email/slack)')
-@click.option('--target', '-t', required=True, help='Delivery target (URL/email/channel)')
-@click.option('--title', required=True, help='Notification title')
-@click.option('--message', '-m', required=True, help='Notification message')
-@click.option('--metadata', help='JSON metadata for notification')
-@click.option('--labels', '-l', help='Comma-separated labels')
+@click.option("--channel", "-c", required=True, help="Notification channel (webhook/email/slack)")
+@click.option("--target", "-t", required=True, help="Delivery target (URL/email/channel)")
+@click.option("--title", required=True, help="Notification title")
+@click.option("--message", "-m", required=True, help="Notification message")
+@click.option("--metadata", help="JSON metadata for notification")
+@click.option("--labels", "-l", help="Comma-separated labels")
 @click.pass_context
 def send_notification(ctx, channel, target, title, message, metadata, labels):
     """Send notification through specified channel"""
@@ -1173,7 +1266,7 @@ def send_notification(ctx, channel, target, title, message, metadata, labels):
             "title": title,
             "message": message,
             "metadata": {},
-            "labels": []
+            "labels": [],
         }
 
         if metadata:
@@ -1194,7 +1287,7 @@ def send_notification(ctx, channel, target, title, message, metadata, labels):
 
 
 @cli.command()
-@click.option('--limit', '-l', default=20, help='Maximum number of entries to retrieve')
+@click.option("--limit", "-l", default=20, help="Maximum number of entries to retrieve")
 @click.pass_context
 def view_dlq(ctx, limit):
     """View failed notifications in dead letter queue"""
@@ -1218,20 +1311,17 @@ def view_dlq(ctx, limit):
 # LOG COLLECTOR COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.option('--service', '-s', required=True, help='Service name that generated the log')
-@click.option('--level', '-l', required=True, help='Log level (debug/info/warning/error/fatal)')
-@click.option('--message', '-m', required=True, help='Log message')
-@click.option('--context', '-c', help='JSON context data for the log entry')
+@click.option("--service", "-s", required=True, help="Service name that generated the log")
+@click.option("--level", "-l", required=True, help="Log level (debug/info/warning/error/fatal)")
+@click.option("--message", "-m", required=True, help="Log message")
+@click.option("--context", "-c", help="JSON context data for the log entry")
 @click.pass_context
 def submit_log(ctx, service, level, message, context):
     """Submit a log entry to the log collector"""
     try:
-        log_request = {
-            "service": service,
-            "level": level,
-            "message": message
-        }
+        log_request = {"service": service, "level": level, "message": message}
 
         if context:
             try:
@@ -1248,9 +1338,9 @@ def submit_log(ctx, service, level, message, context):
 
 
 @cli.command()
-@click.option('--service', '-s', help='Filter by service name')
-@click.option('--level', '-l', help='Filter by log level')
-@click.option('--limit', '-n', default=50, help='Maximum number of logs to retrieve')
+@click.option("--service", "-s", help="Filter by service name")
+@click.option("--level", "-l", help="Filter by log level")
+@click.option("--limit", "-n", default=50, help="Maximum number of logs to retrieve")
 @click.pass_context
 def query_logs(ctx, service, level, limit):
     """Query stored logs with optional filtering"""
@@ -1284,21 +1374,19 @@ def log_stats(ctx):
 # BEDROCK PROXY COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.option('--prompt', '-p', required=True, help='Prompt text for AI model')
-@click.option('--template', '-t', help='Response template (summary/risks/decisions/pr_confidence/life_of_ticket)')
-@click.option('--format', '-f', default='md', help='Output format (md/txt/json)')
-@click.option('--model', '-m', help='AI model to use')
-@click.option('--region', '-r', help='AWS region')
-@click.option('--title', help='Custom title for response')
+@click.option("--prompt", "-p", required=True, help="Prompt text for AI model")
+@click.option("--template", "-t", help="Response template (summary/risks/decisions/pr_confidence/life_of_ticket)")
+@click.option("--format", "-f", default="md", help="Output format (md/txt/json)")
+@click.option("--model", "-m", help="AI model to use")
+@click.option("--region", "-r", help="AWS region")
+@click.option("--title", help="Custom title for response")
 @click.pass_context
 def invoke_ai(ctx, prompt, template, format, model, region, title):
     """Invoke AI model with optional template and formatting"""
     try:
-        request_data = {
-            "prompt": prompt,
-            "format": format
-        }
+        request_data = {"prompt": prompt, "format": format}
 
         if template:
             request_data["template"] = template
@@ -1329,7 +1417,7 @@ def ai_templates(ctx):
 
 
 @cli.command()
-@click.option('--limit', '-l', default=10, help='Maximum number of recent invocations to show')
+@click.option("--limit", "-l", default=10, help="Maximum number of recent invocations to show")
 @click.pass_context
 def ai_history(ctx, limit):
     """View recent AI invocation history"""
@@ -1347,10 +1435,11 @@ def ai_history(ctx, limit):
 # ANALYSIS SERVICE COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('doc_ids', nargs=-1, required=True)
-@click.option('--detectors', '-d', help='Comma-separated list of detectors to use')
-@click.option('--severity-filter', '-s', help='Minimum severity level to report')
+@click.argument("doc_ids", nargs=-1, required=True)
+@click.option("--detectors", "-d", help="Comma-separated list of detectors to use")
+@click.option("--severity-filter", "-s", help="Minimum severity level to report")
 @click.pass_context
 def analyze_docs(ctx, doc_ids, detectors, severity_filter):
     """Analyze documents for consistency and issues"""
@@ -1360,9 +1449,7 @@ def analyze_docs(ctx, doc_ids, detectors, severity_filter):
             console.print("[red]Error: At least one document ID is required[/red]")
             return
 
-        analysis_request = {
-            "targets": list(doc_ids)
-        }
+        analysis_request = {"targets": list(doc_ids)}
 
         if detectors:
             analysis_request["detectors"] = [d.strip() for d in detectors.split(",") if d.strip()]
@@ -1378,9 +1465,9 @@ def analyze_docs(ctx, doc_ids, detectors, severity_filter):
 
 
 @cli.command()
-@click.option('--severity', '-s', help='Filter by severity level (critical/high/medium/low/info)')
-@click.option('--type', '-t', help='Filter by finding type')
-@click.option('--limit', '-l', default=50, help='Maximum number of findings to retrieve')
+@click.option("--severity", "-s", help="Filter by severity level (critical/high/medium/low/info)")
+@click.option("--type", "-t", help="Filter by finding type")
+@click.option("--limit", "-l", default=50, help="Maximum number of findings to retrieve")
 @click.pass_context
 def get_findings(ctx, severity, type, limit):
     """Retrieve analysis findings with optional filtering"""
@@ -1399,9 +1486,9 @@ def get_findings(ctx, severity, type, limit):
 
 
 @cli.command()
-@click.option('--type', '-t', required=True, help='Report type (summary/trends/quality)')
-@click.option('--time-period', help='Time period for trends report (e.g., 30d, 7d)')
-@click.option('--quality-threshold', type=float, help='Quality threshold for quality report (0.0-1.0)')
+@click.option("--type", "-t", required=True, help="Report type (summary/trends/quality)")
+@click.option("--time-period", help="Time period for trends report (e.g., 30d, 7d)")
+@click.option("--quality-threshold", type=float, help="Quality threshold for quality report (0.0-1.0)")
 @click.pass_context
 def generate_report(ctx, type, time_period, quality_threshold):
     """Generate analysis reports"""
@@ -1429,8 +1516,9 @@ def generate_report(ctx, type, time_period, quality_threshold):
 # CONFIGURATION MANAGEMENT COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.option('--service', '-s', help='Service name to view configuration for')
+@click.option("--service", "-s", help="Service name to view configuration for")
 @click.pass_context
 def view_config(ctx, service):
     """View service configuration files"""
@@ -1443,8 +1531,8 @@ def view_config(ctx, service):
 
 
 @cli.command()
-@click.argument('var', required=True)
-@click.argument('value', required=True)
+@click.argument("var", required=True)
+@click.argument("value", required=True)
 @click.pass_context
 def set_env(ctx, var, value):
     """Set environment variable"""
@@ -1500,9 +1588,10 @@ def validate_config(ctx):
 # DEPLOYMENT CONTROLS COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('service', required=True)
-@click.argument('replicas', type=int, required=True)
+@click.argument("service", required=True)
+@click.argument("replicas", type=int, required=True)
 @click.pass_context
 def scale_service(ctx, service, replicas):
     """Scale a service to specified number of replicas"""
@@ -1532,14 +1621,14 @@ def deployment_status(ctx):
 
 
 @cli.command()
-@click.argument('service', required=True)
-@click.argument('image', required=True)
-@click.option('--strategy', '-s', default='rolling', help='Deployment strategy (rolling/blue-green/canary)')
+@click.argument("service", required=True)
+@click.argument("image", required=True)
+@click.option("--strategy", "-s", default="rolling", help="Deployment strategy (rolling/blue-green/canary)")
 @click.pass_context
 def deploy_service(ctx, service, image, strategy):
     """Deploy service with new image"""
     try:
-        valid_strategies = ['rolling', 'blue-green', 'canary']
+        valid_strategies = ["rolling", "blue-green", "canary"]
         if strategy not in valid_strategies:
             console = Console()
             console.print(f"[red]Error: Invalid strategy. Must be one of: {', '.join(valid_strategies)}[/red]")
@@ -1556,22 +1645,24 @@ def deploy_service(ctx, service, image, strategy):
 # DISCOVERY AGENT INTEGRATION COMMANDS
 # ============================================================================
 
+
 @cli.command()
-@click.argument('service', required=False)
-@click.option('--all-services', is_flag=True, help='Discover tools for all services')
-@click.option('--category', help='Filter tools by category')
+@click.argument("service", required=False)
+@click.option("--all-services", is_flag=True, help="Discover tools for all services")
+@click.option("--category", help="Filter tools by category")
 @click.pass_context
 def discover_tools(ctx, service, all_services, category):
     """Discover LangGraph tools from service OpenAPI specifications"""
     try:
-        from services.discovery_agent.modules.tool_discovery import ToolDiscoveryService
         import asyncio
-        
+
+        from services.discovery_agent.modules.tool_discovery import ToolDiscoveryService
+
         console = Console()
-        
+
         async def run_discovery():
             discovery_service = ToolDiscoveryService()
-            
+
             if all_services:
                 # Discover tools for all running services
                 services_to_discover = [
@@ -1583,106 +1674,104 @@ def discover_tools(ctx, service, all_services, category):
                     {"name": "github-mcp", "url": "http://localhost:5072"},
                     {"name": "interpreter", "url": "http://localhost:5120"},
                     {"name": "secure-analyzer", "url": "http://localhost:5070"},
-                    {"name": "summarizer-hub", "url": "http://localhost:5160"}
+                    {"name": "summarizer-hub", "url": "http://localhost:5160"},
                 ]
-                
+
                 console.print("\n[bold]🔍 Discovering Tools for All Services[/bold]")
                 console.print("=" * 50)
-                
+
                 total_tools = 0
                 for svc in services_to_discover:
                     console.print(f"\n[blue]Discovering tools for {svc['name']}...[/blue]")
                     try:
                         result = await discovery_service.discover_tools(
-                            svc['name'], 
-                            svc['url'],
-                            tool_categories=[category] if category else None
+                            svc["name"], svc["url"], tool_categories=[category] if category else None
                         )
-                        
-                        if result.get('success'):
-                            tools = result.get('tools', [])
+
+                        if result.get("success"):
+                            tools = result.get("tools", [])
                             console.print(f"  ✅ Found {len(tools)} tools")
                             total_tools += len(tools)
-                            
+
                             if len(tools) > 0:
                                 for tool in tools[:3]:  # Show first 3 tools
-                                    console.print(f"    📋 {tool.get('name', 'Unknown')}: {tool.get('category', 'uncategorized')}")
+                                    console.print(
+                                        f"    📋 {tool.get('name', 'Unknown')}: {tool.get('category', 'uncategorized')}"
+                                    )
                                 if len(tools) > 3:
                                     console.print(f"    ... and {len(tools) - 3} more tools")
                         else:
                             console.print(f"  ❌ Failed: {result.get('error', 'Unknown error')}")
                     except Exception as e:
                         console.print(f"  ❌ Error: {str(e)}")
-                
+
                 console.print(f"\n[bold]📊 Discovery Summary:[/bold]")
                 console.print(f"  Total Tools Discovered: {total_tools}")
                 console.print(f"  Services Scanned: {len(services_to_discover)}")
-                
+
             elif service:
                 # Discover tools for specific service
                 console.print(f"\n[bold]🔍 Discovering Tools for {service}[/bold]")
                 console.print("=" * 40)
-                
+
                 # Map service names to URLs (you may need to adjust these)
                 service_urls = {
                     "analysis-service": "http://localhost:5020",
-                    "prompt_store": "http://localhost:5110", 
+                    "prompt_store": "http://localhost:5110",
                     "memory-agent": "http://localhost:5040",
                     "source-agent": "http://localhost:5000",
                     "doc_store": "http://localhost:5087",
                     "github-mcp": "http://localhost:5072",
                     "interpreter": "http://localhost:5120",
                     "secure-analyzer": "http://localhost:5070",
-                    "summarizer-hub": "http://localhost:5160"
+                    "summarizer-hub": "http://localhost:5160",
                 }
-                
+
                 if service not in service_urls:
                     console.print(f"[red]❌ Unknown service: {service}[/red]")
                     console.print(f"Available services: {', '.join(service_urls.keys())}")
                     return
-                
+
                 try:
                     result = await discovery_service.discover_tools(
-                        service, 
-                        service_urls[service],
-                        tool_categories=[category] if category else None
+                        service, service_urls[service], tool_categories=[category] if category else None
                     )
-                    
-                    if result.get('success'):
-                        tools = result.get('tools', [])
+
+                    if result.get("success"):
+                        tools = result.get("tools", [])
                         console.print(f"\n✅ Discovered {len(tools)} tools for {service}")
-                        
+
                         if tools:
                             console.print("\n[bold]📋 Discovered Tools:[/bold]")
                             for i, tool in enumerate(tools, 1):
                                 console.print(f"  {i}. [cyan]{tool.get('name', 'Unknown')}[/cyan]")
                                 console.print(f"     Category: {tool.get('category', 'uncategorized')}")
                                 console.print(f"     Description: {tool.get('description', 'No description')}")
-                                if tool.get('parameters'):
+                                if tool.get("parameters"):
                                     console.print(f"     Parameters: {len(tool.get('parameters', []))} params")
                                 console.print()
                         else:
                             console.print(f"[yellow]No tools found for {service}[/yellow]")
                     else:
                         console.print(f"[red]❌ Discovery failed: {result.get('error', 'Unknown error')}[/red]")
-                        
+
                 except Exception as e:
                     console.print(f"[red]❌ Error discovering tools: {str(e)}[/red]")
             else:
                 console.print("[red]❌ Please specify a service name or use --all-services flag[/red]")
                 console.print("Usage: discover-tools analysis-service")
                 console.print("       discover-tools --all-services")
-        
+
         asyncio.run(run_discovery())
-        
+
     except Exception as e:
         console = Console()
         console.print(f"[red]Error: {e}[/red]")
 
 
 @cli.command()
-@click.option('--category', help='Filter tools by category')
-@click.option('--service', help='Filter tools by service')
+@click.option("--category", help="Filter tools by category")
+@click.option("--service", help="Filter tools by service")
 @click.pass_context
 def list_discovered_tools(ctx, category, service):
     """List all previously discovered tools"""
@@ -1690,20 +1779,20 @@ def list_discovered_tools(ctx, category, service):
         console = Console()
         console.print("\n[bold]📋 Discovered Tools Registry[/bold]")
         console.print("=" * 40)
-        
+
         # This would ideally read from a persistent storage
         # For now, we'll show a placeholder
         console.print("[yellow]Tool registry not yet implemented.[/yellow]")
         console.print("Run 'discover-tools --all-services' first to populate the registry.")
-        
+
     except Exception as e:
         console = Console()
         console.print(f"[red]Error: {e}[/red]")
 
 
 @cli.command()
-@click.argument('service_name', required=True)
-@click.option('--tool-name', help='Test specific tool')
+@click.argument("service_name", required=True)
+@click.option("--tool-name", help="Test specific tool")
 @click.pass_context
 def test_discovered_tools(ctx, service_name, tool_name):
     """Test discovered tools for functionality"""
@@ -1711,16 +1800,16 @@ def test_discovered_tools(ctx, service_name, tool_name):
         console = Console()
         console.print(f"\n[bold]🧪 Testing Tools for {service_name}[/bold]")
         console.print("=" * 40)
-        
+
         if tool_name:
             console.print(f"Testing specific tool: {tool_name}")
         else:
             console.print("Testing all discovered tools...")
-        
+
         # This would test the actual tools
         console.print("[yellow]Tool testing not yet implemented.[/yellow]")
         console.print("This feature will validate discovered tools against their services.")
-        
+
     except Exception as e:
         console = Console()
         console.print(f"[red]Error: {e}[/red]")
@@ -1729,6 +1818,7 @@ def test_discovered_tools(ctx, service_name, tool_name):
 # ============================================================================
 # ADVANCED MONITORING COMMANDS
 # ============================================================================
+
 
 @cli.command()
 @click.pass_context
@@ -1777,14 +1867,16 @@ def view_metrics(ctx):
         console = Console()
         console.print(f"[red]Error: {e}[/red]")
 
+
 # ============================================================================
 # END-TO-END WORKFLOW EXECUTION ASYNC FUNCTIONS
 # ============================================================================
 
+
 async def _execute_e2e_query_async(query, format, download, user_id, filename_prefix):
     """Execute end-to-end query processing with output generation."""
     console = Console()
-    
+
     with console.status("[bold green]Processing query..."):
         try:
             # Call interpreter's execute-query endpoint
@@ -1792,34 +1884,34 @@ async def _execute_e2e_query_async(query, format, download, user_id, filename_pr
                 "query": query,
                 "output_format": format,
                 "user_id": user_id or "cli_user",
-                "filename_prefix": filename_prefix
+                "filename_prefix": filename_prefix,
             }
-            
+
             interpreter_url = "http://interpreter:5120"
-            
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(f"{interpreter_url}/execute-query", json=request_data) as response:
                     result = await response.json()
-            
+
             if result.get("status") == "completed":
                 console.print(f"[green]✓[/green] Query executed successfully!")
                 console.print(f"[cyan]Execution ID:[/cyan] {result.get('execution_id')}")
                 console.print(f"[cyan]Workflow:[/cyan] {result.get('workflow_executed')}")
-                
+
                 output_info = result.get("output", {})
                 if output_info:
                     console.print(f"[cyan]Output File:[/cyan] {output_info.get('filename')}")
                     console.print(f"[cyan]Format:[/cyan] {output_info.get('format')}")
                     console.print(f"[cyan]Size:[/cyan] {output_info.get('size_bytes')} bytes")
                     console.print(f"[cyan]Download URL:[/cyan] {output_info.get('download_url')}")
-                    
-                    if download and output_info.get('file_id'):
+
+                    if download and output_info.get("file_id"):
                         console.print("[yellow]Downloading file...[/yellow]")
-                        await _download_output_async(output_info['file_id'], None)
-                        
+                        await _download_output_async(output_info["file_id"], None)
+
             elif result.get("status") == "failed":
                 console.print(f"[red]✗[/red] Workflow execution failed: {result.get('error')}")
-                
+
             elif result.get("status") == "no_workflow":
                 console.print(f"[yellow]⚠[/yellow] {result.get('message')}")
                 suggestions = result.get("suggestions", [])
@@ -1829,7 +1921,7 @@ async def _execute_e2e_query_async(query, format, download, user_id, filename_pr
                         console.print(f"  • {suggestion}")
             else:
                 console.print(f"[red]✗[/red] Error: {result.get('error', 'Unknown error')}")
-                
+
         except Exception as e:
             console.print(f"[red]✗[/red] Error executing query: {str(e)}")
 
@@ -1837,7 +1929,7 @@ async def _execute_e2e_query_async(query, format, download, user_id, filename_pr
 async def _execute_direct_workflow_async(name, parameters, format, download, user_id, filename_prefix):
     """Execute workflow directly with output generation."""
     console = Console()
-    
+
     with console.status(f"[bold green]Executing {name} workflow..."):
         try:
             request_data = {
@@ -1845,32 +1937,32 @@ async def _execute_direct_workflow_async(name, parameters, format, download, use
                 "parameters": parameters,
                 "output_format": format,
                 "user_id": user_id or "cli_user",
-                "filename_prefix": filename_prefix
+                "filename_prefix": filename_prefix,
             }
-            
+
             interpreter_url = "http://interpreter:5120"
-            
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(f"{interpreter_url}/workflows/execute-direct", json=request_data) as response:
                     result = await response.json()
-            
+
             if result.get("status") == "completed":
                 console.print(f"[green]✓[/green] Workflow '{name}' executed successfully!")
                 console.print(f"[cyan]Execution ID:[/cyan] {result.get('execution_id')}")
-                
+
                 output_info = result.get("output", {})
                 if output_info:
                     console.print(f"[cyan]Output File:[/cyan] {output_info.get('filename')}")
                     console.print(f"[cyan]Format:[/cyan] {output_info.get('format')}")
                     console.print(f"[cyan]Size:[/cyan] {output_info.get('size_bytes')} bytes")
-                    
-                    if download and output_info.get('file_id'):
+
+                    if download and output_info.get("file_id"):
                         console.print("[yellow]Downloading file...[/yellow]")
-                        await _download_output_async(output_info['file_id'], None)
-                        
+                        await _download_output_async(output_info["file_id"], None)
+
             else:
                 console.print(f"[red]✗[/red] Workflow execution failed: {result.get('error')}")
-                
+
         except Exception as e:
             console.print(f"[red]✗[/red] Error executing workflow: {str(e)}")
 
@@ -1878,39 +1970,39 @@ async def _execute_direct_workflow_async(name, parameters, format, download, use
 async def _download_output_async(file_id, save_path):
     """Download generated output file."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5000"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{interpreter_url}/outputs/download/{file_id}") as response:
                 if response.status == 200:
                     # Get filename from Content-Disposition header or use file_id
                     filename = file_id
-                    if 'Content-Disposition' in response.headers:
-                        disposition = response.headers['Content-Disposition']
-                        if 'filename=' in disposition:
-                            filename = disposition.split('filename=')[1].strip('"')
-                    
+                    if "Content-Disposition" in response.headers:
+                        disposition = response.headers["Content-Disposition"]
+                        if "filename=" in disposition:
+                            filename = disposition.split("filename=")[1].strip('"')
+
                     # Determine save path
                     if save_path:
                         final_path = save_path
                     else:
                         final_path = f"./{filename}"
-                    
+
                     # Download file
                     file_content = await response.read()
-                    
-                    with open(final_path, 'wb') as f:
+
+                    with open(final_path, "wb") as f:
                         f.write(file_content)
-                    
+
                     console.print(f"[green]✓[/green] File downloaded: {final_path}")
                     console.print(f"[cyan]Size:[/cyan] {len(file_content)} bytes")
-                    
+
                 else:
                     error_text = await response.text()
                     console.print(f"[red]✗[/red] Download failed: {error_text}")
-                    
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error downloading file: {str(e)}")
 
@@ -1918,40 +2010,35 @@ async def _download_output_async(file_id, save_path):
 async def _list_workflow_templates_async():
     """List available workflow templates."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5000"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{interpreter_url}/workflows/templates") as response:
                 result = await response.json()
-        
+
         templates = result.get("templates", {})
-        
+
         if templates:
             console.print(f"[green]Available Workflow Templates ({len(templates)})[/green]")
             console.print()
-            
+
             table = Table(show_header=True, header_style="bold magenta")
             table.add_column("Name", style="cyan")
             table.add_column("Description", style="white")
             table.add_column("Services", style="yellow")
             table.add_column("Output Formats", style="green")
-            
+
             for name, template in templates.items():
                 services = ", ".join(template.get("services", []))
                 output_types = ", ".join(template.get("output_types", []))
-                table.add_row(
-                    name,
-                    template.get("description", ""),
-                    services,
-                    output_types
-                )
-            
+                table.add_row(name, template.get("description", ""), services, output_types)
+
             console.print(table)
         else:
             console.print("[yellow]No workflow templates available[/yellow]")
-            
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error fetching templates: {str(e)}")
 
@@ -1959,33 +2046,33 @@ async def _list_workflow_templates_async():
 async def _get_supported_formats_async():
     """Show supported output formats."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5000"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{interpreter_url}/outputs/formats") as response:
                 result = await response.json()
-        
+
         formats = result.get("supported_formats", [])
         descriptions = result.get("format_descriptions", {})
-        
+
         if formats:
             console.print("[green]Supported Output Formats[/green]")
             console.print()
-            
+
             table = Table(show_header=True, header_style="bold magenta")
             table.add_column("Format", style="cyan")
             table.add_column("Description", style="white")
-            
+
             for format_name in formats:
                 description = descriptions.get(format_name, "No description available")
                 table.add_row(format_name, description)
-            
+
             console.print(table)
         else:
             console.print("[yellow]No supported formats found[/yellow]")
-            
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error fetching formats: {str(e)}")
 
@@ -1993,40 +2080,40 @@ async def _get_supported_formats_async():
 async def _download_document_async(doc_id, save_path):
     """Download persistent document from doc_store."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5120"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{interpreter_url}/documents/{doc_id}/download") as response:
                 if response.status == 200:
                     # Get filename from Content-Disposition header or use doc_id
                     filename = doc_id
-                    if 'Content-Disposition' in response.headers:
-                        disposition = response.headers['Content-Disposition']
-                        if 'filename=' in disposition:
-                            filename = disposition.split('filename=')[1].strip('"')
-                    
+                    if "Content-Disposition" in response.headers:
+                        disposition = response.headers["Content-Disposition"]
+                        if "filename=" in disposition:
+                            filename = disposition.split("filename=")[1].strip('"')
+
                     # Determine save path
                     if save_path:
                         final_path = save_path
                     else:
                         final_path = f"./{filename}"
-                    
+
                     # Download file
                     file_content = await response.read()
-                    
-                    with open(final_path, 'wb') as f:
+
+                    with open(final_path, "wb") as f:
                         f.write(file_content)
-                    
+
                     console.print(f"[green]✓[/green] Document downloaded: {final_path}")
                     console.print(f"[cyan]Document ID:[/cyan] {doc_id}")
                     console.print(f"[cyan]Size:[/cyan] {len(file_content)} bytes")
-                    
+
                 else:
                     error_data = await response.json()
                     console.print(f"[red]✗[/red] Download failed: {error_data.get('error', 'Unknown error')}")
-                    
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error downloading document: {str(e)}")
 
@@ -2034,21 +2121,21 @@ async def _download_document_async(doc_id, save_path):
 async def _get_document_provenance_async(doc_id):
     """Get comprehensive provenance for a workflow-generated document."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5120"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{interpreter_url}/documents/{doc_id}/provenance") as response:
                 result = await response.json()
-        
+
         if result.get("error"):
             console.print(f"[red]✗[/red] Error: {result['error']}")
             return
-        
+
         console.print(f"[green]Document Provenance: {doc_id}[/green]")
         console.print()
-        
+
         # Document Info
         doc_info = result.get("document_info", {})
         console.print("[cyan]Document Information:[/cyan]")
@@ -2057,25 +2144,25 @@ async def _get_document_provenance_async(doc_id):
         console.print(f"  • Created: {doc_info.get('created_at', 'N/A')}")
         console.print(f"  • Author: {doc_info.get('author', 'N/A')}")
         console.print()
-        
+
         # Workflow Chain
         workflow_chain = result.get("workflow_chain", {})
         console.print("[cyan]Workflow Chain:[/cyan]")
         console.print(f"  • Services Used: {', '.join(workflow_chain.get('services_used', []))}")
-        
+
         # Prompts Used
         prompts = workflow_chain.get("prompts_used", [])
         if prompts:
             console.print(f"  • Prompts Used: {len(prompts)}")
             for prompt in prompts[:3]:  # Show first 3
                 console.print(f"    - {prompt.get('action', 'Unknown')} (Step {prompt.get('step_index', 'N/A')})")
-        
+
         # Quality Metrics
         quality = workflow_chain.get("quality_metrics", {})
         if quality:
             console.print(f"  • Quality Score: {quality.get('confidence', 0):.2f}")
             console.print(f"  • Completeness: {quality.get('completeness', 0):.2f}")
-        
+
         # Execution Metadata
         execution_metadata = result.get("execution_metadata", {})
         if execution_metadata:
@@ -2084,7 +2171,7 @@ async def _get_document_provenance_async(doc_id):
             console.print(f"  • Execution ID: {execution_metadata.get('execution_id', 'N/A')}")
             console.print(f"  • Execution Time: {execution_metadata.get('execution_time', 'N/A')}")
             console.print(f"  • Generated At: {execution_metadata.get('generated_at', 'N/A')}")
-            
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error getting provenance: {str(e)}")
 
@@ -2092,28 +2179,29 @@ async def _get_document_provenance_async(doc_id):
 async def _list_workflow_documents_async(workflow_name, limit):
     """List all documents generated by a workflow."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5120"
-        
+
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{interpreter_url}/documents/by-workflow/{workflow_name}", 
-                                 params={"limit": limit}) as response:
+            async with session.get(
+                f"{interpreter_url}/documents/by-workflow/{workflow_name}", params={"limit": limit}
+            ) as response:
                 result = await response.json()
-        
+
         documents = result.get("documents", [])
-        
+
         if documents:
             console.print(f"[green]Documents for '{workflow_name}' workflow ({len(documents)} found)[/green]")
             console.print()
-            
+
             table = Table(show_header=True, header_style="bold magenta")
             table.add_column("Document ID", style="cyan")
             table.add_column("Title", style="white")
             table.add_column("Format", style="yellow")
             table.add_column("Size", style="green")
             table.add_column("Created", style="blue")
-            
+
             for doc in documents:
                 size_kb = doc.get("size_bytes", 0) / 1024
                 table.add_row(
@@ -2121,15 +2209,15 @@ async def _list_workflow_documents_async(workflow_name, limit):
                     doc.get("title", "Untitled")[:40] + ("..." if len(doc.get("title", "")) > 40 else ""),
                     doc.get("format", "unknown"),
                     f"{size_kb:.1f} KB",
-                    doc.get("created_at", "N/A")[:19] if doc.get("created_at") else "N/A"
+                    doc.get("created_at", "N/A")[:19] if doc.get("created_at") else "N/A",
                 )
-            
+
             console.print(table)
             console.print()
             console.print(f"[cyan]Use 'download-document --doc-id <ID>' to download any document[/cyan]")
         else:
             console.print(f"[yellow]No documents found for workflow '{workflow_name}'[/yellow]")
-            
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error listing documents: {str(e)}")
 
@@ -2137,21 +2225,21 @@ async def _list_workflow_documents_async(workflow_name, limit):
 async def _get_execution_trace_async(execution_id):
     """Get detailed execution trace and generated documents."""
     console = Console()
-    
+
     try:
         interpreter_url = "http://interpreter:5120"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{interpreter_url}/workflows/{execution_id}/trace") as response:
                 result = await response.json()
-        
+
         if result.get("error"):
             console.print(f"[red]✗[/red] Error: {result['error']}")
             return
-        
+
         console.print(f"[green]Execution Trace: {execution_id}[/green]")
         console.print()
-        
+
         # Execution Details
         execution_details = result.get("execution_details", {})
         console.print("[cyan]Execution Details:[/cyan]")
@@ -2161,12 +2249,12 @@ async def _get_execution_trace_async(execution_id):
         console.print(f"  • Started: {execution_details.get('started_at', 'N/A')}")
         console.print(f"  • Execution Time: {execution_details.get('execution_time', 'N/A')}")
         console.print()
-        
+
         # Generated Documents
         documents = result.get("generated_documents", [])
         if documents:
             console.print(f"[cyan]Generated Documents ({len(documents)}):[/cyan]")
-            
+
             for i, doc in enumerate(documents, 1):
                 console.print(f"  {i}. {doc.get('title', 'Untitled')} ({doc.get('format', 'unknown')})")
                 console.print(f"     ID: {doc.get('document_id', 'N/A')}")
@@ -2174,7 +2262,7 @@ async def _get_execution_trace_async(execution_id):
                 console.print()
         else:
             console.print("[yellow]No documents generated by this execution[/yellow]")
-            
+
     except Exception as e:
         console.print(f"[red]✗[/red] Error getting execution trace: {str(e)}")
 

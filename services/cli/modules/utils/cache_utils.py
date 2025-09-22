@@ -1,7 +1,7 @@
 """Cache utilities for CLI operations."""
 
-from typing import Dict, Any, Optional
 import time
+from typing import Any, Dict, Optional
 
 
 class CacheManager:
@@ -15,8 +15,8 @@ class CacheManager:
         """Get cached value if not expired."""
         if key in self.cache:
             item = self.cache[key]
-            if time.time() - item.get('timestamp', 0) < item.get('ttl', self.default_ttl):
-                return item['data']
+            if time.time() - item.get("timestamp", 0) < item.get("ttl", self.default_ttl):
+                return item["data"]
             else:
                 # Remove expired item
                 del self.cache[key]
@@ -24,11 +24,7 @@ class CacheManager:
 
     async def set(self, key: str, data: Any, ttl: Optional[int] = None):
         """Set cached value with TTL."""
-        self.cache[key] = {
-            'data': data,
-            'timestamp': time.time(),
-            'ttl': ttl or self.default_ttl
-        }
+        self.cache[key] = {"data": data, "timestamp": time.time(), "ttl": ttl or self.default_ttl}
 
     async def invalidate(self, pattern: Optional[str] = None):
         """Invalidate cache entries matching pattern."""
@@ -45,7 +41,7 @@ class CacheManager:
         expired_keys = []
 
         for key, item in self.cache.items():
-            if current_time - item.get('timestamp', 0) >= item.get('ttl', self.default_ttl):
+            if current_time - item.get("timestamp", 0) >= item.get("ttl", self.default_ttl):
                 expired_keys.append(key)
 
         for key in expired_keys:
@@ -58,13 +54,13 @@ class CacheManager:
         current_time = time.time()
 
         for item in self.cache.values():
-            if current_time - item.get('timestamp', 0) >= item.get('ttl', self.default_ttl):
+            if current_time - item.get("timestamp", 0) >= item.get("ttl", self.default_ttl):
                 expired_entries += 1
 
         return {
-            'total_entries': total_entries,
-            'active_entries': total_entries - expired_entries,
-            'expired_entries': expired_entries
+            "total_entries": total_entries,
+            "active_entries": total_entries - expired_entries,
+            "expired_entries": expired_entries,
         }
 
     async def delete(self, key: str):

@@ -4,15 +4,16 @@ Provides power-user operations for secure analyzer including
 content detection, policy enforcement, and secure summarization.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
+import asyncio
 import json
 import os
-import asyncio
+from typing import Any, Dict, List, Optional
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+from rich.text import Text
 
 from ...base.base_manager import BaseManager
 
@@ -35,7 +36,7 @@ class SecureAnalyzerManager(BaseManager):
             ("3", "Secure Summarization (Policy-filtered AI operations)"),
             ("4", "Security Policy Configuration"),
             ("5", "Compliance Reporting & Analytics"),
-            ("6", "Secure Analyzer Health & Monitoring")
+            ("6", "Secure Analyzer Health & Monitoring"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -60,14 +61,17 @@ class SecureAnalyzerManager(BaseManager):
         """Content security analysis submenu."""
         while True:
             menu = create_menu_table("Content Security Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Analyze Content for Sensitive Information"),
-                ("2", "Batch Content Scanning"),
-                ("3", "File-Based Content Analysis"),
-                ("4", "Interactive Content Scanner"),
-                ("5", "Security Pattern Testing"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Analyze Content for Sensitive Information"),
+                    ("2", "Batch Content Scanning"),
+                    ("3", "File-Based Content Analysis"),
+                    ("4", "Interactive Content Scanner"),
+                    ("5", "Security Pattern Testing"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -112,10 +116,7 @@ class SecureAnalyzerManager(BaseManager):
                 keywords = [k.strip() for k in keywords_input.split(",") if k.strip()]
 
             # Perform detection
-            detect_request = {
-                "content": content,
-                "keywords": keywords
-            }
+            detect_request = {"content": content, "keywords": keywords}
 
             with self.console.status("[bold green]Analyzing content for security risks...[/bold green]") as status:
                 response = await self.clients.post_json("secure-analyzer/detect", detect_request)
@@ -204,7 +205,7 @@ class SecureAnalyzerManager(BaseManager):
                 self.console.print("[red]File too large (max 1MB)[/red]")
                 return
 
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             if not content.strip():
@@ -213,13 +214,10 @@ class SecureAnalyzerManager(BaseManager):
 
             # Get custom keywords
             keywords = None
-            if file_path.endswith(('.py', '.js', '.java', '.cpp', '.c', '.h')):
-                keywords = ['password', 'secret', 'key', 'token', 'api_key']
+            if file_path.endswith((".py", ".js", ".java", ".cpp", ".c", ".h")):
+                keywords = ["password", "secret", "key", "token", "api_key"]
 
-            detect_request = {
-                "content": content,
-                "keywords": keywords
-            }
+            detect_request = {"content": content, "keywords": keywords}
 
             with self.console.status(f"[bold green]Analyzing {os.path.basename(file_path)}...[/bold green]") as status:
                 response = await self.clients.post_json("secure-analyzer/detect", detect_request)
@@ -252,7 +250,9 @@ class SecureAnalyzerManager(BaseManager):
                     self.console.print("[red]🚨 SENSITIVE CONTENT DETECTED![/red]")
                     matches = response.get("matches", [])
                     if matches:
-                        self.console.print(f"[red]Matches: {', '.join(matches[:3])}{'...' if len(matches) > 3 else ''}[/red]")
+                        self.console.print(
+                            f"[red]Matches: {', '.join(matches[:3])}{'...' if len(matches) > 3 else ''}[/red]"
+                        )
                 else:
                     self.console.print("[green]✅ Content appears safe[/green]")
 
@@ -277,7 +277,7 @@ class SecureAnalyzerManager(BaseManager):
                 "SSN": "123-45-6789",
                 "Email": "user@example.com",
                 "IP Address": "192.168.1.100",
-                "JWT Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                "JWT Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
             }
 
             results = []
@@ -287,20 +287,24 @@ class SecureAnalyzerManager(BaseManager):
                 try:
                     response = await self.clients.post_json("secure-analyzer/detect", detect_request)
                     detected = response.get("sensitive", False) if response else False
-                    results.append({
-                        "pattern": pattern_name,
-                        "content": test_content[:50] + "..." if len(test_content) > 50 else test_content,
-                        "detected": detected,
-                        "matches": len(response.get("matches", [])) if response else 0
-                    })
+                    results.append(
+                        {
+                            "pattern": pattern_name,
+                            "content": test_content[:50] + "..." if len(test_content) > 50 else test_content,
+                            "detected": detected,
+                            "matches": len(response.get("matches", [])) if response else 0,
+                        }
+                    )
                 except Exception as e:
-                    results.append({
-                        "pattern": pattern_name,
-                        "content": test_content[:50] + "..." if len(test_content) > 50 else test_content,
-                        "detected": False,
-                        "matches": 0,
-                        "error": str(e)
-                    })
+                    results.append(
+                        {
+                            "pattern": pattern_name,
+                            "content": test_content[:50] + "..." if len(test_content) > 50 else test_content,
+                            "detected": False,
+                            "matches": 0,
+                            "error": str(e),
+                        }
+                    )
 
             # Display results
             table = Table(title="Security Pattern Detection Test Results")
@@ -317,7 +321,7 @@ class SecureAnalyzerManager(BaseManager):
                     result["pattern"],
                     result["content"],
                     f"[{detected_style}]{detected_str}[/{detected_style}]",
-                    str(result["matches"])
+                    str(result["matches"]),
                 )
 
             self.console.print(table)
@@ -329,14 +333,17 @@ class SecureAnalyzerManager(BaseManager):
         """Model policy management submenu."""
         while True:
             menu = create_menu_table("Model Policy Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Get Model Suggestions for Content"),
-                ("2", "View Security Policies"),
-                ("3", "Test Policy Enforcement"),
-                ("4", "Override Policy Restrictions"),
-                ("5", "Policy Compliance Checking"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Get Model Suggestions for Content"),
+                    ("2", "View Security Policies"),
+                    ("3", "Test Policy Enforcement"),
+                    ("4", "Override Policy Restrictions"),
+                    ("5", "Policy Compliance Checking"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -430,7 +437,7 @@ class SecureAnalyzerManager(BaseManager):
                 ("Safe content", "This is a normal document about software development."),
                 ("Sensitive content", "User password: secret123, API key: sk-1234567890abcdef"),
                 ("PII content", "Social Security: 123-45-6789, Credit card: 4111-1111-1111-1111"),
-                ("Mixed content", "Normal text with password: mypass123 and email: user@domain.com")
+                ("Mixed content", "Normal text with password: mypass123 and email: user@domain.com"),
             ]
 
             results = []
@@ -440,26 +447,27 @@ class SecureAnalyzerManager(BaseManager):
                 try:
                     response = await self.clients.post_json("secure-analyzer/suggest", suggest_request)
                     if response:
-                        results.append({
-                            "case": case_name,
-                            "sensitive": response.get("sensitive", False),
-                            "models_allowed": len(response.get("allowed_models", [])),
-                            "suggestion": response.get("suggestion", "")[:50] + "..."
-                        })
+                        results.append(
+                            {
+                                "case": case_name,
+                                "sensitive": response.get("sensitive", False),
+                                "models_allowed": len(response.get("allowed_models", [])),
+                                "suggestion": response.get("suggestion", "")[:50] + "...",
+                            }
+                        )
                     else:
-                        results.append({
+                        results.append(
+                            {"case": case_name, "sensitive": False, "models_allowed": 0, "suggestion": "Request failed"}
+                        )
+                except Exception as e:
+                    results.append(
+                        {
                             "case": case_name,
                             "sensitive": False,
                             "models_allowed": 0,
-                            "suggestion": "Request failed"
-                        })
-                except Exception as e:
-                    results.append({
-                        "case": case_name,
-                        "sensitive": False,
-                        "models_allowed": 0,
-                        "suggestion": f"Error: {str(e)[:30]}"
-                    })
+                            "suggestion": f"Error: {str(e)[:30]}",
+                        }
+                    )
 
             # Display results
             table = Table(title="Policy Enforcement Test Results")
@@ -476,7 +484,7 @@ class SecureAnalyzerManager(BaseManager):
                     result["case"],
                     f"[{sensitive_style}]{sensitive_str}[/{sensitive_style}]",
                     str(result["models_allowed"]),
-                    result["suggestion"]
+                    result["suggestion"],
                 )
 
             self.console.print(table)
@@ -508,14 +516,17 @@ class SecureAnalyzerManager(BaseManager):
         """Secure summarization submenu."""
         while True:
             menu = create_menu_table("Secure Summarization", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Generate Secure Summary"),
-                ("2", "Summarize File Content"),
-                ("3", "Batch Summarization"),
-                ("4", "Custom Prompt Summarization"),
-                ("5", "Provider-Specific Summarization"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Generate Secure Summary"),
+                    ("2", "Summarize File Content"),
+                    ("3", "Batch Summarization"),
+                    ("4", "Custom Prompt Summarization"),
+                    ("5", "Provider-Specific Summarization"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -547,10 +558,7 @@ class SecureAnalyzerManager(BaseManager):
 
             override_policy = Confirm.ask("[bold cyan]Override security policy?[/bold cyan]", default=False)
 
-            summarize_request = {
-                "content": content,
-                "override_policy": override_policy
-            }
+            summarize_request = {"content": content, "override_policy": override_policy}
 
             with self.console.status("[bold green]Generating secure summary...[/bold green]") as status:
                 response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
@@ -607,7 +615,7 @@ class SecureAnalyzerManager(BaseManager):
                 self.console.print(f"[red]File not found: {file_path}[/red]")
                 return
 
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             if not content.strip():
@@ -616,12 +624,11 @@ class SecureAnalyzerManager(BaseManager):
 
             override_policy = Confirm.ask("[bold cyan]Override security policy?[/bold cyan]", default=False)
 
-            summarize_request = {
-                "content": content,
-                "override_policy": override_policy
-            }
+            summarize_request = {"content": content, "override_policy": override_policy}
 
-            with self.console.status(f"[bold green]Summarizing {os.path.basename(file_path)}...[/bold green]") as status:
+            with self.console.status(
+                f"[bold green]Summarizing {os.path.basename(file_path)}...[/bold green]"
+            ) as status:
                 response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
 
             if response:
@@ -652,10 +659,7 @@ class SecureAnalyzerManager(BaseManager):
                 self.console.print("[red]No content provided[/red]")
                 return
 
-            summarize_request = {
-                "content": content,
-                "prompt": custom_prompt
-            }
+            summarize_request = {"content": content, "prompt": custom_prompt}
 
             with self.console.status("[bold green]Generating custom summary...[/bold green]") as status:
                 response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
@@ -681,14 +685,17 @@ class SecureAnalyzerManager(BaseManager):
         """Security policy configuration submenu."""
         while True:
             menu = create_menu_table("Security Policy Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Current Policies"),
-                ("2", "Configure Detection Patterns"),
-                ("3", "Set Model Restrictions"),
-                ("4", "Circuit Breaker Settings"),
-                ("5", "Policy Override Rules"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Current Policies"),
+                    ("2", "Configure Detection Patterns"),
+                    ("3", "Set Model Restrictions"),
+                    ("4", "Circuit Breaker Settings"),
+                    ("5", "Policy Override Rules"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -725,7 +732,9 @@ class SecureAnalyzerManager(BaseManager):
     async def configure_detection_patterns(self):
         """Configure detection patterns."""
         try:
-            self.console.print("[yellow]Detection pattern configuration would allow customizing security rules[/yellow]")
+            self.console.print(
+                "[yellow]Detection pattern configuration would allow customizing security rules[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -734,7 +743,9 @@ class SecureAnalyzerManager(BaseManager):
     async def set_model_restrictions(self):
         """Set model restrictions."""
         try:
-            self.console.print("[yellow]Model restriction settings control which AI models can process content[/yellow]")
+            self.console.print(
+                "[yellow]Model restriction settings control which AI models can process content[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -743,7 +754,9 @@ class SecureAnalyzerManager(BaseManager):
     async def circuit_breaker_settings(self):
         """Configure circuit breaker settings."""
         try:
-            self.console.print("[yellow]Circuit breaker prevents cascade failures and protects system stability[/yellow]")
+            self.console.print(
+                "[yellow]Circuit breaker prevents cascade failures and protects system stability[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -762,14 +775,17 @@ class SecureAnalyzerManager(BaseManager):
         """Compliance reporting and analytics submenu."""
         while True:
             menu = create_menu_table("Compliance Reporting & Analytics", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Security Audit Report"),
-                ("2", "Content Sensitivity Analytics"),
-                ("3", "Policy Violation Tracking"),
-                ("4", "Compliance Dashboard"),
-                ("5", "Security Incident Log"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Security Audit Report"),
+                    ("2", "Content Sensitivity Analytics"),
+                    ("3", "Policy Violation Tracking"),
+                    ("4", "Compliance Dashboard"),
+                    ("5", "Security Incident Log"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -838,14 +854,17 @@ class SecureAnalyzerManager(BaseManager):
         """Secure analyzer health and monitoring submenu."""
         while True:
             menu = create_menu_table("Secure Analyzer Health & Monitoring", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Service Health"),
-                ("2", "Circuit Breaker Status"),
-                ("3", "Performance Metrics"),
-                ("4", "Error Rate Monitoring"),
-                ("5", "Service Logs"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Service Health"),
+                    ("2", "Circuit Breaker Status"),
+                    ("3", "Performance Metrics"),
+                    ("4", "Error Rate Monitoring"),
+                    ("5", "Service Logs"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")

@@ -5,15 +5,16 @@ Comprehensive adapter for the Orchestrator service providing unified CLI interfa
 for workflow management, service registry, peer synchronization, and orchestration features.
 """
 
-from typing import List, Tuple, Any, Dict
 import time
-from .base_service_adapter import BaseServiceAdapter, ServiceInfo, ServiceStatus, CommandResult
+from typing import Any, Dict, List, Tuple
+
+from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 
 
 class OrchestratorAdapter(BaseServiceAdapter):
     """
     Unified adapter for Orchestrator Service
-    
+
     Provides standardized access to:
     - Service registry management
     - Peer synchronization
@@ -22,7 +23,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
     - E2E demonstrations
     - Registry operations
     """
-    
+
     def get_service_info(self) -> ServiceInfo:
         """Get Orchestrator Service information"""
         return ServiceInfo(
@@ -39,7 +40,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 "E2E Demonstrations",
                 "Service Discovery",
                 "Health Monitoring",
-                "Registry Operations"
+                "Registry Operations",
             ],
             dependencies=["redis"],
             endpoints={
@@ -50,49 +51,44 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 "demo_e2e": "/demo/e2e",
                 "registry_status": "/registry/status",
                 "services": "/services",
-                "workflow_status": "/workflows/status"
-            }
+                "workflow_status": "/workflows/status",
+            },
         )
-    
+
     async def health_check(self) -> CommandResult:
         """Perform comprehensive health check"""
         try:
             start_time = time.time()
-            
+
             # Test health endpoint
             health_url = f"{self.base_url}/health"
             health_response = await self.clients.get_json(health_url)
-            
+
             # Test peers endpoint
             peers_url = f"{self.base_url}/peers"
             peers_response = await self.clients.get_json(peers_url)
-            
+
             execution_time = time.time() - start_time
-            
-            if health_response and health_response.get('status') == 'healthy':
+
+            if health_response and health_response.get("status") == "healthy":
                 return CommandResult(
                     success=True,
                     data={
                         "health": health_response,
                         "peers_accessible": peers_response is not None,
-                        "peer_count": len(peers_response) if isinstance(peers_response, list) else 0
+                        "peer_count": len(peers_response) if isinstance(peers_response, list) else 0,
                     },
                     message="Orchestrator is fully operational",
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
             else:
                 return CommandResult(
-                    success=False,
-                    error="Orchestrator health check failed",
-                    execution_time=execution_time
+                    success=False, error="Orchestrator health check failed", execution_time=execution_time
                 )
-                
+
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Health check error: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Health check error: {str(e)}")
+
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
         """Get available Orchestrator commands"""
         return [
@@ -104,14 +100,14 @@ class OrchestratorAdapter(BaseServiceAdapter):
             ("services", "List registered services", "services"),
             ("workflow_status", "Get workflow status", "workflow_status"),
             ("register_service", "Register a new service", "register_service [service_data]"),
-            ("health_detailed", "Get detailed health information", "health_detailed")
+            ("health_detailed", "Get detailed health information", "health_detailed"),
         ]
-    
+
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute Orchestrator commands"""
         try:
             start_time = time.time()
-            
+
             if command == "peers":
                 return await self._get_peers()
             elif command == "sync_peers":
@@ -131,17 +127,11 @@ class OrchestratorAdapter(BaseServiceAdapter):
             elif command == "health_detailed":
                 return await self.health_check()
             else:
-                return CommandResult(
-                    success=False,
-                    error=f"Unknown command: {command}"
-                )
-                
+                return CommandResult(success=False, error=f"Unknown command: {command}")
+
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Command execution failed: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Command execution failed: {str(e)}")
+
     # Private command implementations
     async def _get_peers(self) -> CommandResult:
         """Get all registered peers - fallback to workflows since peers endpoint not available"""
@@ -155,21 +145,18 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 # Fallback to available endpoint
                 url = f"{self.base_url}/workflows"
                 response = await self.clients.get_json(url)
-                
+
             execution_time = time.time() - start_time
-            
+
             return CommandResult(
                 success=True,
                 data=response,
                 message=f"Retrieved orchestrator data (fallback to workflows endpoint)",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Failed to get orchestrator data: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Failed to get orchestrator data: {str(e)}")
+
     async def _sync_peers(self) -> CommandResult:
         """Synchronize peer registry"""
         try:
@@ -177,19 +164,13 @@ class OrchestratorAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/registry/sync-peers"
             response = await self.clients.post_json(url, {})
             execution_time = time.time() - start_time
-            
+
             return CommandResult(
-                success=True,
-                data=response,
-                message="Peer synchronization completed",
-                execution_time=execution_time
+                success=True, data=response, message="Peer synchronization completed", execution_time=execution_time
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Peer synchronization failed: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Peer synchronization failed: {str(e)}")
+
     async def _poll_openapi(self) -> CommandResult:
         """Poll OpenAPI specifications"""
         try:
@@ -197,45 +178,37 @@ class OrchestratorAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/registry/poll-openapi"
             response = await self.clients.post_json(url, {})
             execution_time = time.time() - start_time
-            
+
             results = response.get("results", []) if response else []
             return CommandResult(
                 success=True,
                 data=response,
                 message=f"OpenAPI polling completed, found {len(results)} candidates",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"OpenAPI polling failed: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"OpenAPI polling failed: {str(e)}")
+
     async def _demo_e2e(self, params: Dict) -> CommandResult:
         """Run end-to-end demonstration"""
         try:
             start_time = time.time()
             url = f"{self.base_url}/demo/e2e"
-            
-            payload = {
-                "format": params.get("format", "json")
-            }
-            
+
+            payload = {"format": params.get("format", "json")}
+
             response = await self.clients.post_json(url, payload)
             execution_time = time.time() - start_time
-            
+
             return CommandResult(
                 success=True,
                 data=response,
                 message="E2E demonstration completed successfully",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"E2E demonstration failed: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"E2E demonstration failed: {str(e)}")
+
     async def _get_registry_status(self) -> CommandResult:
         """Get registry status"""
         try:
@@ -243,19 +216,16 @@ class OrchestratorAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/registry/status"
             response = await self.clients.get_json(url)
             execution_time = time.time() - start_time
-            
+
             return CommandResult(
                 success=True,
                 data=response,
                 message="Registry status retrieved successfully",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Failed to get registry status: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Failed to get registry status: {str(e)}")
+
     async def _get_services(self) -> CommandResult:
         """Get registered services"""
         try:
@@ -263,20 +233,17 @@ class OrchestratorAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/services"
             response = await self.clients.get_json(url)
             execution_time = time.time() - start_time
-            
+
             services_count = len(response) if isinstance(response, list) else 0
             return CommandResult(
                 success=True,
                 data=response,
                 message=f"Retrieved {services_count} registered services",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Failed to get services: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Failed to get services: {str(e)}")
+
     async def _get_workflow_status(self) -> CommandResult:
         """Get workflow status"""
         try:
@@ -284,44 +251,38 @@ class OrchestratorAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/workflows/status"
             response = await self.clients.get_json(url)
             execution_time = time.time() - start_time
-            
+
             return CommandResult(
                 success=True,
                 data=response,
                 message="Workflow status retrieved successfully",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Failed to get workflow status: {str(e)}"
-            )
-    
+            return CommandResult(success=False, error=f"Failed to get workflow status: {str(e)}")
+
     async def _register_service(self, params: Dict) -> CommandResult:
         """Register a new service"""
         try:
             start_time = time.time()
             url = f"{self.base_url}/registry/services"
-            
+
             # Default service registration payload
             payload = {
                 "name": params.get("name", "new-service"),
                 "url": params.get("url", "http://new-service:8080"),
                 "health_endpoint": params.get("health_endpoint", "/health"),
-                "version": params.get("version", "1.0.0")
+                "version": params.get("version", "1.0.0"),
             }
-            
+
             response = await self.clients.post_json(url, payload)
             execution_time = time.time() - start_time
-            
+
             return CommandResult(
                 success=True,
                 data=response,
                 message=f"Service '{payload['name']}' registered successfully",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Service registration failed: {str(e)}"
-            )
+            return CommandResult(success=False, error=f"Service registration failed: {str(e)}")

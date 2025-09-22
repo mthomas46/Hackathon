@@ -1,8 +1,10 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import json
+from typing import Any, Callable, Dict, List, Tuple
+
+from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
+
 from ...utils.display_helpers import print_kv, print_list
 
 
@@ -126,12 +128,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         except:
             metadata = {}
         url = f"{clients.analysis_service_url()}/workflows/events"
-        rx = await clients.post_json(url, {
-            "event_type": event_type,
-            "entity_type": entity_type,
-            "entity_id": entity_id,
-            "metadata": metadata
-        })
+        rx = await clients.post_json(
+            url, {"event_type": event_type, "entity_type": entity_type, "entity_id": entity_id, "metadata": metadata}
+        )
         print_kv(console, "Workflow Event", rx)
 
     async def workflow_status():
@@ -158,11 +157,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         targets = [t.strip() for t in targets_input.split(",") if t.strip()]
         priority = Prompt.ask("Priority (low|normal|high)", default="normal")
         url = f"{clients.analysis_service_url()}/distributed/tasks"
-        rx = await clients.post_json(url, {
-            "task_type": task_type,
-            "targets": targets,
-            "priority": priority
-        })
+        rx = await clients.post_json(url, {"task_type": task_type, "targets": targets, "priority": priority})
         print_kv(console, "Distributed Task", rx)
 
     async def distributed_workers():
@@ -191,11 +186,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         except:
             filters = {}
         url = f"{clients.analysis_service_url()}/reports/generate"
-        rx = await clients.post_json(url, {
-            "kind": kind,
-            "format": format_type,
-            "filters": filters
-        })
+        rx = await clients.post_json(url, {"kind": kind, "format": format_type, "filters": filters})
         print_kv(console, "Report Generation", rx)
 
     async def list_findings():
@@ -234,10 +225,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         prompt_id = Prompt.ask("Prompt ID")
         targets = [t.strip() for t in targets_input.split(",") if t.strip()]
         url = f"{clients.analysis_service_url()}/integration/analyze-with-prompt"
-        rx = await clients.post_json(url, {
-            "targets": targets,
-            "prompt_id": prompt_id
-        })
+        rx = await clients.post_json(url, {"targets": targets, "prompt_id": prompt_id})
         print_kv(console, "Prompt-based Analysis", rx)
 
     async def natural_language_analysis():
@@ -249,10 +237,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         except:
             context = {}
         url = f"{clients.analysis_service_url()}/integration/natural-language-analysis"
-        rx = await clients.post_json(url, {
-            "query": query,
-            "context": context
-        })
+        rx = await clients.post_json(url, {"query": query, "context": context})
         print_kv(console, "Natural Language Analysis", rx)
 
     # ============================================================================
@@ -264,10 +249,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         pr_id = Prompt.ask("Pull Request ID")
         analysis_type = Prompt.ask("Analysis type (comprehensive|quick)", default="comprehensive")
         url = f"{clients.analysis_service_url()}/pr-confidence/analyze"
-        rx = await clients.post_json(url, {
-            "pr_id": pr_id,
-            "analysis_type": analysis_type
-        })
+        rx = await clients.post_json(url, {"pr_id": pr_id, "analysis_type": analysis_type})
         print_kv(console, "PR Confidence Analysis", rx)
 
     async def pr_confidence_history():
@@ -294,43 +276,33 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("😊 Sentiment analysis", sentiment_analysis),
         ("🎭 Tone analysis", tone_analysis),
         ("⭐ Quality analysis", quality_analysis),
-
         # Trend Analysis
         ("📈 Trend analysis", trend_analysis),
         ("📊 Portfolio trend analysis", portfolio_trend_analysis),
-
         # Risk Analysis
         ("⚠️ Risk assessment", risk_assessment),
         ("📉 Portfolio risk analysis", portfolio_risk_analysis),
-
         # Remediation
         ("🔧 Generate remediation", remediate),
         ("👀 Preview remediation", remediate_preview),
-
         # Workflow Management
         ("📨 Send workflow event", workflow_events),
         ("📋 Get workflow status", workflow_status),
         ("📊 Workflow queue status", workflow_queue_status),
-
         # Distributed Processing
         ("⚡ Submit distributed task", distributed_task),
         ("👥 List distributed workers", distributed_workers),
         ("📈 Distributed processing stats", distributed_stats),
-
         # Reporting
         ("📄 Generate analysis report", generate_report),
         ("🔍 List findings", list_findings),
         ("🔧 List detectors", list_detectors),
-
         # Integration
         ("🩺 Integration health check", integration_health),
         ("💬 Analyze with custom prompt", analyze_with_prompt),
         ("🗣️ Natural language analysis", natural_language_analysis),
-
         # PR Confidence
         ("🔍 PR confidence analysis", pr_confidence_analysis),
         ("📚 PR confidence history", pr_confidence_history),
         ("📊 PR confidence statistics", pr_confidence_statistics),
     ]
-
-
