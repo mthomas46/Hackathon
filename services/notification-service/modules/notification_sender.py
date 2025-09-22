@@ -1,7 +1,8 @@
 """Notification sending and deduplication for notification service."""
 
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 import httpx
 from fastapi import HTTPException
 
@@ -21,7 +22,7 @@ class NotificationSender:
         title: str,
         message: str,
         metadata: Optional[Dict[str, Any]] = None,
-        labels: Optional[list[str]] = None
+        labels: Optional[list[str]] = None,
     ) -> Dict[str, str]:
         """Send a notification with deduplication."""
 
@@ -37,22 +38,11 @@ class NotificationSender:
 
         # Send the notification
         return await self._send_to_channel(
-            channel.lower().strip(),
-            target,
-            title,
-            message,
-            metadata or {},
-            labels or []
+            channel.lower().strip(), target, title, message, metadata or {}, labels or []
         )
 
     async def _send_to_channel(
-        self,
-        channel: str,
-        target: str,
-        title: str,
-        message: str,
-        metadata: Dict[str, Any],
-        labels: list[str]
+        self, channel: str, target: str, title: str, message: str, metadata: Dict[str, Any], labels: list[str]
     ) -> Dict[str, str]:
         """Send notification to specific channel."""
 
@@ -65,22 +55,14 @@ class NotificationSender:
             return {"status": "queued", "channel": channel}
 
     async def _send_webhook(
-        self,
-        target: str,
-        title: str,
-        message: str,
-        metadata: Dict[str, Any],
-        labels: list[str]
+        self, target: str, title: str, message: str, metadata: Dict[str, Any], labels: list[str]
     ) -> Dict[str, str]:
         """Send notification via webhook."""
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.post(target, json={
-                    "title": title,
-                    "message": message,
-                    "metadata": metadata,
-                    "labels": labels
-                })
+                response = await client.post(
+                    target, json={"title": title, "message": message, "metadata": metadata, "labels": labels}
+                )
                 response.raise_for_status()
                 return {"status": "sent"}
         except Exception as e:

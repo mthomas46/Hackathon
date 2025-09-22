@@ -1,7 +1,7 @@
 """Dead letter queue management for notification service."""
 
 import time
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class DLQManager:
@@ -10,17 +10,9 @@ class DLQManager:
     def __init__(self):
         self._dlq: List[Dict[str, Any]] = []
 
-    def add_failed_notification(
-        self,
-        payload: Dict[str, Any],
-        error: str
-    ) -> None:
+    def add_failed_notification(self, payload: Dict[str, Any], error: str) -> None:
         """Add a failed notification to the dead letter queue."""
-        entry = {
-            "payload": payload,
-            "error": error,
-            "ts": time.time()
-        }
+        entry = {"payload": payload, "error": error, "ts": time.time()}
         self._dlq.append(entry)
 
     def get_dlq_entries(self, limit: int = 50) -> List[Dict[str, Any]]:

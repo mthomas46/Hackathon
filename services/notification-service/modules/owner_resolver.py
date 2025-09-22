@@ -3,10 +3,11 @@
 Provides efficient mapping of owner names to notification targets with
 configurable caching to reduce resolution overhead.
 """
-import os
+
 import json
+import os
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class OwnerResolver:
@@ -46,21 +47,14 @@ class OwnerResolver:
             cached_resolution = self._resolution_cache.get(owner_name)
             if cached_resolution and self._is_cache_entry_valid(cached_resolution):
                 # Return cached result without internal timestamp field
-                resolved_targets[owner_name] = {
-                    key: value
-                    for key, value in cached_resolution.items()
-                    if key != "_ts"
-                }
+                resolved_targets[owner_name] = {key: value for key, value in cached_resolution.items() if key != "_ts"}
                 continue
 
             # Resolve owner information from mapping or heuristics
             target_info = self._resolve_single_owner(owner_name)
 
             # Cache the resolution result with timestamp
-            self._resolution_cache[owner_name] = {
-                **target_info,
-                "_ts": time.time()
-            }
+            self._resolution_cache[owner_name] = {**target_info, "_ts": time.time()}
 
             resolved_targets[owner_name] = target_info
 
