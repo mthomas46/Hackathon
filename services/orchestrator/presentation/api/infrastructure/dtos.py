@@ -1,18 +1,21 @@
 """DTOs for Infrastructure API"""
 
-from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class DLQRetryRequest(BaseModel):
     """Request for DLQ retry operations."""
+
     event_ids: List[str] = Field(..., min_items=1)
     max_retries: Optional[int] = Field(3, ge=1, le=10)
 
 
 class EventReplayRequest(BaseModel):
     """Request for event replay."""
+
     from_timestamp: Optional[str] = None
     to_timestamp: Optional[str] = None
     event_types: Optional[List[str]] = None
@@ -21,12 +24,14 @@ class EventReplayRequest(BaseModel):
 
 class EventClearRequest(BaseModel):
     """Request for clearing events."""
+
     before_timestamp: str
     event_types: Optional[List[str]] = None
 
 
 class DLQStatsResponse(BaseModel):
     """Response containing DLQ statistics."""
+
     total_events: int
     failed_events: int
     retryable_events: int
@@ -39,6 +44,7 @@ class DLQStatsResponse(BaseModel):
 
 class SagaStatsResponse(BaseModel):
     """Response containing saga statistics."""
+
     total_sagas: int
     active_sagas: int
     completed_sagas: int
@@ -51,6 +57,7 @@ class SagaStatsResponse(BaseModel):
 
 class SagaDetailResponse(BaseModel):
     """Response containing detailed saga information."""
+
     saga_id: str
     status: str
     steps: List[Dict[str, Any]]
@@ -64,6 +71,7 @@ class SagaDetailResponse(BaseModel):
 
 class EventHistoryResponse(BaseModel):
     """Response containing event history."""
+
     events: List[Dict[str, Any]]
     total_count: int
     filtered_count: int
@@ -74,6 +82,7 @@ class EventHistoryResponse(BaseModel):
 
 class TracingStatsResponse(BaseModel):
     """Response containing tracing statistics."""
+
     total_traces: int
     active_traces: int
     avg_trace_duration: Optional[float] = None
@@ -85,6 +94,7 @@ class TracingStatsResponse(BaseModel):
 
 class TraceDetailResponse(BaseModel):
     """Response containing detailed trace information."""
+
     trace_id: str
     service_name: str
     start_time: str
@@ -99,6 +109,7 @@ class TraceDetailResponse(BaseModel):
 
 class PeerInfoResponse(BaseModel):
     """Response containing peer orchestrator information."""
+
     peer_id: str
     peer_url: str
     status: str

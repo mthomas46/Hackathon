@@ -1,11 +1,12 @@
 """Parameter Value Value Object"""
 
-from typing import Any, Union
 from enum import Enum
+from typing import Any, Union
 
 
 class ParameterType(Enum):
     """Parameter data types."""
+
     STRING = "string"
     INTEGER = "integer"
     FLOAT = "float"

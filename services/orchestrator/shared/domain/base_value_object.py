@@ -19,5 +19,5 @@ class BaseValueObject(ABC):
 
     def __repr__(self) -> str:
         """String representation of value object."""
-        attrs = ', '.join(f'{k}={v}' for k, v in self.__dict__.items())
+        attrs = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"

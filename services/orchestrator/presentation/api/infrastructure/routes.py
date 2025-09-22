@@ -7,23 +7,32 @@ Provides endpoints for:
 - Event streaming
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
-from datetime import datetime
 import time
+from datetime import datetime
+from typing import List, Optional
 
-from .dtos import (
-    DLQRetryRequest, EventReplayRequest, EventClearRequest,
-    DLQStatsResponse, SagaStatsResponse, SagaDetailResponse,
-    EventHistoryResponse, TracingStatsResponse, TraceDetailResponse,
-    PeerInfoResponse
-)
-from ....main import container
-from services.shared.utilities.logging_client import get_log_collector_client
+from fastapi import APIRouter, Depends, HTTPException
+
 from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities.logging_client import get_log_collector_client
+
+from ....main import container
+from .dtos import (
+    DLQRetryRequest,
+    DLQStatsResponse,
+    EventClearRequest,
+    EventHistoryResponse,
+    EventReplayRequest,
+    PeerInfoResponse,
+    SagaDetailResponse,
+    SagaStatsResponse,
+    TraceDetailResponse,
+    TracingStatsResponse,
+)
 
 # Global logger client instance
 logger_client = None
+
 
 async def get_logger_client():
     """Get or initialize the logger client."""
@@ -34,6 +43,7 @@ async def get_logger_client():
         except Exception:
             pass  # Fallback to no logging if client unavailable
     return logger_client
+
 
 router = APIRouter()
 
@@ -49,20 +59,26 @@ async def start_saga():
     try:
         # Log saga creation start
         if logger:
-            await logger.log_business_event("saga_creation_started", {
-                "request_id": request_id,
-                "operation": "distributed_transaction_creation",
-                "saga_type": "infrastructure_saga",
-                "transaction_scope": "orchestrator_wide",
-                "capabilities": ["compensation_actions", "rollback_support", "state_tracking"]
-            })
+            await logger.log_business_event(
+                "saga_creation_started",
+                {
+                    "request_id": request_id,
+                    "operation": "distributed_transaction_creation",
+                    "saga_type": "infrastructure_saga",
+                    "transaction_scope": "orchestrator_wide",
+                    "capabilities": ["compensation_actions", "rollback_support", "state_tracking"],
+                },
+            )
 
-            await logger.log_info("Starting new distributed transaction (saga)", {
-                "request_id": request_id,
-                "transaction_type": "distributed_saga",
-                "orchestrator_initiated": True,
-                "compensation_enabled": True
-            })
+            await logger.log_info(
+                "Starting new distributed transaction (saga)",
+                {
+                    "request_id": request_id,
+                    "transaction_type": "distributed_saga",
+                    "orchestrator_initiated": True,
+                    "compensation_enabled": True,
+                },
+            )
 
         result = await container.start_saga_use_case.execute()
         saga_id = result["saga_id"]
@@ -70,15 +86,18 @@ async def start_saga():
 
         # Log successful saga creation
         if logger:
-            await logger.log_business_event("saga_created", {
-                "request_id": request_id,
-                "saga_id": saga_id,
-                "operation": "distributed_transaction_creation",
-                "response_time_seconds": response_time,
-                "success": True,
-                "initial_status": "started",
-                "transaction_state": "active"
-            })
+            await logger.log_business_event(
+                "saga_created",
+                {
+                    "request_id": request_id,
+                    "saga_id": saga_id,
+                    "operation": "distributed_transaction_creation",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "initial_status": "started",
+                    "transaction_state": "active",
+                },
+            )
 
             await logger.log_performance_metric(
                 "saga_creation",
@@ -87,8 +106,8 @@ async def start_saga():
                     "request_id": request_id,
                     "saga_id": saga_id,
                     "creation_success": True,
-                    "orchestrator_initiated": True
-                }
+                    "orchestrator_initiated": True,
+                },
             )
 
         return {"saga_id": saga_id, "status": "started"}
@@ -105,18 +124,21 @@ async def start_saga():
                     "operation": "distributed_transaction_creation",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "saga_creation_failed": True
+                    "saga_creation_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("saga_creation_failed", {
-                "request_id": request_id,
-                "operation": "distributed_transaction_creation",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "saga_creation_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "distributed_transaction_creation",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to start saga: {str(e)}")
 
@@ -131,22 +153,29 @@ async def get_saga(saga_id: str):
     try:
         # Log saga retrieval start
         if logger:
-            await logger.log_business_event("saga_retrieval_started", {
-                "request_id": request_id,
-                "saga_id": saga_id,
-                "operation": "saga_state_query",
-                "query_type": "saga_details",
-                "data_scope": "single_saga"
-            })
+            await logger.log_business_event(
+                "saga_retrieval_started",
+                {
+                    "request_id": request_id,
+                    "saga_id": saga_id,
+                    "operation": "saga_state_query",
+                    "query_type": "saga_details",
+                    "data_scope": "single_saga",
+                },
+            )
 
-            await logger.log_info("Retrieving saga details", {
-                "request_id": request_id,
-                "saga_id": saga_id,
-                "query_operation": "saga_state_retrieval",
-                "includes_compensation_history": True
-            })
+            await logger.log_info(
+                "Retrieving saga details",
+                {
+                    "request_id": request_id,
+                    "saga_id": saga_id,
+                    "query_operation": "saga_state_retrieval",
+                    "includes_compensation_history": True,
+                },
+            )
 
         from ....application.infrastructure.queries import GetSagaQuery
+
         query = GetSagaQuery(saga_id=saga_id)
         result = await container.get_saga_use_case.execute(query)
 
@@ -155,13 +184,16 @@ async def get_saga(saga_id: str):
 
             # Log saga not found
             if logger:
-                await logger.log_business_event("saga_not_found", {
-                    "request_id": request_id,
-                    "saga_id": saga_id,
-                    "operation": "saga_state_query",
-                    "response_time_seconds": response_time,
-                    "query_result": "not_found"
-                })
+                await logger.log_business_event(
+                    "saga_not_found",
+                    {
+                        "request_id": request_id,
+                        "saga_id": saga_id,
+                        "operation": "saga_state_query",
+                        "response_time_seconds": response_time,
+                        "query_result": "not_found",
+                    },
+                )
 
             raise HTTPException(status_code=404, detail="Saga not found")
 
@@ -169,16 +201,19 @@ async def get_saga(saga_id: str):
 
         # Log successful saga retrieval
         if logger:
-            await logger.log_business_event("saga_retrieved", {
-                "request_id": request_id,
-                "saga_id": saga_id,
-                "operation": "saga_state_query",
-                "response_time_seconds": response_time,
-                "success": True,
-                "saga_status": result.get("status", "unknown"),
-                "steps_completed": result.get("completed_steps", 0),
-                "total_steps": result.get("total_steps", 0)
-            })
+            await logger.log_business_event(
+                "saga_retrieved",
+                {
+                    "request_id": request_id,
+                    "saga_id": saga_id,
+                    "operation": "saga_state_query",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "saga_status": result.get("status", "unknown"),
+                    "steps_completed": result.get("completed_steps", 0),
+                    "total_steps": result.get("total_steps", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "saga_retrieval",
@@ -187,8 +222,8 @@ async def get_saga(saga_id: str):
                     "request_id": request_id,
                     "saga_id": saga_id,
                     "retrieval_success": True,
-                    "data_returned": bool(result)
-                }
+                    "data_returned": bool(result),
+                },
             )
 
         return result
@@ -208,19 +243,22 @@ async def get_saga(saga_id: str):
                     "operation": "saga_state_query",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "saga_retrieval_failed": True
+                    "saga_retrieval_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("saga_retrieval_failed", {
-                "request_id": request_id,
-                "saga_id": saga_id,
-                "operation": "saga_state_query",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "saga_retrieval_failed",
+                {
+                    "request_id": request_id,
+                    "saga_id": saga_id,
+                    "operation": "saga_state_query",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to get saga: {str(e)}")
 
@@ -235,23 +273,30 @@ async def list_sagas(limit: int = 50, offset: int = 0):
     try:
         # Log saga listing start
         if logger:
-            await logger.log_business_event("saga_listing_started", {
-                "request_id": request_id,
-                "operation": "saga_inventory_query",
-                "query_type": "saga_list",
-                "pagination_enabled": True,
-                "limit": limit,
-                "offset": offset
-            })
+            await logger.log_business_event(
+                "saga_listing_started",
+                {
+                    "request_id": request_id,
+                    "operation": "saga_inventory_query",
+                    "query_type": "saga_list",
+                    "pagination_enabled": True,
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
 
-            await logger.log_info("Listing distributed transactions (sagas)", {
-                "request_id": request_id,
-                "pagination_limit": limit,
-                "pagination_offset": offset,
-                "query_scope": "all_sagas"
-            })
+            await logger.log_info(
+                "Listing distributed transactions (sagas)",
+                {
+                    "request_id": request_id,
+                    "pagination_limit": limit,
+                    "pagination_offset": offset,
+                    "query_scope": "all_sagas",
+                },
+            )
 
         from ....application.infrastructure.queries import ListSagasQuery
+
         query = ListSagasQuery(limit=limit, offset=offset)
         result = await container.list_sagas_use_case.execute(query)
 
@@ -260,16 +305,19 @@ async def list_sagas(limit: int = 50, offset: int = 0):
 
         # Log successful saga listing
         if logger:
-            await logger.log_business_event("saga_listing_completed", {
-                "request_id": request_id,
-                "operation": "saga_inventory_query",
-                "response_time_seconds": response_time,
-                "success": True,
-                "sagas_returned": sagas_returned,
-                "limit": limit,
-                "offset": offset,
-                "total_available": result.get("total", 0)
-            })
+            await logger.log_business_event(
+                "saga_listing_completed",
+                {
+                    "request_id": request_id,
+                    "operation": "saga_inventory_query",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "sagas_returned": sagas_returned,
+                    "limit": limit,
+                    "offset": offset,
+                    "total_available": result.get("total", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "saga_listing",
@@ -278,8 +326,8 @@ async def list_sagas(limit: int = 50, offset: int = 0):
                     "request_id": request_id,
                     "sagas_returned": sagas_returned,
                     "pagination_used": bool(limit or offset),
-                    "listing_success": True
-                }
+                    "listing_success": True,
+                },
             )
 
         return result
@@ -298,18 +346,21 @@ async def list_sagas(limit: int = 50, offset: int = 0):
                     "offset": offset,
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "saga_listing_failed": True
+                    "saga_listing_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("saga_listing_failed", {
-                "request_id": request_id,
-                "operation": "saga_inventory_query",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "saga_listing_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "saga_inventory_query",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to list sagas: {str(e)}")
 
@@ -325,44 +376,51 @@ async def start_trace(service_name: str, operation_name: str):
     try:
         # Log trace creation start
         if logger:
-            await logger.log_business_event("trace_creation_started", {
-                "request_id": request_id,
-                "operation": "distributed_trace_creation",
-                "service_name": service_name,
-                "operation_name": operation_name,
-                "trace_type": "distributed_tracing",
-                "monitoring_scope": "cross_service"
-            })
+            await logger.log_business_event(
+                "trace_creation_started",
+                {
+                    "request_id": request_id,
+                    "operation": "distributed_trace_creation",
+                    "service_name": service_name,
+                    "operation_name": operation_name,
+                    "trace_type": "distributed_tracing",
+                    "monitoring_scope": "cross_service",
+                },
+            )
 
-            await logger.log_info("Starting distributed trace", {
-                "request_id": request_id,
-                "service_name": service_name,
-                "operation_name": operation_name,
-                "trace_purpose": "observability",
-                "distributed_tracking": True
-            })
+            await logger.log_info(
+                "Starting distributed trace",
+                {
+                    "request_id": request_id,
+                    "service_name": service_name,
+                    "operation_name": operation_name,
+                    "trace_purpose": "observability",
+                    "distributed_tracking": True,
+                },
+            )
 
         from ....application.infrastructure.commands import StartTraceCommand
-        command = StartTraceCommand(
-            service_name=service_name,
-            operation_name=operation_name
-        )
+
+        command = StartTraceCommand(service_name=service_name, operation_name=operation_name)
         result = await container.start_trace_use_case.execute(command)
         trace_id = result["trace_id"]
         response_time = time.time() - start_time
 
         # Log successful trace creation
         if logger:
-            await logger.log_business_event("trace_created", {
-                "request_id": request_id,
-                "trace_id": trace_id,
-                "operation": "distributed_trace_creation",
-                "response_time_seconds": response_time,
-                "success": True,
-                "service_name": service_name,
-                "operation_name": operation_name,
-                "trace_status": "active"
-            })
+            await logger.log_business_event(
+                "trace_created",
+                {
+                    "request_id": request_id,
+                    "trace_id": trace_id,
+                    "operation": "distributed_trace_creation",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "service_name": service_name,
+                    "operation_name": operation_name,
+                    "trace_status": "active",
+                },
+            )
 
             await logger.log_performance_metric(
                 "trace_creation",
@@ -371,8 +429,8 @@ async def start_trace(service_name: str, operation_name: str):
                     "request_id": request_id,
                     "trace_id": trace_id,
                     "creation_success": True,
-                    "service_tracked": service_name
-                }
+                    "service_tracked": service_name,
+                },
             )
 
         return {"trace_id": trace_id, "status": "started"}
@@ -391,20 +449,23 @@ async def start_trace(service_name: str, operation_name: str):
                     "operation_name": operation_name,
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "trace_creation_failed": True
+                    "trace_creation_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("trace_creation_failed", {
-                "request_id": request_id,
-                "operation": "distributed_trace_creation",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "service_name": service_name,
-                "operation_name": operation_name,
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "trace_creation_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "distributed_trace_creation",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "service_name": service_name,
+                    "operation_name": operation_name,
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to start trace: {str(e)}")
 
@@ -419,22 +480,29 @@ async def get_trace(trace_id: str):
     try:
         # Log trace retrieval start
         if logger:
-            await logger.log_business_event("trace_retrieval_started", {
-                "request_id": request_id,
-                "trace_id": trace_id,
-                "operation": "trace_state_query",
-                "query_type": "trace_details",
-                "data_scope": "single_trace"
-            })
+            await logger.log_business_event(
+                "trace_retrieval_started",
+                {
+                    "request_id": request_id,
+                    "trace_id": trace_id,
+                    "operation": "trace_state_query",
+                    "query_type": "trace_details",
+                    "data_scope": "single_trace",
+                },
+            )
 
-            await logger.log_info("Retrieving trace details", {
-                "request_id": request_id,
-                "trace_id": trace_id,
-                "query_operation": "trace_state_retrieval",
-                "includes_spans": True
-            })
+            await logger.log_info(
+                "Retrieving trace details",
+                {
+                    "request_id": request_id,
+                    "trace_id": trace_id,
+                    "query_operation": "trace_state_retrieval",
+                    "includes_spans": True,
+                },
+            )
 
         from ....application.infrastructure.queries import GetTraceQuery
+
         query = GetTraceQuery(trace_id=trace_id)
         result = await container.get_trace_use_case.execute(query)
 
@@ -443,13 +511,16 @@ async def get_trace(trace_id: str):
 
             # Log trace not found
             if logger:
-                await logger.log_business_event("trace_not_found", {
-                    "request_id": request_id,
-                    "trace_id": trace_id,
-                    "operation": "trace_state_query",
-                    "response_time_seconds": response_time,
-                    "query_result": "not_found"
-                })
+                await logger.log_business_event(
+                    "trace_not_found",
+                    {
+                        "request_id": request_id,
+                        "trace_id": trace_id,
+                        "operation": "trace_state_query",
+                        "response_time_seconds": response_time,
+                        "query_result": "not_found",
+                    },
+                )
 
             raise HTTPException(status_code=404, detail="Trace not found")
 
@@ -457,16 +528,19 @@ async def get_trace(trace_id: str):
 
         # Log successful trace retrieval
         if logger:
-            await logger.log_business_event("trace_retrieved", {
-                "request_id": request_id,
-                "trace_id": trace_id,
-                "operation": "trace_state_query",
-                "response_time_seconds": response_time,
-                "success": True,
-                "trace_status": result.get("status", "unknown"),
-                "spans_count": len(result.get("spans", [])),
-                "duration_ms": result.get("duration", 0)
-            })
+            await logger.log_business_event(
+                "trace_retrieved",
+                {
+                    "request_id": request_id,
+                    "trace_id": trace_id,
+                    "operation": "trace_state_query",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "trace_status": result.get("status", "unknown"),
+                    "spans_count": len(result.get("spans", [])),
+                    "duration_ms": result.get("duration", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "trace_retrieval",
@@ -475,8 +549,8 @@ async def get_trace(trace_id: str):
                     "request_id": request_id,
                     "trace_id": trace_id,
                     "retrieval_success": True,
-                    "data_returned": bool(result)
-                }
+                    "data_returned": bool(result),
+                },
             )
 
         return result
@@ -496,19 +570,22 @@ async def get_trace(trace_id: str):
                     "operation": "trace_state_query",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "trace_retrieval_failed": True
+                    "trace_retrieval_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("trace_retrieval_failed", {
-                "request_id": request_id,
-                "trace_id": trace_id,
-                "operation": "trace_state_query",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "trace_retrieval_failed",
+                {
+                    "request_id": request_id,
+                    "trace_id": trace_id,
+                    "operation": "trace_state_query",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to get trace: {str(e)}")
 
@@ -523,23 +600,30 @@ async def list_traces(limit: int = 50, offset: int = 0):
     try:
         # Log trace listing start
         if logger:
-            await logger.log_business_event("trace_listing_started", {
-                "request_id": request_id,
-                "operation": "trace_inventory_query",
-                "query_type": "trace_list",
-                "pagination_enabled": True,
-                "limit": limit,
-                "offset": offset
-            })
+            await logger.log_business_event(
+                "trace_listing_started",
+                {
+                    "request_id": request_id,
+                    "operation": "trace_inventory_query",
+                    "query_type": "trace_list",
+                    "pagination_enabled": True,
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
 
-            await logger.log_info("Listing distributed traces", {
-                "request_id": request_id,
-                "pagination_limit": limit,
-                "pagination_offset": offset,
-                "query_scope": "all_traces"
-            })
+            await logger.log_info(
+                "Listing distributed traces",
+                {
+                    "request_id": request_id,
+                    "pagination_limit": limit,
+                    "pagination_offset": offset,
+                    "query_scope": "all_traces",
+                },
+            )
 
         from ....application.infrastructure.queries import ListTracesQuery
+
         query = ListTracesQuery(limit=limit, offset=offset)
         result = await container.list_traces_use_case.execute(query)
 
@@ -548,16 +632,19 @@ async def list_traces(limit: int = 50, offset: int = 0):
 
         # Log successful trace listing
         if logger:
-            await logger.log_business_event("trace_listing_completed", {
-                "request_id": request_id,
-                "operation": "trace_inventory_query",
-                "response_time_seconds": response_time,
-                "success": True,
-                "traces_returned": traces_returned,
-                "limit": limit,
-                "offset": offset,
-                "total_available": result.get("total", 0)
-            })
+            await logger.log_business_event(
+                "trace_listing_completed",
+                {
+                    "request_id": request_id,
+                    "operation": "trace_inventory_query",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "traces_returned": traces_returned,
+                    "limit": limit,
+                    "offset": offset,
+                    "total_available": result.get("total", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "trace_listing",
@@ -566,8 +653,8 @@ async def list_traces(limit: int = 50, offset: int = 0):
                     "request_id": request_id,
                     "traces_returned": traces_returned,
                     "pagination_used": bool(limit or offset),
-                    "listing_success": True
-                }
+                    "listing_success": True,
+                },
             )
 
         return result
@@ -586,18 +673,21 @@ async def list_traces(limit: int = 50, offset: int = 0):
                     "offset": offset,
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "trace_listing_failed": True
+                    "trace_listing_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("trace_listing_failed", {
-                "request_id": request_id,
-                "operation": "trace_inventory_query",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "trace_listing_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "trace_inventory_query",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to list traces: {str(e)}")
 
@@ -613,18 +703,24 @@ async def get_dlq_stats():
     try:
         # Log DLQ stats retrieval start
         if logger:
-            await logger.log_business_event("dlq_stats_retrieval_started", {
-                "request_id": request_id,
-                "operation": "dlq_health_monitoring",
-                "query_type": "queue_statistics",
-                "monitoring_scope": "failed_events"
-            })
+            await logger.log_business_event(
+                "dlq_stats_retrieval_started",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_health_monitoring",
+                    "query_type": "queue_statistics",
+                    "monitoring_scope": "failed_events",
+                },
+            )
 
-            await logger.log_info("Retrieving DLQ statistics", {
-                "request_id": request_id,
-                "stats_type": "comprehensive_dlq_metrics",
-                "includes_failure_analysis": True
-            })
+            await logger.log_info(
+                "Retrieving DLQ statistics",
+                {
+                    "request_id": request_id,
+                    "stats_type": "comprehensive_dlq_metrics",
+                    "includes_failure_analysis": True,
+                },
+            )
 
         result = await container.get_dlq_stats_use_case.execute()
 
@@ -632,24 +728,23 @@ async def get_dlq_stats():
 
         # Log successful DLQ stats retrieval
         if logger:
-            await logger.log_business_event("dlq_stats_retrieved", {
-                "request_id": request_id,
-                "operation": "dlq_health_monitoring",
-                "response_time_seconds": response_time,
-                "success": True,
-                "total_failed_events": result.get("total_events", 0),
-                "retry_candidates": result.get("retryable_events", 0),
-                "oldest_event_age": result.get("oldest_event_hours", 0)
-            })
+            await logger.log_business_event(
+                "dlq_stats_retrieved",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_health_monitoring",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "total_failed_events": result.get("total_events", 0),
+                    "retry_candidates": result.get("retryable_events", 0),
+                    "oldest_event_age": result.get("oldest_event_hours", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "dlq_stats_retrieval",
                 response_time,
-                {
-                    "request_id": request_id,
-                    "stats_retrieval_success": True,
-                    "data_returned": bool(result)
-                }
+                {"request_id": request_id, "stats_retrieval_success": True, "data_returned": bool(result)},
             )
 
         return result
@@ -666,18 +761,21 @@ async def get_dlq_stats():
                     "operation": "dlq_health_monitoring",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "dlq_stats_retrieval_failed": True
+                    "dlq_stats_retrieval_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("dlq_stats_retrieval_failed", {
-                "request_id": request_id,
-                "operation": "dlq_health_monitoring",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "dlq_stats_retrieval_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_health_monitoring",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to get DLQ stats: {str(e)}")
 
@@ -692,23 +790,30 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
     try:
         # Log DLQ events listing start
         if logger:
-            await logger.log_business_event("dlq_events_listing_started", {
-                "request_id": request_id,
-                "operation": "dlq_failure_analysis",
-                "query_type": "failed_events_list",
-                "pagination_enabled": True,
-                "limit": limit,
-                "offset": offset
-            })
+            await logger.log_business_event(
+                "dlq_events_listing_started",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_failure_analysis",
+                    "query_type": "failed_events_list",
+                    "pagination_enabled": True,
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
 
-            await logger.log_info("Listing DLQ events for analysis", {
-                "request_id": request_id,
-                "pagination_limit": limit,
-                "pagination_offset": offset,
-                "query_scope": "failed_events"
-            })
+            await logger.log_info(
+                "Listing DLQ events for analysis",
+                {
+                    "request_id": request_id,
+                    "pagination_limit": limit,
+                    "pagination_offset": offset,
+                    "query_scope": "failed_events",
+                },
+            )
 
         from ....application.infrastructure.queries import ListDLQEventsQuery
+
         query = ListDLQEventsQuery(limit=limit, offset=offset)
         result = await container.list_dlq_events_use_case.execute(query)
 
@@ -717,16 +822,19 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
 
         # Log successful DLQ events listing
         if logger:
-            await logger.log_business_event("dlq_events_listed", {
-                "request_id": request_id,
-                "operation": "dlq_failure_analysis",
-                "response_time_seconds": response_time,
-                "success": True,
-                "events_returned": events_returned,
-                "limit": limit,
-                "offset": offset,
-                "total_failed_events": result.get("total", 0)
-            })
+            await logger.log_business_event(
+                "dlq_events_listed",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_failure_analysis",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "events_returned": events_returned,
+                    "limit": limit,
+                    "offset": offset,
+                    "total_failed_events": result.get("total", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "dlq_events_listing",
@@ -735,8 +843,8 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
                     "request_id": request_id,
                     "events_returned": events_returned,
                     "pagination_used": bool(limit or offset),
-                    "listing_success": True
-                }
+                    "listing_success": True,
+                },
             )
 
         return result
@@ -755,18 +863,21 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
                     "offset": offset,
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "dlq_events_listing_failed": True
+                    "dlq_events_listing_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("dlq_events_listing_failed", {
-                "request_id": request_id,
-                "operation": "dlq_failure_analysis",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "dlq_events_listing_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_failure_analysis",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to list DLQ events: {str(e)}")
 
@@ -781,26 +892,30 @@ async def retry_dlq_events(request: DLQRetryRequest):
     try:
         # Log DLQ retry operation start
         if logger:
-            await logger.log_business_event("dlq_retry_started", {
-                "request_id": request_id,
-                "operation": "dlq_failure_recovery",
-                "event_ids_count": len(request.event_ids),
-                "max_retries": request.max_retries,
-                "recovery_type": "bulk_retry"
-            })
+            await logger.log_business_event(
+                "dlq_retry_started",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_failure_recovery",
+                    "event_ids_count": len(request.event_ids),
+                    "max_retries": request.max_retries,
+                    "recovery_type": "bulk_retry",
+                },
+            )
 
-            await logger.log_info("Retrying failed events from DLQ", {
-                "request_id": request_id,
-                "events_to_retry": len(request.event_ids),
-                "max_retry_attempts": request.max_retries,
-                "recovery_operation": True
-            })
+            await logger.log_info(
+                "Retrying failed events from DLQ",
+                {
+                    "request_id": request_id,
+                    "events_to_retry": len(request.event_ids),
+                    "max_retry_attempts": request.max_retries,
+                    "recovery_operation": True,
+                },
+            )
 
         from ....application.infrastructure.commands import RetryEventCommand
-        command = RetryEventCommand(
-            event_ids=request.event_ids,
-            max_retries=request.max_retries
-        )
+
+        command = RetryEventCommand(event_ids=request.event_ids, max_retries=request.max_retries)
         result = await container.retry_event_use_case.execute(command)
 
         response_time = time.time() - start_time
@@ -809,15 +924,18 @@ async def retry_dlq_events(request: DLQRetryRequest):
 
         # Log successful DLQ retry
         if logger:
-            await logger.log_business_event("dlq_retry_completed", {
-                "request_id": request_id,
-                "operation": "dlq_failure_recovery",
-                "response_time_seconds": response_time,
-                "success": True,
-                "events_retried": events_retried,
-                "events_failed": events_failed,
-                "retry_success_rate": (events_retried / len(request.event_ids)) if request.event_ids else 0
-            })
+            await logger.log_business_event(
+                "dlq_retry_completed",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_failure_recovery",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "events_retried": events_retried,
+                    "events_failed": events_failed,
+                    "retry_success_rate": (events_retried / len(request.event_ids)) if request.event_ids else 0,
+                },
+            )
 
             await logger.log_performance_metric(
                 "dlq_retry_operation",
@@ -826,8 +944,8 @@ async def retry_dlq_events(request: DLQRetryRequest):
                     "request_id": request_id,
                     "events_retried": events_retried,
                     "events_failed": events_failed,
-                    "retry_success": events_failed == 0
-                }
+                    "retry_success": events_failed == 0,
+                },
             )
 
         return result
@@ -846,19 +964,22 @@ async def retry_dlq_events(request: DLQRetryRequest):
                     "max_retries": request.max_retries,
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "dlq_retry_failed": True
+                    "dlq_retry_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("dlq_retry_failed", {
-                "request_id": request_id,
-                "operation": "dlq_failure_recovery",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "events_requested": len(request.event_ids),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "dlq_retry_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "dlq_failure_recovery",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "events_requested": len(request.event_ids),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to retry events: {str(e)}")
 
@@ -874,18 +995,24 @@ async def get_event_stream_stats():
     try:
         # Log event stream stats retrieval start
         if logger:
-            await logger.log_business_event("event_stream_stats_started", {
-                "request_id": request_id,
-                "operation": "event_stream_monitoring",
-                "query_type": "streaming_statistics",
-                "monitoring_scope": "event_system_health"
-            })
+            await logger.log_business_event(
+                "event_stream_stats_started",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_monitoring",
+                    "query_type": "streaming_statistics",
+                    "monitoring_scope": "event_system_health",
+                },
+            )
 
-            await logger.log_info("Retrieving event streaming statistics", {
-                "request_id": request_id,
-                "stats_type": "comprehensive_event_metrics",
-                "includes_throughput_analysis": True
-            })
+            await logger.log_info(
+                "Retrieving event streaming statistics",
+                {
+                    "request_id": request_id,
+                    "stats_type": "comprehensive_event_metrics",
+                    "includes_throughput_analysis": True,
+                },
+            )
 
         result = await container.get_event_stream_stats_use_case.execute()
 
@@ -893,24 +1020,23 @@ async def get_event_stream_stats():
 
         # Log successful event stream stats retrieval
         if logger:
-            await logger.log_business_event("event_stream_stats_retrieved", {
-                "request_id": request_id,
-                "operation": "event_stream_monitoring",
-                "response_time_seconds": response_time,
-                "success": True,
-                "total_events_processed": result.get("total_events", 0),
-                "active_subscribers": result.get("active_subscribers", 0),
-                "throughput_per_second": result.get("events_per_second", 0)
-            })
+            await logger.log_business_event(
+                "event_stream_stats_retrieved",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_monitoring",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "total_events_processed": result.get("total_events", 0),
+                    "active_subscribers": result.get("active_subscribers", 0),
+                    "throughput_per_second": result.get("events_per_second", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "event_stream_stats_retrieval",
                 response_time,
-                {
-                    "request_id": request_id,
-                    "stats_retrieval_success": True,
-                    "data_returned": bool(result)
-                }
+                {"request_id": request_id, "stats_retrieval_success": True, "data_returned": bool(result)},
             )
 
         return result
@@ -927,18 +1053,21 @@ async def get_event_stream_stats():
                     "operation": "event_stream_monitoring",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "event_stream_stats_retrieval_failed": True
+                    "event_stream_stats_retrieval_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("event_stream_stats_retrieval_failed", {
-                "request_id": request_id,
-                "operation": "event_stream_monitoring",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "event_stream_stats_retrieval_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_monitoring",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to get event stats: {str(e)}")
 
@@ -953,41 +1082,48 @@ async def publish_event(event_type: str, payload: dict):
     try:
         # Log event publishing start
         if logger:
-            await logger.log_business_event("event_publish_started", {
-                "request_id": request_id,
-                "operation": "event_stream_publishing",
-                "event_type": event_type,
-                "payload_size": len(str(payload)),
-                "publishing_mode": "direct_stream"
-            })
+            await logger.log_business_event(
+                "event_publish_started",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_publishing",
+                    "event_type": event_type,
+                    "payload_size": len(str(payload)),
+                    "publishing_mode": "direct_stream",
+                },
+            )
 
-            await logger.log_info("Publishing event to stream", {
-                "request_id": request_id,
-                "event_type": event_type,
-                "payload_keys": list(payload.keys()) if isinstance(payload, dict) else ["non_dict_payload"],
-                "stream_publishing": True
-            })
+            await logger.log_info(
+                "Publishing event to stream",
+                {
+                    "request_id": request_id,
+                    "event_type": event_type,
+                    "payload_keys": list(payload.keys()) if isinstance(payload, dict) else ["non_dict_payload"],
+                    "stream_publishing": True,
+                },
+            )
 
         from ....application.infrastructure.commands import PublishEventCommand
-        command = PublishEventCommand(
-            event_type=event_type,
-            payload=payload
-        )
+
+        command = PublishEventCommand(event_type=event_type, payload=payload)
         result = await container.publish_event_use_case.execute(command)
 
         response_time = time.time() - start_time
 
         # Log successful event publishing
         if logger:
-            await logger.log_business_event("event_published", {
-                "request_id": request_id,
-                "operation": "event_stream_publishing",
-                "response_time_seconds": response_time,
-                "success": True,
-                "event_type": event_type,
-                "event_id": result.get("event_id"),
-                "subscribers_notified": result.get("subscribers_notified", 0)
-            })
+            await logger.log_business_event(
+                "event_published",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_publishing",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "event_type": event_type,
+                    "event_id": result.get("event_id"),
+                    "subscribers_notified": result.get("subscribers_notified", 0),
+                },
+            )
 
             await logger.log_performance_metric(
                 "event_publish_operation",
@@ -996,8 +1132,8 @@ async def publish_event(event_type: str, payload: dict):
                     "request_id": request_id,
                     "event_type": event_type,
                     "publish_success": True,
-                    "subscribers_reached": result.get("subscribers_notified", 0)
-                }
+                    "subscribers_reached": result.get("subscribers_notified", 0),
+                },
             )
 
         return result
@@ -1016,19 +1152,22 @@ async def publish_event(event_type: str, payload: dict):
                     "payload_size": len(str(payload)),
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "event_publish_failed": True
+                    "event_publish_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("event_publish_failed", {
-                "request_id": request_id,
-                "operation": "event_stream_publishing",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "event_type": event_type,
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "event_publish_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_publishing",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "event_type": event_type,
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to publish event: {str(e)}")
 
@@ -1043,18 +1182,24 @@ async def replay_events(request: EventReplayRequest):
     try:
         # Log event replay start
         if logger:
-            await logger.log_business_event("event_replay_started", {
-                "request_id": request_id,
-                "operation": "event_stream_replay",
-                "replay_type": "historical_events",
-                "placeholder_implementation": True
-            })
+            await logger.log_business_event(
+                "event_replay_started",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_replay",
+                    "replay_type": "historical_events",
+                    "placeholder_implementation": True,
+                },
+            )
 
-            await logger.log_info("Event replay operation initiated", {
-                "request_id": request_id,
-                "operation_status": "not_implemented",
-                "replay_purpose": "historical_event_recovery"
-            })
+            await logger.log_info(
+                "Event replay operation initiated",
+                {
+                    "request_id": request_id,
+                    "operation_status": "not_implemented",
+                    "replay_purpose": "historical_event_recovery",
+                },
+            )
 
         # Placeholder - event replay functionality would be implemented here
         result = {"message": "Event replay not yet implemented", "status": "pending"}
@@ -1063,14 +1208,17 @@ async def replay_events(request: EventReplayRequest):
 
         # Log event replay operation (placeholder)
         if logger:
-            await logger.log_business_event("event_replay_completed", {
-                "request_id": request_id,
-                "operation": "event_stream_replay",
-                "response_time_seconds": response_time,
-                "success": True,
-                "implementation_status": "placeholder",
-                "events_replayed": 0
-            })
+            await logger.log_business_event(
+                "event_replay_completed",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_replay",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "implementation_status": "placeholder",
+                    "events_replayed": 0,
+                },
+            )
 
         return result
 
@@ -1086,18 +1234,21 @@ async def replay_events(request: EventReplayRequest):
                     "operation": "event_stream_replay",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "event_replay_failed": True
+                    "event_replay_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("event_replay_failed", {
-                "request_id": request_id,
-                "operation": "event_stream_replay",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "event_replay_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_replay",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to replay events: {str(e)}")
 
@@ -1112,18 +1263,24 @@ async def clear_events(request: EventClearRequest):
     try:
         # Log event clearing start
         if logger:
-            await logger.log_business_event("event_clear_started", {
-                "request_id": request_id,
-                "operation": "event_stream_maintenance",
-                "clear_type": "old_events_removal",
-                "placeholder_implementation": True
-            })
+            await logger.log_business_event(
+                "event_clear_started",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_maintenance",
+                    "clear_type": "old_events_removal",
+                    "placeholder_implementation": True,
+                },
+            )
 
-            await logger.log_info("Event clearing operation initiated", {
-                "request_id": request_id,
-                "operation_status": "not_implemented",
-                "maintenance_purpose": "storage_cleanup"
-            })
+            await logger.log_info(
+                "Event clearing operation initiated",
+                {
+                    "request_id": request_id,
+                    "operation_status": "not_implemented",
+                    "maintenance_purpose": "storage_cleanup",
+                },
+            )
 
         # Placeholder - event clearing functionality would be implemented here
         result = {"message": "Event clearing not yet implemented", "status": "pending"}
@@ -1132,14 +1289,17 @@ async def clear_events(request: EventClearRequest):
 
         # Log event clearing operation (placeholder)
         if logger:
-            await logger.log_business_event("event_clear_completed", {
-                "request_id": request_id,
-                "operation": "event_stream_maintenance",
-                "response_time_seconds": response_time,
-                "success": True,
-                "implementation_status": "placeholder",
-                "events_cleared": 0
-            })
+            await logger.log_business_event(
+                "event_clear_completed",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_maintenance",
+                    "response_time_seconds": response_time,
+                    "success": True,
+                    "implementation_status": "placeholder",
+                    "events_cleared": 0,
+                },
+            )
 
         return result
 
@@ -1155,17 +1315,20 @@ async def clear_events(request: EventClearRequest):
                     "operation": "event_stream_maintenance",
                     "error_type": type(e).__name__,
                     "response_time_seconds": error_time,
-                    "event_clear_failed": True
+                    "event_clear_failed": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger.log_business_event("event_clear_failed", {
-                "request_id": request_id,
-                "operation": "event_stream_maintenance",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "response_time_seconds": error_time
-            })
+            await logger.log_business_event(
+                "event_clear_failed",
+                {
+                    "request_id": request_id,
+                    "operation": "event_stream_maintenance",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
 
         raise HTTPException(status_code=500, detail=f"Failed to clear events: {str(e)}")

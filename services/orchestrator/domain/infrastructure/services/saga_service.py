@@ -1,6 +1,6 @@
 """Saga Service Domain Service"""
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.saga_instance import SagaInstance, SagaStep
 from ..value_objects.saga_status import SagaStatus
@@ -19,7 +19,7 @@ class SagaService:
         saga_type: str,
         correlation_id: str,
         steps: List[Dict[str, Any]],
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> SagaInstance:
         """Create a new saga instance."""
         saga_steps = []
@@ -28,16 +28,11 @@ class SagaService:
                 step_id=step_data["step_id"],
                 service_name=step_data["service_name"],
                 operation=step_data["operation"],
-                compensation_operation=step_data.get("compensation_operation")
+                compensation_operation=step_data.get("compensation_operation"),
             )
             saga_steps.append(step)
 
-        saga = SagaInstance(
-            saga_type=saga_type,
-            correlation_id=correlation_id,
-            steps=saga_steps,
-            metadata=metadata
-        )
+        saga = SagaInstance(saga_type=saga_type, correlation_id=correlation_id, steps=saga_steps, metadata=metadata)
 
         self._active_sagas[saga.saga_id] = saga
         return saga
@@ -116,10 +111,7 @@ class SagaService:
         saga.fail("Compensation required due to step failure")
 
     def list_active_sagas(
-        self,
-        saga_type_filter: Optional[str] = None,
-        limit: int = 50,
-        offset: int = 0
+        self, saga_type_filter: Optional[str] = None, limit: int = 50, offset: int = 0
     ) -> List[SagaInstance]:
         """List active sagas with optional filtering."""
         sagas = list(self._active_sagas.values())
@@ -139,7 +131,7 @@ class SagaService:
         saga_type_filter: Optional[str] = None,
         status_filter: Optional[SagaStatus] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[SagaInstance]:
         """List completed sagas with optional filtering."""
         sagas = list(self._completed_sagas.values())
@@ -172,7 +164,7 @@ class SagaService:
             "successful_sagas": successful_sagas,
             "failed_sagas": failed_sagas,
             "success_rate": successful_sagas / total_completed if total_completed > 0 else 0,
-            "avg_completion_time": self._calculate_avg_completion_time(completed_sagas)
+            "avg_completion_time": self._calculate_avg_completion_time(completed_sagas),
         }
 
     def _calculate_avg_completion_time(self, sagas: List[SagaInstance]) -> Optional[float]:

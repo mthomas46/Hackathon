@@ -1,14 +1,14 @@
 """Report Generator Service Domain Service"""
 
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from ..value_objects.approval_recommendation import ApprovalRecommendation
+from ..value_objects.confidence_level import ConfidenceLevel
 from ..value_objects.pr_confidence_report import PRConfidenceReport
 from ..value_objects.report_format import ReportFormat
 from ..value_objects.report_type import ReportType
-from ..value_objects.confidence_level import ConfidenceLevel
-from ..value_objects.approval_recommendation import ApprovalRecommendation
 
 
 class ReportGeneratorService:
@@ -22,7 +22,7 @@ class ReportGeneratorService:
         """Load report templates."""
         # In a real implementation, these would be loaded from files
         return {
-            'html_template': """
+            "html_template": """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -90,7 +90,7 @@ class ReportGeneratorService:
         improvement_areas: List[str],
         analysis_duration: float,
         jira_ticket: Optional[str] = None,
-        ai_provider: str = "local_llm"
+        ai_provider: str = "local_llm",
     ) -> PRConfidenceReport:
         """
         Generate a comprehensive PR confidence analysis report.
@@ -117,7 +117,7 @@ class ReportGeneratorService:
         confidence_level = ConfidenceLevel.from_score(confidence_score)
 
         # Determine approval recommendation based on confidence level and gaps
-        blocking_gaps = [gap for gap in detected_gaps if gap.get('blocking_approval', False)]
+        blocking_gaps = [gap for gap in detected_gaps if gap.get("blocking_approval", False)]
         has_critical_concerns = len(critical_concerns) > 0
 
         if confidence_level == ConfidenceLevel.CRITICAL or blocking_gaps or has_critical_concerns:
@@ -150,22 +150,18 @@ class ReportGeneratorService:
             improvement_areas=improvement_areas,
             analysis_duration=analysis_duration,
             jira_ticket=jira_ticket,
-            ai_provider=ai_provider
+            ai_provider=ai_provider,
         )
 
-    def _assess_risk(
-        self,
-        cross_reference_results: Dict[str, Any],
-        detected_gaps: List[Dict[str, Any]]
-    ) -> str:
+    def _assess_risk(self, cross_reference_results: Dict[str, Any], detected_gaps: List[Dict[str, Any]]) -> str:
         """Assess overall risk based on analysis results."""
         # Calculate risk factors
         gap_count = len(detected_gaps)
-        blocking_gaps = len([g for g in detected_gaps if g.get('blocking_approval', False)])
+        blocking_gaps = len([g for g in detected_gaps if g.get("blocking_approval", False)])
 
         # Get consistency scores
-        doc_consistency = cross_reference_results.get('documentation_consistency_overall', 0.5)
-        req_alignment = cross_reference_results.get('overall_alignment_score', 0.5)
+        doc_consistency = cross_reference_results.get("documentation_consistency_overall", 0.5)
+        req_alignment = cross_reference_results.get("overall_alignment_score", 0.5)
 
         # Determine risk level
         if blocking_gaps > 0 or doc_consistency < 0.3 or req_alignment < 0.3:
@@ -181,7 +177,7 @@ class ReportGeneratorService:
         """Generate HTML report from PRConfidenceReport."""
         title = f"PR Confidence Analysis - {report.pr_id}"
 
-        return self._templates['html_template'].format(
+        return self._templates["html_template"].format(
             title=title,
             timestamp=report.analysis_timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
             confidence_percentage=report.confidence_percentage,
@@ -191,7 +187,7 @@ class ReportGeneratorService:
             component_scores_html=self._generate_component_scores_html(report),
             gap_count=report.gap_count,
             gaps_html=self._generate_gaps_html(report),
-            recommendations_html=self._generate_recommendations_html(report)
+            recommendations_html=self._generate_recommendations_html(report),
         )
 
     def _generate_component_scores_html(self, report: PRConfidenceReport) -> str:
@@ -201,9 +197,11 @@ class ReportGeneratorService:
 
         items = []
         for component, score in report.component_scores.items():
-            items.append(f'<div class="metric"><span>{component.replace("_", " ").title()}</span><span>{score * 100:.1f}%</span></div>')
+            items.append(
+                f'<div class="metric"><span>{component.replace("_", " ").title()}</span><span>{score * 100:.1f}%</span></div>'
+            )
 
-        return '\n'.join(items)
+        return "\n".join(items)
 
     def _generate_gaps_html(self, report: PRConfidenceReport) -> str:
         """Generate HTML for detected gaps."""
@@ -212,17 +210,19 @@ class ReportGeneratorService:
 
         items = []
         for gap in report.detected_gaps:
-            blocking = " [BLOCKING]" if gap.get('blocking_approval', False) else ""
-            items.append(f'<div><strong>{gap.get("gap_type", "Unknown").replace("_", " ").title()}{blocking}:</strong> {gap.get("description", "N/A")}</div>')
+            blocking = " [BLOCKING]" if gap.get("blocking_approval", False) else ""
+            items.append(
+                f'<div><strong>{gap.get("gap_type", "Unknown").replace("_", " ").title()}{blocking}:</strong> {gap.get("description", "N/A")}</div>'
+            )
 
-        return '\n'.join(items)
+        return "\n".join(items)
 
     def _generate_recommendations_html(self, report: PRConfidenceReport) -> str:
         """Generate HTML for recommendations."""
         if not report.recommendations:
             return "<li>No recommendations available.</li>"
 
-        return '\n'.join(f'<li>{rec}</li>' for rec in report.recommendations)
+        return "\n".join(f"<li>{rec}</li>" for rec in report.recommendations)
 
     def _generate_confidence_section(self, report: PRConfidenceReport) -> str:
         """Generate the confidence score section."""
@@ -248,12 +248,14 @@ class ReportGeneratorService:
         """Generate the component scores section."""
         score_items = []
         for component, score in report.component_scores.items():
-            score_items.append(f"""
+            score_items.append(
+                f"""
             <div class="metric">
                 <span>{component.replace('_', ' ').title()}</span>
                 <span style="font-weight: bold;">{score * 100:.1f}%</span>
             </div>
-            """)
+            """
+            )
 
         return f"""
         <section class="section">
@@ -274,15 +276,19 @@ class ReportGeneratorService:
 
         gap_items = []
         for gap in report.detected_gaps:
-            blocking_badge = '<span style="color: red; font-weight: bold;">[BLOCKING]</span>' if gap.get('blocking_approval') else ''
-            gap_items.append(f"""
+            blocking_badge = (
+                '<span style="color: red; font-weight: bold;">[BLOCKING]</span>' if gap.get("blocking_approval") else ""
+            )
+            gap_items.append(
+                f"""
             <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
                 <h4>{gap.get('gap_type', 'Unknown').replace('_', ' ').title()} {blocking_badge}</h4>
                 <p><strong>Description:</strong> {gap.get('description', 'N/A')}</p>
                 <p><strong>Severity:</strong> {gap.get('severity', 'medium').upper()}</p>
                 <p><strong>Recommendation:</strong> {gap.get('recommendation', 'Review required')}</p>
             </div>
-            """)
+            """
+            )
 
         return f"""
         <section class="section">
@@ -353,13 +359,13 @@ class ReportGeneratorService:
         """Validate report data and return list of validation errors."""
         errors = []
 
-        required_fields = ['workflow_id', 'pr_id', 'confidence_score']
+        required_fields = ["workflow_id", "pr_id", "confidence_score"]
         for field in required_fields:
             if field not in report_data:
                 errors.append(f"Missing required field: {field}")
 
-        if 'confidence_score' in report_data:
-            score = report_data['confidence_score']
+        if "confidence_score" in report_data:
+            score = report_data["confidence_score"]
             if not isinstance(score, (int, float)) or not 0.0 <= score <= 1.0:
                 errors.append("Confidence score must be a number between 0.0 and 1.0")
 

@@ -1,8 +1,8 @@
 """Query Execution Result Value Object"""
 
-from typing import Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class ExecutionStatus(Enum):
@@ -41,7 +41,7 @@ class QueryExecutionResult:
         execution_time_seconds: Optional[float] = None,
         services_used: Optional[list[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        execution_timestamp: Optional[datetime] = None
+        execution_timestamp: Optional[datetime] = None,
     ):
         self._query_id = query_id
         self._execution_id = execution_id
@@ -147,7 +147,7 @@ class QueryExecutionResult:
             "execution_timestamp": self._execution_timestamp.isoformat(),
             "has_results": self.has_results,
             "is_successful": self.is_successful,
-            "has_errors": self.has_errors
+            "has_errors": self.has_errors,
         }
 
         if self._error_message:

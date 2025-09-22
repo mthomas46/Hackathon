@@ -8,69 +8,94 @@ Organized into bounded contexts with clear separation of concerns.
 import os
 import sys
 from pathlib import Path
-from fastapi import FastAPI
 from typing import Optional
+
+from fastapi import FastAPI
 
 # Add parent directory to path for proper imports
 parent_dir = str(Path(__file__).parent.parent.parent)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-# Shared utilities
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities.error_handling import register_exception_handlers
-from services.shared.core.constants_new import ServiceNames
-from services.shared.utilities.utilities import setup_common_middleware, attach_self_register
-from services.shared.utilities.logging_client import get_log_collector_client
 import asyncio
 import time
 
-# Infrastructure components
-from .infrastructure.persistence.in_memory import InMemoryWorkflowRepository, InMemoryWorkflowExecutionRepository
-from .infrastructure.persistence.service_registry_repository import InMemoryServiceRepository
-from .infrastructure.external_services.service_client import OrchestratorServiceClient
+from services.shared.core.constants_new import ServiceNames
+
+# Shared utilities
+from services.shared.monitoring.health import register_health_endpoints
+from services.shared.utilities.error_handling import register_exception_handlers
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
+
+from .domain.health_monitoring.services import HealthCheckService, SystemMonitoringService
+from .domain.infrastructure.services import DLQService, EventStreamingService, SagaService, TracingService
 
 # Domain services (with static service definitions)
 from .domain.service_registry.services import ServiceDiscoveryService, ServiceRegistrationService
-from .domain.health_monitoring.services import HealthCheckService, SystemMonitoringService
-from .domain.infrastructure.services import DLQService, SagaService, TracingService, EventStreamingService
+from .infrastructure.external_services.service_client import OrchestratorServiceClient
+
+# Infrastructure components
+from .infrastructure.persistence.in_memory import InMemoryWorkflowExecutionRepository, InMemoryWorkflowRepository
+from .infrastructure.persistence.service_registry_repository import InMemoryServiceRepository
 from .modules.services import _get_service_definitions
+
 
 # Simple workflow check function
 def check_workflows_loaded():
     """Check if workflows are loaded."""
     try:
-        return hasattr(container, 'workflow_repository') and container.workflow_repository is not None
+        return hasattr(container, "workflow_repository") and container.workflow_repository is not None
     except:
         return False
 
-# Application layer
-from .application.workflow_management.use_cases import (
-    CreateWorkflowUseCase, ExecuteWorkflowUseCase, GetWorkflowUseCase, ListWorkflowsUseCase
+
+from .application.health_monitoring.use_cases import (
+    CheckServiceHealthUseCase,
+    CheckSystemHealthUseCase,
+    CheckSystemReadinessUseCase,
+    GetServiceHealthUseCase,
+    GetSystemConfigUseCase,
+    GetSystemHealthUseCase,
+    GetSystemInfoUseCase,
+    GetSystemMetricsUseCase,
+)
+from .application.health_monitoring.use_cases import ListWorkflowsUseCase as HealthListWorkflowsUseCase
+from .application.infrastructure.use_cases import (
+    ExecuteSagaStepUseCase,
+    GetDLQStatsUseCase,
+    GetEventStreamStatsUseCase,
+    GetSagaUseCase,
+    GetTraceUseCase,
+    ListDLQEventsUseCase,
+    ListSagasUseCase,
+    ListTracesUseCase,
+    PublishEventUseCase,
+    RetryEventUseCase,
+    StartSagaUseCase,
+    StartTraceUseCase,
+)
+from .application.ingestion.use_cases import GetIngestionStatusUseCase, ListIngestionsUseCase, StartIngestionUseCase
+from .application.query_processing.use_cases import (
+    GetQueryResultUseCase,
+    ListQueriesUseCase,
+    ProcessNaturalLanguageQueryUseCase,
+)
+from .application.reporting.use_cases import GenerateReportUseCase, GetReportUseCase, ListReportsUseCase
+from .application.service_registry.use_cases import (
+    GetServiceUseCase,
+    ListServicesUseCase,
+    RegisterServiceUseCase,
+    UnregisterServiceUseCase,
 )
 from .application.workflow_management.queries import ListWorkflowsQuery
-from .application.service_registry.use_cases import (
-    RegisterServiceUseCase, UnregisterServiceUseCase, GetServiceUseCase, ListServicesUseCase
-)
-from .application.health_monitoring.use_cases import (
-    CheckSystemHealthUseCase, CheckServiceHealthUseCase, GetSystemHealthUseCase,
-    GetServiceHealthUseCase, GetSystemInfoUseCase, GetSystemMetricsUseCase,
-    GetSystemConfigUseCase, CheckSystemReadinessUseCase, ListWorkflowsUseCase as HealthListWorkflowsUseCase
-)
-from .application.infrastructure.use_cases import (
-    StartSagaUseCase, ExecuteSagaStepUseCase, GetSagaUseCase, ListSagasUseCase,
-    StartTraceUseCase, GetTraceUseCase, ListTracesUseCase,
-    GetDLQStatsUseCase, ListDLQEventsUseCase, RetryEventUseCase,
-    GetEventStreamStatsUseCase, PublishEventUseCase
-)
-from .application.ingestion.use_cases import (
-    StartIngestionUseCase, GetIngestionStatusUseCase, ListIngestionsUseCase
-)
-from .application.reporting.use_cases import (
-    GenerateReportUseCase, GetReportUseCase, ListReportsUseCase
-)
-from .application.query_processing.use_cases import (
-    ProcessNaturalLanguageQueryUseCase, GetQueryResultUseCase, ListQueriesUseCase
+
+# Application layer
+from .application.workflow_management.use_cases import (
+    CreateWorkflowUseCase,
+    ExecuteWorkflowUseCase,
+    GetWorkflowUseCase,
+    ListWorkflowsUseCase,
 )
 
 # Presentation layer routers are registered dynamically below
@@ -83,6 +108,7 @@ DEFAULT_PORT = 5099
 # ============================================================================
 # APPLICATION COMPOSITION - Dependency Injection Container
 # ============================================================================
+
 
 class OrchestratorContainer:
     """Dependency injection container for orchestrator service."""
@@ -120,6 +146,7 @@ class OrchestratorContainer:
         """Initialize application layer use cases for all bounded contexts."""
         # Workflow Management use cases
         from .domain.workflow_management.services.workflow_executor import WorkflowExecutor
+
         self.workflow_executor = WorkflowExecutor()
 
         self.create_workflow_use_case = CreateWorkflowUseCase(self.workflow_repository)
@@ -132,9 +159,7 @@ class OrchestratorContainer:
         # Service Registry use cases
         self.register_service_use_case = RegisterServiceUseCase(self.service_registration_service)
         self.unregister_service_use_case = UnregisterServiceUseCase(self.service_registration_service)
-        self.get_service_use_case = GetServiceUseCase(
-            self.service_discovery_service, self.service_registration_service
-        )
+        self.get_service_use_case = GetServiceUseCase(self.service_discovery_service, self.service_registration_service)
         self.list_services_use_case = ListServicesUseCase(
             self.service_discovery_service, self.service_registration_service
         )
@@ -190,11 +215,12 @@ container = OrchestratorContainer()
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Central control plane and coordination service for the LLM Documentation Ecosystem",
-    version=SERVICE_VERSION
+    version=SERVICE_VERSION,
 )
 
 # Initialize log collector client
 logger_client = None
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -203,20 +229,40 @@ async def startup_event():
     try:
         logger_client = await get_log_collector_client(ServiceNames.ORCHESTRATOR)
         if logger_client:
-            await logger_client.log_business_event("orchestrator_startup", {
-                "version": SERVICE_VERSION,
-                "architecture": "domain_driven_design",
-                "services_loaded": ["health_monitoring", "workflow_management", "service_registry", "infrastructure"],
-                "domain_contexts": ["health_monitoring", "infrastructure", "ingestion", "query_processing", "reporting", "service_registry", "workflow_management"]
-            })
-            await logger_client.log_info("Orchestrator service started", {
-                "ddd_architecture": True,
-                "bounded_contexts": 7,
-                "service_discovery": True,
-                "workflow_orchestration": True
-            })
+            await logger_client.log_business_event(
+                "orchestrator_startup",
+                {
+                    "version": SERVICE_VERSION,
+                    "architecture": "domain_driven_design",
+                    "services_loaded": [
+                        "health_monitoring",
+                        "workflow_management",
+                        "service_registry",
+                        "infrastructure",
+                    ],
+                    "domain_contexts": [
+                        "health_monitoring",
+                        "infrastructure",
+                        "ingestion",
+                        "query_processing",
+                        "reporting",
+                        "service_registry",
+                        "workflow_management",
+                    ],
+                },
+            )
+            await logger_client.log_info(
+                "Orchestrator service started",
+                {
+                    "ddd_architecture": True,
+                    "bounded_contexts": 7,
+                    "service_discovery": True,
+                    "workflow_orchestration": True,
+                },
+            )
     except Exception as e:
         print(f"Failed to initialize log collector client: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -227,6 +273,7 @@ async def shutdown_event():
         except Exception:
             pass
 
+
 # Use common middleware setup to reduce duplication across services
 setup_common_middleware(app, ServiceNames.ORCHESTRATOR)
 
@@ -234,17 +281,19 @@ setup_common_middleware(app, ServiceNames.ORCHESTRATOR)
 # register_exception_handlers(app)
 # register_health_endpoints(app, ServiceNames.ORCHESTRATOR, SERVICE_VERSION)
 
+
 # Simple health endpoint that bypasses all shared systems
 @app.get("/health")
 async def simple_health():
     """Simple health endpoint that avoids datetime serialization."""
     import time
+
     return {
         "status": "healthy",
         "service": "orchestrator",
         "version": "1.0.0",
         "timestamp": time.time(),
-        "uptime_seconds": 0
+        "uptime_seconds": 0,
     }
 
 
@@ -268,9 +317,12 @@ async def shutdown_event():
     # Add cleanup logic here as needed
 
     print("🏁 Orchestrator shutdown completed")
+
+
 # ============================================================================
 # API ROUTE REGISTRATION - Clean separation by bounded contexts
 # ============================================================================
+
 
 def register_bounded_context_routers(app):
     """Register API routers for all bounded contexts.
@@ -279,14 +331,34 @@ def register_bounded_context_routers(app):
     and follows DRY principles by avoiding repetitive try/except blocks.
     """
     router_configs = [
-        ("services.orchestrator.presentation.api.workflow_management.routes", "/api/v1/workflows", ["Workflow Management"], "Workflow Management"),
+        (
+            "services.orchestrator.presentation.api.workflow_management.routes",
+            "/api/v1/workflows",
+            ["Workflow Management"],
+            "Workflow Management",
+        ),
         # Skip health monitoring routes due to datetime serialization issues
         # ("services.orchestrator.presentation.api.health_monitoring.routes", "/api/v1/health", ["Health & Monitoring"], "Health Monitoring"),
-        ("services.orchestrator.presentation.api.infrastructure.routes", "/api/v1/infrastructure", ["Infrastructure"], "Infrastructure"),
+        (
+            "services.orchestrator.presentation.api.infrastructure.routes",
+            "/api/v1/infrastructure",
+            ["Infrastructure"],
+            "Infrastructure",
+        ),
         ("services.orchestrator.presentation.api.ingestion.routes", "/api/v1/ingestion", ["Ingestion"], "Ingestion"),
-        ("services.orchestrator.presentation.api.service_registry.routes", "/api/v1/service-registry", ["Service Registry"], "Service Registry"),
+        (
+            "services.orchestrator.presentation.api.service_registry.routes",
+            "/api/v1/service-registry",
+            ["Service Registry"],
+            "Service Registry",
+        ),
         ("services.orchestrator.presentation.api.reporting.routes", "/api/v1/reporting", ["Reporting"], "Reporting"),
-        ("services.orchestrator.presentation.api.query_processing.routes", "/api/v1/queries", ["Query Processing"], "Query Processing"),
+        (
+            "services.orchestrator.presentation.api.query_processing.routes",
+            "/api/v1/queries",
+            ["Query Processing"],
+            "Query Processing",
+        ),
     ]
 
     for module_path, prefix, tags, context_name in router_configs:
@@ -300,6 +372,7 @@ def register_bounded_context_routers(app):
 
 # Register API routes by bounded context (DDD-based)
 register_bounded_context_routers(app)
+
 
 # Legacy route support (to be migrated)
 @app.get("/workflows")
@@ -317,9 +390,5 @@ if __name__ == "__main__":
     """Run the Orchestrator service directly."""
     print("🚀 DEBUG: Orchestrator main.py loaded and starting!")
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

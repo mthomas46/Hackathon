@@ -4,12 +4,13 @@ This module provides LangGraph tool wrappers for all orchestrator services,
 enabling them to be used as tools within LangGraph workflows.
 """
 
-from typing import Dict, Any, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
+
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
+from services.shared.utilities import get_service_client
 
 
 class ServiceTool(BaseTool):
@@ -38,12 +39,7 @@ def create_prompt_tool(name: str, category: str, content: str, variables: List[s
     """Create a new prompt in the Prompt Store."""
     service_client = get_service_client()
 
-    prompt_data = {
-        "name": name,
-        "category": category,
-        "content": content,
-        "variables": variables
-    }
+    prompt_data = {"name": name, "category": category, "content": content, "variables": variables}
 
     try:
         result = service_client.post_json("prompt-store/api/v1/prompts", prompt_data)
@@ -70,10 +66,9 @@ def get_optimal_prompt_tool(task_type: str, context: Dict[str, Any]) -> Dict[str
     service_client = get_service_client()
 
     try:
-        result = service_client.post_json("prompt-store/api/v1/orchestration/prompts/select", {
-            "task_type": task_type,
-            "context": context
-        })
+        result = service_client.post_json(
+            "prompt-store/api/v1/orchestration/prompts/select", {"task_type": task_type, "context": context}
+        )
         return {"success": True, "data": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -85,11 +80,7 @@ def store_document_tool(content: str, metadata: Dict[str, Any], source: str) -> 
     """Store a document in the Document Store."""
     service_client = get_service_client()
 
-    doc_data = {
-        "content": content,
-        "metadata": metadata,
-        "source": source
-    }
+    doc_data = {"content": content, "metadata": metadata, "source": source}
 
     try:
         result = service_client.post_json("doc-store/api/v1/documents", doc_data)
@@ -132,10 +123,7 @@ def analyze_codebase_tool(repo_url: str, languages: List[str]) -> Dict[str, Any]
     """Analyze a codebase using the Code Analyzer service."""
     service_client = get_service_client()
 
-    analysis_data = {
-        "repo_url": repo_url,
-        "languages": languages
-    }
+    analysis_data = {"repo_url": repo_url, "languages": languages}
 
     try:
         result = service_client.post_json("code-analyzer/analyze", analysis_data)
@@ -162,11 +150,7 @@ def summarize_document_tool(content: str, style: str = "concise") -> Dict[str, A
     """Summarize a document using the Summarizer Hub."""
     service_client = get_service_client()
 
-    summary_data = {
-        "content": content,
-        "format": "markdown",
-        "max_length": 500
-    }
+    summary_data = {"content": content, "format": "markdown", "max_length": 500}
 
     try:
         result = service_client.post_json("summarizer-hub/summarize", summary_data)
@@ -193,10 +177,7 @@ def interpret_query_tool(query: str, context: Optional[Dict[str, Any]] = None) -
     """Interpret a natural language query using the Interpreter service."""
     service_client = get_service_client()
 
-    interpret_data = {
-        "query": query,
-        "context": context or {}
-    }
+    interpret_data = {"query": query, "context": context or {}}
 
     try:
         result = service_client.post_json("interpreter/interpret", interpret_data)
@@ -210,10 +191,7 @@ def execute_workflow_tool(query: str, user_id: Optional[str] = None) -> Dict[str
     """Execute a workflow from a natural language query."""
     service_client = get_service_client()
 
-    execute_data = {
-        "query": query,
-        "user_id": user_id
-    }
+    execute_data = {"query": query, "user_id": user_id}
 
     try:
         result = service_client.post_json("interpreter/execute", execute_data)
@@ -228,11 +206,7 @@ def analyze_document_consistency_tool(doc_ids: List[str], criteria: Dict[str, An
     """Analyze document consistency using the Analysis Service."""
     service_client = get_service_client()
 
-    analysis_data = {
-        "targets": doc_ids,
-        "analysis_type": "consistency",
-        "criteria": criteria
-    }
+    analysis_data = {"targets": doc_ids, "analysis_type": "consistency", "criteria": criteria}
 
     try:
         result = service_client.post_json("analysis-service/analyze", analysis_data)
@@ -247,10 +221,9 @@ def generate_quality_report_tool(analysis_results: Dict[str, Any]) -> Dict[str, 
     service_client = get_service_client()
 
     try:
-        result = service_client.post_json("analysis-service/reports/generate", {
-            "type": "quality_summary",
-            "data": analysis_results
-        })
+        result = service_client.post_json(
+            "analysis-service/reports/generate", {"type": "quality_summary", "data": analysis_results}
+        )
         return {"success": True, "data": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -262,11 +235,7 @@ def send_notification_tool(message: str, channels: List[str], priority: str) -> 
     """Send a notification using the Notification Service."""
     service_client = get_service_client()
 
-    notification_data = {
-        "message": message,
-        "channels": channels,
-        "priority": priority
-    }
+    notification_data = {"message": message, "channels": channels, "priority": priority}
 
     try:
         result = service_client.post_json("notification-service/notify", notification_data)
@@ -280,10 +249,7 @@ def create_notification_template_tool(name: str, template: str) -> Dict[str, Any
     """Create a notification template."""
     service_client = get_service_client()
 
-    template_data = {
-        "name": name,
-        "template": template
-    }
+    template_data = {"name": name, "template": template}
 
     try:
         result = service_client.post_json("notification-service/templates", template_data)
@@ -298,11 +264,7 @@ def ingest_github_repo_tool(repo_url: str, filters: Dict[str, Any]) -> Dict[str,
     """Ingest content from a GitHub repository."""
     service_client = get_service_client()
 
-    ingest_data = {
-        "source_url": repo_url,
-        "source_type": "github",
-        "filters": filters
-    }
+    ingest_data = {"source_url": repo_url, "source_type": "github", "filters": filters}
 
     try:
         result = service_client.post_json("source-agent/docs/fetch", ingest_data)
@@ -316,11 +278,7 @@ def ingest_jira_issues_tool(project_key: str, query: str) -> Dict[str, Any]:
     """Ingest Jira issues and tickets."""
     service_client = get_service_client()
 
-    ingest_data = {
-        "source_url": f"jira/{project_key}",
-        "source_type": "jira",
-        "query": query
-    }
+    ingest_data = {"source_url": f"jira/{project_key}", "source_type": "jira", "query": query}
 
     try:
         result = service_client.post_json("source-agent/docs/fetch", ingest_data)
@@ -335,9 +293,7 @@ def analyze_content_security_tool(content: str) -> Dict[str, Any]:
     """Analyze content for security risks."""
     service_client = get_service_client()
 
-    analysis_data = {
-        "content": content
-    }
+    analysis_data = {"content": content}
 
     try:
         result = service_client.post_json("secure-analyzer/detect", analysis_data)
@@ -351,10 +307,7 @@ def sanitize_content_tool(content: str, policies: List[str]) -> Dict[str, Any]:
     """Sanitize content based on security policies."""
     service_client = get_service_client()
 
-    sanitize_data = {
-        "content": content,
-        "policies": policies
-    }
+    sanitize_data = {"content": content, "policies": policies}
 
     try:
         result = service_client.post_json("secure-analyzer/sanitize", sanitize_data)
@@ -370,44 +323,15 @@ async def create_service_tools(service_name: str, service_client: Any) -> Dict[s
 
     # Map services to their tool functions
     service_tool_map = {
-        "prompt_store": [
-            create_prompt_tool,
-            get_prompt_tool,
-            get_optimal_prompt_tool
-        ],
-        "document_store": [
-            store_document_tool,
-            search_documents_tool,
-            get_document_tool
-        ],
-        "code_analyzer": [
-            analyze_codebase_tool,
-            extract_functions_tool
-        ],
-        "summarizer_hub": [
-            summarize_document_tool,
-            extract_key_concepts_tool
-        ],
-        "interpreter": [
-            interpret_query_tool,
-            execute_workflow_tool
-        ],
-        "analysis_service": [
-            analyze_document_consistency_tool,
-            generate_quality_report_tool
-        ],
-        "notification_service": [
-            send_notification_tool,
-            create_notification_template_tool
-        ],
-        "source_agent": [
-            ingest_github_repo_tool,
-            ingest_jira_issues_tool
-        ],
-        "secure_analyzer": [
-            analyze_content_security_tool,
-            sanitize_content_tool
-        ]
+        "prompt_store": [create_prompt_tool, get_prompt_tool, get_optimal_prompt_tool],
+        "document_store": [store_document_tool, search_documents_tool, get_document_tool],
+        "code_analyzer": [analyze_codebase_tool, extract_functions_tool],
+        "summarizer_hub": [summarize_document_tool, extract_key_concepts_tool],
+        "interpreter": [interpret_query_tool, execute_workflow_tool],
+        "analysis_service": [analyze_document_consistency_tool, generate_quality_report_tool],
+        "notification_service": [send_notification_tool, create_notification_template_tool],
+        "source_agent": [ingest_github_repo_tool, ingest_jira_issues_tool],
+        "secure_analyzer": [analyze_content_security_tool, sanitize_content_tool],
     }
 
     if service_name in service_tool_map:

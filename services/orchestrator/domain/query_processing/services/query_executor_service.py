@@ -1,12 +1,12 @@
 """Query Executor Service Domain Service"""
 
-from typing import Dict, Any, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-from ..value_objects.query_interpretation import QueryInterpretation
-from ..value_objects.query_execution_result import QueryExecutionResult, ExecutionStatus
+from ..value_objects.query_execution_result import ExecutionStatus, QueryExecutionResult
 from ..value_objects.query_intent import QueryIntent
+from ..value_objects.query_interpretation import QueryInterpretation
 
 
 class QueryExecutorService:
@@ -49,7 +49,7 @@ class QueryExecutorService:
                     execution_id=execution_id,
                     status=ExecutionStatus.FAILED,
                     error_message="Query interpretation does not support execution",
-                    execution_time_seconds=(datetime.utcnow() - start_time).total_seconds()
+                    execution_time_seconds=(datetime.utcnow() - start_time).total_seconds(),
                 )
 
             # Get execution handler
@@ -60,7 +60,7 @@ class QueryExecutorService:
                     execution_id=execution_id,
                     status=ExecutionStatus.FAILED,
                     error_message=f"No execution handler for intent: {interpretation.intent}",
-                    execution_time_seconds=(datetime.utcnow() - start_time).total_seconds()
+                    execution_time_seconds=(datetime.utcnow() - start_time).total_seconds(),
                 )
 
             # Execute the query
@@ -81,7 +81,7 @@ class QueryExecutorService:
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
                 error_message=f"Execution failed: {str(e)}",
-                execution_time_seconds=execution_time
+                execution_time_seconds=execution_time,
             )
 
     async def _execute_search_documents(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -90,28 +90,28 @@ class QueryExecutorService:
 
         try:
             # Simulate document search (would integrate with actual doc store)
-            search_terms = interpretation.parameters.get('search_terms', [])
-            document_type = interpretation.entities.get('document_type', 'general')
+            search_terms = interpretation.parameters.get("search_terms", [])
+            document_type = interpretation.entities.get("document_type", "general")
 
             # Mock search results
             results = {
-                'documents_found': 5,
-                'search_terms': search_terms,
-                'document_type': document_type,
-                'results': [
-                    {'id': 'doc-1', 'title': 'Sample Document 1', 'relevance': 0.95},
-                    {'id': 'doc-2', 'title': 'Sample Document 2', 'relevance': 0.87},
-                    {'id': 'doc-3', 'title': 'Sample Document 3', 'relevance': 0.76},
-                ]
+                "documents_found": 5,
+                "search_terms": search_terms,
+                "document_type": document_type,
+                "results": [
+                    {"id": "doc-1", "title": "Sample Document 1", "relevance": 0.95},
+                    {"id": "doc-2", "title": "Sample Document 2", "relevance": 0.87},
+                    {"id": "doc-3", "title": "Sample Document 3", "relevance": 0.76},
+                ],
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('doc_store')
+            result.add_service_used("doc_store")
             return result
 
         except Exception as e:
@@ -119,7 +119,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Document search failed: {str(e)}"
+                error_message=f"Document search failed: {str(e)}",
             )
 
     async def _execute_analyze_content(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -129,23 +129,23 @@ class QueryExecutorService:
         try:
             # Simulate content analysis
             results = {
-                'analysis_type': 'content_analysis',
-                'key_findings': [
-                    'Content contains technical information',
-                    'Identified 3 main topics',
-                    'Complexity level: medium'
+                "analysis_type": "content_analysis",
+                "key_findings": [
+                    "Content contains technical information",
+                    "Identified 3 main topics",
+                    "Complexity level: medium",
                 ],
-                'sentiment': 'neutral',
-                'topics': ['technology', 'process', 'analysis']
+                "sentiment": "neutral",
+                "topics": ["technology", "process", "analysis"],
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('analyzer')
+            result.add_service_used("analyzer")
             return result
 
         except Exception as e:
@@ -153,7 +153,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Content analysis failed: {str(e)}"
+                error_message=f"Content analysis failed: {str(e)}",
             )
 
     async def _execute_workflow(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -161,31 +161,31 @@ class QueryExecutorService:
         execution_id = str(uuid.uuid4())
 
         try:
-            workflow_id = interpretation.parameters.get('workflow_id')
+            workflow_id = interpretation.parameters.get("workflow_id")
             if not workflow_id:
                 return QueryExecutionResult(
                     query_id=interpretation.query_id,
                     execution_id=execution_id,
                     status=ExecutionStatus.FAILED,
-                    error_message="No workflow ID specified"
+                    error_message="No workflow ID specified",
                 )
 
             # Simulate workflow execution
             results = {
-                'workflow_id': workflow_id,
-                'status': 'completed',
-                'steps_executed': 3,
-                'duration_seconds': 2.5,
-                'output': {'result': 'success'}
+                "workflow_id": workflow_id,
+                "status": "completed",
+                "steps_executed": 3,
+                "duration_seconds": 2.5,
+                "output": {"result": "success"},
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('orchestrator')
+            result.add_service_used("orchestrator")
             return result
 
         except Exception as e:
@@ -193,7 +193,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Workflow execution failed: {str(e)}"
+                error_message=f"Workflow execution failed: {str(e)}",
             )
 
     async def _execute_check_status(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -201,24 +201,24 @@ class QueryExecutorService:
         execution_id = str(uuid.uuid4())
 
         try:
-            service_name = interpretation.entities.get('service_name', 'orchestrator')
+            service_name = interpretation.entities.get("service_name", "orchestrator")
 
             # Simulate status check
             results = {
-                'service_name': service_name,
-                'status': 'healthy',
-                'uptime': '2h 30m',
-                'version': '1.0.0',
-                'last_check': datetime.utcnow().isoformat()
+                "service_name": service_name,
+                "status": "healthy",
+                "uptime": "2h 30m",
+                "version": "1.0.0",
+                "last_check": datetime.utcnow().isoformat(),
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('health_monitor')
+            result.add_service_used("health_monitor")
             return result
 
         except Exception as e:
@@ -226,7 +226,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Status check failed: {str(e)}"
+                error_message=f"Status check failed: {str(e)}",
             )
 
     async def _execute_get_metrics(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -236,22 +236,22 @@ class QueryExecutorService:
         try:
             # Simulate metrics retrieval
             results = {
-                'metrics': {
-                    'total_queries': 1250,
-                    'active_workflows': 5,
-                    'system_uptime': '99.9%',
-                    'average_response_time': '0.8s'
+                "metrics": {
+                    "total_queries": 1250,
+                    "active_workflows": 5,
+                    "system_uptime": "99.9%",
+                    "average_response_time": "0.8s",
                 },
-                'timestamp': datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('metrics_service')
+            result.add_service_used("metrics_service")
             return result
 
         except Exception as e:
@@ -259,7 +259,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Metrics retrieval failed: {str(e)}"
+                error_message=f"Metrics retrieval failed: {str(e)}",
             )
 
     async def _execute_summarize_content(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -269,23 +269,23 @@ class QueryExecutorService:
         try:
             # Simulate content summarization
             results = {
-                'summary': 'This content discusses technical processes and analysis methodologies.',
-                'key_points': [
-                    'Technical analysis approaches',
-                    'Process optimization techniques',
-                    'Data-driven decision making'
+                "summary": "This content discusses technical processes and analysis methodologies.",
+                "key_points": [
+                    "Technical analysis approaches",
+                    "Process optimization techniques",
+                    "Data-driven decision making",
                 ],
-                'word_count': 45,
-                'compression_ratio': 0.85
+                "word_count": 45,
+                "compression_ratio": 0.85,
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('summarizer')
+            result.add_service_used("summarizer")
             return result
 
         except Exception as e:
@@ -293,7 +293,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Content summarization failed: {str(e)}"
+                error_message=f"Content summarization failed: {str(e)}",
             )
 
     async def _execute_list_resources(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
@@ -303,21 +303,21 @@ class QueryExecutorService:
         try:
             # Simulate resource listing
             results = {
-                'resources': [
-                    {'type': 'workflow', 'count': 15, 'status': 'available'},
-                    {'type': 'document', 'count': 234, 'status': 'available'},
-                    {'type': 'service', 'count': 8, 'status': 'available'}
+                "resources": [
+                    {"type": "workflow", "count": 15, "status": "available"},
+                    {"type": "document", "count": 234, "status": "available"},
+                    {"type": "service", "count": 8, "status": "available"},
                 ],
-                'total_count': 257
+                "total_count": 257,
             }
 
             result = QueryExecutionResult(
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.SUCCESS,
-                results=results
+                results=results,
             )
-            result.add_service_used('registry')
+            result.add_service_used("registry")
             return result
 
         except Exception as e:
@@ -325,7 +325,7 @@ class QueryExecutorService:
                 query_id=interpretation.query_id,
                 execution_id=execution_id,
                 status=ExecutionStatus.FAILED,
-                error_message=f"Resource listing failed: {str(e)}"
+                error_message=f"Resource listing failed: {str(e)}",
             )
 
     def validate_execution_capability(self, interpretation: QueryInterpretation) -> Dict[str, Any]:
@@ -342,7 +342,7 @@ class QueryExecutorService:
             issues.append("Confidence too low for automatic execution")
 
         return {
-            'can_execute': len(issues) == 0,
-            'issues': issues,
-            'suggested_actions': interpretation.suggested_actions
+            "can_execute": len(issues) == 0,
+            "issues": issues,
+            "suggested_actions": interpretation.suggested_actions,
         }

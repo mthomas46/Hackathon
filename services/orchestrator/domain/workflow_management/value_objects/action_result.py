@@ -1,12 +1,13 @@
 """Action Result Value Object"""
 
-from typing import Any, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
 
 class ActionStatus(Enum):
     """Status of an action execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -26,7 +27,7 @@ class ActionResult:
         error_message: Optional[str] = None,
         execution_time_ms: Optional[int] = None,
         started_at: Optional[datetime] = None,
-        completed_at: Optional[datetime] = None
+        completed_at: Optional[datetime] = None,
     ):
         self._action_id = action_id
         self._status = status
@@ -93,30 +94,27 @@ class ActionResult:
             "error_message": self._error_message,
             "execution_time_ms": self._execution_time_ms,
             "started_at": self._started_at.isoformat(),
-            "completed_at": self._completed_at.isoformat() if self._completed_at else None
+            "completed_at": self._completed_at.isoformat() if self._completed_at else None,
         }
 
     @classmethod
-    def success(cls, action_id: str, output: Any, execution_time_ms: int) -> 'ActionResult':
+    def success(cls, action_id: str, output: Any, execution_time_ms: int) -> "ActionResult":
         """Create a successful action result."""
         return cls(
-            action_id=action_id,
-            status=ActionStatus.COMPLETED,
-            output=output,
-            execution_time_ms=execution_time_ms
+            action_id=action_id, status=ActionStatus.COMPLETED, output=output, execution_time_ms=execution_time_ms
         )
 
     @classmethod
-    def failure(cls, action_id: str, error_message: str, execution_time_ms: int) -> 'ActionResult':
+    def failure(cls, action_id: str, error_message: str, execution_time_ms: int) -> "ActionResult":
         """Create a failed action result."""
         return cls(
             action_id=action_id,
             status=ActionStatus.FAILED,
             error_message=error_message,
-            execution_time_ms=execution_time_ms
+            execution_time_ms=execution_time_ms,
         )
 
     @classmethod
-    def skipped(cls, action_id: str) -> 'ActionResult':
+    def skipped(cls, action_id: str) -> "ActionResult":
         """Create a skipped action result."""
         return cls(action_id=action_id, status=ActionStatus.SKIPPED)

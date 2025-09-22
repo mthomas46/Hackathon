@@ -1,13 +1,12 @@
 """Ingestion Application Use Cases"""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-
-from .commands import StartIngestionCommand, CancelIngestionCommand, RetryIngestionCommand
+from ...shared.application import UseCase
+from .commands import CancelIngestionCommand, RetryIngestionCommand, StartIngestionCommand
 from .queries import GetIngestionStatusQuery, ListIngestionsQuery
 
 
-from ...shared.application import UseCase
 class StartIngestionUseCase(UseCase):
     """Use case for starting document ingestion."""
 
@@ -18,7 +17,7 @@ class StartIngestionUseCase(UseCase):
             "ingestion_id": "placeholder-id",
             "status": "started",
             "source_url": command.source_url,
-            "source_type": command.source_type
+            "source_type": command.source_type,
         }
 
 
@@ -28,11 +27,7 @@ class GetIngestionStatusUseCase(UseCase):
     async def execute(self, query: GetIngestionStatusQuery) -> Optional[Dict[str, Any]]:
         """Execute the get ingestion status use case."""
         # Placeholder implementation
-        return {
-            "ingestion_id": query.ingestion_id,
-            "status": "completed",
-            "progress_percentage": 100
-        }
+        return {"ingestion_id": query.ingestion_id, "status": "completed", "progress_percentage": 100}
 
 
 class ListIngestionsUseCase(UseCase):
@@ -46,6 +41,6 @@ class ListIngestionsUseCase(UseCase):
                 "ingestion_id": "sample-1",
                 "status": "completed",
                 "source_url": "https://example.com",
-                "source_type": "github"
+                "source_type": "github",
             }
         ]
