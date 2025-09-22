@@ -2,9 +2,11 @@
 
 Handles the complex logic for fetching documents from different sources.
 """
-import os
+
 import base64
+import os
 from typing import Any, Dict
+
 from fastapi import HTTPException
 
 from services.shared.integrations.clients.clients import ServiceClients
@@ -12,11 +14,11 @@ from services.shared.utilities import cached_get
 
 from .document_builders import build_readme_doc
 from .shared_utils import (
-    sanitize_for_response,
     build_github_url,
-    handle_source_agent_error,
+    build_source_agent_context,
     create_source_agent_success_response,
-    build_source_agent_context
+    handle_source_agent_error,
+    sanitize_for_response,
 )
 
 
@@ -31,19 +33,16 @@ class FetchHandler:
             try:
                 clients = ServiceClients(timeout=20)
                 mcp_resp = await clients.post_json(
-                    "github-mcp/tools/github.get_repo/invoke",
-                    {"arguments": {"owner": owner, "repo": repo}}
+                    "github-mcp/tools/github.get_repo/invoke", {"arguments": {"owner": owner, "repo": repo}}
                 )
                 result = (mcp_resp or {}).get("result", {})
                 title = f"{result.get('full_name', f'{owner}/{repo}')}"
                 content = f"Repository: {result.get('full_name', f'{owner}/{repo}')}\nStars: {result.get('stars', 0)}\nTopics: {', '.join(result.get('topics', []))}"
                 doc = build_readme_doc(owner, repo, content)
                 context = build_source_agent_context("fetch", req.source, doc.id)
-                return create_source_agent_success_response("retrieved", {
-                    "document": doc.model_dump(),
-                    "source": req.source,
-                    "via": "github-mcp"
-                }, **context)
+                return create_source_agent_success_response(
+                    "retrieved", {"document": doc.model_dump(), "source": req.source, "via": "github-mcp"}, **context
+                )
             except Exception as e:
                 # Fallback to direct GitHub fetch below
                 pass
@@ -65,10 +64,9 @@ class FetchHandler:
         doc = build_readme_doc(safe_owner, safe_repo, safe_content)
 
         context = build_source_agent_context("fetch", req.source, doc.id)
-        return create_source_agent_success_response("retrieved", {
-            "document": doc.model_dump(),
-            "source": req.source
-        }, **context)
+        return create_source_agent_success_response(
+            "retrieved", {"document": doc.model_dump(), "source": req.source}, **context
+        )
 
     @staticmethod
     async def fetch_jira_document(req) -> Dict[str, Any]:
@@ -77,7 +75,8 @@ class FetchHandler:
             "fetch from Jira",
             Exception("Jira fetch not implemented"),
             error_code="FEATURE_NOT_IMPLEMENTED",
-            source=req.source, status="placeholder"
+            source=req.source,
+            status="placeholder",
         )
 
     @staticmethod
@@ -87,7 +86,8 @@ class FetchHandler:
             "fetch from Confluence",
             Exception("Confluence fetch not implemented"),
             error_code="FEATURE_NOT_IMPLEMENTED",
-            source=req.source, status="placeholder"
+            source=req.source,
+            status="placeholder",
         )
 
 

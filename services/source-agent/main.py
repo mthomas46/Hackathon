@@ -16,78 +16,79 @@ Responsibilities:
 
 Dependencies: shared utilities, httpx for HTTP requests, Atlassian SDK, GitHub API.
 """
-from typing import Optional, List
+
 import os
+from typing import List, Optional
+
 import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.responses.responses import create_error_response, create_success_response
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response, create_error_response
-from services.shared.utilities.error_handling import ValidationException, ServiceException
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import utc_now, generate_id, clean_string
-
-
-from services.shared.utilities.error_handling import safe_execute_async
+from services.shared.utilities import clean_string, generate_id, utc_now
+from services.shared.utilities.error_handling import ServiceException, ValidationException, safe_execute_async
 
 try:
     import redis.asyncio as aioredis
 except Exception:
     aioredis = None
 
-from services.shared.core.models.models import Document
-from services.shared.utilities import stable_hash, cached_get
-from services.shared.envelopes import DocumentEnvelope
-from services.shared.utilities.logging_client import get_log_collector_client
-from services.shared.core.constants_new import ServiceNames
 import time
-from services.shared.owners import derive_github_owners
+
+from services.shared.core.constants_new import ServiceNames
+from services.shared.core.models.models import Document
+from services.shared.envelopes import DocumentEnvelope
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+from services.shared.owners import derive_github_owners
+from services.shared.utilities import cached_get, stable_hash
+from services.shared.utilities.logging_client import get_log_collector_client
 
 # Service configuration constants
 SERVICE_NAME = "source-agent"
 SERVICE_TITLE = "Source Agent"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = int(os.environ.get('SERVICE_PORT', 5070))
+DEFAULT_PORT = int(os.environ.get("SERVICE_PORT", 5070))
 
 # Supported sources and their capabilities
 SUPPORTED_SOURCES = ["github", "jira", "confluence"]
 SOURCE_CAPABILITIES = {
     "github": ["readme_fetch", "pr_normalization", "code_analysis"],
     "jira": ["issue_normalization"],
-    "confluence": ["page_normalization"]
+    "confluence": ["page_normalization"],
 }
+from .modules.code_analyzer import code_analyzer
 from .modules.document_builders import (
+    build_confluence_doc,
+    build_jira_doc,
     build_readme_doc,
     extract_endpoints_from_patch,
-    build_jira_doc,
     storage_html_to_text,
-    build_confluence_doc
 )
+from .modules.fetch_handler import fetch_handler
+
+# ============================================================================
+# HANDLER MODULES - Extracted business logic
+# ============================================================================
+from .modules.models import ArchitectureProcessRequest, CodeAnalysisRequest, DocumentRequest, NormalizationRequest
+from .modules.normalize_handler import normalize_handler
 
 # ============================================================================
 # SHARED UTILITIES - Leveraging centralized functionality across modules
 # ============================================================================
 from .modules.shared_utils import (
-    sanitize_for_response,
-    handle_source_agent_error,
-    create_source_agent_success_response,
+    build_github_url,
     build_source_agent_context,
+    create_source_agent_success_response,
     extract_endpoints_from_code,
-    build_github_url
+    handle_source_agent_error,
+    sanitize_for_response,
 )
-
-# ============================================================================
-# HANDLER MODULES - Extracted business logic
-# ============================================================================
-from .modules.models import DocumentRequest, NormalizationRequest, CodeAnalysisRequest, ArchitectureProcessRequest
-from .modules.fetch_handler import fetch_handler
-from .modules.normalize_handler import normalize_handler
-from .modules.code_analyzer import code_analyzer
 
 # Initialize log collector client
 logger_client = None
@@ -96,8 +97,9 @@ logger_client = None
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
-    description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence"
+    description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence",
 )
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -108,21 +110,39 @@ async def startup_event():
         service_name = getattr(ServiceNames, "SOURCE_AGENT", SERVICE_NAME)
         logger_client = await get_log_collector_client(service_name)
         if logger_client:
-            await logger_client.log_business_event("source_agent_startup", {
-                "version": SERVICE_VERSION,
-                "capabilities": ["document_fetching", "data_normalization", "code_analysis", "source_integration", "correlation_tracking"],
-                "integrations": ["github_api", "jira_api", "confluence_api", "log_collector", "doc_store"],
-                "supported_sources": ["github", "jira", "confluence"],
-                "features": ["secure_data_handling", "validation_sanitization", "owner_derivation", "caching_optimization"]
-            })
-            await logger_client.log_info("Source Agent service started", {
-                "supported_sources": ["github", "jira", "confluence"],
-                "document_fetching_enabled": True,
-                "normalization_engine_ready": True,
-                "code_analysis_available": True
-            })
+            await logger_client.log_business_event(
+                "source_agent_startup",
+                {
+                    "version": SERVICE_VERSION,
+                    "capabilities": [
+                        "document_fetching",
+                        "data_normalization",
+                        "code_analysis",
+                        "source_integration",
+                        "correlation_tracking",
+                    ],
+                    "integrations": ["github_api", "jira_api", "confluence_api", "log_collector", "doc_store"],
+                    "supported_sources": ["github", "jira", "confluence"],
+                    "features": [
+                        "secure_data_handling",
+                        "validation_sanitization",
+                        "owner_derivation",
+                        "caching_optimization",
+                    ],
+                },
+            )
+            await logger_client.log_info(
+                "Source Agent service started",
+                {
+                    "supported_sources": ["github", "jira", "confluence"],
+                    "document_fetching_enabled": True,
+                    "normalization_engine_ready": True,
+                    "code_analysis_available": True,
+                },
+            )
     except Exception as e:
         print(f"Failed to initialize log collector client: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -133,10 +153,13 @@ async def shutdown_event():
         except Exception:
             pass
 
-# Use common middleware setup to reduce duplication across services
-from services.shared.utilities import setup_common_middleware, attach_self_register
-from services.shared.utilities.error_handling import install_error_handlers
+
 from services.shared.core.constants_new import ServiceNames
+
+# Use common middleware setup to reduce duplication across services
+from services.shared.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.error_handling import install_error_handlers
+
 setup_common_middleware(app, ServiceNames.SOURCE_AGENT)
 install_error_handlers(app)
 
@@ -144,9 +167,8 @@ install_error_handlers(app)
 attach_self_register(app, ServiceNames.SOURCE_AGENT)
 
 
-
-
 # API Endpoints
+
 
 @app.post("/docs/fetch")
 async def fetch_document(req: DocumentRequest):
@@ -162,23 +184,29 @@ async def fetch_document(req: DocumentRequest):
     try:
         # Log document fetch start
         if logger_client:
-            await logger_client.log_business_event("document_fetch_started", {
-                "request_id": request_id,
-                "source": req.source,
-                "identifier": req.identifier,
-                "document_type": req.doc_type,
-                "has_auth": bool(req.auth_token),
-                "include_metadata": req.include_metadata,
-                "fetch_operation": "single_document"
-            })
+            await logger_client.log_business_event(
+                "document_fetch_started",
+                {
+                    "request_id": request_id,
+                    "source": req.source,
+                    "identifier": req.identifier,
+                    "document_type": req.doc_type,
+                    "has_auth": bool(req.auth_token),
+                    "include_metadata": req.include_metadata,
+                    "fetch_operation": "single_document",
+                },
+            )
 
-            await logger_client.log_info("Starting document fetch from source", {
-                "request_id": request_id,
-                "source": req.source,
-                "identifier": req.identifier,
-                "document_type": req.doc_type,
-                "external_api_call": True
-            })
+            await logger_client.log_info(
+                "Starting document fetch from source",
+                {
+                    "request_id": request_id,
+                    "source": req.source,
+                    "identifier": req.identifier,
+                    "document_type": req.doc_type,
+                    "external_api_call": True,
+                },
+            )
 
         if req.source == "github":
             # Extract owner and repo for GitHub
@@ -186,34 +214,30 @@ async def fetch_document(req: DocumentRequest):
 
             # Log GitHub-specific details
             if logger_client:
-                await logger_client.log_info("Fetching from GitHub repository", {
-                    "request_id": request_id,
-                    "owner": owner,
-                    "repository": repo,
-                    "document_type": req.doc_type
-                })
+                await logger_client.log_info(
+                    "Fetching from GitHub repository",
+                    {"request_id": request_id, "owner": owner, "repository": repo, "document_type": req.doc_type},
+                )
 
             result = await fetch_handler.fetch_github_document(owner, repo, req)
 
         elif req.source == "jira":
             # Log Jira-specific details
             if logger_client:
-                await logger_client.log_info("Fetching from Jira issue/ticket", {
-                    "request_id": request_id,
-                    "jira_identifier": req.identifier,
-                    "document_type": req.doc_type
-                })
+                await logger_client.log_info(
+                    "Fetching from Jira issue/ticket",
+                    {"request_id": request_id, "jira_identifier": req.identifier, "document_type": req.doc_type},
+                )
 
             result = await fetch_handler.fetch_jira_document(req)
 
         elif req.source == "confluence":
             # Log Confluence-specific details
             if logger_client:
-                await logger_client.log_info("Fetching from Confluence page", {
-                    "request_id": request_id,
-                    "confluence_identifier": req.identifier,
-                    "document_type": req.doc_type
-                })
+                await logger_client.log_info(
+                    "Fetching from Confluence page",
+                    {"request_id": request_id, "confluence_identifier": req.identifier, "document_type": req.doc_type},
+                )
 
             result = await fetch_handler.fetch_confluence_document(req)
 
@@ -228,18 +252,21 @@ async def fetch_document(req: DocumentRequest):
                         "source": req.source,
                         "identifier": req.identifier,
                         "error_type": "unsupported_source",
-                        "processing_time_seconds": error_time
+                        "processing_time_seconds": error_time,
                     },
-                    error=Exception(f"Unsupported source: {req.source}")
+                    error=Exception(f"Unsupported source: {req.source}"),
                 )
 
-                await logger_client.log_business_event("document_fetch_failed", {
-                    "request_id": request_id,
-                    "source": req.source,
-                    "identifier": req.identifier,
-                    "error_type": "unsupported_source",
-                    "processing_time_seconds": error_time
-                })
+                await logger_client.log_business_event(
+                    "document_fetch_failed",
+                    {
+                        "request_id": request_id,
+                        "source": req.source,
+                        "identifier": req.identifier,
+                        "error_type": "unsupported_source",
+                        "processing_time_seconds": error_time,
+                    },
+                )
 
             raise HTTPException(status_code=400, detail=f"Unsupported source: {req.source}")
 
@@ -252,17 +279,20 @@ async def fetch_document(req: DocumentRequest):
 
         # Log successful document fetch completion
         if logger_client:
-            await logger_client.log_business_event("document_fetch_completed", {
-                "request_id": request_id,
-                "source": req.source,
-                "identifier": req.identifier,
-                "document_type": req.doc_type,
-                "result_size_bytes": result_size,
-                "has_content": has_content,
-                "has_metadata": has_metadata,
-                "processing_time_seconds": processing_time,
-                "success": True
-            })
+            await logger_client.log_business_event(
+                "document_fetch_completed",
+                {
+                    "request_id": request_id,
+                    "source": req.source,
+                    "identifier": req.identifier,
+                    "document_type": req.doc_type,
+                    "result_size_bytes": result_size,
+                    "has_content": has_content,
+                    "has_metadata": has_metadata,
+                    "processing_time_seconds": processing_time,
+                    "success": True,
+                },
+            )
 
             await logger_client.log_performance_metric(
                 "document_fetch",
@@ -272,8 +302,8 @@ async def fetch_document(req: DocumentRequest):
                     "source": req.source,
                     "document_type": req.doc_type,
                     "fetch_success": True,
-                    "result_has_content": has_content
-                }
+                    "result_has_content": has_content,
+                },
             )
 
         return result
@@ -290,25 +320,28 @@ async def fetch_document(req: DocumentRequest):
                 f"Document fetch failed: {str(e)}",
                 {
                     "request_id": request_id,
-                    "source": getattr(req, 'source', 'unknown'),
-                    "identifier": getattr(req, 'identifier', 'unknown'),
-                    "document_type": getattr(req, 'doc_type', 'unknown'),
+                    "source": getattr(req, "source", "unknown"),
+                    "identifier": getattr(req, "identifier", "unknown"),
+                    "document_type": getattr(req, "doc_type", "unknown"),
                     "error_type": type(e).__name__,
                     "processing_time_seconds": error_time,
-                    "external_api_failure": True
+                    "external_api_failure": True,
                 },
-                error=e
+                error=e,
             )
 
-            await logger_client.log_business_event("document_fetch_failed", {
-                "request_id": request_id,
-                "source": getattr(req, 'source', 'unknown'),
-                "identifier": getattr(req, 'identifier', 'unknown'),
-                "document_type": getattr(req, 'doc_type', 'unknown'),
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "processing_time_seconds": error_time
-            })
+            await logger_client.log_business_event(
+                "document_fetch_failed",
+                {
+                    "request_id": request_id,
+                    "source": getattr(req, "source", "unknown"),
+                    "identifier": getattr(req, "identifier", "unknown"),
+                    "document_type": getattr(req, "doc_type", "unknown"),
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "processing_time_seconds": error_time,
+                },
+            )
 
         raise
 
@@ -336,11 +369,9 @@ async def process_architecture(req: ArchitectureProcessRequest):
         client = get_service_client()
 
         # Forward request to architecture-digitizer
-        result = await client.post_json("architecture-digitizer/normalize", {
-            "system": req.system,
-            "board_id": req.board_id,
-            "token": req.token
-        })
+        result = await client.post_json(
+            "architecture-digitizer/normalize", {"system": req.system, "board_id": req.board_id, "token": req.token}
+        )
 
         context = build_source_agent_context("architecture_process", system=req.system)
         return create_source_agent_success_response("processed", result, **context)
@@ -367,6 +398,7 @@ async def analyze_code(req: CodeAnalysisRequest):
 # Register standardized health endpoints
 register_health_endpoints(app, ServiceNames.SOURCE_AGENT, "1.0.0")
 
+
 @app.get("/sources")
 async def list_sources():
     """List supported sources and their capabilities.
@@ -375,10 +407,7 @@ async def list_sources():
     and their specific capabilities for fetching, normalization, and analysis.
     """
     try:
-        sources_data = {
-            "sources": SUPPORTED_SOURCES,
-            "capabilities": SOURCE_CAPABILITIES
-        }
+        sources_data = {"sources": SUPPORTED_SOURCES, "capabilities": SOURCE_CAPABILITIES}
 
         context = build_source_agent_context("list_sources")
         context = {k: v for k, v in context.items() if k != "operation"}
@@ -393,9 +422,5 @@ async def list_sources():
 if __name__ == "__main__":
     """Run the Source Agent service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

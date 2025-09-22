@@ -5,17 +5,18 @@ extracted from the main source-agent service to improve maintainability.
 """
 
 from typing import List, Optional
+
 from services.shared.core.models.models import Document
 from services.shared.utilities import utc_now
 
 # Import shared utilities from main service module
 from .shared_utils import (
     create_base_document,
-    extract_text_from_html,
-    normalize_document_content,
     extract_adf_text,
+    extract_text_from_html,
+    get_confluence_base_url,
     get_jira_base_url,
-    get_confluence_base_url
+    normalize_document_content,
 )
 
 
@@ -26,12 +27,7 @@ def build_readme_doc(owner: str, repo: str, content: str) -> Document:
         id=f"github:{owner}/{repo}:readme",
         title="README.md",
         content=normalize_document_content(content, "github"),
-        metadata={
-            "owner": owner,
-            "repo": repo,
-            "type": "readme",
-            "url": f"https://github.com/{owner}/{repo}"
-        }
+        metadata={"owner": owner, "repo": repo, "type": "readme", "url": f"https://github.com/{owner}/{repo}"},
     )
     return doc
 
@@ -39,6 +35,7 @@ def build_readme_doc(owner: str, repo: str, content: str) -> Document:
 def extract_endpoints_from_patch(patch: str) -> List[str]:
     """Extract API endpoints from GitHub patch content."""
     import re
+
     # Look for common API patterns in patch files
     patterns = [
         r'@app\.(get|post|put|delete|patch)\(["\']([^"\']+)["\']',
@@ -85,8 +82,8 @@ def build_jira_doc(key: str, data: dict) -> Document:
             "assignee": data.get("fields", {}).get("assignee", {}).get("displayName", ""),
             "reporter": data.get("fields", {}).get("reporter", {}).get("displayName", ""),
             "type": data.get("fields", {}).get("issuetype", {}).get("name", ""),
-            "url": f"{get_jira_base_url()}/browse/{key}"
-        }
+            "url": f"{get_jira_base_url()}/browse/{key}",
+        },
     )
     return doc
 
@@ -116,8 +113,8 @@ def build_confluence_doc(page_id: str, data: dict) -> Document:
             "version": data.get("version", {}).get("number", 0),
             "creator": data.get("creator", {}).get("displayName", ""),
             "last_modifier": data.get("lastModifier", {}).get("displayName", ""),
-            "url": f"{get_confluence_base_url()}/pages/viewpage.action?pageId={page_id}"
-        }
+            "url": f"{get_confluence_base_url()}/pages/viewpage.action?pageId={page_id}",
+        },
     )
     return doc
 
