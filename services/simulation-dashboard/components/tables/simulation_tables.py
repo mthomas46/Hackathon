@@ -1,7 +1,9 @@
-"""Simulation Table Components.
+"""
+Simulation Table Components.
 
-This module provides table components for displaying and managing simulation data,
-including status tracking, filtering, sorting, and bulk operations.
+This module provides table components for displaying and managing
+simulation data, including status tracking, filtering, sorting, and bulk
+operations.
 """
 
 from datetime import datetime, timedelta
@@ -23,7 +25,8 @@ def render_simulation_table(
     on_delete: Optional[Callable] = None,
     on_view_details: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a comprehensive simulation management table.
+    """
+    Render a comprehensive simulation management table.
 
     Args:
         simulations_data: List of simulation data dictionaries
@@ -309,7 +312,8 @@ def format_duration(seconds: float) -> str:
 def render_simulation_summary_table(
     simulations_data: List[Dict[str, Any]], group_by: str = "status", title: str = "📈 Simulation Summary"
 ) -> Dict[str, Any]:
-    """Render a summary table grouped by specified criteria.
+    """
+    Render a summary table grouped by specified criteria.
 
     Args:
         simulations_data: List of simulation data

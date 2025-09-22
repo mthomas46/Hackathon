@@ -1,4 +1,5 @@
-"""Analysis factory for creating analysis entities with complex configuration."""
+"""Analysis factory for creating analysis entities with complex
+configuration."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

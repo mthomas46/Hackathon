@@ -1,4 +1,5 @@
-"""Tests for Prompt Store Additional Handlers logging integration with LogCollectorClient."""
+"""Tests for Prompt Store Additional Handlers logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestPromptStoreHandlersLoggingIntegration:
-    """Test Prompt Store additional handlers logging integration with LogCollectorClient."""
+    """Test Prompt Store additional handlers logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -304,7 +306,8 @@ class TestPromptStoreHandlersLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_ab_test_prompt_selection_logging_test_not_found(self, client, mock_logger_client):
-        """Test A/B test prompt selection endpoint logging when test not found."""
+        """Test A/B test prompt selection endpoint logging when test not
+        found."""
         with patch("services.prompt_store.domain.ab_testing.handlers.ABTestService") as mock_service_class:
             mock_service = MagicMock()
             mock_service.select_prompt_for_test.return_value = None  # Test not found
@@ -516,7 +519,8 @@ class TestPromptStoreHandlersLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, mock_logger_client):
-        """Test that all major business events are logged across prompt store handlers."""
+        """Test that all major business events are logged across prompt store
+        handlers."""
         expected_events = {
             # A/B testing events
             "ab_test_creation_started",

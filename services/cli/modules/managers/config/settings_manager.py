@@ -1,7 +1,8 @@
-"""Settings Manager module for CLI service.
+"""
+Settings Manager module for CLI service.
 
-Provides settings and configuration management including
-service status checking and system diagnostics.
+Provides settings and configuration management including service status
+checking and system diagnostics.
 """
 
 from typing import Any, Dict, List, Optional, Tuple
@@ -48,7 +49,11 @@ class SettingsManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.check_all_services_status()
         elif choice == "2":

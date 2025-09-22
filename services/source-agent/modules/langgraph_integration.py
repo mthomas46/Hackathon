@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Source Agent Service
+LangGraph Integration for Source Agent Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Source Agent Service, enabling repository content fetching in workflows.
+for the Source Agent Service, enabling repository content fetching in
+workflows.
 """
 
 from datetime import datetime

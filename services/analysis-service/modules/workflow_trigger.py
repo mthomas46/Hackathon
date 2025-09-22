@@ -1,8 +1,9 @@
-"""Workflow Trigger module for Analysis Service.
+"""
+Workflow Trigger module for Analysis Service.
 
-Provides intelligent workflow-triggered analysis capabilities that automatically
-respond to workflow events (PRs, commits, releases, etc.) with appropriate
-documentation analysis and quality checks.
+Provides intelligent workflow-triggered analysis capabilities that
+automatically respond to workflow events (PRs, commits, releases, etc.)
+with appropriate documentation analysis and quality checks.
 """
 
 import asyncio
@@ -118,7 +119,8 @@ class WorkflowTrigger:
         self.analysis_queues["low"] = deque()
 
     def _analyze_event_context(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze the context of a workflow event to determine appropriate analysis."""
+        """Analyze the context of a workflow event to determine appropriate
+        analysis."""
         event_type = event_data.get("event_type", "unknown")
         event_action = event_data.get("action", "unknown")
 
@@ -626,7 +628,8 @@ workflow_trigger = WorkflowTrigger()
 
 
 async def process_workflow_event(event_data: Dict[str, Any], webhook_signature: Optional[str] = None) -> Dict[str, Any]:
-    """Convenience function for processing workflow events.
+    """
+    Convenience function for processing workflow events.
 
     Args:
         event_data: Workflow event data

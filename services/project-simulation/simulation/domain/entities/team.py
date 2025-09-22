@@ -184,7 +184,8 @@ class TeamMemberEntity:
         return self.productivity_multiplier >= 1.2 and self.morale_level.value >= 70 and self.burnout_risk.value <= 30
 
     def needs_attention(self) -> bool:
-        """Check if member needs attention (low morale or high burnout risk)."""
+        """Check if member needs attention (low morale or high burnout
+        risk)."""
         return self.morale_level.value < 50 or self.burnout_risk.value > 60
 
     def get_days_since_active(self) -> int:
@@ -233,10 +234,11 @@ class TeamDynamics:
 
 @dataclass
 class Team:
-    """Team Aggregate Root.
+    """
+    Team Aggregate Root.
 
-    This is the root entity for the Team aggregate, managing team members,
-    roles, and team dynamics.
+    This is the root entity for the Team aggregate, managing team
+    members, roles, and team dynamics.
     """
 
     id: TeamId

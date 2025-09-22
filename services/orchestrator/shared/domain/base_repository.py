@@ -1,4 +1,4 @@
-"""Base Repository Class"""
+"""Base Repository Class."""
 
 from abc import ABC, abstractmethod
 from typing import Generic, List, Optional, TypeVar

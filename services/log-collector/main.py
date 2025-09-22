@@ -109,14 +109,16 @@ app.state.logger = logger
 
 
 class LogItem(BaseModel):
-    """Structured log entry data model for consistent logging across services.
+    """
+    Structured log entry data model for consistent logging across services.
 
     All log entries follow this standard format to enable consistent
     storage, filtering, and analysis across the system.
     """
 
     service: str
-    """Service name that generated the log entry (e.g., 'api-gateway', 'user-service')."""
+    """Service name that generated the log entry (e.g., 'api-gateway', 'user-
+    service')."""
 
     level: str
     """Log level: 'debug', 'info', 'warning', 'error', 'fatal', etc."""
@@ -125,7 +127,11 @@ class LogItem(BaseModel):
     """Human-readable log message describing the event."""
 
     timestamp: Optional[str] = None
-    """ISO 8601 timestamp. Auto-generated if not provided."""
+    """
+    ISO 8601 timestamp.
+
+    Auto-generated if not provided.
+    """
 
     context: Optional[Dict[str, Any]] = None
     """Additional structured context data (request_id, user_id, etc.)."""
@@ -133,7 +139,8 @@ class LogItem(BaseModel):
 
 @app.get("/health")
 async def health(request: Request):
-    """Health check endpoint returning service status and current log count.
+    """
+    Health check endpoint returning service status and current log count.
 
     Provides basic service health information including the current
     number of stored log entries for monitoring purposes.
@@ -177,10 +184,12 @@ async def health(request: Request):
 
 @app.post("/logs")
 async def put_log(item: LogItem, request: Request, response: Response):
-    """Store a single log entry in the collection.
+    """
+    Store a single log entry in the collection.
 
-    Accepts a structured log entry and stores it with automatic timestamp
-    generation if not provided. Returns the current total log count.
+    Accepts a structured log entry and stores it with automatic
+    timestamp generation if not provided. Returns the current total log
+    count.
     """
     start_time = time.time()
     logger_instance = request.app.state.logger
@@ -229,7 +238,8 @@ async def put_log(item: LogItem, request: Request, response: Response):
 
 
 class LogBatch(BaseModel):
-    """Batch of multiple log entries for efficient bulk submission.
+    """
+    Batch of multiple log entries for efficient bulk submission.
 
     Used when multiple log entries need to be submitted together,
     reducing the number of individual API calls.
@@ -241,10 +251,12 @@ class LogBatch(BaseModel):
 
 @app.post("/logs/batch")
 async def put_logs(batch: LogBatch, request: Request, response: Response):
-    """Store multiple log entries in a single batch operation.
+    """
+    Store multiple log entries in a single batch operation.
 
-    This endpoint allows efficient bulk submission of multiple log entries,
-    reducing network overhead compared to individual log submissions.
+    This endpoint allows efficient bulk submission of multiple log
+    entries, reducing network overhead compared to individual log
+    submissions.
     """
     start_time = time.time()
     logger_instance = request.app.state.logger
@@ -284,10 +296,12 @@ async def put_logs(batch: LogBatch, request: Request, response: Response):
 
 @app.get("/logs")
 async def list_logs(request: Request, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100):
-    """Retrieve logs with optional filtering by service and/or log level.
+    """
+    Retrieve logs with optional filtering by service and/or log level.
 
-    Supports filtering logs by service name, log level, and limiting the number
-    of results. Returns the most recent logs matching the criteria.
+    Supports filtering logs by service name, log level, and limiting the
+    number of results. Returns the most recent logs matching the
+    criteria.
     """
     start_time = time.time()
     logger_instance = request.app.state.logger
@@ -318,7 +332,8 @@ async def list_logs(request: Request, service: Optional[str] = None, level: Opti
 
 @app.get("/stats")
 async def stats(request: Request, hours: Optional[int] = None):
-    """Get comprehensive log statistics and aggregations.
+    """
+    Get comprehensive log statistics and aggregations.
 
     Returns aggregated statistics including counts by level, service,
     error rates, and top services by log volume for system monitoring.
@@ -372,7 +387,8 @@ async def stats(request: Request, hours: Optional[int] = None):
 async def search_logs(
     request: Request, q: str, fields: Optional[str] = None, case_sensitive: bool = False, limit: int = 100
 ):
-    """Search logs using full-text search across specified fields.
+    """
+    Search logs using full-text search across specified fields.
 
     Performs full-text search across log messages, services, and levels.
     Supports field-specific search and case sensitivity options.
@@ -431,7 +447,8 @@ async def search_logs(
 async def get_logs_by_time_range(
     request: Request, start_time: Optional[str] = None, end_time: Optional[str] = None, limit: int = 100
 ):
-    """Get logs within a specific time range.
+    """
+    Get logs within a specific time range.
 
     Retrieves logs between start_time and end_time (ISO 8601 format).
     Useful for analyzing logs from specific time periods.
@@ -471,7 +488,8 @@ async def get_logs_by_time_range(
 
 @app.get("/metrics/{service_name}")
 async def get_service_metrics(request: Request, service_name: str, time_window_minutes: int = 60):
-    """Get detailed metrics and health analysis for a specific service.
+    """
+    Get detailed metrics and health analysis for a specific service.
 
     Provides comprehensive analysis of a service's logging behavior,
     including error rates, performance metrics, and health scoring.
@@ -531,7 +549,8 @@ async def get_service_metrics(request: Request, service_name: str, time_window_m
 async def export_logs(
     request: Request, filepath: str, service: Optional[str] = None, level: Optional[str] = None, format: str = "json"
 ):
-    """Export logs to a file with optional filtering.
+    """
+    Export logs to a file with optional filtering.
 
     Exports filtered logs to a specified file path on the server.
     Supports JSON and JSONL formats for different use cases.

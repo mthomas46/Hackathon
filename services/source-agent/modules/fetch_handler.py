@@ -1,4 +1,5 @@
-"""Document fetch handler for Source Agent service.
+"""
+Document fetch handler for Source Agent service.
 
 Handles the complex logic for fetching documents from different sources.
 """

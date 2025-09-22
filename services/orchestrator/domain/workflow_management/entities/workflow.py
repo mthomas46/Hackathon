@@ -1,4 +1,4 @@
-"""Workflow Entity"""
+"""Workflow Entity."""
 
 from dataclasses import dataclass, field
 from datetime import datetime

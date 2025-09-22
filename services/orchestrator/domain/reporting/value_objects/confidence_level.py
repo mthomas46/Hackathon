@@ -1,4 +1,4 @@
-"""Confidence Level Value Object"""
+"""Confidence Level Value Object."""
 
 from enum import Enum
 

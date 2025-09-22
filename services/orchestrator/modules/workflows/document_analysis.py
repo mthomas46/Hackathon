@@ -1,7 +1,8 @@
-"""Document analysis workflow using LangGraph.
+"""
+Document analysis workflow using LangGraph.
 
-This module defines a LangGraph workflow for comprehensive document analysis
-leveraging multiple orchestrator services.
+This module defines a LangGraph workflow for comprehensive document
+analysis leveraging multiple orchestrator services.
 """
 
 

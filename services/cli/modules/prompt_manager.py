@@ -1,4 +1,5 @@
-"""Prompt Management module for the CLI service.
+"""
+Prompt Management module for the CLI service.
 
 This module contains prompt-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.

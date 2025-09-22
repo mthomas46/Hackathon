@@ -1,4 +1,5 @@
-"""Prompt Store UI handlers for Frontend service.
+"""
+Prompt Store UI handlers for Frontend service.
 
 Handles prompt store browsing and analytics.
 """

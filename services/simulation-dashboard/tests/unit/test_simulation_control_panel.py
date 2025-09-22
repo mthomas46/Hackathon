@@ -20,7 +20,8 @@ class TestControlPanel:
     @patch("pages.controls.get_available_simulations")
     @patch("pages.controls.get_simulation_details")
     def test_control_panel_renders_with_simulations(self, mock_get_details, mock_get_sims, mock_st):
-        """Test that control panel renders correctly with available simulations."""
+        """Test that control panel renders correctly with available
+        simulations."""
         # Mock data
         mock_get_sims.return_value = [{"id": "sim_001", "name": "Test Sim", "status": "running"}]
         mock_get_details.return_value = {
@@ -328,7 +329,8 @@ class TestUtilityFunctions:
 
     @patch("pages.controls.st")
     def test_get_available_simulations_returns_list(self, mock_st):
-        """Test that get_available_simulations returns proper list structure."""
+        """Test that get_available_simulations returns proper list
+        structure."""
         from pages.controls import get_available_simulations
 
         simulations = get_available_simulations()

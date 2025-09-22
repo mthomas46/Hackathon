@@ -82,7 +82,11 @@ class ValidationPipeline:
         logger.debug(f"Registered business validator for: {entity_type}")
 
     def _get_command_type_from_name(self, name: str):
-        """Get command type from name. This is a simplified implementation."""
+        """
+        Get command type from name.
+
+        This is a simplified implementation.
+        """
         # In a real implementation, you'd have a registry or use type hints
         command_mappings = {
             "CreateDocument": "CreateDocumentCommand",
@@ -93,7 +97,11 @@ class ValidationPipeline:
         return command_mappings.get(name)
 
     def _get_query_type_from_name(self, name: str):
-        """Get query type from name. This is a simplified implementation."""
+        """
+        Get query type from name.
+
+        This is a simplified implementation.
+        """
         query_mappings = {
             "GetDocument": "GetDocumentQuery",
             "GetAnalysis": "GetAnalysisQuery",

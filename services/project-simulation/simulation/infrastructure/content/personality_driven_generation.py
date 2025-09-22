@@ -385,7 +385,8 @@ class PersonalityDrivenGenerator:
     def _calculate_collaboration_effectiveness(
         self, trait_counts: Dict[str, int], style_counts: Dict[str, int]
     ) -> float:
-        """Calculate team collaboration effectiveness based on personality composition."""
+        """Calculate team collaboration effectiveness based on personality
+        composition."""
         # High effectiveness with balanced traits and communication styles
         trait_balance = len(trait_counts) / 4.0  # Optimal: 4 different traits
         style_balance = len(style_counts) / 3.0  # Optimal: 3 different styles

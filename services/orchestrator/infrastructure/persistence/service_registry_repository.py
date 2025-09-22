@@ -1,4 +1,4 @@
-"""Service Registry Repository Implementation"""
+"""Service Registry Repository Implementation."""
 
 from threading import Lock
 from typing import List, Optional

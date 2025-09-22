@@ -1,5 +1,5 @@
 """
-Operational Excellence
+Operational Excellence.
 
 Advanced operational features for enterprise-grade service management.
 """

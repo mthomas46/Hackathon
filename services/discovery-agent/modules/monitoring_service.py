@@ -1,7 +1,9 @@
-"""Monitoring Service Module for Discovery Agent.
+"""
+Monitoring Service Module for Discovery Agent.
 
-This module provides monitoring and observability capabilities for the Discovery Agent
-using the log-collector service for centralized logging and metrics collection.
+This module provides monitoring and observability capabilities for the
+Discovery Agent using the log-collector service for centralized logging
+and metrics collection.
 """
 
 import uuid
@@ -15,7 +17,8 @@ except ImportError:
 
 
 class DiscoveryAgentMonitoring:
-    """Monitoring and observability for Discovery Agent ecosystem using log-collector"""
+    """Monitoring and observability for Discovery Agent ecosystem using log-
+    collector."""
 
     def __init__(self, log_collector_url: str = "http://localhost:5080"):
         self.log_collector_url = log_collector_url
@@ -32,7 +35,7 @@ class DiscoveryAgentMonitoring:
         }
 
     async def log_discovery_event(self, event_type: str, data: Dict[str, Any], level: str = "INFO") -> bool:
-        """Log a discovery-related event to the log-collector service"""
+        """Log a discovery-related event to the log-collector service."""
 
         log_entry = {
             "timestamp": "2025-01-17T21:30:00Z",  # Would use datetime.now() in real implementation
@@ -62,7 +65,7 @@ class DiscoveryAgentMonitoring:
             return True
 
     async def monitor_service_discovery(self, service_name: str, discovery_result: Dict[str, Any]):
-        """Monitor and log service discovery operations"""
+        """Monitor and log service discovery operations."""
 
         # Extract key metrics
         tools_count = len(discovery_result.get("tools", []))
@@ -98,7 +101,7 @@ class DiscoveryAgentMonitoring:
         print(f"📊 Logged discovery for {service_name}: {tools_count} tools")
 
     async def monitor_security_scan(self, tool_name: str, scan_result: Dict[str, Any]):
-        """Monitor and log security scanning operations"""
+        """Monitor and log security scanning operations."""
 
         # Extract security metrics
         risk_level = scan_result.get("risk_level", "unknown")
@@ -132,7 +135,7 @@ class DiscoveryAgentMonitoring:
         print(f"🔒 Logged security scan for {tool_name}: {risk_level} risk, {vulnerabilities_count} vulnerabilities")
 
     async def monitor_tool_execution(self, tool_name: str, service: str, execution_result: Dict[str, Any]):
-        """Monitor and log tool execution events"""
+        """Monitor and log tool execution events."""
 
         success = execution_result.get("success", False)
         execution_time = execution_result.get("execution_time", 0)
@@ -159,7 +162,7 @@ class DiscoveryAgentMonitoring:
         print(f"⚡ Logged tool execution for {tool_name}: {'✅' if success else '❌'}")
 
     async def create_monitoring_dashboard(self) -> Dict[str, Any]:
-        """Create a comprehensive monitoring dashboard"""
+        """Create a comprehensive monitoring dashboard."""
 
         print("📊 Creating Discovery Agent Monitoring Dashboard...")
 
@@ -209,7 +212,7 @@ class DiscoveryAgentMonitoring:
         return dashboard
 
     async def _check_log_collector_health(self) -> str:
-        """Check the health of the log-collector service"""
+        """Check the health of the log-collector service."""
         try:
             async with self.service_client.session() as session:
                 async with session.get(f"{self.log_collector_url}/health", timeout=3) as response:
@@ -221,11 +224,11 @@ class DiscoveryAgentMonitoring:
             return "unreachable"
 
     def _calculate_uptime(self) -> float:
-        """Calculate monitoring session uptime in minutes"""
+        """Calculate monitoring session uptime in minutes."""
         return len(self.metrics["performance_data"]) * 0.5  # Assume 30s per operation
 
     def _calculate_avg_discovery_time(self) -> float:
-        """Calculate average discovery operation time"""
+        """Calculate average discovery operation time."""
         if not self.metrics["performance_data"]:
             return 0.0
 
@@ -233,7 +236,7 @@ class DiscoveryAgentMonitoring:
         return total_time / len(self.metrics["performance_data"])
 
     def _get_fastest_discovery(self) -> Dict[str, Any]:
-        """Get the fastest discovery operation"""
+        """Get the fastest discovery operation."""
         if not self.metrics["performance_data"]:
             return {"service": "none", "time": 0}
 
@@ -245,7 +248,7 @@ class DiscoveryAgentMonitoring:
         }
 
     def _get_slowest_discovery(self) -> Dict[str, Any]:
-        """Get the slowest discovery operation"""
+        """Get the slowest discovery operation."""
         if not self.metrics["performance_data"]:
             return {"service": "none", "time": 0}
 
@@ -257,7 +260,7 @@ class DiscoveryAgentMonitoring:
         }
 
     def _calculate_avg_tools_per_service(self) -> float:
-        """Calculate average tools discovered per service"""
+        """Calculate average tools discovered per service."""
         if not self.metrics["performance_data"]:
             return 0.0
 
@@ -265,7 +268,7 @@ class DiscoveryAgentMonitoring:
         return total_tools / len(self.metrics["performance_data"])
 
     def _analyze_performance_trend(self) -> str:
-        """Analyze performance trend over time"""
+        """Analyze performance trend over time."""
         if len(self.metrics["performance_data"]) < 2:
             return "insufficient_data"
 
@@ -290,7 +293,7 @@ class DiscoveryAgentMonitoring:
         return None
 
     def _calculate_error_rate(self) -> float:
-        """Calculate error rate percentage"""
+        """Calculate error rate percentage."""
         total_operations = self.metrics["discovery_operations"] + self.metrics["security_scans"]
         if total_operations == 0:
             return 0.0
@@ -298,7 +301,7 @@ class DiscoveryAgentMonitoring:
         return (self.metrics["errors"] / total_operations) * 100
 
     def _generate_monitoring_recommendations(self) -> list:
-        """Generate monitoring recommendations based on metrics"""
+        """Generate monitoring recommendations based on metrics."""
         recommendations = []
 
         # Performance recommendations

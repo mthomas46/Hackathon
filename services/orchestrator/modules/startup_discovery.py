@@ -1,8 +1,10 @@
-"""Ecosystem Startup Tool Discovery Module for Orchestrator Service.
+"""
+Ecosystem Startup Tool Discovery Module for Orchestrator Service.
 
-This module provides automatic tool discovery and registration functionality
-that runs when the ecosystem starts up. It ensures that all services are
-discovered and their LangGraph tools are registered with the orchestrator.
+This module provides automatic tool discovery and registration
+functionality that runs when the ecosystem starts up. It ensures that
+all services are discovered and their LangGraph tools are registered
+with the orchestrator.
 """
 
 import logging
@@ -24,7 +26,8 @@ class StartupToolDiscovery:
         self.discovered_tools = {}
 
     async def discover_all_tools(self, dry_run: bool = False) -> Dict[str, Any]:
-        """Discover tools for all ecosystem services during startup.
+        """
+        Discover tools for all ecosystem services during startup.
 
         Args:
             dry_run: If True, only simulate discovery without registration
@@ -202,7 +205,8 @@ startup_discovery = StartupToolDiscovery()
 
 
 async def initialize_ecosystem_tools(dry_run: bool = False) -> Dict[str, Any]:
-    """Initialize tool discovery for the entire ecosystem.
+    """
+    Initialize tool discovery for the entire ecosystem.
 
     This function should be called during orchestrator startup to ensure
     all services are discovered and their tools are registered.
@@ -231,7 +235,8 @@ async def initialize_ecosystem_tools(dry_run: bool = False) -> Dict[str, Any]:
 
 
 async def refresh_service_tools(service_name: str, dry_run: bool = False) -> Dict[str, Any]:
-    """Refresh tools for a specific service.
+    """
+    Refresh tools for a specific service.
 
     Args:
         service_name: Name of the service to refresh tools for

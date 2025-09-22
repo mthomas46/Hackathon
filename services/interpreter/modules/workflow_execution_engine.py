@@ -1,8 +1,10 @@
-"""Workflow Execution Engine for Interpreter Service.
+"""
+Workflow Execution Engine for Interpreter Service.
 
-This module handles the execution, monitoring, and management of workflows through
-deep integration with the orchestrator service. It provides intelligent workflow
-execution, real-time monitoring, error handling, and result optimization.
+This module handles the execution, monitoring, and management of
+workflows through deep integration with the orchestrator service. It
+provides intelligent workflow execution, real-time monitoring, error
+handling, and result optimization.
 """
 
 import asyncio

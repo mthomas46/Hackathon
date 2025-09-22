@@ -1,4 +1,4 @@
-"""Action Executed Event"""
+"""Action Executed Event."""
 
 
 from .base_event import DomainEvent

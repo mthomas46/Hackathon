@@ -1,6 +1,8 @@
-"""Relationships service.
+"""
+Relationships service.
 
-Contains business logic for prompt relationships and semantic connections.
+Contains business logic for prompt relationships and semantic
+connections.
 """
 
 from typing import Any, Dict, List, Optional

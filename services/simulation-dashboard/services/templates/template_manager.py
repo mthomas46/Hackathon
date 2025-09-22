@@ -1,4 +1,5 @@
-"""Template Manager.
+"""
+Template Manager.
 
 This module provides functionality for managing project templates,
 including loading, applying, customizing, and sharing templates.

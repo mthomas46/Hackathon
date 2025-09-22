@@ -67,7 +67,8 @@ T = TypeVar("T")
 
 
 class EnhancedSimulationServiceProvider(IServiceProvider):
-    """Enhanced service provider for project-simulation dependencies with comprehensive service management."""
+    """Enhanced service provider for project-simulation dependencies with
+    comprehensive service management."""
 
     def __init__(self):
         self._container = Container()
@@ -195,7 +196,8 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         }
 
     def _register_utility_services(self) -> None:
-        """Register utility services for validation, formatting, and resilience."""
+        """Register utility services for validation, formatting, and
+        resilience."""
         # Data validation
         self._singletons["validator"] = get_simulation_validator()
         self._service_metadata["validator"] = {"type": "utility", "tags": ["validation", "data", "quality"]}
@@ -244,7 +246,8 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         }
 
     def _create_document_generation_service(self):
-        """Create document generation service with mock-data-generator integration."""
+        """Create document generation service with mock-data-generator
+        integration."""
 
         # Enhanced document generation service with ecosystem integration
         class EnhancedDocumentGenerationService:
@@ -254,7 +257,8 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                 self.logger = get_simulation_logger()
 
             async def generate_project_documents(self, project_config: Dict[str, Any]) -> List[Dict[str, Any]]:
-                """Generate project documents using enhanced mock-data-generator integration."""
+                """Generate project documents using enhanced mock-data-
+                generator integration."""
                 try:
                     # Use cache if available
                     cache_key = f"docs:project:{hash(str(project_config))}"
@@ -338,7 +342,8 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                 self.logger = logger or get_simulation_logger()
 
             async def execute_document_analysis_workflow(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
-                """Execute document analysis workflow with comprehensive tracking."""
+                """Execute document analysis workflow with comprehensive
+                tracking."""
                 start_time = datetime.now()
 
                 try:
@@ -544,7 +549,8 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
 
 
 class EnhancedSimulationContainer(Container):
-    """Enhanced container for project-simulation service with enterprise features."""
+    """Enhanced container for project-simulation service with enterprise
+    features."""
 
     def __init__(self):
         super().__init__()
@@ -848,7 +854,8 @@ def inject_service(*service_names: str):
 
 
 def injectable_service(cls):
-    """Decorator to make a class injectable with automatic service resolution."""
+    """Decorator to make a class injectable with automatic service
+    resolution."""
     original_init = cls.__init__
 
     def dependency_injecting_init(self, *args, **kwargs):

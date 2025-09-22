@@ -1,4 +1,5 @@
-"""Versioning service for business logic operations.
+"""
+Versioning service for business logic operations.
 
 Handles document versioning and history management.
 """

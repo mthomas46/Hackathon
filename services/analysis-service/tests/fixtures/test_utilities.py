@@ -224,7 +224,8 @@ class AsyncMockHelper:
 
     @staticmethod
     def create_sequential_mock(return_values: List[Any]) -> AsyncMock:
-        """Create an async mock that returns different values on successive calls."""
+        """Create an async mock that returns different values on successive
+        calls."""
         return AsyncMock(side_effect=return_values)
 
 

@@ -1,4 +1,5 @@
-"""Configuration management for GitHub MCP service.
+"""
+Configuration management for GitHub MCP service.
 
 Handles environment variable parsing and configuration settings.
 """

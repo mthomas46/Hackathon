@@ -1,4 +1,5 @@
-"""LLM Gateway Modules Package.
+"""
+LLM Gateway Modules Package.
 
 This package contains all the core modules for the LLM Gateway service:
 - provider_router: Intelligent routing to LLM providers

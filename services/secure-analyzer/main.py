@@ -140,10 +140,11 @@ async def health():
 
 
 class DetectRequest(BaseModel):
-    """Request model for content security detection.
+    """
+    Request model for content security detection.
 
-    Analyzes provided content for sensitive information, secrets,
-    and security vulnerabilities using pattern matching.
+    Analyzes provided content for sensitive information, secrets, and
+    security vulnerabilities using pattern matching.
     """
 
     content: str
@@ -153,7 +154,8 @@ class DetectRequest(BaseModel):
     """Additional keywords to search for beyond default security patterns."""
 
     keyword_document: Optional[str] = None
-    """URL or reference to external keyword document (currently unimplemented)."""
+    """URL or reference to external keyword document (currently
+    unimplemented)."""
 
     @field_validator("content")
     @classmethod
@@ -179,20 +181,24 @@ class DetectRequest(BaseModel):
 
 
 class DetectResponse(BaseModel):
-    """Response model for content detection results.
+    """
+    Response model for content detection results.
 
-    Contains the analysis results indicating whether content is sensitive
-    and what specific patterns or topics were detected.
+    Contains the analysis results indicating whether content is
+    sensitive and what specific patterns or topics were detected.
     """
 
     sensitive: bool
-    """Whether the content contains sensitive information that may require special handling."""
+    """Whether the content contains sensitive information that may require
+    special handling."""
 
     matches: List[str]
-    """List of specific patterns or keywords that were detected in the content."""
+    """List of specific patterns or keywords that were detected in the
+    content."""
 
     topics: List[str]
-    """Security topics identified in the content (e.g., 'pii', 'secrets', 'credentials')."""
+    """Security topics identified in the content (e.g., 'pii', 'secrets',
+    'credentials')."""
 
 
 # Pattern matching and content detection logic moved to modules/content_detector.py
@@ -200,7 +206,8 @@ class DetectResponse(BaseModel):
 
 @app.post("/detect", response_model=DetectResponse)
 async def detect(req: DetectRequest):
-    """Detect sensitive content and security risks in the provided text.
+    """
+    Detect sensitive content and security risks in the provided text.
 
     Analyzes content for sensitive information including PII, secrets,
     credentials, and security vulnerabilities. Supports custom keywords

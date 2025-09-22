@@ -1,7 +1,9 @@
-"""Audit Trail System Page.
+"""
+Audit Trail System Page.
 
-This module provides comprehensive auditing capabilities for simulation operations,
-including event tracking, compliance reporting, and audit trail management.
+This module provides comprehensive auditing capabilities for simulation
+operations, including event tracking, compliance reporting, and audit
+trail management.
 """
 
 import json

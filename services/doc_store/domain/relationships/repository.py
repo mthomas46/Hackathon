@@ -1,4 +1,5 @@
-"""Relationships repository for data access operations.
+"""
+Relationships repository for data access operations.
 
 Handles relationship data queries and graph operations.
 """

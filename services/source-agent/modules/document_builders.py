@@ -1,4 +1,5 @@
-"""Document builder functions for the Source Agent service.
+"""
+Document builder functions for the Source Agent service.
 
 This module contains all document construction and processing functions,
 extracted from the main source-agent service to improve maintainability.
@@ -88,7 +89,8 @@ def build_jira_doc(key: str, data: dict) -> Document:
 
 
 def storage_html_to_text(storage: str) -> str:
-    """Convert Jira storage format HTML to plain text using shared utilities."""
+    """Convert Jira storage format HTML to plain text using shared
+    utilities."""
     return extract_text_from_html(storage)
 
 

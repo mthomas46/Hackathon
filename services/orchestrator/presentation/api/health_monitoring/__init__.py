@@ -1,4 +1,4 @@
-"""Health Monitoring API Routes"""
+"""Health Monitoring API Routes."""
 
 from .routes import router
 

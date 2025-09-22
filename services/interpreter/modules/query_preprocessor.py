@@ -1,8 +1,10 @@
-"""Advanced Query Preprocessing for Interpreter Service.
+"""
+Advanced Query Preprocessing for Interpreter Service.
 
-This module handles sophisticated query preprocessing, normalization, and enhancement
-to improve intent recognition and workflow matching. It includes spell correction,
-abbreviation expansion, context injection, and semantic enhancement.
+This module handles sophisticated query preprocessing, normalization,
+and enhancement to improve intent recognition and workflow matching. It
+includes spell correction, abbreviation expansion, context injection,
+and semantic enhancement.
 """
 
 import re

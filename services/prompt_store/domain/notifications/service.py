@@ -1,6 +1,8 @@
-"""Notifications service.
+"""
+Notifications service.
 
-Contains business logic for webhook management, event notification delivery, and monitoring.
+Contains business logic for webhook management, event notification
+delivery, and monitoring.
 """
 
 import asyncio
@@ -102,7 +104,9 @@ class NotificationsService:
     async def notify_event(
         self, event_type: str, event_data: Dict[str, Any], owners: Optional[List[str]] = None
     ) -> Dict[str, Any]:
-        """Send notifications for an event using both webhooks and notification service.
+        """
+        Send notifications for an event using both webhooks and notification
+        service.
 
         Args:
             event_type: Type of event (e.g., 'prompt.created', 'ab_test.completed')
@@ -218,7 +222,8 @@ class NotificationsService:
     async def send_notification_via_service(
         self, event_type: str, message: str, owners: List[str], metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Send notification via the centralized notification service.
+        """
+        Send notification via the centralized notification service.
 
         Args:
             event_type: Type of event for categorization
@@ -261,7 +266,8 @@ class NotificationsService:
             return {"status": "error", "error": str(e), "message": "Exception occurred while sending notification"}
 
     async def send_bulk_notifications(self, notifications: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Send multiple notifications in batch via notification service.
+        """
+        Send multiple notifications in batch via notification service.
 
         Args:
             notifications: List of notification payloads

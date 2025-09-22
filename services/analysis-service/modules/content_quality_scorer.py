@@ -1,7 +1,9 @@
-"""Content Quality Scoring module for Analysis Service.
+"""
+Content Quality Scoring module for Analysis Service.
 
-Provides comprehensive automated assessment of documentation quality including
-readability, structure, completeness, technical accuracy, and overall quality metrics.
+Provides comprehensive automated assessment of documentation quality
+including readability, structure, completeness, technical accuracy, and
+overall quality metrics.
 """
 
 import logging
@@ -599,7 +601,8 @@ content_quality_scorer = ContentQualityScorer()
 
 
 async def assess_document_quality(document: Dict[str, Any]) -> Dict[str, Any]:
-    """Convenience function for document quality assessment.
+    """
+    Convenience function for document quality assessment.
 
     Args:
         document: Document to assess

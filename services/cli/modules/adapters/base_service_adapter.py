@@ -1,9 +1,9 @@
 """
-Base Service Adapter
+Base Service Adapter.
 
-Provides a standardized interface for all service interactions through the CLI.
-This creates a unified pattern for service communication, health monitoring,
-and feature access across the entire ecosystem.
+Provides a standardized interface for all service interactions through
+the CLI. This creates a unified pattern for service communication,
+health monitoring, and feature access across the entire ecosystem.
 """
 
 import json
@@ -18,7 +18,7 @@ from rich.table import Table
 
 
 class ServiceStatus(Enum):
-    """Standard service status enumeration"""
+    """Standard service status enumeration."""
 
     HEALTHY = "healthy"
     UNHEALTHY = "unhealthy"
@@ -28,7 +28,7 @@ class ServiceStatus(Enum):
 
 @dataclass
 class ServiceInfo:
-    """Standard service information structure"""
+    """Standard service information structure."""
 
     name: str
     port: int
@@ -48,7 +48,7 @@ class ServiceInfo:
 
 @dataclass
 class CommandResult:
-    """Standard command result structure"""
+    """Standard command result structure."""
 
     success: bool
     data: Any = None
@@ -83,11 +83,11 @@ class BaseServiceAdapter(ABC):
 
     @abstractmethod
     def get_service_info(self) -> ServiceInfo:
-        """Get standardized service information"""
+        """Get standardized service information."""
 
     @abstractmethod
     async def health_check(self) -> CommandResult:
-        """Perform standardized health check"""
+        """Perform standardized health check."""
 
     @abstractmethod
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
@@ -95,11 +95,11 @@ class BaseServiceAdapter(ABC):
 
     @abstractmethod
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute a service-specific command"""
+        """Execute a service-specific command."""
 
     # Standard helper methods
     async def ping(self) -> CommandResult:
-        """Basic connectivity test"""
+        """Basic connectivity test."""
         try:
             import time
 
@@ -123,7 +123,7 @@ class BaseServiceAdapter(ABC):
             return CommandResult(success=False, error=f"Connection failed: {str(e)}")
 
     def display_service_info(self) -> None:
-        """Display formatted service information"""
+        """Display formatted service information."""
         info = self.get_service_info()
 
         # Create info panel
@@ -148,7 +148,7 @@ class BaseServiceAdapter(ABC):
             self.console.print(Panel(features_table, title="Available Features"))
 
     def display_result(self, result: CommandResult) -> None:
-        """Display formatted command result"""
+        """Display formatted command result."""
         if result.success:
             self.console.print(f"✅ [green]{result.message}[/green]")
             if result.data:
@@ -160,7 +160,7 @@ class BaseServiceAdapter(ABC):
             self.console.print(f"⏱️  Execution time: {result.execution_time:.3f}s")
 
     async def test_all_endpoints(self) -> Dict[str, CommandResult]:
-        """Test all available endpoints for the service"""
+        """Test all available endpoints for the service."""
         results = {}
 
         # Test health endpoint

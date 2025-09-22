@@ -1,7 +1,9 @@
-"""Quality Degradation Detection module for Analysis Service.
+"""
+Quality Degradation Detection module for Analysis Service.
 
-Monitors documentation quality over time and detects when quality is degrading,
-providing alerts, analysis, and recommendations for quality maintenance.
+Monitors documentation quality over time and detects when quality is
+degrading, providing alerts, analysis, and recommendations for quality
+maintenance.
 """
 
 import logging
@@ -691,7 +693,8 @@ async def detect_document_degradation(
     baseline_period_days: int = 90,
     alert_threshold: float = 0.1,
 ) -> Dict[str, Any]:
-    """Convenience function for document quality degradation detection.
+    """
+    Convenience function for document quality degradation detection.
 
     Args:
         document_id: ID of the document to analyze
@@ -713,7 +716,8 @@ async def detect_document_degradation(
 async def monitor_portfolio_degradation(
     documents: List[Dict[str, Any]], baseline_period_days: int = 90, alert_threshold: float = 0.1
 ) -> Dict[str, Any]:
-    """Convenience function for portfolio quality degradation monitoring.
+    """
+    Convenience function for portfolio quality degradation monitoring.
 
     Args:
         documents: List of document data dictionaries

@@ -1,7 +1,8 @@
-"""OpenAPI Specification Validation Tests.
+"""
+OpenAPI Specification Validation Tests.
 
-This module contains tests for validating OpenAPI specification compliance,
-schema validation, and API contract testing.
+This module contains tests for validating OpenAPI specification
+compliance, schema validation, and API contract testing.
 """
 
 import sys

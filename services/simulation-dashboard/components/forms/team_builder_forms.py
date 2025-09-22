@@ -1,7 +1,9 @@
-"""Team Builder Form Components.
+"""
+Team Builder Form Components.
 
-This module provides form components for building and configuring project teams,
-including role assignment, skill selection, and team optimization.
+This module provides form components for building and configuring
+project teams, including role assignment, skill selection, and team
+optimization.
 """
 
 from typing import Any, Dict
@@ -13,7 +15,8 @@ import streamlit as st
 def render_team_builder_form(
     team_key: str = "team_config", title: str = "👥 Team Builder", max_team_size: int = 15
 ) -> Dict[str, Any]:
-    """Render team builder form for configuring project teams.
+    """
+    Render team builder form for configuring project teams.
 
     Args:
         team_key: Key for storing team configuration in session state

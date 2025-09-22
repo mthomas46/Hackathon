@@ -1,8 +1,9 @@
-"""Advanced Circuit Breaker Integration Tests.
+"""
+Advanced Circuit Breaker Integration Tests.
 
-This module contains comprehensive tests for circuit breaker functionality,
-including state transitions, failure thresholds, recovery mechanisms,
-and integration with service ecosystem.
+This module contains comprehensive tests for circuit breaker
+functionality, including state transitions, failure thresholds, recovery
+mechanisms, and integration with service ecosystem.
 """
 
 import asyncio
@@ -95,7 +96,8 @@ class TestCircuitBreakerStateTransitions:
         assert "Circuit breaker is OPEN" in str(exc_info.value)
 
     def test_circuit_breaker_half_open_transition(self):
-        """Test circuit breaker transitions to half-open after recovery timeout."""
+        """Test circuit breaker transitions to half-open after recovery
+        timeout."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
         breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1, recovery_timeout=0.1)
@@ -119,7 +121,8 @@ class TestCircuitBreakerStateTransitions:
         assert breaker.state == CircuitBreakerState.OPEN
 
     def test_circuit_breaker_recovery_on_success(self):
-        """Test circuit breaker recovers when call succeeds in half-open state."""
+        """Test circuit breaker recovers when call succeeds in half-open
+        state."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
         breaker = ServiceCircuitBreaker(

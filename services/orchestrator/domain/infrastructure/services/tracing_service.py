@@ -1,4 +1,4 @@
-"""Tracing Service Domain Service"""
+"""Tracing Service Domain Service."""
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -176,7 +176,11 @@ class TracingService:
         }
 
     def cleanup_old_traces(self, max_age_hours: int = 24) -> int:
-        """Clean up old completed traces. Returns count removed."""
+        """
+        Clean up old completed traces.
+
+        Returns count removed.
+        """
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
         traces_to_remove = []
 

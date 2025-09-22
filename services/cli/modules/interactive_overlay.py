@@ -153,7 +153,8 @@ class InteractiveOverlay:
     def _show_enhanced_menu_header(
         self, title: str, items: List[Tuple[str, str]], enable_shortcuts: bool = True, enable_search: bool = True
     ) -> None:
-        """Show enhanced menu header with service status and keyboard shortcuts."""
+        """Show enhanced menu header with service status and keyboard
+        shortcuts."""
         # Create a rich panel with menu information
         menu_info = Text()
         menu_info.append(f"\n{title}\n", style="bold cyan")
@@ -252,7 +253,8 @@ class InteractiveOverlay:
         return sorted(self.usage_stats.keys(), key=lambda x: self.usage_stats[x], reverse=True)[:limit]
 
     async def _show_success_feedback(self, operation: str = "Operation") -> None:
-        """Show enhanced success feedback after operation with visual indicators."""
+        """Show enhanced success feedback after operation with visual
+        indicators."""
         try:
             # Show success indicator
             self.show_status_indicator("success", f"{operation} completed successfully!")
@@ -444,7 +446,9 @@ interactive_overlay = None
 def get_interactive_overlay(
     console: Console, enable_interactive: bool = True, show_tips: bool = True, use_custom_styling: bool = True
 ) -> InteractiveOverlay:
-    """Get or create the global interactive overlay instance with configuration options.
+    """
+    Get or create the global interactive overlay instance with configuration
+    options.
 
     Args:
         console: Rich console instance
@@ -465,7 +469,8 @@ def get_interactive_overlay(
 
 
 def configure_interactive_overlay(show_tips: bool = True, use_custom_styling: bool = True) -> None:
-    """Configure the global interactive overlay settings.
+    """
+    Configure the global interactive overlay settings.
 
     Args:
         show_tips: Whether to show helpful tips

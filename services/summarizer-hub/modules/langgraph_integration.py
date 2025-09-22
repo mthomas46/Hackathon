@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Summarizer Hub Service
+LangGraph Integration for Summarizer Hub Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Summarizer Hub Service, enabling intelligent summarization in workflows.
+for the Summarizer Hub Service, enabling intelligent summarization in
+workflows.
 """
 
 from datetime import datetime
@@ -157,7 +158,8 @@ class SummarizerHubLangGraphIntegration:
         async def generate_workflow_summary_langgraph(
             content_list: List[str], workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Generate a comprehensive workflow summary from multiple content pieces."""
+            """Generate a comprehensive workflow summary from multiple content
+            pieces."""
             try:
                 workflow_summary_context = {
                     "content_list": content_list,

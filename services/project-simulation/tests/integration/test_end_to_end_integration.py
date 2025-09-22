@@ -1,8 +1,10 @@
-"""End-to-End Integration Tests.
+"""
+End-to-End Integration Tests.
 
-This module contains comprehensive end-to-end integration tests for the Project
-Simulation Service, validating complete simulation workflows, multi-service
-orchestration, and data consistency across the entire platform.
+This module contains comprehensive end-to-end integration tests for the
+Project Simulation Service, validating complete simulation workflows,
+multi-service orchestration, and data consistency across the entire
+platform.
 """
 
 import sys

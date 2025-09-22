@@ -1,4 +1,5 @@
-"""Progress Indicators Component.
+"""
+Progress Indicators Component.
 
 This module provides real-time progress indicators and status tracking
 for simulations and long-running operations.
@@ -21,7 +22,8 @@ def render_progress_indicator(
     on_complete: Optional[Callable] = None,
     on_error: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a comprehensive progress indicator for operations.
+    """
+    Render a comprehensive progress indicator for operations.
 
     Args:
         progress_data: Progress data dictionary

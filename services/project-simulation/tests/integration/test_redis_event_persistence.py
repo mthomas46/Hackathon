@@ -1,7 +1,9 @@
-"""Redis Event Persistence Integration Tests.
+"""
+Redis Event Persistence Integration Tests.
 
-This module contains comprehensive integration tests for Redis-based event persistence,
-replay functionality, and event store operations in the Project Simulation Service.
+This module contains comprehensive integration tests for Redis-based
+event persistence, replay functionality, and event store operations in
+the Project Simulation Service.
 """
 
 import asyncio

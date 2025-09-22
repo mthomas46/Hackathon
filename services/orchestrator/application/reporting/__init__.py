@@ -1,4 +1,4 @@
-"""Reporting Application Layer"""
+"""Reporting Application Layer."""
 
 from .commands import *
 from .queries import *

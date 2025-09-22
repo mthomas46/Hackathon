@@ -1,4 +1,5 @@
-"""Tests for Orchestrator Reporting Routes logging integration with LogCollectorClient."""
+"""Tests for Orchestrator Reporting Routes logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestOrchestratorReportingLoggingIntegration:
-    """Test Orchestrator Reporting routes logging integration with LogCollectorClient."""
+    """Test Orchestrator Reporting routes logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -239,7 +241,8 @@ class TestOrchestratorReportingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_report_template_detail_retrieval_logging_success(self, client, mock_logger_client):
-        """Test report template detail retrieval endpoint logging on success."""
+        """Test report template detail retrieval endpoint logging on
+        success."""
         template_id = "pr-confidence-template"
 
         response = client.get(f"/api/v1/reporting/templates/{template_id}")
@@ -273,7 +276,8 @@ class TestOrchestratorReportingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_report_template_detail_logging_not_found(self, client, mock_logger_client):
-        """Test report template detail retrieval endpoint logging when template not found."""
+        """Test report template detail retrieval endpoint logging when template
+        not found."""
         template_id = "nonexistent-template"
 
         response = client.get(f"/api/v1/reporting/templates/{template_id}")
@@ -291,7 +295,8 @@ class TestOrchestratorReportingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_report_deletion_logging_placeholder(self, client, mock_logger_client):
-        """Test report deletion endpoint logging (placeholder implementation)."""
+        """Test report deletion endpoint logging (placeholder
+        implementation)."""
         report_id = "report_12345"
 
         response = client.delete(f"/api/v1/reporting/reports/{report_id}")
@@ -497,7 +502,8 @@ class TestOrchestratorReportingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, client, mock_logger_client):
-        """Test that all major business events are logged across reporting endpoints."""
+        """Test that all major business events are logged across reporting
+        endpoints."""
         expected_events = {
             # Report generation events
             "report_generation_started",

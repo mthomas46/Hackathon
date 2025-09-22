@@ -1,4 +1,6 @@
-"""Redis pub/sub integration for real-time communication between simulation services.
+"""
+Redis pub/sub integration for real-time communication between simulation
+services.
 
 This module provides Redis-based publish/subscribe functionality for:
 - Real-time simulation progress updates

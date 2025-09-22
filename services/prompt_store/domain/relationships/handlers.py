@@ -1,4 +1,5 @@
-"""Relationships API handlers.
+"""
+Relationships API handlers.
 
 Handles HTTP requests and responses for prompt relationship operations.
 """

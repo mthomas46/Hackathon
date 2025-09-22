@@ -1,4 +1,4 @@
-"""Peers Routes for Orchestrator Service"""
+"""Peers Routes for Orchestrator Service."""
 
 from fastapi import APIRouter
 

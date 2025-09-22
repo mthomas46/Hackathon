@@ -1,7 +1,8 @@
-"""Mock utilities and frameworks for Project Simulation Service testing.
+"""
+Mock utilities and frameworks for Project Simulation Service testing.
 
-Provides comprehensive mocking capabilities that follow ecosystem patterns
-for consistent and reliable test isolation.
+Provides comprehensive mocking capabilities that follow ecosystem
+patterns for consistent and reliable test isolation.
 """
 
 from .mock_clients import *

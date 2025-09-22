@@ -1,4 +1,5 @@
-"""Integration handlers for Analysis Service.
+"""
+Integration handlers for Analysis Service.
 
 Handles the complex logic for integration endpoints.
 """

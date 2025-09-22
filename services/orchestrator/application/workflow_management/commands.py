@@ -1,4 +1,4 @@
-"""Application Commands for Workflow Management"""
+"""Application Commands for Workflow Management."""
 
 from dataclasses import dataclass
 from typing import Any, Dict, Optional

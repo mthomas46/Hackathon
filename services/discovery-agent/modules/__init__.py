@@ -1,7 +1,9 @@
-"""Discovery Agent modules package.
+"""
+Discovery Agent modules package.
 
-This package contains all the modularized functionality for the Discovery Agent service.
-Provides shared utilities and client instances for all discovery agent modules.
+This package contains all the modularized functionality for the
+Discovery Agent service. Provides shared utilities and client instances
+for all discovery agent modules.
 """
 
 from services.shared.utilities import get_service_client
@@ -11,10 +13,12 @@ _service_client = None
 
 
 def get_discovery_agent_client():
-    """Get the shared service client for discovery agent modules.
+    """
+    Get the shared service client for discovery agent modules.
 
-    Uses lazy initialization pattern to create client only when first needed.
-    This ensures efficient resource usage and proper initialization order.
+    Uses lazy initialization pattern to create client only when first
+    needed. This ensures efficient resource usage and proper
+    initialization order.
     """
     global _service_client
     if _service_client is None:

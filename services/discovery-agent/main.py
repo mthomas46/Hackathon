@@ -1,7 +1,8 @@
-"""Working Discovery Agent with Enhanced Endpoints
+"""
+Working Discovery Agent with Enhanced Endpoints.
 
-This version ensures all enhanced endpoints are properly registered with FastAPI
-and can handle the test requirements for ecosystem registration.
+This version ensures all enhanced endpoints are properly registered with
+FastAPI and can handle the test requirements for ecosystem registration.
 """
 
 import re
@@ -29,7 +30,7 @@ from services.shared.utilities.utilities import attach_self_register, setup_comm
 
 
 class DiscoverRequest(BaseModel):
-    """Request model for single service discovery"""
+    """Request model for single service discovery."""
 
     name: str = Field(..., description="Service name")
     base_url: str = Field(..., description="Base URL of the service")
@@ -39,7 +40,7 @@ class DiscoverRequest(BaseModel):
 
 
 class BulkDiscoverRequest(BaseModel):
-    """Request model for bulk service discovery"""
+    """Request model for bulk service discovery."""
 
     services: List[Dict[str, str]] = Field(..., description="List of services to discover")
     auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
@@ -120,7 +121,8 @@ async def shutdown_event():
 
 
 def normalize_service_url(url: str, service_name: str = None) -> str:
-    """Normalize service URL to use Docker internal networking when appropriate"""
+    """Normalize service URL to use Docker internal networking when
+    appropriate."""
     if not url:
         return url
 
@@ -137,7 +139,7 @@ def normalize_service_url(url: str, service_name: str = None) -> str:
 
 
 def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Extract endpoints from OpenAPI specification"""
+    """Extract endpoints from OpenAPI specification."""
     endpoints = []
     paths = spec.get("paths", {})
 
@@ -161,7 +163,7 @@ def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 async def fetch_openapi_spec_with_fallback(base_url: str, openapi_url: str = None) -> Optional[Dict[str, Any]]:
-    """Fetch OpenAPI spec with fallback to common endpoints"""
+    """Fetch OpenAPI spec with fallback to common endpoints."""
     urls_to_try = []
 
     if openapi_url:
@@ -197,7 +199,7 @@ async def fetch_openapi_spec_with_fallback(base_url: str, openapi_url: str = Non
 
 @app.post("/discover")
 async def discover_service(request: DiscoverRequest):
-    """Enhanced single service discovery with network URL normalization"""
+    """Enhanced single service discovery with network URL normalization."""
     start_time = time.time()
     request_id = f"discovery_{int(time.time() * 1000)}"
 
@@ -378,7 +380,7 @@ async def discover_service(request: DiscoverRequest):
 
 @app.post("/discover-ecosystem")
 async def discover_ecosystem(request: BulkDiscoverRequest):
-    """Comprehensive ecosystem discovery for multiple services"""
+    """Comprehensive ecosystem discovery for multiple services."""
     try:
         print("🌐 Starting ecosystem discovery...")
 
@@ -501,7 +503,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
 
 @app.get("/registry/stats")
 async def get_registry_stats():
-    """Get basic registry statistics"""
+    """Get basic registry statistics."""
     try:
         stats = {
             "total_services": 0,
@@ -643,7 +645,7 @@ async def discover_services_v1(request: BulkDiscoverRequest):
 
 @app.get("/monitoring/dashboard")
 async def get_monitoring_dashboard():
-    """Get basic monitoring dashboard"""
+    """Get basic monitoring dashboard."""
     try:
         dashboard = {
             "dashboard_title": "Discovery Agent Monitoring",
@@ -674,7 +676,7 @@ async def get_monitoring_dashboard():
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize enhanced discovery agent"""
+    """Initialize enhanced discovery agent."""
     print("🚀 Enhanced Discovery Agent starting up...")
     print("✅ Network URL normalization enabled")
     print("✅ Bulk ecosystem discovery available")

@@ -1,4 +1,5 @@
-"""Bulk operations handlers for API endpoints.
+"""
+Bulk operations handlers for API endpoints.
 
 Handles HTTP requests and responses for bulk operations.
 """

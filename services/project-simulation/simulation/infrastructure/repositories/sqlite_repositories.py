@@ -1,7 +1,9 @@
-"""SQLite-based repositories for persistent data storage.
+"""
+SQLite-based repositories for persistent data storage.
 
-This module provides SQLite implementations of the repository interfaces,
-ensuring data persistence across application restarts and test runs.
+This module provides SQLite implementations of the repository
+interfaces, ensuring data persistence across application restarts and
+test runs.
 """
 
 import json
@@ -19,7 +21,8 @@ class SQLiteSimulationRepository(ISimulationRepository):
     """SQLite implementation of the simulation repository."""
 
     def __init__(self, db_path: str = None):
-        """Initialize the SQLite repository.
+        """
+        Initialize the SQLite repository.
 
         Args:
             db_path: Path to the SQLite database file (optional, defaults to project data dir)

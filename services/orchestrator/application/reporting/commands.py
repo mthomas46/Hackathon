@@ -1,4 +1,4 @@
-"""Reporting Application Commands"""
+"""Reporting Application Commands."""
 
 from dataclasses import dataclass
 from typing import Any, Dict

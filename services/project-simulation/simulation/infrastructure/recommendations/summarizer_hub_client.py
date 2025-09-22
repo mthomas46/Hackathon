@@ -1,5 +1,6 @@
 """
 Summarizer-Hub Client for integrating with the summarizer service.
+
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
@@ -12,7 +13,8 @@ from simulation.domain.recommendations.recommendation import Recommendation, Rec
 
 
 class SummarizerHubClient:
-    """Client for communicating with the Summarizer-Hub service for recommendations."""
+    """Client for communicating with the Summarizer-Hub service for
+    recommendations."""
 
     def __init__(self, http_client: Optional[httpx.AsyncClient] = None):
         """Initialize the Summarizer-Hub client."""

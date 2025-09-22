@@ -25,7 +25,8 @@ class TestRepositoryContracts:
     """Test cases for repository contract compliance."""
 
     def test_project_repository_interface(self):
-        """Test that ProjectRepository interface defines all required methods."""
+        """Test that ProjectRepository interface defines all required
+        methods."""
         # Get all abstract methods from the interface
         abstract_methods = IProjectRepository.__abstractmethods__
 

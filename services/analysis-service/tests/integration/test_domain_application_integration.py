@@ -75,7 +75,8 @@ class TestDomainApplicationIntegration:
 
     @pytest.mark.asyncio
     async def test_document_creation_workflow(self, domain_services, repositories, event_bus):
-        """Test complete document creation workflow from domain to application."""
+        """Test complete document creation workflow from domain to
+        application."""
         # Setup
         doc_data = {
             "title": "Integration Test Document",

@@ -1,4 +1,5 @@
-"""Architecture Digitizer Manager module for CLI service.
+"""
+Architecture Digitizer Manager module for CLI service.
 
 Provides interactive management of architecture diagram digitization,
 supporting both API-based fetching and file upload processing.
@@ -29,7 +30,11 @@ class ArchitectureDigitizerManager(BaseManager):
         return [("1", "Architecture Analysis"), ("2", "System Modeling"), ("3", "Documentation Generation")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 

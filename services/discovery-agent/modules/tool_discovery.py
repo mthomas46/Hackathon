@@ -1,8 +1,10 @@
-"""LangGraph Tool Discovery Module for Discovery Agent service.
+"""
+LangGraph Tool Discovery Module for Discovery Agent service.
 
-This module handles automatic discovery and registration of LangGraph tools
-from service OpenAPI specifications. It analyzes endpoint definitions and
-generates appropriate tool wrappers for integration with LangGraph workflows.
+This module handles automatic discovery and registration of LangGraph
+tools from service OpenAPI specifications. It analyzes endpoint
+definitions and generates appropriate tool wrappers for integration with
+LangGraph workflows.
 """
 
 import re
@@ -18,7 +20,8 @@ from services.shared.logging import fire_and_forget
 
 
 class ToolDiscoveryService:
-    """Service for discovering and generating LangGraph tools from OpenAPI specs."""
+    """Service for discovering and generating LangGraph tools from OpenAPI
+    specs."""
 
     def __init__(self):
         self.service_client = ServiceClients()
@@ -28,15 +31,15 @@ class ToolDiscoveryService:
         self.registry_storage = None
 
     def set_security_scanner(self, scanner):
-        """Set the security scanner for tool validation"""
+        """Set the security scanner for tool validation."""
         self.security_scanner = scanner
 
     def set_monitoring_service(self, monitoring):
-        """Set the monitoring service for observability"""
+        """Set the monitoring service for observability."""
         self.monitoring_service = monitoring
 
     def set_registry_storage(self, storage):
-        """Set the persistent storage for tool registry"""
+        """Set the persistent storage for tool registry."""
         self.registry_storage = storage
 
     async def discover_tools(
@@ -46,7 +49,8 @@ class ToolDiscoveryService:
         openapi_url: Optional[str] = None,
         tool_categories: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        """Discover LangGraph tools for a service from its OpenAPI specification.
+        """
+        Discover LangGraph tools for a service from its OpenAPI specification.
 
         Args:
             service_name: Name of the service to discover tools for
@@ -406,7 +410,7 @@ class ToolDiscoveryService:
         return discovery_results
 
     async def _check_service_health(self, service_name: str, config: Dict) -> Dict[str, Any]:
-        """Check service health status"""
+        """Check service health status."""
         try:
             async with self.service_client.session() as session:
                 health_url = f"{config['url']}/health"
@@ -425,7 +429,7 @@ class ToolDiscoveryService:
             return {"status": "unreachable", "error": str(e), "response_time": 0.1}
 
     async def _discover_service_openapi(self, service_name: str, config: Dict) -> Dict[str, Any]:
-        """Discover OpenAPI specification for a service"""
+        """Discover OpenAPI specification for a service."""
         try:
             spec_url = f"{config['url']}{config['openapi_path']}"
 
@@ -451,7 +455,7 @@ class ToolDiscoveryService:
             return {"success": False, "error": str(e)}
 
     async def _extract_tools_from_openapi(self, service_name: str, openapi_data: Dict) -> List[Dict[str, Any]]:
-        """Extract tool definitions from OpenAPI specification"""
+        """Extract tool definitions from OpenAPI specification."""
         spec = openapi_data["full_spec"]
         paths = spec.get("paths", {})
         tools = []

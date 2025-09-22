@@ -1,4 +1,5 @@
-"""Document repository for data access operations.
+"""
+Document repository for data access operations.
 
 Handles all database interactions for documents.
 """

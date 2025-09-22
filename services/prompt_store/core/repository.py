@@ -1,6 +1,8 @@
-"""Base repository pattern for Prompt Store service.
+"""
+Base repository pattern for Prompt Store service.
 
-Following domain-driven design principles with generic repository implementation.
+Following domain-driven design principles with generic repository
+implementation.
 """
 
 from abc import ABC, abstractmethod

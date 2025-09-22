@@ -1,7 +1,8 @@
-"""Logging infrastructure for the Simulation Dashboard Service.
+"""
+Logging infrastructure for the Simulation Dashboard Service.
 
-This module provides structured logging capabilities for the dashboard service,
-following consistent patterns with the broader ecosystem.
+This module provides structured logging capabilities for the dashboard
+service, following consistent patterns with the broader ecosystem.
 """
 
 import logging

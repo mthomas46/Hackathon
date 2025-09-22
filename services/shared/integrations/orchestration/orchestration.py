@@ -1,6 +1,8 @@
-"""Consolidated orchestration utilities for distributed operations.
+"""
+Consolidated orchestration utilities for distributed operations.
 
-Combines event ordering, dead letter queue, saga patterns, and event replay.
+Combines event ordering, dead letter queue, saga patterns, and event
+replay.
 """
 
 import asyncio

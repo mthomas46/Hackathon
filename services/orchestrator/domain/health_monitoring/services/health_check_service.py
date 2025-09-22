@@ -1,4 +1,4 @@
-"""Health Check Domain Service"""
+"""Health Check Domain Service."""
 
 import asyncio
 import time

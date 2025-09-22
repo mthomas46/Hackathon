@@ -134,7 +134,8 @@ class AnalysisWorkflow:
 
 
 class AnalyticsIntegrationManager:
-    """Manages integration with analysis_service and other analytics components."""
+    """Manages integration with analysis_service and other analytics
+    components."""
 
     def __init__(self):
         """Initialize analytics integration manager."""

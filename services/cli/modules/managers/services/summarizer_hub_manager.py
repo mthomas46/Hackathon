@@ -1,7 +1,8 @@
-"""Summarizer Hub Manager module for CLI service.
+"""
+Summarizer Hub Manager module for CLI service.
 
-Provides power-user operations for summarizer hub including
-ensemble summarization, model management, and AI operations.
+Provides power-user operations for summarizer hub including ensemble
+summarization, model management, and AI operations.
 """
 
 import os
@@ -21,7 +22,8 @@ class SummarizerHubManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def summarizer_hub_menu(self):
-        """Main summarizer hub management menu with enhanced interactive experience."""
+        """Main summarizer hub management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Summarizer Hub Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -36,7 +38,11 @@ class SummarizerHubManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.ensemble_summarization_menu()
         elif choice == "2":

@@ -1,4 +1,4 @@
-"""Workflow Routes for Orchestrator Service with LangGraph Integration"""
+"""Workflow Routes for Orchestrator Service with LangGraph Integration."""
 
 import time
 from typing import Any, Dict, List, Optional
@@ -348,7 +348,9 @@ async def list_workflows():
 
 @router.post("/tools/discover")
 async def discover_tools(req: ToolDiscoveryRequest):
-    """Automatically discover and register LangGraph tools from ecosystem services.
+    """
+    Automatically discover and register LangGraph tools from ecosystem
+    services.
 
     This endpoint orchestrates automatic tool discovery across all ecosystem services
     by coordinating with the discovery-agent service. It can discover tools for specific

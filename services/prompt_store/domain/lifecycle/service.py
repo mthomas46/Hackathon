@@ -1,6 +1,8 @@
-"""Lifecycle management service.
+"""
+Lifecycle management service.
 
-Contains business logic for prompt lifecycle transitions, validation, and workflow management.
+Contains business logic for prompt lifecycle transitions, validation,
+and workflow management.
 """
 
 from typing import Any, Dict, List
@@ -21,7 +23,8 @@ class LifecycleService:
     async def update_lifecycle_status(
         self, prompt_id: str, new_status: str, reason: str = "", user_id: str = "system"
     ) -> Dict[str, Any]:
-        """Update the lifecycle status of a prompt with validation and side effects."""
+        """Update the lifecycle status of a prompt with validation and side
+        effects."""
 
         # Validate the transition
         current_prompt = self.lifecycle_repo.get_entity(prompt_id)

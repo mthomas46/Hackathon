@@ -1,6 +1,8 @@
-"""Basic WebSocket Tests for Real-time Updates.
+"""
+Basic WebSocket Tests for Real-time Updates.
 
-This module contains basic tests for WebSocket endpoints and message handling.
+This module contains basic tests for WebSocket endpoints and message
+handling.
 """
 
 import pytest

@@ -1,4 +1,5 @@
-"""Configuration Management System.
+"""
+Configuration Management System.
 
 Provides centralized configuration management with environment-specific
 overrides, validation, and dynamic loading capabilities.

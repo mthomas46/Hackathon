@@ -28,7 +28,8 @@ class ApiSchemaEnvelope(BaseModel):
 
 
 def validate_envelope(model: BaseModel):
-    """Decorator to validate request bodies against an envelope model.
+    """
+    Decorator to validate request bodies against an envelope model.
 
     Usage:
         @app.post("/ingest")

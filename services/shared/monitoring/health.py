@@ -1,7 +1,8 @@
-"""Standardized health endpoint helpers and models.
+"""
+Standardized health endpoint helpers and models.
 
-Provides consistent health check patterns across all services.
-Reduces code duplication and ensures uniform health reporting.
+Provides consistent health check patterns across all services. Reduces
+code duplication and ensures uniform health reporting.
 """
 
 import os
@@ -292,7 +293,8 @@ def create_dependency_health_endpoint(health_manager: HealthManager):
 
 
 def register_health_endpoints(app, service_name: str, version: str = "1.0.0"):
-    """Register standard health endpoints on a FastAPI app.
+    """
+    Register standard health endpoints on a FastAPI app.
 
     Args:
         app: FastAPI application instance

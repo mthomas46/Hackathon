@@ -1,7 +1,9 @@
-"""Performance Tests for Enterprise Testing Framework.
+"""
+Performance Tests for Enterprise Testing Framework.
 
-This module contains performance benchmarking tests for the testing framework itself,
-measuring execution speed, memory usage, and scalability of the test suite.
+This module contains performance benchmarking tests for the testing
+framework itself, measuring execution speed, memory usage, and
+scalability of the test suite.
 """
 
 import sys

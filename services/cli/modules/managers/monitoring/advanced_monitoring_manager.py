@@ -11,7 +11,8 @@ from .dashboard_manager import DashboardManager
 
 
 class AdvancedMonitoringManager(BaseManager):
-    """Main advanced monitoring manager coordinating all monitoring operations."""
+    """Main advanced monitoring manager coordinating all monitoring
+    operations."""
 
     def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
         super().__init__(console, clients, cache)

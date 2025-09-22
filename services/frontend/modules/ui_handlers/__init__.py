@@ -1,4 +1,5 @@
-"""UI Handlers for Frontend Service.
+"""
+UI Handlers for Frontend Service.
 
 Organized by service for better maintainability and modularity.
 """

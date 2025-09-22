@@ -1,4 +1,5 @@
-"""Security Scanner Module for Discovery Agent service.
+"""
+Security Scanner Module for Discovery Agent service.
 
 This module provides security scanning capabilities for discovered tools
 using the secure-analyzer service integration.
@@ -14,7 +15,8 @@ except ImportError:
 
 
 class ToolSecurityScanner:
-    """Security scanner for discovered LangGraph tools using secure-analyzer service"""
+    """Security scanner for discovered LangGraph tools using secure-analyzer
+    service."""
 
     def __init__(self, secure_analyzer_url: str = "http://localhost:5070"):
         self.secure_analyzer_url = secure_analyzer_url
@@ -31,7 +33,7 @@ class ToolSecurityScanner:
         }
 
     async def scan_tool_security(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Scan a single tool for security vulnerabilities"""
+        """Scan a single tool for security vulnerabilities."""
 
         security_analysis = {
             "tool_name": tool["name"],
@@ -66,7 +68,7 @@ class ToolSecurityScanner:
         return security_analysis
 
     def _analyze_injection_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for injection vulnerabilities"""
+        """Analyze tool for injection vulnerabilities."""
         vulnerabilities = []
 
         # Check path for injection-prone patterns
@@ -114,7 +116,7 @@ class ToolSecurityScanner:
         return vulnerabilities
 
     def _analyze_auth_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for authentication/authorization risks"""
+        """Analyze tool for authentication/authorization risks."""
         vulnerabilities = []
 
         path = tool.get("path", "").lower()
@@ -151,7 +153,7 @@ class ToolSecurityScanner:
         return vulnerabilities
 
     def _analyze_data_exposure_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for data exposure risks"""
+        """Analyze tool for data exposure risks."""
         vulnerabilities = []
 
         # Check for endpoints that might expose sensitive data
@@ -186,7 +188,7 @@ class ToolSecurityScanner:
         return vulnerabilities
 
     def _analyze_file_operation_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for file operation risks"""
+        """Analyze tool for file operation risks."""
         vulnerabilities = []
 
         path = tool.get("path", "").lower()
@@ -221,7 +223,7 @@ class ToolSecurityScanner:
         return vulnerabilities
 
     async def _scan_with_secure_analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Use the secure-analyzer service for advanced security scanning"""
+        """Use the secure-analyzer service for advanced security scanning."""
 
         try:
             # Prepare tool data for secure-analyzer
@@ -248,7 +250,7 @@ class ToolSecurityScanner:
             return {"success": False, "error": f"Failed to connect to secure-analyzer: {str(e)}"}
 
     def _calculate_risk_level(self, vulnerabilities: List[Dict], secure_analyzer_result: Dict) -> str:
-        """Calculate overall risk level for a tool"""
+        """Calculate overall risk level for a tool."""
 
         # Count vulnerabilities by severity
         high_count = len([v for v in vulnerabilities if v.get("severity") == "high"])
@@ -273,7 +275,7 @@ class ToolSecurityScanner:
             return "low"
 
     def _generate_security_recommendations(self, vulnerabilities: List[Dict], tool: Dict) -> List[str]:
-        """Generate security recommendations based on vulnerabilities"""
+        """Generate security recommendations based on vulnerabilities."""
 
         recommendations = []
 
@@ -311,7 +313,7 @@ class ToolSecurityScanner:
         return list(set(recommendations))  # Remove duplicates
 
     async def scan_tool_catalog(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Scan an entire catalog of tools for security issues"""
+        """Scan an entire catalog of tools for security issues."""
 
         scan_results = {
             "timestamp": "2025-01-17T21:30:00Z",

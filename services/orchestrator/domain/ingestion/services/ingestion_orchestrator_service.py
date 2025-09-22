@@ -1,4 +1,4 @@
-"""Ingestion Orchestrator Service Domain Service"""
+"""Ingestion Orchestrator Service Domain Service."""
 
 import asyncio
 from datetime import datetime

@@ -1,4 +1,4 @@
-"""Service Health Value Object"""
+"""Service Health Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, Optional

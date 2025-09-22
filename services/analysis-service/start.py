@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Analysis Service Startup Script
-Handles the complex DDD structure and import requirements
-"""
+"""Analysis Service Startup Script Handles the complex DDD structure and import
+requirements."""
 import os
 import sys
 from pathlib import Path

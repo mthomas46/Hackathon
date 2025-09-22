@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Enterprise Integration Framework
+Enterprise Integration Framework.
 
-This module provides standardized API patterns, workflow context propagation,
-and service mesh compatibility for the entire ecosystem.
+This module provides standardized API patterns, workflow context
+propagation, and service mesh compatibility for the entire ecosystem.
 """
 
 import asyncio

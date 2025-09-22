@@ -1,7 +1,8 @@
-"""Shared utilities for Interpreter service modules.
+"""
+Shared utilities for Interpreter service modules.
 
-This module contains common utilities used across all interpreter modules
-to eliminate code duplication and ensure consistency.
+This module contains common utilities used across all interpreter
+modules to eliminate code duplication and ensure consistency.
 """
 
 import os
@@ -38,7 +39,8 @@ def get_interpreter_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
 
 
 def handle_interpreter_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for interpreter operations.
+    """
+    Standardized error handling for interpreter operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -49,7 +51,8 @@ def handle_interpreter_error(operation: str, error: Exception, **context) -> Dic
 
 
 def create_interpreter_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for interpreter operations.
+    """
+    Standardized success response for interpreter operations.
 
     Returns a consistent success response format.
     """
@@ -57,7 +60,8 @@ def create_interpreter_success_response(operation: str, data: Any, **context) ->
 
 
 def build_interpreter_context(operation: str, **additional) -> Dict[str, Any]:
-    """Build context dictionary for interpreter operations.
+    """
+    Build context dictionary for interpreter operations.
 
     Provides consistent context for logging and responses.
     """

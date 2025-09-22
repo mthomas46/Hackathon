@@ -1,7 +1,9 @@
-"""Orchestrator Integration Module for Discovery Agent service.
+"""
+Orchestrator Integration Module for Discovery Agent service.
 
-This module provides Phase 3 integration between the Discovery Agent and Orchestrator
-to enable dynamic tool loading and AI-powered workflow generation.
+This module provides Phase 3 integration between the Discovery Agent and
+Orchestrator to enable dynamic tool loading and AI-powered workflow
+generation.
 """
 
 from typing import Any, Dict, List, Optional
@@ -14,7 +16,8 @@ except ImportError:
 
 
 class OrchestratorIntegration:
-    """Integration layer between Discovery Agent and Orchestrator for dynamic tool loading"""
+    """Integration layer between Discovery Agent and Orchestrator for dynamic
+    tool loading."""
 
     def __init__(self, orchestrator_url: str = "http://localhost:5099"):
         self.orchestrator_url = orchestrator_url
@@ -22,7 +25,8 @@ class OrchestratorIntegration:
         self.workflow_cache = {}
 
     async def register_discovered_tools(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Register discovered tools with the orchestrator for workflow use
+        """
+        Register discovered tools with the orchestrator for workflow use.
 
         Args:
             tools: List of discovered tools to register
@@ -72,7 +76,7 @@ class OrchestratorIntegration:
         return results
 
     async def _register_tool_with_orchestrator(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Register a single tool with the orchestrator"""
+        """Register a single tool with the orchestrator."""
         try:
             # Prepare tool registration payload
             tool_payload = {
@@ -106,7 +110,8 @@ class OrchestratorIntegration:
             return {"success": False, "error": f"Connection error: {str(e)}"}
 
     async def create_dynamic_workflow(self, workflow_request: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a dynamic workflow using discovered tools
+        """
+        Create a dynamic workflow using discovered tools.
 
         Args:
             workflow_request: Workflow specification with required tools and steps
@@ -155,7 +160,7 @@ class OrchestratorIntegration:
             return {"success": False, "error": f"Workflow creation failed: {str(e)}"}
 
     async def _check_tool_availability(self, required_tools: List[str]) -> Dict[str, Any]:
-        """Check if required tools are available in the orchestrator"""
+        """Check if required tools are available in the orchestrator."""
         try:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/available-tools"
@@ -204,7 +209,7 @@ class OrchestratorIntegration:
             }
 
     async def _register_workflow(self, workflow_spec: Dict[str, Any]) -> Dict[str, Any]:
-        """Register a workflow with the orchestrator"""
+        """Register a workflow with the orchestrator."""
         try:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/create-dynamic"
@@ -229,7 +234,7 @@ class OrchestratorIntegration:
             return {"success": False, "error": f"Workflow registration error: {str(e)}"}
 
     async def execute_dynamic_workflow(self, workflow_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a previously created dynamic workflow"""
+        """Execute a previously created dynamic workflow."""
         try:
             # Get workflow spec from cache or orchestrator
             workflow_spec = self.workflow_cache.get(workflow_name)
@@ -270,7 +275,7 @@ class OrchestratorIntegration:
             return {"success": False, "error": f"Workflow execution error: {str(e)}"}
 
     async def _get_workflow_from_orchestrator(self, workflow_name: str) -> Optional[Dict[str, Any]]:
-        """Retrieve workflow specification from orchestrator"""
+        """Retrieve workflow specification from orchestrator."""
         try:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/{workflow_name}"
@@ -286,7 +291,7 @@ class OrchestratorIntegration:
             return None
 
     async def get_orchestrator_status(self) -> Dict[str, Any]:
-        """Get orchestrator status and available capabilities"""
+        """Get orchestrator status and available capabilities."""
         try:
             async with self.service_client.session() as session:
                 async with session.get(f"{self.orchestrator_url}/health", timeout=5) as response:
@@ -305,7 +310,7 @@ class OrchestratorIntegration:
             return {"status": "unreachable", "error": str(e)}
 
     async def list_registered_workflows(self) -> Dict[str, Any]:
-        """List all workflows registered with the orchestrator"""
+        """List all workflows registered with the orchestrator."""
         try:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/list"

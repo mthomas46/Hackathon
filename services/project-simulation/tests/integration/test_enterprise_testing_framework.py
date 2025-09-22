@@ -1,7 +1,9 @@
-"""Integration Tests for Enterprise Testing Framework Validation.
+"""
+Integration Tests for Enterprise Testing Framework Validation.
 
-This module contains comprehensive tests for validating the enterprise testing framework,
-including unit test validation, mocking patterns, test fixtures, and performance benchmarking.
+This module contains comprehensive tests for validating the enterprise
+testing framework, including unit test validation, mocking patterns,
+test fixtures, and performance benchmarking.
 """
 
 import time
@@ -13,7 +15,8 @@ from fastapi.testclient import TestClient
 
 
 class TestUnitTestFrameworkValidation:
-    """Test cases for validating the unit test framework setup and functionality."""
+    """Test cases for validating the unit test framework setup and
+    functionality."""
 
     def test_pytest_configuration_validation(self):
         """Test that pytest is properly configured."""

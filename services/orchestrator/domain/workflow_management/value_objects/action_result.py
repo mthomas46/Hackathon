@@ -1,4 +1,4 @@
-"""Action Result Value Object"""
+"""Action Result Value Object."""
 
 from datetime import datetime
 from enum import Enum

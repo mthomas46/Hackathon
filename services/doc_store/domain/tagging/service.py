@@ -1,4 +1,5 @@
-"""Tagging service for business logic operations.
+"""
+Tagging service for business logic operations.
 
 Handles semantic tagging, content analysis, and taxonomy management.
 """

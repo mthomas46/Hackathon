@@ -7,7 +7,8 @@ from typing import Any, Dict
 
 
 class StructuredFormatter(logging.Formatter):
-    """JSON structured logging formatter with correlation ID support.
+    """
+    JSON structured logging formatter with correlation ID support.
 
     This formatter outputs log records in JSON format, including:
     - Timestamp in ISO format
@@ -20,7 +21,8 @@ class StructuredFormatter(logging.Formatter):
     """
 
     def __init__(self, include_extra: bool = True) -> None:
-        """Initialize structured formatter.
+        """
+        Initialize structured formatter.
 
         Args:
             include_extra: Whether to include extra fields in output
@@ -29,7 +31,8 @@ class StructuredFormatter(logging.Formatter):
         self.include_extra = include_extra
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format log record as JSON.
+        """
+        Format log record as JSON.
 
         Args:
             record: Log record to format
@@ -109,7 +112,8 @@ class StructuredFormatter(logging.Formatter):
             return json.dumps(fallback_entry, indent=None)
 
     def _json_serializer(self, obj: Any) -> str:
-        """Custom JSON serializer for non-standard objects.
+        """
+        Custom JSON serializer for non-standard objects.
 
         Args:
             obj: Object to serialize
@@ -140,7 +144,8 @@ class ColoredStructuredFormatter(StructuredFormatter):
     RESET = "\033[0m"
 
     def __init__(self, include_extra: bool = True, use_colors: bool = True) -> None:
-        """Initialize colored structured formatter.
+        """
+        Initialize colored structured formatter.
 
         Args:
             include_extra: Whether to include extra fields
@@ -150,7 +155,8 @@ class ColoredStructuredFormatter(StructuredFormatter):
         self.use_colors = use_colors
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format log record with optional color coding.
+        """
+        Format log record with optional color coding.
 
         Args:
             record: Log record to format
@@ -181,7 +187,8 @@ class CompactFormatter(logging.Formatter):
         )
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format log record in compact format.
+        """
+        Format log record in compact format.
 
         Args:
             record: Log record to format
@@ -209,7 +216,8 @@ class PerformanceFormatter(logging.Formatter):
         super().__init__(fmt="%(asctime)s PERF %(name)s %(operation)s %(duration_ms).2fms %(message)s")
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format performance log record.
+        """
+        Format performance log record.
 
         Args:
             record: Log record to format

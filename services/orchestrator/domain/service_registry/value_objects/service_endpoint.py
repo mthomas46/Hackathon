@@ -1,4 +1,4 @@
-"""Service Endpoint Value Object"""
+"""Service Endpoint Value Object."""
 
 from typing import Optional
 

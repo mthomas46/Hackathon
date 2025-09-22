@@ -36,7 +36,8 @@ class SimulationClient:
     """HTTP client for interacting with the project-simulation service."""
 
     def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0, max_retries: int = 3):
-        """Initialize the simulation client.
+        """
+        Initialize the simulation client.
 
         Args:
             base_url: Base URL of the simulation service. If None, uses config.
@@ -103,7 +104,8 @@ class SimulationClient:
         await self.client.aclose()
 
     async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
-        """Make an HTTP request with retry logic.
+        """
+        Make an HTTP request with retry logic.
 
         Args:
             method: HTTP method (GET, POST, etc.)
@@ -331,7 +333,8 @@ class SimulationClient:
     # WebSocket Methods
 
     async def connect_websocket(self, simulation_id: Optional[str] = None) -> None:
-        """Connect to the simulation service WebSocket.
+        """
+        Connect to the simulation service WebSocket.
 
         Args:
             simulation_id: Optional simulation ID to subscribe to specific updates
@@ -359,7 +362,8 @@ class SimulationClient:
             self.logger.info("Disconnected from WebSocket")
 
     async def listen_for_events(self) -> AsyncGenerator[Dict[str, Any], None]:
-        """Listen for real-time events from the WebSocket.
+        """
+        Listen for real-time events from the WebSocket.
 
         Yields:
             Dict containing event data
@@ -385,7 +389,8 @@ class SimulationClient:
             raise
 
     def add_event_handler(self, event_type: str, handler: Callable) -> None:
-        """Add an event handler for a specific event type.
+        """
+        Add an event handler for a specific event type.
 
         Args:
             event_type: Type of event to handle
@@ -396,7 +401,8 @@ class SimulationClient:
         self.event_handlers[event_type].append(handler)
 
     def remove_event_handler(self, event_type: str, handler: Callable) -> None:
-        """Remove an event handler.
+        """
+        Remove an event handler.
 
         Args:
             event_type: Type of event
@@ -439,7 +445,8 @@ class SimulationClient:
     async def wait_for_simulation_completion(
         self, simulation_id: str, timeout_seconds: int = 3600, poll_interval: float = 5.0
     ) -> Dict[str, Any]:
-        """Wait for a simulation to complete.
+        """
+        Wait for a simulation to complete.
 
         Args:
             simulation_id: ID of the simulation to wait for
@@ -469,7 +476,8 @@ class SimulationClient:
         raise SimulationClientError(f"Simulation {simulation_id} did not complete within {timeout_seconds} seconds")
 
     async def get_simulation_progress_stream(self, simulation_id: str) -> AsyncGenerator[Dict[str, Any], None]:
-        """Get a stream of simulation progress updates.
+        """
+        Get a stream of simulation progress updates.
 
         Args:
             simulation_id: ID of the simulation to monitor

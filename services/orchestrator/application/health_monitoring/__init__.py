@@ -1,4 +1,4 @@
-"""Health Monitoring Application Layer"""
+"""Health Monitoring Application Layer."""
 
 from .commands import *
 from .queries import *

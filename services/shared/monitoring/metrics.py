@@ -1,5 +1,6 @@
 """
 Shared metrics collection for LLM Documentation Ecosystem services.
+
 Provides Prometheus-compatible metrics for monitoring and observability.
 """
 

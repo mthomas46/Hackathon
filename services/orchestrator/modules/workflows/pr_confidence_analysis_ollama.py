@@ -1,8 +1,8 @@
 """
 PR Confidence Analysis Workflow with Ollama LLM Integration.
 
-Enhanced version that uses local Ollama LLM for real AI analysis
-instead of simulation methods.
+Enhanced version that uses local Ollama LLM for real AI analysis instead
+of simulation methods.
 """
 
 import json

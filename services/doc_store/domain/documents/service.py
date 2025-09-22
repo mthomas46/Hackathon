@@ -1,4 +1,5 @@
-"""Document service for business logic operations.
+"""
+Document service for business logic operations.
 
 Handles document validation, processing, and business rules.
 """
@@ -104,7 +105,8 @@ class DocumentService(BaseService[Document]):
         return self.repository.get_by_metadata_field("original_prompt_id", prompt_id)
 
     def get_prompts_with_documents(self) -> Dict[str, List[Document]]:
-        """Get all prompt IDs that have generated documents, with their documents."""
+        """Get all prompt IDs that have generated documents, with their
+        documents."""
         documents = self.repository.get_by_metadata_field_exists("original_prompt_id")
         prompt_docs = {}
         for doc in documents:

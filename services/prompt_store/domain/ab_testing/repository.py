@@ -1,4 +1,5 @@
-"""A/B testing repository implementation.
+"""
+A/B testing repository implementation.
 
 Handles database operations for A/B testing entities.
 """

@@ -1,4 +1,4 @@
-"""Ingestion Application Use Cases"""
+"""Ingestion Application Use Cases."""
 
 from typing import Any, Dict, List, Optional
 

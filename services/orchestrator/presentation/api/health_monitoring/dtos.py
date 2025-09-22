@@ -1,4 +1,4 @@
-"""DTOs for Health Monitoring API"""
+"""DTOs for Health Monitoring API."""
 
 from datetime import datetime
 from typing import Any, Dict, Optional

@@ -1,7 +1,9 @@
-"""Advanced Analytics Platform Page.
+"""
+Advanced Analytics Platform Page.
 
-This module provides advanced analytics capabilities including real-time analytics pipeline,
-predictive modeling dashboard, causal analysis, and advanced visualization engine.
+This module provides advanced analytics capabilities including real-time
+analytics pipeline, predictive modeling dashboard, causal analysis, and
+advanced visualization engine.
 """
 
 import warnings

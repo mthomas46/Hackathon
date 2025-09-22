@@ -1,4 +1,4 @@
-"""Natural Language Query Value Object"""
+"""Natural Language Query Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, Optional

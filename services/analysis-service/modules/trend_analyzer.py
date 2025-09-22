@@ -1,7 +1,9 @@
-"""Trend Analysis module for Analysis Service.
+"""
+Trend Analysis module for Analysis Service.
 
-Provides predictive analytics for documentation quality trends, identifying patterns
-in historical analysis results and forecasting future documentation issues.
+Provides predictive analytics for documentation quality trends,
+identifying patterns in historical analysis results and forecasting
+future documentation issues.
 """
 
 import logging
@@ -40,7 +42,8 @@ logger = logging.getLogger(__name__)
 
 
 class TrendAnalyzer:
-    """Analyzes trends in documentation analysis results and predicts future issues."""
+    """Analyzes trends in documentation analysis results and predicts future
+    issues."""
 
     def __init__(self):
         """Initialize the trend analyzer."""
@@ -57,7 +60,8 @@ class TrendAnalyzer:
         return True
 
     def _extract_historical_data(self, analysis_results: List[Dict[str, Any]]) -> pd.DataFrame:
-        """Extract and structure historical analysis data for trend analysis."""
+        """Extract and structure historical analysis data for trend
+        analysis."""
         if not analysis_results:
             return pd.DataFrame()
 
@@ -558,7 +562,8 @@ async def analyze_document_trends(
     prediction_days: int = 30,
     include_predictions: bool = True,
 ) -> Dict[str, Any]:
-    """Convenience function for document trend analysis.
+    """
+    Convenience function for document trend analysis.
 
     Args:
         document_id: ID of the document to analyze
@@ -580,7 +585,8 @@ async def analyze_document_trends(
 async def analyze_portfolio_trends(
     analysis_results: List[Dict[str, Any]], group_by: str = "document_id", prediction_days: int = 30
 ) -> Dict[str, Any]:
-    """Convenience function for portfolio trend analysis.
+    """
+    Convenience function for portfolio trend analysis.
 
     Args:
         analysis_results: Historical analysis results across portfolio

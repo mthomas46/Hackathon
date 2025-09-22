@@ -1,4 +1,4 @@
-"""Query Interpreter Service Domain Service"""
+"""Query Interpreter Service Domain Service."""
 
 import re
 from typing import Any, Dict, List, Tuple
@@ -69,7 +69,8 @@ class QueryInterpreterService:
 
     def interpret_query(self, query: NaturalLanguageQuery) -> QueryInterpretation:
         """
-        Interpret a natural language query and return structured interpretation.
+        Interpret a natural language query and return structured
+        interpretation.
 
         Args:
             query: The natural language query to interpret

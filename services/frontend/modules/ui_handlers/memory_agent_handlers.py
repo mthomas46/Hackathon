@@ -1,4 +1,5 @@
-"""Memory Agent UI handlers for Frontend service.
+"""
+Memory Agent UI handlers for Frontend service.
 
 Handles memory agent service visualization, including operational
 context storage, event summaries, and memory item management.

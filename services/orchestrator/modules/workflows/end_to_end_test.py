@@ -1,4 +1,5 @@
-"""End-to-End Ecosystem Test Workflow.
+"""
+End-to-End Ecosystem Test Workflow.
 
 Comprehensive workflow that demonstrates the full LLM Documentation Ecosystem:
 1. Generate mock data (Confluence, GitHub, Jira)

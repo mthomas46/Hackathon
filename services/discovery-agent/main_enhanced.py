@@ -1,4 +1,5 @@
-"""Enhanced Discovery Agent Service with All Phase Features
+"""
+Enhanced Discovery Agent Service with All Phase Features.
 
 This enhanced version includes all implemented phases:
 - Phase 1: CLI Integration (existing)
@@ -57,7 +58,7 @@ from .modules.tool_registry import ToolRegistryStorage
 
 
 class DiscoverRequest(BaseModel):
-    """Request model for single service discovery"""
+    """Request model for single service discovery."""
 
     name: str = Field(..., description="Service name")
     base_url: str = Field(..., description="Base URL of the service")
@@ -67,7 +68,7 @@ class DiscoverRequest(BaseModel):
 
 
 class BulkDiscoverRequest(BaseModel):
-    """Request model for bulk service discovery"""
+    """Request model for bulk service discovery."""
 
     services: List[Dict[str, str]] = Field(..., description="List of services to discover")
     auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
@@ -76,7 +77,7 @@ class BulkDiscoverRequest(BaseModel):
 
 
 class SecurityScanRequest(BaseModel):
-    """Request model for security scanning"""
+    """Request model for security scanning."""
 
     tools: Optional[List[Dict[str, Any]]] = Field(None, description="Specific tools to scan")
     scan_all_discovered: bool = Field(True, description="Scan all discovered tools")
@@ -84,7 +85,7 @@ class SecurityScanRequest(BaseModel):
 
 
 class AIToolSelectionRequest(BaseModel):
-    """Request model for AI tool selection"""
+    """Request model for AI tool selection."""
 
     task_description: str = Field(..., description="Description of the task")
     available_tools: Optional[List[Dict[str, Any]]] = Field(None, description="Available tools")
@@ -93,7 +94,7 @@ class AIToolSelectionRequest(BaseModel):
 
 
 class SemanticAnalysisRequest(BaseModel):
-    """Request model for semantic analysis"""
+    """Request model for semantic analysis."""
 
     tools: Optional[List[Dict[str, Any]]] = Field(None, description="Tools to analyze")
     analyze_all_discovered: bool = Field(True, description="Analyze all discovered tools")
@@ -101,7 +102,7 @@ class SemanticAnalysisRequest(BaseModel):
 
 
 class WorkflowCreationRequest(BaseModel):
-    """Request model for AI workflow creation"""
+    """Request model for AI workflow creation."""
 
     workflow_description: str = Field(..., description="Description of desired workflow")
     available_tools: Optional[List[Dict[str, Any]]] = Field(None, description="Available tools")
@@ -138,7 +139,8 @@ register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT)
 
 
 def normalize_service_url(url: str, service_name: str = None) -> str:
-    """Normalize service URL to use Docker internal networking when appropriate"""
+    """Normalize service URL to use Docker internal networking when
+    appropriate."""
     if not url:
         return url
 
@@ -156,7 +158,7 @@ def normalize_service_url(url: str, service_name: str = None) -> str:
 
 @app.post("/discover")
 async def discover_service(request: DiscoverRequest):
-    """Enhanced single service discovery with network URL normalization"""
+    """Enhanced single service discovery with network URL normalization."""
     try:
         # Normalize URLs for Docker networking
         normalized_base_url = normalize_service_url(request.base_url, request.name)
@@ -290,7 +292,7 @@ async def discover_service(request: DiscoverRequest):
 
 @app.post("/discover-ecosystem")
 async def discover_ecosystem(request: BulkDiscoverRequest):
-    """Comprehensive ecosystem discovery for multiple services"""
+    """Comprehensive ecosystem discovery for multiple services."""
     try:
         monitoring.log_discovery_event(
             "ecosystem_discovery_started",
@@ -447,7 +449,7 @@ async def get_registry_tools(
     category: Optional[str] = Query(None, description="Filter by tool category"),
     limit: int = Query(100, description="Maximum number of tools to return"),
 ):
-    """Query discovered tools from registry"""
+    """Query discovered tools from registry."""
     try:
         tools = registry_storage.query_tools(service_name=service_name, category=category, limit=limit)
 
@@ -467,7 +469,7 @@ async def get_registry_tools(
 
 @app.get("/registry/stats")
 async def get_registry_stats():
-    """Get registry statistics and summary"""
+    """Get registry statistics and summary."""
     try:
         stats = registry_storage.get_registry_stats()
         return create_success_response(stats)
@@ -485,7 +487,7 @@ async def get_registry_stats():
 
 @app.post("/security/scan-tools")
 async def scan_tools_security(request: SecurityScanRequest):
-    """Security scan discovered tools using secure-analyzer"""
+    """Security scan discovered tools using secure-analyzer."""
     try:
         tools_to_scan = []
 
@@ -543,7 +545,7 @@ async def scan_tools_security(request: SecurityScanRequest):
 
 @app.get("/monitoring/dashboard")
 async def get_monitoring_dashboard():
-    """Get monitoring dashboard for discovery operations"""
+    """Get monitoring dashboard for discovery operations."""
     try:
         dashboard = monitoring.create_monitoring_dashboard()
         return create_success_response(dashboard)
@@ -561,7 +563,7 @@ async def get_monitoring_events(
     limit: int = Query(50, description="Number of events to return"),
     event_type: Optional[str] = Query(None, description="Filter by event type"),
 ):
-    """Get discovery events from monitoring"""
+    """Get discovery events from monitoring."""
     try:
         events = monitoring.get_recent_events(limit=limit, event_type=event_type)
         return create_success_response(
@@ -581,7 +583,7 @@ async def get_monitoring_events(
 
 @app.post("/ai/select-tools")
 async def ai_select_tools(request: AIToolSelectionRequest):
-    """AI-powered tool selection for tasks"""
+    """AI-powered tool selection for tasks."""
     try:
         available_tools = []
 
@@ -622,7 +624,7 @@ async def ai_select_tools(request: AIToolSelectionRequest):
 
 @app.post("/ai/create-workflow")
 async def ai_create_workflow(request: WorkflowCreationRequest):
-    """Create AI-powered workflow from description"""
+    """Create AI-powered workflow from description."""
     try:
         available_tools = []
 
@@ -662,7 +664,7 @@ async def ai_create_workflow(request: WorkflowCreationRequest):
 
 @app.post("/semantic/analyze-tools")
 async def semantic_analyze_tools(request: SemanticAnalysisRequest):
-    """Semantic analysis of discovered tools"""
+    """Semantic analysis of discovered tools."""
     try:
         tools_to_analyze = []
 
@@ -707,7 +709,7 @@ async def semantic_analyze_tools(request: SemanticAnalysisRequest):
 
 @app.get("/performance/optimize")
 async def optimize_performance():
-    """Get performance optimization recommendations"""
+    """Get performance optimization recommendations."""
     try:
         # Get current discovery data for analysis
         registry_stats = registry_storage.get_registry_stats()
@@ -730,7 +732,7 @@ async def optimize_performance():
 
 @app.get("/performance/dependencies")
 async def analyze_tool_dependencies():
-    """Analyze dependencies between discovered tools"""
+    """Analyze dependencies between discovered tools."""
     try:
         tools = registry_storage.query_tools()
         dependency_analysis = await performance_optimizer.analyze_tool_dependencies(tools)
@@ -753,7 +755,7 @@ async def register_tools_with_orchestrator(
     service_names: Optional[List[str]] = Body(None, description="Specific services to register"),
     register_all: bool = Body(True, description="Register all discovered tools"),
 ):
-    """Register discovered tools with orchestrator"""
+    """Register discovered tools with orchestrator."""
     try:
         tools_to_register = []
 
@@ -791,7 +793,7 @@ async def register_tools_with_orchestrator(
 
 @app.post("/orchestrator/create-workflow")
 async def create_orchestrator_workflow(request: WorkflowCreationRequest):
-    """Create workflow in orchestrator using discovered tools"""
+    """Create workflow in orchestrator using discovered tools."""
     try:
         available_tools = registry_storage.query_tools()
 
@@ -826,7 +828,7 @@ async def create_orchestrator_workflow(request: WorkflowCreationRequest):
 
 
 def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Extract endpoints from OpenAPI specification"""
+    """Extract endpoints from OpenAPI specification."""
     endpoints = []
     paths = spec.get("paths", {})
 
@@ -856,7 +858,7 @@ def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize enhanced discovery agent"""
+    """Initialize enhanced discovery agent."""
     monitoring.log_discovery_event(
         "service_startup",
         {

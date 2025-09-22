@@ -1,5 +1,6 @@
 """
 Report Generator for creating analysis reports.
+
 Following DDD principles with clean, focused functionality.
 """
 

@@ -1797,10 +1797,12 @@ async def get_pull_request_analysis(simulation_id: str, req: Request, format: st
 
 @app.post("/api/v1/interpreter/simulate")
 async def create_simulation_from_interpreter(request: Dict[str, Any], req: Request):
-    """Create and execute a simulation based on interpreter query.
+    """
+    Create and execute a simulation based on interpreter query.
 
-    This endpoint allows the interpreter service to request simulation creation
-    and execution with generated mock data and analysis processing.
+    This endpoint allows the interpreter service to request simulation
+    creation and execution with generated mock data and analysis
+    processing.
     """
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -1924,7 +1926,8 @@ async def get_interpreter_capabilities(req: Request):
 
 @app.post("/api/v1/interpreter/mock-data")
 async def generate_mock_data_for_interpreter(request: Dict[str, Any], req: Request):
-    """Generate mock data for interpreter queries without creating full simulation."""
+    """Generate mock data for interpreter queries without creating full
+    simulation."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
@@ -2054,7 +2057,8 @@ async def get_service_discovery_info(req: Request):
 
 @app.post("/api/v1/interpreter/analyze")
 async def analyze_with_simulation(request: Dict[str, Any], req: Request):
-    """Perform analysis using simulation infrastructure without full execution."""
+    """Perform analysis using simulation infrastructure without full
+    execution."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
@@ -2095,7 +2099,8 @@ async def analyze_with_simulation(request: Dict[str, Any], req: Request):
 
 
 async def generate_mock_simulation_data(query: str, context: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate comprehensive mock data for simulation based on interpreter query."""
+    """Generate comprehensive mock data for simulation based on interpreter
+    query."""
     try:
         # Extract keywords from query to generate relevant mock data
         keywords = extract_keywords_from_query(query)
@@ -2220,7 +2225,8 @@ async def perform_simulation_analysis(content: str, analysis_type: str, context:
 
 
 async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Perform comprehensive analysis on simulation data using summarizer-hub."""
+    """Perform comprehensive analysis on simulation data using summarizer-
+    hub."""
     try:
         # Get documents from simulation
         documents = mock_data.get("documents", [])

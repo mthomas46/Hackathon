@@ -1,4 +1,4 @@
-"""In-Memory Repository Implementations"""
+"""In-Memory Repository Implementations."""
 
 from datetime import datetime
 from threading import Lock

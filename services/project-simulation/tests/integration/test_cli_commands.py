@@ -1,7 +1,9 @@
-"""Integration Tests for CLI Commands and Scripts.
+"""
+Integration Tests for CLI Commands and Scripts.
 
-This module contains comprehensive tests for CLI commands, script functionality,
-and command-line interface validation in the Project Simulation Service.
+This module contains comprehensive tests for CLI commands, script
+functionality, and command-line interface validation in the Project
+Simulation Service.
 """
 
 import os
@@ -232,7 +234,8 @@ class TestCLIOutputFormatting:
         assert "print" in content
 
     def test_scripts_provide_progress_indicators(self):
-        """Test that scripts provide progress indicators for long operations."""
+        """Test that scripts provide progress indicators for long
+        operations."""
         # Long-running scripts should show progress
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 

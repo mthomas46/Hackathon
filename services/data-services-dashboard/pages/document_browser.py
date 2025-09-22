@@ -492,7 +492,8 @@ def render_document_relationships(document_client):
 
 
 def render_enhanced_document_viewer(document: Dict[str, Any]):
-    """Render enhanced document viewer with syntax highlighting and advanced features."""
+    """Render enhanced document viewer with syntax highlighting and advanced
+    features."""
     content = document.get("content", "")
     content_type = document.get("content_type", "text")
     doc_id = document.get("id", "")

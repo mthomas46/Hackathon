@@ -1,6 +1,8 @@
-"""Provider implementations for Summarizer Hub.
+"""
+Provider implementations for Summarizer Hub.
 
-Contains the actual implementation functions for different LLM providers.
+Contains the actual implementation functions for different LLM
+providers.
 """
 
 import json as pyjson

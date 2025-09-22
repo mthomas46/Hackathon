@@ -1,4 +1,5 @@
-"""Tagging handlers for API endpoints.
+"""
+Tagging handlers for API endpoints.
 
 Handles tagging and taxonomy-related HTTP requests.
 """

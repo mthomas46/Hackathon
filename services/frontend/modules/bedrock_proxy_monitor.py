@@ -1,4 +1,5 @@
-"""Bedrock Proxy monitoring infrastructure for Frontend service.
+"""
+Bedrock Proxy monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for bedrock proxy
 service AI invocations and template-based responses.

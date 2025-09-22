@@ -1,6 +1,8 @@
-"""Relationships repository.
+"""
+Relationships repository.
 
-Handles data access operations for prompt relationships and semantic connections.
+Handles data access operations for prompt relationships and semantic
+connections.
 """
 
 from typing import Any, Dict, List, Optional

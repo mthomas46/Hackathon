@@ -25,7 +25,8 @@ class SimulationLoadTester:
     def __init__(
         self, base_url: str = "http://localhost:5075", max_concurrent: int = 10, test_duration_seconds: int = 300
     ):
-        """Initialize load tester.
+        """
+        Initialize load tester.
 
         Args:
             base_url: Base URL of the simulation service

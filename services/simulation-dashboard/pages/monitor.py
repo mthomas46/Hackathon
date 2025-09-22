@@ -1,7 +1,8 @@
-"""Monitor Page.
+"""
+Monitor Page.
 
-This module provides the real-time monitoring page with live progress tracking
-and simulation event visualization using WebSocket integration.
+This module provides the real-time monitoring page with live progress
+tracking and simulation event visualization using WebSocket integration.
 """
 
 import asyncio

@@ -1,4 +1,5 @@
-"""Analytics repository for data analysis operations.
+"""
+Analytics repository for data analysis operations.
 
 Handles analytics queries and aggregations across the document store.
 """

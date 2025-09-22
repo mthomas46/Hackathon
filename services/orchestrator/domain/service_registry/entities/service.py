@@ -1,4 +1,4 @@
-"""Service Entity"""
+"""Service Entity."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

@@ -997,7 +997,8 @@ async def get_workflow_templates():
 
 @app.get("/documents/{document_id}/provenance")
 async def get_document_provenance(document_id: str):
-    """Get comprehensive provenance information for a workflow-generated document."""
+    """Get comprehensive provenance information for a workflow-generated
+    document."""
     try:
         # For demo purposes, create mock provenance data
         # In production, this would query the doc_store

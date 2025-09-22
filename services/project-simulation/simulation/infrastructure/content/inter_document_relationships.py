@@ -138,7 +138,8 @@ class DocumentRelationshipManager:
         self.personality_generator = PersonalityDrivenGenerator()
 
     def _load_relationship_patterns(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
-        """Load predefined relationship patterns for different document types."""
+        """Load predefined relationship patterns for different document
+        types."""
         return {
             "project_requirements": {
                 "outgoing": [
@@ -440,7 +441,8 @@ class DocumentRelationshipManager:
     def find_related_documents(
         self, doc_id: str, max_depth: int = 2, relationship_types: Optional[List[str]] = None
     ) -> Dict[str, Any]:
-        """Find documents related to a given document within specified depth."""
+        """Find documents related to a given document within specified
+        depth."""
         if doc_id not in self.documents:
             raise ValueError(f"Document {doc_id} not found")
 

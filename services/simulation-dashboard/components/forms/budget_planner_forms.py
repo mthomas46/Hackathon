@@ -1,7 +1,9 @@
-"""Budget Planner Form Components.
+"""
+Budget Planner Form Components.
 
-This module provides form components for planning and managing project budgets,
-including cost estimation, ROI calculation, and financial analysis.
+This module provides form components for planning and managing project
+budgets, including cost estimation, ROI calculation, and financial
+analysis.
 """
 
 from typing import Any, Dict, List, Optional
@@ -21,7 +23,8 @@ except ImportError:
 def render_budget_planner_form(
     budget_key: str = "budget_config", title: str = "💰 Budget Planner", project_config: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Render budget planner form for project financial planning.
+    """
+    Render budget planner form for project financial planning.
 
     Args:
         budget_key: Key for storing budget configuration in session state

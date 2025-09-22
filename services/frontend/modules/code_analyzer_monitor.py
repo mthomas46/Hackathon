@@ -1,4 +1,5 @@
-"""Code Analyzer monitoring infrastructure for Frontend service.
+"""
+Code Analyzer monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for code analyzer
 service analysis results, security scans, and style checking.

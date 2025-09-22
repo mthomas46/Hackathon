@@ -1,4 +1,4 @@
-"""Report Type Value Object"""
+"""Report Type Value Object."""
 
 from enum import Enum
 

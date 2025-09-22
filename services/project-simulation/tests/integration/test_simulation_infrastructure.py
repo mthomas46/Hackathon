@@ -1,7 +1,8 @@
-"""Integration tests for simulation infrastructure components.
+"""
+Integration tests for simulation infrastructure components.
 
-Tests database operations, service communication, Redis pub/sub,
-and cross-service integration.
+Tests database operations, service communication, Redis pub/sub, and
+cross-service integration.
 """
 
 import json
@@ -308,7 +309,8 @@ class TestEndToEndIntegration:
 
     @pytest.mark.asyncio
     async def test_simulation_with_redis_and_database(self):
-        """Test complete simulation workflow with Redis and database integration."""
+        """Test complete simulation workflow with Redis and database
+        integration."""
         # This would be a more comprehensive integration test
         # that tests the entire flow from simulation creation
         # through document generation, Redis events, and database storage

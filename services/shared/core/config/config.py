@@ -7,10 +7,11 @@ _CONFIG_CACHE: Dict[str, Any] = {}
 
 
 def load_yaml_config(default_path: str) -> Dict[str, Any]:
-    """Load a YAML file and return a dict. Returns {} on any error.
+    """
+    Load a YAML file and return a dict. Returns {} on any error.
 
-    Keep intentionally simple to avoid adding new runtime deps beyond PyYAML
-    which is already present in the project for other components.
+    Keep intentionally simple to avoid adding new runtime deps beyond
+    PyYAML which is already present in the project for other components.
     """
     try:
         import yaml  # type: ignore
@@ -22,7 +23,8 @@ def load_yaml_config(default_path: str) -> Dict[str, Any]:
 
 
 def _load_app_config() -> Dict[str, Any]:
-    """Load a global app config once (config.yml or config/app.yaml) if present."""
+    """Load a global app config once (config.yml or config/app.yaml) if
+    present."""
     global _CONFIG_CACHE
     if _CONFIG_CACHE:
         return _CONFIG_CACHE

@@ -1,7 +1,9 @@
-"""Discovery Agent Manager module for CLI service.
+"""
+Discovery Agent Manager module for CLI service.
 
-Provides power-user operations for discovery agent including
-API discovery, OpenAPI parsing, service registration, and endpoint management.
+Provides power-user operations for discovery agent including API
+discovery, OpenAPI parsing, service registration, and endpoint
+management.
 """
 
 import json
@@ -22,7 +24,8 @@ class DiscoveryAgentManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def discovery_agent_menu(self):
-        """Main discovery agent management menu with enhanced interactive experience."""
+        """Main discovery agent management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Discovery Agent Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -37,7 +40,11 @@ class DiscoveryAgentManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.service_discovery_menu()
         elif choice == "2":

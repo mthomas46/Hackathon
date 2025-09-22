@@ -1,4 +1,4 @@
-"""Query Processing Application Use Cases"""
+"""Query Processing Application Use Cases."""
 
 from typing import Any, Dict, List, Optional
 

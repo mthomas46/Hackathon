@@ -1,4 +1,5 @@
-"""Test configuration and shared fixtures for the analysis service test suite."""
+"""Test configuration and shared fixtures for the analysis service test
+suite."""
 
 import asyncio
 import tempfile

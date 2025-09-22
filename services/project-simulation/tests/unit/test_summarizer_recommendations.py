@@ -88,7 +88,8 @@ class TestSummarizerHubClient:
 
     @pytest.mark.asyncio
     async def test_get_duplicate_recommendations(self):
-        """Test getting duplicate detection recommendations from summarizer-hub."""
+        """Test getting duplicate detection recommendations from summarizer-
+        hub."""
         # Arrange
         documents = [
             {"id": "doc1", "title": "User Guide", "content": "How to use the system"},
@@ -144,7 +145,8 @@ class TestSummarizerHubClient:
 
     @pytest.mark.asyncio
     async def test_get_outdated_recommendations(self):
-        """Test getting outdated document recommendations from summarizer-hub."""
+        """Test getting outdated document recommendations from summarizer-
+        hub."""
         # Arrange
         current_time = datetime.now()
         old_time = current_time - timedelta(days=365 * 2)  # 2 years old
@@ -214,7 +216,8 @@ class TestSummarizerHubClient:
 
     @pytest.mark.asyncio
     async def test_get_quality_recommendations(self):
-        """Test getting quality improvement recommendations from summarizer-hub."""
+        """Test getting quality improvement recommendations from summarizer-
+        hub."""
         # Arrange
         documents = [
             {
@@ -277,7 +280,8 @@ class TestSummarizerHubClient:
 
     @pytest.mark.asyncio
     async def test_get_comprehensive_recommendations(self):
-        """Test getting comprehensive recommendations across all types from summarizer-hub."""
+        """Test getting comprehensive recommendations across all types from
+        summarizer-hub."""
         # Arrange
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API info", "type": "api_docs"},
@@ -518,7 +522,8 @@ class TestRecommendationTypes:
 
 
 class TestAnalysisServiceReportIntegration:
-    """Test the analysis-service report generation and storage functionality."""
+    """Test the analysis-service report generation and storage
+    functionality."""
 
     def setup_method(self):
         """Setup test fixtures."""
@@ -724,7 +729,8 @@ class TestAnalysisServiceReportIntegration:
             assert result is not None, f"Failed to parse format: {fmt}"
 
     def test_find_relevant_timeline_phase_within_dates(self):
-        """Test finding relevant phase when document date is within phase dates."""
+        """Test finding relevant phase when document date is within phase
+        dates."""
         doc_date = datetime(2024, 1, 10)
         timeline_phases = [
             {"id": "phase1", "name": "Planning", "start_date": "2024-01-01T00:00:00", "end_date": "2024-01-15T00:00:00"}
@@ -736,7 +742,8 @@ class TestAnalysisServiceReportIntegration:
         assert result["id"] == "phase1"
 
     def test_find_relevant_timeline_phase_closest_match(self):
-        """Test finding relevant phase when document date doesn't overlap any phase."""
+        """Test finding relevant phase when document date doesn't overlap any
+        phase."""
         doc_date = datetime(2024, 3, 1)  # March 1st
         timeline_phases = [
             {

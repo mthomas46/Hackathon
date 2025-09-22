@@ -14,7 +14,8 @@ from ...domain.repositories import IProjectRepository, ISimulationRepository, IT
 
 
 class InMemoryProjectRepository(IProjectRepository):
-    """In-memory implementation of project repository for development/testing."""
+    """In-memory implementation of project repository for
+    development/testing."""
 
     def __init__(self):
         self._projects: Dict[str, Project] = {}
@@ -51,7 +52,8 @@ class InMemoryProjectRepository(IProjectRepository):
 
 
 class InMemoryTimelineRepository(ITimelineRepository):
-    """In-memory implementation of timeline repository for development/testing."""
+    """In-memory implementation of timeline repository for
+    development/testing."""
 
     def __init__(self):
         self._timelines: Dict[str, Timeline] = {}
@@ -124,7 +126,8 @@ class InMemoryTeamRepository(ITeamRepository):
 
 
 class InMemorySimulationRepository(ISimulationRepository):
-    """In-memory implementation of simulation repository for development/testing."""
+    """In-memory implementation of simulation repository for
+    development/testing."""
 
     def __init__(self):
         self._simulations: Dict[str, Simulation] = {}

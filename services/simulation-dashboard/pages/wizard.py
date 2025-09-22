@@ -1,7 +1,9 @@
-"""Guided Setup Wizard Page.
+"""
+Guided Setup Wizard Page.
 
 This module provides a comprehensive, user-friendly multi-step wizard
-for creating and configuring project simulations with all required inputs.
+for creating and configuring project simulations with all required
+inputs.
 """
 
 import uuid
@@ -1725,7 +1727,8 @@ def get_recommended_duration(complexity: str, project_type: str) -> int:
 
 
 def estimate_project_budget(complexity: str, duration_weeks: int, project_type: str) -> float:
-    """Estimate project budget based on complexity, duration, and project type."""
+    """Estimate project budget based on complexity, duration, and project
+    type."""
     # Base rates per week by complexity
     base_rates = {
         "Simple": 8000,  # $8K/week for simple projects

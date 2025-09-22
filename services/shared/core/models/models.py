@@ -1,7 +1,9 @@
-"""Shared Pydantic models used across all services in the LLM Documentation Ecosystem.
+"""
+Shared Pydantic models used across all services in the LLM Documentation
+Ecosystem.
 
-This module provides common data models for API responses, requests, and internal data structures
-used throughout the ecosystem services.
+This module provides common data models for API responses, requests, and
+internal data structures used throughout the ecosystem services.
 """
 
 from datetime import datetime, timezone
@@ -11,7 +13,8 @@ from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):
-    """Normalized unit of ingested content from any source.
+    """
+    Normalized unit of ingested content from any source.
 
     - `source_type` indicates origin (e.g., "github", "jira", "confluence").
     - `content` carries the text payload; `metadata` stores source-specific fields.
@@ -58,7 +61,8 @@ class ApiSchema(BaseModel):
 
 
 class Finding(BaseModel):
-    """Detected inconsistency or observation produced by the consistency engine."""
+    """Detected inconsistency or observation produced by the consistency
+    engine."""
 
     id: str
     type: str  # missing_doc|contradiction|drift|stale|broken_link|schema_mismatch|acceptance_mismatch|security_gap
@@ -75,7 +79,8 @@ class Finding(BaseModel):
 
 
 class MemoryItem(BaseModel):
-    """Short-term memory item stored by the memory-agent for operational context."""
+    """Short-term memory item stored by the memory-agent for operational
+    context."""
 
     id: str
     type: str  # operation|llm_summary|doc_summary|api_summary|finding

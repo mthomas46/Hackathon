@@ -1,7 +1,8 @@
-"""Data browser infrastructure for Frontend service.
+"""
+Data browser infrastructure for Frontend service.
 
-Provides read-only browsing capabilities for doc_store and prompt-store data
-with caching, filtering, and pagination support.
+Provides read-only browsing capabilities for doc_store and prompt-store
+data with caching, filtering, and pagination support.
 """
 
 from typing import Any, Dict, List, Optional

@@ -9,7 +9,8 @@ from .logger import generate_correlation_id, get_correlation_id, set_correlation
 
 
 class CorrelationMiddleware(BaseHTTPMiddleware):
-    """Middleware for automatic correlation ID management.
+    """
+    Middleware for automatic correlation ID management.
 
     This middleware automatically:
     - Generates correlation IDs for incoming requests
@@ -19,7 +20,8 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(self, app, header_name: str = "X-Correlation-ID") -> None:
-        """Initialize correlation middleware.
+        """
+        Initialize correlation middleware.
 
         Args:
             app: FastAPI app instance
@@ -29,7 +31,8 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
         self.header_name = header_name
 
     def extract_correlation_id(self, headers: dict) -> Optional[str]:
-        """Extract correlation ID from request headers.
+        """
+        Extract correlation ID from request headers.
 
         Args:
             headers: Request headers dictionary
@@ -41,7 +44,8 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
         return header_value if header_value else None
 
     def set_response_header(self, response_headers: dict, correlation_id: str) -> None:
-        """Set correlation ID in response headers.
+        """
+        Set correlation ID in response headers.
 
         Args:
             response_headers: Response headers dictionary
@@ -51,7 +55,8 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
     @asynccontextmanager
     async def handle_request(self, request_headers: dict, response_headers: dict):
-        """Context manager for handling request correlation.
+        """
+        Context manager for handling request correlation.
 
         Args:
             request_headers: Incoming request headers
@@ -79,7 +84,8 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
             set_correlation_id(previous_id)
 
     async def dispatch(self, request, call_next):
-        """Async dispatch method for BaseHTTPMiddleware.
+        """
+        Async dispatch method for BaseHTTPMiddleware.
 
         Args:
             request: FastAPI request object
@@ -108,7 +114,8 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
 
 def correlation_context(correlation_id: Optional[str] = None):
-    """Decorator/context manager for setting correlation ID.
+    """
+    Decorator/context manager for setting correlation ID.
 
     Args:
         correlation_id: Correlation ID to set (generates new one if None)

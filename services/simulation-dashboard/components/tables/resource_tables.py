@@ -1,7 +1,8 @@
-"""Resource Table Components.
+"""
+Resource Table Components.
 
-This module provides table components for displaying and managing resource allocation,
-usage tracking, and capacity planning.
+This module provides table components for displaying and managing
+resource allocation, usage tracking, and capacity planning.
 """
 
 from datetime import datetime, timedelta
@@ -20,7 +21,8 @@ def render_resource_table(
     on_allocation_change: Optional[Callable] = None,
     on_capacity_adjust: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a comprehensive resource allocation table.
+    """
+    Render a comprehensive resource allocation table.
 
     Args:
         resources_data: List of resource data dictionaries

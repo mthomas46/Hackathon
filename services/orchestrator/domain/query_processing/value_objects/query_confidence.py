@@ -1,4 +1,4 @@
-"""Query Confidence Value Object"""
+"""Query Confidence Value Object."""
 
 from enum import Enum
 
@@ -31,7 +31,8 @@ class QueryConfidence(Enum):
 
     @property
     def can_auto_execute(self) -> bool:
-        """Check if query can be automatically executed at this confidence level."""
+        """Check if query can be automatically executed at this confidence
+        level."""
         return self == QueryConfidence.VERY_HIGH
 
     @property

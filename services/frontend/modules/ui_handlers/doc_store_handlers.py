@@ -1,4 +1,5 @@
-"""Doc Store UI handlers for Frontend service.
+"""
+Doc Store UI handlers for Frontend service.
 
 Handles document store browsing and exploration.
 """

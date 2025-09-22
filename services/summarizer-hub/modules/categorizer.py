@@ -1,7 +1,8 @@
-"""Automated document categorization module for Summarizer Hub.
+"""
+Automated document categorization module for Summarizer Hub.
 
-Provides ML-based document classification and automated tagging capabilities
-using transformer models and traditional ML approaches.
+Provides ML-based document classification and automated tagging
+capabilities using transformer models and traditional ML approaches.
 """
 
 import logging
@@ -36,7 +37,8 @@ class DocumentCategorizer:
     """Automated document categorization using ML models."""
 
     def __init__(self, model_name: str = "facebook/bart-large-mnli"):
-        """Initialize the document categorizer.
+        """
+        Initialize the document categorizer.
 
         Args:
             model_name: Name of the transformer model to use for zero-shot classification
@@ -253,7 +255,8 @@ class DocumentCategorizer:
     async def categorize_document(
         self, document: Dict[str, Any], candidate_categories: Optional[List[str]] = None, use_zero_shot: bool = True
     ) -> Dict[str, Any]:
-        """Categorize a single document.
+        """
+        Categorize a single document.
 
         Args:
             document: Document to categorize
@@ -322,7 +325,8 @@ class DocumentCategorizer:
         candidate_categories: Optional[List[str]] = None,
         use_zero_shot: bool = True,
     ) -> Dict[str, Any]:
-        """Categorize multiple documents in batch.
+        """
+        Categorize multiple documents in batch.
 
         Args:
             documents: List of documents to categorize
@@ -371,7 +375,8 @@ document_categorizer = DocumentCategorizer()
 async def categorize_document(
     document: Dict[str, Any], candidate_categories: Optional[List[str]] = None, use_zero_shot: bool = True
 ) -> Dict[str, Any]:
-    """Convenience function for single document categorization.
+    """
+    Convenience function for single document categorization.
 
     Args:
         document: Document to categorize
@@ -389,7 +394,8 @@ async def categorize_document(
 async def categorize_documents_batch(
     documents: List[Dict[str, Any]], candidate_categories: Optional[List[str]] = None, use_zero_shot: bool = True
 ) -> Dict[str, Any]:
-    """Convenience function for batch document categorization.
+    """
+    Convenience function for batch document categorization.
 
     Args:
         documents: List of documents to categorize

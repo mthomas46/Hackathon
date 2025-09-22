@@ -319,7 +319,8 @@ async def shutdown_event():
 
 
 def register_bounded_context_routers(app):
-    """Register API routers for all bounded contexts.
+    """
+    Register API routers for all bounded contexts.
 
     This function centralizes router registration to keep main.py clean
     and follows DRY principles by avoiding repetitive try/except blocks.

@@ -1,4 +1,4 @@
-"""Workflow Management Application Layer"""
+"""Workflow Management Application Layer."""
 
 from .commands import *
 from .queries import *

@@ -1,7 +1,9 @@
-"""End-to-End Ecosystem Integration Tests.
+"""
+End-to-End Ecosystem Integration Tests.
 
-This module contains comprehensive end-to-end tests that validate complete
-simulation workflows, cross-service data consistency, and ecosystem integration.
+This module contains comprehensive end-to-end tests that validate
+complete simulation workflows, cross-service data consistency, and
+ecosystem integration.
 """
 
 import asyncio

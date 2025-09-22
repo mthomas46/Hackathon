@@ -1,7 +1,9 @@
-"""Unit tests for Security and Performance functionality.
+"""
+Unit tests for Security and Performance functionality.
 
-This module contains comprehensive tests for security validation, performance benchmarking,
-load testing, and security monitoring capabilities of the simulation dashboard.
+This module contains comprehensive tests for security validation,
+performance benchmarking, load testing, and security monitoring
+capabilities of the simulation dashboard.
 """
 
 import hashlib

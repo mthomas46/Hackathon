@@ -1,8 +1,9 @@
-"""API Documentation Validation Tests.
+"""
+API Documentation Validation Tests.
 
-This module contains comprehensive tests for validating API documentation,
-including OpenAPI spec compliance, endpoint documentation completeness,
-and documentation generation accuracy.
+This module contains comprehensive tests for validating API
+documentation, including OpenAPI spec compliance, endpoint documentation
+completeness, and documentation generation accuracy.
 """
 
 import json

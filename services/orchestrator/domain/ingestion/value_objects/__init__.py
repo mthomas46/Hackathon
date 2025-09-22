@@ -1,4 +1,4 @@
-"""Value Objects for Ingestion Domain"""
+"""Value Objects for Ingestion Domain."""
 
 from .document_metadata import DocumentMetadata
 from .ingestion_request import IngestionRequest

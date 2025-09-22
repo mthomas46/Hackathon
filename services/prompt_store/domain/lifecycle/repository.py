@@ -1,6 +1,8 @@
-"""Lifecycle management repository.
+"""
+Lifecycle management repository.
 
-Handles data access operations for prompt lifecycle transitions and status management.
+Handles data access operations for prompt lifecycle transitions and
+status management.
 """
 
 from typing import Any, Dict, List, Optional

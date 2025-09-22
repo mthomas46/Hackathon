@@ -1,7 +1,9 @@
-"""Performance Optimization Module for Discovery Agent service.
+"""
+Performance Optimization Module for Discovery Agent service.
 
-This module provides Phase 5 performance optimization and tool dependency
-mapping capabilities to enhance discovery efficiency and tool orchestration.
+This module provides Phase 5 performance optimization and tool
+dependency mapping capabilities to enhance discovery efficiency and tool
+orchestration.
 """
 
 import statistics
@@ -10,7 +12,8 @@ from typing import Any, Dict, List
 
 
 class PerformanceOptimizer:
-    """Performance optimizer for discovery operations and tool dependency mapping"""
+    """Performance optimizer for discovery operations and tool dependency
+    mapping."""
 
     def __init__(self):
         self.performance_history = {}
@@ -18,7 +21,7 @@ class PerformanceOptimizer:
         self.optimization_cache = {}
 
     async def optimize_discovery_workflow(self, discovery_results: Dict[str, Any]) -> Dict[str, Any]:
-        """Optimize discovery workflow based on performance analysis"""
+        """Optimize discovery workflow based on performance analysis."""
 
         optimization_recommendations = {
             "parallelization_opportunities": [],
@@ -105,7 +108,7 @@ class PerformanceOptimizer:
         }
 
     async def analyze_tool_dependencies(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze dependencies between discovered tools"""
+        """Analyze dependencies between discovered tools."""
 
         dependency_analysis = {
             "dependency_graph": {},
@@ -183,7 +186,7 @@ class PerformanceOptimizer:
         return dependency_analysis
 
     def _analyze_tool_dependency(self, tool1: Dict[str, Any], tool2: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze dependency relationship between two tools"""
+        """Analyze dependency relationship between two tools."""
 
         # Data flow dependencies
         data_patterns = [
@@ -228,7 +231,8 @@ class PerformanceOptimizer:
         return {"depends": False, "type": "none", "strength": 0.0}
 
     async def optimize_workflow_execution(self, workflow_spec: Dict[str, Any]) -> Dict[str, Any]:
-        """Optimize workflow execution based on dependencies and performance"""
+        """Optimize workflow execution based on dependencies and
+        performance."""
 
         optimization_result = {
             "original_workflow": workflow_spec,
@@ -275,7 +279,7 @@ class PerformanceOptimizer:
         return optimization_result
 
     def _analyze_step_dependencies(self, steps: List[Dict[str, Any]]) -> Dict[str, List[str]]:
-        """Analyze dependencies between workflow steps"""
+        """Analyze dependencies between workflow steps."""
 
         dependencies = {}
 
@@ -307,7 +311,7 @@ class PerformanceOptimizer:
     def _identify_parallel_groups(
         self, steps: List[Dict[str, Any]], dependencies: Dict[str, List[str]]
     ) -> List[List[str]]:
-        """Identify groups of steps that can be executed in parallel"""
+        """Identify groups of steps that can be executed in parallel."""
 
         parallel_groups = []
         processed_steps = set()
@@ -333,7 +337,7 @@ class PerformanceOptimizer:
         return parallel_groups
 
     def _optimize_resource_allocation(self, steps: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Optimize resource allocation for workflow steps"""
+        """Optimize resource allocation for workflow steps."""
 
         optimization = {"optimizations": [], "gain": 0}
 
@@ -367,7 +371,7 @@ class PerformanceOptimizer:
         return optimization
 
     async def create_performance_baseline(self, discovery_results: Dict[str, Any]) -> Dict[str, Any]:
-        """Create performance baseline for future optimization comparisons"""
+        """Create performance baseline for future optimization comparisons."""
 
         baseline = {
             "timestamp": "2025-01-17T21:30:00Z",
@@ -427,7 +431,7 @@ class PerformanceOptimizer:
     async def monitor_performance_trends(
         self, current_results: Dict[str, Any], baseline: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Monitor performance trends against baseline"""
+        """Monitor performance trends against baseline."""
 
         trends = {
             "comparison_timestamp": "2025-01-17T21:30:00Z",

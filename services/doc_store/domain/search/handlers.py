@@ -1,4 +1,5 @@
-"""Search handlers for API endpoints.
+"""
+Search handlers for API endpoints.
 
 Handles search-related HTTP requests and responses.
 """

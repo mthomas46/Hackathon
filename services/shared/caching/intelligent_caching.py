@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Intelligent Caching Framework
+Intelligent Caching Framework.
 
-This module provides enterprise-grade caching capabilities with intelligent
-invalidation, performance monitoring, and workflow-aware optimization.
+This module provides enterprise-grade caching capabilities with
+intelligent invalidation, performance monitoring, and workflow-aware
+optimization.
 """
 
 import asyncio

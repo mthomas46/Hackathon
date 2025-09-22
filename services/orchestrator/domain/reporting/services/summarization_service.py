@@ -1,4 +1,4 @@
-"""Summarization Service Domain Service"""
+"""Summarization Service Domain Service."""
 
 import re
 from typing import Any, Dict, List, Optional
@@ -39,7 +39,8 @@ class SummarizationService:
 
     def suggest_summarization_providers(self, request: SummarizationRequest) -> Dict[str, Any]:
         """
-        Suggest appropriate AI providers for summarization based on content and policies.
+        Suggest appropriate AI providers for summarization based on content and
+        policies.
 
         Args:
             request: Summarization request with content and parameters
@@ -224,7 +225,8 @@ class SummarizationService:
         return " ".join(rationales)
 
     def validate_summarization_request(self, request: SummarizationRequest) -> List[str]:
-        """Validate summarization request and return list of validation errors."""
+        """Validate summarization request and return list of validation
+        errors."""
         errors = []
 
         if not request.content or len(request.content.strip()) < 10:

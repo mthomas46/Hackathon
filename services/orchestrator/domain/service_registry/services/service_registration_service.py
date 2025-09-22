@@ -1,4 +1,4 @@
-"""Service Registration Domain Service"""
+"""Service Registration Domain Service."""
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional

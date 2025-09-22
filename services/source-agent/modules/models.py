@@ -1,4 +1,5 @@
-"""Request and response models for Source Agent service.
+"""
+Request and response models for Source Agent service.
 
 Contains all Pydantic models used for API requests and responses.
 """

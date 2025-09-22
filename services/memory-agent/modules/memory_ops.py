@@ -1,4 +1,5 @@
-"""Memory operations for the Memory Agent service.
+"""
+Memory operations for the Memory Agent service.
 
 This module contains all memory management and Redis operations,
 extracted from the main memory-agent service to improve maintainability.

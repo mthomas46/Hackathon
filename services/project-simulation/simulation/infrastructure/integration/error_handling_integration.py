@@ -94,7 +94,8 @@ except ImportError:
 
 
 class SimulationErrorHandlingIntegration:
-    """Integration layer for simulation error handling with shared infrastructure."""
+    """Integration layer for simulation error handling with shared
+    infrastructure."""
 
     def __init__(self):
         """Initialize error handling integration."""

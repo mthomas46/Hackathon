@@ -100,10 +100,11 @@ async def health():
 
 
 class InvokeRequest(BaseModel):
-    """Request model for AI invoke endpoint with structured response generation.
+    """
+    Request model for AI invoke endpoint with structured response generation.
 
-    Supports template-based response formatting for consistent AI outputs.
-    All fields are optional to allow flexible usage patterns.
+    Supports template-based response formatting for consistent AI
+    outputs. All fields are optional to allow flexible usage patterns.
     """
 
     model: Optional[str] = None
@@ -185,11 +186,13 @@ class InvokeRequest(BaseModel):
 
 @app.post("/invoke")
 async def invoke(req: InvokeRequest):
-    """Process AI invoke request with template-based response generation.
+    """
+    Process AI invoke request with template-based response generation.
 
     Accepts a prompt and optional template/format parameters to generate
-    structured AI responses without external API calls. Supports multiple
-    output formats and template types for consistent testing scenarios.
+    structured AI responses without external API calls. Supports
+    multiple output formats and template types for consistent testing
+    scenarios.
     """
     start_time = time.time()
     request_id = f"bedrock_invoke_{int(time.time() * 1000)}"

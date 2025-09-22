@@ -1,4 +1,5 @@
-"""Tests for Orchestrator Ingestion Routes logging integration with LogCollectorClient."""
+"""Tests for Orchestrator Ingestion Routes logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestOrchestratorIngestionLoggingIntegration:
-    """Test Orchestrator Ingestion routes logging integration with LogCollectorClient."""
+    """Test Orchestrator Ingestion routes logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -120,7 +122,8 @@ class TestOrchestratorIngestionLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_ingestion_status_retrieval_logging_not_found(self, client, mock_logger_client):
-        """Test ingestion status retrieval endpoint logging when ingestion not found."""
+        """Test ingestion status retrieval endpoint logging when ingestion not
+        found."""
         with patch("services.orchestrator.presentation.api.ingestion.routes.container") as mock_container:
             mock_container.get_ingestion_status_use_case.execute.return_value = None
 
@@ -184,7 +187,8 @@ class TestOrchestratorIngestionLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_document_metadata_retrieval_logging_placeholder(self, client, mock_logger_client):
-        """Test document metadata retrieval endpoint logging (placeholder implementation)."""
+        """Test document metadata retrieval endpoint logging (placeholder
+        implementation)."""
         response = client.get("/api/v1/ingestion/documents/doc-123")
         assert response.status_code == 501
 
@@ -243,7 +247,8 @@ class TestOrchestratorIngestionLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_ingestion_cancellation_logging_placeholder(self, client, mock_logger_client):
-        """Test ingestion cancellation endpoint logging (placeholder implementation)."""
+        """Test ingestion cancellation endpoint logging (placeholder
+        implementation)."""
         response = client.delete("/api/v1/ingestion/ingest/ingestion-123")
         assert response.status_code == 501
 
@@ -388,7 +393,8 @@ class TestOrchestratorIngestionLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, client, mock_logger_client):
-        """Test that all major business events are logged across ingestion endpoints."""
+        """Test that all major business events are logged across ingestion
+        endpoints."""
         expected_events = {
             # Ingestion workflow events
             "ingestion_workflow_started",

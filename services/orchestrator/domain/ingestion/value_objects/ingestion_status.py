@@ -1,4 +1,4 @@
-"""Ingestion Status Value Object"""
+"""Ingestion Status Value Object."""
 
 from enum import Enum
 

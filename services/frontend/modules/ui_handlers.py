@@ -1,4 +1,5 @@
-"""UI handlers for Frontend service.
+"""
+UI handlers for Frontend service.
 
 Handles the complex logic for different UI pages and endpoints.
 """

@@ -1,4 +1,4 @@
-"""PR Confidence Report Value Object"""
+"""PR Confidence Report Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -9,7 +9,8 @@ from .confidence_level import ConfidenceLevel
 
 
 class PRConfidenceReport:
-    """Value object representing a comprehensive PR confidence analysis report."""
+    """Value object representing a comprehensive PR confidence analysis
+    report."""
 
     def __init__(
         self,

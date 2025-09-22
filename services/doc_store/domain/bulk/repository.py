@@ -1,4 +1,5 @@
-"""Bulk operations repository for data access operations.
+"""
+Bulk operations repository for data access operations.
 
 Handles bulk operation data and batch processing.
 """

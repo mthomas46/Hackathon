@@ -1,6 +1,8 @@
-"""Utility functions for Prompt Store service.
+"""
+Utility functions for Prompt Store service.
 
-Provides common utilities for data processing, validation, and formatting.
+Provides common utilities for data processing, validation, and
+formatting.
 """
 
 import hashlib
@@ -222,7 +224,8 @@ def detect_prompt_drift(
 
 
 def generate_prompt_suggestions(category: str, existing_prompts: List[Dict[str, Any]]) -> List[str]:
-    """Generate prompt improvement suggestions based on category and existing prompts."""
+    """Generate prompt improvement suggestions based on category and existing
+    prompts."""
     suggestions = []
 
     if not existing_prompts:

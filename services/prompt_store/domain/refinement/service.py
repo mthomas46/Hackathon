@@ -1,6 +1,8 @@
-"""Prompt refinement service implementation.
+"""
+Prompt refinement service implementation.
 
-Orchestrates LLM-assisted prompt refinement with document storage and comparison.
+Orchestrates LLM-assisted prompt refinement with document storage and
+comparison.
 """
 
 import asyncio
@@ -46,7 +48,8 @@ class PromptRefinementService:
         context_documents: Optional[List[str]] = None,
         user_id: str = "system",
     ) -> Dict[str, Any]:
-        """Execute prompt refinement workflow using LLM service.
+        """
+        Execute prompt refinement workflow using LLM service.
 
         1. Get original prompt
         2. Send to LLM service with refinement instructions
@@ -347,7 +350,8 @@ class PromptRefinementService:
                 raise ValueError(f"Bedrock service error: {str(e)}")
 
     def _format_refinement_query_for_interpreter(self, request: Dict[str, Any]) -> str:
-        """Format refinement request as natural language query for interpreter."""
+        """Format refinement request as natural language query for
+        interpreter."""
         original_prompt = request.get("original_prompt", {})
         instructions = request.get("refinement_instructions", "")
 
@@ -617,7 +621,8 @@ Provide only the refined prompt content, without additional explanation or forma
         return " | ".join(summary_parts)
 
     async def get_refinement_history(self, prompt_id: str) -> Dict[str, Any]:
-        """Get refinement history for a prompt, including version relationships."""
+        """Get refinement history for a prompt, including version
+        relationships."""
         # Get all versions for this prompt
         versions = self.prompt_service._get_prompt_versions(prompt_id)
 

@@ -1,4 +1,4 @@
-"""Reporting Domain Layer"""
+"""Reporting Domain Layer."""
 
 from .services import *
 from .value_objects import *

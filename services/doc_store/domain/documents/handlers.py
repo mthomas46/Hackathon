@@ -1,4 +1,5 @@
-"""Document handlers for API endpoints.
+"""
+Document handlers for API endpoints.
 
 Handles HTTP requests and responses for document operations.
 """

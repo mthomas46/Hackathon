@@ -1,4 +1,5 @@
-"""CLI Service monitoring infrastructure for Frontend service.
+"""
+CLI Service monitoring infrastructure for Frontend service.
 
 Provides terminal pass-through capabilities for CLI service operations,
 enabling full CLI functionality through web interface.

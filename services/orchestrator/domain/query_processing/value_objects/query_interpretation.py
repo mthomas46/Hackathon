@@ -1,4 +1,4 @@
-"""Query Interpretation Value Object"""
+"""Query Interpretation Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -9,7 +9,8 @@ from .query_type import QueryType
 
 
 class QueryInterpretation:
-    """Value object representing the interpretation of a natural language query."""
+    """Value object representing the interpretation of a natural language
+    query."""
 
     def __init__(
         self,

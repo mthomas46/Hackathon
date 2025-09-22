@@ -1,4 +1,5 @@
-"""A/B testing service implementation.
+"""
+A/B testing service implementation.
 
 Handles business logic for A/B testing operations.
 """
@@ -249,7 +250,8 @@ class ABTestService(BaseService[ABTest]):
             return "A" if a_metric > b_metric else "B"
 
     def _calculate_confidence_level(self, metric_value: float, sample_size: int) -> float:
-        """Calculate confidence level for a metric (simplified implementation)."""
+        """Calculate confidence level for a metric (simplified
+        implementation)."""
         # This is a simplified confidence calculation
         # In a real implementation, you'd use proper statistical methods
 

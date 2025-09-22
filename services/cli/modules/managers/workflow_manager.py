@@ -1,4 +1,5 @@
-"""Workflow Management module for the CLI service.
+"""
+Workflow Management module for the CLI service.
 
 This module contains workflow-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.
@@ -54,7 +55,8 @@ class WorkflowManager(BaseManager):
         return True
 
     async def workflow_orchestration_menu(self):
-        """Workflow orchestration submenu with enhanced interactive experience."""
+        """Workflow orchestration submenu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Workflow Orchestration", use_interactive=True)
 
     async def run_document_analysis(self):

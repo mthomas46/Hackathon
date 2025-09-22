@@ -1,7 +1,9 @@
-"""Bulk Operations Manager module for CLI service.
+"""
+Bulk Operations Manager module for CLI service.
 
-Provides power-user operations for bulk processing across multiple services
-including mass analysis, notifications, quality recalculations, and data operations.
+Provides power-user operations for bulk processing across multiple
+services including mass analysis, notifications, quality recalculations,
+and data operations.
 """
 
 from typing import Any, Dict, List, Optional
@@ -31,7 +33,11 @@ class BulkOperationsManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.mass_document_analysis()
         elif choice == "2":

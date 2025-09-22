@@ -1,7 +1,8 @@
-"""Workflow state management for LangGraph integration.
+"""
+Workflow state management for LangGraph integration.
 
-This module defines the state structures and management for LangGraph workflows
-integrated with the orchestrator service.
+This module defines the state structures and management for LangGraph
+workflows integrated with the orchestrator service.
 """
 
 from datetime import datetime

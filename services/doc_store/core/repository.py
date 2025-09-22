@@ -1,4 +1,5 @@
-"""Base repository for data access operations.
+"""
+Base repository for data access operations.
 
 Provides common CRUD operations and utilities for all repositories.
 """

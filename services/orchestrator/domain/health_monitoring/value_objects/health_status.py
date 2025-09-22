@@ -1,4 +1,4 @@
-"""Health Status Value Object"""
+"""Health Status Value Object."""
 
 from enum import Enum
 

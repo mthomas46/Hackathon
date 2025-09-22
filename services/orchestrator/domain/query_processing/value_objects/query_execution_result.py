@@ -1,4 +1,4 @@
-"""Query Execution Result Value Object"""
+"""Query Execution Result Value Object."""
 
 from datetime import datetime
 from enum import Enum

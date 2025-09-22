@@ -1,8 +1,9 @@
-"""Advanced Simulation Controls Page.
+"""
+Advanced Simulation Controls Page.
 
 This module provides comprehensive simulation control interfaces,
-enabling users to manage simulation lifecycles, implement bulk operations,
-and monitor control status in real-time.
+enabling users to manage simulation lifecycles, implement bulk
+operations, and monitor control status in real-time.
 """
 
 import time

@@ -1,4 +1,4 @@
-"""Base Value Object Class"""
+"""Base Value Object Class."""
 
 from abc import ABC
 

@@ -1,4 +1,5 @@
-"""Lifecycle management handlers for API endpoints.
+"""
+Lifecycle management handlers for API endpoints.
 
 Handles lifecycle policy and transition-related HTTP requests.
 """

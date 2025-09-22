@@ -1,7 +1,9 @@
-"""Configuration models for Project Simulation Service.
+"""
+Configuration models for Project Simulation Service.
 
-This module defines all the Pydantic models used for configuration files,
-simulation parameters, and API responses in the project simulation service.
+This module defines all the Pydantic models used for configuration
+files, simulation parameters, and API responses in the project
+simulation service.
 """
 
 from datetime import datetime

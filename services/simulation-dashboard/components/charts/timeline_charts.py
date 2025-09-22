@@ -1,4 +1,5 @@
-"""Timeline Charts Components.
+"""
+Timeline Charts Components.
 
 This module provides chart components for displaying project timelines,
 Gantt charts, and scheduling visualizations.
@@ -27,7 +28,8 @@ def render_timeline_chart(
     width: Optional[int] = None,
     height: Optional[int] = 500,
 ) -> None:
-    """Render project timeline chart.
+    """
+    Render project timeline chart.
 
     Args:
         phases: List of project phases with timing information
@@ -98,7 +100,8 @@ def render_milestone_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render project milestones chart.
+    """
+    Render project milestones chart.
 
     Args:
         milestones: List of project milestones
@@ -172,7 +175,8 @@ def render_dependency_chart(
     width: Optional[int] = None,
     height: Optional[int] = 500,
 ) -> None:
-    """Render phase dependency visualization.
+    """
+    Render phase dependency visualization.
 
     Args:
         phases: List of project phases with dependencies
@@ -274,7 +278,8 @@ def render_resource_allocation_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render resource allocation timeline chart.
+    """
+    Render resource allocation timeline chart.
 
     Args:
         resources: Resource allocation data

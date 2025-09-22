@@ -1,7 +1,8 @@
-"""Shared utilities for Memory Agent service modules.
+"""
+Shared utilities for Memory Agent service modules.
 
-This module contains common utilities used across all memory-agent modules
-to eliminate code duplication and ensure consistency.
+This module contains common utilities used across all memory-agent
+modules to eliminate code duplication and ensure consistency.
 """
 
 import json
@@ -40,7 +41,8 @@ def get_redis_url() -> str:
 
 
 def handle_memory_agent_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for memory-agent operations.
+    """
+    Standardized error handling for memory-agent operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -51,7 +53,8 @@ def handle_memory_agent_error(operation: str, error: Exception, **context) -> Di
 
 
 def create_memory_agent_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for memory-agent operations.
+    """
+    Standardized success response for memory-agent operations.
 
     Returns a consistent success response format.
     """
@@ -59,7 +62,8 @@ def create_memory_agent_success_response(operation: str, data: Any, **context) -
 
 
 def build_memory_agent_context(operation: str, item_count: Optional[int] = None, **additional) -> Dict[str, Any]:
-    """Build context dictionary for memory-agent operations.
+    """
+    Build context dictionary for memory-agent operations.
 
     Provides consistent context for logging and responses.
     """

@@ -1,4 +1,5 @@
-"""Audit Table Components.
+"""
+Audit Table Components.
 
 This module provides table components for displaying audit trails,
 compliance logs, and security event tracking.
@@ -21,7 +22,8 @@ def render_audit_table(
     on_investigate: Optional[Callable] = None,
     on_export: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a comprehensive audit trail table.
+    """
+    Render a comprehensive audit trail table.
 
     Args:
         audit_data: List of audit event dictionaries

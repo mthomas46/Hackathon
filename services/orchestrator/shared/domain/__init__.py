@@ -1,4 +1,4 @@
-"""Shared Domain Utilities"""
+"""Shared Domain Utilities."""
 
 from .base_entity import BaseEntity
 from .base_repository import BaseRepository

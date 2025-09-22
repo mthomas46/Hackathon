@@ -1,7 +1,9 @@
-"""Integration Tests for Test Quality and Structure Validation.
+"""
+Integration Tests for Test Quality and Structure Validation.
 
-This module contains tests that validate the quality, structure, and maintainability
-of the test suite itself, ensuring enterprise-grade testing standards.
+This module contains tests that validate the quality, structure, and
+maintainability of the test suite itself, ensuring enterprise-grade
+testing standards.
 """
 
 import re
@@ -334,7 +336,8 @@ class TestTestStandardsCompliance:
             assert compliance_score > 0.2, f"Pytest best practices compliance too low: {compliance_score:.2f}"
 
     def test_test_independence(self):
-        """Test that tests are independent and don't rely on execution order."""
+        """Test that tests are independent and don't rely on execution
+        order."""
         test_dir = Path(__file__).parent.parent
         test_files = list(test_dir.rglob("test_*.py"))
 

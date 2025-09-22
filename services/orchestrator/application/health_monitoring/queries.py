@@ -1,4 +1,4 @@
-"""Application Queries for Health Monitoring"""
+"""Application Queries for Health Monitoring."""
 
 from dataclasses import dataclass
 

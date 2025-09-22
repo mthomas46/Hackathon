@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Document Store Service
+LangGraph Integration for Document Store Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Document Store Service, enabling it to participate in AI-powered workflows.
+for the Document Store Service, enabling it to participate in AI-powered
+workflows.
 """
 
 from datetime import datetime

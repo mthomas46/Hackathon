@@ -1,5 +1,6 @@
 """
 Summary Processor for consolidating analysis results.
+
 Following DDD principles with clean, focused functionality.
 """
 
@@ -79,7 +80,8 @@ class SummaryProcessor:
         return action_items
 
     def calculate_confidence_score(self, analysis_results: List[Dict[str, Any]]) -> float:
-        """Calculate overall confidence score from multiple analysis results."""
+        """Calculate overall confidence score from multiple analysis
+        results."""
         if not analysis_results:
             return 0.0
 

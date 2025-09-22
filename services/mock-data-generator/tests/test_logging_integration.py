@@ -1,4 +1,5 @@
-"""Tests for Mock Data Generator logging integration with LogCollectorClient."""
+"""Tests for Mock Data Generator logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os

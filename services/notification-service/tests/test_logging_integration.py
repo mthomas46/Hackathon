@@ -1,4 +1,5 @@
-"""Tests for Notification Service logging integration with LogCollectorClient."""
+"""Tests for Notification Service logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestNotificationServiceLoggingIntegration:
-    """Test Notification Service logging integration with LogCollectorClient."""
+    """Test Notification Service logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):

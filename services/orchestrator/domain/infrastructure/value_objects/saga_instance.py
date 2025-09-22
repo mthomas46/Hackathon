@@ -1,4 +1,4 @@
-"""Saga Instance Value Object"""
+"""Saga Instance Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

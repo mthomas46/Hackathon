@@ -7,7 +7,8 @@ from services.shared.utilities import stable_hash  # type: ignore
 
 
 class StyleExamplesManager:
-    """Manages style examples with in-memory storage and optional persistence."""
+    """Manages style examples with in-memory storage and optional
+    persistence."""
 
     def __init__(self):
         self._examples: Dict[str, List[Dict[str, Any]]] = {}

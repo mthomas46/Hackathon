@@ -625,7 +625,8 @@ class TestCompleteUserWorkflows:
 
     @pytest.mark.asyncio
     async def test_workflow_with_findings_management(self, client):
-        """Test workflow including findings creation, retrieval, and management."""
+        """Test workflow including findings creation, retrieval, and
+        management."""
         # Step 1: Create document and perform analysis (simplified)
         doc_id = "findings-doc-001"
         analysis_id = "findings-analysis-001"

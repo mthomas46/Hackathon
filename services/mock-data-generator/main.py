@@ -1512,7 +1512,8 @@ class MockDataGenerator:
         return deployment_guide
 
     async def generate_ecosystem_scenario(self, request: SimulationEcosystemScenarioRequest) -> List[Dict[str, Any]]:
-        """Generate a complete ecosystem scenario with multiple interconnected documents."""
+        """Generate a complete ecosystem scenario with multiple interconnected
+        documents."""
         scenario_documents = []
 
         # Generate core project documents

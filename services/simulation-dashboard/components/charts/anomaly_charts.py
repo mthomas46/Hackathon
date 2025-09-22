@@ -1,7 +1,8 @@
-"""Anomaly Detection Charts Components.
+"""
+Anomaly Detection Charts Components.
 
-This module provides chart components for displaying anomaly detection results,
-outlier analysis, and pattern recognition visualizations.
+This module provides chart components for displaying anomaly detection
+results, outlier analysis, and pattern recognition visualizations.
 """
 
 from typing import Any, Dict, Optional
@@ -26,7 +27,8 @@ def render_anomaly_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render anomaly detection results chart.
+    """
+    Render anomaly detection results chart.
 
     Args:
         anomaly_data: Anomaly detection data with timestamps, values, and anomaly scores
@@ -206,7 +208,8 @@ def render_pattern_recognition_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render pattern recognition results chart.
+    """
+    Render pattern recognition results chart.
 
     Args:
         pattern_data: Pattern recognition data with clusters or patterns
@@ -377,7 +380,8 @@ def render_outlier_analysis_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render outlier analysis chart.
+    """
+    Render outlier analysis chart.
 
     Args:
         outlier_data: Outlier analysis data
@@ -553,7 +557,8 @@ def render_anomaly_timeline_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render anomaly timeline chart showing anomaly patterns over time.
+    """
+    Render anomaly timeline chart showing anomaly patterns over time.
 
     Args:
         anomaly_timeline: Anomaly timeline data

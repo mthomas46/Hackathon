@@ -1,7 +1,8 @@
-"""Notification Service Manager module for CLI service.
+"""
+Notification Service Manager module for CLI service.
 
-Provides power-user operations for notification service including
-owner resolution, notification delivery, DLQ management, and resolutions.
+Provides power-user operations for notification service including owner
+resolution, notification delivery, DLQ management, and resolutions.
 """
 
 import json
@@ -26,7 +27,11 @@ class NotificationServiceManager(BaseManager):
         return [("1", "Notification Management"), ("2", "Template Configuration"), ("3", "Delivery Monitoring")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 

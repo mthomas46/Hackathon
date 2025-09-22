@@ -1,4 +1,5 @@
-"""Mock implementations for GitHub MCP tools.
+"""
+Mock implementations for GitHub MCP tools.
 
 Contains mock implementations for all supported GitHub tools.
 """

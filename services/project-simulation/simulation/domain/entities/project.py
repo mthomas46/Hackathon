@@ -90,10 +90,11 @@ class ProjectPhase:
 
 @dataclass
 class Project:
-    """Project Aggregate Root.
+    """
+    Project Aggregate Root.
 
-    This is the root entity for the Project aggregate, containing
-    all project-related data and enforcing business rules.
+    This is the root entity for the Project aggregate, containing all
+    project-related data and enforcing business rules.
     """
 
     id: ProjectId

@@ -1,4 +1,5 @@
-"""Code Analyzer UI handlers for Frontend service.
+"""
+Code Analyzer UI handlers for Frontend service.
 
 Handles code analyzer service visualization.
 """

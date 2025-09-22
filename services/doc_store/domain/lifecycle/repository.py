@@ -1,4 +1,5 @@
-"""Lifecycle management repository for data access operations.
+"""
+Lifecycle management repository for data access operations.
 
 Handles lifecycle policy and document lifecycle data operations.
 """

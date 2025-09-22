@@ -507,7 +507,8 @@ class SimulationHealthEndpoint(HealthEndpoint):
         return await self.health_checker.perform_comprehensive_health_check()
 
     async def get_simple_health_status(self) -> Dict[str, Any]:
-        """Get simple health status for load balancers and external monitoring."""
+        """Get simple health status for load balancers and external
+        monitoring."""
         comprehensive = await self.get_detailed_health_status()
 
         return {

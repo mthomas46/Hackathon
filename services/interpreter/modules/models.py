@@ -1,4 +1,5 @@
-"""Request and response models for Interpreter service.
+"""
+Request and response models for Interpreter service.
 
 Contains all Pydantic models used for API requests and responses.
 """

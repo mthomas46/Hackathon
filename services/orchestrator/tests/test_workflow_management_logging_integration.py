@@ -1,4 +1,5 @@
-"""Tests for Orchestrator Workflow Management Routes logging integration with LogCollectorClient."""
+"""Tests for Orchestrator Workflow Management Routes logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestOrchestratorWorkflowManagementLoggingIntegration:
-    """Test Orchestrator Workflow Management routes logging integration with LogCollectorClient."""
+    """Test Orchestrator Workflow Management routes logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -633,7 +635,8 @@ class TestOrchestratorWorkflowManagementLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, client, mock_logger_client):
-        """Test that all major business events are logged across workflow management endpoints."""
+        """Test that all major business events are logged across workflow
+        management endpoints."""
         expected_events = {
             # Workflow lifecycle events
             "workflow_creation_started",

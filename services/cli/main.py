@@ -234,7 +234,8 @@ def cli(ctx, verbose):
 @cli.command()
 @click.pass_context
 def interactive(ctx):
-    """Start interactive CLI mode with menu-driven interface for ecosystem operations"""
+    """Start interactive CLI mode with menu-driven interface for ecosystem
+    operations."""
     start_time = time.time()
     session_id = f"cli_session_{int(time.time() * 1000)}"
 
@@ -350,7 +351,8 @@ def interactive(ctx):
 @click.option("--content", "-c", help="Content variable value for prompt template substitution")
 @click.pass_context
 def get_prompt(ctx, category, name, content):
-    """Retrieve and display a prompt from the Prompt Store with optional variable substitution"""
+    """Retrieve and display a prompt from the Prompt Store with optional
+    variable substitution."""
 
     async def _get_prompt():
         try:
@@ -382,7 +384,8 @@ def get_prompt(ctx, category, name, content):
 @cli.command()
 @click.pass_context
 def health(ctx):
-    """Check and display health status of all ecosystem services with detailed connectivity information"""
+    """Check and display health status of all ecosystem services with detailed
+    connectivity information."""
     start_time = time.time()
     command_id = f"cli_health_check_{int(time.time() * 1000)}"
 
@@ -471,7 +474,8 @@ def health(ctx):
 @click.option("--category", "-c", help="Filter prompts by specific category (e.g., analysis, consistency)")
 @click.pass_context
 def list_prompts(ctx, category):
-    """List all available prompts from Prompt Store with optional category filtering"""
+    """List all available prompts from Prompt Store with optional category
+    filtering."""
     prompt_manager = PromptManager(cli_service.console, cli_service.clients)
     asyncio.run(prompt_manager.list_prompts())
 
@@ -479,7 +483,8 @@ def list_prompts(ctx, category):
 @cli.command()
 @click.pass_context
 def test_integration(ctx):
-    """Run comprehensive integration tests across all ecosystem services to verify connectivity and functionality"""
+    """Run comprehensive integration tests across all ecosystem services to
+    verify connectivity and functionality."""
     asyncio.run(cli_service.test_integration())
 
 
@@ -493,7 +498,7 @@ def test_integration(ctx):
 @click.option("--criteria", "-c", help="Selection criteria as JSON string")
 @click.pass_context
 def analyze_docs(ctx, type, criteria):
-    """Perform mass document analysis across the ecosystem"""
+    """Perform mass document analysis across the ecosystem."""
     try:
         import json
 
@@ -511,7 +516,7 @@ def analyze_docs(ctx, type, criteria):
 @click.option("--threshold", type=float, help="Quality threshold for low-quality recalc")
 @click.pass_context
 def quality_recalc(ctx, type, threshold):
-    """Perform bulk quality score recalculation"""
+    """Perform bulk quality score recalculation."""
     try:
         bulk_manager = cli_service.bulk_operations_manager
         if threshold:
@@ -531,7 +536,7 @@ def quality_recalc(ctx, type, threshold):
 @click.option("--filename", help="Output filename")
 @click.pass_context
 def bulk_export(ctx, format, criteria, filename):
-    """Export documents in bulk"""
+    """Export documents in bulk."""
     try:
         import json
 
@@ -551,7 +556,7 @@ def bulk_export(ctx, format, criteria, filename):
 @click.option("--update-existing", is_flag=True, help="Update existing documents")
 @click.pass_context
 def bulk_import(ctx, file, format, update_existing):
-    """Import documents in bulk"""
+    """Import documents in bulk."""
     try:
         bulk_manager = cli_service.bulk_operations_manager
         asyncio.run(bulk_manager.bulk_import_documents(file, format, update_existing))
@@ -565,7 +570,7 @@ def bulk_import(ctx, file, format, update_existing):
 @click.option("--message", "-m", required=True, help="Notification message")
 @click.pass_context
 def notify_owners(ctx, criteria, message):
-    """Send notifications to document owners"""
+    """Send notifications to document owners."""
     try:
         import json
 
@@ -583,7 +588,7 @@ def notify_owners(ctx, criteria, message):
 @click.option("--config", "-c", help="Workflow configuration as JSON string")
 @click.pass_context
 def workflow_run(ctx, type, config):
-    """Execute orchestrator workflows"""
+    """Execute orchestrator workflows."""
     try:
         import json
 
@@ -599,7 +604,7 @@ def workflow_run(ctx, type, config):
 @cli.command()
 @click.pass_context
 def redis_info(ctx):
-    """Display Redis server information"""
+    """Display Redis server information."""
     try:
         infra_manager = cli_service.infrastructure_manager
         asyncio.run(infra_manager.redis_info())
@@ -611,7 +616,7 @@ def redis_info(ctx):
 @cli.command()
 @click.pass_context
 def dlq_stats(ctx):
-    """Show dead letter queue statistics"""
+    """Show dead letter queue statistics."""
     try:
         infra_manager = cli_service.infrastructure_manager
         asyncio.run(infra_manager.dlq_statistics())
@@ -623,7 +628,7 @@ def dlq_stats(ctx):
 @cli.command()
 @click.pass_context
 def saga_monitor(ctx):
-    """Monitor active sagas"""
+    """Monitor active sagas."""
     try:
         infra_manager = cli_service.infrastructure_manager
         asyncio.run(infra_manager.view_active_sagas())
@@ -636,7 +641,7 @@ def saga_monitor(ctx):
 @click.option("--criteria", "-c", required=True, help="Search criteria as JSON string")
 @click.pass_context
 def tracing_search(ctx, criteria):
-    """Search distributed traces"""
+    """Search distributed traces."""
     try:
         import json
 
@@ -661,7 +666,7 @@ def tracing_search(ctx, criteria):
 @click.option("--context", "-c", help="Additional context as JSON string")
 @click.pass_context
 def interpret_query(ctx, query, user_id, session_id, context):
-    """Interpret a natural language query and show intent analysis"""
+    """Interpret a natural language query and show intent analysis."""
     try:
         import json
 
@@ -688,7 +693,7 @@ def interpret_query(ctx, query, user_id, session_id, context):
 @click.option("--context", "-c", help="Additional context as JSON string")
 @click.pass_context
 def execute_workflow(ctx, query, user_id, session_id, context):
-    """Interpret a query and execute the resulting workflow"""
+    """Interpret a query and execute the resulting workflow."""
     try:
         import json
 
@@ -733,7 +738,7 @@ def execute_e2e_query(ctx, query, format, download, user_id, filename_prefix):
 @click.option("--filename-prefix", help="Prefix for generated filename")
 @click.pass_context
 def execute_direct_workflow(ctx, name, params, format, download, user_id, filename_prefix):
-    """Direct workflow execution with output generation"""
+    """Direct workflow execution with output generation."""
     try:
         import json
 
@@ -749,7 +754,7 @@ def execute_direct_workflow(ctx, name, params, format, download, user_id, filena
 @click.option("--save-path", help="Local path to save the downloaded file")
 @click.pass_context
 def download_output(ctx, file_id, save_path):
-    """Download generated workflow output files"""
+    """Download generated workflow output files."""
     try:
         asyncio.run(_download_output_async(file_id, save_path))
     except Exception as e:
@@ -760,7 +765,7 @@ def download_output(ctx, file_id, save_path):
 @cli.command()
 @click.pass_context
 def list_workflow_templates(ctx):
-    """List available workflow templates and descriptions"""
+    """List available workflow templates and descriptions."""
     try:
         asyncio.run(_list_workflow_templates_async())
     except Exception as e:
@@ -784,7 +789,7 @@ def get_supported_formats(ctx):
 @click.option("--save-path", help="Local path to save the downloaded document")
 @click.pass_context
 def download_document(ctx, doc_id, save_path):
-    """Download persistent document from doc_store"""
+    """Download persistent document from doc_store."""
     try:
         asyncio.run(_download_document_async(doc_id, save_path))
     except Exception as e:
@@ -796,7 +801,7 @@ def download_document(ctx, doc_id, save_path):
 @click.option("--doc-id", required=True, help="Document ID to get provenance for")
 @click.pass_context
 def get_document_provenance(ctx, doc_id):
-    """Get comprehensive provenance for a workflow-generated document"""
+    """Get comprehensive provenance for a workflow-generated document."""
     try:
         asyncio.run(_get_document_provenance_async(doc_id))
     except Exception as e:
@@ -809,7 +814,7 @@ def get_document_provenance(ctx, doc_id):
 @click.option("--limit", default=20, help="Maximum number of documents to list")
 @click.pass_context
 def list_workflow_documents(ctx, workflow, limit):
-    """List all documents generated by a workflow"""
+    """List all documents generated by a workflow."""
     try:
         asyncio.run(_list_workflow_documents_async(workflow, limit))
     except Exception as e:
@@ -821,7 +826,7 @@ def list_workflow_documents(ctx, workflow, limit):
 @click.option("--execution-id", required=True, help="Execution ID to get trace for")
 @click.pass_context
 def get_execution_trace(ctx, execution_id):
-    """Get detailed execution trace and generated documents"""
+    """Get detailed execution trace and generated documents."""
     try:
         asyncio.run(_get_execution_trace_async(execution_id))
     except Exception as e:
@@ -832,7 +837,7 @@ def get_execution_trace(ctx, execution_id):
 @cli.command()
 @click.pass_context
 def list_intents(ctx):
-    """List all supported query intents with examples"""
+    """List all supported query intents with examples."""
     try:
         interpreter_manager = cli_service.interpreter_manager
         asyncio.run(interpreter_manager.list_supported_intents())
@@ -854,7 +859,7 @@ def list_intents(ctx):
 @click.option("--dry-run", is_flag=True, help="Dry run (no registration)")
 @click.pass_context
 def discover_service(ctx, name, url, spec, openapi_url, dry_run):
-    """Discover and optionally register service endpoints from OpenAPI spec"""
+    """Discover and optionally register service endpoints from OpenAPI spec."""
     try:
         discover_request = {"name": name, "base_url": url, "dry_run": dry_run}
 
@@ -897,7 +902,7 @@ def discover_service(ctx, name, url, spec, openapi_url, dry_run):
 @click.option("--data", "-d", help="JSON data payload")
 @click.pass_context
 def store_memory(ctx, type, key, summary, data):
-    """Store operational context and event summaries in memory"""
+    """Store operational context and event summaries in memory."""
     try:
         memory_data = {}
         if data:
@@ -928,7 +933,7 @@ def store_memory(ctx, type, key, summary, data):
 @click.option("--limit", "-l", default=50, help="Maximum items to retrieve")
 @click.pass_context
 def list_memory(ctx, type, key, limit):
-    """List stored memory items with optional filtering"""
+    """List stored memory items with optional filtering."""
     try:
         # Create a temporary console for display
         console = Console()
@@ -961,7 +966,7 @@ def list_memory(ctx, type, key, limit):
 @click.option("--keywords", "-k", help="Comma-separated list of additional keywords to detect")
 @click.pass_context
 def detect_content(ctx, content, keywords):
-    """Analyze content for sensitive information and security risks"""
+    """Analyze content for sensitive information and security risks."""
     try:
         detect_request = {"content": content}
 
@@ -979,7 +984,7 @@ def detect_content(ctx, content, keywords):
 @click.argument("content")
 @click.pass_context
 def suggest_models(ctx, content):
-    """Get AI model recommendations based on content sensitivity"""
+    """Get AI model recommendations based on content sensitivity."""
     try:
         suggest_request = {"content": content}
 
@@ -996,7 +1001,7 @@ def suggest_models(ctx, content):
 @click.option("--prompt", "-p", help="Custom summarization prompt")
 @click.pass_context
 def secure_summarize(ctx, content, override_policy, prompt):
-    """Generate secure summary with policy-based provider filtering"""
+    """Generate secure summary with policy-based provider filtering."""
     try:
         summarize_request = {"content": content, "override_policy": override_policy}
 
@@ -1024,7 +1029,7 @@ def secure_summarize(ctx, content, override_policy, prompt):
 @click.option("--hub-config", is_flag=True, help="Use hub configuration defaults")
 @click.pass_context
 def ensemble_summarize(ctx, content, providers, prompt, hub_config):
-    """Generate ensemble summaries using multiple AI providers"""
+    """Generate ensemble summaries using multiple AI providers."""
     try:
         provider_list = [p.strip() for p in providers.split(",") if p.strip()]
 
@@ -1068,7 +1073,7 @@ def ensemble_summarize(ctx, content, providers, prompt, hub_config):
 @click.argument("provider")
 @click.pass_context
 def test_provider(ctx, provider):
-    """Test connectivity to an AI provider"""
+    """Test connectivity to an AI provider."""
     try:
         # Create a simple test request
         test_config = {"name": provider}
@@ -1113,7 +1118,7 @@ def test_provider(ctx, provider):
 @click.option("--path", "-p", help="File path within repository")
 @click.pass_context
 def analyze_code(ctx, content, language, repo, path):
-    """Analyze code for API endpoints and programming patterns"""
+    """Analyze code for API endpoints and programming patterns."""
     try:
         analyze_request = {"content": content}
 
@@ -1136,7 +1141,7 @@ def analyze_code(ctx, content, language, repo, path):
 @click.option("--keywords", "-k", help="Comma-separated list of additional keywords to detect")
 @click.pass_context
 def scan_security(ctx, content, keywords):
-    """Scan code for security vulnerabilities and sensitive information"""
+    """Scan code for security vulnerabilities and sensitive information."""
     try:
         scan_request = {"content": content}
 
@@ -1161,7 +1166,7 @@ def scan_security(ctx, content, keywords):
 @click.option("--team", "-t", help="Team name")
 @click.pass_context
 def update_owner(ctx, id, owner, team):
-    """Update owner information in the notification service"""
+    """Update owner information in the notification service."""
     try:
         update_request = {"id": id}
 
@@ -1181,7 +1186,7 @@ def update_owner(ctx, id, owner, team):
 @click.argument("owners")
 @click.pass_context
 def resolve_owners(ctx, owners):
-    """Resolve owner names to notification targets"""
+    """Resolve owner names to notification targets."""
     try:
         owners_list = [owner.strip() for owner in owners.split(",") if owner.strip()]
 
@@ -1208,7 +1213,7 @@ def resolve_owners(ctx, owners):
 @click.option("--labels", "-l", help="Comma-separated labels")
 @click.pass_context
 def send_notification(ctx, channel, target, title, message, metadata, labels):
-    """Send notification through specified channel"""
+    """Send notification through specified channel."""
     try:
         notification_request = {
             "channel": channel,
@@ -1240,7 +1245,7 @@ def send_notification(ctx, channel, target, title, message, metadata, labels):
 @click.option("--limit", "-l", default=20, help="Maximum number of entries to retrieve")
 @click.pass_context
 def view_dlq(ctx, limit):
-    """View failed notifications in dead letter queue"""
+    """View failed notifications in dead letter queue."""
     try:
         # Get DLQ entries and display them
         console = Console()
@@ -1269,7 +1274,7 @@ def view_dlq(ctx, limit):
 @click.option("--context", "-c", help="JSON context data for the log entry")
 @click.pass_context
 def submit_log(ctx, service, level, message, context):
-    """Submit a log entry to the log collector"""
+    """Submit a log entry to the log collector."""
     try:
         log_request = {"service": service, "level": level, "message": message}
 
@@ -1293,7 +1298,7 @@ def submit_log(ctx, service, level, message, context):
 @click.option("--limit", "-n", default=50, help="Maximum number of logs to retrieve")
 @click.pass_context
 def query_logs(ctx, service, level, limit):
-    """Query stored logs with optional filtering"""
+    """Query stored logs with optional filtering."""
     try:
         params = {"limit": limit}
         if service:
@@ -1311,7 +1316,7 @@ def query_logs(ctx, service, level, limit):
 @cli.command()
 @click.pass_context
 def log_stats(ctx):
-    """View log statistics and analytics"""
+    """View log statistics and analytics."""
     try:
         log_manager = cli_service.log_collector_manager
         asyncio.run(log_manager.get_log_stats_from_cli())
@@ -1334,7 +1339,7 @@ def log_stats(ctx):
 @click.option("--title", help="Custom title for response")
 @click.pass_context
 def invoke_ai(ctx, prompt, template, format, model, region, title):
-    """Invoke AI model with optional template and formatting"""
+    """Invoke AI model with optional template and formatting."""
     try:
         request_data = {"prompt": prompt, "format": format}
 
@@ -1357,7 +1362,7 @@ def invoke_ai(ctx, prompt, template, format, model, region, title):
 @cli.command()
 @click.pass_context
 def ai_templates(ctx):
-    """List available AI response templates"""
+    """List available AI response templates."""
     try:
         bedrock_manager = cli_service.bedrock_proxy_manager
         asyncio.run(bedrock_manager.list_available_templates())
@@ -1370,7 +1375,7 @@ def ai_templates(ctx):
 @click.option("--limit", "-l", default=10, help="Maximum number of recent invocations to show")
 @click.pass_context
 def ai_history(ctx, limit):
-    """View recent AI invocation history"""
+    """View recent AI invocation history."""
     try:
         bedrock_manager = cli_service.bedrock_proxy_manager
         # Temporarily modify the limit for view_recent_invocations
@@ -1392,7 +1397,7 @@ def ai_history(ctx, limit):
 @click.option("--severity-filter", "-s", help="Minimum severity level to report")
 @click.pass_context
 def analyze_docs(ctx, doc_ids, detectors, severity_filter):
-    """Analyze documents for consistency and issues"""
+    """Analyze documents for consistency and issues."""
     try:
         if not doc_ids:
             console = Console()
@@ -1420,7 +1425,7 @@ def analyze_docs(ctx, doc_ids, detectors, severity_filter):
 @click.option("--limit", "-l", default=50, help="Maximum number of findings to retrieve")
 @click.pass_context
 def get_findings(ctx, severity, type, limit):
-    """Retrieve analysis findings with optional filtering"""
+    """Retrieve analysis findings with optional filtering."""
     try:
         params = {"limit": limit}
         if severity:
@@ -1441,7 +1446,7 @@ def get_findings(ctx, severity, type, limit):
 @click.option("--quality-threshold", type=float, help="Quality threshold for quality report (0.0-1.0)")
 @click.pass_context
 def generate_report(ctx, type, time_period, quality_threshold):
-    """Generate analysis reports"""
+    """Generate analysis reports."""
     try:
         report_request = {"type": type}
 
@@ -1471,7 +1476,7 @@ def generate_report(ctx, type, time_period, quality_threshold):
 @click.option("--service", "-s", help="Service name to view configuration for")
 @click.pass_context
 def view_config(ctx, service):
-    """View service configuration files"""
+    """View service configuration files."""
     try:
         config_manager = cli_service.config_manager
         asyncio.run(config_manager.view_service_configuration())
@@ -1485,7 +1490,7 @@ def view_config(ctx, service):
 @click.argument("value", required=True)
 @click.pass_context
 def set_env(ctx, var, value):
-    """Set environment variable"""
+    """Set environment variable."""
     try:
         config_manager = cli_service.config_manager
         asyncio.run(config_manager.set_environment_variable())
@@ -1497,7 +1502,7 @@ def set_env(ctx, var, value):
 @cli.command()
 @click.pass_context
 def get_env(ctx):
-    """Show current environment variables"""
+    """Show current environment variables."""
     try:
         config_manager = cli_service.config_manager
         asyncio.run(config_manager.view_current_environment())
@@ -1509,7 +1514,7 @@ def get_env(ctx):
 @cli.command()
 @click.pass_context
 def validate_config(ctx):
-    """Validate configuration files and environment variables"""
+    """Validate configuration files and environment variables."""
     try:
         config_manager = cli_service.config_manager
 
@@ -1544,7 +1549,7 @@ def validate_config(ctx):
 @click.argument("replicas", type=int, required=True)
 @click.pass_context
 def scale_service(ctx, service, replicas):
-    """Scale a service to specified number of replicas"""
+    """Scale a service to specified number of replicas."""
     try:
         if replicas < 0:
             console = Console()
@@ -1561,7 +1566,7 @@ def scale_service(ctx, service, replicas):
 @cli.command()
 @click.pass_context
 def deployment_status(ctx):
-    """View current deployment and scaling status"""
+    """View current deployment and scaling status."""
     try:
         deployment_manager = cli_service.deployment_manager
         asyncio.run(deployment_manager.view_deployment_status_from_cli())
@@ -1576,7 +1581,7 @@ def deployment_status(ctx):
 @click.option("--strategy", "-s", default="rolling", help="Deployment strategy (rolling/blue-green/canary)")
 @click.pass_context
 def deploy_service(ctx, service, image, strategy):
-    """Deploy service with new image"""
+    """Deploy service with new image."""
     try:
         valid_strategies = ["rolling", "blue-green", "canary"]
         if strategy not in valid_strategies:
@@ -1602,7 +1607,7 @@ def deploy_service(ctx, service, image, strategy):
 @click.option("--category", help="Filter tools by category")
 @click.pass_context
 def discover_tools(ctx, service, all_services, category):
-    """Discover LangGraph tools from service OpenAPI specifications"""
+    """Discover LangGraph tools from service OpenAPI specifications."""
     try:
         import asyncio
 
@@ -1724,7 +1729,7 @@ def discover_tools(ctx, service, all_services, category):
 @click.option("--service", help="Filter tools by service")
 @click.pass_context
 def list_discovered_tools(ctx, category, service):
-    """List all previously discovered tools"""
+    """List all previously discovered tools."""
     try:
         console = Console()
         console.print("\n[bold]📋 Discovered Tools Registry[/bold]")
@@ -1745,7 +1750,7 @@ def list_discovered_tools(ctx, category, service):
 @click.option("--tool-name", help="Test specific tool")
 @click.pass_context
 def test_discovered_tools(ctx, service_name, tool_name):
-    """Test discovered tools for functionality"""
+    """Test discovered tools for functionality."""
     try:
         console = Console()
         console.print(f"\n[bold]🧪 Testing Tools for {service_name}[/bold]")
@@ -1773,7 +1778,7 @@ def test_discovered_tools(ctx, service_name, tool_name):
 @cli.command()
 @click.pass_context
 def view_dashboards(ctx):
-    """List available monitoring dashboards"""
+    """List available monitoring dashboards."""
     try:
         monitoring_manager = cli_service.advanced_monitoring_manager
         asyncio.run(monitoring_manager.view_dashboards_from_cli())
@@ -1785,7 +1790,7 @@ def view_dashboards(ctx):
 @cli.command()
 @click.pass_context
 def view_alerts(ctx):
-    """Show active monitoring alerts"""
+    """Show active monitoring alerts."""
     try:
         monitoring_manager = cli_service.advanced_monitoring_manager
         asyncio.run(monitoring_manager.view_alerts_from_cli())
@@ -1797,7 +1802,7 @@ def view_alerts(ctx):
 @cli.command()
 @click.pass_context
 def view_slo_status(ctx):
-    """Display SLO/SLA compliance status"""
+    """Display SLO/SLA compliance status."""
     try:
         monitoring_manager = cli_service.advanced_monitoring_manager
         asyncio.run(monitoring_manager.view_slo_status_from_cli())
@@ -1809,7 +1814,7 @@ def view_slo_status(ctx):
 @cli.command()
 @click.pass_context
 def view_metrics(ctx):
-    """Show real-time system metrics"""
+    """Show real-time system metrics."""
     try:
         monitoring_manager = cli_service.advanced_monitoring_manager
         asyncio.run(monitoring_manager.view_metrics_from_cli())

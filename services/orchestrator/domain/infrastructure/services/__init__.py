@@ -1,4 +1,4 @@
-"""Domain Services for Infrastructure"""
+"""Domain Services for Infrastructure."""
 
 from .dlq_service import DLQService
 from .event_streaming_service import EventStreamingService

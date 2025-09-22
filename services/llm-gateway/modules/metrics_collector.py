@@ -1,7 +1,9 @@
-"""Metrics Collector Module for LLM Gateway Service.
+"""
+Metrics Collector Module for LLM Gateway Service.
 
-Collects comprehensive metrics for LLM usage, performance, costs, and error tracking.
-Provides insights into provider performance, cost optimization, and system health.
+Collects comprehensive metrics for LLM usage, performance, costs, and
+error tracking. Provides insights into provider performance, cost
+optimization, and system health.
 """
 
 import time

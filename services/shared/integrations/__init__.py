@@ -1,4 +1,5 @@
-"""Shared Integrations Package.
+"""
+Shared Integrations Package.
 
 This package contains integration utilities for connecting with external
 services and APIs used across the LLM Documentation Ecosystem.

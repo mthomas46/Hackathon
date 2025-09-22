@@ -1,4 +1,5 @@
-"""Tests for Orchestrator Infrastructure Routes logging integration with LogCollectorClient."""
+"""Tests for Orchestrator Infrastructure Routes logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestOrchestratorInfrastructureLoggingIntegration:
-    """Test Orchestrator Infrastructure routes logging integration with LogCollectorClient."""
+    """Test Orchestrator Infrastructure routes logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -323,7 +325,8 @@ class TestOrchestratorInfrastructureLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_event_clear_logging_placeholder(self, client, mock_logger_client):
-        """Test event clearing endpoint logging (placeholder implementation)."""
+        """Test event clearing endpoint logging (placeholder
+        implementation)."""
         response = client.post("/api/v1/infrastructure/events/clear", json={})
         assert response.status_code == 200
 

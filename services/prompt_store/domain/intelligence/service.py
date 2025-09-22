@@ -1,4 +1,5 @@
-"""Cross-service intelligence service for generating prompts from code and documents."""
+"""Cross-service intelligence service for generating prompts from code and
+documents."""
 
 import re
 from typing import Any, Dict, List

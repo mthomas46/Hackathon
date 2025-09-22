@@ -1,4 +1,4 @@
-"""Reporting Application Queries"""
+"""Reporting Application Queries."""
 
 from dataclasses import dataclass
 from typing import Optional

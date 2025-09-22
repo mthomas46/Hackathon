@@ -8,7 +8,8 @@ from services.shared.utilities.error_handling import ServiceException, Validatio
 
 
 def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for CLI operations.
+    """
+    Standardized error handling for CLI operations.
 
     Logs the error and returns a standardized error response.
     """

@@ -1,4 +1,5 @@
-"""Versioning repository for data access operations.
+"""
+Versioning repository for data access operations.
 
 Handles document version data and history operations.
 """

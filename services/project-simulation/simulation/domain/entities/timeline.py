@@ -152,10 +152,11 @@ class TimelinePhase:
 
 @dataclass
 class Timeline:
-    """Timeline Aggregate Root.
+    """
+    Timeline Aggregate Root.
 
-    This is the root entity for the Timeline aggregate, managing project phases,
-    milestones, and overall timeline progression.
+    This is the root entity for the Timeline aggregate, managing project
+    phases, milestones, and overall timeline progression.
     """
 
     id: TimelineId

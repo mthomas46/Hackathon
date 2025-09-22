@@ -1,4 +1,5 @@
-"""API Routes for Service Registry
+"""
+API Routes for Service Registry.
 
 Provides endpoints for:
 - Service registration and discovery

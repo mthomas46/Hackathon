@@ -91,7 +91,8 @@ class PerformanceProfiler:
         enable_memory_tracking: bool = True,
         enable_cpu_tracking: bool = True,
     ) -> None:
-        """Initialize performance profiler.
+        """
+        Initialize performance profiler.
 
         Args:
             logger: Logger service for performance logging
@@ -121,7 +122,8 @@ class PerformanceProfiler:
                 pass  # Memory tracking not available
 
     def start_operation(self, operation_name: str, **context) -> PerformanceMetrics:
-        """Start profiling an operation.
+        """
+        Start profiling an operation.
 
         Args:
             operation_name: Name of the operation being profiled
@@ -152,7 +154,8 @@ class PerformanceProfiler:
         return metrics
 
     def end_operation(self, metrics: Optional[PerformanceMetrics] = None) -> PerformanceMetrics:
-        """End profiling an operation.
+        """
+        End profiling an operation.
 
         Args:
             metrics: PerformanceMetrics object to complete (uses current if None)
@@ -191,7 +194,8 @@ class PerformanceProfiler:
         return metrics
 
     def _analyze_performance(self, metrics: PerformanceMetrics) -> None:
-        """Analyze performance metrics and set flags.
+        """
+        Analyze performance metrics and set flags.
 
         Args:
             metrics: Performance metrics to analyze
@@ -209,7 +213,8 @@ class PerformanceProfiler:
             metrics.high_cpu_usage = True
 
     def _log_performance(self, metrics: PerformanceMetrics) -> None:
-        """Log performance metrics.
+        """
+        Log performance metrics.
 
         Args:
             metrics: Performance metrics to log
@@ -234,7 +239,8 @@ class PerformanceProfiler:
             )
 
     def _add_to_history(self, metrics: PerformanceMetrics) -> None:
-        """Add metrics to performance history.
+        """
+        Add metrics to performance history.
 
         Args:
             metrics: Performance metrics to store
@@ -247,7 +253,8 @@ class PerformanceProfiler:
 
     @contextmanager
     def profile_operation(self, operation_name: str, **context):
-        """Context manager for profiling operations.
+        """
+        Context manager for profiling operations.
 
         Args:
             operation_name: Name of the operation
@@ -263,7 +270,8 @@ class PerformanceProfiler:
             self.end_operation(metrics)
 
     def get_performance_stats(self) -> Dict[str, Any]:
-        """Get performance statistics from history.
+        """
+        Get performance statistics from history.
 
         Returns:
             Dictionary with performance statistics
@@ -304,7 +312,8 @@ class AsyncProfiler(PerformanceProfiler):
 
     @asynccontextmanager
     async def profile_async_operation(self, operation_name: str, **context):
-        """Async context manager for profiling operations.
+        """
+        Async context manager for profiling operations.
 
         Args:
             operation_name: Name of the operation
@@ -320,7 +329,8 @@ class AsyncProfiler(PerformanceProfiler):
             self.end_operation(metrics)
 
     async def profile_async_function(self, func: Callable[..., T], *args, **kwargs) -> T:
-        """Profile an async function execution.
+        """
+        Profile an async function execution.
 
         Args:
             func: Async function to profile
@@ -359,7 +369,8 @@ def get_async_profiler() -> AsyncProfiler:
 
 # Convenience functions
 def profile_operation(operation_name: str, **context):
-    """Profile a synchronous operation.
+    """
+    Profile a synchronous operation.
 
     Args:
         operation_name: Name of the operation
@@ -372,7 +383,8 @@ def profile_operation(operation_name: str, **context):
 
 
 def profile_async_operation(operation_name: str, **context):
-    """Profile an asynchronous operation.
+    """
+    Profile an asynchronous operation.
 
     Args:
         operation_name: Name of the operation

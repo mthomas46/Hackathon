@@ -1,4 +1,4 @@
-"""Use Cases for Workflow Management"""
+"""Use Cases for Workflow Management."""
 
 from typing import List, Optional, Tuple
 

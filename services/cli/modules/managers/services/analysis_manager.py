@@ -1,7 +1,8 @@
-"""Analysis Manager module for CLI service.
+"""
+Analysis Manager module for CLI service.
 
-Provides power-user operations for analysis service including
-analysis runs, reports generation, findings management, and quality metrics.
+Provides power-user operations for analysis service including analysis
+runs, reports generation, findings management, and quality metrics.
 """
 
 from typing import Any, Dict, List, Optional
@@ -55,7 +56,8 @@ class AnalysisManager(BaseManager):
         return True
 
     async def analysis_reports_menu(self):
-        """Main analysis and reports menu with enhanced interactive experience."""
+        """Main analysis and reports menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Analysis & Reports", use_interactive=True)
 
     async def run_analysis_menu(self):

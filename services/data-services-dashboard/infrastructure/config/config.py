@@ -1,7 +1,9 @@
-"""Configuration management for the Data Services Dashboard Service.
+"""
+Configuration management for the Data Services Dashboard Service.
 
-This module provides centralized configuration management for the dashboard service,
-following environment-aware patterns consistent with the ecosystem.
+This module provides centralized configuration management for the
+dashboard service, following environment-aware patterns consistent with
+the ecosystem.
 """
 
 from typing import List, Optional

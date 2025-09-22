@@ -1,8 +1,10 @@
-"""Orchestrator Integration for Interpreter Service.
+"""
+Orchestrator Integration for Interpreter Service.
 
-This module provides deep integration with the orchestrator service, enabling
-the interpreter to execute complex workflows and coordinate multiple services
-to produce tangible outputs from natural language queries.
+This module provides deep integration with the orchestrator service,
+enabling the interpreter to execute complex workflows and coordinate
+multiple services to produce tangible outputs from natural language
+queries.
 """
 
 from datetime import datetime

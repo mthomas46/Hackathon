@@ -18,7 +18,8 @@ from ...presentation.websockets.simulation_websocket import notify_simulation_pr
 
 
 class SimulationApplicationService:
-    """Application service for simulation use cases.
+    """
+    Application service for simulation use cases.
 
     This service orchestrates domain services to fulfill high-level
     business use cases while maintaining clean architecture principles.
@@ -625,7 +626,8 @@ class SimulationApplicationService:
             return {"success": False, "error": str(e), "config_file_path": config_file_path}
 
     def _convert_config_to_simulation_request(self, config: SimulationConfigFile) -> Dict[str, Any]:
-        """Convert a configuration file object to a simulation creation request."""
+        """Convert a configuration file object to a simulation creation
+        request."""
         return {
             "name": config.project_name,
             "description": config.project_description,
@@ -647,7 +649,8 @@ class SimulationApplicationService:
         }
 
     async def get_config_template(self) -> Dict[str, Any]:
-        """Get a configuration template for creating custom simulation configs."""
+        """Get a configuration template for creating custom simulation
+        configs."""
         try:
             template = get_simulation_config_loader().get_config_template()
 

@@ -1,7 +1,9 @@
-"""API & CLI Enhancement Tests.
+"""
+API & CLI Enhancement Tests.
 
-This module contains comprehensive tests for advanced API features and CLI enhancements,
-including HATEOAS, WebSocket streaming, and command-line interface validation.
+This module contains comprehensive tests for advanced API features and
+CLI enhancements, including HATEOAS, WebSocket streaming, and command-
+line interface validation.
 """
 
 import asyncio
@@ -19,7 +21,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 class TestAdvancedHATEOAS:
-    """Test advanced HATEOAS (Hypermedia As The Engine Of Application State) features."""
+    """Test advanced HATEOAS (Hypermedia As The Engine Of Application State)
+    features."""
 
     def test_hateoas_link_generation(self):
         """Test automatic HATEOAS link generation for API responses."""

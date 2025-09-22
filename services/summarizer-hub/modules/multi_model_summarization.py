@@ -196,7 +196,8 @@ class EnsembleSummary:
             self.disagreement_areas = ["content_focus", "detail_level", "key_points"]
 
     def _calculate_similarity(self, text1: str, text2: str) -> float:
-        """Calculate similarity between two texts (simplified Jaccard similarity)."""
+        """Calculate similarity between two texts (simplified Jaccard
+        similarity)."""
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
 

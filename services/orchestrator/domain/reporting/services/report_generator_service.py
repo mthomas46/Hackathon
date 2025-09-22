@@ -1,4 +1,4 @@
-"""Report Generator Service Domain Service"""
+"""Report Generator Service Domain Service."""
 
 import json
 from typing import Any, Dict, List, Optional

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Prompt Store Service
+LangGraph Integration for Prompt Store Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Prompt Store Service, enabling intelligent prompt management in AI workflows.
+for the Prompt Store Service, enabling intelligent prompt management in
+AI workflows.
 """
 
 from datetime import datetime

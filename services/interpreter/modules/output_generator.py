@@ -1,7 +1,9 @@
-"""Output Generator for Interpreter Service.
+"""
+Output Generator for Interpreter Service.
 
-This module handles the generation of various output formats (JSON, PDF, CSV, markdown, ZIP)
-from workflow execution results, enabling users to get tangible deliverables from their queries.
+This module handles the generation of various output formats (JSON, PDF,
+CSV, markdown, ZIP) from workflow execution results, enabling users to
+get tangible deliverables from their queries.
 """
 
 import csv
@@ -163,7 +165,8 @@ class OutputGenerator:
             raise ValueError(f"Unsupported format: {output_format}")
 
     async def _create_workflow_provenance(self, workflow_result: Dict[str, Any]) -> Dict[str, Any]:
-        """Create comprehensive provenance metadata for the workflow execution."""
+        """Create comprehensive provenance metadata for the workflow
+        execution."""
         provenance = {
             "workflow_execution": {
                 "execution_id": workflow_result.get("execution_id"),
@@ -245,7 +248,8 @@ class OutputGenerator:
             return {}
 
     async def _create_data_lineage(self, workflow_result: Dict[str, Any]) -> Dict[str, Any]:
-        """Create data lineage information showing data flow through workflow."""
+        """Create data lineage information showing data flow through
+        workflow."""
         lineage = {"input_sources": [], "processing_steps": [], "output_artifacts": [], "transformations": []}
 
         # Extract data sources from workflow steps

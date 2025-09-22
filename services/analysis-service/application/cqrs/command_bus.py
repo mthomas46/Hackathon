@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 class CommandBus:
-    """Command bus for dispatching commands to handlers with event publishing."""
+    """Command bus for dispatching commands to handlers with event
+    publishing."""
 
     def __init__(self, event_bus: Optional[EventBus] = None):
         """Initialize command bus with empty handler registry."""

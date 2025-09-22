@@ -1,4 +1,5 @@
-"""Notification Service UI handlers for Frontend service.
+"""
+Notification Service UI handlers for Frontend service.
 
 Handles notification service visualization, including owner resolution,
 notification delivery monitoring, and dead letter queue management.

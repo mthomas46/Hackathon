@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Enterprise-Grade LangGraph Integration for Analysis Service
+Enterprise-Grade LangGraph Integration for Analysis Service.
 
-This module provides comprehensive LangGraph awareness and integration capabilities
-for the Analysis Service with enterprise-grade error handling, caching, and monitoring.
+This module provides comprehensive LangGraph awareness and integration
+capabilities for the Analysis Service with enterprise-grade error
+handling, caching, and monitoring.
 """
 
 import time
@@ -57,7 +58,8 @@ class AnalysisServiceLangGraphIntegration:
         async def analyze_document_langgraph(
             doc_id: str, analysis_types: List[str], workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Analyze a document within a LangGraph workflow context with enterprise-grade features."""
+            """Analyze a document within a LangGraph workflow context with
+            enterprise-grade features."""
             start_time = time.time()
 
             try:
@@ -158,7 +160,8 @@ class AnalysisServiceLangGraphIntegration:
         async def get_confidence_score_langgraph(
             analysis_id: str, workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Get confidence score within LangGraph workflow with enterprise-grade features."""
+            """Get confidence score within LangGraph workflow with enterprise-
+            grade features."""
             start_time = time.time()
 
             try:

@@ -1,4 +1,5 @@
-"""Shared utilities for Frontend service modules.
+"""
+Shared utilities for Frontend service modules.
 
 This module contains common utilities used across all frontend modules
 to eliminate code duplication and ensure consistency.
@@ -203,7 +204,8 @@ def sanitize_input(input_str: str) -> str:
 
 
 def create_html_response(content: str, title: str = "LLM Documentation Ecosystem") -> HTMLResponse:
-    """Create a standardized HTML response with consistent styling and XSS protection."""
+    """Create a standardized HTML response with consistent styling and XSS
+    protection."""
     import html
 
     # Escape user input to prevent XSS attacks
@@ -236,7 +238,8 @@ def create_html_response(content: str, title: str = "LLM Documentation Ecosystem
 
 
 def handle_frontend_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for frontend operations.
+    """
+    Standardized error handling for frontend operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -247,7 +250,8 @@ def handle_frontend_error(operation: str, error: Exception, **context) -> Dict[s
 
 
 def create_frontend_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for frontend operations.
+    """
+    Standardized success response for frontend operations.
 
     Returns a consistent success response format.
     """
@@ -257,7 +261,8 @@ def create_frontend_success_response(operation: str, data: Any, **context) -> Di
 
 
 def build_frontend_context(operation: str, **additional) -> Dict[str, Any]:
-    """Build context dictionary for frontend operations.
+    """
+    Build context dictionary for frontend operations.
 
     Provides consistent context for logging and responses.
     """
@@ -269,7 +274,9 @@ def build_frontend_context(operation: str, **additional) -> Dict[str, Any]:
 def fetch_service_data(
     service_name: str, endpoint: str, params: Optional[Dict[str, Any]] = None, clients: Optional[ServiceClients] = None
 ) -> Dict[str, Any]:
-    """Fetch data from a service with consistent error handling and client management.
+    """
+    Fetch data from a service with consistent error handling and client
+    management.
 
     Args:
         service_name: Name of the service to call

@@ -1,4 +1,4 @@
-"""Ingestion Application Queries"""
+"""Ingestion Application Queries."""
 
 from dataclasses import dataclass
 from typing import Optional

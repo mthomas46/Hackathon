@@ -1,4 +1,5 @@
-"""Tests for Orchestrator Service Registry Routes logging integration with LogCollectorClient."""
+"""Tests for Orchestrator Service Registry Routes logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestOrchestratorServiceRegistryLoggingIntegration:
-    """Test Orchestrator Service Registry routes logging integration with LogCollectorClient."""
+    """Test Orchestrator Service Registry routes logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -197,7 +199,8 @@ class TestOrchestratorServiceRegistryLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_service_info_retrieval_logging_not_found(self, client, mock_logger_client):
-        """Test service information retrieval endpoint logging when service not found."""
+        """Test service information retrieval endpoint logging when service not
+        found."""
         mock_result = type(
             "MockResult", (), {"is_failure": lambda: True, "get_errors_string": lambda: "Service not found"}
         )()
@@ -492,7 +495,8 @@ class TestOrchestratorServiceRegistryLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, client, mock_logger_client):
-        """Test that all major business events are logged across service registry endpoints."""
+        """Test that all major business events are logged across service
+        registry endpoints."""
         expected_events = {
             # Service registration events
             "service_registration_started",

@@ -1,4 +1,5 @@
-"""Base service for business logic operations.
+"""
+Base service for business logic operations.
 
 Provides common validation, error handling, and business rule patterns.
 """

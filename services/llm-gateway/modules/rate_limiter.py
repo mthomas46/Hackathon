@@ -1,8 +1,10 @@
-"""Rate Limiter Module for LLM Gateway Service.
+"""
+Rate Limiter Module for LLM Gateway Service.
 
-Implements intelligent rate limiting to prevent abuse, manage costs, and ensure
-fair usage across different users and providers. Supports multiple rate limiting
-strategies including token bucket, sliding window, and provider-specific limits.
+Implements intelligent rate limiting to prevent abuse, manage costs, and
+ensure fair usage across different users and providers. Supports
+multiple rate limiting strategies including token bucket, sliding
+window, and provider-specific limits.
 """
 
 import time

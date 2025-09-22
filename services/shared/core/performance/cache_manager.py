@@ -92,7 +92,8 @@ class MemoryCache(CacheBackend):
     """In-memory cache implementation with LRU eviction."""
 
     def __init__(self, max_size: int = 1000, default_ttl: Optional[int] = None) -> None:
-        """Initialize memory cache.
+        """
+        Initialize memory cache.
 
         Args:
             max_size: Maximum number of entries
@@ -218,7 +219,8 @@ class RedisCache(CacheBackend):
         default_ttl: Optional[int] = None,
         key_prefix: str = "cache:",
     ) -> None:
-        """Initialize Redis cache.
+        """
+        Initialize Redis cache.
 
         Args:
             host: Redis host
@@ -356,7 +358,8 @@ class CacheManager(ICacheService):
         secondary_backend: Optional[CacheBackend] = None,
         logger: Optional[ILoggerService] = None,
     ) -> None:
-        """Initialize cache manager.
+        """
+        Initialize cache manager.
 
         Args:
             primary_backend: Primary cache backend (fast, small)

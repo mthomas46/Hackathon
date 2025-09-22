@@ -1,4 +1,5 @@
-"""Response processing for Summarizer Hub.
+"""
+Response processing for Summarizer Hub.
 
 Handles consistency analysis and response normalization.
 """

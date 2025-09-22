@@ -1,7 +1,9 @@
-"""Memory Agent modules package.
+"""
+Memory Agent modules package.
 
-This package contains all the modularized functionality for the Memory Agent service.
-Provides shared utilities and client instances for all memory agent modules.
+This package contains all the modularized functionality for the Memory
+Agent service. Provides shared utilities and client instances for all
+memory agent modules.
 """
 
 from services.shared.utilities.utilities import get_service_client
@@ -11,10 +13,12 @@ _service_client = None
 
 
 def get_memory_agent_client():
-    """Get the shared service client for memory agent modules.
+    """
+    Get the shared service client for memory agent modules.
 
-    Uses lazy initialization pattern to create client only when first needed.
-    This ensures efficient resource usage and proper initialization order.
+    Uses lazy initialization pattern to create client only when first
+    needed. This ensures efficient resource usage and proper
+    initialization order.
     """
     global _service_client
     if _service_client is None:

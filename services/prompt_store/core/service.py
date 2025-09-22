@@ -1,6 +1,8 @@
-"""Base service pattern for Prompt Store service.
+"""
+Base service pattern for Prompt Store service.
 
-Following domain-driven design principles with generic service implementation.
+Following domain-driven design principles with generic service
+implementation.
 """
 
 from abc import ABC

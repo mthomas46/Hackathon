@@ -1,7 +1,9 @@
-"""Interpreter modules package.
+"""
+Interpreter modules package.
 
-This package contains all the modularized functionality for the Interpreter service.
-Provides shared utilities and client instances for all interpreter modules.
+This package contains all the modularized functionality for the
+Interpreter service. Provides shared utilities and client instances for
+all interpreter modules.
 """
 
 # Optional import - will use fallback if not available
@@ -19,10 +21,12 @@ _service_client = None
 
 
 def get_interpreter_client():
-    """Get the shared service client for interpreter modules.
+    """
+    Get the shared service client for interpreter modules.
 
-    Uses lazy initialization pattern to create client only when first needed.
-    This ensures efficient resource usage and proper initialization order.
+    Uses lazy initialization pattern to create client only when first
+    needed. This ensures efficient resource usage and proper
+    initialization order.
     """
     global _service_client
     if _service_client is None:

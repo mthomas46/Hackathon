@@ -1,9 +1,11 @@
-"""Conversation Memory Management for Interpreter Service.
+"""
+Conversation Memory Management for Interpreter Service.
 
-This module manages conversation context and memory across user interactions,
-integrating with the memory-agent service for persistent storage and retrieval.
-Enables the interpreter to maintain context, learn from previous queries,
-and provide more intelligent responses based on conversation history.
+This module manages conversation context and memory across user
+interactions, integrating with the memory-agent service for persistent
+storage and retrieval. Enables the interpreter to maintain context,
+learn from previous queries, and provide more intelligent responses
+based on conversation history.
 """
 
 import time
@@ -17,7 +19,8 @@ from services.shared.logging import fire_and_forget
 
 
 class ConversationMemory:
-    """Manages conversation context and memory for enhanced user interactions."""
+    """Manages conversation context and memory for enhanced user
+    interactions."""
 
     def __init__(self):
         self.client = ServiceClients()

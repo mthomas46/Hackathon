@@ -1,5 +1,5 @@
 """
-PR Gap Detection Module
+PR Gap Detection Module.
 
 Advanced gap detection for identifying missing requirements, tests,
 documentation, and other critical implementation gaps in PRs.

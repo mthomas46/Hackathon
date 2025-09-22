@@ -1,4 +1,4 @@
-"""System Monitoring Domain Service"""
+"""System Monitoring Domain Service."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

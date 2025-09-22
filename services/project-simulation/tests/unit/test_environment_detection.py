@@ -173,7 +173,8 @@ class TestIntegrationWithEcosystem:
         assert isinstance(result, bool)
 
     def test_service_url_consistency(self):
-        """Test that service URLs are consistent across different environment configurations."""
+        """Test that service URLs are consistent across different environment
+        configurations."""
         # Test that both Docker and local configurations have the same service keys
         with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=True):
             docker_analyzer = SimulationAnalyzer()
@@ -189,7 +190,8 @@ class TestIntegrationWithEcosystem:
         assert set(docker_analyzer.service_urls.keys()) == expected_services
 
     def test_environment_detection_is_deterministic(self):
-        """Test that environment detection is deterministic for the same conditions."""
+        """Test that environment detection is deterministic for the same
+        conditions."""
         # Test that multiple calls to environment detection return the same result
         with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=True):
             analyzer1 = SimulationAnalyzer()

@@ -1,5 +1,6 @@
 """
 Domain entities for service discovery.
+
 Following DDD principles with clean, focused entities.
 """
 

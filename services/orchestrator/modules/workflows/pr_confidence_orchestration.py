@@ -1,8 +1,8 @@
 """
-PR Confidence Analysis Orchestration Workflow
+PR Confidence Analysis Orchestration Workflow.
 
-Simplified orchestrator workflow that coordinates analysis across services
-without containing the actual analysis business logic.
+Simplified orchestrator workflow that coordinates analysis across
+services without containing the actual analysis business logic.
 """
 
 from datetime import datetime

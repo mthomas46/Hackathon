@@ -1,7 +1,8 @@
-"""Base Use Case Class
+"""
+Base Use Case Class.
 
-Shared base class for all use cases across bounded contexts.
-Provides consistent interface and error handling patterns.
+Shared base class for all use cases across bounded contexts. Provides
+consistent interface and error handling patterns.
 """
 
 from abc import ABC, abstractmethod
@@ -11,7 +12,8 @@ T = TypeVar("T")
 
 
 class UseCase(ABC):
-    """Base class for all use cases.
+    """
+    Base class for all use cases.
 
     Provides a consistent interface for executing business operations
     across all bounded contexts in the system.
@@ -19,7 +21,8 @@ class UseCase(ABC):
 
     @abstractmethod
     async def execute(self, *args, **kwargs):
-        """Execute the use case.
+        """
+        Execute the use case.
 
         Args:
             *args: Positional arguments specific to the use case

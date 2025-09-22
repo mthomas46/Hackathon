@@ -1,4 +1,5 @@
-"""API Routes for Reporting
+"""
+API Routes for Reporting.
 
 Provides endpoints for:
 - Report generation and management

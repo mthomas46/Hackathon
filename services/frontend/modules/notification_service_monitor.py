@@ -1,7 +1,9 @@
-"""Notification Service monitoring infrastructure for Frontend service.
+"""
+Notification Service monitoring infrastructure for Frontend service.
 
-Provides visualization and monitoring capabilities for notification service
-owner resolution, notification delivery, and dead letter queue management.
+Provides visualization and monitoring capabilities for notification
+service owner resolution, notification delivery, and dead letter queue
+management.
 """
 
 from typing import Any, Dict, List, Optional
@@ -12,7 +14,8 @@ from .shared_utils import get_frontend_clients, get_notification_service_url
 
 
 class NotificationServiceMonitor:
-    """Monitor for notification service owner resolution and notification delivery."""
+    """Monitor for notification service owner resolution and notification
+    delivery."""
 
     def __init__(self):
         self._notifications = []

@@ -1,7 +1,9 @@
-"""Risk Assessment module for Analysis Service.
+"""
+Risk Assessment module for Analysis Service.
 
-Provides comprehensive risk assessment for documentation, identifying areas most
-at risk for documentation drift, quality degradation, and maintenance issues.
+Provides comprehensive risk assessment for documentation, identifying
+areas most at risk for documentation drift, quality degradation, and
+maintenance issues.
 """
 
 import logging
@@ -572,7 +574,8 @@ risk_assessor = RiskAssessor()
 async def assess_document_risk(
     document_id: str, document_data: Dict[str, Any], analysis_history: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
-    """Convenience function for document risk assessment.
+    """
+    Convenience function for document risk assessment.
 
     Args:
         document_id: ID of the document to assess
@@ -586,7 +589,8 @@ async def assess_document_risk(
 
 
 async def assess_portfolio_risks(documents: List[Dict[str, Any]], group_by: str = "document_type") -> Dict[str, Any]:
-    """Convenience function for portfolio risk assessment.
+    """
+    Convenience function for portfolio risk assessment.
 
     Args:
         documents: List of document data dictionaries

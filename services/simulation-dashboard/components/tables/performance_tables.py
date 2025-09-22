@@ -1,7 +1,8 @@
-"""Performance Table Components.
+"""
+Performance Table Components.
 
-This module provides table components for displaying performance metrics,
-benchmarking results, and system monitoring data.
+This module provides table components for displaying performance
+metrics, benchmarking results, and system monitoring data.
 """
 
 from datetime import datetime, timedelta
@@ -20,7 +21,8 @@ def render_performance_table(
     on_threshold_set: Optional[Callable] = None,
     on_alert_config: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a comprehensive performance metrics table.
+    """
+    Render a comprehensive performance metrics table.
 
     Args:
         performance_data: List of performance metric dictionaries

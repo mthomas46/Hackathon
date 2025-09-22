@@ -1,6 +1,8 @@
-"""Core entities for Prompt Store service.
+"""
+Core entities for Prompt Store service.
 
-Following domain-driven design principles with base entities and specific domain entities.
+Following domain-driven design principles with base entities and
+specific domain entities.
 """
 
 from abc import ABC, abstractmethod

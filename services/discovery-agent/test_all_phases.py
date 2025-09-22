@@ -1,8 +1,10 @@
-"""Comprehensive tests for ALL Discovery Agent phases and features.
+"""
+Comprehensive tests for ALL Discovery Agent phases and features.
 
-This module provides complete test coverage for all Phase 1-5 implementations
-including security scanning, monitoring, AI tool selection, semantic analysis,
-performance optimization, and orchestrator integration.
+This module provides complete test coverage for all Phase 1-5
+implementations including security scanning, monitoring, AI tool
+selection, semantic analysis, performance optimization, and orchestrator
+integration.
 """
 
 import os

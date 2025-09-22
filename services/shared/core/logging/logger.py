@@ -16,7 +16,8 @@ _correlation_lock = threading.RLock()
 
 
 class LoggerService(ILoggerService):
-    """Enterprise-grade structured logging service with correlation IDs.
+    """
+    Enterprise-grade structured logging service with correlation IDs.
 
     This logger service provides:
     - Structured logging with JSON output
@@ -36,7 +37,8 @@ class LoggerService(ILoggerService):
         enable_json: bool = True,
         enable_console: bool = True,
     ) -> None:
-        """Initialize logger service.
+        """
+        Initialize logger service.
 
         Args:
             name: Logger name/identifier
@@ -113,7 +115,8 @@ class LoggerService(ILoggerService):
         return enriched
 
     def debug(self, message: str, **kwargs) -> None:
-        """Log debug message with structured data.
+        """
+        Log debug message with structured data.
 
         Debug messages are typically used for detailed troubleshooting
         information useful during development and debugging.
@@ -127,7 +130,8 @@ class LoggerService(ILoggerService):
             self._logger.debug(message, extra={"structured_data": enriched_data})
 
     def info(self, message: str, **kwargs) -> None:
-        """Log info message with structured data.
+        """
+        Log info message with structured data.
 
         Info messages provide general information about application
         operation, such as startup events and successful operations.
@@ -141,7 +145,8 @@ class LoggerService(ILoggerService):
             self._logger.info(message, extra={"structured_data": enriched_data})
 
     def warning(self, message: str, **kwargs) -> None:
-        """Log warning message with structured data.
+        """
+        Log warning message with structured data.
 
         Warning messages indicate potential issues that don't prevent
         operation but should be investigated.
@@ -155,7 +160,8 @@ class LoggerService(ILoggerService):
             self._logger.warning(message, extra={"structured_data": enriched_data})
 
     def error(self, message: str, **kwargs) -> None:
-        """Log error message with structured data.
+        """
+        Log error message with structured data.
 
         Error messages indicate failures that affect operation but
         don't necessarily cause application shutdown.
@@ -169,7 +175,8 @@ class LoggerService(ILoggerService):
             self._logger.error(message, extra={"structured_data": enriched_data})
 
     def critical(self, message: str, **kwargs) -> None:
-        """Log critical message with structured data.
+        """
+        Log critical message with structured data.
 
         Critical messages indicate severe failures that may require
         immediate attention and could cause application instability.
@@ -183,7 +190,8 @@ class LoggerService(ILoggerService):
             self._logger.critical(message, extra={"structured_data": enriched_data})
 
     def log_performance(self, operation: str, duration: float, **kwargs) -> None:
-        """Log performance metrics.
+        """
+        Log performance metrics.
 
         Args:
             operation: Name of the operation being measured
@@ -200,7 +208,8 @@ class LoggerService(ILoggerService):
         )
 
     def log_request(self, method: str, endpoint: str, status_code: int, duration: float, **kwargs) -> None:
-        """Log HTTP request information.
+        """
+        Log HTTP request information.
 
         Args:
             method: HTTP method (GET, POST, etc.)
@@ -228,7 +237,8 @@ class LoggerService(ILoggerService):
         )
 
     def log_business_event(self, event_type: str, **kwargs) -> None:
-        """Log business domain events.
+        """
+        Log business domain events.
 
         Args:
             event_type: Type of business event
@@ -237,7 +247,8 @@ class LoggerService(ILoggerService):
         self.info(f"Business Event: {event_type}", event_type=event_type, event_category="business", **kwargs)
 
     def create_child_logger(self, child_name: str) -> "LoggerService":
-        """Create a child logger with the same configuration.
+        """
+        Create a child logger with the same configuration.
 
         Args:
             child_name: Name for the child logger
@@ -258,7 +269,8 @@ _global_logger: Optional[LoggerService] = None
 
 
 def get_logger(name: Optional[str] = None) -> LoggerService:
-    """Get logger instance.
+    """
+    Get logger instance.
 
     Args:
         name: Optional logger name (defaults to 'analysis-service')
@@ -273,7 +285,8 @@ def get_logger(name: Optional[str] = None) -> LoggerService:
 
 
 def get_correlation_id() -> Optional[str]:
-    """Get current correlation ID.
+    """
+    Get current correlation ID.
 
     Returns:
         Current correlation ID or None if not set
@@ -282,7 +295,8 @@ def get_correlation_id() -> Optional[str]:
 
 
 def set_correlation_id(correlation_id: Optional[str]) -> None:
-    """Set correlation ID for current context.
+    """
+    Set correlation ID for current context.
 
     Args:
         correlation_id: Correlation ID to set, or None to clear
@@ -292,7 +306,8 @@ def set_correlation_id(correlation_id: Optional[str]) -> None:
 
 
 def generate_correlation_id() -> str:
-    """Generate a new correlation ID.
+    """
+    Generate a new correlation ID.
 
     Returns:
         New unique correlation ID
@@ -303,7 +318,8 @@ def generate_correlation_id() -> str:
 
 
 def with_correlation_id(correlation_id: Optional[str] = None):
-    """Context manager/decorator to set correlation ID.
+    """
+    Context manager/decorator to set correlation ID.
 
     Args:
         correlation_id: Correlation ID to use (generates new one if None)

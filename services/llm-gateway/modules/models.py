@@ -1,6 +1,8 @@
-"""Request and response models for LLM Gateway Service.
+"""
+Request and response models for LLM Gateway Service.
 
-Contains all Pydantic models used for API requests and responses in the LLM Gateway.
+Contains all Pydantic models used for API requests and responses in the
+LLM Gateway.
 """
 
 from typing import Any, Dict, Optional

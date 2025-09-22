@@ -1,4 +1,5 @@
-"""Prompt service implementation.
+"""
+Prompt service implementation.
 
 Handles business logic for prompts following domain-driven design.
 """

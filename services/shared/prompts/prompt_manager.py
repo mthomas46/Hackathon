@@ -1,7 +1,8 @@
-"""Prompt Manager for configurable LLM prompts.
+"""
+Prompt Manager for configurable LLM prompts.
 
-Provides centralized management of prompts used across all LLM-powered services.
-Supports templating, versioning, and easy customization.
+Provides centralized management of prompts used across all LLM-powered
+services. Supports templating, versioning, and easy customization.
 """
 
 from dataclasses import dataclass
@@ -27,7 +28,8 @@ class PromptManager:
     """Centralized prompt management system."""
 
     def __init__(self, config_path: Optional[str] = None):
-        """Initialize prompt manager.
+        """
+        Initialize prompt manager.
 
         Args:
             config_path: Path to prompts configuration file
@@ -87,7 +89,8 @@ class PromptManager:
         return extract_variables(content)
 
     def get_prompt(self, key: str, **variables) -> str:
-        """Get a prompt by key and fill in variables.
+        """
+        Get a prompt by key and fill in variables.
 
         Args:
             key: Prompt key in format "category.name"

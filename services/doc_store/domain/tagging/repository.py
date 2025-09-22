@@ -1,4 +1,5 @@
-"""Tagging repository for data access operations.
+"""
+Tagging repository for data access operations.
 
 Handles tag and taxonomy data operations.
 """

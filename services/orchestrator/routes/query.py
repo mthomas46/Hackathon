@@ -1,4 +1,4 @@
-"""Query Routes for Orchestrator Service"""
+"""Query Routes for Orchestrator Service."""
 
 import os
 from typing import Any, Dict, List, Optional

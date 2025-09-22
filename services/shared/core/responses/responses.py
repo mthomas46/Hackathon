@@ -1,4 +1,5 @@
-"""Standardized API Response Models and Helpers
+"""
+Standardized API Response Models and Helpers.
 
 Comprehensive response handling system used across all services.
 

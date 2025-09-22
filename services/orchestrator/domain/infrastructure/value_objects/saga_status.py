@@ -1,4 +1,4 @@
-"""Saga Status Value Object"""
+"""Saga Status Value Object."""
 
 from enum import Enum
 

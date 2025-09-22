@@ -337,7 +337,8 @@ class SimulationMonitor:
             st.warning("Unable to load progress data")
 
     def render_workflow_monitor_tab(self, simulation_id: str):
-        """Render workflow monitoring tab with active workflow visualization."""
+        """Render workflow monitoring tab with active workflow
+        visualization."""
         st.markdown("### 🔄 Workflow Monitor")
         st.markdown("**Active Visual Element**: Watch workflows complete in real-time")
 

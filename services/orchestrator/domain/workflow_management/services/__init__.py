@@ -1,4 +1,4 @@
-"""Domain Services for Workflow Management"""
+"""Domain Services for Workflow Management."""
 
 from .parameter_resolver import ParameterResolver
 from .workflow_executor import WorkflowExecutor

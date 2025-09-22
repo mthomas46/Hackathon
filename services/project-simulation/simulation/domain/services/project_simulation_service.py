@@ -63,7 +63,8 @@ class IWorkflowExecutionService(Protocol):
 
 @dataclass
 class ProjectSimulationService:
-    """Domain service for project simulation business logic.
+    """
+    Domain service for project simulation business logic.
 
     This service orchestrates complex business operations that span
     multiple aggregates and enforce domain rules.

@@ -1,4 +1,4 @@
-"""Query Type Value Object"""
+"""Query Type Value Object."""
 
 from enum import Enum
 

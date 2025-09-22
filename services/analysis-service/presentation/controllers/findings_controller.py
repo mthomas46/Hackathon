@@ -19,10 +19,12 @@ class FindingsController:
 
         @self.router.get("/findings")
         async def get_findings_endpoint():
-            """Retrieve analysis findings with filtering by severity and type.
+            """
+            Retrieve analysis findings with filtering by severity and type.
 
-            Provides filtered access to analysis findings with support for
-            severity levels, finding types, date ranges, and document-specific queries.
+            Provides filtered access to analysis findings with support
+            for severity levels, finding types, date ranges, and
+            document-specific queries.
             """
             return await analysis_handlers.handle_list_findings()
 

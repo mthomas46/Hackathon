@@ -1,4 +1,5 @@
-"""Event Stream Component.
+"""
+Event Stream Component.
 
 This module provides real-time event streaming and display capabilities,
 with filtering, search, and live updates.
@@ -21,7 +22,8 @@ def render_event_stream(
     auto_scroll: bool = True,
     on_event_click: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a live event stream with real-time updates.
+    """
+    Render a live event stream with real-time updates.
 
     Args:
         events_data: Initial events data

@@ -1,8 +1,9 @@
-"""WebSocket Client for Real-Time Simulation Updates.
+"""
+WebSocket Client for Real-Time Simulation Updates.
 
-This module provides WebSocket client functionality for receiving real-time
-updates from the project-simulation service, including progress updates,
-event notifications, and ecosystem status changes.
+This module provides WebSocket client functionality for receiving real-
+time updates from the project-simulation service, including progress
+updates, event notifications, and ecosystem status changes.
 """
 
 import asyncio

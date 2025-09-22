@@ -1,4 +1,4 @@
-"""Workflow ID Value Object"""
+"""Workflow ID Value Object."""
 
 import uuid
 from typing import Union

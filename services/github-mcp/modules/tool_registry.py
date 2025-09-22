@@ -1,4 +1,5 @@
-"""Tool registry for GitHub MCP service.
+"""
+Tool registry for GitHub MCP service.
 
 Manages tool definitions, toolsets, and filtering.
 """

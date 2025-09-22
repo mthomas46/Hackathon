@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Interpreter Service
+LangGraph Integration for Interpreter Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Interpreter Service, enabling natural language workflow orchestration.
+for the Interpreter Service, enabling natural language workflow
+orchestration.
 """
 
 from datetime import datetime
@@ -33,7 +34,8 @@ class InterpreterLangGraphIntegration:
         async def interpret_query_langgraph(
             query: str, context: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Interpret a natural language query within LangGraph workflow context."""
+            """Interpret a natural language query within LangGraph workflow
+            context."""
             try:
                 # Enhance interpretation with workflow context
                 enhanced_context = {
@@ -160,7 +162,8 @@ class InterpreterLangGraphIntegration:
         async def translate_workflow_instruction_langgraph(
             instruction: str, target_services: List[str], workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Translate natural language instruction into service-specific commands."""
+            """Translate natural language instruction into service-specific
+            commands."""
             try:
                 translation_context = {
                     "instruction": instruction,

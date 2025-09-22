@@ -1,9 +1,10 @@
-"""Integration Tests for CLI Functionality.
+"""
+Integration Tests for CLI Functionality.
 
-This module contains comprehensive tests for CLI scripts,
-command-line interfaces, and user interaction patterns.
-Tests cover script execution, argument parsing, error handling,
-and user experience aspects of CLI tools.
+This module contains comprehensive tests for CLI scripts, command-line
+interfaces, and user interaction patterns. Tests cover script execution,
+argument parsing, error handling, and user experience aspects of CLI
+tools.
 """
 
 import subprocess
@@ -124,7 +125,8 @@ class TestCLIErrorHandling:
     """Test cases for CLI error handling and user feedback."""
 
     def test_monitor_simulation_handles_invalid_simulation_id(self):
-        """Test that monitor_simulation handles invalid simulation IDs gracefully."""
+        """Test that monitor_simulation handles invalid simulation IDs
+        gracefully."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
 
         with open(script_path, "r") as f:

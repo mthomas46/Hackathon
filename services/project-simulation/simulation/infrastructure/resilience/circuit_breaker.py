@@ -44,7 +44,8 @@ class ServiceCircuitBreaker:
     def __init__(
         self, service_name: str, failure_threshold: int = 5, recovery_timeout: float = 60.0, success_threshold: int = 3
     ):
-        """Initialize circuit breaker.
+        """
+        Initialize circuit breaker.
 
         Args:
             service_name: Name of the service

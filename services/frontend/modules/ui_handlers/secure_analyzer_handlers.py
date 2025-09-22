@@ -1,7 +1,8 @@
-"""Secure Analyzer UI handlers for Frontend service.
+"""
+Secure Analyzer UI handlers for Frontend service.
 
-Handles secure analyzer service visualization, including content detection,
-policy enforcement, and secure summarization monitoring.
+Handles secure analyzer service visualization, including content
+detection, policy enforcement, and secure summarization monitoring.
 """
 
 

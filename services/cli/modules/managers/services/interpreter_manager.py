@@ -1,7 +1,8 @@
-"""Interpreter Manager module for CLI service.
+"""
+Interpreter Manager module for CLI service.
 
-Provides power-user operations for interpreter service including
-query interpretation, workflow execution, and intent management.
+Provides power-user operations for interpreter service including query
+interpretation, workflow execution, and intent management.
 """
 
 import json
@@ -21,7 +22,8 @@ class InterpreterManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def interpreter_management_menu(self):
-        """Main interpreter management menu with enhanced interactive experience."""
+        """Main interpreter management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Interpreter Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -36,7 +38,11 @@ class InterpreterManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.query_interpretation_menu()
         elif choice == "2":

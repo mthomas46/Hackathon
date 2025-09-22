@@ -1,8 +1,9 @@
-"""Automated Remediation module for Analysis Service.
+"""
+Automated Remediation module for Analysis Service.
 
-Provides intelligent automated fixes for common documentation issues, ranging from
-simple formatting corrections to complex content improvements, with safety checks
-and rollback capabilities.
+Provides intelligent automated fixes for common documentation issues,
+ranging from simple formatting corrections to complex content
+improvements, with safety checks and rollback capabilities.
 """
 
 import copy
@@ -720,7 +721,8 @@ async def remediate_document(
     metadata: Optional[Dict[str, Any]] = None,
     confidence_level: str = "medium",
 ) -> Dict[str, Any]:
-    """Convenience function for automated document remediation.
+    """
+    Convenience function for automated document remediation.
 
     Args:
         content: The documentation content to remediate
@@ -743,7 +745,8 @@ async def preview_remediation(
     doc_type: str = "general",
     metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Convenience function for remediation preview.
+    """
+    Convenience function for remediation preview.
 
     Args:
         content: The documentation content to preview remediation for

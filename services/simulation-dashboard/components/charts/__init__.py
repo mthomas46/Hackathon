@@ -1,7 +1,9 @@
-"""Chart Components Module.
+"""
+Chart Components Module.
 
-This module provides reusable chart components for the simulation dashboard,
-including prediction charts, timeline charts, performance charts, and anomaly detection charts.
+This module provides reusable chart components for the simulation
+dashboard, including prediction charts, timeline charts, performance
+charts, and anomaly detection charts.
 """
 
 from .anomaly_charts import render_anomaly_chart

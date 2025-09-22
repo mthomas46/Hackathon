@@ -1,7 +1,9 @@
-"""Tool Registry Storage Module for Discovery Agent.
+"""
+Tool Registry Storage Module for Discovery Agent.
 
-This module provides persistent storage capabilities for discovered tools
-using a simple file-based registry that can be extended to database storage.
+This module provides persistent storage capabilities for discovered
+tools using a simple file-based registry that can be extended to
+database storage.
 """
 
 import json
@@ -10,7 +12,7 @@ from typing import Any, Dict, List
 
 
 class ToolRegistryStorage:
-    """Persistent storage for discovered tools and discovery results"""
+    """Persistent storage for discovered tools and discovery results."""
 
     def __init__(self, storage_path: str = "./data/tool_registry"):
         self.storage_path = Path(storage_path)
@@ -22,7 +24,7 @@ class ToolRegistryStorage:
         self.security_reports_file = self.storage_path / "security_reports.json"
 
     async def save_discovery_results(self, discovery_results: Dict[str, Any]):
-        """Save comprehensive discovery results to persistent storage"""
+        """Save comprehensive discovery results to persistent storage."""
 
         try:
             # Load existing results
@@ -48,7 +50,7 @@ class ToolRegistryStorage:
             print(f"⚠️ Failed to save discovery results: {e}")
 
     async def save_tools(self, service_name: str, tools: List[Dict[str, Any]]):
-        """Save discovered tools for a specific service"""
+        """Save discovered tools for a specific service."""
 
         try:
             # Load existing tools registry
@@ -67,7 +69,7 @@ class ToolRegistryStorage:
             print(f"⚠️ Failed to save tools for {service_name}: {e}")
 
     async def save_security_report(self, service_name: str, security_report: Dict[str, Any]):
-        """Save security scan results for a service"""
+        """Save security scan results for a service."""
 
         try:
             # Load existing security reports
@@ -92,7 +94,7 @@ class ToolRegistryStorage:
             print(f"⚠️ Failed to save security report for {service_name}: {e}")
 
     async def load_discovery_results(self) -> Dict[str, Any]:
-        """Load discovery results from persistent storage"""
+        """Load discovery results from persistent storage."""
         try:
             if self.discovery_results_file.exists():
                 with open(self.discovery_results_file, "r") as f:
@@ -103,7 +105,7 @@ class ToolRegistryStorage:
             return {}
 
     async def load_tools_registry(self) -> Dict[str, Any]:
-        """Load tools registry from persistent storage"""
+        """Load tools registry from persistent storage."""
         try:
             if self.tools_file.exists():
                 with open(self.tools_file, "r") as f:
@@ -114,7 +116,7 @@ class ToolRegistryStorage:
             return {}
 
     async def load_security_reports(self) -> Dict[str, Any]:
-        """Load security reports from persistent storage"""
+        """Load security reports from persistent storage."""
         try:
             if self.security_reports_file.exists():
                 with open(self.security_reports_file, "r") as f:
@@ -125,18 +127,18 @@ class ToolRegistryStorage:
             return {}
 
     async def get_tools_for_service(self, service_name: str) -> List[Dict[str, Any]]:
-        """Retrieve tools for a specific service"""
+        """Retrieve tools for a specific service."""
         registry = await self.load_tools_registry()
         service_data = registry.get(service_name, {})
         return service_data.get("tools", [])
 
     async def get_all_tools(self) -> Dict[str, List[Dict[str, Any]]]:
-        """Retrieve all tools from registry"""
+        """Retrieve all tools from registry."""
         registry = await self.load_tools_registry()
         return {service: data.get("tools", []) for service, data in registry.items()}
 
     async def search_tools(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Search tools based on criteria"""
+        """Search tools based on criteria."""
         all_tools = await self.get_all_tools()
         matching_tools = []
 
@@ -170,7 +172,7 @@ class ToolRegistryStorage:
         return matching_tools
 
     async def get_registry_stats(self) -> Dict[str, Any]:
-        """Get comprehensive statistics about the tool registry"""
+        """Get comprehensive statistics about the tool registry."""
         registry = await self.load_tools_registry()
         discovery_results = await self.load_discovery_results()
         security_reports = await self.load_security_reports()
@@ -215,7 +217,7 @@ class ToolRegistryStorage:
         return stats
 
     async def cleanup_old_data(self, days_to_keep: int = 30):
-        """Clean up old discovery results and reports"""
+        """Clean up old discovery results and reports."""
         # This would implement cleanup logic based on timestamps
         # For now, just maintain the size limits we already have
         print(f"🧹 Cleanup completed (maintaining size limits)")

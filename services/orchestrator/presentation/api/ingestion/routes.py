@@ -1,4 +1,5 @@
-"""API Routes for Document Ingestion
+"""
+API Routes for Document Ingestion.
 
 Provides endpoints for:
 - Starting document ingestion workflows

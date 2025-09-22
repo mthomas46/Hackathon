@@ -1,4 +1,4 @@
-"""Ingestion Source Type Value Object"""
+"""Ingestion Source Type Value Object."""
 
 from enum import Enum
 

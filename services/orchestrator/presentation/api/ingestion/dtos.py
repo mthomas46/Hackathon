@@ -1,4 +1,4 @@
-"""DTOs for Ingestion API"""
+"""DTOs for Ingestion API."""
 
 from typing import Any, Dict, List, Optional
 

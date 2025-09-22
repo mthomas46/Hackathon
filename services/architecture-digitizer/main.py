@@ -229,11 +229,14 @@ app.add_route("/metrics", metrics_endpoint(SERVICE_NAME))
 
 @app.post("/normalize", response_model=NormalizeResponse)
 async def normalize_architecture(request: NormalizeRequest):
-    """Normalize architectural diagrams from various sources into standardized format.
+    """
+    Normalize architectural diagrams from various sources into standardized
+    format.
 
-    Fetches diagram data from supported systems (Miro, FigJam, Lucid, Confluence)
-    and normalizes it into the common Software Architecture JSON schema with
-    components and connections for downstream analysis and documentation.
+    Fetches diagram data from supported systems (Miro, FigJam, Lucid,
+    Confluence) and normalizes it into the common Software Architecture
+    JSON schema with components and connections for downstream analysis
+    and documentation.
     """
     start_time = time.time()
     request_id = f"arch_normalize_{int(time.time() * 1000)}"
@@ -400,10 +403,11 @@ async def normalize_file_upload(
     system: str = Form(..., description="Diagram system (miro, figjam, lucid, confluence)"),
     file_format: str = Form(..., description="File format (json, xml, html)"),
 ):
-    """Normalize an uploaded diagram file into standardized format.
+    """
+    Normalize an uploaded diagram file into standardized format.
 
-    Accepts diagram files exported from supported systems and converts them
-    into the common Software Architecture JSON schema.
+    Accepts diagram files exported from supported systems and converts
+    them into the common Software Architecture JSON schema.
     """
     import time
 

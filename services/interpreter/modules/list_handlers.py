@@ -1,4 +1,5 @@
-"""List handlers for Interpreter service.
+"""
+List handlers for Interpreter service.
 
 Handles the logic for list and info endpoints.
 """

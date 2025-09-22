@@ -1,4 +1,4 @@
-"""Approval Recommendation Value Object"""
+"""Approval Recommendation Value Object."""
 
 from enum import Enum
 

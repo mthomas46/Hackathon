@@ -1,4 +1,4 @@
-"""Query Processing Application Commands"""
+"""Query Processing Application Commands."""
 
 from dataclasses import dataclass
 

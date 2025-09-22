@@ -62,7 +62,8 @@ except ImportError:
 
 
 class SimulationHealthMonitoringIntegration:
-    """Integration layer for simulation health monitoring with shared infrastructure."""
+    """Integration layer for simulation health monitoring with shared
+    infrastructure."""
 
     def __init__(self):
         """Initialize health monitoring integration."""
@@ -84,7 +85,8 @@ class SimulationHealthMonitoringIntegration:
         self.logger.info("Simulation health monitoring integration initialized")
 
     def _register_health_indicators(self):
-        """Register simulation-specific health indicators with shared registry."""
+        """Register simulation-specific health indicators with shared
+        registry."""
         # Register core simulation indicators
         self.indicator_registry.register("simulation_engine", self._check_simulation_engine)
         self.indicator_registry.register("ecosystem_services", self._check_ecosystem_services)
@@ -161,7 +163,8 @@ class SimulationHealthMonitoringIntegration:
     def _check_integration_status(
         self, simulation_health: Dict[str, Any], ecosystem_health: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Check integration status between simulation and ecosystem services."""
+        """Check integration status between simulation and ecosystem
+        services."""
         integration_status = {
             "data_flow": "unknown",
             "service_communication": "unknown",

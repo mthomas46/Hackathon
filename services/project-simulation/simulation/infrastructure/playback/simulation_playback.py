@@ -1,7 +1,9 @@
-"""Simulation playback infrastructure.
+"""
+Simulation playback infrastructure.
 
-This module provides functionality to replay simulations using stored data,
-retrieving documents and prompts that were used during the original simulation.
+This module provides functionality to replay simulations using stored
+data, retrieving documents and prompts that were used during the
+original simulation.
 """
 
 import asyncio

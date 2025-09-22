@@ -92,7 +92,11 @@ class BaseValidator(ABC):
         """Validate the given data."""
 
     async def validate_field(self, field_name: str, field_value: Any) -> List[ValidationError]:
-        """Validate a specific field. Override in subclasses as needed."""
+        """
+        Validate a specific field.
+
+        Override in subclasses as needed.
+        """
         return []
 
     def create_error(

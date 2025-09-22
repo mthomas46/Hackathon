@@ -1,5 +1,5 @@
 """
-PR Confidence Analysis Module for Analysis Service
+PR Confidence Analysis Module for Analysis Service.
 
 This module provides comprehensive PR confidence analysis capabilities
 moved from the orchestrator to the dedicated analysis service.

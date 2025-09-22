@@ -1,4 +1,5 @@
-"""DocStore Manager module for CLI service.
+"""
+DocStore Manager module for CLI service.
 
 Provides power-user operations for document store management including
 documents, analyses, search, and quality operations.
@@ -29,7 +30,11 @@ class DocStoreManager(BaseManager):
         return [("1", "Document Management"), ("2", "Search Operations"), ("3", "Storage Configuration")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 

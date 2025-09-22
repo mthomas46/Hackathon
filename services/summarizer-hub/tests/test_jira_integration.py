@@ -1,6 +1,8 @@
-"""Unit Tests for Jira Integration in Summarizer Hub Service.
+"""
+Unit Tests for Jira Integration in Summarizer Hub Service.
 
-This module contains unit tests for Jira ticket creation and management functionality.
+This module contains unit tests for Jira ticket creation and management
+functionality.
 """
 
 from typing import Any, Dict, List
@@ -207,7 +209,8 @@ class TestJiraIntegrationWithSummarizer:
 
     @pytest.mark.asyncio
     async def test_generate_recommendations_with_jira_suggestions_only(self, summarizer, sample_documents):
-        """Test recommendations generation with Jira suggestions but no creation."""
+        """Test recommendations generation with Jira suggestions but no
+        creation."""
         result = await summarizer.generate_recommendations(
             documents=sample_documents, include_jira_suggestions=True, create_jira_tickets=False
         )
@@ -218,7 +221,8 @@ class TestJiraIntegrationWithSummarizer:
 
     @pytest.mark.asyncio
     async def test_generate_recommendations_with_jira_creation_enabled(self, summarizer, sample_documents):
-        """Test recommendations generation with Jira ticket creation enabled."""
+        """Test recommendations generation with Jira ticket creation
+        enabled."""
         with patch("main.jira_client", new_callable=AsyncMock) as mock_jira_client:
             mock_jira_client.create_jira_tickets_from_suggestions.return_value = {
                 "success": True,
@@ -308,7 +312,8 @@ class TestJiraTicketGeneration:
             assert "epic_link" in ticket
 
     def test_generate_jira_ticket_suggestions_consolidation_focus(self, summarizer):
-        """Test Jira ticket generation focused on consolidation recommendations."""
+        """Test Jira ticket generation focused on consolidation
+        recommendations."""
         recommendations = [
             {
                 "type": "consolidation",

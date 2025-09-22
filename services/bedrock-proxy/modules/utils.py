@@ -1,13 +1,16 @@
-"""Utility functions for bedrock proxy service.
+"""
+Utility functions for bedrock proxy service.
 
-Provides helper functions for text processing, sanitization, and content generation.
+Provides helper functions for text processing, sanitization, and content
+generation.
 """
 
 import re
 
 
 def sanitize_for_response(text: str) -> str:
-    """Sanitize text to prevent XSS attacks and injection in JSON responses.
+    """
+    Sanitize text to prevent XSS attacks and injection in JSON responses.
 
     Performs comprehensive sanitization including:
     - HTML tag removal
@@ -55,7 +58,8 @@ def sanitize_for_response(text: str) -> str:
 
 
 def bullets_from_text(text: str, max_items: int = 5) -> list[str]:
-    """Extract meaningful bullet points from input text content.
+    """
+    Extract meaningful bullet points from input text content.
 
     Parses text line by line, extracting non-empty lines as bullet points.
     Provides fallback content if no meaningful text is found.

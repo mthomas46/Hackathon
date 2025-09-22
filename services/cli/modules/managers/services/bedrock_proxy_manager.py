@@ -1,7 +1,8 @@
-"""Bedrock Proxy Manager module for CLI service.
+"""
+Bedrock Proxy Manager module for CLI service.
 
-Provides power-user operations for bedrock proxy including
-AI model invocations, template usage, proxy management, and history.
+Provides power-user operations for bedrock proxy including AI model
+invocations, template usage, proxy management, and history.
 """
 
 import json
@@ -32,7 +33,11 @@ class BedrockProxyManager(BaseManager):
         return [("1", "Template Management"), ("2", "Format Configuration"), ("3", "Invocation History")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 

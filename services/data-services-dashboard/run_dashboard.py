@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Data Services Dashboard Runner.
+"""
+Data Services Dashboard Runner.
 
-This script runs the Data Services Dashboard, a unified interface for managing
-Memory Agent, Prompt Store, and Document Store services.
+This script runs the Data Services Dashboard, a unified interface for
+managing Memory Agent, Prompt Store, and Document Store services.
 """
 
 import sys

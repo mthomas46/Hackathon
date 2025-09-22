@@ -1,4 +1,5 @@
-"""Service Integration Module for LLM Gateway Service.
+"""
+Service Integration Module for LLM Gateway Service.
 
 Handles comprehensive integration with all ecosystem services including:
 - doc_store: Document storage and retrieval

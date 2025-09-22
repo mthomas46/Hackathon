@@ -1,4 +1,5 @@
-"""Prompt repository implementation.
+"""
+Prompt repository implementation.
 
 Handles database operations for prompts following domain-driven design.
 """

@@ -96,7 +96,8 @@ except ImportError:
 
 
 class SimulationRedisCacheManager:
-    """Redis cache manager for simulation state persistence following ecosystem patterns."""
+    """Redis cache manager for simulation state persistence following ecosystem
+    patterns."""
 
     def __init__(self, redis_config: Optional[Dict[str, Any]] = None):
         """Initialize Redis cache manager."""

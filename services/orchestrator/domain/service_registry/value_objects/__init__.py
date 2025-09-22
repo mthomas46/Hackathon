@@ -1,4 +1,4 @@
-"""Value Objects for Service Registry Domain"""
+"""Value Objects for Service Registry Domain."""
 
 from .service_capability import ServiceCapability
 from .service_endpoint import ServiceEndpoint

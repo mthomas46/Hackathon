@@ -1,4 +1,5 @@
-"""Discovery Agent monitoring infrastructure for Frontend service.
+"""
+Discovery Agent monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for discovery agent
 service endpoint registration and OpenAPI parsing operations.
@@ -12,7 +13,8 @@ from .shared_utils import get_discovery_agent_url, get_frontend_clients
 
 
 class DiscoveryAgentMonitor:
-    """Monitor for discovery agent service endpoint registration and parsing operations."""
+    """Monitor for discovery agent service endpoint registration and parsing
+    operations."""
 
     def __init__(self):
         self._discovery_history = []

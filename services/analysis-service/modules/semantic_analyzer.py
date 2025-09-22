@@ -84,7 +84,8 @@ class EmbeddingCalculator:
     def __init__(
         self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None, model_name: str = "all-MiniLM-L6-v2"
     ):
-        """Initialize embedding calculator.
+        """
+        Initialize embedding calculator.
 
         Args:
             logger: Logger service for logging operations
@@ -121,7 +122,8 @@ class EmbeddingCalculator:
             self._dimensions = 384  # Standard embedding dimension
 
     async def calculate_embedding(self, text: str) -> EmbeddingResult:
-        """Calculate embedding for text.
+        """
+        Calculate embedding for text.
 
         Args:
             text: Text to calculate embedding for
@@ -178,7 +180,8 @@ class EmbeddingCalculator:
         return embedding.astype(np.float32)
 
     async def calculate_batch_embeddings(self, texts: List[str]) -> List[EmbeddingResult]:
-        """Calculate embeddings for multiple texts.
+        """
+        Calculate embeddings for multiple texts.
 
         Args:
             texts: List of texts to calculate embeddings for
@@ -206,7 +209,8 @@ class SimilarityCalculator:
     """Calculates similarity between embeddings."""
 
     def __init__(self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None):
-        """Initialize similarity calculator.
+        """
+        Initialize similarity calculator.
 
         Args:
             logger: Logger service for logging operations
@@ -218,7 +222,8 @@ class SimilarityCalculator:
     async def calculate_similarity(
         self, embedding1: np.ndarray, embedding2: np.ndarray, metric: str = "cosine"
     ) -> float:
-        """Calculate similarity between two embeddings.
+        """
+        Calculate similarity between two embeddings.
 
         Args:
             embedding1: First embedding vector
@@ -271,7 +276,8 @@ class SimilarityCalculator:
         return np.dot(vec1, vec2)
 
     async def calculate_pairwise_similarities(self, embeddings: List[np.ndarray], metric: str = "cosine") -> np.ndarray:
-        """Calculate pairwise similarities between all embeddings.
+        """
+        Calculate pairwise similarities between all embeddings.
 
         Args:
             embeddings: List of embedding vectors
@@ -304,7 +310,8 @@ class SimilarityCalculator:
         metric: str = "cosine",
         top_k: Optional[int] = None,
     ) -> List[SimilarityResult]:
-        """Find similar pairs of texts based on embeddings.
+        """
+        Find similar pairs of texts based on embeddings.
 
         Args:
             embeddings: List of embedding vectors
@@ -365,7 +372,8 @@ class SimilarityCalculator:
 
 
 class SemanticAnalyzer:
-    """Main semantic analysis service combining embedding and similarity calculations."""
+    """Main semantic analysis service combining embedding and similarity
+    calculations."""
 
     def __init__(
         self,
@@ -373,7 +381,8 @@ class SemanticAnalyzer:
         similarity_calculator: Optional[SimilarityCalculator] = None,
         logger: Optional[ILoggerService] = None,
     ):
-        """Initialize semantic analyzer.
+        """
+        Initialize semantic analyzer.
 
         Args:
             embedding_calculator: Embedding calculator instance
@@ -387,7 +396,8 @@ class SemanticAnalyzer:
     async def analyze_semantic_similarity(
         self, texts: List[str], threshold: float = 0.8, metric: str = "cosine", top_k: Optional[int] = None
     ) -> Dict[str, Any]:
-        """Perform complete semantic similarity analysis.
+        """
+        Perform complete semantic similarity analysis.
 
         Args:
             texts: List of texts to analyze
@@ -484,7 +494,8 @@ class SemanticAnalyzer:
     async def find_most_similar(
         self, target_text: str, candidate_texts: List[str], top_k: int = 5, metric: str = "cosine"
     ) -> Dict[str, Any]:
-        """Find most similar texts to a target text.
+        """
+        Find most similar texts to a target text.
 
         Args:
             target_text: The target text to find similarities for

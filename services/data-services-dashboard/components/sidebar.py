@@ -9,7 +9,8 @@ import streamlit as st
 
 
 def render_sidebar(pages: Dict[str, Dict[str, Any]]) -> str:
-    """Render the sidebar navigation.
+    """
+    Render the sidebar navigation.
 
     Args:
         pages: Dictionary of available pages

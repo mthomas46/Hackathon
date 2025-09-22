@@ -1,4 +1,5 @@
-"""Shared Constants and Configuration
+"""
+Shared Constants and Configuration.
 
 Centralized constants, enums, and configuration values used across all services.
 

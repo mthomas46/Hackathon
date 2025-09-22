@@ -1,4 +1,5 @@
-"""Consolidated resilience utilities for fault tolerance and reliability.
+"""
+Consolidated resilience utilities for fault tolerance and reliability.
 
 Combines retry, circuit breaker, and rate limiting functionality.
 """
@@ -14,7 +15,8 @@ T = TypeVar("T")
 
 
 class CircuitBreaker:
-    """Tracks consecutive failures and gates calls for a cooldown window.
+    """
+    Tracks consecutive failures and gates calls for a cooldown window.
 
     State transitions:
     - closed: calls pass, failures increment counter

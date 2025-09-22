@@ -1,7 +1,9 @@
-"""Real-time Components Module.
+"""
+Real-time Components Module.
 
 This module provides real-time components for the simulation dashboard,
-including live metrics, event streams, progress indicators, and status dashboards.
+including live metrics, event streams, progress indicators, and status
+dashboards.
 """
 
 from .event_stream import render_event_stream

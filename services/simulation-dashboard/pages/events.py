@@ -1,7 +1,9 @@
-"""Events Timeline Page.
+"""
+Events Timeline Page.
 
-This module provides the event timeline and replay visualization interface,
-allowing users to explore simulation events chronologically and replay event sequences.
+This module provides the event timeline and replay visualization
+interface, allowing users to explore simulation events chronologically
+and replay event sequences.
 """
 
 from datetime import datetime, timedelta

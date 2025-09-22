@@ -1,7 +1,5 @@
-"""
-Memory Agent Service Adapter for CLI interaction
-Handles memory management, conversation history, and context storage
-"""
+"""Memory Agent Service Adapter for CLI interaction Handles memory management,
+conversation history, and context storage."""
 
 import time
 from typing import Any, Dict, List, Optional
@@ -37,11 +35,11 @@ class MemoryAgentAdapter(BaseServiceAdapter):
         )
 
     def get_available_commands(self) -> List[str]:
-        """Return list of available commands for this service"""
+        """Return list of available commands for this service."""
         return ["status", "memories", "contexts", "search", "store", "recall", "forget", "stats", "clear"]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute a command against the Memory Agent service"""
+        """Execute a command against the Memory Agent service."""
         command_map = {
             "status": self._get_status,
             "memories": self._list_memories,
@@ -64,7 +62,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _get_status(self) -> CommandResult:
-        """Get Memory Agent service status"""
+        """Get Memory Agent service status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/status"
@@ -81,7 +79,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Memory Agent status: {str(e)}")
 
     async def _list_memories(self, limit: int = 10, context_id: Optional[str] = None) -> CommandResult:
-        """List stored memories"""
+        """List stored memories."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/memories"
@@ -102,7 +100,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list memories: {str(e)}")
 
     async def _list_contexts(self) -> CommandResult:
-        """List conversation contexts"""
+        """List conversation contexts."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/contexts"
@@ -119,7 +117,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list contexts: {str(e)}")
 
     async def _search_memories(self, query: str, context_id: Optional[str] = None) -> CommandResult:
-        """Search memories by content"""
+        """Search memories by content."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/search"
@@ -142,7 +140,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
     async def _store_memory(
         self, content: str, context_id: Optional[str] = None, metadata: Optional[Dict] = None
     ) -> CommandResult:
-        """Store a new memory"""
+        """Store a new memory."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/memories"
@@ -163,7 +161,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to store memory: {str(e)}")
 
     async def _recall_memory(self, memory_id: str) -> CommandResult:
-        """Recall a specific memory"""
+        """Recall a specific memory."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/memories/{memory_id}"
@@ -177,7 +175,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to recall memory {memory_id}: {str(e)}")
 
     async def _forget_memory(self, memory_id: str) -> CommandResult:
-        """Delete a specific memory"""
+        """Delete a specific memory."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/memories/{memory_id}"
@@ -210,7 +208,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to clear memories: {str(e)}")
 
     async def _get_stats(self) -> CommandResult:
-        """Get Memory Agent statistics"""
+        """Get Memory Agent statistics."""
         try:
             start_time = time.time()
 
@@ -244,7 +242,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Memory Agent stats: {str(e)}")
 
     def format_response(self, result: CommandResult, command: str) -> None:
-        """Format and display the command result"""
+        """Format and display the command result."""
         if not result.success:
             self.console.print(f"[red]❌ Error: {result.error}[/red]")
             return
@@ -270,7 +268,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
-        """Format status response"""
+        """Format status response."""
         if not data:
             self.console.print("[yellow]⚠️  No status data available[/yellow]")
             return
@@ -285,7 +283,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_memories_response(self, data: Dict[str, Any]) -> None:
-        """Format memories list response"""
+        """Format memories list response."""
         memories = data.get("memories", [])
         if not memories:
             self.console.print("[yellow]🧠 No memories found[/yellow]")
@@ -312,7 +310,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Total memories: {total}[/dim]")
 
     def _format_contexts_response(self, data: Dict[str, Any]) -> None:
-        """Format contexts response"""
+        """Format contexts response."""
         contexts = data.get("contexts", [])
         if not contexts:
             self.console.print("[yellow]💭 No contexts found[/yellow]")
@@ -338,7 +336,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_search_response(self, data: Dict[str, Any]) -> None:
-        """Format search results"""
+        """Format search results."""
         results = data.get("results", [])
         if not results:
             self.console.print("[yellow]🔍 No memories found[/yellow]")
@@ -366,7 +364,7 @@ class MemoryAgentAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Query: '{query}' - {total} results[/dim]")
 
     def _format_stats_response(self, data: Dict[str, Any]) -> None:
-        """Format statistics response"""
+        """Format statistics response."""
         self.console.print(
             Panel.fit(
                 f"📊 Memory Agent Statistics\n\n"

@@ -1,4 +1,4 @@
-"""Application Queries for Workflow Management"""
+"""Application Queries for Workflow Management."""
 
 from dataclasses import dataclass
 from typing import Optional

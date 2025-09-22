@@ -163,7 +163,8 @@ original_healthy_response = healthy_response
 
 
 def custom_healthy_response(service_name: str, version: str = "1.0.0", **kwargs):
-    """Custom healthy response that includes database_connected for doc_store."""
+    """Custom healthy response that includes database_connected for
+    doc_store."""
     if service_name == ServiceNames.DOC_STORE:
         # TODO: Implement database connection check
         kwargs["database_connected"] = True  # Placeholder

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Discovery Agent Service
+LangGraph Integration for Discovery Agent Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Discovery Agent Service, enabling automated tool discovery and registration.
+for the Discovery Agent Service, enabling automated tool discovery and
+registration.
 """
 
 from datetime import datetime
@@ -33,7 +34,8 @@ class DiscoveryAgentLangGraphIntegration:
         async def discover_service_tools_langgraph(
             service_name: str, service_url: str, workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Discover tools for a service within LangGraph workflow context."""
+            """Discover tools for a service within LangGraph workflow
+            context."""
             try:
                 # Check cache first
                 cache_key = f"{service_name}_{service_url}"
@@ -86,7 +88,8 @@ class DiscoveryAgentLangGraphIntegration:
         async def register_tools_with_orchestrator_langgraph(
             tools_data: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Register discovered tools with orchestrator within workflow context."""
+            """Register discovered tools with orchestrator within workflow
+            context."""
             try:
                 # Enhance registration with workflow context
                 registration_context = {
@@ -128,7 +131,8 @@ class DiscoveryAgentLangGraphIntegration:
         async def validate_service_compatibility_langgraph(
             service_name: str, workflow_context: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
-            """Validate service compatibility for tool discovery within workflow."""
+            """Validate service compatibility for tool discovery within
+            workflow."""
             try:
                 validation_context = {
                     "service_name": service_name,

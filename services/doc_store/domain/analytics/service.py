@@ -1,4 +1,5 @@
-"""Analytics service for business logic operations.
+"""
+Analytics service for business logic operations.
 
 Handles analytics processing and business rules.
 """

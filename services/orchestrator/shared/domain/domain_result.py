@@ -1,4 +1,4 @@
-"""Domain Result Class"""
+"""Domain Result Class."""
 
 from dataclasses import dataclass
 from typing import Generic, List, Optional, TypeVar

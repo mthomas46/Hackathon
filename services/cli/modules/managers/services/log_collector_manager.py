@@ -1,7 +1,8 @@
-"""Log Collector Manager module for CLI service.
+"""
+Log Collector Manager module for CLI service.
 
-Provides power-user operations for log collector including
-log aggregation, streaming, pattern analysis, and stats.
+Provides power-user operations for log collector including log
+aggregation, streaming, pattern analysis, and stats.
 """
 
 import json
@@ -28,7 +29,11 @@ class LogCollectorManager(BaseManager):
         return [("1", "Log Collection"), ("2", "Log Analysis"), ("3", "Log Storage")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 

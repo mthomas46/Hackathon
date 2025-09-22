@@ -1,4 +1,5 @@
-"""Quality assurance and validation service for prompt testing and bias detection."""
+"""Quality assurance and validation service for prompt testing and bias
+detection."""
 
 import re
 from typing import Any, Dict, List

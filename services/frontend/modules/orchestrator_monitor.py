@@ -1,7 +1,8 @@
-"""Orchestrator monitoring infrastructure for Frontend service.
+"""
+Orchestrator monitoring infrastructure for Frontend service.
 
-Provides visualization and monitoring capabilities for orchestrator Redis pub/sub
-activity and service configuration.
+Provides visualization and monitoring capabilities for orchestrator
+Redis pub/sub activity and service configuration.
 """
 
 from collections import defaultdict

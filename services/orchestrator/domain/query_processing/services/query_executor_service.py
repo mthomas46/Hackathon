@@ -1,4 +1,4 @@
-"""Query Executor Service Domain Service"""
+"""Query Executor Service Domain Service."""
 
 import uuid
 from datetime import datetime

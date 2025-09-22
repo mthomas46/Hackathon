@@ -1,4 +1,5 @@
-"""API Routes for Query Processing
+"""
+API Routes for Query Processing.
 
 Provides endpoints for:
 - Natural language query processing

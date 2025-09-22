@@ -81,7 +81,8 @@ def track_cache_operation(operation: str, cache_key: str, hit: bool = True, **co
 
 
 def create_metrics_summary() -> Dict[str, Any]:
-    """Create a summary of CLI metrics (placeholder for future implementation)."""
+    """Create a summary of CLI metrics (placeholder for future
+    implementation)."""
     # This would typically aggregate metrics from a metrics store
     return {
         "total_operations": 0,

@@ -1,4 +1,5 @@
-"""LLM Gateway Integration Module for Interpreter Service.
+"""
+LLM Gateway Integration Module for Interpreter Service.
 
 Provides integration between the Interpreter service and LLM Gateway for:
 - Enhanced natural language understanding using LLM capabilities
@@ -265,7 +266,8 @@ Return a JSON object with:
             }
 
     async def generate_workflow_suggestions(self, query: str, available_services: List[str]) -> Dict[str, Any]:
-        """Use LLM Gateway to generate workflow suggestions based on query and available services."""
+        """Use LLM Gateway to generate workflow suggestions based on query and
+        available services."""
         try:
             services_str = ", ".join(available_services)
 

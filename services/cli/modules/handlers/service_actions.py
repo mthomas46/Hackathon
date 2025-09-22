@@ -1,8 +1,9 @@
-"""Service Actions module for the CLI service.
+"""
+Service Actions module for the CLI service.
 
-Provides an interactive, API-driven menu that lets users enact common actions
-across services. Menus are populated by querying the appropriate APIs and
-collecting user input for required parameters.
+Provides an interactive, API-driven menu that lets users enact common
+actions across services. Menus are populated by querying the appropriate
+APIs and collecting user input for required parameters.
 """
 
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -42,7 +43,8 @@ class ServiceActions:
             await self._service_menu(service)
 
     async def _select_service(self) -> Optional[str]:
-        """Build service list from orchestrator registry if available; fallback to known set."""
+        """Build service list from orchestrator registry if available; fallback
+        to known set."""
         services: List[str] = []
         # Try orchestrator registry
         try:

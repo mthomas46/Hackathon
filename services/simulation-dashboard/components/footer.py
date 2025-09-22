@@ -1,7 +1,8 @@
-"""Footer Component.
+"""
+Footer Component.
 
-This module provides the footer component for the dashboard,
-including version information, links, and system status.
+This module provides the footer component for the dashboard, including
+version information, links, and system status.
 """
 
 from datetime import datetime

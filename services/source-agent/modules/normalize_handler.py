@@ -1,4 +1,5 @@
-"""Data normalization handler for Source Agent service.
+"""
+Data normalization handler for Source Agent service.
 
 Handles the complex logic for normalizing data from different sources.
 """

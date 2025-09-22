@@ -1,8 +1,10 @@
-"""Intent recognition functionality for the Interpreter service.
+"""
+Intent recognition functionality for the Interpreter service.
 
-This module contains the IntentRecognizer class and related functionality,
-extracted from the main interpreter service to improve maintainability.
-Enhanced with ecosystem context awareness for project-specific understanding.
+This module contains the IntentRecognizer class and related
+functionality, extracted from the main interpreter service to improve
+maintainability. Enhanced with ecosystem context awareness for project-
+specific understanding.
 """
 
 import re
@@ -168,7 +170,8 @@ class IntentRecognizer:
         self._add_service_specific_patterns()
 
     def _add_service_specific_patterns(self):
-        """Add service-specific intent patterns based on ecosystem capabilities."""
+        """Add service-specific intent patterns based on ecosystem
+        capabilities."""
         # Get service capabilities from ecosystem context
         services = ecosystem_context.service_capabilities
 
@@ -283,7 +286,8 @@ class IntentRecognizer:
         return min(base_score, 1.0)
 
     def _recognize_with_ecosystem_context(self, query: str) -> Tuple[str, float, Dict[str, Any]]:
-        """Use ecosystem context for intent recognition when pattern matching is uncertain."""
+        """Use ecosystem context for intent recognition when pattern matching
+        is uncertain."""
         best_intent = "unknown"
         best_score = 0.0
         metadata = {}

@@ -120,7 +120,8 @@ attach_self_register(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB")
 
 
 class InvokeRequest(BaseModel):
-    """Request model for tool invocation with execution options.
+    """
+    Request model for tool invocation with execution options.
 
     Allows specification of tool arguments and execution mode controls
     for flexible GitHub MCP tool invocation.
@@ -133,14 +134,17 @@ class InvokeRequest(BaseModel):
     """Optional correlation ID for request tracing."""
 
     mock: Optional[bool] = None
-    """Override default mock mode setting (True for mock, False for real API)."""
+    """Override default mock mode setting (True for mock, False for real
+    API)."""
 
     write: Optional[bool] = None
-    """Indicates if this is a write operation (subject to read-only mode gating)."""
+    """Indicates if this is a write operation (subject to read-only mode
+    gating)."""
 
 
 class InvokeResponse(BaseModel):
-    """Response model for tool invocation results.
+    """
+    Response model for tool invocation results.
 
     Contains the execution result and metadata for a tool invocation,
     indicating success or failure with appropriate result data.
@@ -184,11 +188,13 @@ async def info():
 
 @app.get("/tools", response_model=List[ToolDescription])
 async def list_tools(toolsets: Optional[str] = None):
-    """List available GitHub MCP tools with optional toolset filtering.
+    """
+    List available GitHub MCP tools with optional toolset filtering.
 
-    Returns available tools filtered by toolset when dynamic toolsets are enabled.
-    Supports comma-separated toolset specification in query parameter.
-    Defaults to 'repos' toolset when dynamic mode is enabled but no toolsets specified.
+    Returns available tools filtered by toolset when dynamic toolsets
+    are enabled. Supports comma-separated toolset specification in query
+    parameter. Defaults to 'repos' toolset when dynamic mode is enabled
+    but no toolsets specified.
     """
     # Determine effective toolsets from query (if dynamic) or environment
     effective_toolsets: Optional[Set[str]] = None
@@ -208,13 +214,16 @@ async def list_tools(toolsets: Optional[str] = None):
 
 @app.post("/tools/{tool}/invoke", response_model=InvokeResponse)
 async def invoke(tool: str, payload: InvokeRequest):
-    """Invoke a specific GitHub MCP tool with the provided arguments.
+    """
+    Invoke a specific GitHub MCP tool with the provided arguments.
 
-    Executes the specified tool using either mock implementations or real GitHub API calls,
-    with support for upstream MCP proxying and downstream event emission.
-    Write operations are gated by read-only mode configuration.
+    Executes the specified tool using either mock implementations or
+    real GitHub API calls, with support for upstream MCP proxying and
+    downstream event emission. Write operations are gated by read-only
+    mode configuration.
 
-    Supports correlation ID tracking and flexible mock/real execution modes.
+    Supports correlation ID tracking and flexible mock/real execution
+    modes.
     """
     start_time = time.time()
     request_id = f"github_mcp_invoke_{int(time.time() * 1000)}"

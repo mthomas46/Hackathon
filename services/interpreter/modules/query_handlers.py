@@ -1,6 +1,8 @@
-"""Query handlers for Interpreter service.
+"""
+Query handlers for Interpreter service.
 
-Handles the complex logic for query interpretation and execution endpoints.
+Handles the complex logic for query interpretation and execution
+endpoints.
 """
 
 import time

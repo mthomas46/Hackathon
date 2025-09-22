@@ -1,9 +1,9 @@
 """
-Analysis Service Adapter
+Analysis Service Adapter.
 
-Standardized adapter for the Analysis Service providing unified CLI interface
-for all analysis capabilities including code analysis, security scanning,
-quality metrics, and architectural analysis.
+Standardized adapter for the Analysis Service providing unified CLI
+interface for all analysis capabilities including code analysis,
+security scanning, quality metrics, and architectural analysis.
 """
 
 import time
@@ -14,7 +14,7 @@ from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 class AnalysisServiceAdapter(BaseServiceAdapter):
     """
-    Unified adapter for Analysis Service
+    Unified adapter for Analysis Service.
 
     Provides standardized access to:
     - Code analysis capabilities
@@ -26,7 +26,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
     """
 
     def get_service_info(self) -> ServiceInfo:
-        """Get Analysis Service information"""
+        """Get Analysis Service information."""
         return ServiceInfo(
             name="analysis-service",
             port=5020,
@@ -57,7 +57,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
         )
 
     async def health_check(self) -> CommandResult:
-        """Perform comprehensive health check"""
+        """Perform comprehensive health check."""
         try:
             start_time = time.time()
 
@@ -98,7 +98,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Health check error: {str(e)}")
 
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
-        """Get available Analysis Service commands"""
+        """Get available Analysis Service commands."""
         return [
             ("analyze", "Perform general code analysis", "analyze [target_id] [analysis_type]"),
             (
@@ -116,7 +116,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
         ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute Analysis Service commands"""
+        """Execute Analysis Service commands."""
         try:
             start_time = time.time()
 
@@ -146,7 +146,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _get_service_status(self) -> CommandResult:
-        """Get detailed service status"""
+        """Get detailed service status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/api/analysis/status"
@@ -163,7 +163,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get service status: {str(e)}")
 
     async def _perform_analysis(self, params: Dict) -> CommandResult:
-        """Perform general analysis"""
+        """Perform general analysis."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/api/analysis/analyze"
@@ -184,7 +184,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Analysis failed: {str(e)}")
 
     async def _semantic_similarity(self, params: Dict) -> CommandResult:
-        """Perform semantic similarity analysis"""
+        """Perform semantic similarity analysis."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/api/analysis/semantic-similarity"
@@ -204,28 +204,28 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Semantic similarity analysis failed: {str(e)}")
 
     async def _sentiment_analysis(self, params: Dict) -> CommandResult:
-        """Perform sentiment analysis"""
+        """Perform sentiment analysis."""
         # Implementation would call appropriate endpoint
         return CommandResult(
             success=True, data={"sentiment": "positive", "confidence": 0.85}, message="Sentiment analysis completed"
         )
 
     async def _quality_assessment(self, params: Dict) -> CommandResult:
-        """Perform quality assessment"""
+        """Perform quality assessment."""
         # Implementation would call appropriate endpoint
         return CommandResult(
             success=True, data={"quality_score": 85, "issues": []}, message="Quality assessment completed"
         )
 
     async def _security_scan(self, params: Dict) -> CommandResult:
-        """Perform security scan"""
+        """Perform security scan."""
         # Implementation would call appropriate endpoint
         return CommandResult(
             success=True, data={"security_score": 92, "vulnerabilities": []}, message="Security scan completed"
         )
 
     async def _architecture_analysis(self, params: Dict) -> CommandResult:
-        """Perform architecture analysis"""
+        """Perform architecture analysis."""
         # Implementation would call appropriate endpoint
         return CommandResult(
             success=True,
@@ -234,7 +234,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
         )
 
     async def _get_metrics(self) -> CommandResult:
-        """Get analysis metrics"""
+        """Get analysis metrics."""
         # Implementation would call appropriate endpoint
         return CommandResult(
             success=True,

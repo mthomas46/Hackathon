@@ -1,4 +1,5 @@
-"""Cross-Service Data Consistency Tests.
+"""
+Cross-Service Data Consistency Tests.
 
 This module contains tests that validate data consistency and integrity
 across multiple services in the ecosystem, ensuring reliable data flow

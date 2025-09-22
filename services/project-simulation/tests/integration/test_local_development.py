@@ -1,4 +1,5 @@
-"""Local Development Environment Tests.
+"""
+Local Development Environment Tests.
 
 This module contains comprehensive tests for local development setup,
 including environment configuration, database integration, and local

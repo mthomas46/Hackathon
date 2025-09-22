@@ -1,7 +1,9 @@
-"""Presentation Layer Utilities
+"""
+Presentation Layer Utilities.
 
 Utility functions for the presentation layer (API routes and DTOs).
-These functions handle common presentation concerns like response formatting and request processing.
+These functions handle common presentation concerns like response
+formatting and request processing.
 """
 
 from typing import Any, Dict

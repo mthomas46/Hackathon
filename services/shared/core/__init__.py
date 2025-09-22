@@ -1,7 +1,8 @@
 """
-Core Shared Functionality
+Core Shared Functionality.
 
-This module contains the core shared functionality used across all services.
+This module contains the core shared functionality used across all
+services.
 """
 
 from .config.config import *

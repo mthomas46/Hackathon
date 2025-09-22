@@ -1,4 +1,5 @@
-"""Base handler for API endpoint operations.
+"""
+Base handler for API endpoint operations.
 
 Provides common HTTP response patterns and error handling.
 """

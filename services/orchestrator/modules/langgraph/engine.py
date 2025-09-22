@@ -1,4 +1,5 @@
-"""LangGraph workflow engine for Orchestrator service.
+"""
+LangGraph workflow engine for Orchestrator service.
 
 This module provides the core LangGraph workflow execution engine
 integrated with the existing orchestrator infrastructure.
@@ -30,7 +31,8 @@ class LangGraphWorkflowEngine:
         self.service_client = get_orchestrator_service_client()
 
     async def initialize_tools(self, service_names: List[str]) -> Dict[str, BaseTool]:
-        """Initialize tools for specified services, using discovered tools when available."""
+        """Initialize tools for specified services, using discovered tools when
+        available."""
         tools = {}
 
         for service_name in service_names:
@@ -95,7 +97,8 @@ class LangGraphWorkflowEngine:
 
         # Create dynamic function for the tool
         async def dynamic_tool_func(**kwargs):
-            """Dynamic tool function that calls the discovered service endpoint."""
+            """Dynamic tool function that calls the discovered service
+            endpoint."""
             try:
                 # Get service URL from discovery data
                 service_url = tool_def.get("service_url", "")
@@ -245,7 +248,8 @@ class LangGraphWorkflowEngine:
             raise
 
     async def _log_workflow_event(self, workflow_id: str, event_type: str, data: Dict[str, Any]):
-        """Log workflow events using the orchestrator's logging infrastructure."""
+        """Log workflow events using the orchestrator's logging
+        infrastructure."""
         try:
             # Use the existing logging infrastructure
             log_data = {"workflow_id": workflow_id, "event_type": event_type, "timestamp": utc_now(), "data": data}

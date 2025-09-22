@@ -1,5 +1,6 @@
 """
 Domain entities for recommendations.
+
 Following DDD principles with clean, focused entities.
 """
 

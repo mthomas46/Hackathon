@@ -1,5 +1,5 @@
 """
-PR Cross-Reference Analysis Module
+PR Cross-Reference Analysis Module.
 
 Advanced cross-reference analysis between PR, Jira, and Confluence data
 to identify alignment, gaps, and consistency issues.

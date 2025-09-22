@@ -1,4 +1,4 @@
-"""Entities for Workflow Management Domain"""
+"""Entities for Workflow Management Domain."""
 
 from .workflow import Workflow, WorkflowStatus
 from .workflow_action import ActionType, WorkflowAction

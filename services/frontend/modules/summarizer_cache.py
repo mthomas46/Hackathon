@@ -1,7 +1,8 @@
-"""Caching infrastructure for Summarizer Hub data.
+"""
+Caching infrastructure for Summarizer Hub data.
 
-Provides in-memory caching for summarizer hub job history, prompts, and models
-to enable visualization and monitoring of summarizer processes.
+Provides in-memory caching for summarizer hub job history, prompts, and
+models to enable visualization and monitoring of summarizer processes.
 """
 
 from dataclasses import dataclass, field

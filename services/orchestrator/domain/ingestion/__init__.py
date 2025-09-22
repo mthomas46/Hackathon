@@ -1,4 +1,4 @@
-"""Ingestion Domain Layer"""
+"""Ingestion Domain Layer."""
 
 from .services import *
 from .value_objects import *

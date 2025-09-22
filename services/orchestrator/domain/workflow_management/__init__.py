@@ -1,4 +1,4 @@
-"""Workflow Management Domain Layer"""
+"""Workflow Management Domain Layer."""
 
 from .entities import *
 from .events import *

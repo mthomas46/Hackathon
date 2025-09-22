@@ -1,7 +1,9 @@
-"""Discovery Agent UI handlers for Frontend service.
+"""
+Discovery Agent UI handlers for Frontend service.
 
 Handles discovery agent service visualization, including endpoint
-registration monitoring, OpenAPI parsing, and service discovery operations.
+registration monitoring, OpenAPI parsing, and service discovery
+operations.
 """
 
 

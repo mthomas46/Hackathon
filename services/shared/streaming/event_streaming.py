@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Real-Time Event Streaming Infrastructure
+Real-Time Event Streaming Infrastructure.
 
 Enterprise-grade event streaming system for Phase 1 implementation.
-Provides distributed event processing, correlation, and real-time analytics.
+Provides distributed event processing, correlation, and real-time
+analytics.
 """
 
 import asyncio

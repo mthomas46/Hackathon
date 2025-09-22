@@ -1,4 +1,4 @@
-"""Ingestion Application Commands"""
+"""Ingestion Application Commands."""
 
 from dataclasses import dataclass
 from typing import Any, Dict

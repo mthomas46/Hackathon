@@ -1,7 +1,9 @@
-"""Comprehensive tests for LangGraph Tool Discovery functionality.
+"""
+Comprehensive tests for LangGraph Tool Discovery functionality.
 
 This module tests the automatic tool discovery and registration system
-that integrates with LangGraph workflows in the LLM Documentation Ecosystem.
+that integrates with LangGraph workflows in the LLM Documentation
+Ecosystem.
 """
 
 from typing import Any, Dict

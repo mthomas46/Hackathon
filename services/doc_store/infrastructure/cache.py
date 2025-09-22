@@ -1,4 +1,5 @@
-"""Cache infrastructure for Doc Store service.
+"""
+Cache infrastructure for Doc Store service.
 
 Provides Redis and local caching capabilities.
 """

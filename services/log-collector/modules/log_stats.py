@@ -1,7 +1,8 @@
-"""Log statistics calculation for log collector service.
+"""
+Log statistics calculation for log collector service.
 
-Provides comprehensive analytics and aggregations for log data
-to support system monitoring and diagnostics with enhanced metrics.
+Provides comprehensive analytics and aggregations for log data to
+support system monitoring and diagnostics with enhanced metrics.
 """
 
 from collections import defaultdict
@@ -10,7 +11,8 @@ from typing import Any, Dict, List, Optional
 
 
 def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Optional[int] = None) -> Dict[str, Any]:
-    """Calculate comprehensive statistics and analytics from log entries.
+    """
+    Calculate comprehensive statistics and analytics from log entries.
 
     Analyzes the complete log dataset to provide insights into system behavior,
     error rates, service activity levels, and other key metrics for monitoring.

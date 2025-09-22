@@ -1,7 +1,8 @@
-"""Memory Agent Manager module for CLI service.
+"""
+Memory Agent Manager module for CLI service.
 
-Provides power-user operations for memory agent including
-operational context storage, event summaries, and memory management.
+Provides power-user operations for memory agent including operational
+context storage, event summaries, and memory management.
 """
 
 import json
@@ -23,7 +24,8 @@ class MemoryAgentManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def memory_agent_menu(self):
-        """Main memory agent management menu with enhanced interactive experience."""
+        """Main memory agent management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Memory Agent Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -37,7 +39,11 @@ class MemoryAgentManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.memory_item_management_menu()
         elif choice == "2":

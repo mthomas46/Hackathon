@@ -1,5 +1,6 @@
 """
 Mock Data Generator for Project Simulations.
+
 Following TDD principles with clean, testable code.
 """
 

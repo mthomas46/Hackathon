@@ -1,4 +1,5 @@
-"""Configuration Page.
+"""
+Configuration Page.
 
 This module provides the configuration and settings page for managing
 service connections, health monitoring, and system settings.

@@ -1,4 +1,5 @@
-"""GitHub MCP UI handlers for Frontend service.
+"""
+GitHub MCP UI handlers for Frontend service.
 
 Handles github-mcp service visualization, including tool invocation
 monitoring, GitHub operations, and MCP tool testing.

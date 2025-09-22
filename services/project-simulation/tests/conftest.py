@@ -1,7 +1,9 @@
-"""Shared test configuration and fixtures for Project Simulation Service.
+"""
+Shared test configuration and fixtures for Project Simulation Service.
 
-Provides common test setup, fixtures, and utilities reused across all test layers.
-Follows established ecosystem testing patterns for consistency and maintainability.
+Provides common test setup, fixtures, and utilities reused across all
+test layers. Follows established ecosystem testing patterns for
+consistency and maintainability.
 """
 
 import asyncio

@@ -1,7 +1,8 @@
 """
-Enterprise-Grade Features
+Enterprise-Grade Features.
 
-Advanced enterprise functionality including error handling, service mesh, and integrations.
+Advanced enterprise functionality including error handling, service
+mesh, and integrations.
 """
 
 from .enterprise_initializer import *

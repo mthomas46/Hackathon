@@ -5,7 +5,8 @@ from typing import List
 
 
 def extract_endpoints_from_text(text: str) -> List[str]:
-    """Extract API endpoints from code text.
+    """
+    Extract API endpoints from code text.
 
     Supports FastAPI, Flask, and Express.js patterns.
     """

@@ -97,7 +97,8 @@ class TestCodeAnalyzerLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_code_analysis_minimal_scope_logging(self, client, mock_logger_client):
-        """Test code analysis with minimal scope (functions and classes disabled)."""
+        """Test code analysis with minimal scope (functions and classes
+        disabled)."""
         # Make request with minimal scope
         request_data = {
             "code": "print('Hello, World!')",

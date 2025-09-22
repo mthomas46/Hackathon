@@ -1,7 +1,5 @@
-"""
-Bedrock Proxy Service Adapter for CLI interaction
-Handles AWS Bedrock API interactions and LLM model access
-"""
+"""Bedrock Proxy Service Adapter for CLI interaction Handles AWS Bedrock API
+interactions and LLM model access."""
 
 import time
 from typing import Any, Dict, List
@@ -29,11 +27,11 @@ class BedrockProxyAdapter(BaseServiceAdapter):
         )
 
     def get_available_commands(self) -> List[str]:
-        """Return list of available commands for this service"""
+        """Return list of available commands for this service."""
         return ["status", "models", "chat", "complete", "embed", "test-connection", "stats"]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute a command against the Bedrock Proxy service"""
+        """Execute a command against the Bedrock Proxy service."""
         command_map = {
             "status": self._get_status,
             "models": self._list_models,
@@ -54,7 +52,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _get_status(self) -> CommandResult:
-        """Get Bedrock Proxy service status"""
+        """Get Bedrock Proxy service status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/status"
@@ -71,7 +69,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Bedrock Proxy status: {str(e)}")
 
     async def _list_models(self) -> CommandResult:
-        """List available Bedrock models"""
+        """List available Bedrock models."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/models"
@@ -88,7 +86,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list models: {str(e)}")
 
     async def _chat_completion(self, message: str, model: str = "claude-3", max_tokens: int = 1000) -> CommandResult:
-        """Create a chat completion"""
+        """Create a chat completion."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/chat/completions"
@@ -107,7 +105,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to create chat completion: {str(e)}")
 
     async def _text_completion(self, prompt: str, model: str = "titan-text", max_tokens: int = 1000) -> CommandResult:
-        """Create a text completion"""
+        """Create a text completion."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/completions"
@@ -126,7 +124,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to create text completion: {str(e)}")
 
     async def _create_embeddings(self, text: str, model: str = "titan-embed") -> CommandResult:
-        """Create embeddings for text"""
+        """Create embeddings for text."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/embeddings"
@@ -142,7 +140,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to create embeddings: {str(e)}")
 
     async def _test_connection(self) -> CommandResult:
-        """Test connection to AWS Bedrock"""
+        """Test connection to AWS Bedrock."""
         try:
             start_time = time.time()
 
@@ -170,7 +168,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to test Bedrock connection: {str(e)}")
 
     async def _get_stats(self) -> CommandResult:
-        """Get Bedrock Proxy statistics"""
+        """Get Bedrock Proxy statistics."""
         try:
             start_time = time.time()
 
@@ -200,7 +198,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Bedrock Proxy stats: {str(e)}")
 
     def format_response(self, result: CommandResult, command: str) -> None:
-        """Format and display the command result"""
+        """Format and display the command result."""
         if not result.success:
             self.console.print(f"[red]❌ Error: {result.error}[/red]")
             return
@@ -230,7 +228,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
-        """Format status response"""
+        """Format status response."""
         if not data:
             self.console.print("[yellow]⚠️  No status data available[/yellow]")
             return
@@ -245,7 +243,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_models_response(self, data: Dict[str, Any]) -> None:
-        """Format models list response"""
+        """Format models list response."""
         models = data.get("models", [])
         if not models:
             self.console.print("[yellow]🤖 No models available[/yellow]")
@@ -275,7 +273,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Total models: {len(models)}[/dim]")
 
     def _format_chat_response(self, data: Dict[str, Any]) -> None:
-        """Format chat completion response"""
+        """Format chat completion response."""
         if not data:
             self.console.print("[yellow]💬 No response data[/yellow]")
             return
@@ -292,7 +290,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             )
 
     def _format_completion_response(self, data: Dict[str, Any]) -> None:
-        """Format text completion response"""
+        """Format text completion response."""
         if not data:
             self.console.print("[yellow]📝 No completion data[/yellow]")
             return
@@ -309,7 +307,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             )
 
     def _format_embeddings_response(self, data: Dict[str, Any]) -> None:
-        """Format embeddings response"""
+        """Format embeddings response."""
         if not data:
             self.console.print("[yellow]🔢 No embeddings data[/yellow]")
             return
@@ -333,7 +331,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]📊 Token Usage: {usage.get('total_tokens', 0)} tokens[/dim]")
 
     def _format_test_response(self, data: Dict[str, Any]) -> None:
-        """Format connection test response"""
+        """Format connection test response."""
         service_health = data.get("service_health", {})
         bedrock_status = data.get("bedrock_connection", "unknown")
         model_count = data.get("available_models", 0)
@@ -354,7 +352,7 @@ class BedrockProxyAdapter(BaseServiceAdapter):
         )
 
     def _format_stats_response(self, data: Dict[str, Any]) -> None:
-        """Format statistics response"""
+        """Format statistics response."""
         self.console.print(
             Panel.fit(
                 f"📊 Bedrock Proxy Statistics\n\n"

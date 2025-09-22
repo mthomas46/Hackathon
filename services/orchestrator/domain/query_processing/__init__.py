@@ -1,4 +1,4 @@
-"""Query Processing Domain Layer"""
+"""Query Processing Domain Layer."""
 
 from .services import *
 from .value_objects import *

@@ -38,7 +38,7 @@ import psutil
 
 @dataclass
 class LogContext:
-    """Context information for logging"""
+    """Context information for logging."""
 
     service_name: str
     service_version: str = "1.0.0"
@@ -52,7 +52,7 @@ class LogContext:
 
 @dataclass
 class PerformanceMetrics:
-    """Performance metrics for monitoring"""
+    """Performance metrics for monitoring."""
 
     timestamp: datetime = field(default_factory=datetime.now)
     cpu_percent: float = 0.0
@@ -71,12 +71,12 @@ class StandardizedLogger:
     """
     Standardized logging system for the ecosystem.
 
-    Provides consistent logging across all services with structured output,
-    performance monitoring, and health tracking.
+    Provides consistent logging across all services with structured
+    output, performance monitoring, and health tracking.
     """
 
     def __init__(self, service_name: str, config: Optional[Dict[str, Any]] = None):
-        """Initialize the standardized logger"""
+        """Initialize the standardized logger."""
         self.service_name = service_name
         self.config = config or self._get_default_config()
         self.context = LogContext(service_name=service_name)
@@ -112,7 +112,7 @@ class StandardizedLogger:
         )
 
     def _get_default_config(self) -> Dict[str, Any]:
-        """Get default logging configuration"""
+        """Get default logging configuration."""
         return {
             "log_level": os.environ.get("LOG_LEVEL", "INFO"),
             "log_format": os.environ.get("LOG_FORMAT", "json"),
@@ -126,7 +126,7 @@ class StandardizedLogger:
         }
 
     def _setup_logging(self):
-        """Setup logging configuration"""
+        """Setup logging configuration."""
         # Clear existing handlers
         self.logger.handlers.clear()
 
@@ -161,7 +161,7 @@ class StandardizedLogger:
         self.logger.propagate = False
 
     def update_context(self, **kwargs):
-        """Update logging context"""
+        """Update logging context."""
         for key, value in kwargs.items():
             if hasattr(self.context, key):
                 setattr(self.context, key, value)
@@ -175,7 +175,7 @@ class StandardizedLogger:
         user_id: Optional[str] = None,
         extra: Optional[Dict[str, Any]] = None,
     ):
-        """Log HTTP request with performance metrics"""
+        """Log HTTP request with performance metrics."""
         log_level = logging.INFO if status_code < 400 else logging.WARNING
 
         # Update metrics
@@ -198,7 +198,7 @@ class StandardizedLogger:
         self.logger.log(log_level, f"HTTP {method} {path} -> {status_code}", extra=log_data)
 
     def log_error(self, error: Exception, context: Optional[Dict[str, Any]] = None, error_code: Optional[str] = None):
-        """Log error with context"""
+        """Log error with context."""
         error_data = {
             "error_type": type(error).__name__,
             "error_message": str(error),
@@ -213,7 +213,7 @@ class StandardizedLogger:
         self.logger.error(f"Error: {error}", extra=error_data, exc_info=True)
 
     def log_performance(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
-        """Log performance metrics"""
+        """Log performance metrics."""
         perf_data = {"operation": operation, "duration_ms": round(duration * 1000, 2), "service": self.service_name}
 
         if metadata:
@@ -222,7 +222,7 @@ class StandardizedLogger:
         self.logger.info(f"Performance: {operation}", extra=perf_data)
 
     def log_business_event(self, event_type: str, event_data: Dict[str, Any]):
-        """Log business events for analytics"""
+        """Log business events for analytics."""
         event_data.update(
             {"event_type": event_type, "service": self.service_name, "timestamp": datetime.now().isoformat()}
         )
@@ -230,13 +230,13 @@ class StandardizedLogger:
         self.logger.info(f"Business Event: {event_type}", extra=event_data)
 
     def _get_traceback(self, error: Exception) -> str:
-        """Get formatted traceback"""
+        """Get formatted traceback."""
         import traceback
 
         return "".join(traceback.format_exception(type(error), error, error.__traceback__))
 
     def start_monitoring(self):
-        """Start performance monitoring"""
+        """Start performance monitoring."""
         if not self.config["monitoring_enabled"]:
             return
 
@@ -251,14 +251,14 @@ class StandardizedLogger:
         self.logger.info("📊 Performance monitoring started")
 
     def stop_monitoring(self):
-        """Stop performance monitoring"""
+        """Stop performance monitoring."""
         self._monitoring_active = False
         if self._monitoring_thread:
             self._monitoring_thread.join(timeout=5)
         self.logger.info("📊 Performance monitoring stopped")
 
     def _monitoring_loop(self):
-        """Main monitoring loop"""
+        """Main monitoring loop."""
         while self._monitoring_active:
             try:
                 self._collect_metrics()
@@ -268,7 +268,7 @@ class StandardizedLogger:
                 time.sleep(5)  # Wait before retrying
 
     def _collect_metrics(self):
-        """Collect system and application metrics"""
+        """Collect system and application metrics."""
         try:
             # System metrics
             self.metrics.cpu_percent = psutil.cpu_percent(interval=1)
@@ -306,7 +306,7 @@ class StandardizedLogger:
             self.logger.error(f"Failed to collect metrics: {e}")
 
     def _log_metrics_summary(self):
-        """Log metrics summary"""
+        """Log metrics summary."""
         if not self.metrics_history:
             return
 
@@ -330,7 +330,7 @@ class StandardizedLogger:
         self.logger.info("📊 Metrics Summary", extra=metrics_data)
 
     def get_health_status(self) -> Dict[str, Any]:
-        """Get current health status"""
+        """Get current health status."""
         self.last_health_check = datetime.now()
 
         # Determine health based on metrics
@@ -370,33 +370,33 @@ class StandardizedLogger:
         }
 
     def _cleanup(self):
-        """Cleanup resources"""
+        """Cleanup resources."""
         self.stop_monitoring()
         self.logger.info("🧹 Standardized Logger cleanup completed")
 
     # Convenience methods for different log levels
     def debug(self, message: str, **kwargs):
-        """Log debug message"""
+        """Log debug message."""
         self.logger.debug(message, extra=self._prepare_extra(kwargs))
 
     def info(self, message: str, **kwargs):
-        """Log info message"""
+        """Log info message."""
         self.logger.info(message, extra=self._prepare_extra(kwargs))
 
     def warning(self, message: str, **kwargs):
-        """Log warning message"""
+        """Log warning message."""
         self.logger.warning(message, extra=self._prepare_extra(kwargs))
 
     def error(self, message: str, **kwargs):
-        """Log error message"""
+        """Log error message."""
         self.logger.error(message, extra=self._prepare_extra(kwargs))
 
     def critical(self, message: str, **kwargs):
-        """Log critical message"""
+        """Log critical message."""
         self.logger.critical(message, extra=self._prepare_extra(kwargs))
 
     def _prepare_extra(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        """Prepare extra data for logging"""
+        """Prepare extra data for logging."""
         extra = {
             "service": self.service_name,
             "instance": self.context.instance_id,
@@ -414,7 +414,7 @@ class StandardizedLogger:
 
 
 class StructuredFormatter(logging.Formatter):
-    """Structured JSON formatter for logs"""
+    """Structured JSON formatter for logs."""
 
     def format(self, record):
         # Create base log entry
@@ -470,9 +470,7 @@ class StructuredFormatter(logging.Formatter):
 
 
 def performance_monitor(operation_name: str = None):
-    """
-    Decorator for performance monitoring of functions
-    """
+    """Decorator for performance monitoring of functions."""
 
     def decorator(func):
         @wraps(func)
@@ -519,7 +517,7 @@ _logger_registry = {}
 
 def get_logger(service_name: str, config: Optional[Dict[str, Any]] = None) -> StandardizedLogger:
     """
-    Get or create a standardized logger for a service
+    Get or create a standardized logger for a service.
 
     Args:
         service_name: Name of the service
@@ -535,13 +533,13 @@ def get_logger(service_name: str, config: Optional[Dict[str, Any]] = None) -> St
 
 
 def get_all_loggers() -> Dict[str, StandardizedLogger]:
-    """Get all registered loggers"""
+    """Get all registered loggers."""
     return _logger_registry.copy()
 
 
 def configure_service_logging(service_name: str, config: Dict[str, Any]):
     """
-    Configure logging for a service
+    Configure logging for a service.
 
     Args:
         service_name: Name of the service

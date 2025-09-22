@@ -1,4 +1,5 @@
-"""A/B testing handlers for API endpoints.
+"""
+A/B testing handlers for API endpoints.
 
 Handles HTTP requests and responses for A/B testing operations.
 """

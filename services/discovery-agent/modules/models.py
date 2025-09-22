@@ -1,4 +1,5 @@
-"""Request and response models for Discovery Agent service.
+"""
+Request and response models for Discovery Agent service.
 
 Contains all Pydantic models used for API requests and responses.
 """
@@ -9,7 +10,8 @@ from pydantic import BaseModel
 
 
 class DiscoverRequest(BaseModel):
-    """Input for discovery.
+    """
+    Input for discovery.
 
     - `spec`: Optional inline OpenAPI for offline/testing flows
     - `openapi_url`: Fetch spec from URL when provided
@@ -25,7 +27,8 @@ class DiscoverRequest(BaseModel):
 
 
 class ToolDiscoveryRequest(BaseModel):
-    """Input for LangGraph tool discovery.
+    """
+    Input for LangGraph tool discovery.
 
     - `service_name`: Name of the service to discover tools for
     - `service_url`: Base URL of the service

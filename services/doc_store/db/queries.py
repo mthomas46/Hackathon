@@ -1,4 +1,5 @@
-"""Common database query operations for Doc Store service.
+"""
+Common database query operations for Doc Store service.
 
 Provides reusable query functions to reduce code duplication.
 """

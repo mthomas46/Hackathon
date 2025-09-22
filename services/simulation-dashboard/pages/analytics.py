@@ -1,4 +1,5 @@
-"""Analytics Page.
+"""
+Analytics Page.
 
 This module provides advanced analytics and insights with interactive
 visualizations, performance metrics, and trend analysis.

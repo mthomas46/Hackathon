@@ -1,8 +1,9 @@
-"""Dependency Management and Graceful Degradation.
+"""
+Dependency Management and Graceful Degradation.
 
-This module provides comprehensive dependency checking and graceful degradation
-for optional libraries, ensuring the dashboard works even when some advanced
-features are not available.
+This module provides comprehensive dependency checking and graceful
+degradation for optional libraries, ensuring the dashboard works even
+when some advanced features are not available.
 """
 
 import importlib

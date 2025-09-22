@@ -85,7 +85,7 @@ register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT, SERVICE_VERSION)
 
 
 def initialize_phase_services():
-    """Initialize all phase services with proper integration"""
+    """Initialize all phase services with proper integration."""
     # Configure tool discovery service with dependencies
     tool_discovery_service.set_security_scanner(tool_security_scanner)
     tool_discovery_service.set_monitoring_service(discovery_monitoring_service)
@@ -104,19 +104,22 @@ initialize_phase_services()
 
 @app.post("/discover")
 async def discover(req: DiscoverRequest):
-    """Discover and register OpenAPI endpoints from specification or URL.
+    """
+    Discover and register OpenAPI endpoints from specification or URL.
 
-    Parses OpenAPI specifications to extract service endpoints and optionally
-    registers them with the orchestrator. Supports both inline specs for testing
-    and remote URL fetching for production deployments. Includes dry-run mode
-    for testing without actual registration.
+    Parses OpenAPI specifications to extract service endpoints and
+    optionally registers them with the orchestrator. Supports both
+    inline specs for testing and remote URL fetching for production
+    deployments. Includes dry-run mode for testing without actual
+    registration.
     """
     return await discovery_handler.discover_endpoints(req)
 
 
 @app.post("/discover/tools")
 async def discover_tools(req: ToolDiscoveryRequest):
-    """Discover and register LangGraph tools from service OpenAPI specifications.
+    """
+    Discover and register LangGraph tools from service OpenAPI specifications.
 
     Automatically analyzes service OpenAPI specs to identify operations that can be
     exposed as LangGraph tools. Categorizes tools by functionality and optionally

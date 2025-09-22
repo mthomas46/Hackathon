@@ -1,4 +1,5 @@
-"""Distribution Charts Components.
+"""
+Distribution Charts Components.
 
 This module provides chart components for displaying data distributions,
 histograms, box plots, and statistical visualizations.
@@ -29,7 +30,8 @@ def render_distribution_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render data distribution chart.
+    """
+    Render data distribution chart.
 
     Args:
         distribution_data: Distribution data to visualize
@@ -188,7 +190,8 @@ def render_multi_distribution_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render comparison of multiple distributions.
+    """
+    Render comparison of multiple distributions.
 
     Args:
         multi_data: Multiple distribution data
@@ -305,7 +308,8 @@ def render_probability_distribution_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render probability distribution chart.
+    """
+    Render probability distribution chart.
 
     Args:
         prob_data: Probability distribution data
@@ -434,7 +438,8 @@ def render_cumulative_distribution_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render cumulative distribution function chart.
+    """
+    Render cumulative distribution function chart.
 
     Args:
         cdf_data: CDF data

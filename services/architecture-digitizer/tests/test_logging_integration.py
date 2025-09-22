@@ -1,4 +1,5 @@
-"""Tests for Architecture Digitizer logging integration with LogCollectorClient."""
+"""Tests for Architecture Digitizer logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestArchitectureDigitizerLoggingIntegration:
-    """Test Architecture Digitizer logging integration with LogCollectorClient."""
+    """Test Architecture Digitizer logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):

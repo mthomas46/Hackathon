@@ -542,7 +542,8 @@ class TestEndToEndContentGenerationWorkflow:
 
     @pytest.mark.asyncio
     async def test_complete_content_generation_workflow(self):
-        """Test complete content generation workflow from request to storage."""
+        """Test complete content generation workflow from request to
+        storage."""
         with patch(
             "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
         ) as mock_get_mock_client, patch(

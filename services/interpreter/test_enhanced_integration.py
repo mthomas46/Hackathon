@@ -1,8 +1,9 @@
-"""Comprehensive Integration Tests for Enhanced Interpreter Service.
+"""
+Comprehensive Integration Tests for Enhanced Interpreter Service.
 
-This module tests the enhanced natural language processing capabilities of the
-interpreter service, including ecosystem awareness, orchestrator integration,
-LangGraph workflow discovery, and prompt engineering.
+This module tests the enhanced natural language processing capabilities
+of the interpreter service, including ecosystem awareness, orchestrator
+integration, LangGraph workflow discovery, and prompt engineering.
 """
 
 import asyncio

@@ -466,7 +466,8 @@ class TestDataConsistencyValidation:
 
 @pytest.mark.integration
 class TestErrorHandlingFallbacksIntegrationSuite:
-    """Comprehensive integration test suite for error handling and fallbacks."""
+    """Comprehensive integration test suite for error handling and
+    fallbacks."""
 
     @pytest.mark.asyncio
     async def test_complete_error_handling_workflow(self):

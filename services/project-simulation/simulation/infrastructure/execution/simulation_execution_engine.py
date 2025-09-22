@@ -42,7 +42,8 @@ from simulation.infrastructure.workflows.workflow_orchestrator import Simulation
 
 
 class SimulationExecutionEngine:
-    """Core simulation execution engine that orchestrates domain logic and ecosystem integration."""
+    """Core simulation execution engine that orchestrates domain logic and
+    ecosystem integration."""
 
     def __init__(
         self,
@@ -74,7 +75,8 @@ class SimulationExecutionEngine:
         self.execution_tasks: Dict[str, asyncio.Task] = {}
 
     async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
-        """Execute a simulation using the domain model and ecosystem integration."""
+        """Execute a simulation using the domain model and ecosystem
+        integration."""
         try:
             self.logger.info(f"Starting simulation execution", simulation_id=simulation_id)
 

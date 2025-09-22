@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Comprehensive Error Audit Script for Project Simulation Service.
+"""
+Comprehensive Error Audit Script for Project Simulation Service.
 
 This script systematically checks for common error patterns we've been fixing:
 1. Import path issues
@@ -269,7 +270,8 @@ except ImportError:
                 self.issues["import_paths"].append(f"{file_path}: Error checking shared imports - {e}")
 
     def check_fallback_patterns(self):
-        """Check for missing try-except fallback patterns around shared imports."""
+        """Check for missing try-except fallback patterns around shared
+        imports."""
         print("  🛡️  Checking fallback patterns for shared imports...")
 
         python_files = self.find_python_files()

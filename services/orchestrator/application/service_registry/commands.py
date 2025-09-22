@@ -1,4 +1,4 @@
-"""Application Commands for Service Registry"""
+"""Application Commands for Service Registry."""
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional

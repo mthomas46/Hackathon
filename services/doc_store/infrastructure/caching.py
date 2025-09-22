@@ -4,8 +4,8 @@
 """
 High-performance caching layer for Doc Store service.
 
-Provides multi-level caching with Redis integration, intelligent cache invalidation,
-performance monitoring, and adaptive caching strategies.
+Provides multi-level caching with Redis integration, intelligent cache
+invalidation, performance monitoring, and adaptive caching strategies.
 """
 
 import hashlib

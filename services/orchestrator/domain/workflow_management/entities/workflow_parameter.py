@@ -1,4 +1,4 @@
-"""Workflow Parameter Entity"""
+"""Workflow Parameter Entity."""
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional

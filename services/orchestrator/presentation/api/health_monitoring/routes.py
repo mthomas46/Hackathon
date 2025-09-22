@@ -1,4 +1,4 @@
-"""Health Monitoring API Routes"""
+"""Health Monitoring API Routes."""
 
 
 from fastapi import APIRouter, Depends, HTTPException

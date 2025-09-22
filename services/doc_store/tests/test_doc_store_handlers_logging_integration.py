@@ -1,4 +1,5 @@
-"""Tests for Doc Store Additional Handlers logging integration with LogCollectorClient."""
+"""Tests for Doc Store Additional Handlers logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -13,7 +14,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestDocStoreHandlersLoggingIntegration:
-    """Test Doc Store additional handlers logging integration with LogCollectorClient."""
+    """Test Doc Store additional handlers logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def mock_logger_client(self):
@@ -412,7 +414,8 @@ class TestDocStoreHandlersLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, mock_logger_client):
-        """Test that all major business events are logged across doc store handlers."""
+        """Test that all major business events are logged across doc store
+        handlers."""
         expected_events = {
             # Document analytics events
             "document_analytics_retrieval_started",

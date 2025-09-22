@@ -1,4 +1,5 @@
-"""Type definitions for Doc Store service.
+"""
+Type definitions for Doc Store service.
 
 Centralized type hints and aliases for better code maintainability.
 """

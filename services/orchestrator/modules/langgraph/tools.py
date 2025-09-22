@@ -1,7 +1,8 @@
-"""Service tool wrappers for LangGraph integration.
+"""
+Service tool wrappers for LangGraph integration.
 
-This module provides LangGraph tool wrappers for all orchestrator services,
-enabling them to be used as tools within LangGraph workflows.
+This module provides LangGraph tool wrappers for all orchestrator
+services, enabling them to be used as tools within LangGraph workflows.
 """
 
 from typing import Any, Dict, List, Optional

@@ -1,8 +1,8 @@
 """
-Unified Service Registry
+Unified Service Registry.
 
-Central registry for all service adapters in the ecosystem.
-Provides standardized discovery, management, and interaction with all services.
+Central registry for all service adapters in the ecosystem. Provides
+standardized discovery, management, and interaction with all services.
 """
 
 import asyncio
@@ -28,7 +28,7 @@ from .source_agent_adapter import SourceAgentAdapter
 
 class ServiceRegistry:
     """
-    Central registry for all ecosystem services
+    Central registry for all ecosystem services.
 
     Manages:
     - Service discovery and registration
@@ -106,7 +106,7 @@ class ServiceRegistry:
         }
 
     async def initialize(self) -> None:
-        """Initialize all service adapters"""
+        """Initialize all service adapters."""
         self.console.print("[bold blue]🚀 Initializing Service Registry...[/bold blue]")
 
         for service_name, config in self._service_configs.items():
@@ -126,15 +126,15 @@ class ServiceRegistry:
         self.console.print(f"[green]✅ Registry initialized with {len(self._adapters)} services[/green]")
 
     def get_adapter(self, service_name: str) -> Optional[BaseServiceAdapter]:
-        """Get adapter for specific service"""
+        """Get adapter for specific service."""
         return self._adapters.get(service_name)
 
     def list_services(self) -> List[str]:
-        """Get list of all registered services"""
+        """Get list of all registered services."""
         return list(self._adapters.keys())
 
     async def health_check_all(self) -> Dict[str, CommandResult]:
-        """Perform health check on all services"""
+        """Perform health check on all services."""
         self.console.print("[bold blue]🔍 Performing ecosystem health check...[/bold blue]")
 
         results = {}
@@ -164,7 +164,7 @@ class ServiceRegistry:
         return results
 
     def _display_health_summary(self, results: Dict[str, CommandResult]) -> None:
-        """Display formatted health check summary"""
+        """Display formatted health check summary."""
         table = Table(title="🏥 Ecosystem Health Summary")
         table.add_column("Service", style="cyan", no_wrap=True)
         table.add_column("Status", style="bold")
@@ -215,7 +215,7 @@ class ServiceRegistry:
         self.console.print(summary_panel)
 
     async def execute_ecosystem_command(self, service_name: str, command: str, **kwargs) -> CommandResult:
-        """Execute command on specific service"""
+        """Execute command on specific service."""
         adapter = self.get_adapter(service_name)
         if not adapter:
             return CommandResult(success=False, error=f"Service '{service_name}' not found in registry")
@@ -223,7 +223,7 @@ class ServiceRegistry:
         return await adapter.execute_command(command, **kwargs)
 
     async def discover_service_capabilities(self) -> Dict[str, List[Tuple[str, str, str]]]:
-        """Discover capabilities of all services"""
+        """Discover capabilities of all services."""
         capabilities = {}
 
         for service_name, adapter in self._adapters.items():
@@ -237,7 +237,7 @@ class ServiceRegistry:
         return capabilities
 
     def display_ecosystem_overview(self) -> None:
-        """Display comprehensive ecosystem overview"""
+        """Display comprehensive ecosystem overview."""
         self.console.print(
             Panel(
                 f"[bold blue]🌐 LLM Documentation Ecosystem[/bold blue]\n\n"
@@ -251,7 +251,7 @@ class ServiceRegistry:
 
 
 class GenericServiceAdapter(BaseServiceAdapter):
-    """Generic adapter for services without specialized implementations"""
+    """Generic adapter for services without specialized implementations."""
 
     def get_service_info(self) -> ServiceInfo:
         return ServiceInfo(

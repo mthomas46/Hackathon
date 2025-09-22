@@ -1,4 +1,4 @@
-"""Use Cases for Health Monitoring"""
+"""Use Cases for Health Monitoring."""
 
 from typing import Any, Dict
 
@@ -143,7 +143,8 @@ class CheckSystemReadinessUseCase(UseCase):
 
 
 class ListWorkflowsUseCase(UseCase):
-    """Use case for listing available workflows (migrated from old health handlers)."""
+    """Use case for listing available workflows (migrated from old health
+    handlers)."""
 
     def __init__(self):
         # This would typically inject a workflow repository

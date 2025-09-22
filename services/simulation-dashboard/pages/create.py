@@ -1,4 +1,5 @@
-"""Create Simulation Page.
+"""
+Create Simulation Page.
 
 This module provides the simulation creation page with guided setup,
 configuration management, and validation.

@@ -1,4 +1,5 @@
-"""LLM Gateway Integration Module for Secure Analyzer Service.
+"""
+LLM Gateway Integration Module for Secure Analyzer Service.
 
 Provides integration between the Secure Analyzer and LLM Gateway for:
 - LLM-powered security analysis and threat detection
@@ -26,7 +27,8 @@ class LLMGatewayIntegration:
     async def enhance_security_analysis_with_llm(
         self, content: str, basic_findings: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Use LLM Gateway to enhance basic security analysis with intelligent insights."""
+        """Use LLM Gateway to enhance basic security analysis with intelligent
+        insights."""
         try:
             findings_summary = "\n".join(
                 [
@@ -127,7 +129,8 @@ Return your analysis as a JSON object with keys: risk_assessment, attack_vectors
     async def intelligent_provider_recommendation(
         self, content: str, security_findings: List[Dict[str, Any]], available_providers: List[str]
     ) -> Dict[str, Any]:
-        """Use LLM Gateway to recommend the most secure provider for content processing."""
+        """Use LLM Gateway to recommend the most secure provider for content
+        processing."""
         try:
             findings_summary = "\n".join(
                 [
@@ -228,7 +231,8 @@ Return a JSON object with keys: recommended_provider, reasoning, security_score,
     async def generate_security_policy_with_llm(
         self, content_patterns: List[Dict[str, Any]], historical_incidents: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Use LLM Gateway to generate intelligent security policies based on patterns and incidents."""
+        """Use LLM Gateway to generate intelligent security policies based on
+        patterns and incidents."""
         try:
             patterns_summary = "\n".join(
                 [
@@ -341,7 +345,8 @@ Return the policy recommendations as a JSON object with keys: content_classifica
             }
 
     async def analyze_compliance_with_llm(self, content: str, compliance_frameworks: List[str]) -> Dict[str, Any]:
-        """Use LLM Gateway to analyze content for compliance with various frameworks."""
+        """Use LLM Gateway to analyze content for compliance with various
+        frameworks."""
         try:
             frameworks_str = ", ".join(compliance_frameworks)
 

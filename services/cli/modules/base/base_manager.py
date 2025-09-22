@@ -30,10 +30,15 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
 
     @abstractmethod
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
 
     def get_required_services(self) -> List[str]:
-        """Return list of services required by this manager.
+        """
+        Return list of services required by this manager.
 
         Override this method in subclasses to specify which services
         must be running for the manager's features to work.
@@ -44,7 +49,8 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         return []
 
     async def check_required_services(self) -> Dict[str, Dict[str, Any]]:
-        """Check health of all required services.
+        """
+        Check health of all required services.
 
         Returns:
             Dict mapping service names to health status
@@ -56,7 +62,8 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         return await self.check_services_health(required_services)
 
     async def validate_service_dependencies(self) -> bool:
-        """Validate that all required services are healthy.
+        """
+        Validate that all required services are healthy.
 
         Returns:
             True if all required services are healthy, False otherwise
@@ -202,7 +209,8 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
     async def monitor_operation(
         self, operation_id: str, operation_type: str, status_func, success_check, progress_func=None, interval: int = 2
     ) -> bool:
-        """Generic monitoring utility for async operations.
+        """
+        Generic monitoring utility for async operations.
 
         Args:
             operation_id: ID of the operation to monitor
@@ -325,7 +333,8 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         await self.run_submenu_loop(title, items, back_option)
 
     async def handle_submenu_choice(self, choice: str) -> bool:
-        """Handle submenu choice by delegating to handle_choice with service validation."""
+        """Handle submenu choice by delegating to handle_choice with service
+        validation."""
         # Check service dependencies before allowing menu progression
         if not await self.validate_service_dependencies():
             return False

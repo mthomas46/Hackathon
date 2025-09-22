@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Test script for LangGraph integration in Orchestrator service.
+"""
+Test script for LangGraph integration in Orchestrator service.
 
 This script validates that the LangGraph integration is working properly
 by testing the core components and workflows.

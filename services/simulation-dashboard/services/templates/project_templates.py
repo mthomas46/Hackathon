@@ -1,7 +1,9 @@
-"""Project Templates.
+"""
+Project Templates.
 
-This module defines predefined project templates for different types of software projects,
-providing quick-start configurations for common scenarios.
+This module defines predefined project templates for different types of
+software projects, providing quick-start configurations for common
+scenarios.
 """
 
 from typing import Any, Dict

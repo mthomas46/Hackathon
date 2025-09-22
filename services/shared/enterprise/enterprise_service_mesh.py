@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Enterprise Service Mesh Implementation
+Enterprise Service Mesh Implementation.
 
-Comprehensive service mesh with mTLS, authentication, authorization,
-and traffic management for Phase 1 implementation.
+Comprehensive service mesh with mTLS, authentication, authorization, and
+traffic management for Phase 1 implementation.
 """
 
 import asyncio
@@ -401,7 +401,8 @@ class RateLimiter:
 
 
 class EnterpriseServiceMesh:
-    """Enterprise Service Mesh with comprehensive security and traffic management."""
+    """Enterprise Service Mesh with comprehensive security and traffic
+    management."""
 
     def __init__(self):
         self.ca = CertificateAuthority()

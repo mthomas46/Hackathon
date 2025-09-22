@@ -1,4 +1,5 @@
-"""Database schema definitions for Doc Store service.
+"""
+Database schema definitions for Doc Store service.
 
 Contains all table creation statements and indexes.
 """

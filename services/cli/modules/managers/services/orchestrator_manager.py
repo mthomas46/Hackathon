@@ -1,4 +1,5 @@
-"""Orchestrator Manager module for CLI service.
+"""
+Orchestrator Manager module for CLI service.
 
 Provides power-user operations for orchestrator management including
 workflows, registry, infrastructure monitoring, and job management.
@@ -33,7 +34,8 @@ class OrchestratorManager(BaseManager):
         ]
 
     async def orchestrator_management_menu(self):
-        """Main orchestrator management menu with enhanced interactive experience."""
+        """Main orchestrator management menu with enhanced interactive
+        experience."""
         menu_items = await self.get_main_menu()
         await self.run_menu_loop("Orchestrator Management", menu_items, use_interactive=True)
 

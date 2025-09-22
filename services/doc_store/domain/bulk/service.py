@@ -1,4 +1,5 @@
-"""Bulk operations service for business logic operations.
+"""
+Bulk operations service for business logic operations.
 
 Handles bulk processing and batch operations business rules.
 """

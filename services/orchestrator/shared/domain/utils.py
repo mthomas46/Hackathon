@@ -1,7 +1,9 @@
-"""Domain Utilities
+"""
+Domain Utilities.
 
-Utility functions for domain logic that are shared across bounded contexts.
-These functions handle common domain operations like validation and data processing.
+Utility functions for domain logic that are shared across bounded
+contexts. These functions handle common domain operations like
+validation and data processing.
 """
 
 from typing import Any, Dict, List, Optional

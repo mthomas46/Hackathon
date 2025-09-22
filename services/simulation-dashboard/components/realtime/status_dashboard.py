@@ -1,4 +1,5 @@
-"""Status Dashboard Component.
+"""
+Status Dashboard Component.
 
 This module provides real-time status monitoring and dashboard display
 for system health, service status, and operational metrics.
@@ -20,7 +21,8 @@ def render_status_dashboard(
     refresh_interval: int = 30,
     on_service_action: Optional[Callable] = None,
 ) -> Dict[str, Any]:
-    """Render a comprehensive system status dashboard.
+    """
+    Render a comprehensive system status dashboard.
 
     Args:
         status_data: System status data

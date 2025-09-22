@@ -1,4 +1,5 @@
-"""CLI Commands module for the CLI service.
+"""
+CLI Commands module for the CLI service.
 
 This module contains the main CLI class and command handling logic,
 extracted from the main CLI service to improve maintainability.

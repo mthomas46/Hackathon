@@ -1,4 +1,5 @@
-"""Health Infrastructure Package.
+"""
+Health Infrastructure Package.
 
 This package contains health monitoring and checking functionality
 for the project-simulation service.

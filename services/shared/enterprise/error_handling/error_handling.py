@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Enterprise Error Handling Framework v2.0
+Enterprise Error Handling Framework v2.0.
 
-Advanced error handling, recovery, and resilience framework for Phase 1 implementation.
-Provides comprehensive error management across all services with intelligent recovery.
+Advanced error handling, recovery, and resilience framework for Phase 1
+implementation. Provides comprehensive error management across all
+services with intelligent recovery.
 """
 
 import asyncio

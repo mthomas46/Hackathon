@@ -86,7 +86,8 @@ class TerminalUIState:
 
 
 class TerminalProgressVisualizer:
-    """Rich terminal UI for simulation execution with progress bars and real-time updates."""
+    """Rich terminal UI for simulation execution with progress bars and real-
+    time updates."""
 
     def __init__(
         self,

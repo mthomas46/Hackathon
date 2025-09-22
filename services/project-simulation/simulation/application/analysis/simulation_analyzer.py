@@ -1,7 +1,8 @@
 """
 Simulation Analyzer for processing and analyzing simulation data.
-Following DDD principles with clean separation of concerns.
-Integrates with ecosystem services for comprehensive analysis.
+
+Following DDD principles with clean separation of concerns. Integrates
+with ecosystem services for comprehensive analysis.
 """
 
 import json
@@ -752,11 +753,14 @@ class SimulationAnalyzer:
     async def place_documents_on_timeline(
         self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Place documents on the simulation timeline based on timestamps and relevance.
+        """
+        Place documents on the simulation timeline based on timestamps and
+        relevance.
 
-        This method organizes documents chronologically within the simulation timeline,
-        associating them with relevant phases and milestones based on their creation/update dates
-        and content analysis.
+        This method organizes documents chronologically within the
+        simulation timeline, associating them with relevant phases and
+        milestones based on their creation/update dates and content
+        analysis.
         """
         try:
             # Parse timeline phases
@@ -922,7 +926,8 @@ class SimulationAnalyzer:
         return relevant_phases[0] if relevant_phases else None
 
     def _determine_placement_reason(self, doc_date: datetime, phase: Dict[str, Any]) -> str:
-        """Determine why a document was placed in a particular timeline phase."""
+        """Determine why a document was placed in a particular timeline
+        phase."""
         start_date = self._parse_timestamp(phase.get("start_date"))
         end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(phase.get("planned_end_date"))
 
@@ -1084,7 +1089,9 @@ class SimulationAnalyzer:
     async def generate_comprehensive_summary_report(
         self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any] = None
     ) -> Dict[str, Any]:
-        """Generate a comprehensive summary report combining recommendations and analysis.
+        """
+        Generate a comprehensive summary report combining recommendations and
+        analysis.
 
         This method creates a unified report that combines:
         - Recommendations from summarizer-hub
@@ -1685,7 +1692,8 @@ class SimulationAnalyzer:
     # ============================================================================
 
     async def analyze_pull_request(self, simulation_id: str, pr_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze pull request changes via the analysis service.
+        """
+        Analyze pull request changes via the analysis service.
 
         This method delegates PR analysis to the specialized analysis service,
         maintaining clean separation of concerns and leveraging the analysis

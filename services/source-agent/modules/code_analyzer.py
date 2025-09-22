@@ -1,4 +1,5 @@
-"""Code analysis handler for Source Agent service.
+"""
+Code analysis handler for Source Agent service.
 
 Handles code analysis and endpoint extraction logic.
 """

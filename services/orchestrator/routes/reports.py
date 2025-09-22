@@ -1,4 +1,4 @@
-"""Reports Routes for Orchestrator Service"""
+"""Reports Routes for Orchestrator Service."""
 
 from typing import Optional
 

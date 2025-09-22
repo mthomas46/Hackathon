@@ -1,4 +1,4 @@
-"""Ingestion Result Value Object"""
+"""Ingestion Result Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

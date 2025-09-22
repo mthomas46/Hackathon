@@ -1,4 +1,5 @@
-"""Consolidated middleware utilities for common service patterns.
+"""
+Consolidated middleware utilities for common service patterns.
 
 Combines request ID, metrics, and rate limiting middleware.
 """
@@ -72,7 +73,8 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Token-bucket rate limiter per-path.
+    """
+    Token-bucket rate limiter per-path.
 
     Disabled by default unless RATE_LIMIT_ENABLED env var is set truthy.
     Configure limits via code: RateLimitMiddleware(..., limits={"/analyze": (5, 10)})

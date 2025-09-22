@@ -1,5 +1,6 @@
 """
 Domain entities for analysis results.
+
 Following DDD principles with clean, focused entities.
 """
 

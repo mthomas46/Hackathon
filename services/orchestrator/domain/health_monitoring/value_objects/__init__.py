@@ -1,4 +1,4 @@
-"""Value Objects for Health Monitoring Domain"""
+"""Value Objects for Health Monitoring Domain."""
 
 from .health_check_result import HealthCheckResult
 from .health_status import HealthStatus

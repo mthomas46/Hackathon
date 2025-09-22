@@ -132,7 +132,8 @@ class TestEndToEndWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_complete_analysis_workflow_end_to_end(self, complete_system_setup):
-        """Test complete analysis workflow from document creation to findings retrieval."""
+        """Test complete analysis workflow from document creation to findings
+        retrieval."""
         setup = complete_system_setup
 
         # Step 1: Create document through application service

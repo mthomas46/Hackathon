@@ -96,7 +96,7 @@ register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT, SERVICE_VERSION)
 
 
 def initialize_phase_services():
-    """Initialize all phase services with proper integration"""
+    """Initialize all phase services with proper integration."""
     # Configure tool discovery service with dependencies
     tool_discovery_service.set_security_scanner(tool_security_scanner)
     tool_discovery_service.set_monitoring_service(discovery_monitoring_service)
@@ -115,19 +115,22 @@ initialize_phase_services()
 
 @app.post("/discover")
 async def discover(req: DiscoverRequest):
-    """Discover and register OpenAPI endpoints from specification or URL.
+    """
+    Discover and register OpenAPI endpoints from specification or URL.
 
-    Parses OpenAPI specifications to extract service endpoints and optionally
-    registers them with the orchestrator. Supports both inline specs for testing
-    and remote URL fetching for production deployments. Includes dry-run mode
-    for testing without actual registration.
+    Parses OpenAPI specifications to extract service endpoints and
+    optionally registers them with the orchestrator. Supports both
+    inline specs for testing and remote URL fetching for production
+    deployments. Includes dry-run mode for testing without actual
+    registration.
     """
     return await discovery_handler.discover_endpoints(req)
 
 
 @app.post("/discover/tools")
 async def discover_tools(req: ToolDiscoveryRequest):
-    """Discover and register LangGraph tools from service OpenAPI specifications.
+    """
+    Discover and register LangGraph tools from service OpenAPI specifications.
 
     Automatically analyzes service OpenAPI specs to identify operations that can be
     exposed as LangGraph tools. Categorizes tools by functionality and optionally
@@ -739,7 +742,7 @@ async def get_optimization_status():
 
 
 class BulkDiscoverRequest(BaseModel):
-    """Request model for bulk service discovery"""
+    """Request model for bulk service discovery."""
 
     services: List[Dict[str, str]] = Field(..., description="List of services to discover")
     auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
@@ -748,7 +751,8 @@ class BulkDiscoverRequest(BaseModel):
 
 
 def normalize_service_url(url: str, service_name: str = None) -> str:
-    """Normalize service URL to use Docker internal networking when appropriate"""
+    """Normalize service URL to use Docker internal networking when
+    appropriate."""
     if not url:
         return url
 
@@ -766,7 +770,7 @@ def normalize_service_url(url: str, service_name: str = None) -> str:
 
 @app.post("/discover-ecosystem")
 async def discover_ecosystem(request: BulkDiscoverRequest):
-    """Comprehensive ecosystem discovery for multiple services"""
+    """Comprehensive ecosystem discovery for multiple services."""
     try:
         services_to_discover = []
 
@@ -886,7 +890,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
 
 @app.get("/registry/stats")
 async def get_registry_stats():
-    """Get basic registry statistics"""
+    """Get basic registry statistics."""
     try:
         # Basic stats - would be enhanced with actual registry implementation
         stats = {"total_services": 0, "total_tools": 0, "last_discovery": None, "discovery_runs": 0}
@@ -900,7 +904,7 @@ async def get_registry_stats():
 
 @app.get("/monitoring/dashboard")
 async def get_monitoring_dashboard():
-    """Get basic monitoring dashboard"""
+    """Get basic monitoring dashboard."""
     try:
         dashboard = {
             "dashboard_title": "Discovery Agent Monitoring",
@@ -924,7 +928,7 @@ original_discover_handler = None
 
 
 async def handle_discovery_endpoint(request: DiscoverRequest):
-    """Enhanced discovery handler with URL normalization"""
+    """Enhanced discovery handler with URL normalization."""
     try:
         # Normalize URLs for Docker networking
         normalized_base_url = normalize_service_url(request.base_url, request.name)

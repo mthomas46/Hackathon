@@ -1,4 +1,5 @@
-"""Relationships service for business logic operations.
+"""
+Relationships service for business logic operations.
 
 Handles relationship processing and graph analysis business rules.
 """

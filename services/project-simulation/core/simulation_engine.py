@@ -37,7 +37,8 @@ from .timeline_engine import TimelineEngine
 
 
 class SimulationEngine:
-    """Main simulation coordinator that orchestrates all simulation activities."""
+    """Main simulation coordinator that orchestrates all simulation
+    activities."""
 
     def __init__(self, event_system: EventSystem):
         """Initialize the simulation engine."""

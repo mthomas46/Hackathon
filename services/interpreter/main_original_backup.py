@@ -104,29 +104,34 @@ register_health_endpoints(app, ServiceNames.INTERPRETER, SERVICE_VERSION)
 
 @app.post("/interpret", response_model=InterpretedIntent)
 async def interpret_query(query: UserQuery):
-    """Interpret user query and return intent with workflow.
+    """
+    Interpret user query and return intent with workflow.
 
-    Processes natural language queries to extract intent, entities, and generate
-    structured workflows. Includes confidence scoring and fallback handling for
-    ambiguous queries with optional session and user context.
+    Processes natural language queries to extract intent, entities, and
+    generate structured workflows. Includes confidence scoring and
+    fallback handling for ambiguous queries with optional session and
+    user context.
     """
     return await query_handlers.handle_interpret_query(query)
 
 
 @app.post("/execute")
 async def execute_workflow(query: UserQuery):
-    """Interpret query and execute the resulting workflow.
+    """
+    Interpret query and execute the resulting workflow.
 
-    Interprets the user query and immediately executes the generated workflow
-    across multiple services. Provides end-to-end processing from natural language
-    to completed operations with detailed execution results.
+    Interprets the user query and immediately executes the generated
+    workflow across multiple services. Provides end-to-end processing
+    from natural language to completed operations with detailed
+    execution results.
     """
     return await query_handlers.handle_execute_workflow(query)
 
 
 @app.get("/intents")
 async def list_supported_intents():
-    """List all supported intents and examples.
+    """
+    List all supported intents and examples.
 
     Returns comprehensive information about all supported query intents,
     including example queries, entity extraction patterns, and workflow
@@ -142,7 +147,8 @@ async def list_supported_intents():
 
 @app.post("/natural-query")
 async def process_natural_query(query: UserQuery):
-    """Process natural language query with full ecosystem context.
+    """
+    Process natural language query with full ecosystem context.
 
     This enhanced endpoint provides:
     - Ecosystem-aware intent recognition
@@ -199,7 +205,8 @@ async def process_natural_query(query: UserQuery):
 
 @app.post("/execute-natural-workflow")
 async def execute_natural_workflow(query: UserQuery):
-    """Execute natural language query as a complete workflow.
+    """
+    Execute natural language query as a complete workflow.
 
     This endpoint:
     1. Interprets the natural language query
@@ -270,7 +277,8 @@ async def execute_natural_workflow(query: UserQuery):
 
 @app.get("/ecosystem/capabilities")
 async def get_ecosystem_capabilities():
-    """Get comprehensive ecosystem capabilities for natural language processing.
+    """
+    Get comprehensive ecosystem capabilities for natural language processing.
 
     Returns detailed information about:
     - Available services and their capabilities
@@ -322,7 +330,8 @@ async def get_ecosystem_capabilities():
 
 @app.post("/workflows/discover")
 async def discover_workflows():
-    """Discover all available workflows in the ecosystem.
+    """
+    Discover all available workflows in the ecosystem.
 
     Returns comprehensive information about:
     - Traditional workflows (rule-based)
@@ -368,7 +377,8 @@ async def discover_workflows():
 
 @app.post("/prompt/translate")
 async def translate_prompt(query: UserQuery):
-    """Translate natural language query into structured workflow prompt.
+    """
+    Translate natural language query into structured workflow prompt.
 
     Uses advanced prompt engineering to:
     1. Understand the natural language query
@@ -423,7 +433,8 @@ async def translate_prompt(query: UserQuery):
 
 @app.post("/natural-query")
 async def process_natural_query(query_data: UserQuery):
-    """Enhanced natural language query processing with ecosystem context.
+    """
+    Enhanced natural language query processing with ecosystem context.
 
     This endpoint provides comprehensive natural language processing with:
     - Advanced query preprocessing and normalization
@@ -555,7 +566,8 @@ async def get_ecosystem_capabilities():
 
 @app.post("/workflows/discover")
 async def discover_workflows():
-    """Discover available workflows from orchestrator and LangGraph integration."""
+    """Discover available workflows from orchestrator and LangGraph
+    integration."""
     try:
         # Discover traditional workflows
         traditional_workflows = await orchestrator_integration.discover_available_workflows()
@@ -852,7 +864,8 @@ async def get_workflow_templates():
 
 @app.get("/documents/{document_id}/provenance")
 async def get_document_provenance(document_id: str):
-    """Get comprehensive provenance information for a workflow-generated document."""
+    """Get comprehensive provenance information for a workflow-generated
+    document."""
     try:
         # Get document metadata from doc_store
         doc_store_url = "http://doc-store:5087"

@@ -1,4 +1,4 @@
-"""Health Routes for Orchestrator Service"""
+"""Health Routes for Orchestrator Service."""
 
 from fastapi import APIRouter
 

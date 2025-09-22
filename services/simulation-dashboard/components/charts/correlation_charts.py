@@ -1,7 +1,8 @@
-"""Correlation Charts Components.
+"""
+Correlation Charts Components.
 
-This module provides chart components for displaying correlation analysis,
-relationship visualization, and dependency mapping.
+This module provides chart components for displaying correlation
+analysis, relationship visualization, and dependency mapping.
 """
 
 from typing import Any, Dict, List, Optional
@@ -26,7 +27,8 @@ def render_correlation_chart(
     width: Optional[int] = None,
     height: Optional[int] = 500,
 ) -> None:
-    """Render correlation matrix heatmap.
+    """
+    Render correlation matrix heatmap.
 
     Args:
         correlation_data: Correlation matrix data
@@ -135,7 +137,8 @@ def render_scatter_correlation_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render scatter plot showing correlation between two variables.
+    """
+    Render scatter plot showing correlation between two variables.
 
     Args:
         scatter_data: Scatter plot data with x and y variables
@@ -241,7 +244,8 @@ def render_network_correlation_chart(
     width: Optional[int] = None,
     height: Optional[int] = 500,
 ) -> None:
-    """Render network visualization of correlations.
+    """
+    Render network visualization of correlations.
 
     Args:
         network_data: Network data with nodes and edges

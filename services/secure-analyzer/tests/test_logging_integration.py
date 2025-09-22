@@ -193,7 +193,8 @@ class TestSecureAnalyzerLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_different_content_types_logging(self, client, mock_logger_client):
-        """Test logging for different types of content and sensitivity levels."""
+        """Test logging for different types of content and sensitivity
+        levels."""
         test_cases = [
             {
                 "content": "Normal safe content without any sensitive information",

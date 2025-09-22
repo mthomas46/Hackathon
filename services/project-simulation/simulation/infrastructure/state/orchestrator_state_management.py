@@ -125,7 +125,8 @@ except ImportError:
 
 
 class OrchestratorStateManager:
-    """State manager that reuses orchestrator patterns for simulation state management."""
+    """State manager that reuses orchestrator patterns for simulation state
+    management."""
 
     def __init__(self, orchestrator_client=None):
         """Initialize orchestrator state manager."""

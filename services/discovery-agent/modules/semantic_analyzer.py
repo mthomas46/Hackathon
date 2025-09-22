@@ -1,7 +1,8 @@
-"""Semantic Analysis Module for Discovery Agent service.
+"""
+Semantic Analysis Module for Discovery Agent service.
 
-This module provides Phase 4 semantic analysis capabilities using LLM
-to intelligently categorize and analyze discovered tools.
+This module provides Phase 4 semantic analysis capabilities using LLM to
+intelligently categorize and analyze discovered tools.
 """
 
 import re
@@ -15,7 +16,7 @@ except ImportError:
 
 
 class SemanticToolAnalyzer:
-    """Semantic analyzer for tool categorization and analysis using LLM"""
+    """Semantic analyzer for tool categorization and analysis using LLM."""
 
     def __init__(self, interpreter_url: str = "http://localhost:5120"):
         self.interpreter_url = interpreter_url
@@ -66,7 +67,7 @@ class SemanticToolAnalyzer:
         }
 
     async def analyze_tool_semantics(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform semantic analysis of a tool using LLM understanding"""
+        """Perform semantic analysis of a tool using LLM understanding."""
 
         semantic_analysis = {
             "tool_name": tool["name"],
@@ -102,7 +103,7 @@ class SemanticToolAnalyzer:
         return semantic_analysis
 
     async def _perform_llm_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Use LLM to perform semantic analysis of the tool"""
+        """Use LLM to perform semantic analysis of the tool."""
 
         analysis_prompt = f"""
         Analyze the following API tool and provide semantic understanding:
@@ -144,7 +145,7 @@ class SemanticToolAnalyzer:
             return {"success": False, "error": str(e)}
 
     def _parse_llm_semantic_response(self, llm_response: str) -> Dict[str, Any]:
-        """Parse LLM semantic analysis response"""
+        """Parse LLM semantic analysis response."""
 
         try:
             # Try to extract JSON from response
@@ -175,7 +176,7 @@ class SemanticToolAnalyzer:
         }
 
     def _rule_based_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Rule-based semantic analysis as fallback"""
+        """Rule-based semantic analysis as fallback."""
 
         tool_name = tool.get("name", "").lower()
         description = tool.get("description", "").lower()
@@ -237,7 +238,7 @@ class SemanticToolAnalyzer:
         }
 
     def _calculate_semantic_confidence(self, semantic_analysis: Dict[str, Any]) -> float:
-        """Calculate confidence score for semantic analysis"""
+        """Calculate confidence score for semantic analysis."""
 
         confidence = 0.0
 
@@ -265,7 +266,7 @@ class SemanticToolAnalyzer:
         return min(confidence, 1.0)
 
     async def analyze_tool_relationships(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze relationships between tools using semantic understanding"""
+        """Analyze relationships between tools using semantic understanding."""
 
         relationship_analysis = {
             "tool_count": len(tools),
@@ -311,7 +312,7 @@ class SemanticToolAnalyzer:
         return relationship_analysis
 
     async def _analyze_tool_pair_relationship(self, tool1: Dict[str, Any], tool2: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze relationship between two tools"""
+        """Analyze relationship between two tools."""
 
         # Get semantic information
         sem1 = tool1.get("semantic_analysis", {})
@@ -378,7 +379,7 @@ class SemanticToolAnalyzer:
         }
 
     def _generate_workflow_suggestions(self, complementary_pairs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Generate workflow suggestions based on tool relationships"""
+        """Generate workflow suggestions based on tool relationships."""
 
         suggestions = []
 
@@ -405,7 +406,7 @@ class SemanticToolAnalyzer:
         return suggestions
 
     async def enhance_tool_categorization(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Enhance tool categorization using semantic analysis"""
+        """Enhance tool categorization using semantic analysis."""
 
         enhanced_tools = []
 

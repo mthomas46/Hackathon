@@ -1,4 +1,5 @@
-"""Notifications service for business logic operations.
+"""
+Notifications service for business logic operations.
 
 Handles notification processing and webhook management.
 """

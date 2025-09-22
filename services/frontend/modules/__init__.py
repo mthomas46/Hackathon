@@ -1,7 +1,9 @@
-"""Frontend modules package.
+"""
+Frontend modules package.
 
-This package contains all the modularized functionality for the Frontend service.
-Provides shared utilities and client instances for all frontend modules.
+This package contains all the modularized functionality for the Frontend
+service. Provides shared utilities and client instances for all frontend
+modules.
 """
 
 from services.shared.utilities import get_service_client
@@ -11,10 +13,12 @@ _service_client = None
 
 
 def get_frontend_client():
-    """Get the shared service client for frontend modules.
+    """
+    Get the shared service client for frontend modules.
 
-    Uses lazy initialization pattern to create client only when first needed.
-    This ensures efficient resource usage and proper initialization order.
+    Uses lazy initialization pattern to create client only when first
+    needed. This ensures efficient resource usage and proper
+    initialization order.
     """
     global _service_client
     if _service_client is None:

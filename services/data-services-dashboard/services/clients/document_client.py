@@ -15,7 +15,8 @@ class DocumentStoreClient:
     """Client for interacting with the Document Store service."""
 
     def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
-        """Initialize the document store client.
+        """
+        Initialize the document store client.
 
         Args:
             base_url: Base URL of the Document Store service

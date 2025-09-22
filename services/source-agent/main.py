@@ -152,11 +152,12 @@ attach_self_register(app, ServiceNames.SOURCE_AGENT)
 
 @app.post("/docs/fetch")
 async def fetch_document(req: DocumentRequest):
-    """Fetch document from specified source using handler modules.
+    """
+    Fetch document from specified source using handler modules.
 
-    Supports fetching documents from GitHub (READMEs, PRs), Jira (issues),
-    and Confluence (pages). Uses appropriate authentication and data
-    transformation for each source type.
+    Supports fetching documents from GitHub (READMEs, PRs), Jira
+    (issues), and Confluence (pages). Uses appropriate authentication
+    and data transformation for each source type.
     """
     start_time = time.time()
     request_id = f"source_fetch_{int(time.time() * 1000)}"
@@ -328,20 +329,23 @@ async def fetch_document(req: DocumentRequest):
 
 @app.post("/normalize")
 async def normalize_data(req: NormalizationRequest):
-    """Normalize data from specified source using handler modules.
+    """
+    Normalize data from specified source using handler modules.
 
-    Applies source-specific normalization rules to standardize data format,
-    clean content, and extract structured information from raw source data.
+    Applies source-specific normalization rules to standardize data
+    format, clean content, and extract structured information from raw
+    source data.
     """
     return normalize_handler.normalize_data(req.source, req.data, req.correlation_id)
 
 
 @app.post("/architecture/process")
 async def process_architecture(req: ArchitectureProcessRequest):
-    """Process architectural diagrams using the architecture-digitizer service.
+    """
+    Process architectural diagrams using the architecture-digitizer service.
 
-    Forwards diagram processing requests to the architecture-digitizer service
-    for normalization into standardized JSON schema.
+    Forwards diagram processing requests to the architecture-digitizer
+    service for normalization into standardized JSON schema.
     """
     try:
         from services.shared.utilities import get_service_client
@@ -363,10 +367,12 @@ async def process_architecture(req: ArchitectureProcessRequest):
 
 @app.post("/code/analyze")
 async def analyze_code(req: CodeAnalysisRequest):
-    """Analyze code for API endpoints and patterns using handler modules.
+    """
+    Analyze code for API endpoints and patterns using handler modules.
 
-    Performs static analysis on code to identify API endpoints, architectural
-    patterns, and potential integration points across different frameworks.
+    Performs static analysis on code to identify API endpoints,
+    architectural patterns, and potential integration points across
+    different frameworks.
     """
     return code_analyzer.analyze_code(req.text)
 
@@ -381,10 +387,12 @@ register_health_endpoints(app, ServiceNames.SOURCE_AGENT, "1.0.0")
 
 @app.get("/sources")
 async def list_sources():
-    """List supported sources and their capabilities.
+    """
+    List supported sources and their capabilities.
 
-    Returns information about all supported source types (GitHub, Jira, Confluence)
-    and their specific capabilities for fetching, normalization, and analysis.
+    Returns information about all supported source types (GitHub, Jira,
+    Confluence) and their specific capabilities for fetching,
+    normalization, and analysis.
     """
     try:
         sources_data = {"sources": SUPPORTED_SOURCES, "capabilities": SOURCE_CAPABILITIES}

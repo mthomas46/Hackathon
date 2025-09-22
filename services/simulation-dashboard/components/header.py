@@ -1,7 +1,8 @@
-"""Header Component.
+"""
+Header Component.
 
-This module provides the header component for the dashboard,
-including title, status indicators, and global actions.
+This module provides the header component for the dashboard, including
+title, status indicators, and global actions.
 """
 
 from datetime import datetime

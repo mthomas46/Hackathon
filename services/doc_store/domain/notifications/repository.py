@@ -1,4 +1,5 @@
-"""Notifications repository for data access operations.
+"""
+Notifications repository for data access operations.
 
 Handles notification and webhook data operations.
 """

@@ -1,4 +1,4 @@
-"""Workflow Validator Domain Service"""
+"""Workflow Validator Domain Service."""
 
 from typing import List, Tuple
 

@@ -1,4 +1,5 @@
-"""Database schema definitions for Prompt Store service.
+"""
+Database schema definitions for Prompt Store service.
 
 Contains all table creation statements and indexes.
 """

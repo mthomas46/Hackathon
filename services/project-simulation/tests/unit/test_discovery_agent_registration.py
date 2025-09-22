@@ -130,7 +130,8 @@ class TestDiscoveryAgentRegistration:
 
     @pytest.mark.asyncio
     async def test_validate_endpoint_accessibility(self):
-        """Test validating that registered endpoints are actually accessible."""
+        """Test validating that registered endpoints are actually
+        accessible."""
         # Arrange
         endpoints = [
             ServiceEndpoint(path="/api/v1/simulations", method="POST"),
@@ -242,7 +243,8 @@ class TestServiceRegistry:
 
 # Integration Tests (would be in separate file in real TDD)
 class TestDiscoveryAgentIntegration:
-    """Integration tests for discovery agent (would run after unit tests pass)."""
+    """Integration tests for discovery agent (would run after unit tests
+    pass)."""
 
     @pytest.mark.asyncio
     async def test_full_service_discovery_workflow(self):
@@ -255,5 +257,6 @@ class TestDiscoveryAgentIntegration:
 
     @pytest.mark.asyncio
     async def test_cross_service_communication(self):
-        """Test communication between orchestrator and simulation service via discovery."""
+        """Test communication between orchestrator and simulation service via
+        discovery."""
         # This would test end-to-end communication flow

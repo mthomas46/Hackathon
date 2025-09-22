@@ -1,7 +1,8 @@
-"""Secure Analyzer Manager module for CLI service.
+"""
+Secure Analyzer Manager module for CLI service.
 
-Provides power-user operations for secure analyzer including
-content detection, policy enforcement, and secure summarization.
+Provides power-user operations for secure analyzer including content
+detection, policy enforcement, and secure summarization.
 """
 
 import os
@@ -21,7 +22,8 @@ class SecureAnalyzerManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def secure_analyzer_menu(self):
-        """Main secure analyzer management menu with enhanced interactive experience."""
+        """Main secure analyzer management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Secure Analyzer Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -36,7 +38,11 @@ class SecureAnalyzerManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.content_security_analysis_menu()
         elif choice == "2":

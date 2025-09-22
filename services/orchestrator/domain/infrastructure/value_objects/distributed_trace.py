@@ -1,4 +1,4 @@
-"""Distributed Trace Value Object"""
+"""Distributed Trace Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -9,7 +9,8 @@ from .trace_status import TraceStatus
 
 
 class DistributedTrace:
-    """Value object representing a complete distributed trace across services."""
+    """Value object representing a complete distributed trace across
+    services."""
 
     def __init__(
         self,

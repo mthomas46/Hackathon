@@ -1,4 +1,4 @@
-"""Service Registry Domain Layer"""
+"""Service Registry Domain Layer."""
 
 from .entities import *
 from .services import *

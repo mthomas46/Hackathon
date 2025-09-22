@@ -1,4 +1,4 @@
-"""Workflow Started Event"""
+"""Workflow Started Event."""
 
 
 from .base_event import DomainEvent

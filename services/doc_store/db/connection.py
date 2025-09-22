@@ -1,4 +1,5 @@
-"""Database connection management for Doc Store service.
+"""
+Database connection management for Doc Store service.
 
 Provides connection pooling and secure database access.
 """

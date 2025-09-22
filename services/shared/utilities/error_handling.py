@@ -1,4 +1,5 @@
-"""Standardized Error Handling and Exception Classes
+"""
+Standardized Error Handling and Exception Classes.
 
 Comprehensive error handling system used across all services in the ecosystem.
 
@@ -38,7 +39,8 @@ from ..monitoring.logging import fire_and_forget
 
 
 class ServiceException(Exception):
-    """Base exception class for service-specific errors.
+    """
+    Base exception class for service-specific errors.
 
     All custom exceptions in the ecosystem should inherit from this class
     to ensure consistent error handling, logging, and response formatting.

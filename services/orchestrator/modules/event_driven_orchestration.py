@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Event-Driven Orchestration
+Event-Driven Orchestration.
 
 This module provides event-driven workflow orchestration capabilities including:
 - Event sourcing patterns

@@ -1,4 +1,4 @@
-"""Parameter Resolver Domain Service"""
+"""Parameter Resolver Domain Service."""
 
 from typing import Any, Dict, List, Optional, Tuple
 

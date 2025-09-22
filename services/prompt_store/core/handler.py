@@ -1,6 +1,8 @@
-"""Base handler pattern for Prompt Store service.
+"""
+Base handler pattern for Prompt Store service.
 
-Following domain-driven design principles with generic handler implementation.
+Following domain-driven design principles with generic handler
+implementation.
 """
 
 from abc import ABC

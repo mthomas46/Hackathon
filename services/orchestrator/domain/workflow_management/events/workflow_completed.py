@@ -1,4 +1,4 @@
-"""Workflow Completed Event"""
+"""Workflow Completed Event."""
 
 
 from .base_event import DomainEvent

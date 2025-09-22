@@ -1,8 +1,11 @@
-"""Intelligent Workflow Dispatcher for Interpreter Service.
+"""
+Intelligent Workflow Dispatcher for Interpreter Service.
 
-This module handles the intelligent routing of user queries to appropriate ecosystem workflows,
-with deep orchestrator integration and context-aware workflow selection. It understands the
-main workflows available in the ecosystem and maps user intents to optimal execution paths.
+This module handles the intelligent routing of user queries to
+appropriate ecosystem workflows, with deep orchestrator integration and
+context-aware workflow selection. It understands the main workflows
+available in the ecosystem and maps user intents to optimal execution
+paths.
 """
 
 from datetime import datetime
@@ -24,7 +27,8 @@ except ImportError:
 
 
 class WorkflowDispatcher:
-    """Intelligent dispatcher for ecosystem workflows with orchestrator integration."""
+    """Intelligent dispatcher for ecosystem workflows with orchestrator
+    integration."""
 
     def __init__(self):
         self.client = ServiceClients()
@@ -600,7 +604,8 @@ class WorkflowDispatcher:
         return enhanced_result
 
     async def _generate_follow_up_suggestions(self, workflow_name: str, result: Dict[str, Any]) -> List[str]:
-        """Generate follow-up action suggestions based on workflow execution."""
+        """Generate follow-up action suggestions based on workflow
+        execution."""
         suggestions = []
 
         if workflow_name == "document_analysis":

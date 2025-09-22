@@ -1,4 +1,5 @@
-"""Interpreter UI handlers for Frontend service.
+"""
+Interpreter UI handlers for Frontend service.
 
 Handles interpreter service visualization, including natural language
 query interpretation, intent recognition, and workflow execution.

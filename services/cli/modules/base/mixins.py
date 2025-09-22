@@ -1,4 +1,5 @@
-"""Mixins for BaseManager to consolidate common functionality.
+"""
+Mixins for BaseManager to consolidate common functionality.
 
 This module provides mixins that can be used with BaseManager to reduce
 code duplication across different manager implementations.
@@ -56,7 +57,8 @@ class MenuMixin(ABC):
                 Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def handle_submenu_choice(self, choice: str) -> bool:
-        """Handle submenu choice. Override in subclasses.
+        """
+        Handle submenu choice. Override in subclasses.
 
         Args:
             choice: The user's menu choice
@@ -73,7 +75,8 @@ class OperationMixin(ABC):
     async def monitor_operation(
         self, operation_id: str, operation_type: str, status_func, completion_func, timeout: int = 300
     ) -> Optional[Dict[str, Any]]:
-        """Monitor an async operation with progress indication.
+        """
+        Monitor an async operation with progress indication.
 
         Args:
             operation_id: Unique identifier for the operation
@@ -118,7 +121,8 @@ class OperationMixin(ABC):
     async def api_operation_with_confirm(
         self, endpoint: str, data: Dict[str, Any], description: str, confirm_msg: str, success_msg: str
     ) -> bool:
-        """Perform API operation with user confirmation.
+        """
+        Perform API operation with user confirmation.
 
         Args:
             endpoint: API endpoint
@@ -144,7 +148,8 @@ class TableMixin(ABC):
     """Mixin providing common table creation and population functionality."""
 
     def create_and_populate_table(self, title: str, headers: List[str], data_rows: List[List[str]]) -> Table:
-        """Create a table and populate it with data.
+        """
+        Create a table and populate it with data.
 
         Args:
             title: Table title
@@ -161,7 +166,8 @@ class TableMixin(ABC):
         return table
 
     def create_status_table_with_data(self, title: str, status_data: Dict[str, Dict[str, Any]]) -> Table:
-        """Create a status table populated with service status data.
+        """
+        Create a status table populated with service status data.
 
         Args:
             title: Table title
@@ -189,7 +195,8 @@ class TableMixin(ABC):
         return table
 
     def create_workflow_table_with_data(self, title: str, workflows: List[Dict[str, Any]]) -> Table:
-        """Create a workflow table populated with workflow data.
+        """
+        Create a workflow table populated with workflow data.
 
         Args:
             title: Table title
@@ -220,7 +227,8 @@ class TableMixin(ABC):
         return table
 
     def create_findings_table_with_data(self, title: str, findings: List[Dict[str, Any]]) -> Table:
-        """Create a findings table populated with analysis findings.
+        """
+        Create a findings table populated with analysis findings.
 
         Args:
             title: Table title
@@ -255,7 +263,8 @@ class ValidationMixin(ABC):
     """Mixin providing common validation and error handling functionality."""
 
     def validate_required_params(self, params: Dict[str, Any], required: List[str]) -> bool:
-        """Validate that required parameters are present.
+        """
+        Validate that required parameters are present.
 
         Args:
             params: Parameters to validate
@@ -273,7 +282,8 @@ class ValidationMixin(ABC):
         return True
 
     def validate_enum_value(self, value: str, allowed_values: List[str], param_name: str) -> bool:
-        """Validate that a value is in allowed enum values.
+        """
+        Validate that a value is in allowed enum values.
 
         Args:
             value: Value to validate
@@ -292,7 +302,8 @@ class ValidationMixin(ABC):
     async def handle_operation_error(
         self, operation: str, error: Exception, retry_func=None, max_retries: int = 0
     ) -> bool:
-        """Handle operation errors with optional retry logic.
+        """
+        Handle operation errors with optional retry logic.
 
         Args:
             operation: Operation description
@@ -321,7 +332,8 @@ class HealthCheckMixin(ABC):
     """Mixin providing service health checking functionality."""
 
     async def check_service_health(self, service_name: str) -> Dict[str, Any]:
-        """Check the health of a specific service.
+        """
+        Check the health of a specific service.
 
         Args:
             service_name: Name of the service to check
@@ -348,7 +360,8 @@ class HealthCheckMixin(ABC):
             return {"status": "unreachable", "error": str(e), "timestamp": asyncio.get_event_loop().time()}
 
     async def check_services_health(self, service_names: List[str]) -> Dict[str, Dict[str, Any]]:
-        """Check health of multiple services.
+        """
+        Check health of multiple services.
 
         Args:
             service_names: List of service names to check
@@ -370,7 +383,8 @@ class HealthCheckMixin(ABC):
         return results
 
     def _get_service_health_url(self, service_name: str) -> str:
-        """Get the health check URL for a service.
+        """
+        Get the health check URL for a service.
 
         Args:
             service_name: Name of the service
@@ -399,7 +413,8 @@ class HealthCheckMixin(ABC):
         return url_map.get(service_name, f"http://localhost:5000/health")
 
     def is_service_healthy(self, health_data: Dict[str, Any]) -> bool:
-        """Check if a service health response indicates healthy status.
+        """
+        Check if a service health response indicates healthy status.
 
         Args:
             health_data: Health check response data
@@ -410,7 +425,8 @@ class HealthCheckMixin(ABC):
         return health_data.get("status") == "healthy"
 
     def format_health_status(self, service_name: str, health_data: Dict[str, Any]) -> Tuple[str, str]:
-        """Format health status for display.
+        """
+        Format health status for display.
 
         Args:
             service_name: Name of the service
@@ -437,7 +453,8 @@ class HealthCheckMixin(ABC):
     async def display_service_health_table(
         self, health_results: Dict[str, Dict[str, Any]], title: str = "Service Health Status"
     ) -> None:
-        """Display service health results in a formatted table.
+        """
+        Display service health results in a formatted table.
 
         Args:
             health_results: Dict mapping service names to health data

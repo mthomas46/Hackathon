@@ -1,4 +1,5 @@
-"""Prediction Charts Components.
+"""
+Prediction Charts Components.
 
 This module provides chart components for displaying ML predictions,
 forecasts, and predictive analytics visualizations.
@@ -27,7 +28,8 @@ def render_prediction_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render prediction chart for ML model results.
+    """
+    Render prediction chart for ML model results.
 
     Args:
         predictions: Dictionary containing prediction data
@@ -118,7 +120,8 @@ def render_forecast_comparison_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render comparison chart between historical and forecast data.
+    """
+    Render comparison chart between historical and forecast data.
 
     Args:
         historical_data: Historical data points
@@ -186,7 +189,8 @@ def render_prediction_confidence_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render prediction chart with confidence intervals.
+    """
+    Render prediction chart with confidence intervals.
 
     Args:
         predictions: Prediction data
@@ -266,7 +270,8 @@ def render_model_performance_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render model performance metrics chart.
+    """
+    Render model performance metrics chart.
 
     Args:
         performance_data: Model performance metrics

@@ -1,6 +1,8 @@
-"""Discovery handler for Discovery Agent service.
+"""
+Discovery handler for Discovery Agent service.
 
-Handles the complex logic for discovering and registering OpenAPI endpoints.
+Handles the complex logic for discovering and registering OpenAPI
+endpoints.
 """
 
 from typing import Any, Dict, List

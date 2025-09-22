@@ -1,4 +1,4 @@
-"""Reporting Application Use Cases"""
+"""Reporting Application Use Cases."""
 
 from typing import Any, Dict, List, Optional
 

@@ -1,7 +1,8 @@
-"""Shared utilities for Discovery Agent service modules.
+"""
+Shared utilities for Discovery Agent service modules.
 
-This module contains common utilities used across all discovery-agent modules
-to eliminate code duplication and ensure consistency.
+This module contains common utilities used across all discovery-agent
+modules to eliminate code duplication and ensure consistency.
 """
 
 import hashlib
@@ -42,7 +43,8 @@ def get_discovery_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
 
 
 def handle_discovery_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for discovery operations.
+    """
+    Standardized error handling for discovery operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -64,7 +66,8 @@ def handle_discovery_error(operation: str, error: Exception, **context) -> Dict[
 
 
 def create_discovery_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for discovery operations.
+    """
+    Standardized success response for discovery operations.
 
     Returns a consistent success response format.
     """
@@ -77,7 +80,8 @@ def create_discovery_success_response(operation: str, data: Any, **context) -> D
 
 
 def build_discovery_context(operation: str, **additional) -> Dict[str, Any]:
-    """Build context dictionary for discovery operations.
+    """
+    Build context dictionary for discovery operations.
 
     Provides consistent context for logging and responses.
     """

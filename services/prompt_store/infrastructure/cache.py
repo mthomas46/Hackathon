@@ -1,4 +1,5 @@
-"""Cache infrastructure for Prompt Store service.
+"""
+Cache infrastructure for Prompt Store service.
 
 Provides Redis and local caching capabilities for prompts and analytics.
 """

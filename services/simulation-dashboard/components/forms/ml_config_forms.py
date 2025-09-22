@@ -1,7 +1,8 @@
-"""ML Configuration Form Components.
+"""
+ML Configuration Form Components.
 
-This module provides form components for configuring machine learning models,
-training parameters, and prediction settings.
+This module provides form components for configuring machine learning
+models, training parameters, and prediction settings.
 """
 
 from typing import Any, Dict, Optional
@@ -15,7 +16,8 @@ def render_ml_config_form(
     title: str = "🤖 Machine Learning Configuration",
     default_config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Render ML configuration form for model training and prediction settings.
+    """
+    Render ML configuration form for model training and prediction settings.
 
     Args:
         config_key: Key for storing configuration in session state
@@ -261,7 +263,8 @@ def render_ml_config_form(
 def render_model_training_form(
     training_key: str = "training_config", title: str = "🎓 Model Training Configuration"
 ) -> Dict[str, Any]:
-    """Render model training configuration form.
+    """
+    Render model training configuration form.
 
     Args:
         training_key: Key for storing training configuration

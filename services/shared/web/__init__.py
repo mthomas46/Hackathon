@@ -1,5 +1,5 @@
 """
-Web Utilities
+Web Utilities.
 
 HTML generation and envelope utilities for web responses.
 """

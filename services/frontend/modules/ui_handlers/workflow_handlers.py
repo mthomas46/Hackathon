@@ -1,4 +1,5 @@
-"""Workflow UI handlers for Frontend service.
+"""
+Workflow UI handlers for Frontend service.
 
 Handles workflow and job status visualization.
 """

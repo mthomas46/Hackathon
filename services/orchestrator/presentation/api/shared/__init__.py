@@ -1,4 +1,4 @@
-"""Shared API DTOs"""
+"""Shared API DTOs."""
 
 from .dtos import *
 

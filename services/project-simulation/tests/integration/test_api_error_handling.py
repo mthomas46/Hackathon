@@ -1,7 +1,9 @@
-"""Integration Tests for API Error Handling and Edge Cases.
+"""
+Integration Tests for API Error Handling and Edge Cases.
 
-This module contains comprehensive tests for API error handling, edge cases,
-and robust error response validation in the Project Simulation Service.
+This module contains comprehensive tests for API error handling, edge
+cases, and robust error response validation in the Project Simulation
+Service.
 """
 
 

@@ -1,4 +1,5 @@
-"""Event system for Doc Store service.
+"""
+Event system for Doc Store service.
 
 Provides event emission, subscription, and notification capabilities.
 """

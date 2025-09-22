@@ -1,4 +1,4 @@
-"""Value Objects for Workflow Management Domain"""
+"""Value Objects for Workflow Management Domain."""
 
 from .action_result import ActionResult, ActionStatus
 from .execution_id import ExecutionId

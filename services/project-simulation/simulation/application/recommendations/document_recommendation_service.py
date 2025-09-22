@@ -1,6 +1,9 @@
 """
-Document Recommendation Service for high-level document analysis and recommendations.
-Following DDD application layer patterns with clean separation of concerns.
+Document Recommendation Service for high-level document analysis and
+recommendations.
+
+Following DDD application layer patterns with clean separation of
+concerns.
 """
 
 import asyncio
@@ -10,7 +13,8 @@ from simulation.infrastructure.recommendations.summarizer_hub_client import Summ
 
 
 class DocumentRecommendationService:
-    """High-level service for document analysis and recommendation generation."""
+    """High-level service for document analysis and recommendation
+    generation."""
 
     def __init__(self):
         """Initialize the document recommendation service."""
@@ -109,7 +113,8 @@ class DocumentRecommendationService:
         return gaps
 
     async def generate_actionable_recommendations(self, analysis_results: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Generate actionable recommendations based on comprehensive analysis."""
+        """Generate actionable recommendations based on comprehensive
+        analysis."""
         recommendations = []
 
         # Process quality scores

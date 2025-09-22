@@ -100,7 +100,8 @@ async def shutdown_event():
 
 
 class OwnerUpdate(BaseModel):
-    """Request model for updating owner information in the system.
+    """
+    Request model for updating owner information in the system.
 
     Used to update the ownership registry that maps entities to their
     responsible owners and teams for notification routing.
@@ -129,11 +130,12 @@ async def health():
 
 @app.post("/owners/update")
 async def owners_update(req: OwnerUpdate):
-    """Update owner information in the ownership registry.
+    """
+    Update owner information in the ownership registry.
 
-    This endpoint allows updating the mapping of entities to their owners
-    and teams. In a production system, this would persist to a database
-    or configuration repository.
+    This endpoint allows updating the mapping of entities to their
+    owners and teams. In a production system, this would persist to a
+    database or configuration repository.
 
     Currently implemented as a stub for testing purposes.
     """
@@ -142,7 +144,8 @@ async def owners_update(req: OwnerUpdate):
 
 
 class NotifyPayload(BaseModel):
-    """Request model for sending notifications through various channels.
+    """
+    Request model for sending notifications through various channels.
 
     Supports multiple notification channels with automatic deduplication
     and metadata enrichment for better notification management.
@@ -169,11 +172,14 @@ class NotifyPayload(BaseModel):
 
 @app.post("/notify")
 async def notify(req: NotifyPayload):
-    """Send a notification through the specified channel with automatic deduplication.
+    """
+    Send a notification through the specified channel with automatic
+    deduplication.
 
-    Processes the notification request, applies deduplication logic to prevent
-    spam, and delivers through the appropriate channel. Failed notifications
-    are automatically added to the dead letter queue for retry or analysis.
+    Processes the notification request, applies deduplication logic to
+    prevent spam, and delivers through the appropriate channel. Failed
+    notifications are automatically added to the dead letter queue for
+    retry or analysis.
     """
     start_time = time.time()
     request_id = f"notify_{int(time.time() * 1000)}"
@@ -285,10 +291,11 @@ async def notify(req: NotifyPayload):
 
 
 class ResolveOwnersRequest(BaseModel):
-    """Request model for resolving multiple owners to their notification targets.
+    """
+    Request model for resolving multiple owners to their notification targets.
 
-    Used to batch-resolve owner names to their corresponding notification
-    channels and targets for efficient bulk operations.
+    Used to batch-resolve owner names to their corresponding
+    notification channels and targets for efficient bulk operations.
     """
 
     owners: List[str]
@@ -297,11 +304,12 @@ class ResolveOwnersRequest(BaseModel):
 
 @app.post("/owners/resolve")
 async def owners_resolve(req: ResolveOwnersRequest):
-    """Resolve a list of owner names to their notification targets.
+    """
+    Resolve a list of owner names to their notification targets.
 
-    Takes multiple owner identifiers and returns their resolved notification
-    targets (email addresses, webhook URLs, etc.) using cached mappings
-    and fallback heuristics.
+    Takes multiple owner identifiers and returns their resolved
+    notification targets (email addresses, webhook URLs, etc.) using
+    cached mappings and fallback heuristics.
     """
     start_time = time.time()
     request_id = f"owner_resolve_{int(time.time() * 1000)}"
@@ -388,7 +396,8 @@ async def owners_resolve(req: ResolveOwnersRequest):
 
 @app.get("/dlq")
 async def get_dlq(limit: int = 50):
-    """Retrieve entries from the dead letter queue for failed notifications.
+    """
+    Retrieve entries from the dead letter queue for failed notifications.
 
     Returns the most recent failed notification attempts for monitoring
     and debugging purposes. Limited to prevent excessive response sizes.

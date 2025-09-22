@@ -1,4 +1,5 @@
-"""Sample documents for Interpreter service context.
+"""
+Sample documents for Interpreter service context.
 
 This module contains a diverse set of sample documents that can be used as context
 when processing queries that require document analysis or simulation scenarios.
@@ -249,7 +250,8 @@ class SampleDocumentRepository:
         return [doc for doc in self.documents if doc.get("category", "").lower() == category.lower()]
 
     def get_similar_documents(self) -> List[Dict[str, Any]]:
-        """Get documents that are highly similar (for testing deduplication)."""
+        """Get documents that are highly similar (for testing
+        deduplication)."""
         return [doc for doc in self.documents if "similar" in doc.get("id", "")]
 
     def get_contradictory_documents(self) -> List[Dict[str, Any]]:

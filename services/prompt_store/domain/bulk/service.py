@@ -1,4 +1,5 @@
-"""Bulk operations service implementation.
+"""
+Bulk operations service implementation.
 
 Handles business logic for bulk operations on prompts.
 """
@@ -310,7 +311,8 @@ class BulkOperationService(BaseService[BulkOperation]):
             print(f"Failed to update progress for operation {operation_id}: {e}")
 
     def _estimate_time_remaining(self, operation: BulkOperation) -> Optional[float]:
-        """Estimate time remaining for operation completion (simple implementation)."""
+        """Estimate time remaining for operation completion (simple
+        implementation)."""
         if operation.status not in ["processing"] or operation.processed_items == 0:
             return None
 

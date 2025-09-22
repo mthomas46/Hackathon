@@ -1,4 +1,4 @@
-"""Ingestion Application Layer"""
+"""Ingestion Application Layer."""
 
 from .commands import *
 from .queries import *

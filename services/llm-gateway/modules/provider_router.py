@@ -1,7 +1,9 @@
-"""Provider Router for LLM Gateway Service.
+"""
+Provider Router for LLM Gateway Service.
 
-Handles intelligent routing of LLM requests to appropriate providers based on
-content analysis, availability, cost optimization, and performance requirements.
+Handles intelligent routing of LLM requests to appropriate providers
+based on content analysis, availability, cost optimization, and
+performance requirements.
 """
 
 import time

@@ -1,4 +1,5 @@
-"""Sidebar Navigation Component.
+"""
+Sidebar Navigation Component.
 
 This module provides the sidebar navigation component for the dashboard,
 including page selection, theme switching, and quick actions.

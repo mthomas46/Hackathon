@@ -1,4 +1,5 @@
-"""Prompt refinement handlers for API endpoints.
+"""
+Prompt refinement handlers for API endpoints.
 
 Handles HTTP requests and responses for prompt refinement operations.
 """

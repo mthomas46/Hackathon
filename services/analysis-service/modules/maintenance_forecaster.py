@@ -1,4 +1,5 @@
-"""Maintenance Forecasting module for Analysis Service.
+"""
+Maintenance Forecasting module for Analysis Service.
 
 Predicts when documentation will need updates based on risk assessment,
 historical patterns, usage data, and business requirements.
@@ -671,7 +672,8 @@ maintenance_forecaster = MaintenanceForecaster()
 async def forecast_document_maintenance(
     document_id: str, document_data: Dict[str, Any], analysis_history: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
-    """Convenience function for document maintenance forecasting.
+    """
+    Convenience function for document maintenance forecasting.
 
     Args:
         document_id: ID of the document to forecast
@@ -687,7 +689,8 @@ async def forecast_document_maintenance(
 async def forecast_portfolio_maintenance(
     documents: List[Dict[str, Any]], group_by: str = "document_type"
 ) -> Dict[str, Any]:
-    """Convenience function for portfolio maintenance forecasting.
+    """
+    Convenience function for portfolio maintenance forecasting.
 
     Args:
         documents: List of document data dictionaries

@@ -201,7 +201,8 @@ class ProjectDocument(Document):
 
 
 class SimulationAnalysisResult(AnalysisResult):
-    """Simulation-specific analysis result extending ecosystem AnalysisResult."""
+    """Simulation-specific analysis result extending ecosystem
+    AnalysisResult."""
 
     simulation_context: Dict[str, Any] = Field(default_factory=dict, description="Simulation context")
     project_phase: Optional[str] = Field(default=None, description="Project phase context")
@@ -210,7 +211,8 @@ class SimulationAnalysisResult(AnalysisResult):
 
 
 class SimulationGenerationRequest(GenerationRequest):
-    """Simulation-specific generation request extending ecosystem GenerationRequest."""
+    """Simulation-specific generation request extending ecosystem
+    GenerationRequest."""
 
     simulation_context: Dict[str, Any] = Field(default_factory=dict, description="Simulation context")
     project_type: Optional[str] = Field(default=None, description="Project type context")
@@ -220,7 +222,8 @@ class SimulationGenerationRequest(GenerationRequest):
 
 
 class SimulationWorkflowDefinition(WorkflowDefinition):
-    """Simulation workflow definition extending ecosystem WorkflowDefinition."""
+    """Simulation workflow definition extending ecosystem
+    WorkflowDefinition."""
 
     simulation_type: str = Field(description="Type of simulation workflow")
     project_template: Optional[str] = Field(default=None, description="Project template to use")

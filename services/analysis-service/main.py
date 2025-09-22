@@ -271,22 +271,25 @@ from .modules.shared_utils import (
 
 @app.post("/analyze")
 async def analyze_documents(req: AnalysisRequest):
-    """Analyze documents for consistency and issues with configurable detectors.
+    """
+    Analyze documents for consistency and issues with configurable detectors.
 
-    Performs comprehensive document analysis using various detectors to identify
-    consistency issues, quality problems, and maintenance concerns across
-    multiple document sources and types.
+    Performs comprehensive document analysis using various detectors to
+    identify consistency issues, quality problems, and maintenance
+    concerns across multiple document sources and types.
     """
     return await analysis_handlers.handle_analyze_documents(req)
 
 
 @app.post("/analyze/semantic-similarity")
 async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
-    """Analyze semantic similarity between documents using embeddings.
+    """
+    Analyze semantic similarity between documents using embeddings.
 
-    Uses sentence transformers to detect conceptually similar but differently
-    worded content across documents. Useful for identifying duplicate content,
-    consolidation opportunities, and semantic relationships between documents.
+    Uses sentence transformers to detect conceptually similar but
+    differently worded content across documents. Useful for identifying
+    duplicate content, consolidation opportunities, and semantic
+    relationships between documents.
     """
     try:
         result = await analysis_handlers.handle_semantic_similarity_analysis(req)
@@ -331,7 +334,8 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
 
 @app.post("/analyze/sentiment")
 async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
-    """Analyze sentiment, tone, and clarity of a document.
+    """
+    Analyze sentiment, tone, and clarity of a document.
 
     Performs comprehensive sentiment analysis including tone assessment,
     readability scoring, and clarity evaluation to provide insights into
@@ -381,7 +385,8 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
 
 @app.post("/analyze/tone")
 async def analyze_tone_endpoint(req: ToneAnalysisRequest):
-    """Analyze tone patterns and writing style in a document.
+    """
+    Analyze tone patterns and writing style in a document.
 
     Provides detailed analysis of writing tone, style patterns, and
     communication effectiveness based on the specified analysis scope.
@@ -430,11 +435,12 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
 
 @app.post("/analyze/quality")
 async def analyze_content_quality_endpoint(req: ContentQualityRequest):
-    """Analyze content quality and provide comprehensive assessment.
+    """
+    Analyze content quality and provide comprehensive assessment.
 
-    Performs automated evaluation of documentation quality including readability,
-    structure, completeness, and technical accuracy with detailed recommendations
-    for improvement.
+    Performs automated evaluation of documentation quality including
+    readability, structure, completeness, and technical accuracy with
+    detailed recommendations for improvement.
     """
     try:
         result = await analysis_handlers.handle_content_quality_assessment(req)
@@ -551,11 +557,13 @@ TESTING = os.getenv("TESTING", config.get("testing", "default_value"))
 
 @app.post("/analyze/trends")
 async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
-    """Analyze trends and predict future issues for a document.
+    """
+    Analyze trends and predict future issues for a document.
 
-    Performs comprehensive trend analysis on historical analysis results to identify
-    patterns, predict future documentation issues, and provide proactive recommendations
-    for maintaining documentation quality.
+    Performs comprehensive trend analysis on historical analysis results
+    to identify patterns, predict future documentation issues, and
+    provide proactive recommendations for maintaining documentation
+    quality.
     """
     try:
         result = await analysis_handlers.handle_trend_analysis(req)
@@ -609,11 +617,12 @@ async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
 
 @app.post("/analyze/trends/portfolio")
 async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
-    """Analyze trends across a portfolio of documents.
+    """
+    Analyze trends across a portfolio of documents.
 
-    Performs comprehensive trend analysis across multiple documents to identify
-    portfolio-wide patterns, high-risk documents, and provide strategic recommendations
-    for documentation quality improvement.
+    Performs comprehensive trend analysis across multiple documents to
+    identify portfolio-wide patterns, high-risk documents, and provide
+    strategic recommendations for documentation quality improvement.
     """
     try:
         result = await analysis_handlers.handle_portfolio_trend_analysis(req)
@@ -663,11 +672,13 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
 
 @app.post("/analyze/risk")
 async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
-    """Assess risk factors for documentation drift and quality degradation.
+    """
+    Assess risk factors for documentation drift and quality degradation.
 
-    Performs comprehensive risk assessment to identify documents most at risk
-    for quality issues, staleness, and maintenance problems. Provides actionable
-    recommendations for risk mitigation and resource prioritization.
+    Performs comprehensive risk assessment to identify documents most at
+    risk for quality issues, staleness, and maintenance problems.
+    Provides actionable recommendations for risk mitigation and resource
+    prioritization.
     """
     try:
         result = await analysis_handlers.handle_risk_assessment(req)
@@ -716,11 +727,13 @@ async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
 
 @app.post("/analyze/risk/portfolio")
 async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
-    """Assess risks across a portfolio of documents.
+    """
+    Assess risks across a portfolio of documents.
 
-    Performs comprehensive risk assessment across multiple documents to identify
-    portfolio-wide risk patterns, high-risk documents, and strategic recommendations
-    for documentation quality management and resource allocation.
+    Performs comprehensive risk assessment across multiple documents to
+    identify portfolio-wide risk patterns, high-risk documents, and
+    strategic recommendations for documentation quality management and
+    resource allocation.
     """
     try:
         result = await analysis_handlers.handle_portfolio_risk_assessment(req)
@@ -773,11 +786,13 @@ async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
 
 @app.post("/analyze/maintenance/forecast")
 async def forecast_document_maintenance_endpoint(req: MaintenanceForecastRequest):
-    """Forecast maintenance needs and schedule for documentation.
+    """
+    Forecast maintenance needs and schedule for documentation.
 
-    Predicts when documentation will require updates based on risk assessment,
-    usage patterns, quality trends, and business requirements. Provides actionable
-    maintenance schedules and resource planning recommendations.
+    Predicts when documentation will require updates based on risk
+    assessment, usage patterns, quality trends, and business
+    requirements. Provides actionable maintenance schedules and resource
+    planning recommendations.
     """
     try:
         result = await analysis_handlers.handle_maintenance_forecast(req)
@@ -825,11 +840,13 @@ async def forecast_document_maintenance_endpoint(req: MaintenanceForecastRequest
 
 @app.post("/analyze/maintenance/forecast/portfolio")
 async def forecast_portfolio_maintenance_endpoint(req: PortfolioMaintenanceForecastRequest):
-    """Forecast maintenance needs across a portfolio of documents.
+    """
+    Forecast maintenance needs across a portfolio of documents.
 
-    Provides comprehensive maintenance planning across multiple documents,
-    including prioritized schedules, resource allocation recommendations,
-    and strategic maintenance roadmaps for documentation portfolios.
+    Provides comprehensive maintenance planning across multiple
+    documents, including prioritized schedules, resource allocation
+    recommendations, and strategic maintenance roadmaps for
+    documentation portfolios.
     """
     try:
         result = await analysis_handlers.handle_portfolio_maintenance_forecast(req)
@@ -882,11 +899,12 @@ async def forecast_portfolio_maintenance_endpoint(req: PortfolioMaintenanceForec
 
 @app.post("/analyze/quality/degradation")
 async def detect_document_quality_degradation_endpoint(req: QualityDegradationDetectionRequest):
-    """Detect quality degradation in documentation over time.
+    """
+    Detect quality degradation in documentation over time.
 
-    Monitors documentation quality trends and detects when quality is degrading,
-    providing alerts and analysis of degradation patterns with actionable insights
-    for quality maintenance and improvement.
+    Monitors documentation quality trends and detects when quality is
+    degrading, providing alerts and analysis of degradation patterns
+    with actionable insights for quality maintenance and improvement.
     """
     try:
         result = await analysis_handlers.handle_quality_degradation_detection(req)
@@ -949,11 +967,13 @@ async def detect_document_quality_degradation_endpoint(req: QualityDegradationDe
 
 @app.post("/analyze/quality/degradation/portfolio")
 async def monitor_portfolio_quality_degradation_endpoint(req: PortfolioQualityDegradationRequest):
-    """Monitor quality degradation across a portfolio of documents.
+    """
+    Monitor quality degradation across a portfolio of documents.
 
-    Provides comprehensive quality degradation monitoring across multiple documents,
-    identifying portfolio-wide degradation patterns, generating alerts, and providing
-    strategic recommendations for quality maintenance and improvement.
+    Provides comprehensive quality degradation monitoring across
+    multiple documents, identifying portfolio-wide degradation patterns,
+    generating alerts, and providing strategic recommendations for
+    quality maintenance and improvement.
     """
     try:
         result = await analysis_handlers.handle_portfolio_quality_degradation(req)
@@ -1009,11 +1029,13 @@ async def monitor_portfolio_quality_degradation_endpoint(req: PortfolioQualityDe
 
 @app.post("/analyze/change/impact")
 async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisRequest):
-    """Analyze the impact of changes to documentation on related content.
+    """
+    Analyze the impact of changes to documentation on related content.
 
-    Performs comprehensive change impact analysis to understand how document changes
-    affect related content, dependencies, and stakeholders. Provides actionable insights
-    for change management and risk mitigation.
+    Performs comprehensive change impact analysis to understand how
+    document changes affect related content, dependencies, and
+    stakeholders. Provides actionable insights for change management and
+    risk mitigation.
     """
     try:
         result = await analysis_handlers.handle_change_impact_analysis(req)
@@ -1063,11 +1085,13 @@ async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisReque
 
 @app.post("/analyze/change/impact/portfolio")
 async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactRequest):
-    """Analyze the impact of changes across a document portfolio.
+    """
+    Analyze the impact of changes across a document portfolio.
 
-    Provides comprehensive change impact analysis across multiple documents,
-    identifying portfolio-wide effects, high-impact changes, and strategic
-    recommendations for managing documentation changes at scale.
+    Provides comprehensive change impact analysis across multiple
+    documents, identifying portfolio-wide effects, high-impact changes,
+    and strategic recommendations for managing documentation changes at
+    scale.
     """
     try:
         result = await analysis_handlers.handle_portfolio_change_impact_analysis(req)
@@ -1121,12 +1145,14 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
 
 @app.post("/analyze/generate-report")
 async def generate_analysis_report_endpoint(req: dict):
-    """Generate comprehensive analysis reports for simulation service.
+    """
+    Generate comprehensive analysis reports for simulation service.
 
-    This endpoint is specifically designed for the simulation service to request
-    comprehensive analysis reports that include both JSON data and human-readable
-    Markdown formatting. The analysis service performs all the heavy lifting of
-    report generation, keeping the simulation service pure and focused on simulation logic.
+    This endpoint is specifically designed for the simulation service to
+    request comprehensive analysis reports that include both JSON data
+    and human-readable Markdown formatting. The analysis service
+    performs all the heavy lifting of report generation, keeping the
+    simulation service pure and focused on simulation logic.
     """
     try:
         # Extract request parameters
@@ -1274,7 +1300,8 @@ async def generate_analysis_report_endpoint(req: dict):
 
 @app.post("/analyze/pull-request")
 async def analyze_pull_request_endpoint(req: dict):
-    """Analyze pull request changes and provide refactoring suggestions.
+    """
+    Analyze pull request changes and provide refactoring suggestions.
 
     This endpoint provides comprehensive analysis of pull request data including:
     - Code quality assessment
@@ -2064,11 +2091,13 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
 
 @app.post("/remediate")
 async def remediate_document_endpoint(req: AutomatedRemediationRequest):
-    """Apply automated fixes to documentation issues.
+    """
+    Apply automated fixes to documentation issues.
 
-    Intelligently identifies and fixes common documentation problems including
-    formatting inconsistencies, grammar errors, terminology issues, and structural
-    problems. Provides safety checks and rollback capabilities.
+    Intelligently identifies and fixes common documentation problems
+    including formatting inconsistencies, grammar errors, terminology
+    issues, and structural problems. Provides safety checks and rollback
+    capabilities.
     """
     try:
         result = await analysis_handlers.handle_automated_remediation(req)
@@ -2114,10 +2143,12 @@ async def remediate_document_endpoint(req: AutomatedRemediationRequest):
 
 @app.post("/remediate/preview")
 async def preview_remediation_endpoint(req: RemediationPreviewRequest):
-    """Preview automated remediation changes without applying them.
+    """
+    Preview automated remediation changes without applying them.
 
-    Shows what fixes would be applied to documentation without making any actual
-    changes, allowing users to review and approve modifications before execution.
+    Shows what fixes would be applied to documentation without making
+    any actual changes, allowing users to review and approve
+    modifications before execution.
     """
     try:
         result = await analysis_handlers.handle_remediation_preview(req)
@@ -2159,11 +2190,13 @@ async def preview_remediation_endpoint(req: RemediationPreviewRequest):
 
 @app.post("/workflows/events")
 async def process_workflow_event_endpoint(req: WorkflowEventRequest):
-    """Process workflow events and trigger appropriate analyses.
+    """
+    Process workflow events and trigger appropriate analyses.
 
-    Receives workflow events (PRs, commits, releases, etc.) and automatically
-    triggers relevant documentation analysis based on the event type and content.
-    Supports GitHub, GitLab, and other webhook integrations.
+    Receives workflow events (PRs, commits, releases, etc.) and
+    automatically triggers relevant documentation analysis based on the
+    event type and content. Supports GitHub, GitLab, and other webhook
+    integrations.
     """
     try:
         result = await analysis_handlers.handle_workflow_event(req)
@@ -2221,10 +2254,12 @@ async def process_workflow_event_endpoint(req: WorkflowEventRequest):
 
 @app.get("/workflows/{workflow_id}")
 async def get_workflow_status_endpoint(workflow_id: str):
-    """Get the status of a workflow analysis.
+    """
+    Get the status of a workflow analysis.
 
-    Retrieves the current status, progress, and results of a workflow-triggered
-    analysis. Useful for monitoring long-running analyses and checking completion.
+    Retrieves the current status, progress, and results of a workflow-
+    triggered analysis. Useful for monitoring long-running analyses and
+    checking completion.
     """
     try:
         # Create status request
@@ -2275,11 +2310,12 @@ async def get_workflow_status_endpoint(workflow_id: str):
 
 @app.get("/workflows/queue/status")
 async def get_workflow_queue_status_endpoint():
-    """Get the status of workflow analysis queues.
+    """
+    Get the status of workflow analysis queues.
 
-    Provides an overview of the current workflow processing queues, including
-    queue lengths, active workflows, and recent events. Useful for monitoring
-    system load and processing capacity.
+    Provides an overview of the current workflow processing queues,
+    including queue lengths, active workflows, and recent events. Useful
+    for monitoring system load and processing capacity.
     """
     try:
         result = await analysis_handlers.handle_workflow_queue_status()
@@ -2317,11 +2353,12 @@ async def get_workflow_queue_status_endpoint():
 
 @app.post("/workflows/webhook/config")
 async def configure_webhook_endpoint(req: WebhookConfigRequest):
-    """Configure webhook settings for workflow integration.
+    """
+    Configure webhook settings for workflow integration.
 
-    Sets up webhook configuration for receiving workflow events from external
-    systems like GitHub, GitLab, or CI/CD pipelines. Enables secure event processing
-    with signature validation.
+    Sets up webhook configuration for receiving workflow events from
+    external systems like GitHub, GitLab, or CI/CD pipelines. Enables
+    secure event processing with signature validation.
     """
     try:
         result = await analysis_handlers.handle_webhook_config(req)
@@ -2352,11 +2389,13 @@ async def configure_webhook_endpoint(req: WebhookConfigRequest):
 
 @app.post("/repositories/analyze")
 async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest):
-    """Analyze documentation across multiple repositories.
+    """
+    Analyze documentation across multiple repositories.
 
-    Performs comprehensive cross-repository analysis to identify patterns,
-    inconsistencies, redundancies, and opportunities for documentation
-    improvement across an organization's entire repository ecosystem.
+    Performs comprehensive cross-repository analysis to identify
+    patterns, inconsistencies, redundancies, and opportunities for
+    documentation improvement across an organization's entire repository
+    ecosystem.
     """
     try:
         result = await analysis_handlers.handle_cross_repository_analysis(req)
@@ -2415,11 +2454,12 @@ async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest)
 
 @app.post("/repositories/connectivity")
 async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRequest):
-    """Analyze connectivity and dependencies between repositories.
+    """
+    Analyze connectivity and dependencies between repositories.
 
-    Examines how repositories are connected through documentation references,
-    shared dependencies, and integration points to understand the
-    organizational documentation ecosystem.
+    Examines how repositories are connected through documentation
+    references, shared dependencies, and integration points to
+    understand the organizational documentation ecosystem.
     """
     try:
         result = await analysis_handlers.handle_repository_connectivity(req)
@@ -2472,7 +2512,8 @@ async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRe
 
 @app.post("/repositories/connectors/config")
 async def configure_repository_connector_endpoint(req: RepositoryConnectorConfigRequest):
-    """Configure repository connectors for external systems.
+    """
+    Configure repository connectors for external systems.
 
     Sets up and configures connectors for GitHub, GitLab, Bitbucket,
     Azure DevOps, and other repository hosting platforms to enable
@@ -2521,7 +2562,8 @@ async def configure_repository_connector_endpoint(req: RepositoryConnectorConfig
 
 @app.get("/repositories/connectors")
 async def get_supported_connectors_endpoint():
-    """Get list of supported repository connectors.
+    """
+    Get list of supported repository connectors.
 
     Returns information about all supported repository hosting platforms
     and their capabilities for cross-repository analysis integration.
@@ -2550,7 +2592,8 @@ async def get_supported_connectors_endpoint():
 
 @app.get("/repositories/frameworks")
 async def get_analysis_frameworks_endpoint():
-    """Get available cross-repository analysis frameworks.
+    """
+    Get available cross-repository analysis frameworks.
 
     Returns information about all available analysis frameworks for
     cross-repository documentation analysis and their capabilities.
@@ -2579,10 +2622,12 @@ async def get_analysis_frameworks_endpoint():
 
 @app.post("/distributed/tasks")
 async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
-    """Submit a task for distributed processing.
+    """
+    Submit a task for distributed processing.
 
-    Submits analysis tasks to be processed asynchronously across multiple workers,
-    enabling high-performance parallel processing of large document analysis workloads.
+    Submits analysis tasks to be processed asynchronously across
+    multiple workers, enabling high-performance parallel processing of
+    large document analysis workloads.
     """
     try:
         result = await analysis_handlers.handle_submit_distributed_task(req)
@@ -2625,10 +2670,12 @@ async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
 
 @app.post("/distributed/tasks/batch")
 async def submit_batch_tasks_endpoint(req: BatchTasksRequest):
-    """Submit multiple tasks for batch distributed processing.
+    """
+    Submit multiple tasks for batch distributed processing.
 
-    Submits a batch of analysis tasks to be processed in parallel across multiple workers,
-    optimizing throughput for large-scale document analysis operations.
+    Submits a batch of analysis tasks to be processed in parallel across
+    multiple workers, optimizing throughput for large-scale document
+    analysis operations.
     """
     try:
         result = await analysis_handlers.handle_submit_batch_tasks(req)
@@ -2659,10 +2706,12 @@ async def submit_batch_tasks_endpoint(req: BatchTasksRequest):
 
 @app.get("/distributed/tasks/{task_id}")
 async def get_task_status_endpoint(task_id: str):
-    """Get the status of a distributed task.
+    """
+    Get the status of a distributed task.
 
-    Retrieves real-time status, progress, and results for distributed processing tasks,
-    enabling monitoring and tracking of long-running analysis operations.
+    Retrieves real-time status, progress, and results for distributed
+    processing tasks, enabling monitoring and tracking of long-running
+    analysis operations.
     """
     try:
         req = TaskStatusRequest(task_id=task_id)
@@ -2705,10 +2754,12 @@ async def get_task_status_endpoint(task_id: str):
 
 @app.delete("/distributed/tasks/{task_id}")
 async def cancel_task_endpoint(task_id: str):
-    """Cancel a distributed task.
+    """
+    Cancel a distributed task.
 
-    Cancels a running distributed processing task, freeing up worker resources
-    and preventing completion of unnecessary analysis operations.
+    Cancels a running distributed processing task, freeing up worker
+    resources and preventing completion of unnecessary analysis
+    operations.
     """
     try:
         req = CancelTaskRequest(task_id=task_id)
@@ -2738,10 +2789,12 @@ async def cancel_task_endpoint(task_id: str):
 
 @app.get("/distributed/workers")
 async def get_workers_status_endpoint():
-    """Get status of all distributed processing workers.
+    """
+    Get status of all distributed processing workers.
 
-    Provides comprehensive information about worker availability, performance,
-    and current task assignments for monitoring and optimization.
+    Provides comprehensive information about worker availability,
+    performance, and current task assignments for monitoring and
+    optimization.
     """
     try:
         result = await analysis_handlers.handle_get_workers_status()
@@ -2781,7 +2834,8 @@ async def get_workers_status_endpoint():
 
 @app.get("/distributed/stats")
 async def get_processing_stats_endpoint():
-    """Get distributed processing statistics.
+    """
+    Get distributed processing statistics.
 
     Provides comprehensive metrics about task processing performance,
     throughput, completion rates, and system utilization.
@@ -2827,10 +2881,12 @@ async def get_processing_stats_endpoint():
 
 @app.post("/distributed/workers/scale")
 async def scale_workers_endpoint(req: ScaleWorkersRequest):
-    """Scale the number of distributed processing workers.
+    """
+    Scale the number of distributed processing workers.
 
     Dynamically adjusts the worker pool size based on workload demands,
-    enabling automatic scaling for optimal performance and resource utilization.
+    enabling automatic scaling for optimal performance and resource
+    utilization.
     """
     try:
         result = await analysis_handlers.handle_scale_workers(req)
@@ -2863,10 +2919,11 @@ async def scale_workers_endpoint(req: ScaleWorkersRequest):
 
 @app.post("/distributed/start")
 async def start_distributed_processing_endpoint():
-    """Start the distributed processing system.
+    """
+    Start the distributed processing system.
 
-    Initializes the distributed task processing loop and begins accepting
-    tasks for parallel processing across the worker pool.
+    Initializes the distributed task processing loop and begins
+    accepting tasks for parallel processing across the worker pool.
     """
     try:
         result = await analysis_handlers.handle_start_processing()
@@ -2895,10 +2952,12 @@ async def start_distributed_processing_endpoint():
 
 @app.put("/distributed/load-balancing/strategy")
 async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest):
-    """Configure load balancing strategy for distributed processing.
+    """
+    Configure load balancing strategy for distributed processing.
 
-    Changes the algorithm used to distribute tasks across available workers,
-    optimizing for different workload patterns and performance requirements.
+    Changes the algorithm used to distribute tasks across available
+    workers, optimizing for different workload patterns and performance
+    requirements.
     """
     try:
         result = await analysis_handlers.handle_set_load_balancing_strategy(req)
@@ -2935,10 +2994,12 @@ async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest
 
 @app.get("/distributed/queue/status")
 async def get_queue_status_endpoint():
-    """Get detailed status of the distributed processing queue.
+    """
+    Get detailed status of the distributed processing queue.
 
-    Provides comprehensive information about queue length, priority distribution,
-    processing efficiency, and task aging for performance monitoring.
+    Provides comprehensive information about queue length, priority
+    distribution, processing efficiency, and task aging for performance
+    monitoring.
     """
     try:
         result = await analysis_handlers.handle_get_queue_status()
@@ -2979,7 +3040,8 @@ async def get_queue_status_endpoint():
 
 @app.put("/distributed/load-balancing/config")
 async def configure_load_balancing_endpoint(req: LoadBalancingConfigRequest):
-    """Configure comprehensive load balancing settings.
+    """
+    Configure comprehensive load balancing settings.
 
     Sets up advanced load balancing parameters including strategy,
     worker scaling, queue management, and auto-scaling policies.
@@ -3021,10 +3083,11 @@ async def configure_load_balancing_endpoint(req: LoadBalancingConfigRequest):
 
 @app.get("/distributed/load-balancing/config")
 async def get_load_balancing_config_endpoint():
-    """Get current load balancing configuration.
+    """
+    Get current load balancing configuration.
 
-    Retrieves the current load balancing strategy, worker count,
-    and configuration settings for monitoring and management.
+    Retrieves the current load balancing strategy, worker count, and
+    configuration settings for monitoring and management.
     """
     try:
         result = await analysis_handlers.handle_get_load_balancing_config()
@@ -3069,11 +3132,13 @@ async def generate_report(req: ReportRequest):
 
 @app.post("/reports/document-dump")
 async def generate_document_dump_report(req: DocumentDumpRequest):
-    """Generate a comprehensive document dump report with beautified formatting.
+    """
+    Generate a comprehensive document dump report with beautified formatting.
 
-    This endpoint creates a formatted report of all documents used in analysis,
-    properly categorized by type (Confluence, Jira, Pull Request) with appropriate
-    metadata and formatting for each document type.
+    This endpoint creates a formatted report of all documents used in
+    analysis, properly categorized by type (Confluence, Jira, Pull
+    Request) with appropriate metadata and formatting for each document
+    type.
     """
     try:
         # Filter documents if requested
@@ -3354,18 +3419,20 @@ def format_generic_content(content: str) -> List[str]:
 
 @app.get("/findings")
 async def get_findings(limit: int = 100, severity: Optional[str] = None, finding_type_filter: Optional[str] = None):
-    """Get analysis findings with optional filtering by severity and type.
+    """
+    Get analysis findings with optional filtering by severity and type.
 
-    Retrieves findings from document analysis operations with support for
-    pagination and filtering by severity levels and finding types for
-    targeted issue management and reporting.
+    Retrieves findings from document analysis operations with support
+    for pagination and filtering by severity levels and finding types
+    for targeted issue management and reporting.
     """
     return await analysis_handlers.handle_get_findings(limit, severity, finding_type_filter)
 
 
 @app.get("/detectors")
 async def list_detectors():
-    """List available analysis detectors and their capabilities.
+    """
+    List available analysis detectors and their capabilities.
 
     Provides information about all configured detectors including their
     analysis capabilities, supported document types, and configuration
@@ -3376,11 +3443,14 @@ async def list_detectors():
 
 @app.get("/reports/confluence/consolidation")
 async def get_confluence_consolidation_report(min_confidence: float = 0.0):
-    """Get Confluence consolidation report for duplicate detection and content optimization.
+    """
+    Get Confluence consolidation report for duplicate detection and content
+    optimization.
 
-    Analyzes Confluence pages to identify duplicate content, consolidation opportunities,
-    and provides recommendations for merging similar pages to reduce maintenance overhead
-    and improve content organization.
+    Analyzes Confluence pages to identify duplicate content,
+    consolidation opportunities, and provides recommendations for
+    merging similar pages to reduce maintenance overhead and improve
+    content organization.
     """
     # Validate query parameters
     if min_confidence < 0.0 or min_confidence > 1.0:
@@ -3442,10 +3512,12 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
 
 @app.get("/reports/jira/staleness")
 async def get_jira_staleness_report(min_confidence: float = 0.0):
-    """Get Jira staleness report for ticket lifecycle management.
+    """
+    Get Jira staleness report for ticket lifecycle management.
 
-    Analyzes Jira tickets to identify stale items that may require attention,
-    closure, or reassignment based on activity patterns and metadata flags.
+    Analyzes Jira tickets to identify stale items that may require
+    attention, closure, or reassignment based on activity patterns and
+    metadata flags.
     """
     # Validate query parameters
     if min_confidence < 0.0 or min_confidence > 1.0:
@@ -3493,11 +3565,12 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
 
 @app.post("/reports/findings/notify-owners")
 async def notify_owners(req: NotifyOwnersRequest):
-    """Send notifications for analysis findings to document owners.
+    """
+    Send notifications for analysis findings to document owners.
 
-    Processes findings and sends targeted notifications to responsible parties
-    via configured communication channels for timely issue resolution and
-    collaborative document maintenance.
+    Processes findings and sends targeted notifications to responsible
+    parties via configured communication channels for timely issue
+    resolution and collaborative document maintenance.
     """
     # Validation is handled by Pydantic model
     try:
@@ -3536,11 +3609,13 @@ async def notify_owners(req: NotifyOwnersRequest):
 
 @app.get("/integration/health")
 async def integration_health():
-    """Check integration health with other services in the ecosystem.
+    """
+    Check integration health with other services in the ecosystem.
 
     Performs comprehensive health checks across all integrated services
-    including Document Store, Prompt Store, Interpreter, and Source Agent
-    to ensure reliable cross-service communication and functionality.
+    including Document Store, Prompt Store, Interpreter, and Source
+    Agent to ensure reliable cross-service communication and
+    functionality.
     """
     try:
         health_status = await service_client.get_system_health()
@@ -3555,7 +3630,8 @@ async def integration_health():
 
 @app.post("/integration/analyze-with-prompt")
 async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name: str, **variables):
-    """Analyze documents using customizable prompts from Prompt Store.
+    """
+    Analyze documents using customizable prompts from Prompt Store.
 
     Leverages the Prompt Store service to retrieve and execute tailored
     analysis prompts with variable substitution, enabling flexible and
@@ -3596,11 +3672,12 @@ async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name:
 
 @app.post("/integration/natural-language-analysis")
 async def natural_language_analysis(request_data: dict = None):
-    """Analyze documents using natural language queries via Interpreter service.
+    """
+    Analyze documents using natural language queries via Interpreter service.
 
-    Enables users to perform complex analysis operations using conversational
-    language, automatically translating natural language requests into
-    structured analysis workflows and execution plans.
+    Enables users to perform complex analysis operations using
+    conversational language, automatically translating natural language
+    requests into structured analysis workflows and execution plans.
     """
     try:
         # Handle both JSON payload and query parameter for compatibility
@@ -3698,11 +3775,13 @@ async def log_analysis_usage(request_data: dict = None):
 
 @app.post("/architecture/analyze")
 async def analyze_architecture(req: ArchitectureAnalysisRequest):
-    """Analyze architectural diagrams for consistency, completeness, and best practices.
+    """
+    Analyze architectural diagrams for consistency, completeness, and best
+    practices.
 
-    Performs specialized analysis on normalized architecture data from the
-    architecture-digitizer service, identifying potential issues, inconsistencies,
-    and providing recommendations for improvement.
+    Performs specialized analysis on normalized architecture data from
+    the architecture-digitizer service, identifying potential issues,
+    inconsistencies, and providing recommendations for improvement.
     """
     try:
         # Get the appropriate analyzer for the analysis type
@@ -3742,10 +3821,12 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
 
 @app.post("/pr-confidence/analyze")
 async def analyze_pr_confidence(req: Dict[str, Any]):
-    """Analyze PR confidence with comprehensive cross-reference analysis.
+    """
+    Analyze PR confidence with comprehensive cross-reference analysis.
 
-    Performs detailed analysis of a pull request against its requirements
-    and documentation to provide confidence scores and recommendations.
+    Performs detailed analysis of a pull request against its
+    requirements and documentation to provide confidence scores and
+    recommendations.
     """
     try:
         from .modules.pr_confidence_analysis import PRConfidenceAnalysisRequest, pr_confidence_analysis_service
@@ -3845,7 +3926,8 @@ async def get_analysis_statistics():
 # Custom health endpoint registered LAST to override shared health endpoint
 @app.get("/api/v1/analysis/status")
 async def get_analysis_status():
-    """Get comprehensive status of analysis service capabilities and current state."""
+    """Get comprehensive status of analysis service capabilities and current
+    state."""
     from services.shared.monitoring.health import HealthManager
 
     health_manager = HealthManager("analysis-service", "1.0.0")

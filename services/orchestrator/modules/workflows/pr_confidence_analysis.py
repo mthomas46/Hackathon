@@ -1,8 +1,9 @@
 """
 PR Confidence Analysis Workflow using LangGraph.
 
-This workflow analyzes GitHub PRs against Jira requirements and Confluence documentation
-to provide confidence scores and recommendations for PR approval.
+This workflow analyzes GitHub PRs against Jira requirements and
+Confluence documentation to provide confidence scores and
+recommendations for PR approval.
 """
 
 from datetime import datetime

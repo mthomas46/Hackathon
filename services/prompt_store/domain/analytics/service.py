@@ -1,4 +1,5 @@
-"""Advanced analytics service for prompt performance, optimization, and insights."""
+"""Advanced analytics service for prompt performance, optimization, and
+insights."""
 
 from typing import Any, Dict
 

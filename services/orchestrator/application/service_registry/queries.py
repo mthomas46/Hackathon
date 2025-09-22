@@ -1,4 +1,4 @@
-"""Application Queries for Service Registry"""
+"""Application Queries for Service Registry."""
 
 from dataclasses import dataclass
 from typing import Optional

@@ -1,7 +1,5 @@
-"""
-Frontend Service Adapter for CLI interaction
-Handles web interface and user interaction endpoints
-"""
+"""Frontend Service Adapter for CLI interaction Handles web interface and user
+interaction endpoints."""
 
 import time
 from typing import Any, Dict, List
@@ -29,11 +27,11 @@ class FrontendAdapter(BaseServiceAdapter):
         )
 
     def get_available_commands(self) -> List[str]:
-        """Return list of available commands for this service"""
+        """Return list of available commands for this service."""
         return ["status", "config", "services", "pages", "assets", "test-ui", "stats"]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute a command against the Frontend service"""
+        """Execute a command against the Frontend service."""
         command_map = {
             "status": self._get_status,
             "config": self._get_config,
@@ -54,7 +52,7 @@ class FrontendAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _get_status(self) -> CommandResult:
-        """Get Frontend service status"""
+        """Get Frontend service status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/api/status"
@@ -71,7 +69,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Frontend status: {str(e)}")
 
     async def _get_config(self) -> CommandResult:
-        """Get Frontend configuration"""
+        """Get Frontend configuration."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/api/config"
@@ -88,7 +86,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Frontend config: {str(e)}")
 
     async def _get_services(self) -> CommandResult:
-        """Get services available through the frontend"""
+        """Get services available through the frontend."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/api/services"
@@ -105,7 +103,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get frontend services: {str(e)}")
 
     async def _list_pages(self) -> CommandResult:
-        """List available frontend pages"""
+        """List available frontend pages."""
         try:
             start_time = time.time()
 
@@ -136,7 +134,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list frontend pages: {str(e)}")
 
     async def _check_assets(self) -> CommandResult:
-        """Check static assets availability"""
+        """Check static assets availability."""
         try:
             start_time = time.time()
 
@@ -165,7 +163,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to check frontend assets: {str(e)}")
 
     async def _test_ui(self) -> CommandResult:
-        """Test UI responsiveness"""
+        """Test UI responsiveness."""
         try:
             start_time = time.time()
 
@@ -200,7 +198,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to test UI: {str(e)}")
 
     async def _get_stats(self) -> CommandResult:
-        """Get Frontend service statistics"""
+        """Get Frontend service statistics."""
         try:
             start_time = time.time()
 
@@ -228,7 +226,7 @@ class FrontendAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Frontend stats: {str(e)}")
 
     def format_response(self, result: CommandResult, command: str) -> None:
-        """Format and display the command result"""
+        """Format and display the command result."""
         if not result.success:
             self.console.print(f"[red]❌ Error: {result.error}[/red]")
             return
@@ -258,7 +256,7 @@ class FrontendAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
-        """Format status response"""
+        """Format status response."""
         if not data:
             self.console.print("[yellow]⚠️  No status data available[/yellow]")
             return
@@ -273,7 +271,7 @@ class FrontendAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_config_response(self, data: Dict[str, Any]) -> None:
-        """Format configuration response"""
+        """Format configuration response."""
         if not data:
             self.console.print("[yellow]⚙️  No configuration data available[/yellow]")
             return
@@ -293,7 +291,7 @@ class FrontendAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_services_response(self, data: Dict[str, Any]) -> None:
-        """Format services response"""
+        """Format services response."""
         services = data.get("services", [])
         if not services:
             self.console.print("[yellow]🌐 No frontend services found[/yellow]")
@@ -320,7 +318,7 @@ class FrontendAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_pages_response(self, data: Dict[str, Any]) -> None:
-        """Format pages response"""
+        """Format pages response."""
         pages = data.get("pages", [])
         if not pages:
             self.console.print("[yellow]📄 No pages checked[/yellow]")
@@ -340,7 +338,7 @@ class FrontendAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_assets_response(self, data: Dict[str, Any]) -> None:
-        """Format assets response"""
+        """Format assets response."""
         assets = data.get("assets", [])
         if not assets:
             self.console.print("[yellow]📦 No assets checked[/yellow]")
@@ -360,7 +358,7 @@ class FrontendAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_ui_test_response(self, data: Dict[str, Any]) -> None:
-        """Format UI test response"""
+        """Format UI test response."""
         main_page = data.get("main_page", {})
         api_health = data.get("api_health", {})
         overall = data.get("overall_status", "unknown")
@@ -382,7 +380,7 @@ class FrontendAdapter(BaseServiceAdapter):
         )
 
     def _format_stats_response(self, data: Dict[str, Any]) -> None:
-        """Format statistics response"""
+        """Format statistics response."""
         health = data.get("health", {})
         status = data.get("status", {})
 

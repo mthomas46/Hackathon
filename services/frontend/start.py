@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Frontend Service Startup Script
-Handles the frontend service startup with proper import resolution
-"""
+"""Frontend Service Startup Script Handles the frontend service startup with
+proper import resolution."""
 
 import os
 import sys

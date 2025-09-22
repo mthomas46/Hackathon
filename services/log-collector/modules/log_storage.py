@@ -1,8 +1,9 @@
-"""Log storage management for log collector service.
+"""
+Log storage management for log collector service.
 
-Provides in-memory storage for log entries with automatic cleanup
-and bounded history to prevent memory exhaustion. Now includes
-persistent storage options and advanced search capabilities.
+Provides in-memory storage for log entries with automatic cleanup and
+bounded history to prevent memory exhaustion. Now includes persistent
+storage options and advanced search capabilities.
 """
 
 import asyncio
@@ -14,10 +15,12 @@ from typing import Any, Dict, List, Optional
 
 
 class LogStorage:
-    """Manages log storage with multiple storage backends and advanced search.
+    """
+    Manages log storage with multiple storage backends and advanced search.
 
-    Supports in-memory storage with optional persistence to disk, automatic
-    cleanup, and comprehensive search and filtering capabilities.
+    Supports in-memory storage with optional persistence to disk,
+    automatic cleanup, and comprehensive search and filtering
+    capabilities.
     """
 
     def __init__(
@@ -27,7 +30,8 @@ class LogStorage:
         storage_path: Optional[str] = None,
         retention_days: int = 7,
     ):
-        """Initialize log storage with capacity limit and persistence options.
+        """
+        Initialize log storage with capacity limit and persistence options.
 
         Args:
             max_logs: Maximum number of log entries to retain in memory (default: 5000)
@@ -58,7 +62,8 @@ class LogStorage:
             self._needs_async_init = False
 
     def add_log(self, log_entry: Dict[str, Any]) -> int:
-        """Add a single log entry to storage with automatic timestamping.
+        """
+        Add a single log entry to storage with automatic timestamping.
 
         If no timestamp is provided in the log entry, the current UTC time
         is automatically added. Maintains bounded history by removing oldest
@@ -90,7 +95,8 @@ class LogStorage:
         return len(self._logs)
 
     def add_logs_batch(self, log_entries: List[Dict[str, Any]]) -> int:
-        """Add multiple log entries efficiently in batch.
+        """
+        Add multiple log entries efficiently in batch.
 
         Processes each log entry individually to ensure proper timestamping
         and capacity management.
@@ -108,7 +114,8 @@ class LogStorage:
     def get_logs(
         self, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100
     ) -> List[Dict[str, Any]]:
-        """Retrieve filtered logs with optional pagination.
+        """
+        Retrieve filtered logs with optional pagination.
 
         Filters logs by service name and/or log level, then returns
         the most recent entries up to the specified limit.
@@ -130,7 +137,8 @@ class LogStorage:
         return filtered[-limit:] if limit > 0 else filtered
 
     def get_all_logs(self) -> List[Dict[str, Any]]:
-        """Get a copy of all stored log entries.
+        """
+        Get a copy of all stored log entries.
 
         Returns:
             Complete list of all log entries (defensive copy)
@@ -138,7 +146,8 @@ class LogStorage:
         return self._logs.copy()
 
     def get_count(self) -> int:
-        """Get the current number of stored log entries.
+        """
+        Get the current number of stored log entries.
 
         Returns:
             Total count of log entries in storage
@@ -146,17 +155,19 @@ class LogStorage:
         return len(self._logs)
 
     def clear_logs(self) -> None:
-        """Clear all stored log entries (primarily for testing).
+        """
+        Clear all stored log entries (primarily for testing).
 
-        This method removes all log entries from storage.
-        Use with caution in production environments.
+        This method removes all log entries from storage. Use with
+        caution in production environments.
         """
         self._logs.clear()
 
     def search_logs(
         self, query: str, fields: Optional[List[str]] = None, case_sensitive: bool = False, limit: int = 100
     ) -> List[Dict[str, Any]]:
-        """Search logs using full-text search across specified fields.
+        """
+        Search logs using full-text search across specified fields.
 
         Args:
             query: Search query string
@@ -193,7 +204,8 @@ class LogStorage:
     def get_logs_by_time_range(
         self, start_time: Optional[str] = None, end_time: Optional[str] = None, limit: int = 100
     ) -> List[Dict[str, Any]]:
-        """Get logs within a specific time range.
+        """
+        Get logs within a specific time range.
 
         Args:
             start_time: ISO timestamp for start of range (inclusive)
@@ -221,7 +233,8 @@ class LogStorage:
         return results
 
     def get_service_metrics(self, service_name: Optional[str] = None, time_window_minutes: int = 60) -> Dict[str, Any]:
-        """Get detailed metrics for a specific service or all services.
+        """
+        Get detailed metrics for a specific service or all services.
 
         Args:
             service_name: Specific service to analyze (None for all)
@@ -400,7 +413,8 @@ class LogStorage:
     def export_logs(
         self, filepath: str, service: Optional[str] = None, level: Optional[str] = None, format: str = "json"
     ) -> int:
-        """Export logs to a file with optional filtering.
+        """
+        Export logs to a file with optional filtering.
 
         Args:
             filepath: Path to export file
@@ -432,7 +446,8 @@ class LogStorage:
 
     @staticmethod
     def _now_iso() -> str:
-        """Generate current timestamp in ISO 8601 format.
+        """
+        Generate current timestamp in ISO 8601 format.
 
         Returns:
             UTC timestamp string in ISO format (e.g., '2024-01-15T10:30:45.123456+00:00')

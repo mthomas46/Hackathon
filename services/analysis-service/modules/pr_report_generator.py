@@ -1,5 +1,5 @@
 """
-PR Confidence Analysis Report Generator
+PR Confidence Analysis Report Generator.
 
 Generates comprehensive HTML and JSON reports for PR confidence analysis
 with detailed findings, recommendations, and executive summaries.

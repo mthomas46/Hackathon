@@ -1,4 +1,5 @@
-"""Main UI handlers for Frontend service.
+"""
+Main UI handlers for Frontend service.
 
 Handles general dashboard functionality and main page rendering.
 """

@@ -1,4 +1,5 @@
-"""Core models for Prompt Store service.
+"""
+Core models for Prompt Store service.
 
 Pydantic models for API requests and responses.
 """

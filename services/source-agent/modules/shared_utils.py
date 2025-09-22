@@ -1,7 +1,8 @@
-"""Shared utilities for Source Agent service modules.
+"""
+Shared utilities for Source Agent service modules.
 
-This module contains common utilities used across all source-agent modules
-to eliminate code duplication and ensure consistency.
+This module contains common utilities used across all source-agent
+modules to eliminate code duplication and ensure consistency.
 """
 
 import re
@@ -88,7 +89,8 @@ def get_confluence_base_url() -> str:
 
 
 def handle_source_agent_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for source-agent operations.
+    """
+    Standardized error handling for source-agent operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -99,7 +101,8 @@ def handle_source_agent_error(operation: str, error: Exception, **context) -> Di
 
 
 def create_source_agent_success_response(op: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for source-agent operations.
+    """
+    Standardized success response for source-agent operations.
 
     Merge optional context into the response payload instead of passing
     as keyword args to the shared success response constructor.
@@ -117,7 +120,8 @@ def create_source_agent_success_response(op: str, data: Any, **context) -> Dict[
 def build_source_agent_context(
     operation: str, source_type: Optional[str] = None, doc_id: Optional[str] = None, **additional
 ) -> Dict[str, Any]:
-    """Build context dictionary for source-agent operations.
+    """
+    Build context dictionary for source-agent operations.
 
     Provides consistent context for logging and responses.
     """

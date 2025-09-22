@@ -1,4 +1,5 @@
-"""Analytics handlers for API endpoints.
+"""
+Analytics handlers for API endpoints.
 
 Handles analytics-related HTTP requests and responses.
 """

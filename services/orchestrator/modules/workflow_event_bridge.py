@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Workflow Event Bridge
+Workflow Event Bridge.
 
-Connects the workflow management system with the event-driven orchestration framework.
-Provides seamless integration between workflow operations and event emission/persistence.
+Connects the workflow management system with the event-driven
+orchestration framework. Provides seamless integration between workflow
+operations and event emission/persistence.
 """
 
 from datetime import datetime

@@ -1,4 +1,4 @@
-"""Value Objects for Infrastructure Domain"""
+"""Value Objects for Infrastructure Domain."""
 
 from .distributed_trace import DistributedTrace
 from .dlq_event import DLQEvent

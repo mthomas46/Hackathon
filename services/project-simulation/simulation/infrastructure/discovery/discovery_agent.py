@@ -1,5 +1,6 @@
 """
 Discovery agent for service registration and health checking.
+
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
@@ -17,7 +18,8 @@ from simulation.domain.entities.discovery import (
 
 
 class DiscoveryAgent:
-    """Agent responsible for service discovery, registration, and health monitoring."""
+    """Agent responsible for service discovery, registration, and health
+    monitoring."""
 
     def __init__(self, registry, http_client: Optional[httpx.AsyncClient] = None):
         self.registry = registry

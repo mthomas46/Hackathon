@@ -1,4 +1,4 @@
-"""Infrastructure Application Commands"""
+"""Infrastructure Application Commands."""
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional

@@ -1,8 +1,9 @@
 """
-Source Agent Service Adapter
+Source Agent Service Adapter.
 
-Comprehensive adapter for the Source Agent service providing unified CLI interface
-for document fetching, normalization, code analysis, and source management features.
+Comprehensive adapter for the Source Agent service providing unified CLI
+interface for document fetching, normalization, code analysis, and
+source management features.
 """
 
 import time
@@ -13,7 +14,7 @@ from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 class SourceAgentAdapter(BaseServiceAdapter):
     """
-    Unified adapter for Source Agent Service
+    Unified adapter for Source Agent Service.
 
     Provides standardized access to:
     - Document fetching and processing
@@ -25,7 +26,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
     """
 
     def get_service_info(self) -> ServiceInfo:
-        """Get Source Agent Service information"""
+        """Get Source Agent Service information."""
         return ServiceInfo(
             name="source-agent",
             port=5000,
@@ -57,7 +58,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
         )
 
     async def health_check(self) -> CommandResult:
-        """Perform comprehensive health check"""
+        """Perform comprehensive health check."""
         try:
             start_time = time.time()
 
@@ -83,7 +84,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Health check error: {str(e)}")
 
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
-        """Get available Source Agent commands"""
+        """Get available Source Agent commands."""
         return [
             ("fetch", "Fetch document from URL or repository", "fetch [url] [options]"),
             ("process", "Process uploaded file or content", "process [file_path] [type]"),
@@ -98,7 +99,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
         ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute Source Agent commands"""
+        """Execute Source Agent commands."""
         try:
             start_time = time.time()
 
@@ -130,7 +131,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _fetch_document(self, params: Dict) -> CommandResult:
-        """Fetch document from URL or repository"""
+        """Fetch document from URL or repository."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/fetch"
@@ -151,7 +152,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Document fetch failed: {str(e)}")
 
     async def _process_content(self, params: Dict) -> CommandResult:
-        """Process uploaded file or content"""
+        """Process uploaded file or content."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/process"
@@ -172,7 +173,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Content processing failed: {str(e)}")
 
     async def _analyze_source(self, params: Dict) -> CommandResult:
-        """Analyze source code or document"""
+        """Analyze source code or document."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/analyze"
@@ -193,7 +194,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Source analysis failed: {str(e)}")
 
     async def _normalize_document(self, params: Dict) -> CommandResult:
-        """Normalize document format"""
+        """Normalize document format."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/normalize"
@@ -214,7 +215,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Document normalization failed: {str(e)}")
 
     async def _index_content(self, params: Dict) -> CommandResult:
-        """Index content for search"""
+        """Index content for search."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/index"
@@ -235,7 +236,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Content indexing failed: {str(e)}")
 
     async def _get_repositories(self) -> CommandResult:
-        """Get managed repositories"""
+        """Get managed repositories."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/repositories"
@@ -253,7 +254,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get repositories: {str(e)}")
 
     async def _get_files(self, params: Dict) -> CommandResult:
-        """Get processed files"""
+        """Get processed files."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/files"
@@ -276,7 +277,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get files: {str(e)}")
 
     async def _get_metadata(self, params: Dict) -> CommandResult:
-        """Get document metadata"""
+        """Get document metadata."""
         try:
             start_time = time.time()
             document_id = params.get("document_id", "doc_123")
@@ -294,7 +295,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get metadata: {str(e)}")
 
     async def _get_status(self, params: Dict) -> CommandResult:
-        """Get processing status"""
+        """Get processing status."""
         try:
             start_time = time.time()
             job_id = params.get("job_id", "job_123")

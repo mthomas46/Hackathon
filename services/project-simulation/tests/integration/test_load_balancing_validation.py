@@ -1,8 +1,9 @@
-"""Load Balancing Validation Tests.
+"""
+Load Balancing Validation Tests.
 
-This module contains comprehensive tests for load balancing functionality,
-including distribution algorithms, failover scenarios, health checks,
-and performance under load.
+This module contains comprehensive tests for load balancing
+functionality, including distribution algorithms, failover scenarios,
+health checks, and performance under load.
 """
 
 import random

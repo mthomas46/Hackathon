@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Run script for the Simulation Dashboard Service.
+"""
+Run script for the Simulation Dashboard Service.
 
-This script provides an easy way to start the dashboard service
-locally for development and testing.
+This script provides an easy way to start the dashboard service locally
+for development and testing.
 """
 
 import os

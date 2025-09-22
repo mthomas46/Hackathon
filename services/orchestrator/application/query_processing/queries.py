@@ -1,4 +1,4 @@
-"""Query Processing Application Queries"""
+"""Query Processing Application Queries."""
 
 from dataclasses import dataclass
 from typing import Optional

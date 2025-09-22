@@ -1,4 +1,5 @@
-"""HTTP Client Utilities for Inter-Service Communication
+"""
+HTTP Client Utilities for Inter-Service Communication.
 
 Robust HTTP client implementation with resilience patterns for service communication.
 
@@ -39,7 +40,8 @@ except ImportError:
 
 
 class ServiceClients:
-    """Robust HTTP client wrapper for inter-service communication.
+    """
+    Robust HTTP client wrapper for inter-service communication.
 
     Provides a unified interface for all HTTP communication between services,
     with built-in resilience patterns including retries, circuit breakers,
@@ -247,7 +249,8 @@ class ServiceClients:
         return await self.get_json(url)
 
     async def interpret_query(self, query: str, user_id: Optional[str] = None) -> Dict[str, Any]:
-        """Send query to Interpreter service for natural language processing."""
+        """Send query to Interpreter service for natural language
+        processing."""
         url = f"{self.interpreter_url()}/interpret"
         payload = {"query": query}
         if user_id:
@@ -709,10 +712,11 @@ class ServiceClients:
     async def post_json(
         self, url: str, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
-        """POST JSON and parse JSON response.
+        """
+        POST JSON and parse JSON response.
 
-        Only passes optional kwargs when provided so that simple test doubles
-        that don't accept headers/params keep working.
+        Only passes optional kwargs when provided so that simple test
+        doubles that don't accept headers/params keep working.
         """
         async with httpx.AsyncClient(timeout=self.timeout) as client:
 

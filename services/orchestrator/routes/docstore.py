@@ -1,4 +1,4 @@
-"""Docstore Routes for Orchestrator Service"""
+"""Docstore Routes for Orchestrator Service."""
 
 from typing import Any, Dict, Optional
 

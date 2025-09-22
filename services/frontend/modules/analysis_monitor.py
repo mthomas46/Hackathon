@@ -1,7 +1,9 @@
-"""Analysis Service monitoring infrastructure for Frontend service.
+"""
+Analysis Service monitoring infrastructure for Frontend service.
 
-Provides caching and visualization capabilities for analysis service results,
-linking findings with documents and enabling deep-dive exploration.
+Provides caching and visualization capabilities for analysis service
+results, linking findings with documents and enabling deep-dive
+exploration.
 """
 
 from collections import defaultdict

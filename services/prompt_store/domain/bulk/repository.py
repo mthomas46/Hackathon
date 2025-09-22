@@ -1,4 +1,5 @@
-"""Bulk operations repository implementation.
+"""
+Bulk operations repository implementation.
 
 Handles database operations for bulk operations and their results.
 """

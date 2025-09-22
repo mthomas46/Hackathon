@@ -1,4 +1,5 @@
-"""Live Metrics Component.
+"""
+Live Metrics Component.
 
 This module provides real-time monitoring and display of system metrics,
 with automatic updates and alerting capabilities.
@@ -24,7 +25,8 @@ def render_live_metrics(
     on_metric_update: Optional[Callable] = None,
     max_history_points: int = 50,
 ) -> Dict[str, Any]:
-    """Render a live metrics dashboard with real-time updates.
+    """
+    Render a live metrics dashboard with real-time updates.
 
     Args:
         metrics_data: Initial metrics data

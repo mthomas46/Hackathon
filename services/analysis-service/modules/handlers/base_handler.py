@@ -240,7 +240,11 @@ class BaseAnalysisHandler(ABC):
 
     @abstractmethod
     async def handle(self, request: Any) -> AnalysisResult:
-        """Handle the analysis request. Must be implemented by subclasses."""
+        """
+        Handle the analysis request.
+
+        Must be implemented by subclasses.
+        """
 
     async def execute_with_timing(self, request: Any) -> AnalysisResult:
         """Execute analysis with timing and error handling."""

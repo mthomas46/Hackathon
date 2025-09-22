@@ -1,7 +1,8 @@
-"""Services Overview UI handlers for Frontend service.
+"""
+Services Overview UI handlers for Frontend service.
 
-Handles comprehensive system-wide monitoring dashboard
-showing health and status of all services in the ecosystem.
+Handles comprehensive system-wide monitoring dashboard showing health
+and status of all services in the ecosystem.
 """
 
 

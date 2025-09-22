@@ -1,8 +1,9 @@
-"""Event Broadcasting Integration Tests.
+"""
+Event Broadcasting Integration Tests.
 
-This module contains comprehensive tests for event broadcasting functionality,
-including WebSocket connections, event distribution, real-time updates,
-and integration with the simulation event system.
+This module contains comprehensive tests for event broadcasting
+functionality, including WebSocket connections, event distribution,
+real-time updates, and integration with the simulation event system.
 """
 
 import json

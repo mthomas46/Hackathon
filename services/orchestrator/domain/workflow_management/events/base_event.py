@@ -1,4 +1,4 @@
-"""Base Domain Event"""
+"""Base Domain Event."""
 
 import uuid
 from abc import ABC

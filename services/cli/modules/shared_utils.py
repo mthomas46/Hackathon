@@ -1,7 +1,8 @@
-"""Shared utilities for CLI service modules.
+"""
+Shared utilities for CLI service modules.
 
-This module contains common utilities used across all CLI modules
-to eliminate code duplication and ensure consistency.
+This module contains common utilities used across all CLI modules to
+eliminate code duplication and ensure consistency.
 """
 
 import os
@@ -43,7 +44,8 @@ def get_cli_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
 
 
 def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
-    """Standardized error handling for CLI operations.
+    """
+    Standardized error handling for CLI operations.
 
     Logs the error and returns a standardized error response.
     """
@@ -54,7 +56,8 @@ def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, A
 
 
 def create_cli_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
-    """Standardized success response for CLI operations.
+    """
+    Standardized success response for CLI operations.
 
     Returns a consistent success response format.
     """
@@ -62,7 +65,8 @@ def create_cli_success_response(operation: str, data: Any, **context) -> Dict[st
 
 
 def build_cli_context(operation: str, **additional) -> Dict[str, Any]:
-    """Build context dictionary for CLI operations.
+    """
+    Build context dictionary for CLI operations.
 
     Provides consistent context for logging and responses.
     """

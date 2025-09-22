@@ -1,7 +1,9 @@
-"""Peer Review Enhancement module for Summarizer Hub.
+"""
+Peer Review Enhancement module for Summarizer Hub.
 
-Provides AI-assisted code review capabilities specifically focused on documentation quality,
-offering comprehensive feedback, suggestions, and best practice recommendations.
+Provides AI-assisted code review capabilities specifically focused on
+documentation quality, offering comprehensive feedback, suggestions, and
+best practice recommendations.
 """
 
 import logging
@@ -795,7 +797,8 @@ peer_review_enhancer = PeerReviewEnhancer()
 async def review_documentation(
     content: str, doc_type: str = "general", title: str = "", metadata: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Convenience function for documentation peer review.
+    """
+    Convenience function for documentation peer review.
 
     Args:
         content: The documentation content to review
@@ -810,7 +813,8 @@ async def review_documentation(
 
 
 async def compare_document_versions(old_content: str, new_content: str, doc_type: str = "general") -> Dict[str, Any]:
-    """Convenience function for comparing document versions.
+    """
+    Convenience function for comparing document versions.
 
     Args:
         old_content: Previous version content

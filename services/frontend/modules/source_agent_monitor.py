@@ -1,4 +1,5 @@
-"""Source Agent monitoring infrastructure for Frontend service.
+"""
+Source Agent monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for source agent
 service document fetching, normalization, and code analysis operations.
@@ -12,7 +13,8 @@ from .shared_utils import get_frontend_clients, get_source_agent_url
 
 
 class SourceAgentMonitor:
-    """Monitor for source agent service document operations and source integrations."""
+    """Monitor for source agent service document operations and source
+    integrations."""
 
     def __init__(self):
         self._fetches = []

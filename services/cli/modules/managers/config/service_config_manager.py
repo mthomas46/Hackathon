@@ -22,7 +22,11 @@ class ServiceConfigManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         service = await self._select_service()
         if not service:
             return True

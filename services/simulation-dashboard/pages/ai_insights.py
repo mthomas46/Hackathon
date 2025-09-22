@@ -1,7 +1,9 @@
-"""AI-Powered Insights Engine Page.
+"""
+AI-Powered Insights Engine Page.
 
 This module provides AI-powered insights, intelligent recommendations,
-and predictive analytics for simulation operations and performance optimization.
+and predictive analytics for simulation operations and performance
+optimization.
 """
 
 import warnings

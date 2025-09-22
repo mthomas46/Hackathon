@@ -172,10 +172,12 @@ class SimulationResult:
 
 @dataclass
 class Simulation:
-    """Simulation Aggregate Root.
+    """
+    Simulation Aggregate Root.
 
     This is the root entity for the Simulation aggregate, orchestrating
-    the entire simulation process and coordinating between all aggregates.
+    the entire simulation process and coordinating between all
+    aggregates.
     """
 
     id: SimulationId

@@ -1,4 +1,5 @@
-"""Report handlers for Analysis Service.
+"""
+Report handlers for Analysis Service.
 
 Handles the complex logic for report generation endpoints.
 """

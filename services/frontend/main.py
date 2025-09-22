@@ -277,10 +277,11 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/info")
 async def info():
-    """Get service information and configuration.
+    """
+    Get service information and configuration.
 
-    Returns detailed service metadata including version, configuration URLs,
-    and environment settings for connected services.
+    Returns detailed service metadata including version, configuration
+    URLs, and environment settings for connected services.
     """
     try:
         return create_frontend_success_response(
@@ -307,11 +308,12 @@ async def info():
 
 @app.get("/config/effective")
 async def config_effective():
-    """Get effective configuration from environment.
+    """
+    Get effective configuration from environment.
 
     Returns the resolved configuration values for all dependent services
-    (Reporting, Doc Store, Consistency Engine) as determined from environment
-    variables or configuration files.
+    (Reporting, Doc Store, Consistency Engine) as determined from
+    environment variables or configuration files.
     """
     try:
         config = {
@@ -331,10 +333,11 @@ async def config_effective():
 
 @app.get("/metrics")
 async def metrics():
-    """Get frontend service metrics.
+    """
+    Get frontend service metrics.
 
-    Returns basic service metrics including the number of registered routes
-    and service status information for monitoring purposes.
+    Returns basic service metrics including the number of registered
+    routes and service status information for monitoring purposes.
     """
     try:
         return create_frontend_success_response(
@@ -349,7 +352,8 @@ async def metrics():
 @app.get("/app/{path:path}")
 async def spa_catch_all(path: str):
     print("SPA catch-all route called")
-    """Catch-all route for Elm SPA routing.
+    """
+    Catch-all route for Elm SPA routing.
 
     Serves index.html for any route under /app so that Elm can handle
     client-side routing for the single-page application.
@@ -359,7 +363,8 @@ async def spa_catch_all(path: str):
 
 @app.get("/owner-coverage")
 async def ui_owner_coverage():
-    """Render owner coverage report page.
+    """
+    Render owner coverage report page.
 
     Displays a table showing owner coverage statistics by team,
     including percentages for missing owners and low-view documents.
@@ -369,7 +374,8 @@ async def ui_owner_coverage():
 
 @app.get("/topics")
 async def ui_topics():
-    """Render topics overview page with document freshness analysis.
+    """
+    Render topics overview page with document freshness analysis.
 
     Shows topic collections with associated documents and their
     freshness metrics for content management insights.
@@ -379,10 +385,11 @@ async def ui_topics():
 
 @app.get("/confluence/consolidation")
 async def ui_confluence_consolidation():
-    """Render Confluence consolidation report page.
+    """
+    Render Confluence consolidation report page.
 
-    Displays consolidation recommendations for Confluence pages
-    to reduce duplication and improve content organization.
+    Displays consolidation recommendations for Confluence pages to
+    reduce duplication and improve content organization.
     """
     return ui_handlers.handle_confluence_consolidation()
 
@@ -391,7 +398,8 @@ async def ui_confluence_consolidation():
 async def ui_jira_staleness(
     min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False
 ):
-    """Render Jira staleness report page with filtering options.
+    """
+    Render Jira staleness report page with filtering options.
 
     Shows stale Jira tickets with configurable confidence thresholds.
     Supports filtering by duplicate confidence and result limits.
@@ -443,17 +451,19 @@ async def ui_report():
 
 @app.get("/workflows/status")
 async def ui_workflows_status():
-    """Render workflow and job status monitoring page.
+    """
+    Render workflow and job status monitoring page.
 
-    Provides a real-time dashboard for monitoring active workflows,
-    job progress, and orchestrator performance metrics.
+    Provides a real-time dashboard for monitoring active workflows, job
+    progress, and orchestrator performance metrics.
     """
     return ui_handlers.handle_workflows_status()
 
 
 @app.get("/summarizer/status")
 async def ui_summarizer_status():
-    """Render summarizer hub status and process monitoring page.
+    """
+    Render summarizer hub status and process monitoring page.
 
     Provides a dashboard for monitoring summarizer hub jobs, prompts,
     model usage, and performance metrics.
@@ -463,10 +473,11 @@ async def ui_summarizer_status():
 
 @app.get("/logs/dashboard")
 async def ui_logs_dashboard():
-    """Render logs dashboard for visualization and troubleshooting.
+    """
+    Render logs dashboard for visualization and troubleshooting.
 
-    Provides a comprehensive dashboard for viewing logs, statistics,
-    and real-time log streaming for system monitoring and diagnostics.
+    Provides a comprehensive dashboard for viewing logs, statistics, and
+    real-time log streaming for system monitoring and diagnostics.
     """
     start_time = time.time()
     request_id = f"frontend_logs_dashboard_{int(time.time() * 1000)}"
@@ -547,7 +558,8 @@ async def ui_logs_dashboard():
 
 @app.get("/doc_store/browser")
 async def ui_doc_store_browser():
-    """Render doc_store data browser for document exploration.
+    """
+    Render doc_store data browser for document exploration.
 
     Provides a read-only interface for browsing documents, analyses,
     quality metrics, and style examples stored in the doc_store.
@@ -557,27 +569,30 @@ async def ui_doc_store_browser():
 
 @app.get("/prompt-store/browser")
 async def ui_prompt_store_browser():
-    """Render prompt-store data browser for prompt exploration.
+    """
+    Render prompt-store data browser for prompt exploration.
 
-    Provides a read-only interface for browsing prompts, analytics,
-    and A/B testing results stored in the prompt-store.
+    Provides a read-only interface for browsing prompts, analytics, and
+    A/B testing results stored in the prompt-store.
     """
     return ui_handlers.handle_prompt_store_browser()
 
 
 @app.get("/orchestrator/monitor")
 async def ui_orchestrator_monitor():
-    """Render orchestrator monitoring dashboard.
+    """
+    Render orchestrator monitoring dashboard.
 
-    Provides comprehensive monitoring of Redis pub/sub activity,
-    service configuration, and workflow execution for the orchestrator.
+    Provides comprehensive monitoring of Redis pub/sub activity, service
+    configuration, and workflow execution for the orchestrator.
     """
     return ui_handlers.handle_orchestrator_monitor()
 
 
 @app.get("/analysis/dashboard")
 async def ui_analysis_dashboard():
-    """Render analysis service dashboard.
+    """
+    Render analysis service dashboard.
 
     Provides comprehensive visualization of analysis results, findings,
     and cross-service correlations for document quality assessment.
@@ -587,27 +602,31 @@ async def ui_analysis_dashboard():
 
 @app.get("/services/overview")
 async def ui_services_overview():
-    """Render comprehensive services overview dashboard.
+    """
+    Render comprehensive services overview dashboard.
 
-    Provides monitoring and visualization for all services in the ecosystem,
-    showing their status, activity, and health across the distributed system.
+    Provides monitoring and visualization for all services in the
+    ecosystem, showing their status, activity, and health across the
+    distributed system.
     """
     return ui_handlers.handle_services_overview()
 
 
 @app.get("/code-analyzer/dashboard")
 async def ui_code_analyzer_dashboard():
-    """Render code analyzer service dashboard.
+    """
+    Render code analyzer service dashboard.
 
-    Provides code analysis, security scanning, and style checking capabilities
-    with interactive forms and result visualization.
+    Provides code analysis, security scanning, and style checking
+    capabilities with interactive forms and result visualization.
     """
     return ui_handlers.handle_code_analyzer_dashboard()
 
 
 @app.get("/bedrock-proxy/dashboard")
 async def ui_bedrock_proxy_dashboard():
-    """Render bedrock proxy service dashboard.
+    """
+    Render bedrock proxy service dashboard.
 
     Provides AI invocation monitoring, template usage tracking, and
     interactive testing capabilities for the bedrock proxy service.
@@ -617,57 +636,65 @@ async def ui_bedrock_proxy_dashboard():
 
 @app.get("/discovery-agent/dashboard")
 async def ui_discovery_agent_dashboard():
-    """Render discovery agent service dashboard.
+    """
+    Render discovery agent service dashboard.
 
     Provides endpoint discovery monitoring, OpenAPI parsing operations,
-    and service registration capabilities for the discovery agent service.
+    and service registration capabilities for the discovery agent
+    service.
     """
     return ui_handlers.handle_discovery_agent_dashboard()
 
 
 @app.get("/github-mcp/dashboard")
 async def ui_github_mcp_dashboard():
-    """Render github-mcp service dashboard.
+    """
+    Render github-mcp service dashboard.
 
-    Provides GitHub MCP tool monitoring, tool invocation testing,
-    and GitHub operations tracking for the GitHub MCP service.
+    Provides GitHub MCP tool monitoring, tool invocation testing, and
+    GitHub operations tracking for the GitHub MCP service.
     """
     return ui_handlers.handle_github_mcp_dashboard()
 
 
 @app.get("/interpreter/dashboard")
 async def ui_interpreter_dashboard():
-    """Render interpreter service dashboard.
+    """
+    Render interpreter service dashboard.
 
-    Provides natural language query interpretation monitoring,
-    intent recognition testing, and workflow execution tracking.
+    Provides natural language query interpretation monitoring, intent
+    recognition testing, and workflow execution tracking.
     """
     return ui_handlers.handle_interpreter_dashboard()
 
 
 @app.get("/memory-agent/dashboard")
 async def ui_memory_agent_dashboard():
-    """Render memory agent service dashboard.
+    """
+    Render memory agent service dashboard.
 
-    Provides operational context monitoring, event summary storage,
-    and memory item management for the memory agent service.
+    Provides operational context monitoring, event summary storage, and
+    memory item management for the memory agent service.
     """
     return ui_handlers.handle_memory_agent_dashboard()
 
 
 @app.get("/notification-service/dashboard")
 async def ui_notification_service_dashboard():
-    """Render notification service dashboard.
+    """
+    Render notification service dashboard.
 
-    Provides owner resolution monitoring, notification delivery tracking,
-    and dead letter queue management for the notification service.
+    Provides owner resolution monitoring, notification delivery
+    tracking, and dead letter queue management for the notification
+    service.
     """
     return ui_handlers.handle_notification_service_dashboard()
 
 
 @app.get("/secure-analyzer/dashboard")
 async def ui_secure_analyzer_dashboard():
-    """Render secure analyzer service dashboard.
+    """
+    Render secure analyzer service dashboard.
 
     Provides content security analysis, policy enforcement monitoring,
     and secure summarization testing for the secure analyzer service.
@@ -677,7 +704,8 @@ async def ui_secure_analyzer_dashboard():
 
 @app.get("/source-agent/dashboard")
 async def ui_source_agent_dashboard():
-    """Render source agent service dashboard.
+    """
+    Render source agent service dashboard.
 
     Provides document fetching, data normalization, and code analysis
     monitoring across GitHub, Jira, and Confluence sources.
@@ -687,7 +715,8 @@ async def ui_source_agent_dashboard():
 
 @app.get("/services/overview")
 async def ui_services_overview():
-    """Render comprehensive services overview dashboard.
+    """
+    Render comprehensive services overview dashboard.
 
     Provides system-wide monitoring and health status for all services
     in the LLM Documentation Ecosystem with categorized views.
@@ -697,7 +726,8 @@ async def ui_services_overview():
 
 @app.get("/cli/terminal")
 async def ui_cli_terminal():
-    """Render CLI terminal interface.
+    """
+    Render CLI terminal interface.
 
     Provides a web-based terminal for full CLI service functionality,
     allowing users to execute commands and interact with the ecosystem.
@@ -707,7 +737,8 @@ async def ui_cli_terminal():
 
 @app.get("/api/workflows/jobs/status")
 async def get_workflows_jobs_status():
-    """Get active workflows and jobs status for visualization.
+    """
+    Get active workflows and jobs status for visualization.
 
     Polls the orchestrator service to retrieve information about:
     - Active workflows and their execution status
@@ -801,10 +832,13 @@ async def get_workflows_jobs_status():
 
 @app.get("/api/summarizer/status")
 async def get_summarizer_status():
-    """Get summarizer hub status, job history, and process information for visualization.
+    """
+    Get summarizer hub status, job history, and process information for
+    visualization.
 
-    Returns cached data about previous summarizer jobs, active prompts, model usage,
-    and performance metrics for monitoring and visualization purposes.
+    Returns cached data about previous summarizer jobs, active prompts,
+    model usage, and performance metrics for monitoring and
+    visualization purposes.
     """
     try:
         # Get cached data
@@ -846,7 +880,8 @@ async def get_summarizer_status():
 
 @app.post("/api/summarizer/record-job")
 async def record_summarizer_job_endpoint(job_data: dict):
-    """Record a summarizer job for caching and visualization.
+    """
+    Record a summarizer job for caching and visualization.
 
     This endpoint is called by the summarizer hub after job completion
     to cache job data for monitoring and visualization.
@@ -876,10 +911,11 @@ async def record_summarizer_job_endpoint(job_data: dict):
 
 @app.get("/api/logs/status")
 async def get_logs_status():
-    """Get comprehensive log status and cached data for visualization.
+    """
+    Get comprehensive log status and cached data for visualization.
 
-    Returns cached logs, statistics, and analytics data from the log collector
-    service for dashboard visualization and troubleshooting.
+    Returns cached logs, statistics, and analytics data from the log
+    collector service for dashboard visualization and troubleshooting.
     """
     try:
         # Get cached data
@@ -914,7 +950,8 @@ async def get_logs_status():
 
 @app.get("/api/logs/fetch")
 async def fetch_logs(service: Optional[str] = None, level: Optional[str] = None, limit: int = 100):
-    """Fetch logs from the log collector service with filtering.
+    """
+    Fetch logs from the log collector service with filtering.
 
     Retrieves fresh logs from the log collector and updates the cache
     for subsequent visualization requests.
@@ -1024,7 +1061,8 @@ async def fetch_logs(service: Optional[str] = None, level: Optional[str] = None,
 
 @app.get("/api/logs/stream")
 async def stream_logs_endpoint(service: Optional[str] = None, level: Optional[str] = None, poll_interval: int = 5):
-    """Stream logs in real-time using Server-Sent Events.
+    """
+    Stream logs in real-time using Server-Sent Events.
 
     Provides a continuous stream of new logs for live dashboard updates
     and real-time monitoring capabilities.
@@ -1054,10 +1092,11 @@ async def stream_logs_endpoint(service: Optional[str] = None, level: Optional[st
 
 @app.get("/api/logs/stats")
 async def get_logs_stats():
-    """Get fresh log statistics from the log collector service.
+    """
+    Get fresh log statistics from the log collector service.
 
-    Fetches current statistics and analytics from the log collector
-    for monitoring and troubleshooting purposes.
+    Fetches current statistics and analytics from the log collector for
+    monitoring and troubleshooting purposes.
     """
     try:
         stats = await fetch_log_stats_from_collector()
@@ -1072,10 +1111,11 @@ async def get_logs_stats():
 
 @app.get("/api/doc_store/status")
 async def get_doc_store_status():
-    """Get comprehensive doc_store status and summary for visualization.
+    """
+    Get comprehensive doc_store status and summary for visualization.
 
-    Returns cached document data, analyses, quality metrics, and style examples
-    for dashboard visualization and data browsing.
+    Returns cached document data, analyses, quality metrics, and style
+    examples for dashboard visualization and data browsing.
     """
     try:
         summary = get_doc_store_summary()
@@ -1090,7 +1130,8 @@ async def get_doc_store_status():
 
 @app.get("/api/doc_store/documents")
 async def get_doc_store_documents(limit: int = 20, offset: int = 0, force_refresh: bool = False):
-    """Get documents from doc_store with pagination.
+    """
+    Get documents from doc_store with pagination.
 
     Retrieves documents with metadata for browsing and visualization.
     """
@@ -1109,7 +1150,8 @@ async def get_doc_store_documents(limit: int = 20, offset: int = 0, force_refres
 
 @app.get("/api/doc_store/documents/{doc_id}")
 async def get_doc_store_document(doc_id: str):
-    """Get a specific document by ID.
+    """
+    Get a specific document by ID.
 
     Retrieves full document content and metadata for detailed viewing.
     """
@@ -1133,7 +1175,8 @@ async def get_doc_store_document(doc_id: str):
 async def get_doc_store_analyses(
     document_id: Optional[str] = None, limit: int = 20, offset: int = 0, force_refresh: bool = False
 ):
-    """Get analyses from doc_store with optional filtering.
+    """
+    Get analyses from doc_store with optional filtering.
 
     Retrieves analysis results with optional filtering by document ID.
     """
@@ -1152,9 +1195,11 @@ async def get_doc_store_analyses(
 
 @app.get("/api/doc_store/quality")
 async def get_doc_store_quality(force_refresh: bool = False):
-    """Get document quality metrics and analysis.
+    """
+    Get document quality metrics and analysis.
 
-    Retrieves quality metrics, stale documents, and other health indicators.
+    Retrieves quality metrics, stale documents, and other health
+    indicators.
     """
     try:
         result = await data_browser.get_doc_store_quality(force_refresh=force_refresh)
@@ -1169,7 +1214,8 @@ async def get_doc_store_quality(force_refresh: bool = False):
 
 @app.get("/api/doc_store/style-examples")
 async def get_doc_store_style_examples(force_refresh: bool = False):
-    """Get style examples by programming language.
+    """
+    Get style examples by programming language.
 
     Retrieves code documentation style examples for different languages.
     """
@@ -1188,7 +1234,8 @@ async def get_doc_store_style_examples(force_refresh: bool = False):
 
 @app.get("/api/doc_store/search")
 async def search_doc_store(q: str, limit: int = 20):
-    """Search documents in doc_store.
+    """
+    Search documents in doc_store.
 
     Performs full-text search across document content and metadata.
     """
@@ -1205,7 +1252,8 @@ async def search_doc_store(q: str, limit: int = 20):
 
 @app.get("/api/prompt-store/status")
 async def get_prompt_store_status():
-    """Get comprehensive prompt-store status and summary for visualization.
+    """
+    Get comprehensive prompt-store status and summary for visualization.
 
     Returns cached prompt data, analytics, and A/B testing information
     for dashboard visualization and data browsing.
@@ -1225,7 +1273,8 @@ async def get_prompt_store_status():
 async def get_prompt_store_prompts(
     category: Optional[str] = None, limit: int = 20, offset: int = 0, force_refresh: bool = False
 ):
-    """Get prompts from prompt-store with optional filtering.
+    """
+    Get prompts from prompt-store with optional filtering.
 
     Retrieves prompts with metadata, optionally filtered by category.
     """
@@ -1246,9 +1295,11 @@ async def get_prompt_store_prompts(
 
 @app.get("/api/prompt-store/analytics")
 async def get_prompt_store_analytics(force_refresh: bool = False):
-    """Get prompt store analytics and usage metrics.
+    """
+    Get prompt store analytics and usage metrics.
 
-    Retrieves usage statistics, performance metrics, and A/B testing results.
+    Retrieves usage statistics, performance metrics, and A/B testing
+    results.
     """
     try:
         result = await data_browser.get_prompt_store_analytics(force_refresh=force_refresh)
@@ -1265,10 +1316,11 @@ async def get_prompt_store_analytics(force_refresh: bool = False):
 
 @app.get("/api/orchestrator/status")
 async def get_orchestrator_status():
-    """Get comprehensive orchestrator status and monitoring data.
+    """
+    Get comprehensive orchestrator status and monitoring data.
 
-    Returns configuration, Redis pub/sub activity, and workflow information
-    for dashboard visualization and troubleshooting.
+    Returns configuration, Redis pub/sub activity, and workflow
+    information for dashboard visualization and troubleshooting.
     """
     try:
         summary = get_orchestrator_summary()
@@ -1283,10 +1335,11 @@ async def get_orchestrator_status():
 
 @app.get("/api/orchestrator/config")
 async def get_orchestrator_config(force_refresh: bool = False):
-    """Get orchestrator service configuration.
+    """
+    Get orchestrator service configuration.
 
-    Retrieves effective configuration including Redis settings,
-    peer orchestrators, and service discovery configuration.
+    Retrieves effective configuration including Redis settings, peer
+    orchestrators, and service discovery configuration.
     """
     try:
         config_data = await orchestrator_monitor.get_orchestrator_config(force_refresh=force_refresh)
@@ -1301,10 +1354,11 @@ async def get_orchestrator_config(force_refresh: bool = False):
 
 @app.get("/api/orchestrator/redis-activity")
 async def get_orchestrator_redis_activity(force_refresh: bool = False):
-    """Get Redis pub/sub activity information.
+    """
+    Get Redis pub/sub activity information.
 
-    Retrieves information about Redis channels, published events,
-    and pub/sub activity patterns for monitoring.
+    Retrieves information about Redis channels, published events, and
+    pub/sub activity patterns for monitoring.
     """
     try:
         activity_data = await orchestrator_monitor.get_redis_pubsub_activity(force_refresh=force_refresh)
@@ -1323,10 +1377,11 @@ async def get_orchestrator_redis_activity(force_refresh: bool = False):
 
 @app.get("/api/orchestrator/workflows")
 async def get_orchestrator_workflows(force_refresh: bool = False):
-    """Get orchestrator workflow information.
+    """
+    Get orchestrator workflow information.
 
-    Retrieves available workflows, execution history, and workflow statistics
-    for monitoring distributed operations.
+    Retrieves available workflows, execution history, and workflow
+    statistics for monitoring distributed operations.
     """
     try:
         workflow_data = await orchestrator_monitor.get_orchestrator_workflows(force_refresh=force_refresh)
@@ -1343,7 +1398,8 @@ async def get_orchestrator_workflows(force_refresh: bool = False):
 
 @app.get("/api/orchestrator/health")
 async def get_orchestrator_health():
-    """Get orchestrator service health status.
+    """
+    Get orchestrator service health status.
 
     Provides quick health check information for monitoring dashboards.
     """
@@ -1360,10 +1416,11 @@ async def get_orchestrator_health():
 
 @app.get("/api/analysis/status")
 async def get_analysis_status():
-    """Get comprehensive analysis service status and cached results.
+    """
+    Get comprehensive analysis service status and cached results.
 
-    Returns analysis service status, cached findings, and analysis statistics
-    for dashboard visualization and troubleshooting.
+    Returns analysis service status, cached findings, and analysis
+    statistics for dashboard visualization and troubleshooting.
     """
     try:
         status_data = await analysis_monitor.get_analysis_status()
@@ -1384,10 +1441,11 @@ async def get_analysis_findings(
     offset: int = 0,
     force_refresh: bool = False,
 ):
-    """Get analysis findings with filtering and pagination.
+    """
+    Get analysis findings with filtering and pagination.
 
-    Retrieves findings from analysis service with optional filtering
-    by severity and type, supporting pagination.
+    Retrieves findings from analysis service with optional filtering by
+    severity and type, supporting pagination.
     """
     try:
         result = await analysis_monitor.get_findings(
@@ -1404,10 +1462,12 @@ async def get_analysis_findings(
 
 @app.get("/api/analysis/results/{analysis_id}")
 async def get_analysis_result(analysis_id: str):
-    """Get detailed analysis result with linked documents.
+    """
+    Get detailed analysis result with linked documents.
 
-    Retrieves a specific analysis result with enhanced document information
-    and cross-service correlations for deep-dive exploration.
+    Retrieves a specific analysis result with enhanced document
+    information and cross-service correlations for deep-dive
+    exploration.
     """
     try:
         result = await analysis_monitor.get_analysis_result(analysis_id)
@@ -1427,10 +1487,11 @@ async def get_analysis_result(analysis_id: str):
 
 @app.post("/api/analysis/run")
 async def run_analysis_endpoint(analysis_request: dict):
-    """Run a new analysis and cache the results.
+    """
+    Run a new analysis and cache the results.
 
-    Executes analysis on specified targets and caches results for visualization.
-    Supports different analysis types and options.
+    Executes analysis on specified targets and caches results for
+    visualization. Supports different analysis types and options.
     """
     try:
         result = await analysis_monitor.run_analysis(
@@ -1448,10 +1509,11 @@ async def run_analysis_endpoint(analysis_request: dict):
 
 @app.get("/api/analysis/reports/{report_type}")
 async def get_analysis_report(report_type: str):
-    """Get analysis reports by type.
+    """
+    Get analysis reports by type.
 
-    Retrieves different types of analysis reports including
-    confluence consolidation and Jira staleness reports.
+    Retrieves different types of analysis reports including confluence
+    consolidation and Jira staleness reports.
     """
     try:
         report_data = await analysis_monitor.get_reports(report_type=report_type)
@@ -1466,10 +1528,11 @@ async def get_analysis_report(report_type: str):
 
 @app.get("/api/analysis/history")
 async def get_analysis_history(limit: int = 20):
-    """Get analysis execution history.
+    """
+    Get analysis execution history.
 
-    Retrieves recent analysis runs with their results and metadata
-    for historical analysis and trend identification.
+    Retrieves recent analysis runs with their results and metadata for
+    historical analysis and trend identification.
     """
     try:
         history = analysis_monitor.get_analysis_history(limit=limit)
@@ -1486,10 +1549,11 @@ async def get_analysis_history(limit: int = 20):
 
 @app.get("/api/analysis/findings/{finding_id}")
 async def get_finding_details(finding_id: str):
-    """Get detailed information about a specific finding.
+    """
+    Get detailed information about a specific finding.
 
-    Retrieves comprehensive information about a finding including
-    its analysis context and related documents.
+    Retrieves comprehensive information about a finding including its
+    analysis context and related documents.
     """
     try:
         finding_details = analysis_monitor.get_finding_details(finding_id)
@@ -1614,10 +1678,11 @@ async def get_code_analyzer_history():
 
 @app.get("/api/bedrock-proxy/status")
 async def get_bedrock_proxy_status():
-    """Get comprehensive bedrock proxy service status.
+    """
+    Get comprehensive bedrock proxy service status.
 
-    Returns health information, invocation statistics, and recent activity
-    for monitoring the bedrock proxy service.
+    Returns health information, invocation statistics, and recent
+    activity for monitoring the bedrock proxy service.
     """
     try:
         status_data = await bedrock_proxy_monitor.get_proxy_status()
@@ -1632,10 +1697,12 @@ async def get_bedrock_proxy_status():
 
 @app.post("/api/bedrock-proxy/invoke")
 async def invoke_bedrock_proxy(req: dict):
-    """Invoke AI through the bedrock proxy and cache the result.
+    """
+    Invoke AI through the bedrock proxy and cache the result.
 
     Accepts a prompt and optional template/format parameters to generate
-    structured AI responses. Results are cached for monitoring and analysis.
+    structured AI responses. Results are cached for monitoring and
+    analysis.
     """
     try:
         prompt = req.get("prompt")
@@ -1675,7 +1742,8 @@ async def invoke_bedrock_proxy(req: dict):
 
 @app.get("/api/bedrock-proxy/history")
 async def get_bedrock_proxy_history(limit: int = 20):
-    """Get bedrock proxy invocation history.
+    """
+    Get bedrock proxy invocation history.
 
     Returns cached invocation history with optional limit parameter.
     Useful for analyzing usage patterns and troubleshooting.
@@ -1698,10 +1766,11 @@ async def get_bedrock_proxy_history(limit: int = 20):
 
 @app.get("/api/discovery-agent/status")
 async def get_discovery_agent_status():
-    """Get comprehensive discovery agent service status.
+    """
+    Get comprehensive discovery agent service status.
 
-    Returns health information, discovery statistics, and recent activity
-    for monitoring the discovery agent service operations.
+    Returns health information, discovery statistics, and recent
+    activity for monitoring the discovery agent service operations.
     """
     try:
         from .modules.discovery_agent_monitor import discovery_agent_monitor
@@ -1718,10 +1787,12 @@ async def get_discovery_agent_status():
 
 @app.post("/api/discovery-agent/discover")
 async def discover_service_endpoints(req: dict):
-    """Trigger endpoint discovery for a service and cache the result.
+    """
+    Trigger endpoint discovery for a service and cache the result.
 
-    Accepts a service URL and optional parameters to discover OpenAPI endpoints
-    and optionally register them with the orchestrator. Supports dry-run mode.
+    Accepts a service URL and optional parameters to discover OpenAPI
+    endpoints and optionally register them with the orchestrator.
+    Supports dry-run mode.
     """
     try:
         from .modules.discovery_agent_monitor import discovery_agent_monitor
@@ -1766,7 +1837,8 @@ async def discover_service_endpoints(req: dict):
 
 @app.get("/api/discovery-agent/history")
 async def get_discovery_agent_history(limit: int = 20):
-    """Get discovery agent operation history.
+    """
+    Get discovery agent operation history.
 
     Returns cached discovery history with optional limit parameter.
     Useful for analyzing discovery patterns and troubleshooting.
@@ -1791,7 +1863,8 @@ async def get_discovery_agent_history(limit: int = 20):
 
 @app.get("/api/github-mcp/status")
 async def get_github_mcp_status():
-    """Get comprehensive github-mcp service status.
+    """
+    Get comprehensive github-mcp service status.
 
     Returns health information, configuration details, tool statistics,
     and recent activity for monitoring the GitHub MCP service.
@@ -1809,7 +1882,8 @@ async def get_github_mcp_status():
 
 @app.get("/api/github-mcp/tools")
 async def get_github_mcp_tools(toolsets: Optional[str] = None):
-    """Get available GitHub MCP tools.
+    """
+    Get available GitHub MCP tools.
 
     Returns list of available tools filtered by toolsets when specified.
     Useful for discovering what GitHub operations are available.
@@ -1827,10 +1901,12 @@ async def get_github_mcp_tools(toolsets: Optional[str] = None):
 
 @app.post("/api/github-mcp/invoke")
 async def invoke_github_mcp_tool(req: dict):
-    """Invoke a GitHub MCP tool and cache the result.
+    """
+    Invoke a GitHub MCP tool and cache the result.
 
     Accepts a tool name and arguments to execute GitHub operations
-    through the MCP service. Results are cached for monitoring and analysis.
+    through the MCP service. Results are cached for monitoring and
+    analysis.
     """
     try:
         from .modules.github_mcp_monitor import github_mcp_monitor
@@ -1873,10 +1949,12 @@ async def invoke_github_mcp_tool(req: dict):
 
 @app.get("/api/github-mcp/history")
 async def get_github_mcp_history(limit: int = 20):
-    """Get GitHub MCP tool invocation history.
+    """
+    Get GitHub MCP tool invocation history.
 
-    Returns cached tool invocation history with optional limit parameter.
-    Useful for analyzing tool usage patterns and troubleshooting.
+    Returns cached tool invocation history with optional limit
+    parameter. Useful for analyzing tool usage patterns and
+    troubleshooting.
     """
     try:
         from .modules.github_mcp_monitor import github_mcp_monitor
@@ -1896,10 +1974,12 @@ async def get_github_mcp_history(limit: int = 20):
 
 @app.get("/api/interpreter/status")
 async def get_interpreter_status():
-    """Get comprehensive interpreter service status.
+    """
+    Get comprehensive interpreter service status.
 
-    Returns health information, supported intents, interpretation statistics,
-    and recent activity for monitoring the interpreter service.
+    Returns health information, supported intents, interpretation
+    statistics, and recent activity for monitoring the interpreter
+    service.
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
@@ -1914,10 +1994,12 @@ async def get_interpreter_status():
 
 @app.get("/api/interpreter/intents")
 async def get_interpreter_intents():
-    """Get supported intents and their examples.
+    """
+    Get supported intents and their examples.
 
     Returns comprehensive information about all supported query intents,
-    including example queries, entity extraction patterns, and descriptions.
+    including example queries, entity extraction patterns, and
+    descriptions.
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
@@ -1932,10 +2014,12 @@ async def get_interpreter_intents():
 
 @app.post("/api/interpreter/interpret")
 async def interpret_query(req: dict):
-    """Interpret a natural language query.
+    """
+    Interpret a natural language query.
 
-    Accepts a query string and returns intent recognition, entity extraction,
-    confidence scoring, and generated workflow without execution.
+    Accepts a query string and returns intent recognition, entity
+    extraction, confidence scoring, and generated workflow without
+    execution.
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
@@ -1975,10 +2059,12 @@ async def interpret_query(req: dict):
 
 @app.post("/api/interpreter/execute")
 async def execute_interpreted_workflow(req: dict):
-    """Interpret query and execute the resulting workflow.
+    """
+    Interpret query and execute the resulting workflow.
 
-    Interprets the user query and immediately executes the generated workflow
-    across multiple services, providing end-to-end processing results.
+    Interprets the user query and immediately executes the generated
+    workflow across multiple services, providing end-to-end processing
+    results.
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
@@ -2021,10 +2107,12 @@ async def execute_interpreted_workflow(req: dict):
 
 @app.get("/api/interpreter/interpretations")
 async def get_interpreter_history(limit: int = 20):
-    """Get interpretation history.
+    """
+    Get interpretation history.
 
-    Returns cached query interpretation history with optional limit parameter.
-    Useful for analyzing interpretation patterns and confidence trends.
+    Returns cached query interpretation history with optional limit
+    parameter. Useful for analyzing interpretation patterns and
+    confidence trends.
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
@@ -2039,10 +2127,12 @@ async def get_interpreter_history(limit: int = 20):
 
 @app.get("/api/interpreter/executions")
 async def get_execution_history(limit: int = 20):
-    """Get workflow execution history.
+    """
+    Get workflow execution history.
 
-    Returns cached workflow execution history with optional limit parameter.
-    Useful for analyzing execution success rates and performance metrics.
+    Returns cached workflow execution history with optional limit
+    parameter. Useful for analyzing execution success rates and
+    performance metrics.
     """
     try:
         from .modules.interpreter_monitor import interpreter_monitor
@@ -2062,7 +2152,8 @@ async def get_execution_history(limit: int = 20):
 
 @app.get("/api/memory-agent/status")
 async def get_memory_agent_status():
-    """Get comprehensive memory agent service status.
+    """
+    Get comprehensive memory agent service status.
 
     Returns health information, memory statistics, and recent activity
     for monitoring the memory agent service operations.
@@ -2080,7 +2171,8 @@ async def get_memory_agent_status():
 
 @app.get("/api/memory-agent/items")
 async def get_memory_agent_items(type: Optional[str] = None, key: Optional[str] = None, limit: int = 25):
-    """Get memory items with filtering.
+    """
+    Get memory items with filtering.
 
     Returns stored memory items with optional filtering by type and key,
     useful for browsing operational context and event summaries.
@@ -2098,7 +2190,8 @@ async def get_memory_agent_items(type: Optional[str] = None, key: Optional[str] 
 
 @app.post("/api/memory-agent/store")
 async def store_memory_agent_item(req: dict):
-    """Store a memory item.
+    """
+    Store a memory item.
 
     Accepts memory item data and stores it in the memory agent's
     operational context storage with TTL-based expiration.
@@ -2140,7 +2233,8 @@ async def store_memory_agent_item(req: dict):
 
 @app.get("/api/memory-agent/history")
 async def get_memory_agent_history(limit: int = 20):
-    """Get memory agent item history.
+    """
+    Get memory agent item history.
 
     Returns cached memory item history with optional limit parameter.
     Useful for analyzing memory storage patterns and content.
@@ -2165,10 +2259,11 @@ async def get_memory_agent_history(limit: int = 20):
 
 @app.get("/api/notification-service/status")
 async def get_notification_service_status():
-    """Get comprehensive notification service status.
+    """
+    Get comprehensive notification service status.
 
-    Returns health information, notification statistics, DLQ status,
-    and recent activity for monitoring the notification service.
+    Returns health information, notification statistics, DLQ status, and
+    recent activity for monitoring the notification service.
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
@@ -2187,7 +2282,8 @@ async def get_notification_service_status():
 
 @app.get("/api/notification-service/dlq")
 async def get_notification_dlq(limit: int = 50):
-    """Get dead letter queue entries.
+    """
+    Get dead letter queue entries.
 
     Returns failed notification attempts for debugging and monitoring
     delivery issues in the notification service.
@@ -2205,10 +2301,12 @@ async def get_notification_dlq(limit: int = 50):
 
 @app.post("/api/notification-service/resolve-owners")
 async def resolve_notification_owners(req: dict):
-    """Resolve owners to notification targets.
+    """
+    Resolve owners to notification targets.
 
-    Accepts a list of owner names and returns their resolved notification
-    targets (email addresses, webhook URLs, etc.) for bulk operations.
+    Accepts a list of owner names and returns their resolved
+    notification targets (email addresses, webhook URLs, etc.) for bulk
+    operations.
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
@@ -2247,10 +2345,11 @@ async def resolve_notification_owners(req: dict):
 
 @app.post("/api/notification-service/send")
 async def send_test_notification(req: dict):
-    """Send a test notification.
+    """
+    Send a test notification.
 
-    Accepts notification parameters and sends a test notification through
-    the specified channel for testing delivery capabilities.
+    Accepts notification parameters and sends a test notification
+    through the specified channel for testing delivery capabilities.
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
@@ -2295,10 +2394,12 @@ async def send_test_notification(req: dict):
 
 @app.get("/api/notification-service/notifications")
 async def get_notification_history(limit: int = 20):
-    """Get notification delivery history.
+    """
+    Get notification delivery history.
 
-    Returns cached notification delivery history with optional limit parameter.
-    Useful for analyzing delivery success rates and troubleshooting.
+    Returns cached notification delivery history with optional limit
+    parameter. Useful for analyzing delivery success rates and
+    troubleshooting.
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
@@ -2315,10 +2416,12 @@ async def get_notification_history(limit: int = 20):
 
 @app.get("/api/notification-service/resolutions")
 async def get_owner_resolution_history(limit: int = 20):
-    """Get owner resolution history.
+    """
+    Get owner resolution history.
 
-    Returns cached owner resolution history with optional limit parameter.
-    Useful for analyzing resolution patterns and caching effectiveness.
+    Returns cached owner resolution history with optional limit
+    parameter. Useful for analyzing resolution patterns and caching
+    effectiveness.
     """
     try:
         from .modules.notification_service_monitor import notification_service_monitor
@@ -2340,7 +2443,8 @@ async def get_owner_resolution_history(limit: int = 20):
 
 @app.get("/api/secure-analyzer/status")
 async def get_secure_analyzer_status():
-    """Get comprehensive secure analyzer service status.
+    """
+    Get comprehensive secure analyzer service status.
 
     Returns health information, analysis statistics, and recent activity
     for monitoring the secure analyzer service operations.
@@ -2360,7 +2464,8 @@ async def get_secure_analyzer_status():
 
 @app.post("/api/secure-analyzer/detect")
 async def detect_secure_content(req: dict):
-    """Detect sensitive content in provided text.
+    """
+    Detect sensitive content in provided text.
 
     Accepts content and optional keywords, returns security analysis
     including detected sensitive information and security topics.
@@ -2406,7 +2511,8 @@ async def detect_secure_content(req: dict):
 
 @app.post("/api/secure-analyzer/suggest")
 async def suggest_secure_models(req: dict):
-    """Get model suggestions based on content sensitivity.
+    """
+    Get model suggestions based on content sensitivity.
 
     Accepts content and returns AI model recommendations based on
     security analysis and policy enforcement.
@@ -2452,7 +2558,8 @@ async def suggest_secure_models(req: dict):
 
 @app.post("/api/secure-analyzer/summarize")
 async def generate_secure_summary(req: dict):
-    """Generate secure summary with policy enforcement.
+    """
+    Generate secure summary with policy enforcement.
 
     Accepts content and generates summaries using appropriate AI models
     based on security analysis and policy constraints.
@@ -2510,7 +2617,8 @@ async def generate_secure_summary(req: dict):
 
 @app.get("/api/secure-analyzer/detections")
 async def get_detection_history(limit: int = 20):
-    """Get content detection history.
+    """
+    Get content detection history.
 
     Returns cached detection history with optional limit parameter.
     Useful for analyzing security patterns and detection effectiveness.
@@ -2528,10 +2636,12 @@ async def get_detection_history(limit: int = 20):
 
 @app.get("/api/secure-analyzer/suggestions")
 async def get_suggestion_history(limit: int = 20):
-    """Get model suggestion history.
+    """
+    Get model suggestion history.
 
     Returns cached suggestion history with optional limit parameter.
-    Useful for analyzing policy enforcement and model selection patterns.
+    Useful for analyzing policy enforcement and model selection
+    patterns.
     """
     try:
         from .modules.secure_analyzer_monitor import secure_analyzer_monitor
@@ -2546,10 +2656,11 @@ async def get_suggestion_history(limit: int = 20):
 
 @app.get("/api/secure-analyzer/summaries")
 async def get_summary_history(limit: int = 20):
-    """Get secure summary history.
+    """
+    Get secure summary history.
 
-    Returns cached summary history with optional limit parameter.
-    Useful for analyzing summarization effectiveness and policy compliance.
+    Returns cached summary history with optional limit parameter. Useful
+    for analyzing summarization effectiveness and policy compliance.
     """
     try:
         from .modules.secure_analyzer_monitor import secure_analyzer_monitor
@@ -2569,10 +2680,12 @@ async def get_summary_history(limit: int = 20):
 
 @app.get("/api/source-agent/status")
 async def get_source_agent_status():
-    """Get comprehensive source agent service status.
+    """
+    Get comprehensive source agent service status.
 
-    Returns health information, operation statistics, source capabilities,
-    and recent activity for monitoring the source agent service.
+    Returns health information, operation statistics, source
+    capabilities, and recent activity for monitoring the source agent
+    service.
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
@@ -2587,10 +2700,11 @@ async def get_source_agent_status():
 
 @app.post("/api/source-agent/fetch")
 async def fetch_source_document(req: dict):
-    """Fetch document from specified source.
+    """
+    Fetch document from specified source.
 
-    Accepts source type, identifier, and optional scope parameters
-    to fetch documents from GitHub, Jira, or Confluence.
+    Accepts source type, identifier, and optional scope parameters to
+    fetch documents from GitHub, Jira, or Confluence.
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
@@ -2632,10 +2746,12 @@ async def fetch_source_document(req: dict):
 
 @app.post("/api/source-agent/normalize")
 async def normalize_source_data(req: dict):
-    """Normalize data from specified source.
+    """
+    Normalize data from specified source.
 
-    Accepts source type, raw data, and optional correlation ID
-    to normalize data from GitHub, Jira, or Confluence into standard format.
+    Accepts source type, raw data, and optional correlation ID to
+    normalize data from GitHub, Jira, or Confluence into standard
+    format.
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
@@ -2677,10 +2793,11 @@ async def normalize_source_data(req: dict):
 
 @app.post("/api/source-agent/analyze")
 async def analyze_source_code(req: dict):
-    """Analyze code for API endpoints and patterns.
+    """
+    Analyze code for API endpoints and patterns.
 
-    Accepts code text and performs static analysis to identify
-    API endpoints, architectural patterns, and integration points.
+    Accepts code text and performs static analysis to identify API
+    endpoints, architectural patterns, and integration points.
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
@@ -2719,10 +2836,11 @@ async def analyze_source_code(req: dict):
 
 @app.get("/api/source-agent/fetches")
 async def get_fetch_history(limit: int = 20):
-    """Get document fetch history.
+    """
+    Get document fetch history.
 
-    Returns cached fetch history with optional limit parameter.
-    Useful for analyzing fetch success rates and source performance.
+    Returns cached fetch history with optional limit parameter. Useful
+    for analyzing fetch success rates and source performance.
     """
     try:
         from .modules.source_agent_monitor import source_agent_monitor
@@ -2737,7 +2855,8 @@ async def get_fetch_history(limit: int = 20):
 
 @app.get("/api/source-agent/normalizations")
 async def get_normalization_history(limit: int = 20):
-    """Get data normalization history.
+    """
+    Get data normalization history.
 
     Returns cached normalization history with optional limit parameter.
     Useful for analyzing normalization success rates and data quality.
@@ -2757,7 +2876,8 @@ async def get_normalization_history(limit: int = 20):
 
 @app.get("/api/source-agent/analyses")
 async def get_analysis_history(limit: int = 20):
-    """Get code analysis history.
+    """
+    Get code analysis history.
 
     Returns cached analysis history with optional limit parameter.
     Useful for analyzing code patterns and endpoint detection accuracy.
@@ -2780,10 +2900,12 @@ async def get_analysis_history(limit: int = 20):
 
 @app.get("/api/services/overview")
 async def get_services_overview():
-    """Get comprehensive overview of all services in the ecosystem.
+    """
+    Get comprehensive overview of all services in the ecosystem.
 
     Returns system-wide health metrics, service status, and categorized
-    service information for monitoring the entire LLM Documentation Ecosystem.
+    service information for monitoring the entire LLM Documentation
+    Ecosystem.
     """
     try:
         from .modules.services_overview_monitor import services_overview_monitor
@@ -2798,10 +2920,12 @@ async def get_services_overview():
 
 @app.get("/api/services/overview/{service_name}")
 async def get_service_health_details(service_name: str):
-    """Get detailed health information for a specific service.
+    """
+    Get detailed health information for a specific service.
 
     Returns comprehensive health data and status information for the
-    specified service, useful for detailed troubleshooting and monitoring.
+    specified service, useful for detailed troubleshooting and
+    monitoring.
     """
     try:
         from .modules.services_overview_monitor import services_overview_monitor
@@ -2825,10 +2949,12 @@ async def get_service_health_details(service_name: str):
 
 @app.get("/api/cli/status")
 async def get_cli_status():
-    """Get CLI service health status.
+    """
+    Get CLI service health status.
 
-    Returns health information and availability status for the CLI service,
-    including whether the CLI executable is accessible and functional.
+    Returns health information and availability status for the CLI
+    service, including whether the CLI executable is accessible and
+    functional.
     """
     try:
         from .modules.cli_monitor import cli_monitor
@@ -2843,10 +2969,12 @@ async def get_cli_status():
 
 @app.post("/api/cli/execute")
 async def execute_cli_command(req: dict):
-    """Execute a CLI command.
+    """
+    Execute a CLI command.
 
-    Accepts a command string and optional arguments, executes the CLI command,
-    and returns the stdout, stderr, and exit code from the execution.
+    Accepts a command string and optional arguments, executes the CLI
+    command, and returns the stdout, stderr, and exit code from the
+    execution.
     """
     try:
         from .modules.cli_monitor import cli_monitor
@@ -2883,10 +3011,11 @@ async def execute_cli_command(req: dict):
 
 @app.get("/api/cli/commands")
 async def get_cli_commands():
-    """Get available CLI commands and help information.
+    """
+    Get available CLI commands and help information.
 
-    Returns a list of all available CLI commands with descriptions
-    and usage examples for the web interface.
+    Returns a list of all available CLI commands with descriptions and
+    usage examples for the web interface.
     """
     try:
         from .modules.cli_monitor import cli_monitor
@@ -2901,7 +3030,8 @@ async def get_cli_commands():
 
 @app.get("/api/cli/history")
 async def get_cli_command_history(limit: int = 20):
-    """Get CLI command execution history.
+    """
+    Get CLI command execution history.
 
     Returns recent command executions with their results, useful for
     auditing CLI usage and troubleshooting command issues.
@@ -2919,10 +3049,11 @@ async def get_cli_command_history(limit: int = 20):
 
 @app.post("/api/cli/history/clear")
 async def clear_cli_command_history():
-    """Clear the CLI command execution history.
+    """
+    Clear the CLI command execution history.
 
-    Removes all stored command execution history from memory.
-    Useful for privacy and performance management.
+    Removes all stored command execution history from memory. Useful for
+    privacy and performance management.
     """
     try:
         from .modules.cli_monitor import cli_monitor
@@ -2939,10 +3070,11 @@ async def clear_cli_command_history():
 
 @app.get("/api/cli/prompts")
 async def get_cli_prompts(category: Optional[str] = None):
-    """Get prompts via CLI interface.
+    """
+    Get prompts via CLI interface.
 
-    Uses the CLI service to retrieve prompt listings, providing
-    an alternative interface to the prompt store.
+    Uses the CLI service to retrieve prompt listings, providing an
+    alternative interface to the prompt store.
     """
     try:
         from .modules.cli_monitor import cli_monitor
@@ -2957,7 +3089,8 @@ async def get_cli_prompts(category: Optional[str] = None):
 
 @app.get("/api/cli/prompts/{category}/{name}")
 async def get_cli_prompt_details(category: str, name: str, content: Optional[str] = None):
-    """Get specific prompt details via CLI interface.
+    """
+    Get specific prompt details via CLI interface.
 
     Uses the CLI service to retrieve individual prompt details,
     including optional content variable substitution.
@@ -2977,7 +3110,8 @@ async def get_cli_prompt_details(category: str, name: str, content: Optional[str
 
 @app.post("/api/cli/test-integration")
 async def run_cli_integration_tests():
-    """Run integration tests via CLI interface.
+    """
+    Run integration tests via CLI interface.
 
     Executes the CLI service's integration testing functionality,
     providing comprehensive cross-service validation.

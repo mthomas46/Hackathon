@@ -1,4 +1,5 @@
-"""Tests for Orchestrator Query Processing Routes logging integration with LogCollectorClient."""
+"""Tests for Orchestrator Query Processing Routes logging integration with
+LogCollectorClient."""
 
 import asyncio
 import os
@@ -16,7 +17,8 @@ from services.shared.utilities.logging_client import LogCollectorClient
 
 
 class TestOrchestratorQueryProcessingLoggingIntegration:
-    """Test Orchestrator Query Processing routes logging integration with LogCollectorClient."""
+    """Test Orchestrator Query Processing routes logging integration with
+    LogCollectorClient."""
 
     @pytest.fixture
     def client(self):
@@ -41,7 +43,8 @@ class TestOrchestratorQueryProcessingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_natural_language_query_processing_logging_success(self, client, mock_logger_client):
-        """Test natural language query processing endpoint logging on success."""
+        """Test natural language query processing endpoint logging on
+        success."""
         mock_result = {
             "results": [
                 {"title": "AI Document", "score": 0.95, "content": "AI content..."},
@@ -194,7 +197,8 @@ class TestOrchestratorQueryProcessingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_query_result_retrieval_logging_not_found(self, client, mock_logger_client):
-        """Test query result retrieval endpoint logging when result not found."""
+        """Test query result retrieval endpoint logging when result not
+        found."""
         query_id = "nonexistent_query"
 
         with patch("services.orchestrator.presentation.api.query_processing.routes.container") as mock_container:
@@ -339,7 +343,8 @@ class TestOrchestratorQueryProcessingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_query_result_deletion_logging_placeholder(self, client, mock_logger_client):
-        """Test query result deletion endpoint logging (placeholder implementation)."""
+        """Test query result deletion endpoint logging (placeholder
+        implementation)."""
         query_id = "query_12345"
 
         response = client.delete(f"/api/v1/query-processing/results/{query_id}")
@@ -400,7 +405,8 @@ class TestOrchestratorQueryProcessingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_natural_language_query_processing_logging_failure(self, client, mock_logger_client):
-        """Test natural language query processing endpoint logging on failure."""
+        """Test natural language query processing endpoint logging on
+        failure."""
         with patch("services.orchestrator.presentation.api.query_processing.routes.container") as mock_container:
             mock_container.process_natural_language_query_use_case.execute.side_effect = ValueError(
                 "Query parsing failed"
@@ -521,7 +527,8 @@ class TestOrchestratorQueryProcessingLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_business_events_comprehensive_coverage(self, client, mock_logger_client):
-        """Test that all major business events are logged across query processing endpoints."""
+        """Test that all major business events are logged across query
+        processing endpoints."""
         expected_events = {
             # Natural language query events
             "natural_language_query_started",

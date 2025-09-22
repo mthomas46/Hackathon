@@ -1,4 +1,4 @@
-"""Workflow Management API Routes"""
+"""Workflow Management API Routes."""
 
 from .routes import router
 

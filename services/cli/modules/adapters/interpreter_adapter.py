@@ -1,7 +1,5 @@
-"""
-Interpreter Service Adapter for CLI interaction
-Handles code execution and interpretation requests
-"""
+"""Interpreter Service Adapter for CLI interaction Handles code execution and
+interpretation requests."""
 
 import time
 from typing import Any, Dict, List, Optional
@@ -29,11 +27,11 @@ class InterpreterAdapter(BaseServiceAdapter):
         )
 
     def get_available_commands(self) -> List[str]:
-        """Return list of available commands for this service"""
+        """Return list of available commands for this service."""
         return ["status", "languages", "execute", "sessions", "create-session", "end-session", "test-execute", "stats"]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute a command against the Interpreter service"""
+        """Execute a command against the Interpreter service."""
         command_map = {
             "status": self._get_status,
             "languages": self._get_languages,
@@ -55,7 +53,7 @@ class InterpreterAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _get_status(self) -> CommandResult:
-        """Get Interpreter service status"""
+        """Get Interpreter service status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/status"
@@ -72,7 +70,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Interpreter status: {str(e)}")
 
     async def _get_languages(self) -> CommandResult:
-        """Get supported programming languages"""
+        """Get supported programming languages."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/languages"
@@ -91,7 +89,7 @@ class InterpreterAdapter(BaseServiceAdapter):
     async def _execute_code(
         self, code: str, language: str = "python", session_id: Optional[str] = None
     ) -> CommandResult:
-        """Execute code in the interpreter"""
+        """Execute code in the interpreter."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/execute"
@@ -109,7 +107,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to execute code: {str(e)}")
 
     async def _list_sessions(self) -> CommandResult:
-        """List active execution sessions"""
+        """List active execution sessions."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/sessions"
@@ -126,7 +124,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list sessions: {str(e)}")
 
     async def _create_session(self, language: str = "python", name: Optional[str] = None) -> CommandResult:
-        """Create a new execution session"""
+        """Create a new execution session."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/sessions"
@@ -147,7 +145,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to create session: {str(e)}")
 
     async def _end_session(self, session_id: str) -> CommandResult:
-        """End an execution session"""
+        """End an execution session."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/sessions/{session_id}"
@@ -161,7 +159,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to end session {session_id}: {str(e)}")
 
     async def _test_execute(self) -> CommandResult:
-        """Test code execution with a simple example"""
+        """Test code execution with a simple example."""
         try:
             start_time = time.time()
 
@@ -187,7 +185,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to test code execution: {str(e)}")
 
     async def _get_stats(self) -> CommandResult:
-        """Get Interpreter service statistics"""
+        """Get Interpreter service statistics."""
         try:
             start_time = time.time()
 
@@ -221,7 +219,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Interpreter stats: {str(e)}")
 
     def format_response(self, result: CommandResult, command: str) -> None:
-        """Format and display the command result"""
+        """Format and display the command result."""
         if not result.success:
             self.console.print(f"[red]❌ Error: {result.error}[/red]")
             return
@@ -249,7 +247,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
-        """Format status response"""
+        """Format status response."""
         if not data:
             self.console.print("[yellow]⚠️  No status data available[/yellow]")
             return
@@ -264,7 +262,7 @@ class InterpreterAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_languages_response(self, data: Dict[str, Any]) -> None:
-        """Format supported languages response"""
+        """Format supported languages response."""
         languages = data.get("languages", [])
         if not languages:
             self.console.print("[yellow]📝 No languages available[/yellow]")
@@ -295,7 +293,7 @@ class InterpreterAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Total languages: {len(languages)}[/dim]")
 
     def _format_execution_response(self, data: Dict[str, Any]) -> None:
-        """Format code execution response"""
+        """Format code execution response."""
         if not data:
             self.console.print("[yellow]⚡ No execution data[/yellow]")
             return
@@ -328,7 +326,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]🔗 Session: {session_id}[/dim]")
 
     def _format_sessions_response(self, data: Dict[str, Any]) -> None:
-        """Format sessions response"""
+        """Format sessions response."""
         sessions = data.get("sessions", [])
         if not sessions:
             self.console.print("[yellow]🔗 No active sessions[/yellow]")
@@ -360,7 +358,7 @@ class InterpreterAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Total sessions: {len(sessions)}[/dim]")
 
     def _format_test_response(self, data: Dict[str, Any]) -> None:
-        """Format test execution response"""
+        """Format test execution response."""
         test_passed = data.get("test_passed", False)
         execution_result = data.get("execution_result", {})
         output_length = data.get("output_length", 0)
@@ -386,7 +384,7 @@ class InterpreterAdapter(BaseServiceAdapter):
             self.console.print(Panel(output, title="📤 Test Output", border_style="green"))
 
     def _format_stats_response(self, data: Dict[str, Any]) -> None:
-        """Format statistics response"""
+        """Format statistics response."""
         self.console.print(
             Panel.fit(
                 f"📊 Interpreter Statistics\n\n"

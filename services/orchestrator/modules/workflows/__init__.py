@@ -1,7 +1,8 @@
-"""LangGraph workflows for Orchestrator service.
+"""
+LangGraph workflows for Orchestrator service.
 
-This module contains predefined LangGraph workflows that leverage
-the existing service ecosystem for common documentation tasks.
+This module contains predefined LangGraph workflows that leverage the
+existing service ecosystem for common documentation tasks.
 """
 
 from .document_analysis import create_document_analysis_workflow

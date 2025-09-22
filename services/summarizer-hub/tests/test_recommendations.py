@@ -1,5 +1,6 @@
 """
 Unit tests for Summarizer-Hub recommendation endpoints.
+
 Following TDD principles with comprehensive test coverage.
 """
 
@@ -22,7 +23,8 @@ class TestRecommendationEndpoints:
         self.summarizer = SimpleSummarizer()
 
     def test_recommendations_endpoint_structure(self):
-        """Test that recommendations endpoint accepts proper request structure."""
+        """Test that recommendations endpoint accepts proper request
+        structure."""
         # Test with empty documents list
         response = self.client.post("/api/v1/recommendations", json={"documents": []})
         assert response.status_code == 422  # Validation error for empty documents

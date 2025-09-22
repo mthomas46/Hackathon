@@ -1,4 +1,5 @@
-"""Shared Infrastructure for LLM Documentation Ecosystem.
+"""
+Shared Infrastructure for LLM Documentation Ecosystem.
 
 This package contains shared utilities, middleware, logging, and other
 common infrastructure components used across all services in the ecosystem.

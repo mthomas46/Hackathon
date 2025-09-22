@@ -1,4 +1,4 @@
-"""Workflow Executor Domain Service"""
+"""Workflow Executor Domain Service."""
 
 import asyncio
 from datetime import datetime

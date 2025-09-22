@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Comprehensive test runner for all logging functionality.
+"""
+Comprehensive test runner for all logging functionality.
 
 This script runs all logging-related tests across the ecosystem and provides
 detailed reporting on test results, coverage, and any issues found.
@@ -36,7 +37,8 @@ class LoggingTestRunner:
     """Comprehensive test runner for logging functionality."""
 
     def __init__(self, verbose: bool = False, coverage: bool = False, services: Optional[List[str]] = None):
-        """Initialize the test runner.
+        """
+        Initialize the test runner.
 
         Args:
             verbose: Enable verbose output
@@ -199,7 +201,8 @@ class LoggingTestRunner:
             self.test_categories = filtered_categories
 
     def run_tests(self) -> bool:
-        """Run all logging tests and return success status.
+        """
+        Run all logging tests and return success status.
 
         Returns:
             True if all tests pass, False otherwise
@@ -247,7 +250,8 @@ class LoggingTestRunner:
         return success
 
     def _run_test_category(self, category_key: str, category_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Run tests for a specific category.
+        """
+        Run tests for a specific category.
 
         Args:
             category_key: Test category identifier
@@ -331,7 +335,8 @@ class LoggingTestRunner:
             return {"success": False, "tests_run": 0, "tests_passed": 0, "tests_failed": 0, "error": str(e)}
 
     def _parse_pytest_output(self, stdout: str, stderr: str) -> tuple[int, int, int]:
-        """Parse pytest output to extract test counts.
+        """
+        Parse pytest output to extract test counts.
 
         Args:
             stdout: Standard output from pytest
@@ -374,7 +379,8 @@ class LoggingTestRunner:
         return passed_count + failed_count, passed_count, failed_count
 
     def _print_summary(self, total_tests: int, total_passed: int, total_failed: int, success: bool):
-        """Print comprehensive test summary.
+        """
+        Print comprehensive test summary.
 
         Args:
             total_tests: Total number of tests run
@@ -427,7 +433,8 @@ class LoggingTestRunner:
         print()
 
     def generate_report(self, output_file: Optional[str] = None) -> Dict[str, Any]:
-        """Generate a detailed test report.
+        """
+        Generate a detailed test report.
 
         Args:
             output_file: Optional file path to save the report

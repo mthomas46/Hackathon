@@ -1,7 +1,9 @@
-"""Simplified WebSocket Broadcasting Integration Tests.
+"""
+Simplified WebSocket Broadcasting Integration Tests.
 
-This module contains simplified integration tests for core WebSocket broadcasting functionality,
-focusing on event broadcasting and message formatting without complex infrastructure dependencies.
+This module contains simplified integration tests for core WebSocket
+broadcasting functionality, focusing on event broadcasting and message
+formatting without complex infrastructure dependencies.
 """
 
 import uuid

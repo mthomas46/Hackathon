@@ -25,7 +25,8 @@ class MockDataGenerator:
     """Comprehensive mock data generator for testing."""
 
     def __init__(self, seed: Optional[int] = None):
-        """Initialize mock data generator with optional seed for reproducibility."""
+        """Initialize mock data generator with optional seed for
+        reproducibility."""
         self.seed = seed
         self._id_counter = 0
 

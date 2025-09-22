@@ -1,4 +1,5 @@
-"""Real implementations for GitHub MCP tools.
+"""
+Real implementations for GitHub MCP tools.
 
 Handles delegation to actual GitHub services via source-agent.
 """

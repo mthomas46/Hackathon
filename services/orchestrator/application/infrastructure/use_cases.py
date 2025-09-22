@@ -1,4 +1,4 @@
-"""Infrastructure Application Use Cases"""
+"""Infrastructure Application Use Cases."""
 
 from typing import Any, Dict, List, Optional
 

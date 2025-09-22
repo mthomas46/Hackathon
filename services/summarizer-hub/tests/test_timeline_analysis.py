@@ -1,7 +1,8 @@
-"""Unit Tests for Timeline Analysis in Summarizer Hub Service.
+"""
+Unit Tests for Timeline Analysis in Summarizer Hub Service.
 
-This module contains unit tests for timeline analysis functionality
-that was moved from the simulation service to the summarizer-hub service.
+This module contains unit tests for timeline analysis functionality that
+was moved from the simulation service to the summarizer-hub service.
 """
 
 from datetime import datetime
@@ -187,7 +188,8 @@ class TestTimelineAnalysis:
         assert len(high_severity_gaps) >= 1
 
     def test_identify_timeline_gaps_insufficient_coverage(self, summarizer, sample_timeline):
-        """Test identifying timeline gaps when phases have insufficient documents."""
+        """Test identifying timeline gaps when phases have insufficient
+        documents."""
         placements = [
             {"placement_phase": "Planning", "relevance_score": 0.8},
             {"placement_phase": "Development", "relevance_score": 0.9},
@@ -286,7 +288,8 @@ class TestTimelineAnalysis:
 
 
 class TestTimelineAnalysisIntegration:
-    """Integration tests for timeline analysis with full recommendation generation."""
+    """Integration tests for timeline analysis with full recommendation
+    generation."""
 
     @pytest.fixture
     def summarizer(self):

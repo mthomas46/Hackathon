@@ -1,7 +1,9 @@
-"""LangGraph Service Integration Framework
+"""
+LangGraph Service Integration Framework.
 
-This module provides comprehensive LangGraph integration patterns for all services
-in the ecosystem, enabling seamless workflow orchestration and AI-powered capabilities.
+This module provides comprehensive LangGraph integration patterns for
+all services in the ecosystem, enabling seamless workflow orchestration
+and AI-powered capabilities.
 """
 
 from abc import ABC, abstractmethod

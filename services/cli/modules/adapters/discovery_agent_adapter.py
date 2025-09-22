@@ -1,7 +1,5 @@
-"""
-Discovery Agent Service Adapter for CLI interaction
-Handles service discovery, registration, and ecosystem mapping
-"""
+"""Discovery Agent Service Adapter for CLI interaction Handles service
+discovery, registration, and ecosystem mapping."""
 
 import time
 from typing import Any, Dict, List, Optional
@@ -37,11 +35,11 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
         )
 
     def get_available_commands(self) -> List[str]:
-        """Return list of available commands for this service"""
+        """Return list of available commands for this service."""
         return ["status", "services", "discover", "register", "unregister", "topology", "health-check", "stats"]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute a command against the Discovery Agent service"""
+        """Execute a command against the Discovery Agent service."""
         command_map = {
             "status": self._get_status,
             "services": self._list_services,
@@ -63,7 +61,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _get_status(self) -> CommandResult:
-        """Get Discovery Agent service status"""
+        """Get Discovery Agent service status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/status"
@@ -80,7 +78,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Discovery Agent status: {str(e)}")
 
     async def _list_services(self, service_type: Optional[str] = None) -> CommandResult:
-        """List discovered services"""
+        """List discovered services."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/services"
@@ -101,7 +99,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list services: {str(e)}")
 
     async def _discover_services(self, query: Optional[str] = None) -> CommandResult:
-        """Discover services in the ecosystem"""
+        """Discover services in the ecosystem."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/discover"
@@ -124,7 +122,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
     async def _register_service(
         self, name: str, url: str, service_type: str = "unknown", metadata: Optional[Dict] = None
     ) -> CommandResult:
-        """Register a new service"""
+        """Register a new service."""
         try:
             start_time = time.time()
             register_url = f"{self.base_url}/register"
@@ -143,7 +141,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to register service {name}: {str(e)}")
 
     async def _unregister_service(self, service_id: str) -> CommandResult:
-        """Unregister a service"""
+        """Unregister a service."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/services/{service_id}"
@@ -160,7 +158,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to unregister service {service_id}: {str(e)}")
 
     async def _get_topology(self) -> CommandResult:
-        """Get service topology and relationships"""
+        """Get service topology and relationships."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/topology"
@@ -177,7 +175,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get topology: {str(e)}")
 
     async def _health_check_services(self) -> CommandResult:
-        """Perform health checks on all registered services"""
+        """Perform health checks on all registered services."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/health-check"
@@ -194,7 +192,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to perform health checks: {str(e)}")
 
     async def _get_stats(self) -> CommandResult:
-        """Get Discovery Agent statistics"""
+        """Get Discovery Agent statistics."""
         try:
             start_time = time.time()
 
@@ -227,7 +225,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get Discovery Agent stats: {str(e)}")
 
     def format_response(self, result: CommandResult, command: str) -> None:
-        """Format and display the command result"""
+        """Format and display the command result."""
         if not result.success:
             self.console.print(f"[red]❌ Error: {result.error}[/red]")
             return
@@ -255,7 +253,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
-        """Format status response"""
+        """Format status response."""
         if not data:
             self.console.print("[yellow]⚠️  No status data available[/yellow]")
             return
@@ -270,7 +268,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
         self.console.print(table)
 
     def _format_services_response(self, data: Dict[str, Any]) -> None:
-        """Format services list response"""
+        """Format services list response."""
         services = data.get("services", [])
         if not services:
             self.console.print("[yellow]🔍 No services found[/yellow]")
@@ -298,7 +296,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Total services: {len(services)}[/dim]")
 
     def _format_discovery_response(self, data: Dict[str, Any]) -> None:
-        """Format discovery results"""
+        """Format discovery results."""
         discovered = data.get("discovered", [])
         if not discovered:
             self.console.print("[yellow]🔍 No new services discovered[/yellow]")
@@ -326,7 +324,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
         self.console.print(f"[dim]Discovered: {len(discovered)} new services[/dim]")
 
     def _format_topology_response(self, data: Dict[str, Any]) -> None:
-        """Format topology response"""
+        """Format topology response."""
         if not data:
             self.console.print("[yellow]🌐 No topology data available[/yellow]")
             return
@@ -372,7 +370,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
             )
 
     def _format_health_check_response(self, data: Dict[str, Any]) -> None:
-        """Format health check results"""
+        """Format health check results."""
         results = data.get("results", [])
         if not results:
             self.console.print("[yellow]❤️  No health check results[/yellow]")
@@ -411,7 +409,7 @@ class DiscoveryAgentAdapter(BaseServiceAdapter):
         )
 
     def _format_stats_response(self, data: Dict[str, Any]) -> None:
-        """Format statistics response"""
+        """Format statistics response."""
         topology = data.get("topology", {})
         node_count = len(topology.get("nodes", [])) if topology else 0
         edge_count = len(topology.get("edges", [])) if topology else 0

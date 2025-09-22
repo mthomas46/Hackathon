@@ -1,8 +1,9 @@
-"""Form Components Module.
+"""
+Form Components Module.
 
-This module provides reusable form components for the simulation dashboard,
-including ML configuration forms, team builder forms, budget planner forms,
-and risk assessment forms.
+This module provides reusable form components for the simulation
+dashboard, including ML configuration forms, team builder forms, budget
+planner forms, and risk assessment forms.
 """
 
 from .budget_planner_forms import render_budget_planner_form

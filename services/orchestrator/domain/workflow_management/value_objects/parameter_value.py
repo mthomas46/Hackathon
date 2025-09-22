@@ -1,4 +1,4 @@
-"""Parameter Value Value Object"""
+"""Parameter Value Value Object."""
 
 from enum import Enum
 from typing import Any

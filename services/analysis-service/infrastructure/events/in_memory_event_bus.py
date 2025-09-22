@@ -203,7 +203,8 @@ class InMemoryEventSubscriber(EventSubscriber):
 
 
 class SharedInMemoryEventBus(InMemoryEventBus):
-    """Shared in-memory event bus for cross-service communication in testing."""
+    """Shared in-memory event bus for cross-service communication in
+    testing."""
 
     _instance: Optional["SharedInMemoryEventBus"] = None
     _lock = asyncio.Lock()

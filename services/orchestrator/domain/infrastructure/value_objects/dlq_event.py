@@ -1,4 +1,4 @@
-"""DLQ Event Value Object"""
+"""DLQ Event Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -119,7 +119,11 @@ class DLQEvent:
         return (datetime.utcnow() - self._dlq_timestamp).total_seconds()
 
     def increment_retry_count(self) -> bool:
-        """Increment retry count. Returns True if can retry, False if exhausted."""
+        """
+        Increment retry count.
+
+        Returns True if can retry, False if exhausted.
+        """
         if self.can_retry:
             self._retry_count += 1
             return True

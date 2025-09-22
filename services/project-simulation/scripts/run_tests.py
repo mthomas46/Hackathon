@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Test Runner for Project Simulation Service.
+"""
+Test Runner for Project Simulation Service.
 
 This script provides comprehensive test execution capabilities for the
 Project Simulation Service, supporting different test categories, parallel

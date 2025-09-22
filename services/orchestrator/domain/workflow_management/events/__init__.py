@@ -1,4 +1,4 @@
-"""Domain Events for Workflow Management"""
+"""Domain Events for Workflow Management."""
 
 from .action_executed import ActionExecutedEvent
 from .workflow_completed import WorkflowCompletedEvent

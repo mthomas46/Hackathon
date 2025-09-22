@@ -1,4 +1,4 @@
-"""Document Processor Service Domain Service"""
+"""Document Processor Service Domain Service."""
 
 import hashlib
 from datetime import datetime

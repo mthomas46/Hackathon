@@ -1,7 +1,9 @@
-"""Reporting functionality for the Analysis Service.
+"""
+Reporting functionality for the Analysis Service.
 
-This module provides a unified reporting interface that leverages the optimized
-analysis functions from analysis_logic.py to eliminate code duplication.
+This module provides a unified reporting interface that leverages the
+optimized analysis functions from analysis_logic.py to eliminate code
+duplication.
 """
 
 from typing import Any, Dict, List
@@ -17,7 +19,8 @@ from .shared_utils import build_analysis_context, create_analysis_success_respon
 
 
 def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
-    """Generate summary report of findings using optimized analysis logic.
+    """
+    Generate summary report of findings using optimized analysis logic.
 
     This function serves as a unified interface that delegates to the
     optimized implementation in analysis_logic.py, ensuring consistency
@@ -29,7 +32,9 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
 
 
 def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> Dict[str, Any]:
-    """Generate trends report showing patterns over time using optimized analysis logic.
+    """
+    Generate trends report showing patterns over time using optimized analysis
+    logic.
 
     This function serves as a unified interface that delegates to the
     optimized implementation in analysis_logic.py, ensuring consistency

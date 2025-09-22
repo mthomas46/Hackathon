@@ -1,4 +1,4 @@
-"""Value Objects for Reporting Domain"""
+"""Value Objects for Reporting Domain."""
 
 from .approval_recommendation import ApprovalRecommendation
 from .confidence_level import ConfidenceLevel

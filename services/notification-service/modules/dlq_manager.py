@@ -30,7 +30,11 @@ class DLQManager:
         self._dlq.clear()
 
     def prune_old_entries(self, max_age_seconds: int = 86400) -> int:
-        """Remove entries older than max_age_seconds. Returns count of removed entries."""
+        """
+        Remove entries older than max_age_seconds.
+
+        Returns count of removed entries.
+        """
         cutoff_time = time.time() - max_age_seconds
         old_count = len(self._dlq)
         self._dlq = [entry for entry in self._dlq if entry.get("ts", 0) > cutoff_time]

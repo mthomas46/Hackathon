@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Operational Excellence Framework
+Operational Excellence Framework.
 
-This module provides comprehensive health monitoring, automated service discovery,
-and real-time performance dashboards for operational excellence.
+This module provides comprehensive health monitoring, automated service
+discovery, and real-time performance dashboards for operational
+excellence.
 """
 
 import asyncio

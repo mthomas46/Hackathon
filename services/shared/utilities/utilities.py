@@ -1,4 +1,5 @@
-"""Shared Utility Functions
+"""
+Shared Utility Functions.
 
 Core utility functions used across all services in the LLM Documentation Ecosystem.
 
@@ -45,7 +46,8 @@ def extract_variables(text: str) -> List[str]:
 
 
 def generate_id(prefix: str = "", length: int = 12) -> str:
-    """Generate a unique ID with optional prefix for consistent identification.
+    """
+    Generate a unique ID with optional prefix for consistent identification.
 
     Creates cryptographically secure unique identifiers using timestamp and UUID.
     Used across all services for consistent ID generation and correlation tracking.
@@ -74,7 +76,8 @@ def safe_filename(filename: str) -> str:
 
 
 def utc_now() -> datetime:
-    """Get current UTC datetime with timezone information.
+    """
+    Get current UTC datetime with timezone information.
 
     Provides consistent UTC timestamp generation across all services.
     Used for logging, audit trails, and temporal ordering of operations.
@@ -137,10 +140,11 @@ def is_valid_url(url: str) -> bool:
 
 
 def validate_string_length(text: str, min_len: int = 0, max_len: int = 1000) -> bool:
-    """Validate string length constraints.
+    """
+    Validate string length constraints.
 
-    This is a simplified version for basic validation.
-    For detailed error messages, use error_handling.validate_string_length.
+    This is a simplified version for basic validation. For detailed
+    error messages, use error_handling.validate_string_length.
     """
     return min_len <= len(text) <= max_len
 
@@ -188,7 +192,8 @@ def get_file_size_mb(file_path: Union[str, Path]) -> float:
 
 
 def read_file_safe(file_path: Union[str, Path], encoding: str = "utf-8") -> Optional[str]:
-    """Safely read a file, returning None if it doesn't exist or can't be read."""
+    """Safely read a file, returning None if it doesn't exist or can't be
+    read."""
     try:
         with open(file_path, "r", encoding=encoding) as f:
             return f.read()
@@ -290,10 +295,11 @@ def stable_hash(text: str) -> str:
 
 
 def attach_self_register(app, service_name: str) -> None:
-    """Register service with the orchestrator or discovery mechanism.
+    """
+    Register service with the orchestrator or discovery mechanism.
 
-    This function sets up the service to be discoverable by other services
-    and registers it with any central registry if available.
+    This function sets up the service to be discoverable by other
+    services and registers it with any central registry if available.
     """
     # For now, this is a simple stub implementation
     # In a full implementation, this would register with a service discovery system
@@ -362,7 +368,8 @@ def setup_common_middleware(
 async def cached_get(
     url: str, etag: Optional[str] = None, last_modified: Optional[str] = None, timeout: int = 15
 ) -> Tuple[int, str, Dict[str, str]]:
-    """Perform cached HTTP GET request with ETag and Last-Modified support.
+    """
+    Perform cached HTTP GET request with ETag and Last-Modified support.
 
     Returns:
         Tuple of (status_code, response_body, response_headers)
@@ -391,14 +398,16 @@ async def cached_get(
 
 
 class TokenBucket:
-    """Token bucket for rate limiting.
+    """
+    Token bucket for rate limiting.
 
-    Refills tokens at a constant rate up to a maximum capacity.
-    Requests consume one token each.
+    Refills tokens at a constant rate up to a maximum capacity. Requests
+    consume one token each.
     """
 
     def __init__(self, rate_per_sec: float, burst: int):
-        """Initialize token bucket.
+        """
+        Initialize token bucket.
 
         Args:
             rate_per_sec: Tokens added per second

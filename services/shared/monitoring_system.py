@@ -30,7 +30,7 @@ from standardized_logger import StandardizedLogger, get_all_loggers
 
 @dataclass
 class ServiceStatus:
-    """Service status information"""
+    """Service status information."""
 
     name: str
     status: str  # "healthy", "warning", "critical", "unknown"
@@ -43,7 +43,7 @@ class ServiceStatus:
 
 @dataclass
 class Alert:
-    """Monitoring alert"""
+    """Monitoring alert."""
 
     alert_id: str
     service_name: str
@@ -57,7 +57,7 @@ class Alert:
 
 @dataclass
 class DashboardMetrics:
-    """Dashboard metrics summary"""
+    """Dashboard metrics summary."""
 
     total_services: int
     healthy_services: int
@@ -75,12 +75,12 @@ class MonitoringDashboard:
     """
     Real-time monitoring dashboard for the ecosystem.
 
-    Provides comprehensive monitoring of all services with health status,
-    performance metrics, and alerting capabilities.
+    Provides comprehensive monitoring of all services with health
+    status, performance metrics, and alerting capabilities.
     """
 
     def __init__(self, workspace_path: Optional[str] = None):
-        """Initialize the monitoring dashboard"""
+        """Initialize the monitoring dashboard."""
         self.workspace_path = Path(workspace_path or Path.cwd())
         self.services: Dict[str, ServiceStatus] = {}
         self.alerts: List[Alert] = []
@@ -107,7 +107,7 @@ class MonitoringDashboard:
         self.logger.info("📊 Monitoring Dashboard initialized")
 
     def start_monitoring(self):
-        """Start the monitoring dashboard"""
+        """Start the monitoring dashboard."""
         if self.is_running:
             return
 
@@ -119,14 +119,14 @@ class MonitoringDashboard:
         self.logger.info("📊 Monitoring dashboard started")
 
     def stop_monitoring(self):
-        """Stop the monitoring dashboard"""
+        """Stop the monitoring dashboard."""
         self.is_running = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=5)
         self.logger.info("📊 Monitoring dashboard stopped")
 
     def _monitoring_loop(self):
-        """Main monitoring loop"""
+        """Main monitoring loop."""
         while self.is_running:
             try:
                 self._update_service_status()
@@ -138,7 +138,7 @@ class MonitoringDashboard:
                 time.sleep(5)
 
     def _update_service_status(self):
-        """Update status of all monitored services"""
+        """Update status of all monitored services."""
         # Get all loggers (represents all services)
         service_loggers = get_all_loggers()
 
@@ -167,7 +167,7 @@ class MonitoringDashboard:
                 )
 
     def _check_alerts(self):
-        """Check for alerts based on service status and metrics"""
+        """Check for alerts based on service status and metrics."""
         for service_name, service_status in self.services.items():
             # Health status alerts
             if service_status.status == "critical":
@@ -195,7 +195,7 @@ class MonitoringDashboard:
                 )
 
     def _create_alert(self, service_name: str, alert_type: str, severity: str, message: str):
-        """Create a new alert"""
+        """Create a new alert."""
         # Check if similar alert already exists and is unresolved
         for alert in self.alerts:
             if (
@@ -220,7 +220,7 @@ class MonitoringDashboard:
         )
 
     def resolve_alert(self, alert_id: str):
-        """Resolve an alert"""
+        """Resolve an alert."""
         for alert in self.alerts:
             if alert.alert_id == alert_id and not alert.resolved:
                 alert.resolved = True
@@ -232,7 +232,7 @@ class MonitoringDashboard:
                 break
 
     def _update_dashboard_metrics(self):
-        """Update dashboard metrics summary"""
+        """Update dashboard metrics summary."""
         if not self.services:
             return
 
@@ -279,7 +279,7 @@ class MonitoringDashboard:
             self.metrics_history = self.metrics_history[-100:]
 
     def get_dashboard_data(self) -> Dict[str, Any]:
-        """Get current dashboard data"""
+        """Get current dashboard data."""
         if not self.services:
             return {"error": "No services monitored"}
 
@@ -337,7 +337,7 @@ class MonitoringDashboard:
         return dashboard_data
 
     def print_dashboard(self):
-        """Print formatted dashboard"""
+        """Print formatted dashboard."""
         data = self.get_dashboard_data()
 
         if "error" in data:
@@ -385,7 +385,7 @@ class MonitoringDashboard:
         print("=" * 80)
 
     def save_dashboard_report(self, filename: Optional[str] = None) -> Path:
-        """Save dashboard report to JSON file"""
+        """Save dashboard report to JSON file."""
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"dashboard_report_{timestamp}.json"
@@ -400,13 +400,13 @@ class MonitoringDashboard:
         return report_path
 
     def get_service_logs(self, service_name: str, lines: int = 50) -> Optional[List[str]]:
-        """Get recent logs for a specific service"""
+        """Get recent logs for a specific service."""
         # This would integrate with log aggregation system
         # For now, return a placeholder
         return [f"Sample log entry for {service_name}"]
 
     def get_performance_trends(self, hours: int = 24) -> Dict[str, Any]:
-        """Get performance trends over the specified time period"""
+        """Get performance trends over the specified time period."""
         if not self.metrics_history:
             return {"error": "No metrics history available"}
 
@@ -430,7 +430,7 @@ class MonitoringDashboard:
         return trends
 
     def _calculate_trend(self, values: List[float]) -> str:
-        """Calculate trend direction from values"""
+        """Calculate trend direction from values."""
         if len(values) < 2:
             return "insufficient_data"
 
@@ -454,7 +454,7 @@ _dashboard_instance: Optional[MonitoringDashboard] = None
 
 
 def get_monitoring_dashboard() -> MonitoringDashboard:
-    """Get the global monitoring dashboard instance"""
+    """Get the global monitoring dashboard instance."""
     global _dashboard_instance
     if _dashboard_instance is None:
         _dashboard_instance = MonitoringDashboard()
@@ -462,13 +462,13 @@ def get_monitoring_dashboard() -> MonitoringDashboard:
 
 
 def start_monitoring():
-    """Start the monitoring dashboard"""
+    """Start the monitoring dashboard."""
     dashboard = get_monitoring_dashboard()
     dashboard.start_monitoring()
 
 
 def stop_monitoring():
-    """Stop the monitoring dashboard"""
+    """Stop the monitoring dashboard."""
     dashboard = get_monitoring_dashboard()
     dashboard.stop_monitoring()
 

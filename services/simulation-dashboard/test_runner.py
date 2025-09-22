@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Test runner for the Simulation Dashboard Service.
+"""
+Test runner for the Simulation Dashboard Service.
 
 This script provides a convenient way to run different types of tests
 for the simulation dashboard with various options and configurations.

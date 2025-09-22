@@ -101,7 +101,8 @@ TImplementation = TypeVar("TImplementation")
 
 
 class ServiceLifetime(Enum):
-    """Enumeration of service lifetime scopes.
+    """
+    Enumeration of service lifetime scopes.
 
     This enum defines the different lifetime management strategies for services
     registered in the dependency injection container.
@@ -121,7 +122,8 @@ class ServiceLifetime(Enum):
 
 
 class ServiceDescriptor(Generic[T]):
-    """Service descriptor for DI container registration.
+    """
+    Service descriptor for DI container registration.
 
     This class encapsulates all the metadata and configuration needed to manage
     a service within the dependency injection container. It handles service
@@ -151,7 +153,8 @@ class ServiceDescriptor(Generic[T]):
         lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT,
         instance: Optional[T] = None,
     ) -> None:
-        """Initialize service descriptor.
+        """
+        Initialize service descriptor.
 
         Args:
             service_type: The interface type clients will request
@@ -168,7 +171,8 @@ class ServiceDescriptor(Generic[T]):
         self._lock = threading.RLock()
 
     def create_instance(self, container: "DependencyContainer", *args: Any, **kwargs: Any) -> T:
-        """Create a new instance of the service.
+        """
+        Create a new instance of the service.
 
         This method handles the complete service instantiation process including:
         - Singleton instance reuse
@@ -208,7 +212,8 @@ class ServiceDescriptor(Generic[T]):
             return instance
 
     def _create_with_injection(self, container: "DependencyContainer", *args: Any, **kwargs: Any) -> T:
-        """Create instance with automatic dependency injection.
+        """
+        Create instance with automatic dependency injection.
 
         This method performs automatic dependency injection by:
         1. Inspecting the constructor signature
@@ -262,7 +267,8 @@ class ServiceDescriptor(Generic[T]):
 
 
 class IServiceProvider(Protocol):
-    """Service provider protocol.
+    """
+    Service provider protocol.
 
     This protocol defines the standard interface for service providers
     in the dependency injection system. It allows for different service
@@ -273,7 +279,8 @@ class IServiceProvider(Protocol):
     """
 
     def get_service(self, service_type: Type[T]) -> T:
-        """Get service instance.
+        """
+        Get service instance.
 
         Retrieves a single instance of the requested service type.
         For services with multiple implementations, this typically
@@ -291,7 +298,8 @@ class IServiceProvider(Protocol):
         ...
 
     def get_services(self, service_type: Type[T]) -> List[T]:
-        """Get all service instances of type.
+        """
+        Get all service instances of type.
 
         Retrieves all registered instances of the requested service type.
         This is useful when multiple implementations of the same interface
@@ -307,20 +315,22 @@ class IServiceProvider(Protocol):
 
 
 class IServiceScope(Protocol):
-    """Service scope protocol.
+    """
+    Service scope protocol.
 
-    This protocol defines the interface for service scopes, which provide
-    isolated service instances within a specific context or lifetime.
-    Scopes are typically used for request-scoped services or per-operation
-    state management.
+    This protocol defines the interface for service scopes, which
+    provide isolated service instances within a specific context or
+    lifetime. Scopes are typically used for request-scoped services or
+    per-operation state management.
 
-    Service scopes ensure that services created within the scope are properly
-    disposed when the scope ends, preventing resource leaks and ensuring
-    proper cleanup of stateful services.
+    Service scopes ensure that services created within the scope are
+    properly disposed when the scope ends, preventing resource leaks and
+    ensuring proper cleanup of stateful services.
     """
 
     def get_service(self, service_type: Type[T]) -> T:
-        """Get scoped service instance.
+        """
+        Get scoped service instance.
 
         Retrieves a service instance that is scoped to this specific context.
         If the service is scoped, a new instance will be created for this scope
@@ -339,11 +349,12 @@ class IServiceScope(Protocol):
         ...
 
     def dispose(self) -> None:
-        """Dispose of scoped services.
+        """
+        Dispose of scoped services.
 
-        Cleans up all services that were created within this scope.
-        This method should be called when the scope is no longer needed
-        to ensure proper resource cleanup and prevent memory leaks.
+        Cleans up all services that were created within this scope. This
+        method should be called when the scope is no longer needed to
+        ensure proper resource cleanup and prevent memory leaks.
 
         After disposal, the scope should not be used for further service
         resolution as it may result in undefined behavior.
@@ -352,7 +363,8 @@ class IServiceScope(Protocol):
 
 
 class DependencyContainer(IServiceProvider):
-    """Enterprise-grade dependency injection container.
+    """
+    Enterprise-grade dependency injection container.
 
     This is the core class of the dependency injection framework, providing
     comprehensive service registration, resolution, and lifecycle management.
@@ -399,7 +411,8 @@ class DependencyContainer(IServiceProvider):
     """
 
     def __init__(self, parent: Optional["DependencyContainer"] = None) -> None:
-        """Initialize dependency injection container.
+        """
+        Initialize dependency injection container.
 
         Args:
             parent: Optional parent container for hierarchical resolution.
@@ -415,7 +428,8 @@ class DependencyContainer(IServiceProvider):
     def register_singleton(
         self, service_type: Type[T], implementation_type: Optional[Type[T]] = None, instance: Optional[T] = None
     ) -> "DependencyContainer":
-        """Register a singleton service.
+        """
+        Register a singleton service.
 
         Singleton services share a single instance across the entire application.
         This is the most efficient option for stateless services and shared resources.
@@ -436,7 +450,8 @@ class DependencyContainer(IServiceProvider):
     def register_transient(
         self, service_type: Type[T], implementation_type: Optional[Type[T]] = None
     ) -> "DependencyContainer":
-        """Register a transient service.
+        """
+        Register a transient service.
 
         Transient services create a new instance each time they are requested.
         Use this for stateful services or when isolation between requests is needed.
@@ -456,7 +471,8 @@ class DependencyContainer(IServiceProvider):
     def register_scoped(
         self, service_type: Type[T], implementation_type: Optional[Type[T]] = None
     ) -> "DependencyContainer":
-        """Register a scoped service.
+        """
+        Register a scoped service.
 
         Scoped services create one instance per service scope. Within a scope,
         the same instance is reused, but different scopes get different instances.
@@ -476,7 +492,8 @@ class DependencyContainer(IServiceProvider):
     def register_factory(
         self, service_type: Type[T], factory: Callable[..., T], lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT
     ) -> "DependencyContainer":
-        """Register a service with a custom factory function.
+        """
+        Register a service with a custom factory function.
 
         Factory functions provide full control over service instantiation,
         useful for complex initialization logic or third-party libraries.
@@ -501,7 +518,8 @@ class DependencyContainer(IServiceProvider):
         return self
 
     def register_instance(self, service_type: Type[T], instance: T) -> "DependencyContainer":
-        """Register a pre-created instance as singleton.
+        """
+        Register a pre-created instance as singleton.
 
         This is useful for services that need special initialization or
         when integrating with existing singleton instances.
@@ -541,7 +559,8 @@ class DependencyContainer(IServiceProvider):
             return self
 
     def resolve(self, service_type: Type[T]) -> T:
-        """Resolve a service instance.
+        """
+        Resolve a service instance.
 
         This is the core method for retrieving service instances from the container.
         It implements the service resolution algorithm:
@@ -581,7 +600,8 @@ class DependencyContainer(IServiceProvider):
         raise ValueError(f"Service of type '{service_type}' not registered")
 
     def get_service(self, service_type: Type[T]) -> T:
-        """Get service instance (IServiceProvider implementation).
+        """
+        Get service instance (IServiceProvider implementation).
 
         This method implements the IServiceProvider protocol, providing
         a standard interface for service resolution.
@@ -598,7 +618,8 @@ class DependencyContainer(IServiceProvider):
         return self.resolve(service_type)
 
     def get_services(self, service_type: Type[T]) -> List[T]:
-        """Get all service instances of type.
+        """
+        Get all service instances of type.
 
         Retrieves all registered instances of the requested service type.
         This is useful when multiple implementations of the same interface
@@ -632,7 +653,8 @@ class DependencyContainer(IServiceProvider):
         return services
 
     def create_scope(self) -> "ServiceScope":
-        """Create a new service scope.
+        """
+        Create a new service scope.
 
         Service scopes provide isolated service instances within a specific
         context or lifetime. Scoped services will share instances within
@@ -654,7 +676,8 @@ class DependencyContainer(IServiceProvider):
         return ServiceScope(self)
 
     def dispose(self) -> None:
-        """Dispose of container resources.
+        """
+        Dispose of container resources.
 
         This method cleans up all resources managed by the container:
         - Disposes of singleton service instances
@@ -680,7 +703,8 @@ class DependencyContainer(IServiceProvider):
 
 
 class ServiceScope(IServiceScope):
-    """Service scope for managing scoped service instances.
+    """
+    Service scope for managing scoped service instances.
 
     Service scopes provide isolated service instances within a specific context
     or lifetime. They ensure that scoped services share instances within the
@@ -718,7 +742,8 @@ class ServiceScope(IServiceScope):
     """
 
     def __init__(self, container: DependencyContainer) -> None:
-        """Initialize service scope.
+        """
+        Initialize service scope.
 
         Args:
             container: The parent dependency injection container that
@@ -730,7 +755,8 @@ class ServiceScope(IServiceScope):
         self._lock = threading.RLock()
 
     def get_service(self, service_type: Type[T]) -> T:
-        """Get scoped service instance.
+        """
+        Get scoped service instance.
 
         Retrieves a service instance that is scoped to this specific context.
         If the service is scoped, a new instance will be created for this scope
@@ -771,7 +797,8 @@ class ServiceScope(IServiceScope):
             return self._container.resolve(service_type)
 
     def dispose(self) -> None:
-        """Dispose of scoped services and clean up resources.
+        """
+        Dispose of scoped services and clean up resources.
 
         This method disposes of all service instances that were created
         within this scope. It calls the dispose method on any services
@@ -803,7 +830,8 @@ _container_lock = threading.RLock()
 
 
 def get_global_container() -> DependencyContainer:
-    """Get the global dependency injection container.
+    """
+    Get the global dependency injection container.
 
     Returns the singleton global container instance. If no global container
     exists, a new one is created automatically.
@@ -827,7 +855,8 @@ def get_global_container() -> DependencyContainer:
 
 
 def set_global_container(container: DependencyContainer) -> None:
-    """Set the global dependency injection container.
+    """
+    Set the global dependency injection container.
 
     This function allows replacing the global container instance.
     This is useful for testing scenarios where you want to use
@@ -850,7 +879,8 @@ def set_global_container(container: DependencyContainer) -> None:
 
 @contextmanager
 def service_scope():
-    """Context manager for creating a service scope.
+    """
+    Context manager for creating a service scope.
 
     This context manager provides a convenient way to create and manage
     service scopes. It automatically handles scope creation, context
@@ -880,7 +910,8 @@ def service_scope():
 
 
 def inject(func: Callable[..., T]) -> Callable[..., T]:
-    """Decorator to inject dependencies into a function.
+    """
+    Decorator to inject dependencies into a function.
 
     This decorator automatically injects dependencies into function parameters
     based on their type annotations. It inspects the function signature and

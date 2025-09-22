@@ -1,7 +1,9 @@
-"""Security Filter Module for LLM Gateway Service.
+"""
+Security Filter Module for LLM Gateway Service.
 
-Handles security-aware routing and content analysis to ensure sensitive content
-is routed to appropriate LLM providers based on security policies.
+Handles security-aware routing and content analysis to ensure sensitive
+content is routed to appropriate LLM providers based on security
+policies.
 """
 
 from dataclasses import dataclass

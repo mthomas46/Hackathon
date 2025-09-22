@@ -1,7 +1,8 @@
-"""Code Analyzer Manager module for CLI service.
+"""
+Code Analyzer Manager module for CLI service.
 
-Provides power-user operations for code analyzer including
-code analysis, security scanning, style checking, and analysis history.
+Provides power-user operations for code analyzer including code
+analysis, security scanning, style checking, and analysis history.
 """
 
 import asyncio
@@ -35,7 +36,11 @@ class CodeAnalyzerManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         # Basic implementation - just show error for now
         self.display.show_error("Feature not yet implemented")
         return True

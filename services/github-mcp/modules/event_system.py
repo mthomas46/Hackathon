@@ -1,4 +1,5 @@
-"""Event system for GitHub MCP service.
+"""
+Event system for GitHub MCP service.
 
 Handles integration events and downstream service notifications.
 """

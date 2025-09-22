@@ -1,4 +1,5 @@
-"""LLM Gateway Integration Module for Summarizer Hub Service.
+"""
+LLM Gateway Integration Module for Summarizer Hub Service.
 
 Provides integration between the Summarizer Hub and LLM Gateway for:
 - Enhanced summarization using LLM Gateway capabilities
@@ -26,7 +27,8 @@ class LLMGatewayIntegration:
     async def enhance_summarization_with_llm(
         self, text: str, original_summary: str, summarization_metadata: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Use LLM Gateway to enhance and improve existing summarization results."""
+        """Use LLM Gateway to enhance and improve existing summarization
+        results."""
         try:
             enhancement_prompt = f"""
 You are an expert at improving technical summaries. Review the following text, its original summary, and metadata, then provide an enhanced version.
@@ -100,7 +102,8 @@ Return only the enhanced summary, no additional explanation.
     async def intelligent_provider_selection_for_summary(
         self, text: str, summary_requirements: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Use LLM Gateway to intelligently select the best provider for summarization."""
+        """Use LLM Gateway to intelligently select the best provider for
+        summarization."""
         try:
             # Analyze text characteristics
             text_length = len(text)
@@ -207,7 +210,8 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
     async def quality_assessment_with_llm(
         self, text: str, summary: str, quality_metrics: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Use LLM Gateway to assess summary quality and provide detailed feedback."""
+        """Use LLM Gateway to assess summary quality and provide detailed
+        feedback."""
         try:
             assessment_prompt = f"""
 You are an expert at evaluating summary quality. Assess the following summary against the original text.

@@ -1,4 +1,4 @@
-"""Service Discovery Domain Service"""
+"""Service Discovery Domain Service."""
 
 from typing import Any, Dict, List, Optional
 

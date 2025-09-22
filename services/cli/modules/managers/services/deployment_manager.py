@@ -1,8 +1,9 @@
-"""Deployment Controls Manager module for CLI service.
+"""
+Deployment Controls Manager module for CLI service.
 
-Provides comprehensive deployment management including
-service scaling, rolling updates, canary deployments, traffic management,
-and container orchestration controls.
+Provides comprehensive deployment management including service scaling,
+rolling updates, canary deployments, traffic management, and container
+orchestration controls.
 """
 
 import asyncio
@@ -33,7 +34,11 @@ class DeploymentManager(BaseManager):
         return [("1", "Deployment Management"), ("2", "Scaling Operations"), ("3", "Monitoring & Health")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 

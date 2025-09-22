@@ -1,9 +1,10 @@
-"""Integration Tests for REST API and User Experience.
+"""
+Integration Tests for REST API and User Experience.
 
 This module contains comprehensive tests for the REST API endpoints,
-HATEOAS implementation, WebSocket functionality, and overall user experience.
-Tests cover API maturity levels, real-time communication, error handling,
-and user interaction patterns.
+HATEOAS implementation, WebSocket functionality, and overall user
+experience. Tests cover API maturity levels, real-time communication,
+error handling, and user interaction patterns.
 """
 
 import json
@@ -35,10 +36,12 @@ except ImportError:
 
 
 class TestHATEOASImplementation:
-    """Test cases for HATEOAS (Hypermedia as the Engine of Application State) implementation."""
+    """Test cases for HATEOAS (Hypermedia as the Engine of Application State)
+    implementation."""
 
     def test_root_endpoint_provides_api_discovery_links(self, test_client):
-        """Test that root endpoint provides comprehensive API discovery links."""
+        """Test that root endpoint provides comprehensive API discovery
+        links."""
         response = test_client.get("/")
 
         assert response.status_code == 200
@@ -57,7 +60,8 @@ class TestHATEOASImplementation:
             assert links[link]["href"].startswith(("http://", "/")), f"Invalid href format for {link}"
 
     def test_simulation_collection_provides_navigation_links(self, test_client):
-        """Test that simulation collection endpoint provides proper navigation links."""
+        """Test that simulation collection endpoint provides proper navigation
+        links."""
         response = test_client.get("/api/v1/simulations")
 
         assert response.status_code == 200
@@ -145,7 +149,8 @@ class TestHATEOASImplementation:
 
     @pytest.mark.asyncio
     async def test_hateoas_links_are_functional(self):
-        """Test that HATEOAS links are actually functional and point to valid endpoints."""
+        """Test that HATEOAS links are actually functional and point to valid
+        endpoints."""
         # This would require a running server to test link functionality
         # For now, we'll test the link structure and format
 

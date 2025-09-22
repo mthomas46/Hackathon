@@ -1,4 +1,5 @@
-"""GitHub MCP monitoring infrastructure for Frontend service.
+"""
+GitHub MCP monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for github-mcp
 service tool invocations and GitHub data operations.
@@ -12,7 +13,8 @@ from .shared_utils import get_frontend_clients, get_github_mcp_url
 
 
 class GithubMcpMonitor:
-    """Monitor for github-mcp service tool invocations and GitHub operations."""
+    """Monitor for github-mcp service tool invocations and GitHub
+    operations."""
 
     def __init__(self):
         self._tool_invocations = []

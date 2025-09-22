@@ -1,4 +1,4 @@
-"""Saga Service Domain Service"""
+"""Saga Service Domain Service."""
 
 from typing import Any, Dict, List, Optional
 
@@ -177,7 +177,11 @@ class SagaService:
         return sum(completion_times) / len(completion_times) if completion_times else None
 
     def cleanup_completed_sagas(self, max_age_days: int = 30) -> int:
-        """Clean up old completed sagas. Returns count removed."""
+        """
+        Clean up old completed sagas.
+
+        Returns count removed.
+        """
         # In a real implementation, this would remove sagas older than max_age_days
         # For now, return 0 as we don't have actual cleanup logic
         return 0

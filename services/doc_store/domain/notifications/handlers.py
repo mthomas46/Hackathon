@@ -1,4 +1,5 @@
-"""Notifications handlers for API endpoints.
+"""
+Notifications handlers for API endpoints.
 
 Handles notification-related HTTP requests and responses.
 """

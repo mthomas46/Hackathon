@@ -1,4 +1,4 @@
-"""Shared DTOs for cross-cutting concerns"""
+"""Shared DTOs for cross-cutting concerns."""
 
 from typing import Any, Dict, List, Optional
 

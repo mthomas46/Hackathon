@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Event Management CLI for Project Simulation Service.
+"""
+Event Management CLI for Project Simulation Service.
 
 This script provides command-line tools for managing simulation events,
 including querying, replaying, statistics, and cleanup operations.

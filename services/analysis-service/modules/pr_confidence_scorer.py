@@ -1,8 +1,9 @@
 """
-PR Confidence Scoring Module
+PR Confidence Scoring Module.
 
 Advanced confidence scoring algorithm for PR approval recommendations
-based on multiple factors including alignment, quality, risks, and completeness.
+based on multiple factors including alignment, quality, risks, and
+completeness.
 """
 
 from dataclasses import dataclass

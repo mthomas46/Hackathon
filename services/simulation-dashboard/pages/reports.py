@@ -1,4 +1,5 @@
-"""Reports Page.
+"""
+Reports Page.
 
 This module provides the reporting and analytics page with interactive
 report generation and visualization capabilities.

@@ -1,4 +1,5 @@
-"""LangGraph integration for Orchestrator service.
+"""
+LangGraph integration for Orchestrator service.
 
 This module provides LangGraph workflow orchestration capabilities
 integrated with the existing orchestrator infrastructure.

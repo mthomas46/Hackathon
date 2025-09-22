@@ -1,8 +1,9 @@
-"""Unit tests for Autonomous Systems functionality.
+"""
+Unit tests for Autonomous Systems functionality.
 
-This module contains comprehensive unit tests for autonomous system capabilities,
-including auto-scaling, self-healing, intelligent resource allocation,
-and autonomous optimization loops.
+This module contains comprehensive unit tests for autonomous system
+capabilities, including auto-scaling, self-healing, intelligent resource
+allocation, and autonomous optimization loops.
 """
 
 import os

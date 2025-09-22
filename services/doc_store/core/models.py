@@ -1,4 +1,5 @@
-"""Core request and response models for Doc Store service.
+"""
+Core request and response models for Doc Store service.
 
 Consolidated and simplified from the original 595-line file.
 """

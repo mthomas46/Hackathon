@@ -1,4 +1,4 @@
-"""Summarization Request Value Object"""
+"""Summarization Request Value Object."""
 
 from typing import Any, Dict, List, Optional
 

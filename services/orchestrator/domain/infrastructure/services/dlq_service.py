@@ -1,4 +1,4 @@
-"""DLQ Service Domain Service"""
+"""DLQ Service Domain Service."""
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -79,7 +79,11 @@ class DLQService:
         return events[start_idx:end_idx]
 
     def retry_dlq_events(self, dlq_ids: List[str]) -> Dict[str, Any]:
-        """Retry DLQ events. Returns retry results."""
+        """
+        Retry DLQ events.
+
+        Returns retry results.
+        """
         results = {"total_requested": len(dlq_ids), "retried": [], "failed": [], "exhausted": []}
 
         for dlq_id in dlq_ids:
@@ -152,7 +156,11 @@ class DLQService:
         }
 
     def cleanup_old_events(self, max_age_hours: int = 24) -> int:
-        """Remove events older than specified hours. Returns count removed."""
+        """
+        Remove events older than specified hours.
+
+        Returns count removed.
+        """
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
         events_to_remove = []
 

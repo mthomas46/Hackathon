@@ -1,6 +1,8 @@
-"""Models for Summarizer Hub service.
+"""
+Models for Summarizer Hub service.
 
-Pydantic models for API requests and responses in the Summarizer Hub service.
+Pydantic models for API requests and responses in the Summarizer Hub
+service.
 """
 
 from typing import Any, Dict, List, Optional

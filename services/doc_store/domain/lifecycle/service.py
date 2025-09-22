@@ -1,4 +1,5 @@
-"""Lifecycle management service for business logic operations.
+"""
+Lifecycle management service for business logic operations.
 
 Handles lifecycle policy evaluation and automated transitions.
 """

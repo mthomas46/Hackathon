@@ -1,4 +1,5 @@
-"""Provider management for Summarizer Hub.
+"""
+Provider management for Summarizer Hub.
 
 Handles provider registry and orchestration.
 """

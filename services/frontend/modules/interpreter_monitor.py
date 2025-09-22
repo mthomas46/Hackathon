@@ -1,4 +1,5 @@
-"""Interpreter monitoring infrastructure for Frontend service.
+"""
+Interpreter monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for interpreter
 service natural language processing and workflow generation.
@@ -12,7 +13,8 @@ from .shared_utils import get_frontend_clients, get_interpreter_url
 
 
 class InterpreterMonitor:
-    """Monitor for interpreter service natural language processing and workflow operations."""
+    """Monitor for interpreter service natural language processing and workflow
+    operations."""
 
     def __init__(self):
         self._interpretations = []
@@ -134,7 +136,8 @@ class InterpreterMonitor:
     async def execute_workflow(
         self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Execute a workflow from a natural language query and cache the result."""
+        """Execute a workflow from a natural language query and cache the
+        result."""
         try:
             clients = get_frontend_clients()
             interpreter_url = get_interpreter_url()

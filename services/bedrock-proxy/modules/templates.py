@@ -1,7 +1,9 @@
-"""Template processing and rendering for bedrock proxy service.
+"""
+Template processing and rendering for bedrock proxy service.
 
-This module defines response templates for structured AI output generation,
-including template detection, content building, and format rendering.
+This module defines response templates for structured AI output
+generation, including template detection, content building, and format
+rendering.
 """
 
 from typing import Dict, List
@@ -83,7 +85,8 @@ VALID_FORMATS = SUPPORTED_FORMATS
 
 
 def detect_template_from_prompt(prompt: str) -> str:
-    """Auto-detect the most appropriate template type from prompt content.
+    """
+    Auto-detect the most appropriate template type from prompt content.
 
     Analyzes the input prompt text to determine which response template
     would be most suitable based on keywords and context.
@@ -115,7 +118,8 @@ def detect_template_from_prompt(prompt: str) -> str:
 
 
 def generate_default_title(template: str) -> str:
-    """Generate an appropriate default title for the given template type.
+    """
+    Generate an appropriate default title for the given template type.
 
     Args:
         template: Template name (e.g., 'summary', 'risks', etc.)
@@ -134,7 +138,8 @@ def generate_default_title(template: str) -> str:
 
 
 def build_template_sections(template: str, prompt: str) -> Dict[str, List[str]]:
-    """Build structured content sections for the specified template type.
+    """
+    Build structured content sections for the specified template type.
 
     Processes the template configuration and generates appropriate content
     sections based on the template type and input prompt.
@@ -167,7 +172,8 @@ def build_template_sections(template: str, prompt: str) -> Dict[str, List[str]]:
 
 
 def render_markdown(title: str, sections: Dict[str, List[str]]) -> str:
-    """Render structured content sections as formatted Markdown text.
+    """
+    Render structured content sections as formatted Markdown text.
 
     Args:
         title: Main title for the document
@@ -188,7 +194,8 @@ def render_markdown(title: str, sections: Dict[str, List[str]]) -> str:
 
 
 def render_text(title: str, sections: Dict[str, List[str]]) -> str:
-    """Render structured content sections as plain text format.
+    """
+    Render structured content sections as plain text format.
 
     Args:
         title: Main title for the document

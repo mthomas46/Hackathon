@@ -1,4 +1,4 @@
-"""Infrastructure Persistence Layer"""
+"""Infrastructure Persistence Layer."""
 
 from .in_memory import *
 from .interfaces import *

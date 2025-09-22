@@ -1,8 +1,9 @@
-"""Integration Tests for WebSocket Communication.
+"""
+Integration Tests for WebSocket Communication.
 
-This module contains comprehensive tests for WebSocket endpoints,
-real-time event broadcasting, and client-server communication patterns.
-Tests cover connection handling, message routing, and error scenarios.
+This module contains comprehensive tests for WebSocket endpoints, real-
+time event broadcasting, and client-server communication patterns. Tests
+cover connection handling, message routing, and error scenarios.
 """
 
 import asyncio
@@ -179,7 +180,8 @@ class TestWebSocketEventBroadcasting:
 
     @pytest.mark.asyncio
     async def test_broadcast_to_simulation_clients(self):
-        """Test broadcasting messages to all clients of a specific simulation."""
+        """Test broadcasting messages to all clients of a specific
+        simulation."""
         handler = SimulationWebSocketHandler()
 
         # Mock clients

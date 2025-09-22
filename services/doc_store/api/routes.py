@@ -1,4 +1,5 @@
-"""API routes for Doc Store service.
+"""
+API routes for Doc Store service.
 
 Consolidated route definitions for all endpoints.
 """

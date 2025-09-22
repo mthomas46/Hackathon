@@ -1,7 +1,8 @@
-"""Performance Charts Components.
+"""
+Performance Charts Components.
 
-This module provides chart components for displaying performance metrics,
-monitoring data, and system analytics visualizations.
+This module provides chart components for displaying performance
+metrics, monitoring data, and system analytics visualizations.
 """
 
 from datetime import datetime
@@ -29,7 +30,8 @@ def render_performance_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render performance metrics chart.
+    """
+    Render performance metrics chart.
 
     Args:
         metrics_data: Performance metrics data
@@ -136,7 +138,8 @@ def render_system_health_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render system health monitoring chart.
+    """
+    Render system health monitoring chart.
 
     Args:
         health_data: System health metrics
@@ -249,7 +252,8 @@ def render_response_time_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render response time analysis chart.
+    """
+    Render response time analysis chart.
 
     Args:
         response_data: Response time metrics
@@ -363,7 +367,8 @@ def render_throughput_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render system throughput chart.
+    """
+    Render system throughput chart.
 
     Args:
         throughput_data: Throughput metrics
@@ -467,7 +472,8 @@ def render_error_rate_chart(
     width: Optional[int] = None,
     height: Optional[int] = 400,
 ) -> None:
-    """Render error rate analysis chart.
+    """
+    Render error rate analysis chart.
 
     Args:
         error_data: Error rate metrics

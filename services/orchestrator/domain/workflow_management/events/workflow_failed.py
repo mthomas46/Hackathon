@@ -1,4 +1,4 @@
-"""Workflow Failed Event"""
+"""Workflow Failed Event."""
 
 
 from .base_event import DomainEvent

@@ -1,4 +1,4 @@
-"""Document Metadata Value Object"""
+"""Document Metadata Value Object."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

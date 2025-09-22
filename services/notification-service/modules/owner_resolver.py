@@ -1,4 +1,5 @@
-"""Owner resolution and caching for notification service.
+"""
+Owner resolution and caching for notification service.
 
 Provides efficient mapping of owner names to notification targets with
 configurable caching to reduce resolution overhead.
@@ -11,7 +12,8 @@ from typing import Any, Dict
 
 
 class OwnerResolver:
-    """Manages owner-to-target resolution with TTL-based caching.
+    """
+    Manages owner-to-target resolution with TTL-based caching.
 
     This class handles the mapping of owner names/handles to their
     notification targets (email, webhook URLs, etc.) with automatic
@@ -19,7 +21,8 @@ class OwnerResolver:
     """
 
     def __init__(self, cache_ttl: float = 300.0):
-        """Initialize the owner resolver with cache settings.
+        """
+        Initialize the owner resolver with cache settings.
 
         Args:
             cache_ttl: Time-to-live for cached resolutions in seconds (default: 300)
@@ -28,7 +31,8 @@ class OwnerResolver:
         self._cache_ttl_seconds = cache_ttl
 
     def resolve_owners(self, owners: list[str]) -> Dict[str, Dict[str, str]]:
-        """Resolve multiple owner names to their notification targets.
+        """
+        Resolve multiple owner names to their notification targets.
 
         Processes a list of owner identifiers and returns their corresponding
         notification targets. Uses caching for performance and applies
@@ -61,7 +65,8 @@ class OwnerResolver:
         return resolved_targets
 
     def _is_cache_entry_valid(self, cached_entry: Dict[str, Any]) -> bool:
-        """Check if a cached resolution entry is still valid based on TTL.
+        """
+        Check if a cached resolution entry is still valid based on TTL.
 
         Args:
             cached_entry: Cached entry with timestamp
@@ -74,7 +79,8 @@ class OwnerResolver:
         return elapsed_seconds <= self._cache_ttl_seconds
 
     def _resolve_single_owner(self, owner: str) -> Dict[str, str]:
-        """Resolve a single owner name to notification target information.
+        """
+        Resolve a single owner name to notification target information.
 
         Args:
             owner: Owner name to resolve
@@ -95,7 +101,8 @@ class OwnerResolver:
         return target_info
 
     def _load_owner_mapping(self) -> Dict[str, Dict[str, str]]:
-        """Load owner-to-target mapping from configuration sources.
+        """
+        Load owner-to-target mapping from configuration sources.
 
         Attempts to load owner mappings from environment variables or files.
         Supports both JSON environment variables and external configuration files.
@@ -128,7 +135,9 @@ class OwnerResolver:
         return mapping_data
 
     def _apply_resolution_heuristics(self, owner: str) -> Dict[str, str]:
-        """Apply intelligent heuristics to resolve owners without explicit mappings.
+        """
+        Apply intelligent heuristics to resolve owners without explicit
+        mappings.
 
         Uses pattern matching to infer notification targets from owner names:
         - URLs are treated as webhook endpoints
@@ -149,10 +158,11 @@ class OwnerResolver:
             return {"handle": owner}
 
     def clear_cache(self) -> None:
-        """Clear all cached owner resolutions.
+        """
+        Clear all cached owner resolutions.
 
-        Forces fresh resolution of all owners on next request.
-        Useful for testing or when configuration changes.
+        Forces fresh resolution of all owners on next request. Useful
+        for testing or when configuration changes.
         """
         self._resolution_cache.clear()
 

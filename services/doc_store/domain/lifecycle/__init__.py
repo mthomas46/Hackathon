@@ -1,4 +1,6 @@
-"""Lifecycle management domain for Doc Store service.
+"""
+Lifecycle management domain for Doc Store service.
 
-Provides policy-based retention, archival, and automated lifecycle transitions.
+Provides policy-based retention, archival, and automated lifecycle
+transitions.
 """

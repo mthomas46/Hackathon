@@ -1,8 +1,9 @@
-"""Unit tests for Real-time Monitoring functionality.
+"""
+Unit tests for Real-time Monitoring functionality.
 
-This module contains comprehensive unit tests for real-time monitoring capabilities,
-including WebSocket connections, event streaming, live metrics updates,
-and performance monitoring under load.
+This module contains comprehensive unit tests for real-time monitoring
+capabilities, including WebSocket connections, event streaming, live
+metrics updates, and performance monitoring under load.
 """
 
 import asyncio

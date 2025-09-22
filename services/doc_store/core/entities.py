@@ -1,4 +1,5 @@
-"""Business domain entities for Doc Store service.
+"""
+Business domain entities for Doc Store service.
 
 Defines core business objects and their relationships.
 """

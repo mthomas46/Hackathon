@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Test script for the Simulation Dashboard Service.
+"""
+Test script for the Simulation Dashboard Service.
 
-This script performs basic tests to verify the dashboard service
-is working correctly.
+This script performs basic tests to verify the dashboard service is
+working correctly.
 """
 
 import asyncio

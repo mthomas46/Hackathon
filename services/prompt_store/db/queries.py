@@ -1,4 +1,5 @@
-"""Database query utilities for Prompt Store service.
+"""
+Database query utilities for Prompt Store service.
 
 Provides common database operations and query helpers.
 """

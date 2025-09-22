@@ -1,4 +1,4 @@
-"""Infrastructure Domain Layer"""
+"""Infrastructure Domain Layer."""
 
 from .services import *
 from .value_objects import *

@@ -1,4 +1,4 @@
-"""Base Entity Class"""
+"""Base Entity Class."""
 
 from abc import ABC
 from dataclasses import dataclass

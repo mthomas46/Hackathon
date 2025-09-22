@@ -1,7 +1,8 @@
-"""Source Agent Manager module for CLI service.
+"""
+Source Agent Manager module for CLI service.
 
-Provides power-user operations for source agent including
-document fetching, normalization, and code analysis.
+Provides power-user operations for source agent including document
+fetching, normalization, and code analysis.
 """
 
 from typing import Any, Dict, List, Optional
@@ -26,7 +27,8 @@ class SourceAgentManager(BaseManager):
         return [ServiceNames.SOURCE_AGENT]
 
     async def source_agent_menu(self):
-        """Main source agent management menu with enhanced interactive experience."""
+        """Main source agent management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Source Agent Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -40,7 +42,11 @@ class SourceAgentManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.document_fetching_menu()
         elif choice == "2":

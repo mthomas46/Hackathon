@@ -1,4 +1,4 @@
-"""DTOs for Service Registry API"""
+"""DTOs for Service Registry API."""
 
 from typing import Any, Dict, List, Optional
 

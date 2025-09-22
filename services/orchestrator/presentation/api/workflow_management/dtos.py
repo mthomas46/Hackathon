@@ -1,4 +1,4 @@
-"""DTOs for Workflow Management API"""
+"""DTOs for Workflow Management API."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional

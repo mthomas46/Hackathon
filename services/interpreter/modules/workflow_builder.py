@@ -1,7 +1,9 @@
-"""Workflow building functionality for the Interpreter service.
+"""
+Workflow building functionality for the Interpreter service.
 
-This module contains the WorkflowBuilder class and related functionality,
-extracted from the main interpreter service to improve maintainability.
+This module contains the WorkflowBuilder class and related
+functionality, extracted from the main interpreter service to improve
+maintainability.
 """
 
 from typing import TYPE_CHECKING, Any, Dict, Optional

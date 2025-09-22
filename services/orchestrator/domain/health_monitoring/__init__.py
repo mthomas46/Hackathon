@@ -1,4 +1,4 @@
-"""Health Monitoring Domain Layer"""
+"""Health Monitoring Domain Layer."""
 
 from .services import *
 from .value_objects import *

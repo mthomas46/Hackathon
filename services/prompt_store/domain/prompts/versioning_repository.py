@@ -1,4 +1,5 @@
-"""Prompt versioning repository implementation.
+"""
+Prompt versioning repository implementation.
 
 Handles database operations for prompt versions.
 """

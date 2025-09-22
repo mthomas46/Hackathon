@@ -1,4 +1,4 @@
-"""Use Cases for Service Registry"""
+"""Use Cases for Service Registry."""
 
 from typing import List, Optional
 

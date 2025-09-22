@@ -1,4 +1,5 @@
-"""API Routes for Infrastructure Management
+"""
+API Routes for Infrastructure Management.
 
 Provides endpoints for:
 - Distributed transaction management (Sagas)

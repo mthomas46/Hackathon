@@ -16,7 +16,8 @@ class LLMGatewayClient:
     """Client for interacting with the LLM Gateway service."""
 
     def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
-        """Initialize the LLM Gateway client.
+        """
+        Initialize the LLM Gateway client.
 
         Args:
             base_url: Base URL of the LLM Gateway service

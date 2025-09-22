@@ -302,7 +302,8 @@ class TransactionService(ApplicationService):
 
 
 class UnitOfWork:
-    """Unit of Work pattern implementation for managing transactions and domain object state."""
+    """Unit of Work pattern implementation for managing transactions and domain
+    object state."""
 
     def __init__(self, transaction_service: TransactionService):
         """Initialize unit of work."""

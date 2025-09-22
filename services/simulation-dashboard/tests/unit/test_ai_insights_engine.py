@@ -1,8 +1,9 @@
-"""Unit tests for AI Insights Engine functionality.
+"""
+Unit tests for AI Insights Engine functionality.
 
-This module contains comprehensive unit tests for the AI insights engine,
-including pattern recognition, anomaly detection, predictive modeling,
-and machine learning pipeline validation.
+This module contains comprehensive unit tests for the AI insights
+engine, including pattern recognition, anomaly detection, predictive
+modeling, and machine learning pipeline validation.
 """
 
 import os
@@ -112,7 +113,8 @@ class TestAIInsightsEngine:
 
     @patch("pages.ai_insights.SKLEARN_AVAILABLE", False)
     def test_perform_pattern_analysis_without_sklearn(self):
-        """Test pattern analysis fallback when scikit-learn is not available."""
+        """Test pattern analysis fallback when scikit-learn is not
+        available."""
         result = perform_pattern_analysis(self.sample_data)
 
         # Should return basic statistical analysis

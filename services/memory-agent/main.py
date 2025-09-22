@@ -173,7 +173,8 @@ async def memory_health():
 
 
 class PutMemoryRequest(BaseModel):
-    """Request model for storing memory items.
+    """
+    Request model for storing memory items.
 
     Contains a single memory item to be stored in the memory agent's
     operational context storage with TTL-based expiration.

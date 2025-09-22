@@ -1,4 +1,4 @@
-"""Value Objects for Query Processing Domain"""
+"""Value Objects for Query Processing Domain."""
 
 from .natural_language_query import NaturalLanguageQuery
 from .query_confidence import QueryConfidence

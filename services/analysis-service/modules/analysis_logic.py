@@ -1,4 +1,5 @@
-"""Analysis logic and detection functions for the Analysis Service.
+"""
+Analysis logic and detection functions for the Analysis Service.
 
 This module contains all the core analysis and detection functionality,
 extracted from the main analysis service to improve maintainability.
@@ -79,7 +80,8 @@ def _create_finding(
 
 
 def _extract_text_overlap(text1: str, text2: str) -> float:
-    """Calculate text overlap ratio between two texts with performance optimizations."""
+    """Calculate text overlap ratio between two texts with performance
+    optimizations."""
     if not text1 or not text2:
         return 0.0
 
@@ -137,7 +139,8 @@ def _extract_endpoints_from_apis(apis: List[Dict[str, Any]]) -> Set[str]:
 
 
 def detect_readme_drift(docs: List[Document]) -> List[Finding]:
-    """Detect drift between README and other documentation with improved analysis and performance optimizations."""
+    """Detect drift between README and other documentation with improved
+    analysis and performance optimizations."""
     findings = []
     context = build_analysis_context("detect_readme_drift", doc_count=len(docs))
 
@@ -203,7 +206,8 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
 
 
 def detect_api_mismatches(docs: List[Document], apis: List[Dict[str, Any]]) -> List[Finding]:
-    """Detect mismatches between API documentation and implementation with improved analysis."""
+    """Detect mismatches between API documentation and implementation with
+    improved analysis."""
     findings = []
     context = build_analysis_context("detect_api_mismatches", docs_count=len(docs), apis_count=len(apis))
 
@@ -283,7 +287,8 @@ def _calculate_health_score(findings: List[Finding]) -> int:
 
 
 def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
-    """Generate comprehensive summary report of findings with improved analysis."""
+    """Generate comprehensive summary report of findings with improved
+    analysis."""
     context = build_analysis_context("generate_summary_report", total_findings=len(findings))
 
     try:

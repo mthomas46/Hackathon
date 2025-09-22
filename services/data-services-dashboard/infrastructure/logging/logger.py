@@ -1,6 +1,8 @@
-"""Logging configuration for the Data Services Dashboard Service.
+"""
+Logging configuration for the Data Services Dashboard Service.
 
-This module provides centralized logging setup following ecosystem patterns.
+This module provides centralized logging setup following ecosystem
+patterns.
 """
 
 import logging

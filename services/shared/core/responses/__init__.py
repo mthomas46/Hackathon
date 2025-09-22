@@ -1,5 +1,5 @@
 """
-Core Response Models
+Core Response Models.
 
 Standardized API response models and helpers.
 """

@@ -1,4 +1,5 @@
-"""Secure Analyzer monitoring infrastructure for Frontend service.
+"""
+Secure Analyzer monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for secure analyzer
 service content detection, policy enforcement, and secure summarization.
@@ -12,7 +13,8 @@ from .shared_utils import get_frontend_clients, get_secure_analyzer_url
 
 
 class SecureAnalyzerMonitor:
-    """Monitor for secure analyzer service content detection and policy enforcement."""
+    """Monitor for secure analyzer service content detection and policy
+    enforcement."""
 
     def __init__(self):
         self._detections = []

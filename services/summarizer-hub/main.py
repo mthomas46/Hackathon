@@ -2294,7 +2294,8 @@ class JiraClient:
     def _handle_inconclusive_recommendations(
         self, documents: List[Dict[str, Any]], recommendations: List[Dict[str, Any]], confidence_threshold: float
     ) -> Dict[str, Any]:
-        """Handle cases where information is insufficient for confident recommendations."""
+        """Handle cases where information is insufficient for confident
+        recommendations."""
         inconclusive_handling = {
             "insufficient_data_warnings": [],
             "data_quality_assessment": {},
@@ -2403,7 +2404,8 @@ class JiraClient:
     def _analyze_timeline_and_documents(
         self, documents: List[Dict[str, Any]], timeline: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Analyze timeline and document placement for coherence and completeness."""
+        """Analyze timeline and document placement for coherence and
+        completeness."""
         timeline_analysis = {
             "timeline_structure": {},
             "document_placement": {},
@@ -2506,7 +2508,8 @@ class JiraClient:
     def _find_relevant_timeline_phase(
         self, doc_date: datetime, timeline_phases: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
-        """Find the most relevant timeline phase for a document based on date."""
+        """Find the most relevant timeline phase for a document based on
+        date."""
         # This is a simplified version - in practice you'd need to know the project start date
         # For now, we'll assume phases are in chronological order
         for phase in timeline_phases:
@@ -2984,7 +2987,8 @@ async def generate_recommendations(request: RecommendationRequest):
 
 @app.post("/api/v1/recommendations")
 async def recommendations_v1(request: RecommendationRequest):
-    """Generate document recommendations using standardized API v1 interface."""
+    """Generate document recommendations using standardized API v1
+    interface."""
     try:
         result = await summarizer.generate_recommendations(
             request.documents,

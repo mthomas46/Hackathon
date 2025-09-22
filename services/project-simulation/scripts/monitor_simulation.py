@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Terminal Monitor for Project Simulation Service.
+"""
+Terminal Monitor for Project Simulation Service.
 
 This script provides a command-line interface for monitoring simulation execution
 with rich terminal UI, progress bars, and real-time status updates.

@@ -1,4 +1,4 @@
-"""Service Registry Application Layer"""
+"""Service Registry Application Layer."""
 
 from .commands import *
 from .queries import *

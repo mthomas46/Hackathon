@@ -1,4 +1,4 @@
-"""Query Intent Value Object"""
+"""Query Intent Value Object."""
 
 from enum import Enum
 

@@ -1,7 +1,8 @@
-"""Services Overview monitoring infrastructure for Frontend service.
+"""
+Services Overview monitoring infrastructure for Frontend service.
 
-Provides comprehensive system-wide monitoring and health dashboard
-for all services in the LLM Documentation Ecosystem.
+Provides comprehensive system-wide monitoring and health dashboard for
+all services in the LLM Documentation Ecosystem.
 """
 
 from typing import Any, Dict

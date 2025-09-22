@@ -286,7 +286,8 @@ def circuit_breaker(
 
 
 class AdaptiveCircuitBreaker(CircuitBreaker):
-    """Adaptive circuit breaker that adjusts thresholds based on performance."""
+    """Adaptive circuit breaker that adjusts thresholds based on
+    performance."""
 
     def __init__(self, config: CircuitBreakerConfig, adaptation_interval: int = 300):
         """Initialize adaptive circuit breaker."""

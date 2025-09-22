@@ -1,4 +1,5 @@
-"""CLI Service UI handlers for Frontend service.
+"""
+CLI Service UI handlers for Frontend service.
 
 Handles terminal pass-through interface for CLI service operations,
 providing a web-based terminal for full CLI functionality.

@@ -1,4 +1,5 @@
-"""Infrastructure Manager module for CLI service.
+"""
+Infrastructure Manager module for CLI service.
 
 Provides power-user operations for infrastructure monitoring including
 Redis, DLQ, sagas, tracing, and system infrastructure management.
@@ -20,7 +21,8 @@ class InfrastructureManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def infrastructure_menu(self):
-        """Main infrastructure management menu with enhanced interactive experience."""
+        """Main infrastructure management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Infrastructure Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -35,7 +37,11 @@ class InfrastructureManager(BaseManager):
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.redis_operations_menu()
         elif choice == "2":

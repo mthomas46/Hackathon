@@ -1,4 +1,4 @@
-"""Query Processing Application Layer"""
+"""Query Processing Application Layer."""
 
 from .commands import *
 from .queries import *

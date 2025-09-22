@@ -1,4 +1,5 @@
-"""Consolidated observability utilities for monitoring and tracing.
+"""
+Consolidated observability utilities for monitoring and tracing.
 
 Combines distributed tracing and logging functionality.
 """

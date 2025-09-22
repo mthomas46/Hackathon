@@ -38,7 +38,8 @@ class TestDocumentTypeValidation:
             assert hasattr(DocumentType, doc_type), f"Missing document type: {doc_type}"
 
     def test_extended_document_type_coverage(self):
-        """Test that all expected document types are available in the service."""
+        """Test that all expected document types are available in the
+        service."""
         expected_types = [
             "CONFLUENCE_PAGE",
             "JIRA_TICKET",

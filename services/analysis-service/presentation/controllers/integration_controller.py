@@ -20,34 +20,41 @@ class IntegrationController:
 
         @self.router.get("/integration/health")
         async def get_integration_health_endpoint():
-            """Check integration health with other services.
+            """
+            Check integration health with other services.
 
-            Provides comprehensive health status for all service integrations
-            including connectivity, response times, and error rates.
+            Provides comprehensive health status for all service
+            integrations including connectivity, response times, and
+            error rates.
             """
             return await integration_handlers.get_integration_health()
 
         @self.router.post("/integration/analyze-with-prompt")
         async def analyze_with_prompt_endpoint(request: Dict[str, Any]):
-            """Analyze using prompts from Prompt Store.
+            """
+            Analyze using prompts from Prompt Store.
 
-            Performs analysis using customizable prompts from the Prompt Store
-            service, enabling flexible and context-aware analysis workflows.
+            Performs analysis using customizable prompts from the Prompt
+            Store service, enabling flexible and context-aware analysis
+            workflows.
             """
             return await integration_handlers.analyze_with_prompt(request)
 
         @self.router.post("/integration/natural-language-analysis")
         async def natural_language_analysis_endpoint(request: Dict[str, Any]):
-            """Analyze using natural language queries.
+            """
+            Analyze using natural language queries.
 
-            Processes natural language queries to perform intelligent analysis
-            and provide human-readable insights and recommendations.
+            Processes natural language queries to perform intelligent
+            analysis and provide human-readable insights and
+            recommendations.
             """
             return await integration_handlers.natural_language_analysis(request)
 
         @self.router.get("/integration/prompts/categories")
         async def get_prompt_categories_endpoint():
-            """Get available prompt categories.
+            """
+            Get available prompt categories.
 
             Returns list of available prompt categories and templates
             for different types of analysis and use cases.
@@ -56,10 +63,12 @@ class IntegrationController:
 
         @self.router.post("/integration/log-analysis")
         async def log_analysis_usage_endpoint(request: Dict[str, Any]):
-            """Log analysis usage for analytics.
+            """
+            Log analysis usage for analytics.
 
-            Records analysis usage patterns for analytics and optimization
-            of the analysis service based on actual usage patterns.
+            Records analysis usage patterns for analytics and
+            optimization of the analysis service based on actual usage
+            patterns.
             """
             return await integration_handlers.log_analysis_usage(request)
 

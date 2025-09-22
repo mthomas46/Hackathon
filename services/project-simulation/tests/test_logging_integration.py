@@ -275,7 +275,8 @@ class TestProjectSimulationLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_simulation_creation_with_teams_and_milestones_logging(self, client, mock_logger_client):
-        """Test logging for simulations with complex team and milestone structures."""
+        """Test logging for simulations with complex team and milestone
+        structures."""
         # Mock complex simulation result
         mock_result = {
             "success": True,
@@ -412,7 +413,8 @@ class TestProjectSimulationLoggingIntegration:
 
     @pytest.mark.asyncio
     async def test_performance_metrics_not_tracked_for_creation(self, client, mock_logger_client):
-        """Test that performance metrics are not tracked for simulation creation (unlike some other services)."""
+        """Test that performance metrics are not tracked for simulation
+        creation (unlike some other services)."""
         # Mock successful creation
         mock_result = {
             "success": True,

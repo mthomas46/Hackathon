@@ -1,4 +1,4 @@
-"""DTOs for Query Processing API"""
+"""DTOs for Query Processing API."""
 
 from typing import Any, Dict, List, Optional
 

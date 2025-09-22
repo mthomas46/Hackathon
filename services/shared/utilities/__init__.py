@@ -1,4 +1,5 @@
-"""Shared Utilities Package.
+"""
+Shared Utilities Package.
 
 This package contains utility functions and helpers used across all services
 in the LLM Documentation Ecosystem.

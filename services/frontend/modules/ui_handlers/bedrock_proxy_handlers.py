@@ -1,4 +1,5 @@
-"""Bedrock Proxy UI handlers for Frontend service.
+"""
+Bedrock Proxy UI handlers for Frontend service.
 
 Handles bedrock proxy service visualization, including AI invocation
 monitoring, template usage tracking, and response analytics.

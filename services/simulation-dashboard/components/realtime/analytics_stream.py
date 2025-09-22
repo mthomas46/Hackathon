@@ -1,7 +1,9 @@
-"""Real-Time Analytics Stream Component.
+"""
+Real-Time Analytics Stream Component.
 
-This module provides real-time analytics streaming capabilities that connect
-to multiple ecosystem services to provide live data analytics and insights.
+This module provides real-time analytics streaming capabilities that
+connect to multiple ecosystem services to provide live data analytics
+and insights.
 """
 
 import asyncio

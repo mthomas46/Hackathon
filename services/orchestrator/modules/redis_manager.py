@@ -155,7 +155,8 @@ class CircuitBreaker:
 
 
 class RedisManager:
-    """Enterprise Redis connection manager with circuit breaker and retry logic."""
+    """Enterprise Redis connection manager with circuit breaker and retry
+    logic."""
 
     def __init__(
         self,

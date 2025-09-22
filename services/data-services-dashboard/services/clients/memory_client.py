@@ -16,7 +16,8 @@ class MemoryAgentClient:
     """Client for interacting with the Memory Agent service."""
 
     def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
-        """Initialize the memory agent client.
+        """
+        Initialize the memory agent client.
 
         Args:
             base_url: Base URL of the Memory Agent service

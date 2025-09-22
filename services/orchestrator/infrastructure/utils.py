@@ -1,7 +1,9 @@
-"""Infrastructure Utilities
+"""
+Infrastructure Utilities.
 
-Utility functions for infrastructure concerns in the orchestrator service.
-These functions handle service communication, URL resolution, and request preparation.
+Utility functions for infrastructure concerns in the orchestrator
+service. These functions handle service communication, URL resolution,
+and request preparation.
 """
 
 import os

@@ -1,7 +1,9 @@
-"""Source Agent UI handlers for Frontend service.
+"""
+Source Agent UI handlers for Frontend service.
 
 Handles source agent service visualization, including document fetching,
-data normalization, and code analysis operations across GitHub, Jira, and Confluence.
+data normalization, and code analysis operations across GitHub, Jira,
+and Confluence.
 """
 
 

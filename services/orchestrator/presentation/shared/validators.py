@@ -1,4 +1,5 @@
-"""Shared DTO Validators
+"""
+Shared DTO Validators.
 
 Common validation patterns used across all DTOs to reduce duplication
 and ensure consistency.

@@ -1,4 +1,5 @@
-"""Centralized Logging Client for Log Collector Service Integration.
+"""
+Centralized Logging Client for Log Collector Service Integration.
 
 This module provides a unified logging client that all services can use to send
 structured logs to the centralized log-collector service. It handles async
@@ -33,10 +34,11 @@ import httpx
 
 
 class LogCollectorClient:
-    """Async client for sending logs to the centralized log-collector service.
+    """
+    Async client for sending logs to the centralized log-collector service.
 
-    Provides a clean interface for services to submit structured logs with
-    automatic batching, retries, and error handling.
+    Provides a clean interface for services to submit structured logs
+    with automatic batching, retries, and error handling.
     """
 
     def __init__(
@@ -48,7 +50,8 @@ class LogCollectorClient:
         max_retries: int = 3,
         timeout: float = 10.0,
     ):
-        """Initialize the log collector client.
+        """
+        Initialize the log collector client.
 
         Args:
             service_name: Name of the service sending logs
@@ -276,10 +279,11 @@ _clients_lock = asyncio.Lock()
 
 
 async def get_log_collector_client(service_name: str) -> LogCollectorClient:
-    """Get or create a log collector client for the specified service.
+    """
+    Get or create a log collector client for the specified service.
 
-    This function provides a centralized way to get logging clients
-    and ensures only one client per service is created.
+    This function provides a centralized way to get logging clients and
+    ensures only one client per service is created.
     """
     async with _clients_lock:
         if service_name not in _clients:

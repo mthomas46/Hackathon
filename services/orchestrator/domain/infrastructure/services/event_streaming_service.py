@@ -1,4 +1,4 @@
-"""Event Streaming Service Domain Service"""
+"""Event Streaming Service Domain Service."""
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -213,6 +213,10 @@ class EventStreamingService:
         }
 
     def cleanup_old_events(self, max_age_hours: int = 24) -> int:
-        """Clean up events older than specified hours. Returns count removed."""
+        """
+        Clean up events older than specified hours.
+
+        Returns count removed.
+        """
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
         return self.clear_events(before_timestamp=cutoff_time)["cleared_count"]

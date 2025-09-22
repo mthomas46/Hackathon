@@ -1,7 +1,8 @@
-"""Shared utilities for analysis service modules.
+"""
+Shared utilities for analysis service modules.
 
-This module contains common patterns and utilities used across all analysis service modules
-to eliminate redundancy and ensure consistency.
+This module contains common patterns and utilities used across all
+analysis service modules to eliminate redundancy and ensure consistency.
 """
 
 import os

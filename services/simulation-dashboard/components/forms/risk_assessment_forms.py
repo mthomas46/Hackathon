@@ -1,4 +1,5 @@
-"""Risk Assessment Form Components.
+"""
+Risk Assessment Form Components.
 
 This module provides form components for assessing project risks,
 calculating success probability, and generating mitigation strategies.
@@ -13,7 +14,8 @@ import streamlit as st
 def render_risk_assessment_form(
     risk_key: str = "risk_config", title: str = "⚠️ Risk Assessment", project_config: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Render risk assessment form for project risk evaluation.
+    """
+    Render risk assessment form for project risk evaluation.
 
     Args:
         risk_key: Key for storing risk configuration in session state

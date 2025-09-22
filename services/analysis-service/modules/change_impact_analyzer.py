@@ -1,7 +1,9 @@
-"""Change Impact Analysis module for Analysis Service.
+"""
+Change Impact Analysis module for Analysis Service.
 
-Analyzes how document changes affect related content, dependencies, and the overall
-documentation ecosystem, providing insights for change management and impact assessment.
+Analyzes how document changes affect related content, dependencies, and
+the overall documentation ecosystem, providing insights for change
+management and impact assessment.
 """
 
 import logging
@@ -38,7 +40,8 @@ logger = logging.getLogger(__name__)
 
 
 class ChangeImpactAnalyzer:
-    """Analyzes the impact of document changes on related content and dependencies."""
+    """Analyzes the impact of document changes on related content and
+    dependencies."""
 
     def __init__(self):
         """Initialize the change impact analyzer."""
@@ -206,7 +209,8 @@ class ChangeImpactAnalyzer:
     def _analyze_semantic_similarity(
         self, source_doc: Dict[str, Any], target_docs: List[Dict[str, Any]]
     ) -> Dict[str, Dict[str, Any]]:
-        """Analyze semantic similarity between source document and target documents."""
+        """Analyze semantic similarity between source document and target
+        documents."""
         if not target_docs:
             return {}
 
@@ -271,7 +275,8 @@ class ChangeImpactAnalyzer:
     def _analyze_content_overlap(
         self, source_doc: Dict[str, Any], target_docs: List[Dict[str, Any]]
     ) -> Dict[str, Dict[str, Any]]:
-        """Analyze content overlap between source document and target documents."""
+        """Analyze content overlap between source document and target
+        documents."""
         if not target_docs:
             return {}
 
@@ -330,7 +335,8 @@ class ChangeImpactAnalyzer:
     def _analyze_relationships(
         self, source_doc: Dict[str, Any], target_docs: List[Dict[str, Any]]
     ) -> Dict[str, Dict[str, Any]]:
-        """Analyze relationships between source document and target documents."""
+        """Analyze relationships between source document and target
+        documents."""
         if not target_docs:
             return {}
 
@@ -732,7 +738,8 @@ class ChangeImpactAnalyzer:
     async def analyze_portfolio_change_impact(
         self, changes: List[Dict[str, Any]], document_portfolio: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Analyze the impact of multiple changes across a document portfolio."""
+        """Analyze the impact of multiple changes across a document
+        portfolio."""
 
         start_time = time.time()
 
@@ -867,7 +874,8 @@ async def analyze_change_impact(
     change_description: Dict[str, Any],
     related_documents: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
-    """Convenience function for change impact analysis.
+    """
+    Convenience function for change impact analysis.
 
     Args:
         document_id: ID of the document being changed
@@ -889,7 +897,8 @@ async def analyze_change_impact(
 async def analyze_portfolio_change_impact(
     changes: List[Dict[str, Any]], document_portfolio: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
-    """Convenience function for portfolio change impact analysis.
+    """
+    Convenience function for portfolio change impact analysis.
 
     Args:
         changes: List of change descriptions

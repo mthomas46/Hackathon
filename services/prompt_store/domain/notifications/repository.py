@@ -1,6 +1,8 @@
-"""Notifications repository.
+"""
+Notifications repository.
 
-Handles data access operations for webhooks, event notifications, and delivery tracking.
+Handles data access operations for webhooks, event notifications, and
+delivery tracking.
 """
 
 import json
@@ -200,7 +202,8 @@ class NotificationsRepository:
         return WebhookEntity.from_dict(row)
 
     def get_active_webhooks_for_event(self, event_type: str) -> List[WebhookEntity]:
-        """Get all active webhooks that should receive a specific event type."""
+        """Get all active webhooks that should receive a specific event
+        type."""
         query = f"""
             SELECT id, name, url, events, secret, is_active, retry_count, timeout_seconds,
                    created_by, created_at, updated_at

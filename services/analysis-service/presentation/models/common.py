@@ -95,7 +95,8 @@ class SearchParams(BaseModel):
 
 
 class ListQueryParams(PaginationParams, SortParams, FilterParams, SearchParams):
-    """Combined parameters for list endpoints with search, filter, sort, and pagination."""
+    """Combined parameters for list endpoints with search, filter, sort, and
+    pagination."""
 
     include_metadata: bool = Field(False, description="Include metadata in response")
     include_related: bool = Field(False, description="Include related entities")

@@ -1,7 +1,9 @@
-"""Environment Management Integration Tests.
+"""
+Environment Management Integration Tests.
 
-This module contains comprehensive integration tests for environment management,
-including environment switching, configuration validation, and service health monitoring.
+This module contains comprehensive integration tests for environment
+management, including environment switching, configuration validation,
+and service health monitoring.
 """
 
 import json

@@ -1,4 +1,5 @@
-"""Memory Agent monitoring infrastructure for Frontend service.
+"""
+Memory Agent monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for memory agent
 service operational context and event summary storage.
@@ -12,7 +13,8 @@ from .shared_utils import get_frontend_clients, get_memory_agent_url
 
 
 class MemoryAgentMonitor:
-    """Monitor for memory agent service operational context and event storage."""
+    """Monitor for memory agent service operational context and event
+    storage."""
 
     def __init__(self):
         self._memory_items = []

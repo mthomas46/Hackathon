@@ -1,4 +1,5 @@
-"""Versioning handlers for API endpoints.
+"""
+Versioning handlers for API endpoints.
 
 Handles versioning and history-related HTTP requests.
 """

@@ -1,4 +1,4 @@
-"""Service Capability Value Object"""
+"""Service Capability Value Object."""
 
 from typing import Optional
 

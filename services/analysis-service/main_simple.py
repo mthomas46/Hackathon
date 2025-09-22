@@ -53,7 +53,8 @@ async def analysis_status():
 
 @app.get("/api/v1/analysis/status")
 async def get_analysis_status_v1():
-    """Get comprehensive status of analysis service capabilities and current state."""
+    """Get comprehensive status of analysis service capabilities and current
+    state."""
 
     # Get basic health info
     basic_health = {
@@ -114,7 +115,7 @@ async def get_analysis_status_v1():
 
 @app.post("/api/analysis/analyze")
 async def analyze_code():
-    """Simplified analysis endpoint"""
+    """Simplified analysis endpoint."""
     return create_success_response(
         data={
             "analysis_id": "analysis_123",

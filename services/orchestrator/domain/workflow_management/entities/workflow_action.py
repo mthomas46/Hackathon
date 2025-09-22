@@ -1,4 +1,4 @@
-"""Workflow Action Entity"""
+"""Workflow Action Entity."""
 
 import uuid
 from dataclasses import dataclass, field
@@ -54,7 +54,8 @@ class WorkflowAction:
             raise ValueError("Timeout must be positive")
 
     def can_execute(self, previous_results: Dict[str, Any]) -> bool:
-        """Check if this action can be executed based on conditions and dependencies."""
+        """Check if this action can be executed based on conditions and
+        dependencies."""
         # Check dependencies
         for dep_id in self.depends_on:
             if dep_id not in previous_results:

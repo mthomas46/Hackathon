@@ -1,5 +1,5 @@
 """
-Reporting Framework
+Reporting Framework.
 
 Human-readable report generation and management utilities.
 """

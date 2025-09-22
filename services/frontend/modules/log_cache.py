@@ -1,4 +1,5 @@
-"""Log caching and streaming infrastructure for Frontend service.
+"""
+Log caching and streaming infrastructure for Frontend service.
 
 Provides caching for log data from the log collector service and
 supports real-time log streaming for visualization and troubleshooting.

@@ -1,8 +1,9 @@
 """
-Orchestrator Service Adapter
+Orchestrator Service Adapter.
 
-Comprehensive adapter for the Orchestrator service providing unified CLI interface
-for workflow management, service registry, peer synchronization, and orchestration features.
+Comprehensive adapter for the Orchestrator service providing unified CLI
+interface for workflow management, service registry, peer
+synchronization, and orchestration features.
 """
 
 import time
@@ -13,7 +14,7 @@ from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 class OrchestratorAdapter(BaseServiceAdapter):
     """
-    Unified adapter for Orchestrator Service
+    Unified adapter for Orchestrator Service.
 
     Provides standardized access to:
     - Service registry management
@@ -25,7 +26,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
     """
 
     def get_service_info(self) -> ServiceInfo:
-        """Get Orchestrator Service information"""
+        """Get Orchestrator Service information."""
         return ServiceInfo(
             name="orchestrator",
             port=5099,
@@ -56,7 +57,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
         )
 
     async def health_check(self) -> CommandResult:
-        """Perform comprehensive health check"""
+        """Perform comprehensive health check."""
         try:
             start_time = time.time()
 
@@ -90,7 +91,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Health check error: {str(e)}")
 
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
-        """Get available Orchestrator commands"""
+        """Get available Orchestrator commands."""
         return [
             ("peers", "List all registered peers", "peers"),
             ("sync_peers", "Synchronize peer registry", "sync_peers"),
@@ -104,7 +105,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
         ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute Orchestrator commands"""
+        """Execute Orchestrator commands."""
         try:
             start_time = time.time()
 
@@ -158,7 +159,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get orchestrator data: {str(e)}")
 
     async def _sync_peers(self) -> CommandResult:
-        """Synchronize peer registry"""
+        """Synchronize peer registry."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/registry/sync-peers"
@@ -172,7 +173,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Peer synchronization failed: {str(e)}")
 
     async def _poll_openapi(self) -> CommandResult:
-        """Poll OpenAPI specifications"""
+        """Poll OpenAPI specifications."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/registry/poll-openapi"
@@ -190,7 +191,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"OpenAPI polling failed: {str(e)}")
 
     async def _demo_e2e(self, params: Dict) -> CommandResult:
-        """Run end-to-end demonstration"""
+        """Run end-to-end demonstration."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/demo/e2e"
@@ -210,7 +211,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"E2E demonstration failed: {str(e)}")
 
     async def _get_registry_status(self) -> CommandResult:
-        """Get registry status"""
+        """Get registry status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/registry/status"
@@ -227,7 +228,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get registry status: {str(e)}")
 
     async def _get_services(self) -> CommandResult:
-        """Get registered services"""
+        """Get registered services."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/services"
@@ -245,7 +246,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get services: {str(e)}")
 
     async def _get_workflow_status(self) -> CommandResult:
-        """Get workflow status"""
+        """Get workflow status."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/workflows/status"
@@ -262,7 +263,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get workflow status: {str(e)}")
 
     async def _register_service(self, params: Dict) -> CommandResult:
-        """Register a new service"""
+        """Register a new service."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/registry/services"

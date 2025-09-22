@@ -15,7 +15,8 @@ class PromptStoreClient:
     """Client for interacting with the Prompt Store service."""
 
     def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
-        """Initialize the prompt store client.
+        """
+        Initialize the prompt store client.
 
         Args:
             base_url: Base URL of the Prompt Store service

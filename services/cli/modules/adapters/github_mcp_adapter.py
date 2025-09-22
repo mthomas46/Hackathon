@@ -1,8 +1,9 @@
 """
-GitHub MCP Service Adapter
+GitHub MCP Service Adapter.
 
-Comprehensive adapter for the GitHub MCP service providing unified CLI interface
-for GitHub tool invocation, repository operations, and GitHub API interactions.
+Comprehensive adapter for the GitHub MCP service providing unified CLI
+interface for GitHub tool invocation, repository operations, and GitHub
+API interactions.
 """
 
 import time
@@ -13,7 +14,7 @@ from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 class GitHubMCPAdapter(BaseServiceAdapter):
     """
-    Unified adapter for GitHub MCP Service
+    Unified adapter for GitHub MCP Service.
 
     Provides standardized access to:
     - GitHub repository operations
@@ -25,7 +26,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
     """
 
     def get_service_info(self) -> ServiceInfo:
-        """Get GitHub MCP Service information"""
+        """Get GitHub MCP Service information."""
         return ServiceInfo(
             name="github-mcp",
             port=5072,
@@ -57,7 +58,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
         )
 
     async def health_check(self) -> CommandResult:
-        """Perform comprehensive health check"""
+        """Perform comprehensive health check."""
         try:
             start_time = time.time()
 
@@ -83,7 +84,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Health check error: {str(e)}")
 
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
-        """Get available GitHub MCP commands"""
+        """Get available GitHub MCP commands."""
         return [
             ("list_repos", "List GitHub repositories", "list_repos [owner] [limit]"),
             ("get_repo", "Get repository information", "get_repo [owner/repo]"),
@@ -100,7 +101,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
         ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
-        """Execute GitHub MCP commands"""
+        """Execute GitHub MCP commands."""
         try:
             start_time = time.time()
 
@@ -136,7 +137,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
 
     # Private command implementations
     async def _list_repositories(self, params: Dict) -> CommandResult:
-        """List GitHub repositories"""
+        """List GitHub repositories."""
         try:
             start_time = time.time()
             url = f"{self.base_url}/repositories"
@@ -158,7 +159,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list repositories: {str(e)}")
 
     async def _get_repository(self, params: Dict) -> CommandResult:
-        """Get repository information"""
+        """Get repository information."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -176,7 +177,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get repository: {str(e)}")
 
     async def _list_issues(self, params: Dict) -> CommandResult:
-        """List repository issues"""
+        """List repository issues."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -198,7 +199,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list issues: {str(e)}")
 
     async def _create_issue(self, params: Dict) -> CommandResult:
-        """Create new issue"""
+        """Create new issue."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -224,7 +225,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to create issue: {str(e)}")
 
     async def _list_pull_requests(self, params: Dict) -> CommandResult:
-        """List pull requests"""
+        """List pull requests."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -245,7 +246,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list pull requests: {str(e)}")
 
     async def _get_file(self, params: Dict) -> CommandResult:
-        """Get file content"""
+        """Get file content."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -266,7 +267,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get file: {str(e)}")
 
     async def _search_repositories(self, params: Dict) -> CommandResult:
-        """Search repositories"""
+        """Search repositories."""
         try:
             start_time = time.time()
             query = params.get("query", "python")
@@ -289,7 +290,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Repository search failed: {str(e)}")
 
     async def _search_code(self, params: Dict) -> CommandResult:
-        """Search code"""
+        """Search code."""
         try:
             start_time = time.time()
             query = params.get("query", "function")
@@ -312,7 +313,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Code search failed: {str(e)}")
 
     async def _list_branches(self, params: Dict) -> CommandResult:
-        """List repository branches"""
+        """List repository branches."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -331,7 +332,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to list branches: {str(e)}")
 
     async def _get_commits(self, params: Dict) -> CommandResult:
-        """Get commit history"""
+        """Get commit history."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")
@@ -352,7 +353,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             return CommandResult(success=False, error=f"Failed to get commits: {str(e)}")
 
     async def _create_webhook(self, params: Dict) -> CommandResult:
-        """Create repository webhook"""
+        """Create repository webhook."""
         try:
             start_time = time.time()
             repo = params.get("repo", "owner/repo")

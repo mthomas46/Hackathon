@@ -1,4 +1,4 @@
-"""Application Commands for Health Monitoring"""
+"""Application Commands for Health Monitoring."""
 
 from dataclasses import dataclass
 from typing import Any, Dict, Optional

@@ -893,7 +893,8 @@ class TestContentValidationEdgeCases:
 
     @pytest.mark.asyncio
     async def test_mixed_language_content_validation(self):
-        """Test validation of content with mixed languages or special characters."""
+        """Test validation of content with mixed languages or special
+        characters."""
         with patch(
             "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
         ) as mock_get_analysis:

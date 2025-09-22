@@ -1,6 +1,8 @@
-"""Notifications API handlers.
+"""
+Notifications API handlers.
 
-Handles HTTP requests and responses for webhook management and notification monitoring.
+Handles HTTP requests and responses for webhook management and
+notification monitoring.
 """
 
 from typing import Any, Dict

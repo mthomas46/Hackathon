@@ -17,10 +17,18 @@ class BaseHandler(ABC):
 
     @abstractmethod
     async def handle_command(self, command: str, **kwargs) -> Dict[str, Any]:
-        """Handle a specific command. Return result dict."""
+        """
+        Handle a specific command.
+
+        Return result dict.
+        """
 
     async def validate_input(self, *args) -> Any:
-        """Validate input data. Supports multiple calling patterns."""
+        """
+        Validate input data.
+
+        Supports multiple calling patterns.
+        """
         if len(args) == 2 and isinstance(args[0], dict) and isinstance(args[1], dict):
             # Original signature: validate_input(data, schema)
             data, schema = args

@@ -1,4 +1,5 @@
-"""Service management functionality for the Orchestrator service.
+"""
+Service management functionality for the Orchestrator service.
 
 This module contains all service discovery and information endpoints,
 extracted from the main orchestrator service to improve maintainability.
@@ -130,7 +131,8 @@ def _build_service_info(service_name: str, service_config: Dict[str, Any], servi
 
 
 async def list_services() -> Dict[str, Any]:
-    """Get comprehensive information about all integrated services with enhanced metadata."""
+    """Get comprehensive information about all integrated services with
+    enhanced metadata."""
     try:
         service_client = get_orchestrator_service_client()
         service_definitions = _get_service_definitions()

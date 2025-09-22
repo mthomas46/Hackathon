@@ -1,8 +1,9 @@
-"""Cross-Repository Analysis module for Analysis Service.
+"""
+Cross-Repository Analysis module for Analysis Service.
 
-Provides comprehensive analysis capabilities across multiple repositories,
-identifying patterns, inconsistencies, and opportunities for documentation
-improvement at the organizational level.
+Provides comprehensive analysis capabilities across multiple
+repositories, identifying patterns, inconsistencies, and opportunities
+for documentation improvement at the organizational level.
 """
 
 import logging
@@ -912,7 +913,8 @@ cross_repository_analyzer = CrossRepositoryAnalyzer()
 async def analyze_repositories(
     repositories: List[Dict[str, Any]], analysis_types: Optional[List[str]] = None
 ) -> Dict[str, Any]:
-    """Convenience function for cross-repository analysis.
+    """
+    Convenience function for cross-repository analysis.
 
     Args:
         repositories: List of repository data to analyze

@@ -1,8 +1,10 @@
-"""Intelligent Overview Dashboard Page.
+"""
+Intelligent Overview Dashboard Page.
 
-This module provides an intelligent overview dashboard that leverages the full
-ecosystem infrastructure including LLM Gateway, Analysis Service, and real-time
-data processing for intelligent insights, predictive analytics, and autonomous features.
+This module provides an intelligent overview dashboard that leverages
+the full ecosystem infrastructure including LLM Gateway, Analysis
+Service, and real-time data processing for intelligent insights,
+predictive analytics, and autonomous features.
 """
 
 import asyncio

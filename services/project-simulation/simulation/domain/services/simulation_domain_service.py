@@ -35,7 +35,9 @@ class SimulationDomainService:
     def validate_simulation_feasibility(
         self, project: Project, timeline: Timeline, team: Team
     ) -> Tuple[bool, List[str]]:
-        """Validate if a simulation is feasible given project, timeline, and team constraints.
+        """
+        Validate if a simulation is feasible given project, timeline, and team
+        constraints.
 
         Args:
             project: The project aggregate
@@ -90,7 +92,8 @@ class SimulationDomainService:
     def calculate_simulation_progress(
         self, timeline: Timeline, completed_events: List[TimelineEvent]
     ) -> Dict[str, Any]:
-        """Calculate comprehensive simulation progress metrics.
+        """
+        Calculate comprehensive simulation progress metrics.
 
         Args:
             timeline: The timeline aggregate
@@ -139,7 +142,9 @@ class SimulationDomainService:
         }
 
     def optimize_team_assignment(self, project: Project, team: Team, timeline: Timeline) -> Dict[str, Any]:
-        """Optimize team member assignments based on project requirements and timeline.
+        """
+        Optimize team member assignments based on project requirements and
+        timeline.
 
         Args:
             project: The project aggregate
@@ -183,7 +188,8 @@ class SimulationDomainService:
         return recommendations
 
     def assess_project_risks(self, project: Project, team: Team, timeline: Timeline) -> Dict[str, Any]:
-        """Assess project risks and provide mitigation strategies.
+        """
+        Assess project risks and provide mitigation strategies.
 
         Args:
             project: The project aggregate
@@ -245,7 +251,9 @@ class SimulationDomainService:
     def generate_simulation_insights(
         self, project: Project, timeline: Timeline, team: Team, events: List[TimelineEvent]
     ) -> Dict[str, Any]:
-        """Generate intelligent insights about the simulation progress and outcomes.
+        """
+        Generate intelligent insights about the simulation progress and
+        outcomes.
 
         Args:
             project: The project aggregate

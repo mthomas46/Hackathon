@@ -1,4 +1,5 @@
-"""Dynamic prompt orchestration service for conditional chains and pipelines."""
+"""Dynamic prompt orchestration service for conditional chains and
+pipelines."""
 
 import asyncio
 from typing import Any, Dict, List, Optional

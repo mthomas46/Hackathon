@@ -1,7 +1,9 @@
-"""Integration Tests for HATEOAS Functionality.
+"""
+Integration Tests for HATEOAS Functionality.
 
-This module contains comprehensive tests for Hypermedia as the Engine of Application State (HATEOAS)
-implementation. Tests cover API discoverability, link relations, and hypermedia-driven navigation.
+This module contains comprehensive tests for Hypermedia as the Engine of
+Application State (HATEOAS) implementation. Tests cover API
+discoverability, link relations, and hypermedia-driven navigation.
 """
 
 
@@ -50,7 +52,8 @@ class TestAPIDiscovery:
             assert "v1" in versions
 
     def test_api_discovery_provides_deprecation_warnings(self, test_client):
-        """Test that API discovery provides deprecation warnings for older versions."""
+        """Test that API discovery provides deprecation warnings for older
+        versions."""
         # This would test deprecation notices for API versions
 
 
@@ -58,7 +61,8 @@ class TestResourceNavigation:
     """Test cases for resource navigation and link relations."""
 
     def test_simulation_collection_provides_complete_navigation(self, test_client):
-        """Test that simulation collection provides complete navigation links."""
+        """Test that simulation collection provides complete navigation
+        links."""
         response = test_client.get("/api/v1/simulations")
 
         assert response.status_code == 200
@@ -377,7 +381,8 @@ class TestHATEOASPerformance:
     """Test cases for HATEOAS performance and optimization."""
 
     def test_link_generation_is_efficient(self, test_client):
-        """Test that link generation doesn't significantly impact response time."""
+        """Test that link generation doesn't significantly impact response
+        time."""
         import time
 
         # Measure response time with links
@@ -396,7 +401,8 @@ class TestHATEOASPerformance:
             assert "_links" in data
 
     def test_link_validation_doesnt_impact_performance(self, test_client):
-        """Test that link validation doesn't significantly impact performance."""
+        """Test that link validation doesn't significantly impact
+        performance."""
         # This would test the performance impact of link validation
 
 

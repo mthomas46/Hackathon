@@ -1,4 +1,5 @@
-"""Event processing for Memory Agent service.
+"""
+Event processing for Memory Agent service.
 
 Handles Redis pub/sub event subscription and processing.
 """
