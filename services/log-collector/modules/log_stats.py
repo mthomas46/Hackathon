@@ -3,9 +3,10 @@
 Provides comprehensive analytics and aggregations for log data
 to support system monitoring and diagnostics with enhanced metrics.
 """
-from typing import Dict, List, Any, Optional
+
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 
 def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Optional[int] = None) -> Dict[str, Any]:
@@ -33,7 +34,7 @@ def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Opti
         filtered_logs = []
         for log in logs:
             try:
-                log_time = datetime.fromisoformat(log.get("timestamp", "").replace('Z', '+00:00'))
+                log_time = datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
                 if log_time > cutoff_time:
                     filtered_logs.append(log)
             except (ValueError, AttributeError):
@@ -67,16 +68,18 @@ def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Opti
         # Track errors separately for error rate analysis
         if level in ("error", "fatal"):
             errors_by_service[service] += 1
-            error_messages.append({
-                "service": service,
-                "message": message[:200],  # Truncate long messages
-                "timestamp": log.get("timestamp")
-            })
+            error_messages.append(
+                {
+                    "service": service,
+                    "message": message[:200],  # Truncate long messages
+                    "timestamp": log.get("timestamp"),
+                }
+            )
 
         # Time-based analysis
         if log.get("timestamp"):
             try:
-                dt = datetime.fromisoformat(log["timestamp"].replace('Z', '+00:00'))
+                dt = datetime.fromisoformat(log["timestamp"].replace("Z", "+00:00"))
                 timestamps.append(dt)
                 hour_key = f"{dt.hour:02d}:00"
                 hourly_distribution[hour_key] += 1
@@ -99,7 +102,7 @@ def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Opti
         time_range = {
             "start": min(timestamps).isoformat(),
             "end": max(timestamps).isoformat(),
-            "duration_hours": (max(timestamps) - min(timestamps)).total_seconds() / 3600
+            "duration_hours": (max(timestamps) - min(timestamps)).total_seconds() / 3600,
         }
 
     # Performance metrics
@@ -126,7 +129,7 @@ def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Opti
             "total_logs": count,
             "error_count": error_count,
             "error_rate": error_count / count if count > 0 else 0,
-            "health_score": health_score
+            "health_score": health_score,
         }
 
     # Identify top 5 services by log volume for quick diagnostics
@@ -154,6 +157,8 @@ def calculate_log_statistics(logs: List[Dict[str, Any]], time_window_hours: Opti
             "healthy_services": sum(1 for s in service_health.values() if s["health_score"] > 80),
             "unhealthy_services": sum(1 for s in service_health.values() if s["health_score"] <= 80),
             "total_services": len(service_health),
-            "avg_health_score": sum(s["health_score"] for s in service_health.values()) / len(service_health) if service_health else 100
-        }
+            "avg_health_score": (
+                sum(s["health_score"] for s in service_health.values()) / len(service_health) if service_health else 100
+            ),
+        },
     }

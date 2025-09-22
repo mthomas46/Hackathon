@@ -4,13 +4,14 @@ Provides in-memory storage for log entries with automatic cleanup
 and bounded history to prevent memory exhaustion. Now includes
 persistent storage options and advanced search capabilities.
 """
-from typing import List, Dict, Any, Optional, Iterator
-from datetime import datetime, timezone, timedelta
+
+import asyncio
 import json
 import os
 import threading
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-import asyncio
+from typing import Any, Dict, Iterator, List, Optional
 
 
 class LogStorage:
@@ -20,8 +21,13 @@ class LogStorage:
     cleanup, and comprehensive search and filtering capabilities.
     """
 
-    def __init__(self, max_logs: int = 5000, persist_to_disk: bool = False,
-                 storage_path: Optional[str] = None, retention_days: int = 7):
+    def __init__(
+        self,
+        max_logs: int = 5000,
+        persist_to_disk: bool = False,
+        storage_path: Optional[str] = None,
+        retention_days: int = 7,
+    ):
         """Initialize log storage with capacity limit and persistence options.
 
         Args:
@@ -101,10 +107,7 @@ class LogStorage:
         return len(self._logs)
 
     def get_logs(
-        self,
-        service: Optional[str] = None,
-        level: Optional[str] = None,
-        limit: int = 100
+        self, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Retrieve filtered logs with optional pagination.
 
@@ -120,9 +123,10 @@ class LogStorage:
             List of matching log entries, most recent first
         """
         filtered = [
-            log for log in self._logs
-            if (service is None or log.get("service") == service) and
-               (level is None or log.get("level", "").lower() == level.lower())
+            log
+            for log in self._logs
+            if (service is None or log.get("service") == service)
+            and (level is None or log.get("level", "").lower() == level.lower())
         ]
         return filtered[-limit:] if limit > 0 else filtered
 
@@ -150,8 +154,9 @@ class LogStorage:
         """
         self._logs.clear()
 
-    def search_logs(self, query: str, fields: Optional[List[str]] = None,
-                   case_sensitive: bool = False, limit: int = 100) -> List[Dict[str, Any]]:
+    def search_logs(
+        self, query: str, fields: Optional[List[str]] = None, case_sensitive: bool = False, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """Search logs using full-text search across specified fields.
 
         Args:
@@ -186,9 +191,9 @@ class LogStorage:
 
         return matches
 
-    def get_logs_by_time_range(self, start_time: Optional[str] = None,
-                              end_time: Optional[str] = None,
-                              limit: int = 100) -> List[Dict[str, Any]]:
+    def get_logs_by_time_range(
+        self, start_time: Optional[str] = None, end_time: Optional[str] = None, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """Get logs within a specific time range.
 
         Args:
@@ -216,8 +221,7 @@ class LogStorage:
 
         return results
 
-    def get_service_metrics(self, service_name: Optional[str] = None,
-                           time_window_minutes: int = 60) -> Dict[str, Any]:
+    def get_service_metrics(self, service_name: Optional[str] = None, time_window_minutes: int = 60) -> Dict[str, Any]:
         """Get detailed metrics for a specific service or all services.
 
         Args:
@@ -231,8 +235,10 @@ class LogStorage:
 
         with self._lock:
             relevant_logs = [
-                log for log in self._logs
-                if datetime.fromisoformat(log.get("timestamp", "2000-01-01T00:00:00+00:00").replace('Z', '+00:00')) > cutoff_time
+                log
+                for log in self._logs
+                if datetime.fromisoformat(log.get("timestamp", "2000-01-01T00:00:00+00:00").replace("Z", "+00:00"))
+                > cutoff_time
             ]
 
         if service_name:
@@ -248,8 +254,8 @@ class LogStorage:
             "performance": {
                 "avg_response_time": None,
                 "error_rate": 0.0,
-                "throughput_per_minute": len(relevant_logs) / max(time_window_minutes, 1)
-            }
+                "throughput_per_minute": len(relevant_logs) / max(time_window_minutes, 1),
+            },
         }
 
         response_times = []
@@ -277,11 +283,13 @@ class LogStorage:
             # Collect errors
             if level in ("error", "fatal"):
                 error_count += 1
-                metrics["errors"].append({
-                    "timestamp": log.get("timestamp"),
-                    "service": service,
-                    "message": log.get("message", "")[:200]  # Truncate long messages
-                })
+                metrics["errors"].append(
+                    {
+                        "timestamp": log.get("timestamp"),
+                        "service": service,
+                        "message": log.get("message", "")[:200],  # Truncate long messages
+                    }
+                )
 
             # Collect response times from context
             if log.get("context") and "response_time" in log["context"]:
@@ -310,9 +318,9 @@ class LogStorage:
 
             # Append to file (create if doesn't exist)
             async with asyncio.Lock():  # File access lock
-                with open(log_file, 'a', encoding='utf-8') as f:
+                with open(log_file, "a", encoding="utf-8") as f:
                     json.dump(log_entry, f, ensure_ascii=False)
-                    f.write('\n')
+                    f.write("\n")
 
         except Exception as e:
             # Log persistence errors (without recursing)
@@ -330,14 +338,14 @@ class LogStorage:
             loaded_count = 0
             for log_file in sorted(self._storage_path.glob("logs_*.jsonl")):
                 try:
-                    with open(log_file, 'r', encoding='utf-8') as f:
+                    with open(log_file, "r", encoding="utf-8") as f:
                         for line in f:
                             if line.strip():
                                 log_entry = json.loads(line.strip())
 
                                 # Only load recent entries
                                 entry_time = datetime.fromisoformat(
-                                    log_entry.get("timestamp", "2000-01-01T00:00:00+00:00").replace('Z', '+00:00')
+                                    log_entry.get("timestamp", "2000-01-01T00:00:00+00:00").replace("Z", "+00:00")
                                 )
 
                                 if entry_time > cutoff_date:
@@ -390,8 +398,9 @@ class LogStorage:
         except Exception as e:
             print(f"Warning: Failed to cleanup old logs: {e}")
 
-    def export_logs(self, filepath: str, service: Optional[str] = None,
-                   level: Optional[str] = None, format: str = "json") -> int:
+    def export_logs(
+        self, filepath: str, service: Optional[str] = None, level: Optional[str] = None, format: str = "json"
+    ) -> int:
         """Export logs to a file with optional filtering.
 
         Args:
@@ -406,13 +415,13 @@ class LogStorage:
         logs_to_export = self.get_logs(service=service, level=level, limit=0)  # No limit
 
         try:
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 if format == "json":
                     json.dump(logs_to_export, f, indent=2, ensure_ascii=False)
                 elif format == "jsonl":
                     for log in logs_to_export:
                         json.dump(log, f, ensure_ascii=False)
-                        f.write('\n')
+                        f.write("\n")
                 else:
                     raise ValueError(f"Unsupported export format: {format}")
 
@@ -436,9 +445,4 @@ class LogStorage:
 log_storage = LogStorage()
 
 # Enhanced instance with persistence (can be used as alternative)
-persistent_log_storage = LogStorage(
-    max_logs=10000,
-    persist_to_disk=True,
-    storage_path="./logs",
-    retention_days=30
-)
+persistent_log_storage = LogStorage(max_logs=10000, persist_to_disk=True, storage_path="./logs", retention_days=30)

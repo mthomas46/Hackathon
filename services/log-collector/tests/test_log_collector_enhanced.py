@@ -1,19 +1,20 @@
 """Tests for enhanced log collector service functionality."""
 
-import pytest
 import asyncio
 import json
-import tempfile
 import os
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, patch
 import sys
+import tempfile
+from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add the parent directory to sys.path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from modules.log_storage import LogStorage, persistent_log_storage
 from modules.log_stats import calculate_log_statistics
+from modules.log_storage import LogStorage, persistent_log_storage
 
 
 class TestEnhancedLogStorage:
@@ -103,14 +104,8 @@ class TestEnhancedLogStorage:
         old_time = (now - timedelta(hours=2)).isoformat()
         recent_time = (now - timedelta(minutes=30)).isoformat()
 
-        storage.add_log({
-            "service": "test", "level": "info", "message": "Old log",
-            "timestamp": old_time
-        })
-        storage.add_log({
-            "service": "test", "level": "info", "message": "Recent log",
-            "timestamp": recent_time
-        })
+        storage.add_log({"service": "test", "level": "info", "message": "Old log", "timestamp": old_time})
+        storage.add_log({"service": "test", "level": "info", "message": "Recent log", "timestamp": recent_time})
 
         # Query last hour
         start_time = (now - timedelta(hours=1)).isoformat()
@@ -125,10 +120,20 @@ class TestEnhancedLogStorage:
 
         # Add logs for a service
         logs = [
-            {"service": "api", "level": "info", "message": "Request processed", "timestamp": "2024-01-01T10:00:00Z",
-             "context": {"response_time": 0.1}},
-            {"service": "api", "level": "info", "message": "Request processed", "timestamp": "2024-01-01T10:01:00Z",
-             "context": {"response_time": 0.2}},
+            {
+                "service": "api",
+                "level": "info",
+                "message": "Request processed",
+                "timestamp": "2024-01-01T10:00:00Z",
+                "context": {"response_time": 0.1},
+            },
+            {
+                "service": "api",
+                "level": "info",
+                "message": "Request processed",
+                "timestamp": "2024-01-01T10:01:00Z",
+                "context": {"response_time": 0.2},
+            },
             {"service": "api", "level": "error", "message": "Database error", "timestamp": "2024-01-01T10:02:00Z"},
             {"service": "worker", "level": "info", "message": "Task done", "timestamp": "2024-01-01T10:03:00Z"},
         ]
@@ -158,7 +163,7 @@ class TestEnhancedLogStorage:
             storage.add_log(log)
 
         # Export to temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_file = f.name
 
         try:
@@ -166,7 +171,7 @@ class TestEnhancedLogStorage:
             assert count == 2
 
             # Verify exported file
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 exported_data = json.load(f)
                 assert len(exported_data) == 2
                 assert exported_data[0]["message"] == "Test message 1"
@@ -180,7 +185,7 @@ class TestEnhancedLogStorage:
 
         storage.add_log({"service": "test", "level": "info", "message": "Test message"})
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             temp_file = f.name
 
         try:
@@ -188,7 +193,7 @@ class TestEnhancedLogStorage:
             assert count == 1
 
             # Verify exported file (JSONL format)
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 lines = f.readlines()
                 assert len(lines) == 1
                 log_entry = json.loads(lines[0])
@@ -210,7 +215,7 @@ class TestEnhancedLogStorage:
         for log in logs:
             storage.add_log(log)
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_file = f.name
 
         try:
@@ -218,7 +223,7 @@ class TestEnhancedLogStorage:
             count = storage.export_logs(temp_file, service="api")
             assert count == 2
 
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 exported_data = json.load(f)
                 assert len(exported_data) == 2
                 assert all(log["service"] == "api" for log in exported_data)
@@ -233,18 +238,14 @@ class TestEnhancedLogStatistics:
     def test_calculate_statistics_with_time_window(self):
         """Test statistics calculation with time window filtering."""
         logs = [
+            {"service": "api", "level": "info", "message": "Request 1", "timestamp": "2024-01-01T12:00:00Z"},
+            {"service": "api", "level": "error", "message": "Error occurred", "timestamp": "2024-01-01T12:05:00Z"},
             {
-                "service": "api", "level": "info", "message": "Request 1",
-                "timestamp": "2024-01-01T12:00:00Z"
+                "service": "worker",
+                "level": "info",
+                "message": "Task completed",
+                "timestamp": "2024-01-01T11:00:00Z",  # Older than time window
             },
-            {
-                "service": "api", "level": "error", "message": "Error occurred",
-                "timestamp": "2024-01-01T12:05:00Z"
-            },
-            {
-                "service": "worker", "level": "info", "message": "Task completed",
-                "timestamp": "2024-01-01T11:00:00Z"  # Older than time window
-            }
         ]
 
         # Calculate stats for last 2 hours
@@ -260,15 +261,19 @@ class TestEnhancedLogStatistics:
         """Test performance metrics in statistics."""
         logs = [
             {
-                "service": "api", "level": "info", "message": "Request",
+                "service": "api",
+                "level": "info",
+                "message": "Request",
                 "timestamp": "2024-01-01T12:00:00Z",
-                "context": {"response_time": 0.1}
+                "context": {"response_time": 0.1},
             },
             {
-                "service": "api", "level": "info", "message": "Request",
+                "service": "api",
+                "level": "info",
+                "message": "Request",
                 "timestamp": "2024-01-01T12:01:00Z",
-                "context": {"response_time": 0.3}
-            }
+                "context": {"response_time": 0.3},
+            },
         ]
 
         stats = calculate_log_statistics(logs)
@@ -392,8 +397,13 @@ class TestLogCollectorIntegration:
 
         # Add test logs
         logs = [
-            {"service": "api", "level": "info", "message": "Request", "timestamp": "2024-01-01T12:00:00Z",
-             "context": {"response_time": 0.1}},
+            {
+                "service": "api",
+                "level": "info",
+                "message": "Request",
+                "timestamp": "2024-01-01T12:00:00Z",
+                "context": {"response_time": 0.1},
+            },
             {"service": "api", "level": "error", "message": "Error", "timestamp": "2024-01-01T12:01:00Z"},
         ]
 
@@ -413,7 +423,7 @@ class TestLogCollectorIntegration:
         storage.add_log({"service": "test", "level": "info", "message": "Test message"})
 
         # Test export functionality that would be used by endpoint
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_file = f.name
 
         try:
@@ -422,7 +432,7 @@ class TestLogCollectorIntegration:
 
             # Verify file was created and has content
             assert os.path.exists(temp_file)
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 data = json.load(f)
                 assert len(data) == 1
 
@@ -453,7 +463,7 @@ class TestPersistentStorageIntegration:
                 "service": "test",
                 "level": "info",
                 "message": "Persistent test message",
-                "timestamp": "2024-01-01T12:00:00Z"
+                "timestamp": "2024-01-01T12:00:00Z",
             }
             storage.add_log(log_entry)
 
@@ -465,7 +475,7 @@ class TestPersistentStorageIntegration:
             assert expected_file.exists()
 
             # Check file contents
-            with open(expected_file, 'r') as f:
+            with open(expected_file, "r") as f:
                 lines = f.readlines()
                 assert len(lines) == 1
                 persisted_log = json.loads(lines[0])
