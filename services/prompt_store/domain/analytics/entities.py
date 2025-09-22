@@ -1,14 +1,16 @@
 """Analytics domain entities for performance tracking and insights."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from ...core.entities import BaseEntity
 
 
 @dataclass
 class PromptPerformanceMetrics(BaseEntity):
     """Performance metrics for prompt execution."""
+
     prompt_id: str
     version: int
     total_requests: int = 0
@@ -50,9 +52,10 @@ class PromptPerformanceMetrics(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptPerformanceMetrics':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptPerformanceMetrics":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -67,15 +70,24 @@ class PromptPerformanceMetrics(BaseEntity):
             total_tokens_used=data.get("total_tokens_used", 0),
             average_tokens_per_request=data.get("average_tokens_per_request", 0.0),
             cost_estimate_usd=data.get("cost_estimate_usd", 0.0),
-            last_updated=datetime.fromisoformat(data["last_updated"]) if isinstance(data.get("last_updated"), str) else datetime.utcnow(),
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            last_updated=(
+                datetime.fromisoformat(data["last_updated"])
+                if isinstance(data.get("last_updated"), str)
+                else datetime.utcnow()
+            ),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )
 
 
 @dataclass
 class UserSatisfactionScore(BaseEntity):
     """User satisfaction scores for prompts."""
+
     prompt_id: str
     user_id: str
     session_id: str
@@ -106,9 +118,10 @@ class UserSatisfactionScore(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'UserSatisfactionScore':
+    def from_dict(cls, data: Dict[str, Any]) -> "UserSatisfactionScore":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -119,14 +132,19 @@ class UserSatisfactionScore(BaseEntity):
             context_tags=data.get("context_tags", []),
             response_quality_score=data.get("response_quality_score"),
             use_case_category=data.get("use_case_category", "general"),
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )
 
 
 @dataclass
 class PromptOptimizationSuggestion(BaseEntity):
     """AI-generated suggestions for prompt improvement."""
+
     prompt_id: str
     current_version: int
     suggestion_type: str  # "clarity", "specificity", "structure", "bias", etc.
@@ -163,9 +181,10 @@ class PromptOptimizationSuggestion(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptOptimizationSuggestion':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptOptimizationSuggestion":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -177,16 +196,23 @@ class PromptOptimizationSuggestion(BaseEntity):
             expected_impact=data["expected_impact"],
             llm_service_used=data["llm_service_used"],
             implemented=data.get("implemented", False),
-            implemented_at=datetime.fromisoformat(data["implemented_at"]) if isinstance(data.get("implemented_at"), str) else None,
+            implemented_at=(
+                datetime.fromisoformat(data["implemented_at"]) if isinstance(data.get("implemented_at"), str) else None
+            ),
             implementation_result=data.get("implementation_result"),
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )
 
 
 @dataclass
 class PromptEvolutionMetrics(BaseEntity):
     """Track how prompts evolve and improve over time."""
+
     prompt_id: str
     from_version: int
     to_version: int
@@ -219,9 +245,10 @@ class PromptEvolutionMetrics(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptEvolutionMetrics':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptEvolutionMetrics":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -233,14 +260,19 @@ class PromptEvolutionMetrics(BaseEntity):
             user_satisfaction_change=data.get("user_satisfaction_change"),
             token_efficiency_change=data.get("token_efficiency_change"),
             cost_savings_usd=data.get("cost_savings_usd"),
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )
 
 
 @dataclass
 class CostOptimizationMetrics(BaseEntity):
     """Track and optimize LLM API costs."""
+
     prompt_id: str
     version: int
     total_cost_usd: float
@@ -271,9 +303,10 @@ class CostOptimizationMetrics(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CostOptimizationMetrics':
+    def from_dict(cls, data: Dict[str, Any]) -> "CostOptimizationMetrics":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -284,14 +317,19 @@ class CostOptimizationMetrics(BaseEntity):
             optimization_opportunities=data.get("optimization_opportunities", []),
             cost_trend=data.get("cost_trend", "stable"),
             projected_monthly_savings=data.get("projected_monthly_savings"),
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )
 
 
 @dataclass
 class BiasDetectionResult(BaseEntity):
     """Results from bias detection analysis."""
+
     prompt_id: str
     version: int
     bias_type: str  # "gender", "racial", "cultural", "political", etc.
@@ -322,9 +360,10 @@ class BiasDetectionResult(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BiasDetectionResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "BiasDetectionResult":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -336,15 +375,22 @@ class BiasDetectionResult(BaseEntity):
             confidence_score=data["confidence_score"],
             analysis_method=data["analysis_method"],
             resolved=data.get("resolved", False),
-            resolved_at=datetime.fromisoformat(data["resolved_at"]) if isinstance(data.get("resolved_at"), str) else None,
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            resolved_at=(
+                datetime.fromisoformat(data["resolved_at"]) if isinstance(data.get("resolved_at"), str) else None
+            ),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )
 
 
 @dataclass
 class PromptTestingResult(BaseEntity):
     """Results from automated prompt testing."""
+
     prompt_id: str
     version: int
     test_suite_id: str
@@ -381,9 +427,10 @@ class PromptTestingResult(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptTestingResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptTestingResult":
         """Create entity from dictionary representation."""
         from datetime import datetime
+
         return cls(
             id=data.get("id"),
             prompt_id=data["prompt_id"],
@@ -397,6 +444,10 @@ class PromptTestingResult(BaseEntity):
             expected_output_similarity=data["expected_output_similarity"],
             error_message=data.get("error_message"),
             test_metadata=data.get("test_metadata", {}),
-            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data.get("created_at"), str) else datetime.utcnow(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
         )

@@ -4,19 +4,20 @@ Orchestrates LLM-assisted prompt refinement with document storage and comparison
 """
 
 import asyncio
-from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.utilities import generate_id, utc_now
 
 # Import LLM service clients
 from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.utilities import generate_id, utc_now
 
 # Import doc store client
 try:
     from services.doc_store.domain.documents.service import DocumentService
+
     DOC_STORE_AVAILABLE = True
 except ImportError:
     DOC_STORE_AVAILABLE = False
@@ -35,12 +36,17 @@ class PromptRefinementService:
         if DOC_STORE_AVAILABLE and not self.doc_service:
             # Import here to avoid circular imports
             from services.doc_store.domain.documents.service import DocumentService
+
             self.doc_service = DocumentService()
 
-    async def refine_prompt(self, prompt_id: str, refinement_instructions: str,
-                           llm_service: str = "interpreter",
-                           context_documents: Optional[List[str]] = None,
-                           user_id: str = "system") -> Dict[str, Any]:
+    async def refine_prompt(
+        self,
+        prompt_id: str,
+        refinement_instructions: str,
+        llm_service: str = "interpreter",
+        context_documents: Optional[List[str]] = None,
+        user_id: str = "system",
+    ) -> Dict[str, Any]:
         """Execute prompt refinement workflow using LLM service.
 
         1. Get original prompt
@@ -69,21 +75,23 @@ class PromptRefinementService:
             "context_documents": context_documents or [],
             "status": "processing",
             "created_at": utc_now(),
-            "user_id": user_id
+            "user_id": user_id,
         }
 
         # Cache session info
         await prompt_store_cache.set(f"refinement_session:{session_id}", refinement_session, ttl=3600)
 
         # Start async refinement process
-        asyncio.create_task(self._execute_refinement_async(session_id, original_prompt,
-                                                         refinement_instructions, llm_service,
-                                                         context_documents, user_id))
+        asyncio.create_task(
+            self._execute_refinement_async(
+                session_id, original_prompt, refinement_instructions, llm_service, context_documents, user_id
+            )
+        )
 
         return {
             "session_id": session_id,
             "status": "processing",
-            "message": "Prompt refinement started. Check status for results."
+            "message": "Prompt refinement started. Check status for results.",
         }
 
     async def get_refinement_status(self, session_id: str) -> Dict[str, Any]:
@@ -94,8 +102,9 @@ class PromptRefinementService:
 
         return session
 
-    async def compare_prompt_versions(self, prompt_id: str, version_a: Optional[int] = None,
-                                    version_b: Optional[int] = None) -> Dict[str, Any]:
+    async def compare_prompt_versions(
+        self, prompt_id: str, version_a: Optional[int] = None, version_b: Optional[int] = None
+    ) -> Dict[str, Any]:
         """Compare different versions of a prompt."""
         prompt = self.prompt_service.get_entity(prompt_id)
         if not prompt:
@@ -119,11 +128,7 @@ class PromptRefinementService:
 
         return {
             "prompt_id": prompt_id,
-            "comparison": {
-                "version_a": version_a_data,
-                "version_b": version_b_data,
-                "differences": differences
-            }
+            "comparison": {"version_a": version_a_data, "version_b": version_b_data, "differences": differences},
         }
 
     async def compare_refinement_documents(self, session_a: str, session_b: str) -> Dict[str, Any]:
@@ -158,12 +163,13 @@ class PromptRefinementService:
             "document_comparison": {
                 "document_a": doc_a.to_dict(),
                 "document_b": doc_b.to_dict(),
-                "differences": differences
-            }
+                "differences": differences,
+            },
         }
 
-    async def replace_prompt_with_refined(self, prompt_id: str, session_id: str,
-                                        user_id: str = "system") -> Dict[str, Any]:
+    async def replace_prompt_with_refined(
+        self, prompt_id: str, session_id: str, user_id: str = "system"
+    ) -> Dict[str, Any]:
         """Replace original prompt with refined version from session."""
         session = await prompt_store_cache.get(f"refinement_session:{session_id}")
         if not session or session.get("status") != "completed":
@@ -188,16 +194,11 @@ class PromptRefinementService:
             raise ValueError(f"Original prompt {prompt_id} not found")
 
         # Generate detailed change summary
-        change_summary = self._generate_refinement_change_summary(
-            original_prompt, refined_content, session, result_doc
-        )
+        change_summary = self._generate_refinement_change_summary(original_prompt, refined_content, session, result_doc)
 
         # Update the original prompt with versioning
         updated_prompt = self.prompt_service.update_prompt_content(
-            prompt_id=prompt_id,
-            content=refined_content,
-            change_summary=change_summary,
-            updated_by=user_id
+            prompt_id=prompt_id, content=refined_content, change_summary=change_summary, updated_by=user_id
         )
 
         # Mark session as applied
@@ -209,13 +210,18 @@ class PromptRefinementService:
             "prompt_id": prompt_id,
             "new_version": updated_prompt.version,
             "session_id": session_id,
-            "message": f"Prompt updated to version {updated_prompt.version}"
+            "message": f"Prompt updated to version {updated_prompt.version}",
         }
 
-    async def _execute_refinement_async(self, session_id: str, original_prompt: Any,
-                                      refinement_instructions: str, llm_service: str,
-                                      context_documents: Optional[List[str]],
-                                      user_id: str) -> None:
+    async def _execute_refinement_async(
+        self,
+        session_id: str,
+        original_prompt: Any,
+        refinement_instructions: str,
+        llm_service: str,
+        context_documents: Optional[List[str]],
+        user_id: str,
+    ) -> None:
         """Execute the refinement workflow asynchronously."""
         try:
             # Update session status
@@ -250,8 +256,9 @@ class PromptRefinementService:
             session["failed_at"] = utc_now()
             await prompt_store_cache.set(f"refinement_session:{session_id}", session, ttl=3600)
 
-    def _prepare_llm_refinement_request(self, prompt: Any, instructions: str,
-                                      context_docs: Optional[List[str]] = None) -> Dict[str, Any]:
+    def _prepare_llm_refinement_request(
+        self, prompt: Any, instructions: str, context_docs: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """Prepare the request to send to LLM service for refinement."""
         request = {
             "task": "prompt_refinement",
@@ -260,10 +267,10 @@ class PromptRefinementService:
                 "category": prompt.category,
                 "content": prompt.content,
                 "variables": prompt.variables,
-                "description": prompt.description
+                "description": prompt.description,
             },
             "refinement_instructions": instructions,
-            "context": []
+            "context": [],
         }
 
         # Add context documents if provided
@@ -279,13 +286,12 @@ class PromptRefinementService:
             # Convert our refinement request to interpreter format
             interpreter_request = {
                 "query": self._format_refinement_query_for_interpreter(request),
-                "user_id": request.get("user_id", "system")
+                "user_id": request.get("user_id", "system"),
             }
 
             try:
                 response = await self.llm_clients.interpret_query(
-                    interpreter_request["query"],
-                    interpreter_request["user_id"]
+                    interpreter_request["query"], interpreter_request["user_id"]
                 )
 
                 # Extract the refined prompt from interpreter response
@@ -305,7 +311,7 @@ class PromptRefinementService:
                 "prompt": self._format_refinement_prompt_for_bedrock(request),
                 "template": "summary",  # Use summary template for refinement
                 "format": "md",
-                "model": "anthropic.claude-3-sonnet-20240229-v1:0"
+                "model": "anthropic.claude-3-sonnet-20240229-v1:0",
             }
 
             try:
@@ -327,7 +333,9 @@ class PromptRefinementService:
         """Call Bedrock proxy service directly."""
         import httpx
 
-        bedrock_url = self.llm_clients.get_config_value("BEDROCK_PROXY_URL", "http://bedrock-proxy:7090/invoke", section="services", env_key="BEDROCK_PROXY_URL")
+        bedrock_url = self.llm_clients.get_config_value(
+            "BEDROCK_PROXY_URL", "http://bedrock-proxy:7090/invoke", section="services", env_key="BEDROCK_PROXY_URL"
+        )
 
         async with httpx.AsyncClient(timeout=60) as client:
             try:
@@ -360,7 +368,9 @@ class PromptRefinementService:
 
         return query.strip()
 
-    def _extract_refined_prompt_from_interpreter_response(self, interpreter_data: Dict[str, Any], original_request: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_refined_prompt_from_interpreter_response(
+        self, interpreter_data: Dict[str, Any], original_request: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Extract refined prompt from interpreter service response."""
         # The interpreter service returns workflow/intent data
         # For refinement, we look for the interpreted intent and extract refined content
@@ -414,16 +424,14 @@ Provide only the refined prompt content, without additional explanation or forma
 
         return prompt.strip()
 
-    async def _store_refinement_result(self, session_id: str, original_prompt: Any,
-                                     llm_response: Dict[str, Any], llm_service: str,
-                                     user_id: str) -> str:
+    async def _store_refinement_result(
+        self, session_id: str, original_prompt: Any, llm_response: Dict[str, Any], llm_service: str, user_id: str
+    ) -> str:
         """Store refinement result in doc_store."""
         await self.initialize_doc_service()
 
         # Create document content from LLM response
-        doc_content = self._format_refinement_result_as_document(
-            session_id, original_prompt, llm_response, llm_service
-        )
+        doc_content = self._format_refinement_result_as_document(session_id, original_prompt, llm_response, llm_service)
 
         # Create document in doc_store with enhanced metadata
         doc_data = {
@@ -438,17 +446,18 @@ Provide only the refined prompt content, without additional explanation or forma
                 "refinement_type": "llm_assisted",
                 "user_id": user_id,
                 "llm_response": llm_response,  # Store full LLM response for extraction fallback
-                "refined_content": llm_response.get('refined_content', ''),
-                "created_at": utc_now().isoformat()
+                "refined_content": llm_response.get("refined_content", ""),
+                "created_at": utc_now().isoformat(),
             },
-            "correlation_id": f"refinement_{session_id}"
+            "correlation_id": f"refinement_{session_id}",
         }
 
         result_doc = await self.doc_service.create_entity(doc_data)
         return result_doc.id
 
-    def _format_refinement_result_as_document(self, session_id: str, original_prompt: Any,
-                                            llm_response: Dict[str, Any], llm_service: str) -> str:
+    def _format_refinement_result_as_document(
+        self, session_id: str, original_prompt: Any, llm_response: Dict[str, Any], llm_service: str
+    ) -> str:
         """Format LLM refinement result as a document."""
         # This would format the refinement result in a structured way
         # For now, return a simple formatted document
@@ -484,20 +493,16 @@ Provide only the refined prompt content, without additional explanation or forma
             "version": version,
             "content": f"Version {version} content",
             "variables": ["var1", "var2"],
-            "created_at": utc_now().isoformat()
+            "created_at": utc_now().isoformat(),
         }
 
-    def _calculate_prompt_differences(self, version_a: Dict[str, Any],
-                                    version_b: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_prompt_differences(self, version_a: Dict[str, Any], version_b: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate differences between prompt versions."""
         differences = {
             "content_changed": version_a.get("content") != version_b.get("content"),
             "variables_added": [],
             "variables_removed": [],
-            "content_diff": self._simple_text_diff(
-                version_a.get("content", ""),
-                version_b.get("content", "")
-            )
+            "content_diff": self._simple_text_diff(version_a.get("content", ""), version_b.get("content", "")),
         }
 
         # Compare variables
@@ -512,7 +517,7 @@ Provide only the refined prompt content, without additional explanation or forma
         """Calculate differences between refinement result documents."""
         return {
             "content_diff": self._simple_text_diff(doc_a.content, doc_b.content),
-            "metadata_diff": self._compare_metadata(doc_a.metadata, doc_b.metadata)
+            "metadata_diff": self._compare_metadata(doc_a.metadata, doc_b.metadata),
         }
 
     def _simple_text_diff(self, text_a: str, text_b: str) -> str:
@@ -527,7 +532,7 @@ Provide only the refined prompt content, without additional explanation or forma
         return {
             "keys_added": list(set(meta_b.keys()) - set(meta_a.keys())),
             "keys_removed": list(set(meta_a.keys()) - set(meta_b.keys())),
-            "values_changed": [k for k in meta_a.keys() & meta_b.keys() if meta_a[k] != meta_b[k]]
+            "values_changed": [k for k in meta_a.keys() & meta_b.keys() if meta_a[k] != meta_b[k]],
         }
 
     def _extract_refined_prompt_from_document(self, document: Any) -> str:
@@ -536,18 +541,18 @@ Provide only the refined prompt content, without additional explanation or forma
 
         # Parse the document to extract the refined prompt
         # Look for the "Refined Prompt" section
-        lines = content.split('\n')
+        lines = content.split("\n")
         refined_section_found = False
         refined_prompt_lines = []
 
         for line in lines:
-            if line.startswith('## Refined Prompt'):
+            if line.startswith("## Refined Prompt"):
                 refined_section_found = True
                 continue
-            elif line.startswith('## ') and refined_section_found:
+            elif line.startswith("## ") and refined_section_found:
                 # We've reached the next section, stop collecting
                 break
-            elif refined_section_found and line.startswith('```'):
+            elif refined_section_found and line.startswith("```"):
                 # Skip the code block markers
                 continue
             elif refined_section_found:
@@ -556,21 +561,22 @@ Provide only the refined prompt content, without additional explanation or forma
 
         if refined_prompt_lines:
             # Join the lines and clean up any extra whitespace
-            refined_content = '\n'.join(refined_prompt_lines).strip()
+            refined_content = "\n".join(refined_prompt_lines).strip()
             # Remove any trailing empty lines
-            return '\n'.join([line for line in refined_content.split('\n') if line.strip()])
+            return "\n".join([line for line in refined_content.split("\n") if line.strip()])
         else:
             # Fallback: try to extract from LLM response if stored in metadata
-            if hasattr(document, 'metadata') and document.metadata:
-                llm_response = document.metadata.get('llm_response', {})
-                if isinstance(llm_response, dict) and 'refined_content' in llm_response:
-                    return llm_response['refined_content']
+            if hasattr(document, "metadata") and document.metadata:
+                llm_response = document.metadata.get("llm_response", {})
+                if isinstance(llm_response, dict) and "refined_content" in llm_response:
+                    return llm_response["refined_content"]
 
             # Last resort: return the whole content
             return content
 
-    def _generate_refinement_change_summary(self, original_prompt: Any, refined_content: str,
-                                           session: Dict[str, Any], result_doc: Any) -> str:
+    def _generate_refinement_change_summary(
+        self, original_prompt: Any, refined_content: str, session: Dict[str, Any], result_doc: Any
+    ) -> str:
         """Generate detailed change summary for refinement versioning."""
         import difflib
 
@@ -579,20 +585,21 @@ Provide only the refined prompt content, without additional explanation or forma
         refined_lines = refined_content.splitlines(keepends=True)
 
         # Get diff statistics
-        diff = list(difflib.unified_diff(original_lines, refined_lines,
-                                       fromfile='original', tofile='refined', lineterm=''))
+        diff = list(
+            difflib.unified_diff(original_lines, refined_lines, fromfile="original", tofile="refined", lineterm="")
+        )
 
-        added_lines = len([line for line in diff if line.startswith('+') and not line.startswith('+++')])
-        removed_lines = len([line for line in diff if line.startswith('-') and not line.startswith('---')])
+        added_lines = len([line for line in diff if line.startswith("+") and not line.startswith("+++")])
+        removed_lines = len([line for line in diff if line.startswith("-") and not line.startswith("---")])
 
         # Get session and LLM details
-        llm_service = session.get('llm_service', 'unknown')
-        refinement_instructions = session.get('refinement_instructions', '')
+        llm_service = session.get("llm_service", "unknown")
+        refinement_instructions = session.get("refinement_instructions", "")
 
         # Generate summary
         summary_parts = [
             f"LLM-assisted refinement using {llm_service}",
-            f"Content changes: +{added_lines} lines, -{removed_lines} lines"
+            f"Content changes: +{added_lines} lines, -{removed_lines} lines",
         ]
 
         if refinement_instructions:
@@ -603,9 +610,9 @@ Provide only the refined prompt content, without additional explanation or forma
             summary_parts.append(f"Instructions: {instructions_preview}")
 
         # Add metadata if available
-        if hasattr(result_doc, 'metadata') and result_doc.metadata:
+        if hasattr(result_doc, "metadata") and result_doc.metadata:
             metadata = result_doc.metadata
-            if 'original_prompt_version' in metadata:
+            if "original_prompt_version" in metadata:
                 summary_parts.append(f"Applied to version {metadata['original_prompt_version']}")
 
         return " | ".join(summary_parts)
@@ -622,18 +629,20 @@ Provide only the refined prompt content, without additional explanation or forma
         refinement_history = []
         for version in versions:
             if "LLM-assisted refinement" in version.change_summary:
-                refinement_history.append({
-                    "version": version.version,
-                    "change_summary": version.change_summary,
-                    "created_by": version.created_by,
-                    "created_at": version.created_at.isoformat(),
-                    "change_type": version.change_type
-                })
+                refinement_history.append(
+                    {
+                        "version": version.version,
+                        "change_summary": version.change_summary,
+                        "created_by": version.created_by,
+                        "created_at": version.created_at.isoformat(),
+                        "change_type": version.change_type,
+                    }
+                )
 
         return {
             "prompt_id": prompt_id,
             "refinement_history": refinement_history,
-            "total_refinements": len(refinement_history)
+            "total_refinements": len(refinement_history),
         }
 
     async def get_version_refinement_details(self, prompt_id: str, version: int) -> Dict[str, Any]:
@@ -651,7 +660,7 @@ Provide only the refined prompt content, without additional explanation or forma
             "change_summary": version_entity.change_summary,
             "created_by": version_entity.created_by,
             "created_at": version_entity.created_at.isoformat(),
-            "is_refinement": is_refinement
+            "is_refinement": is_refinement,
         }
 
         if is_refinement:
@@ -672,7 +681,8 @@ Provide only the refined prompt content, without additional explanation or forma
                 changes = part.replace("Content changes: ", "")
                 # Parse +X lines, -Y lines
                 import re
-                match = re.search(r'\+(\d+) lines, -(\d+) lines', changes)
+
+                match = re.search(r"\+(\d+) lines, -(\d+) lines", changes)
                 if match:
                     info["lines_added"] = int(match.group(1))
                     info["lines_removed"] = int(match.group(2))

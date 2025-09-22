@@ -2,16 +2,17 @@
 
 import asyncio
 import statistics
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from .entities import PromptPerformanceMetrics, UserSatisfactionScore
-from .repository import AnalyticsRepository
-from ...core.service import BaseService
-from ...infrastructure.cache import prompt_store_cache
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
+
+from ...core.service import BaseService
+from ...infrastructure.cache import prompt_store_cache
+from .entities import PromptPerformanceMetrics, UserSatisfactionScore
+from .repository import AnalyticsRepository
 
 
 class AnalyticsService(BaseService[PromptPerformanceMetrics]):
@@ -44,8 +45,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
 
         # Calculate cost estimate
         cost_estimate = self._calculate_cost_estimate(
-            usage_data.get("llm_service", "unknown"),
-            input_tokens, output_tokens
+            usage_data.get("llm_service", "unknown"), input_tokens, output_tokens
         )
         metrics.cost_estimate_usd += cost_estimate
 
@@ -70,11 +70,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
         if existing:
             return existing
 
-        metrics = PromptPerformanceMetrics(
-            id=generate_id(),
-            prompt_id=prompt_id,
-            version=version
-        )
+        metrics = PromptPerformanceMetrics(id=generate_id(), prompt_id=prompt_id, version=version)
         self.create_entity(metrics.__dict__)
         return metrics
 
@@ -87,9 +83,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
             metrics.p99_response_time_ms = response_time
         else:
             alpha = 0.1
-            metrics.average_response_time_ms = (
-                alpha * response_time + (1 - alpha) * metrics.average_response_time_ms
-            )
+            metrics.average_response_time_ms = alpha * response_time + (1 - alpha) * metrics.average_response_time_ms
             metrics.p95_response_time_ms = metrics.average_response_time_ms * 1.5
             metrics.p99_response_time_ms = metrics.average_response_time_ms * 2.0
 
@@ -100,7 +94,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
             "gpt-3.5-turbo": {"input": 0.0015, "output": 0.002},
             "claude-3": {"input": 0.015, "output": 0.075},
             "interpreter": {"input": 0.001, "output": 0.002},
-            "bedrock": {"input": 0.0015, "output": 0.002}
+            "bedrock": {"input": 0.0015, "output": 0.002},
         }
 
         rates = cost_rates.get(llm_service.lower(), cost_rates["gpt-3.5-turbo"])
@@ -124,7 +118,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
             rating=satisfaction_data["rating"],
             feedback_text=satisfaction_data.get("feedback_text"),
             context_tags=satisfaction_data.get("context_tags", []),
-            use_case_category=satisfaction_data.get("use_case_category", "general")
+            use_case_category=satisfaction_data.get("use_case_category", "general"),
         )
 
         self.repository.create_satisfaction_score(score.__dict__)
@@ -136,7 +130,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
             "time_range_days": time_range_days,
             "summary": await self._get_analytics_summary(time_range_days),
             "performance_metrics": await self._get_performance_overview(time_range_days),
-            "usage_trends": await self._get_usage_trends(time_range_days)
+            "usage_trends": await self._get_usage_trends(time_range_days),
         }
 
     async def _get_analytics_summary(self, days: int) -> Dict[str, Any]:
@@ -147,7 +141,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
         return {
             "total_prompts": total_prompts,
             "total_requests": total_requests,
-            "active_prompts": self.repository.get_active_prompts_count()
+            "active_prompts": self.repository.get_active_prompts_count(),
         }
 
     async def _get_performance_overview(self, days: int) -> Dict[str, Any]:
@@ -156,7 +150,7 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
 
         return {
             "top_performing_prompts": top_performing,
-            "average_response_time_ms": self.repository.get_average_response_time(days)
+            "average_response_time_ms": self.repository.get_average_response_time(days),
         }
 
     async def _get_usage_trends(self, days: int) -> Dict[str, Any]:
@@ -164,7 +158,4 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
         usage_by_day = self.repository.get_usage_by_day(days)
         popular_prompts = self.repository.get_most_used_prompts(days, limit=10)
 
-        return {
-            "daily_usage": usage_by_day,
-            "popular_prompts": popular_prompts
-        }
+        return {"daily_usage": usage_by_day, "popular_prompts": popular_prompts}

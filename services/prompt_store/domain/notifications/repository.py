@@ -3,11 +3,12 @@
 Handles data access operations for webhooks, event notifications, and delivery tracking.
 """
 
-from typing import List, Optional, Dict, Any
-from datetime import datetime
 import json
-from services.prompt_store.db.queries import execute_query
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from services.prompt_store.core.entities import BaseEntity
+from services.prompt_store.db.queries import execute_query
 from services.shared.utilities import generate_id, utc_now
 
 
@@ -38,11 +39,11 @@ class WebhookEntity(BaseEntity):
             "timeout_seconds": self.timeout_seconds,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
+            "updated_at": self.updated_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'WebhookEntity':
+    def from_dict(cls, data: Dict[str, Any]) -> "WebhookEntity":
         """Create webhook from dictionary."""
         webhook = cls()
         webhook.id = data.get("id")
@@ -55,9 +56,9 @@ class WebhookEntity(BaseEntity):
         webhook.timeout_seconds = data.get("timeout_seconds", 30)
         webhook.created_by = data.get("created_by", "")
         if "created_at" in data:
-            webhook.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            webhook.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data:
-            webhook.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            webhook.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return webhook
 
 
@@ -88,11 +89,11 @@ class NotificationEntity(BaseEntity):
             "error_message": self.error_message,
             "retry_count": self.retry_count,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
+            "updated_at": self.updated_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'NotificationEntity':
+    def from_dict(cls, data: Dict[str, Any]) -> "NotificationEntity":
         """Create notification from dictionary."""
         notification = cls()
         notification.id = data.get("id")
@@ -102,13 +103,13 @@ class NotificationEntity(BaseEntity):
         notification.recipient_id = data["recipient_id"]
         notification.status = data.get("status", "pending")
         if "delivered_at" in data and data["delivered_at"]:
-            notification.delivered_at = datetime.fromisoformat(data["delivered_at"].replace('Z', '+00:00'))
+            notification.delivered_at = datetime.fromisoformat(data["delivered_at"].replace("Z", "+00:00"))
         notification.error_message = data.get("error_message")
         notification.retry_count = data.get("retry_count", 0)
         if "created_at" in data:
-            notification.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            notification.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data:
-            notification.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            notification.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return notification
 
 
@@ -116,12 +117,23 @@ class NotificationsRepository:
     """Repository for notification operations."""
 
     VALID_EVENT_TYPES = {
-        "prompt.created", "prompt.updated", "prompt.deleted",
-        "prompt.lifecycle_changed", "prompt.version_created",
-        "ab_test.created", "ab_test.completed", "ab_test.updated",
-        "bulk_operation.started", "bulk_operation.completed", "bulk_operation.failed",
-        "relationship.created", "relationship.updated", "relationship.deleted",
-        "refinement.started", "refinement.completed", "refinement.failed"
+        "prompt.created",
+        "prompt.updated",
+        "prompt.deleted",
+        "prompt.lifecycle_changed",
+        "prompt.version_created",
+        "ab_test.created",
+        "ab_test.completed",
+        "ab_test.updated",
+        "bulk_operation.started",
+        "bulk_operation.completed",
+        "bulk_operation.failed",
+        "relationship.created",
+        "relationship.updated",
+        "relationship.deleted",
+        "refinement.started",
+        "refinement.completed",
+        "refinement.failed",
     }
 
     def __init__(self):
@@ -150,12 +162,23 @@ class NotificationsRepository:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
-        execute_query(query, (
-            webhook.id, webhook.name, webhook.url, json.dumps(webhook.events),
-            webhook.secret, webhook.is_active, webhook.retry_count,
-            webhook.timeout_seconds, webhook.created_by,
-            webhook.created_at.isoformat(), webhook.updated_at.isoformat()
-        ), fetch_all=False)
+        execute_query(
+            query,
+            (
+                webhook.id,
+                webhook.name,
+                webhook.url,
+                json.dumps(webhook.events),
+                webhook.secret,
+                webhook.is_active,
+                webhook.retry_count,
+                webhook.timeout_seconds,
+                webhook.created_by,
+                webhook.created_at.isoformat(),
+                webhook.updated_at.isoformat(),
+            ),
+            fetch_all=False,
+        )
 
         return webhook
 
@@ -254,8 +277,9 @@ class NotificationsRepository:
         return True
 
     # Notification operations
-    def create_notification(self, event_type: str, event_data: Dict[str, Any],
-                          recipient_type: str, recipient_id: str) -> NotificationEntity:
+    def create_notification(
+        self, event_type: str, event_data: Dict[str, Any], recipient_type: str, recipient_id: str
+    ) -> NotificationEntity:
         """Create a notification event."""
 
         if event_type not in self.VALID_EVENT_TYPES:
@@ -275,12 +299,21 @@ class NotificationsRepository:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
-        execute_query(query, (
-            notification.id, notification.event_type, json.dumps(notification.event_data),
-            notification.recipient_type, notification.recipient_id, notification.status,
-            notification.retry_count, notification.created_at.isoformat(),
-            notification.updated_at.isoformat()
-        ), fetch_all=False)
+        execute_query(
+            query,
+            (
+                notification.id,
+                notification.event_type,
+                json.dumps(notification.event_data),
+                notification.recipient_type,
+                notification.recipient_id,
+                notification.status,
+                notification.retry_count,
+                notification.created_at.isoformat(),
+                notification.updated_at.isoformat(),
+            ),
+            fetch_all=False,
+        )
 
         return notification
 
@@ -304,8 +337,9 @@ class NotificationsRepository:
 
         return notifications
 
-    def update_notification_status(self, notification_id: str, status: str,
-                                 error_message: Optional[str] = None) -> bool:
+    def update_notification_status(
+        self, notification_id: str, status: str, error_message: Optional[str] = None
+    ) -> bool:
         """Update notification delivery status."""
         query = f"""
             UPDATE {self.notifications_table}
@@ -316,9 +350,9 @@ class NotificationsRepository:
 
         delivered_at = utc_now().isoformat() if status in ["delivered", "failed"] else None
 
-        execute_query(query, (
-            status, error_message, delivered_at, utc_now().isoformat(), notification_id
-        ), fetch_all=False)
+        execute_query(
+            query, (status, error_message, delivered_at, utc_now().isoformat(), notification_id), fetch_all=False
+        )
 
         return True
 
@@ -350,9 +384,10 @@ class NotificationsRepository:
             LIMIT 10
         """
         recent_rows = execute_query(recent_query, fetch_all=True)
-        recent_events = [{"id": row["id"], "event_type": row["event_type"],
-                         "status": row["status"], "created_at": row["created_at"]}
-                        for row in recent_rows]
+        recent_events = [
+            {"id": row["id"], "event_type": row["event_type"], "status": row["status"], "created_at": row["created_at"]}
+            for row in recent_rows
+        ]
 
         # Webhook stats
         webhook_query = f"""
@@ -363,7 +398,7 @@ class NotificationsRepository:
         webhook_row = execute_query(webhook_query, fetch_one=True)
         webhook_stats = {
             "total_webhooks": webhook_row["total_webhooks"] if webhook_row else 0,
-            "active_webhooks": webhook_row["active_webhooks"] if webhook_row else 0
+            "active_webhooks": webhook_row["active_webhooks"] if webhook_row else 0,
         }
 
         return {
@@ -371,7 +406,7 @@ class NotificationsRepository:
             "event_counts": event_counts,
             "recent_events": recent_events,
             "webhook_stats": webhook_stats,
-            "total_notifications": sum(status_counts.values())
+            "total_notifications": sum(status_counts.values()),
         }
 
     def cleanup_old_notifications(self, days_old: int = 30) -> int:

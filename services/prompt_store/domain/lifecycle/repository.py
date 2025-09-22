@@ -3,11 +3,11 @@
 Handles data access operations for prompt lifecycle transitions and status management.
 """
 
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from services.prompt_store.db.queries import execute_query
 from services.prompt_store.core.entities import Prompt
+from services.prompt_store.db.queries import execute_query
 from services.shared.utilities import utc_now
 
 
@@ -19,7 +19,7 @@ class LifecycleRepository:
         "draft": ["published", "archived"],
         "published": ["deprecated", "archived"],
         "deprecated": ["archived", "published"],  # Allow reactivation
-        "archived": ["published"]  # Allow reactivation from archive
+        "archived": ["published"],  # Allow reactivation from archive
     }
 
     def __init__(self):
@@ -42,8 +42,9 @@ class LifecycleRepository:
         # Convert row to Prompt entity
         return Prompt.from_dict(row)
 
-    def update_lifecycle_status(self, prompt_id: str, new_status: str,
-                               reason: str = "", updated_by: str = "system") -> bool:
+    def update_lifecycle_status(
+        self, prompt_id: str, new_status: str, reason: str = "", updated_by: str = "system"
+    ) -> bool:
         """Update the lifecycle status of a prompt."""
         if new_status not in self.VALID_STATUSES:
             raise ValueError(f"Invalid lifecycle status: {new_status}")
@@ -55,9 +56,7 @@ class LifecycleRepository:
 
         # Validate transition
         if new_status not in self.VALID_TRANSITIONS.get(current_prompt.lifecycle_status, []):
-            raise ValueError(
-                f"Invalid transition from '{current_prompt.lifecycle_status}' to '{new_status}'"
-            )
+            raise ValueError(f"Invalid transition from '{current_prompt.lifecycle_status}' to '{new_status}'")
 
         # Update the status
         update_query = f"""
@@ -76,7 +75,7 @@ class LifecycleRepository:
             "from_status": current_prompt.lifecycle_status,
             "to_status": new_status,
             "reason": reason,
-            "updated_by": updated_by
+            "updated_by": updated_by,
         }
         metadata["lifecycle_history"].append(history_entry)
 
@@ -94,8 +93,7 @@ class LifecycleRepository:
         except Exception as e:
             raise Exception(f"Failed to update lifecycle status: {str(e)}")
 
-    def get_prompts_by_status(self, status: str, limit: int = 50,
-                             offset: int = 0) -> List[Prompt]:
+    def get_prompts_by_status(self, status: str, limit: int = 50, offset: int = 0) -> List[Prompt]:
         """Get prompts by lifecycle status."""
         if status not in self.VALID_STATUSES:
             raise ValueError(f"Invalid lifecycle status: {status}")

@@ -3,32 +3,38 @@
 Handles data access operations for prompt relationships and semantic connections.
 """
 
-from typing import List, Optional, Dict, Any
-from services.prompt_store.db.queries import execute_query
+from typing import Any, Dict, List, Optional
+
 from services.prompt_store.core.entities import PromptRelationship
+from services.prompt_store.db.queries import execute_query
 
 
 class RelationshipsRepository:
     """Repository for prompt relationship operations."""
 
     VALID_RELATIONSHIP_TYPES = {
-        "extends",      # Target extends source (inheritance)
-        "references",   # Source references target
+        "extends",  # Target extends source (inheritance)
+        "references",  # Source references target
         "alternative",  # Alternative to source
-        "similar",      # Similar to source
-        "depends_on",   # Source depends on target
-        "replaces",     # Source replaces target
+        "similar",  # Similar to source
+        "depends_on",  # Source depends on target
+        "replaces",  # Source replaces target
         "complements",  # Source complements target
-        "conflicts"     # Source conflicts with target
+        "conflicts",  # Source conflicts with target
     }
 
     def __init__(self):
         self.table_name = "prompt_relationships"
 
-    def create_relationship(self, source_id: str, target_id: str,
-                           relationship_type: str, strength: float = 1.0,
-                           metadata: Optional[Dict[str, Any]] = None,
-                           created_by: str = "system") -> PromptRelationship:
+    def create_relationship(
+        self,
+        source_id: str,
+        target_id: str,
+        relationship_type: str,
+        strength: float = 1.0,
+        metadata: Optional[Dict[str, Any]] = None,
+        created_by: str = "system",
+    ) -> PromptRelationship:
         """Create a new relationship between prompts."""
 
         if relationship_type not in self.VALID_RELATIONSHIP_TYPES:
@@ -48,7 +54,7 @@ class RelationshipsRepository:
             relationship_type=relationship_type,
             strength=strength,
             metadata=metadata or {},
-            created_by=created_by
+            created_by=created_by,
         )
 
         # Save to database
@@ -58,22 +64,25 @@ class RelationshipsRepository:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
-        execute_query(query, (
-            relationship.id,
-            relationship.source_prompt_id,
-            relationship.target_prompt_id,
-            relationship.relationship_type,
-            relationship.strength,
-            str(relationship.metadata),
-            relationship.created_by,
-            relationship.created_at.isoformat(),
-            relationship.updated_at.isoformat()
-        ), fetch_all=False)
+        execute_query(
+            query,
+            (
+                relationship.id,
+                relationship.source_prompt_id,
+                relationship.target_prompt_id,
+                relationship.relationship_type,
+                relationship.strength,
+                str(relationship.metadata),
+                relationship.created_by,
+                relationship.created_at.isoformat(),
+                relationship.updated_at.isoformat(),
+            ),
+            fetch_all=False,
+        )
 
         return relationship
 
-    def get_relationship(self, source_id: str, target_id: str,
-                        relationship_type: str) -> Optional[PromptRelationship]:
+    def get_relationship(self, source_id: str, target_id: str, relationship_type: str) -> Optional[PromptRelationship]:
         """Get a specific relationship."""
         query = f"""
             SELECT id, source_prompt_id, target_prompt_id, relationship_type,
@@ -88,8 +97,7 @@ class RelationshipsRepository:
 
         return PromptRelationship.from_dict(row)
 
-    def get_relationships_for_prompt(self, prompt_id: str,
-                                   direction: str = "both") -> List[PromptRelationship]:
+    def get_relationships_for_prompt(self, prompt_id: str, direction: str = "both") -> List[PromptRelationship]:
         """Get all relationships for a prompt."""
 
         if direction == "outgoing":
@@ -127,8 +135,7 @@ class RelationshipsRepository:
         rows = execute_query(query, params, fetch_all=True)
         return [PromptRelationship.from_dict(row) for row in rows]
 
-    def update_relationship_strength(self, relationship_id: str,
-                                   new_strength: float) -> bool:
+    def update_relationship_strength(self, relationship_id: str, new_strength: float) -> bool:
         """Update the strength of a relationship."""
         if not (0.0 <= new_strength <= 1.0):
             raise ValueError("Relationship strength must be between 0.0 and 1.0")
@@ -181,12 +188,14 @@ class RelationshipsRepository:
 
             for rel in relationships:
                 # Add edge
-                graph["edges"].append({
-                    "source": rel.source_prompt_id,
-                    "target": rel.target_prompt_id,
-                    "type": rel.relationship_type,
-                    "strength": rel.strength
-                })
+                graph["edges"].append(
+                    {
+                        "source": rel.source_prompt_id,
+                        "target": rel.target_prompt_id,
+                        "type": rel.relationship_type,
+                        "strength": rel.strength,
+                    }
+                )
 
                 # Recursively add related prompts
                 if rel.source_prompt_id == current_id:

@@ -1,9 +1,6 @@
 """Refinement domain for Prompt Store service."""
 
-from .service import PromptRefinementService
 from .handlers import PromptRefinementHandlers
+from .service import PromptRefinementService
 
-__all__ = [
-    'PromptRefinementService',
-    'PromptRefinementHandlers'
-]
+__all__ = ["PromptRefinementService", "PromptRefinementHandlers"]

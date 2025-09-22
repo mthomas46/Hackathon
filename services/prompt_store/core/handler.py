@@ -4,8 +4,9 @@ Following domain-driven design principles with generic handler implementation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Callable, Awaitable
-from services.shared.core.responses.responses import create_success_response, create_error_response
+from typing import Any, Awaitable, Callable, Dict
+
+from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.utilities.error_handling import ServiceException
 
 
@@ -21,13 +22,10 @@ class BaseHandler(ABC):
             result = operation(*args, **kwargs)
 
             # Handle async operations
-            if hasattr(result, '__await__'):
+            if hasattr(result, "__await__"):
                 result = await result
 
-            return create_success_response(
-                message="Operation completed successfully",
-                data=result
-            )
+            return create_success_response(message="Operation completed successfully", data=result)
 
         except ServiceException as e:
             return create_error_response(str(e), e.error_code)
