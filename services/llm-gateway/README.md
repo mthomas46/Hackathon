@@ -33,24 +33,28 @@ The **LLM Gateway** is the **centralized AI orchestration hub** that provides se
 - **Intelligent Routing**: Advanced routing based on content sensitivity, cost optimization, and performance metrics
 - **Security-Aware Processing**: Automatic provider selection for sensitive content with PII and security analysis
 - **Multi-Provider Support**: Seamless integration with local and cloud-based AI providers
+- **Model Selection Intelligence**: Automatic model selection based on task complexity and requirements
 
-### **🔒 Security & Compliance**
-- **Content Security Analysis**: Automatic detection of PII, credentials, and proprietary information
-- **Provider Security Mapping**: Route sensitive content exclusively to secure providers (Ollama, Bedrock)
-- **Audit Trail**: Complete logging of all AI interactions for compliance and security monitoring
-- **Access Control**: Role-based access control and authentication for AI operations
+### **🔒 Advanced Security & Compliance**
+- **Multi-Level Content Security Analysis**: Detection of PII, credentials, proprietary information, and sensitive patterns
+- **Provider Security Mapping**: Intelligent routing with security levels (High: Ollama/Bedrock, Medium: OpenAI/Anthropic/Grok)
+- **Compliance-Aware Routing**: Automatic routing based on data classification and regulatory requirements
+- **Comprehensive Audit Trail**: Complete logging of all AI interactions with correlation IDs and metadata
+- **Access Control & Authentication**: Role-based access control and user-specific authentication
 
-### **💰 Cost Optimization & Performance**
-- **Real-time Cost Tracking**: Monitor usage and costs across all providers with detailed analytics
-- **Intelligent Provider Switching**: Automatic routing based on cost-effectiveness and budget management
-- **Performance Monitoring**: Track response times, success rates, and provider availability
-- **Caching & Optimization**: Advanced caching to reduce costs and improve response times
+### **💰 Advanced Cost Optimization & Performance**
+- **Real-time Cost Tracking**: Monitor usage and costs across all providers with detailed analytics and budgeting
+- **Intelligent Provider Switching**: ML-based automatic routing based on cost-effectiveness and budget management
+- **Performance Monitoring**: Track response times, success rates, token usage, and provider availability
+- **Advanced Caching**: Multi-level caching (exact match, semantic similarity, response patterns)
+- **Predictive Scaling**: Automatic provider scaling based on demand patterns and performance metrics
 
-### **📊 Operational Excellence**
-- **Comprehensive Metrics**: Detailed monitoring of usage, costs, performance, and success rates
-- **Rate Limiting**: Configurable rate limiting to prevent abuse and manage resource utilization
-- **Load Balancing**: Distribute requests based on provider availability and performance
-- **Adaptive Learning**: ML-based provider selection optimization based on historical performance
+### **📊 Enterprise Operational Excellence**
+- **Comprehensive Metrics**: Detailed monitoring of usage, costs, performance, success rates, and error patterns
+- **Advanced Rate Limiting**: Multi-level rate limiting (user, provider, global) with burst protection and cooldowns
+- **Intelligent Load Balancing**: Distribute requests based on provider availability, performance, and cost
+- **Adaptive Learning**: ML-based provider selection optimization using historical performance data
+- **Real-time Analytics**: Live dashboards with performance insights and predictive analytics
 
 ## 🎯 **Core Design Philosophy**
 
@@ -98,11 +102,11 @@ INTEGRATED_SERVICES = {
 def select_optimal_provider(content, requirements):
     analysis = {
         "sensitivity": analyze_content_sensitivity(content),
-        "complexity": analyze_query_complexity(content), 
+        "complexity": analyze_query_complexity(content),
         "performance_requirements": requirements.get("performance", "standard"),
         "cost_constraints": requirements.get("cost", "optimized")
     }
-    
+
     if analysis["sensitivity"] == "high":
         return ["ollama", "bedrock"]  # Local/secure providers only
     elif analysis["complexity"] == "high":
@@ -116,6 +120,203 @@ def select_optimal_provider(content, requirements):
 - **Cost Optimization**: Smart provider switching for cost-effectiveness
 - **Security-Aware Routing**: Sensitive content routed to secure providers only
 - **Performance-Based Load Balancing**: Real-time provider performance monitoring
+
+### 🏢 **Provider Integration Guide**
+
+#### **Ollama (Local/Secure Provider)**
+**Security Level**: High | **Cost**: Free | **Setup**:
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull models
+ollama pull llama3
+ollama pull codellama
+
+# Configure in LLM Gateway
+OLLAMA_ENDPOINT=http://localhost:11434
+OLLAMA_MODEL=llama3
+```
+
+**Use Cases**: Sensitive content, offline processing, cost-effective development
+
+#### **OpenAI (Cloud Provider)**
+**Security Level**: Medium | **Cost**: Pay-per-token | **Setup**:
+```bash
+# Get API key from https://platform.openai.com/api-keys
+OPENAI_API_KEY=sk-your-key-here
+
+# Configure models
+OPENAI_MODEL=gpt-4o  # Latest GPT-4 model
+OPENAI_EMBEDDING_MODEL=text-embedding-ada-002
+```
+
+**Use Cases**: Complex reasoning, creative tasks, general AI assistance
+
+#### **Anthropic Claude (Cloud Provider)**
+**Security Level**: Medium | **Cost**: Pay-per-token | **Setup**:
+```bash
+# Get API key from https://console.anthropic.com/
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+
+# Configure models
+ANTHROPIC_MODEL=claude-3.5-sonnet-20241022
+```
+
+**Use Cases**: Long-form content, analysis, research tasks
+
+#### **AWS Bedrock (Enterprise/Secure Provider)**
+**Security Level**: High | **Cost**: Pay-per-token | **Setup**:
+```bash
+# Configure AWS credentials
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
+
+# Configure Bedrock endpoint
+BEDROCK_ENDPOINT=http://bedrock-proxy:7090/invoke
+BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0
+```
+
+**Use Cases**: Enterprise compliance, sensitive data processing, regulated industries
+
+#### **Grok (Cloud Provider)**
+**Security Level**: Medium | **Cost**: Pay-per-token | **Setup**:
+```bash
+# Get API key from xAI
+GROK_API_KEY=grok-your-key-here
+
+# Configure model
+GROK_MODEL=grok-beta
+```
+
+**Use Cases**: Creative tasks, real-time information, conversational AI
+
+### 🛡️ **Security Classification System**
+
+#### **Security Levels**
+- **🔴 Critical**: Contains API keys, passwords, credentials, PII → Routes to Ollama/Bedrock only
+- **🟠 High**: Contains proprietary code, internal docs, sensitive business info → Routes to Ollama/Bedrock preferred
+- **🟡 Medium**: Contains general technical content, public documentation → All providers available
+- **🟢 Low**: Contains public information, generic content → Cost-optimized routing
+
+#### **Content Analysis Engine**
+```python
+def analyze_content_security(content):
+    patterns = {
+        "critical": [
+            r"sk-\w+",  # OpenAI keys
+            r"sk-ant-\w+",  # Anthropic keys
+            r"password.*=",  # Passwords
+            r"secret.*=",  # Secrets
+            r"token.*=",  # Tokens
+            r"\b\d{3}-\d{2}-\d{4}\b",  # SSN patterns
+        ],
+        "high": [
+            r"internal.*only",
+            r"confidential",
+            r"proprietary",
+            r"private.*api",
+            r"source.*code",
+        ],
+        "medium": [
+            r"api.*endpoint",
+            r"database.*connection",
+            r"server.*config",
+        ]
+    }
+    # Returns security classification and confidence score
+```
+
+### 💰 **Cost Optimization Strategies**
+
+#### **Intelligent Cost Management**
+```python
+def optimize_cost_routing(request):
+    # Analyze request characteristics
+    complexity = analyze_complexity(request.prompt)
+    length = len(request.prompt.split())
+
+    # Cost optimization logic
+    if complexity == "low" and length < 100:
+        return "ollama"  # Free, fast
+    elif complexity == "medium":
+        return "grok"  # Cost-effective cloud option
+    elif complexity == "high":
+        return "openai"  # Best performance for complex tasks
+    else:
+        return "anthropic"  # Balanced performance/cost
+```
+
+#### **Budget Management**
+```python
+# Budget configuration
+BUDGET_CONFIG = {
+    "daily_limit": 50.0,  # Max $50/day
+    "monthly_limit": 1000.0,  # Max $1000/month
+    "alert_threshold": 0.8,  # Alert at 80% usage
+    "fallback_provider": "ollama"  # Fallback when budget exceeded
+}
+```
+
+### 📊 **Model Selection Guide**
+
+#### **Task-Based Model Selection**
+| Task Type | Recommended Models | Reasoning |
+|-----------|-------------------|-----------|
+| **Code Generation** | CodeLlama (Ollama), GPT-4 (OpenAI) | Specialized code understanding |
+| **Creative Writing** | Claude (Anthropic), GPT-4 (OpenAI) | Excellent language generation |
+| **Analysis/Research** | Claude (Anthropic), GPT-4 (OpenAI) | Strong reasoning capabilities |
+| **Simple Q&A** | Grok, Llama3 (Ollama) | Fast, cost-effective responses |
+| **Sensitive Content** | Ollama, Bedrock | Local/secure processing |
+| **Embeddings** | OpenAI Ada-002, Ollama | Optimized for semantic search |
+
+#### **Performance Comparison**
+```
+Response Time (avg):
+- Ollama: 2-5 seconds
+- OpenAI: 1-3 seconds
+- Anthropic: 2-4 seconds
+- Bedrock: 3-6 seconds
+- Grok: 1-2 seconds
+
+Cost per 1K tokens:
+- Ollama: $0.00
+- OpenAI: $0.002-0.03
+- Anthropic: $0.015-0.032
+- Bedrock: $0.015-0.032
+- Grok: $0.01
+```
+
+### ⚡ **Rate Limiting & Throttling**
+
+#### **Multi-Level Rate Limiting**
+```python
+RATE_LIMIT_CONFIG = {
+    "user_limits": {
+        "requests_per_minute": 60,
+        "requests_per_hour": 1000,
+        "tokens_per_minute": 50000,
+        "burst_limit": 10,
+        "cooldown_seconds": 60
+    },
+    "provider_limits": {
+        "openai": {"rpm": 3500, "tpm": 90000},
+        "anthropic": {"rpm": 50, "tpm": 25000},
+        "ollama": {"rpm": 1000, "tpm": 100000}  # Local limits
+    },
+    "global_limits": {
+        "max_concurrent_requests": 100,
+        "max_tokens_per_second": 1000
+    }
+}
+```
+
+#### **Adaptive Rate Limiting**
+- **User Behavior Analysis**: Adjusts limits based on usage patterns
+- **Provider Health Monitoring**: Reduces limits when providers are slow/unreliable
+- **Burst Protection**: Allows short bursts while preventing sustained abuse
+- **Cooldown Periods**: Temporary throttling after limit violations
 
 ### 🔒 Security Integration
 - Content analysis for sensitive information detection
