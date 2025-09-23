@@ -1,0 +1,107 @@
+{
+  "timestamp": "2025-09-18T14:48:40.321509",
+  "test_summary": {
+    "total_services": 15,
+    "healthy_services": 14,
+    "health_percentage": 93.3,
+    "api_working": 3,
+    "api_not_implemented": 5,
+    "api_failed": 0,
+    "overall_status": "EXCELLENT"
+  },
+  "service_status": {
+    "redis": {
+      "status": "failed",
+      "error": "Remote end closed connection without response",
+      "port": 6379
+    },
+    "orchestrator": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.004,
+      "port": 5099
+    },
+    "doc_store": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.003,
+      "port": 5087
+    },
+    "analysis-service": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5080
+    },
+    "source-agent": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5085
+    },
+    "notification-service": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5130
+    },
+    "frontend": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 3000
+    },
+    "llm-gateway": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5055
+    },
+    "mock-data-generator": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5065
+    },
+    "summarizer-hub": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5160
+    },
+    "code-analyzer": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5025
+    },
+    "discovery-agent": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5045
+    },
+    "prompt_store": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5110
+    },
+    "interpreter": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 5120
+    },
+    "ollama": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001,
+      "port": 11434
+    }
+  },
+  "recommendations": [
+    "System is production-ready"
+  ],
+  "next_steps": []
+}

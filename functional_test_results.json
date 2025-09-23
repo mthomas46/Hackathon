@@ -1,0 +1,310 @@
+{
+  "health_checks": {
+    "redis": {
+      "status": "failed",
+      "error": "Server disconnected"
+    },
+    "orchestrator": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.004064083099365234,
+      "data": {
+        "status": "healthy",
+        "service": "orchestrator",
+        "version": "1.0.0",
+        "timestamp": 1758224887.9008784,
+        "uptime_seconds": 0
+      }
+    },
+    "doc_store": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.003515005111694336,
+      "data": {
+        "status": "healthy",
+        "service": "doc_store",
+        "version": "1.0.0",
+        "timestamp": 1758224887.9047227,
+        "uptime_seconds": 0
+      }
+    },
+    "analysis-service": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0029268264770507812,
+      "data": {
+        "status": "healthy",
+        "service": "analysis-service",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T19:48:07.908083+00:00",
+        "uptime_seconds": 408.53269,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": true,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      }
+    },
+    "source-agent": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0016260147094726562,
+      "data": {
+        "status": "healthy",
+        "service": "source-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T19:48:07.910356+00:00",
+        "uptime_seconds": 973.886388,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": null,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      }
+    },
+    "notification-service": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0013928413391113281,
+      "data": {
+        "status": "healthy",
+        "service": "notification-service",
+        "version": "0.1.0",
+        "description": "Notification service is operational"
+      }
+    },
+    "frontend": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.001789093017578125,
+      "data": {
+        "status": "healthy",
+        "service": "frontend",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T19:48:07.913274+00:00",
+        "uptime_seconds": 967.702113,
+        "environment": "development",
+        "workflows_loaded": null,
+        "database_connected": null,
+        "models_loaded": null,
+        "api_connected": true,
+        "llm_connected": null,
+        "ollama_available": null,
+        "data_sources": null,
+        "email_configured": null,
+        "analysis_ready": null
+      }
+    },
+    "llm-gateway": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0010418891906738281,
+      "data": {
+        "status": "healthy",
+        "service": "llm-gateway",
+        "version": "1.0.0",
+        "timestamp": 1758224887.9149373,
+        "environment": "development",
+        "ollama_endpoint": "http://ollama:11434"
+      }
+    },
+    "mock-data-generator": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0011208057403564453,
+      "data": {
+        "status": "healthy",
+        "service": "mock-data-generator",
+        "version": "1.0.0",
+        "timestamp": 1758224887.9160824,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055",
+        "doc_store_url": "http://doc_store:5087"
+      }
+    },
+    "summarizer-hub": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0011188983917236328,
+      "data": {
+        "status": "healthy",
+        "service": "summarizer-hub",
+        "version": "1.0.0",
+        "timestamp": 1758224887.9171934,
+        "environment": "development",
+        "llm_gateway_url": "http://llm-gateway:5055"
+      }
+    },
+    "code-analyzer": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0010440349578857422,
+      "data": {
+        "status": "healthy",
+        "service": "code-analyzer"
+      }
+    },
+    "discovery-agent": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0015799999237060547,
+      "data": {
+        "status": "healthy",
+        "service": "discovery-agent",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T19:48:07.919547Z",
+        "uptime_seconds": 48685.364213,
+        "environment": "development"
+      }
+    },
+    "prompt_store": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0018489360809326172,
+      "data": {
+        "status": "healthy",
+        "service": "prompt-store",
+        "version": "2.0.0",
+        "timestamp": "2025-09-18T19:48:07.921575Z",
+        "uptime_seconds": 52944.184437,
+        "environment": "development"
+      }
+    },
+    "interpreter": {
+      "status": "healthy",
+      "http_code": 200,
+      "response_time": 0.0014300346374511719,
+      "data": {
+        "status": "healthy",
+        "service": "interpreter",
+        "version": "1.0.0",
+        "timestamp": "2025-09-18T19:48:07.923183",
+        "features": [
+          "document_persistence",
+          "workflow_provenance",
+          "doc_store_integration"
+        ]
+      }
+    },
+    "ollama": {
+      "status": "unknown",
+      "http_code": 200,
+      "response_time": 0.0015010833740234375,
+      "data": {
+        "models": [
+          {
+            "name": "llama3.2:1b",
+            "model": "llama3.2:1b",
+            "modified_at": "2025-09-18T05:28:05.240572004Z",
+            "size": 1321098329,
+            "digest": "baf6a787fdffd633537aa2eb51cfd54cb93ff08e28040095462bb63daf552878",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "1.2B",
+              "quantization_level": "Q8_0"
+            }
+          },
+          {
+            "name": "tinyllama:latest",
+            "model": "tinyllama:latest",
+            "modified_at": "2025-09-18T05:27:56.568572Z",
+            "size": 637700138,
+            "digest": "2644915ede352ea7bdfaff0bfac0be74c719d5d5202acb63a6fb095b52f394a4",
+            "details": {
+              "parent_model": "",
+              "format": "gguf",
+              "family": "llama",
+              "families": [
+                "llama"
+              ],
+              "parameter_size": "1B",
+              "quantization_level": "Q4_0"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "api_endpoints": {
+    "orchestrator_/api/v1/workflows": {
+      "status": "success",
+      "http_code": 200,
+      "data_type": "dict"
+    },
+    "doc_store_/api/v1/documents": {
+      "status": "success",
+      "http_code": 200,
+      "data_type": "dict"
+    },
+    "analysis-service_/api/v1/analysis/status": {
+      "status": "http_error",
+      "http_code": 404,
+      "reason": "Not Found"
+    },
+    "source-agent_/api/v1/sources": {
+      "status": "http_error",
+      "http_code": 404,
+      "reason": "Not Found"
+    },
+    "notification-service_/api/v1/notifications": {
+      "status": "http_error",
+      "http_code": 404,
+      "reason": "Not Found"
+    },
+    "llm-gateway_/api/v1/models": {
+      "status": "http_error",
+      "http_code": 404,
+      "reason": "Not Found"
+    },
+    "prompt_store_/api/v1/prompts": {
+      "status": "success",
+      "http_code": 200,
+      "data_type": "dict"
+    },
+    "code-analyzer_/api/v1/analyze/status": {
+      "status": "http_error",
+      "http_code": 404,
+      "reason": "Not Found"
+    }
+  },
+  "service_interactions": {},
+  "performance_metrics": {
+    "orchestrator": {
+      "total_requests": 3,
+      "successful": 3,
+      "failed": 0,
+      "avg_response_time": 0.0010610421498616536,
+      "success_rate": 100.0
+    },
+    "doc_store": {
+      "total_requests": 3,
+      "successful": 3,
+      "failed": 0,
+      "avg_response_time": 0.0009470780690511068,
+      "success_rate": 100.0
+    },
+    "analysis-service": {
+      "total_requests": 3,
+      "successful": 3,
+      "failed": 0,
+      "avg_response_time": 0.0008741219838460287,
+      "success_rate": 100.0
+    }
+  },
+  "integration_tests": {}
+}

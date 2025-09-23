@@ -1,0 +1,31 @@
+# Data Services Dashboard - Core Dependencies
+# Unified interface for Memory Agent, Prompt Store, and Document Store services
+
+# Web Framework
+streamlit>=1.28.0
+
+# HTTP Client for async API calls
+httpx>=0.24.0
+
+# Data visualization
+plotly>=5.0.0
+pandas>=2.0.0
+
+# Configuration and data validation
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Logging
+structlog>=23.0.0
+
+# Standard library enhancements
+typing-extensions>=4.0.0
+
+# Optional: For enhanced data processing
+numpy>=1.24.0
+openpyxl>=3.1.0  # For Excel export support
+
+# Development dependencies (optional)
+# pytest>=7.0.0        # For testing (see requirements-test.txt)
+# black>=23.0.0        # For code formatting
+# mypy>=1.0.0          # For type checking

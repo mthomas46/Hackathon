@@ -1,0 +1,13 @@
+# CLI Service Requirements
+# Extends base requirements with CLI-specific dependencies
+
+# Import base requirements
+-r ../requirements.base.txt
+
+# CLI-specific dependencies for enhanced interactive experience
+questionary==2.0.1          # Interactive CLI prompts and selections
+prompt-toolkit>=2.0,<=3.0.36  # Advanced CLI toolkit (dependency of questionary)
+
+# Additional CLI enhancements
+click==8.1.7               # CLI framework (if not in base requirements)
+rich==13.7.0              # Rich text and beautiful formatting

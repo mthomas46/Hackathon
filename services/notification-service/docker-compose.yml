@@ -1,0 +1,23 @@
+# Individual Docker Compose for Notification Service
+# This allows the notification-service to run independently as a standalone service
+
+version: "3.9"
+
+services:
+  notification-service:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ../../:/app:ro
+      - ./:/app/services/notification-service:rw
+      - ../../:/app:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/notification-service/main.py"
+    ports:
+      - "5095:5095"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5095/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

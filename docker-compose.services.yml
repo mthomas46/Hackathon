@@ -1,0 +1,18 @@
+# =============================================================================
+# DOCKER COMPOSE - SERVICES EXTENSION (DEPRECATED)
+# =============================================================================
+# This file is kept for backward compatibility but is no longer needed.
+# All services are now included in docker-compose.dev.yml
+#
+# If you need to extend the main docker-compose.dev.yml, you can add
+# additional services here and use:
+# docker-compose -f docker-compose.dev.yml -f docker-compose.services.yml up
+# =============================================================================
+
+version: '3.8'
+
+services: {}
+
+volumes: {}
+
+networks: {}

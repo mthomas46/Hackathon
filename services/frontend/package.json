@@ -1,0 +1,33 @@
+{
+  "name": "frontend-service",
+  "version": "1.0.0",
+  "description": "Frontend service for LLM Documentation Ecosystem",
+  "main": "index.js",
+  "scripts": {
+    "elm:init": "elm init",
+    "elm:install": "elm install",
+    "elm:make": "elm make src/elm/Main.elm --output=static/elm.js",
+    "elm:make:optimized": "elm make src/elm/Main.elm --output=static/elm.js --optimize",
+    "elm:make:watch": "elm-watch hot",
+    "elm:test": "elm-test",
+    "build": "npm run elm:make:optimized",
+    "dev": "run-pty % npm run elm:make:watch % npm run test",
+    "test": "elm-test --watch",
+    "test:ci": "elm-test"
+  },
+  "keywords": [
+    "elm",
+    "frontend",
+    "documentation",
+    "llm"
+  ],
+  "author": "Casey Webb",
+  "license": "MIT",
+  "devDependencies": {
+    "elm": "^0.19.1-6",
+    "elm-json": "^0.2.13",
+    "elm-test": "^0.19.1-revision12",
+    "elm-watch": "^1.1.2",
+    "run-pty": "^5.0.0"
+  }
+}

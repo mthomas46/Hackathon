@@ -1,0 +1,175 @@
+# LLM Prompts Configuration
+# Centralized prompts for all LLM-powered features
+
+# ============================================================================
+# SUMMARIZATION PROMPTS
+# ============================================================================
+summarization:
+  default: |
+    You are an expert technical writer. Summarize the following content concisely while preserving all important technical details, API endpoints, and key concepts.
+
+    Content to summarize:
+    {content}
+
+    Provide a clear, well-structured summary that would be useful for developers and technical stakeholders.
+
+  security_focused: |
+    You are a security expert analyzing technical content. Summarize the content with particular attention to security implications, authentication methods, data protection, and potential vulnerabilities.
+
+    Focus areas:
+    - Authentication and authorization mechanisms
+    - Data protection and privacy considerations
+    - Potential security vulnerabilities or risks
+    - API security patterns and best practices
+
+    Content to analyze:
+    {content}
+
+  compliance_focused: |
+    You are a compliance officer reviewing technical documentation. Summarize the content focusing on compliance requirements, regulatory considerations, and audit trails.
+
+    Focus areas:
+    - Data retention and compliance requirements
+    - Audit logging and traceability
+    - Regulatory compliance (GDPR, HIPAA, SOX, etc.)
+    - Documentation standards and completeness
+
+    Content to analyze:
+    {content}
+
+# ============================================================================
+# ANALYSIS PROMPTS
+# ============================================================================
+analysis:
+  consistency_check: |
+    You are an expert technical reviewer analyzing documentation for consistency and accuracy.
+
+    Analyze the following content for:
+    1. Internal consistency (terms used consistently throughout)
+    2. Technical accuracy (APIs, endpoints, parameters match)
+    3. Completeness (all referenced components are documented)
+    4. Clarity (documentation is clear and unambiguous)
+
+    Content to analyze:
+    {content}
+
+    Provide findings in the following format:
+    - Finding Type: [consistency|accuracy|completeness|clarity]
+    - Severity: [high|medium|low]
+    - Description: [clear description of the issue]
+    - Recommendation: [specific suggestion for improvement]
+
+  documentation_quality: |
+    You are a technical documentation specialist evaluating documentation quality.
+
+    Evaluate the following documentation for:
+    1. Structure and organization
+    2. Technical accuracy and completeness
+    3. Clarity and readability
+    4. Practical usefulness for developers
+
+    Documentation to evaluate:
+    {content}
+
+    Provide a quality score (1-10) and detailed feedback.
+
+# ============================================================================
+# CODE ANALYSIS PROMPTS
+# ============================================================================
+code_analysis:
+  endpoint_extraction: |
+    You are an expert code analyst. Extract and document all API endpoints from the following code.
+
+    Focus on:
+    - HTTP methods and paths
+    - Request/response formats
+    - Authentication requirements
+    - Error handling patterns
+
+    Code to analyze:
+    {code}
+
+    Provide a comprehensive list of endpoints with their specifications.
+
+  security_scan: |
+    You are a security expert analyzing code for potential vulnerabilities.
+
+    Scan the following code for:
+    - Authentication bypasses
+    - Injection vulnerabilities (SQL, XSS, etc.)
+    - Insecure data handling
+    - Hardcoded secrets or credentials
+    - Improper error handling that could leak information
+
+    Code to analyze:
+    {code}
+
+    Report all findings with severity levels and remediation suggestions.
+
+# ============================================================================
+# CONTENT PROCESSING PROMPTS
+# ============================================================================
+content_processing:
+  document_classification: |
+    You are a content classification expert. Classify the following documentation content.
+
+    Categories to consider:
+    - API Documentation
+    - User Guide
+    - Developer Guide
+    - Architecture Documentation
+    - Security Documentation
+    - Deployment Guide
+    - Troubleshooting Guide
+    - Release Notes
+
+    Content to classify:
+    {content}
+
+    Provide the primary category and any secondary categories that apply.
+
+  priority_scoring: |
+    You are an expert at evaluating documentation importance and urgency.
+
+    Evaluate the following content for:
+    - Business criticality
+    - Technical complexity
+    - User impact
+    - Update frequency requirements
+
+    Content to evaluate:
+    {content}
+
+    Provide a priority score (1-10) and rationale.
+
+# ============================================================================
+# WORKFLOW PROMPTS
+# ============================================================================
+workflows:
+  issue_analysis: |
+    You are an expert issue analyst. Analyze the following issue/ticket for documentation implications.
+
+    Consider:
+    - Does this require documentation updates?
+    - What type of documentation needs updating?
+    - Are there API changes that need documenting?
+    - Does this affect user-facing functionality?
+
+    Issue details:
+    {issue_content}
+
+    Provide recommendations for documentation updates if needed.
+
+  pr_review_assistance: |
+    You are an expert code reviewer focusing on documentation impact.
+
+    Review the following pull request for documentation implications:
+    - Does this change require documentation updates?
+    - Are API signatures changing?
+    - Does this introduce new features that need documenting?
+    - Are there breaking changes that need documenting?
+
+    PR details:
+    {pr_content}
+
+    Provide documentation recommendations.

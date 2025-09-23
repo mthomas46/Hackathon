@@ -1,0 +1,23 @@
+# Individual Docker Compose for Bedrock Proxy Service
+# This allows the bedrock-proxy to run independently as a standalone service
+
+version: "3.9"
+
+services:
+  bedrock-proxy:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ../../:/app:ro
+      - ./:/app/services/bedrock-proxy:rw
+      - ../../:/app:ro
+    environment:
+      - ENVIRONMENT=development
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn pydantic && python services/bedrock-proxy/main.py"
+    ports:
+      - "7090:7090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

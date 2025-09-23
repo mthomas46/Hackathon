@@ -1,0 +1,20 @@
+server:
+  port: 5080
+log_collector:
+  retention_days: ${LOG_RETENTION_DAYS:-30}
+  max_log_size_mb: ${MAX_LOG_SIZE_MB:-100}
+security:
+  enable_ssl: ${SSL_ENABLED:-false}
+  ssl_cert_path: ${SSL_CERT_PATH:-}
+  ssl_key_path: ${SSL_KEY_PATH:-}
+  cors_origins: ${CORS_ORIGINS:-http://localhost:3000}
+  rate_limiting_enabled: ${RATE_LIMITING_ENABLED:-true}
+  max_request_size: ${MAX_REQUEST_SIZE:-10485760}
+  timeout_seconds: ${TIMEOUT_SECONDS:-30}
+  enable_request_logging: ${REQUEST_LOGGING:-false}
+  enable_metrics: ${METRICS_ENABLED:-true}
+development:
+  debug_mode: ${DEBUG_MODE:-false}
+  enable_cors: ${ENABLE_CORS:-true}
+  mock_external_services: ${MOCK_EXTERNAL:-false}
+  log_level: ${LOG_LEVEL:-INFO}

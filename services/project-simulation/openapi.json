@@ -1,0 +1,20 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Project Simulation Service API",
+    "version": "1.0.0",
+    "description": "API for project simulation and analysis"
+  },
+  "paths": {
+    "/api/v1/simulations": {
+      "get": {
+        "summary": "List simulations",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  }
+}

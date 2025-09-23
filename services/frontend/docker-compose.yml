@@ -1,0 +1,26 @@
+# Individual Docker Compose for Frontend Service
+# This allows the frontend to run independently as a standalone service
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../../:/app:ro
+    environment:
+      - ENVIRONMENT=production
+      - PYTHONPATH=/app
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:3000/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3

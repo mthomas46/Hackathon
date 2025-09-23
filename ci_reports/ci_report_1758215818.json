@@ -1,0 +1,68 @@
+{
+  "timestamp": 1758215818.4177809,
+  "overall_success": false,
+  "validation_levels": [
+    "quick_validation",
+    "security_validation"
+  ],
+  "summary": {
+    "total_checks": 7,
+    "passed_checks": 6,
+    "failed_checks": 1,
+    "success_rate": 0.8571428571428571
+  },
+  "details": {
+    "quick_validation": {
+      "passed": true,
+      "checks": {
+        "syntax": {
+          "passed": true,
+          "files_checked": 10
+        },
+        "imports": {
+          "passed": true,
+          "imports_tested": 7
+        },
+        "config": {
+          "passed": true,
+          "files_checked": 2
+        },
+        "ports": {
+          "passed": true,
+          "stdout": "\ud83d\udc33 Docker Standardization and Port Management\n==================================================\n\n\u26a0\ufe0f CONFIGURATION ISSUES:\n  \u26a0\ufe0f doc_store: Port mapping 5087:5010 - ensure health checks use internal port\n  \u26a0\ufe0f analysis-service: Port mapping 5080:5020 - ensure health checks use internal port\n  \u26a0\ufe0f notification-service: Port mapping 5130:5020 - ensure health checks use internal port\n  \u26a0\ufe0f source-agent: Port mapping 5085:5070 - ensure health checks use internal port\n\n\ud83d\udca1 RECOMMENDATIONS:\n  \u2022 Update health..."
+        }
+      },
+      "duration": 1758215817.630969
+    },
+    "security_validation": {
+      "passed": false,
+      "checks": {
+        "secrets": {
+          "passed": true,
+          "message": "No obvious secrets found"
+        },
+        "vulnerabilities": {
+          "passed": true,
+          "message": "Vulnerability check completed (placeholder - integrate with security tools)",
+          "tools_recommended": [
+            "trivy",
+            "snyk",
+            "bandit"
+          ]
+        },
+        "permissions": {
+          "passed": false,
+          "error": "Python files with executable permissions: 15",
+          "suspicious_files": [
+            "tests/document_persistence_test_runner.py",
+            "tests/test_health_monitoring.py",
+            "venv/lib/python3.13/site-packages/numpy/testing/print_coercion_tables.py",
+            "scripts/integration/comprehensive_docker_test.py",
+            "scripts/integration/benchmark_prompt_store.py"
+          ]
+        }
+      },
+      "duration": 1758215818.4177458
+    }
+  }
+}

@@ -1,0 +1,27 @@
+server:
+  port: 5072
+github:
+  toolsets: ${GITHUB_TOOLSETS:-repos}
+  dynamic_toolsets: ${GITHUB_DYNAMIC_TOOLSETS:-false}
+  read_only: ${GITHUB_READ_ONLY:-false}
+  mock: ${GITHUB_MOCK:-true}
+  host: ${GITHUB_HOST:-}
+  personal_access_token: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
+  use_official_gh_mcp: ${USE_OFFICIAL_GH_MCP:-false}
+  official_gh_mcp_base_url: ${OFFICIAL_GH_MCP_BASE_URL:-http://github-mcp-server:8060}
+upstream_timeout_seconds: ${UPSTREAM_TIMEOUT_SECONDS:-60}
+security:
+  enable_ssl: ${SSL_ENABLED:-false}
+  ssl_cert_path: ${SSL_CERT_PATH:-}
+  ssl_key_path: ${SSL_KEY_PATH:-}
+  cors_origins: ${CORS_ORIGINS:-http://localhost:3000}
+  rate_limiting_enabled: ${RATE_LIMITING_ENABLED:-true}
+  max_request_size: ${MAX_REQUEST_SIZE:-10485760}
+  timeout_seconds: ${TIMEOUT_SECONDS:-30}
+  enable_request_logging: ${REQUEST_LOGGING:-false}
+  enable_metrics: ${METRICS_ENABLED:-true}
+development:
+  debug_mode: ${DEBUG_MODE:-false}
+  enable_cors: ${ENABLE_CORS:-true}
+  mock_external_services: ${MOCK_EXTERNAL:-false}
+  log_level: ${LOG_LEVEL:-INFO}
