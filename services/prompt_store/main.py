@@ -893,8 +893,8 @@ async def retry_bulk_operation(operation_id: str):
 async def refine_prompt(
     prompt_id: str,
     refinement_instructions: str,
-    llm_service: str = "interpreter",
-    context_documents: Optional[List[str]] = None,
+                       llm_service: str = "interpreter",
+                       context_documents: Optional[List[str]] = None,
     user_id: str = "api_user",
 ):
     """Start LLM-assisted prompt refinement workflow."""

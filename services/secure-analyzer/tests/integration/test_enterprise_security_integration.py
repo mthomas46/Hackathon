@@ -253,9 +253,9 @@ AWS_CONFIG = {
     's3_bucket': 'company-secure-data'
 }
 
-# API Keys
-STRIPE_SECRET_KEY = 'sk_live_51Hb8GzKQ2X8vF9qX7Y8Z9A0B1C2D3E4F5G6H7I8J9K0L1M2N3O4P5Q6R7S8T9U0V1W2X3Y4Z5'
-SENDGRID_API_KEY = 'SG.abcdefghijklmnopqrstuvwx.SG.abcdefghijklmnopqrstuvwx1234567890'
+# API Keys (Test/Dummy Values - DO NOT USE IN PRODUCTION)
+STRIPE_SECRET_KEY = 'sk_test_dummy_key_for_testing_only_not_real'
+SENDGRID_API_KEY = 'SG.dummy_api_key_for_testing_only_not_real'
 
 # JWT Secret
 JWT_SECRET = 'MySuperSecretJWTKeyThatShouldNeverBeInCode123456789!'
