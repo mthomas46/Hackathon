@@ -29,7 +29,15 @@ except ImportError:
         return LoggerService()
 
     def with_correlation_id(correlation_id=None):
-        return lambda func: func
+        from contextlib import contextmanager
+
+        @contextmanager
+        def _correlation_context():
+            # Simple no-op context manager to prevent crashes
+            # Correlation ID tracking can be implemented later if needed
+            yield
+
+        return _correlation_context()
 
     def generate_correlation_id():
         import uuid

@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any, Tuple
 from services.prompt_store.core.repository import BaseRepository
 from services.prompt_store.core.entities import Prompt
 from services.prompt_store.db.queries import execute_paged_query, execute_query, serialize_json, deserialize_json
+from services.shared.utilities import validate_sql_identifier
 
 
 class PromptRepository(BaseRepository[Prompt]):
@@ -14,6 +15,10 @@ class PromptRepository(BaseRepository[Prompt]):
 
     def __init__(self):
         super().__init__("prompts")
+
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
 
     def _row_to_entity(self, row: Dict[str, Any]) -> Prompt:
         """Convert database row to Prompt entity."""
@@ -70,14 +75,14 @@ class PromptRepository(BaseRepository[Prompt]):
             INSERT OR REPLACE INTO {self.table_name}
             ({','.join(columns)})
             VALUES ({placeholders})
-        """
+        """  # nosec: Table name validated in __init__
 
         execute_query(query, values)
         return entity
 
     def get_by_id(self, entity_id: str) -> Optional[Prompt]:
         """Get prompt by ID."""
-        query = f"SELECT * FROM {self.table_name} WHERE id = ?"
+        query = f"SELECT * FROM {self.table_name} WHERE id = ?"  # nosec: Table name validated in __init__
         row = execute_query(query, (entity_id,), fetch_one=True)
         return self._row_to_entity(row) if row else None
 
@@ -107,7 +112,7 @@ class PromptRepository(BaseRepository[Prompt]):
             UPDATE {self.table_name}
             SET {', '.join(set_parts)}, updated_at = ?
             WHERE id = ?
-        """
+        """  # nosec: Table name validated in __init__
         values.insert(-1, "CURRENT_TIMESTAMP")  # Insert updated_at before id
 
         execute_query(query, values)
@@ -115,13 +120,13 @@ class PromptRepository(BaseRepository[Prompt]):
 
     def delete(self, entity_id: str) -> bool:
         """Soft delete prompt."""
-        query = f"UPDATE {self.table_name} SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+        query = f"UPDATE {self.table_name} SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?"  # nosec: Table name validated in __init__
         execute_query(query, (entity_id,))
         return True
 
     def exists(self, entity_id: str) -> bool:
         """Check if prompt exists."""
-        query = f"SELECT 1 FROM {self.table_name} WHERE id = ? AND is_active = 1"
+        query = f"SELECT 1 FROM {self.table_name} WHERE id = ? AND is_active = 1"  # nosec: Table name validated in __init__
         row = execute_query(query, (entity_id,), fetch_one=True)
         return row is not None
 
@@ -152,13 +157,13 @@ class PromptRepository(BaseRepository[Prompt]):
             if conditions:
                 where_clause = f"WHERE {' AND '.join(conditions)}"
 
-        query = f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}"
+        query = f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}"  # nosec: Table name validated in __init__
         result = execute_query(query, tuple(params), fetch_one=True)
         return result["count"] if result else 0
 
     def get_by_name(self, category: str, name: str) -> Optional[Prompt]:
         """Get prompt by category and name."""
-        query = f"SELECT * FROM {self.table_name} WHERE category = ? AND name = ? AND is_active = 1"
+        query = f"SELECT * FROM {self.table_name} WHERE category = ? AND name = ? AND is_active = 1"  # nosec: Table name validated in __init__
         row = execute_query(query, (category, name), fetch_one=True)
         return self._row_to_entity(row) if row else None
 
@@ -188,7 +193,7 @@ class PromptRepository(BaseRepository[Prompt]):
 
     def get_by_category(self, category: str, limit: int = 50, offset: int = 0) -> List[Prompt]:
         """Get prompts by category."""
-        query = f"SELECT * FROM {self.table_name} WHERE category = ? AND is_active = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        query = f"SELECT * FROM {self.table_name} WHERE category = ? AND is_active = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?"  # nosec: Table name validated in __init__
         rows = execute_query(query, (category, limit, offset), fetch_all=True)
         return [self._row_to_entity(row) for row in rows]
 
@@ -215,12 +220,12 @@ class PromptRepository(BaseRepository[Prompt]):
 
     def increment_usage_count(self, prompt_id: str) -> bool:
         """Increment usage count for a prompt."""
-        query = f"UPDATE {self.table_name} SET usage_count = usage_count + 1 WHERE id = ?"
+        query = f"UPDATE {self.table_name} SET usage_count = usage_count + 1 WHERE id = ?"  # nosec: Table name validated in __init__
         execute_query(query, (prompt_id,))
         return True
 
     def update_performance_score(self, prompt_id: str, score: float) -> bool:
         """Update performance score for a prompt."""
-        query = f"UPDATE {self.table_name} SET performance_score = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+        query = f"UPDATE {self.table_name} SET performance_score = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"  # nosec: Table name validated in __init__
         execute_query(query, (score, prompt_id))
         return True

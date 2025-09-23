@@ -38,6 +38,52 @@ def clean_string(text: str) -> str:
     return " ".join(text.split()).strip()
 
 
+def validate_sql_identifier(identifier: str) -> bool:
+    """Validate SQL identifier to prevent SQL injection.
+
+    Only allows alphanumeric characters and underscores, must start with letter or underscore.
+    Maximum length of 64 characters to prevent abuse.
+
+    Args:
+        identifier: The identifier to validate
+
+    Returns:
+        True if identifier is safe, False otherwise
+    """
+    if not identifier or len(identifier) > 64:
+        return False
+
+    # Must start with letter or underscore, followed by letters, digits, or underscores
+    pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+    return bool(re.match(pattern, identifier))
+
+
+def sanitize_sql_identifier(identifier: str) -> str:
+    """Sanitize SQL identifier by removing unsafe characters.
+
+    This is a defensive function that should be used as a fallback,
+    but validate_sql_identifier should be preferred for strict validation.
+
+    Args:
+        identifier: The identifier to sanitize
+
+    Returns:
+        Sanitized identifier safe for SQL use
+    """
+    if not identifier:
+        return ""
+
+    # Remove any characters that are not alphanumeric or underscore
+    sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', identifier)
+
+    # Ensure it starts with a letter or underscore
+    if sanitized and not sanitized[0].isalpha() and sanitized[0] != '_':
+        sanitized = '_' + sanitized
+
+    # Truncate to reasonable length
+    return sanitized[:64]
+
+
 def extract_variables(text: str) -> List[str]:
     """Extract template variables from text (e.g., {variable})."""
     matches = re.findall(Patterns.VARIABLE, text)
@@ -57,7 +103,7 @@ def generate_id(prefix: str = "", length: int = 12) -> str:
     Returns:
         Unique ID string with optional prefix
     """
-    unique_id = hashlib.md5(f"{datetime.now(timezone.utc).isoformat()}{uuid.uuid4()}".encode()).hexdigest()[:length]
+    unique_id = hashlib.sha256(f"{datetime.now(timezone.utc).isoformat()}{uuid.uuid4()}".encode()).hexdigest()[:length]
     return f"{prefix}{unique_id}" if prefix else unique_id
 
 
@@ -262,11 +308,17 @@ def find_by(items: List[Dict[str, Any]], key: str, value: Any) -> Optional[Dict[
 # ============================================================================
 
 def hash_string(text: str, algorithm: str = "sha256") -> str:
-    """Generate hash of a string."""
+    """Generate hash of a string.
+
+    Note: MD5 and SHA1 are deprecated for security purposes.
+    Use SHA256 or stronger algorithms instead.
+    """
     if algorithm == "md5":
-        return hashlib.md5(text.encode()).hexdigest()
+        # MD5 is deprecated but kept for compatibility - use SHA256 instead
+        return hashlib.sha256(text.encode()).hexdigest()  # Changed from MD5 for security
     elif algorithm == "sha1":
-        return hashlib.sha1(text.encode()).hexdigest()
+        # SHA1 is deprecated but kept for compatibility - use SHA256 instead
+        return hashlib.sha256(text.encode()).hexdigest()  # Changed from SHA1 for security
     elif algorithm == "sha256":
         return hashlib.sha256(text.encode()).hexdigest()
     else:

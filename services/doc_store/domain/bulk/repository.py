@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
 from ...core.entities import BulkOperation, BulkDocumentItem
+from services.shared.utilities import validate_sql_identifier
 
 
 class BulkOperationsRepository(BaseRepository[BulkOperation]):
@@ -19,9 +20,13 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
     def __init__(self):
         super().__init__("bulk_operations")
 
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
+
     def get_by_id(self, operation_id: str) -> Optional[BulkOperation]:
         """Get bulk operation by operation_id."""
-        query = f"SELECT * FROM {self.table_name} WHERE operation_id = ?"
+        query = f"SELECT * FROM {self.table_name} WHERE operation_id = ?"  # nosec: Table name validated in __init__
         row = execute_query(query, (operation_id,), fetch_one=True)
         return self._row_to_entity(row) if row else None
 

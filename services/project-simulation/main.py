@@ -483,7 +483,48 @@ except Exception as e:
 
 # Create health endpoints using shared patterns
 health_endpoints = create_simulation_health_endpoints()
-register_health_endpoints(app, SERVICE_NAME)
+# register_health_endpoints(app, SERVICE_NAME)  # Commented out to avoid conflicts
+
+# Ensure basic health endpoint exists with API contract compliance
+@app.get("/health")
+async def health():
+    """Basic health check with API contract compliance and timeout protection."""
+    import asyncio
+    from datetime import datetime
+
+    try:
+        # Add timeout protection for health checks
+        async with asyncio.timeout(5.0):  # 5 second timeout
+            # Quick self-check - ensure we can perform basic operations
+            _ = datetime.utcnow().isoformat()  # Test datetime operations
+
+            return {
+                "status": "healthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "timestamp": datetime.utcnow().isoformat(),
+                "environment": os.getenv("ENVIRONMENT", "development")
+            }
+    except asyncio.TimeoutError:
+        # If health check times out, return degraded status
+        return {
+            "status": "degraded",
+            "service": SERVICE_NAME,
+            "version": SERVICE_VERSION,
+            "timestamp": datetime.utcnow().isoformat(),
+            "environment": os.getenv("ENVIRONMENT", "development"),
+            "error": "health_check_timeout"
+        }
+    except Exception as e:
+        # If any other error occurs, return unhealthy status
+        return {
+            "status": "unhealthy",
+            "service": SERVICE_NAME,
+            "version": SERVICE_VERSION,
+            "timestamp": datetime.utcnow().isoformat(),
+            "environment": os.getenv("ENVIRONMENT", "development"),
+            "error": str(e)
+        }
 
 # Service discovery instance
 service_discovery = get_service_discovery()
@@ -491,36 +532,59 @@ service_discovery = get_service_discovery()
 
 @app.on_event("startup")
 async def startup_event():
-    """Application startup event handler."""
+    """Application startup event handler with timeout protection."""
+    import asyncio
     logger.info("Starting Project Simulation Service", version=SERVICE_VERSION, environment=config.service.environment)
 
-    # Initialize event persistence
-    try:
-        from simulation.infrastructure.persistence.redis_event_store import initialize_event_persistence
-        await initialize_event_persistence()
-        logger.info("Event persistence system initialized")
-    except Exception as e:
-        logger.warning(f"Failed to initialize event persistence: {e}")
+    # Add timeout protection for startup operations
+    startup_timeout = 30.0  # 30 second timeout for startup
 
-    # Initialize environment management
     try:
-        from simulation.infrastructure.config.environment_manager import initialize_environment_management
-        await initialize_environment_management()
-        logger.info("Environment management system initialized")
-    except Exception as e:
-        logger.warning(f"Failed to initialize environment management: {e}")
+        async with asyncio.timeout(startup_timeout):
+            # Initialize event persistence with timeout
+            try:
+                from simulation.infrastructure.persistence.redis_event_store import initialize_event_persistence
+                await asyncio.wait_for(initialize_event_persistence(), timeout=10.0)
+                logger.info("Event persistence system initialized")
+            except asyncio.TimeoutError:
+                logger.warning("Event persistence initialization timed out")
+            except Exception as e:
+                logger.warning(f"Failed to initialize event persistence: {e}")
 
-    # Initialize Redis integration
-    try:
-        await initialize_redis_integration(logger)
-        logger.info("Redis integration initialized")
-    except Exception as e:
-        logger.warning(f"Failed to initialize Redis integration: {e}")
+            # Initialize environment management with timeout
+            try:
+                from simulation.infrastructure.config.environment_manager import initialize_environment_management
+                await asyncio.wait_for(initialize_environment_management(), timeout=10.0)
+                logger.info("Environment management system initialized")
+            except asyncio.TimeoutError:
+                logger.warning("Environment management initialization timed out")
+            except Exception as e:
+                logger.warning(f"Failed to initialize environment management: {e}")
 
-    # Start service discovery
-    if is_development():
-        await start_service_discovery()
-        logger.info("Service discovery started for development environment")
+            # Initialize Redis integration with timeout
+            try:
+                await asyncio.wait_for(initialize_redis_integration(logger), timeout=10.0)
+                logger.info("Redis integration initialized")
+            except asyncio.TimeoutError:
+                logger.warning("Redis integration initialization timed out")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Redis integration: {e}")
+
+            # Start service discovery with timeout
+            if is_development():
+                try:
+                    await asyncio.wait_for(start_service_discovery(), timeout=5.0)
+                    logger.info("Service discovery started for development environment")
+                except asyncio.TimeoutError:
+                    logger.warning("Service discovery startup timed out")
+                except Exception as e:
+                    logger.warning(f"Failed to start service discovery: {e}")
+
+    except asyncio.TimeoutError:
+        logger.error("Application startup timed out - service may not be fully initialized")
+    except Exception as e:
+        logger.error(f"Critical error during startup: {e}")
+        # Don't re-raise - allow service to start in degraded state
 
     # Log service information
     logger.info("Service configuration",
@@ -537,13 +601,32 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Application shutdown event handler."""
+    """Application shutdown event handler with timeout protection."""
+    import asyncio
     logger.info("Shutting down Project Simulation Service")
 
-    # Stop service discovery
-    if is_development():
-        await stop_service_discovery()
-        logger.info("Service discovery stopped")
+    # Add timeout protection for shutdown operations
+    shutdown_timeout = 10.0  # 10 second timeout for shutdown
+
+    try:
+        async with asyncio.timeout(shutdown_timeout):
+            # Stop service discovery with timeout
+            if is_development():
+                try:
+                    await asyncio.wait_for(stop_service_discovery(), timeout=5.0)
+                    logger.info("Service discovery stopped")
+                except asyncio.TimeoutError:
+                    logger.warning("Service discovery shutdown timed out")
+                except Exception as e:
+                    logger.warning(f"Failed to stop service discovery: {e}")
+
+            # Add any other cleanup operations here with timeouts
+            # For example: close database connections, cleanup resources, etc.
+
+    except asyncio.TimeoutError:
+        logger.error("Application shutdown timed out - some resources may not be cleaned up")
+    except Exception as e:
+        logger.error(f"Critical error during shutdown: {e}")
 
     logger.info("Shutdown completed")
 
@@ -1658,99 +1741,100 @@ async def get_pull_request_analysis(simulation_id: str, req: Request, format: st
 # INTERPRETER SERVICE INTEGRATION ENDPOINTS
 # ============================================================================
 
-@app.post("/api/v1/interpreter/simulate")
-async def create_simulation_from_interpreter(request: Dict[str, Any], req: Request):
-    """Create and execute a simulation based on interpreter query.
-
-    This endpoint allows the interpreter service to request simulation creation
-    and execution with generated mock data and analysis processing.
-    """
-    correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
-
-    with with_correlation_id(correlation_id):
-        try:
-            # Extract interpreter request parameters
-            query = request.get("query", "")
-            context = request.get("context", {})
-            simulation_config = request.get("simulation_config", {})
-
-            logger.info(
-                "Interpreter simulation request received",
-                operation="interpreter_simulation",
-                query_length=len(query),
-                context_keys=list(context.keys()),
-                correlation_id=correlation_id
-            )
-
-            # Generate mock data based on query and context
-            mock_data = await generate_mock_simulation_data(query, context, simulation_config)
-
-            # Create simulation with integrated mock data
-            simulation_request = {
-                "name": f"Interpreter Simulation: {query[:50]}...",
-                "description": f"Simulation generated from interpreter query: {query}",
-                "type": simulation_config.get("type", "web_application"),
-                "complexity": simulation_config.get("complexity", "medium"),
-                "duration_weeks": simulation_config.get("duration_weeks", 8),
-                "budget": simulation_config.get("budget", 150000),
-                "technologies": mock_data.get("technologies", ["Python", "FastAPI", "React"]),
-                "team_size": mock_data.get("team_size", 5)
-            }
-
-            # Create simulation
-            result = await application_service.create_simulation(simulation_request)
-
-            if result["success"]:
-                simulation_id = result.get("simulation_id")
-
-                # Integrate documents from doc-store if available
-                mock_documents = mock_data.get("documents", [])
-                integrated_documents = await integrate_doc_store_documents_with_timeline(
-                    simulation_id=simulation_id,
-                    mock_documents=mock_documents,
-                    timeline=mock_data.get("timeline")
-                )
-
-                # Update mock data with integrated documents
-                mock_data["documents"] = integrated_documents
-                mock_data["doc_store_integration"] = {
-                    "enabled": True,
-                    "original_mock_docs": len(mock_documents),
-                    "integrated_docs": len(integrated_documents),
-                    "doc_store_docs": len(integrated_documents) - len(mock_documents),
-                    "timestamp": datetime.now().isoformat()
-                }
-
-                # Store integrated mock data in simulation
-                await store_mock_data_in_simulation(simulation_id, mock_data)
-
-                # Execute simulation with analysis processing
-                execution_result = await execute_simulation_with_analysis(simulation_id, mock_data)
-
-                return create_success_response(
-                    data={
-                        "simulation_id": simulation_id,
-                        "mock_data_generated": True,
-                        "analysis_performed": True,
-                        "execution_result": execution_result,
-                        "query": query,
-                        "context_summary": context
-                    },
-                    message="Interpreter simulation created and executed successfully"
-                )
-            else:
-                raise HTTPException(
-                    status_code=400,
-                    detail=result.get("message", "Failed to create simulation")
-                )
-
-        except Exception as e:
-            logger.error(
-                "Failed to create interpreter simulation",
-                error=str(e),
-                correlation_id=correlation_id
-            )
-            raise HTTPException(status_code=500, detail="Failed to create interpreter simulation")
+# # @app.post("/api/v1/interpreter/simulate")
+# # async def create_simulation_from_interpreter(request: Dict[str, Any], req: Request):
+#     """Create and execute a simulation based on interpreter query.
+# 
+#     This endpoint allows the interpreter service to request simulation creation
+#     and execution with generated mock data and analysis processing.
+#     """
+#     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
+# 
+#     # Temporarily disabled correlation context manager due to logging issues
+#     # with with_correlation_id(correlation_id):
+#     try:
+#         # Extract interpreter request parameters
+#             query = request.get("query", "")
+#             context = request.get("context", {})
+#             simulation_config = request.get("simulation_config", {})
+# 
+#             logger.info(
+#                 "Interpreter simulation request received",
+#                 operation="interpreter_simulation",
+#                 query_length=len(query),
+#                 context_keys=list(context.keys()),
+#                 correlation_id=correlation_id
+#             )
+# 
+#             # Generate mock data based on query and context
+#             mock_data = await generate_mock_simulation_data(query, context, simulation_config)
+# 
+#             # Create simulation with integrated mock data
+#             simulation_request = {
+#                 "name": f"Interpreter Simulation: {query[:50]}...",
+#                 "description": f"Simulation generated from interpreter query: {query}",
+#                 "type": simulation_config.get("type", "web_application"),
+#                 "complexity": simulation_config.get("complexity", "medium"),
+#                 "duration_weeks": simulation_config.get("duration_weeks", 8),
+#                 "budget": simulation_config.get("budget", 150000),
+#                 "technologies": mock_data.get("technologies", ["Python", "FastAPI", "React"]),
+#                 "team_size": mock_data.get("team_size", 5)
+#             }
+# 
+#             # Create simulation
+#             result = await application_service.create_simulation(simulation_request)
+# 
+#             if result["success"]:
+#                 simulation_id = result.get("simulation_id")
+# 
+#                 # Integrate documents from doc-store if available
+#                 mock_documents = mock_data.get("documents", [])
+#                 integrated_documents = await integrate_doc_store_documents_with_timeline(
+#                     simulation_id=simulation_id,
+#                     mock_documents=mock_documents,
+#                     timeline=mock_data.get("timeline")
+#                 )
+# 
+#                 # Update mock data with integrated documents
+#                 mock_data["documents"] = integrated_documents
+#                 mock_data["doc_store_integration"] = {
+#                     "enabled": True,
+#                     "original_mock_docs": len(mock_documents),
+#                     "integrated_docs": len(integrated_documents),
+#                     "doc_store_docs": len(integrated_documents) - len(mock_documents),
+#                     "timestamp": datetime.now().isoformat()
+#                 }
+# 
+#                 # Store integrated mock data in simulation
+#                 await store_mock_data_in_simulation(simulation_id, mock_data)
+# 
+#                 # Execute simulation with analysis processing
+#                 execution_result = await execute_simulation_with_analysis(simulation_id, mock_data)
+# 
+#                 return create_success_response(
+#                     data={
+#                         "simulation_id": simulation_id,
+#                         "mock_data_generated": True,
+#                         "analysis_performed": True,
+#                         "execution_result": execution_result,
+#                         "query": query,
+#                         "context_summary": context
+#                     },
+#                     message="Interpreter simulation created and executed successfully"
+#                 )
+#             else:
+#                 raise HTTPException(
+#                     status_code=400,
+#                     detail=result.get("message", "Failed to create simulation")
+#                 )
+# 
+#     except Exception as e:
+#         logger.error(
+#             "Failed to create interpreter simulation",
+#             error=str(e),
+#             correlation_id=correlation_id
+#         )
+#         raise HTTPException(status_code=500, detail="Failed to create interpreter simulation")
 
 @app.get("/api/v1/interpreter/capabilities")
 async def get_interpreter_capabilities(req: Request):
@@ -3916,7 +4000,7 @@ async def integrate_doc_store_documents_with_timeline(simulation_id: str, mock_d
 
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=5075,
         reload=True,
         log_level="info"

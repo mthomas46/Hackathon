@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
 from ...core.entities import DocumentTag, TaxonomyNode
+from services.shared.utilities import validate_sql_identifier
 
 
 class TaggingRepository(BaseRepository[DocumentTag]):

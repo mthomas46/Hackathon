@@ -1,9 +1,9 @@
 {
   "summary": {
     "total_services_analyzed": 24,
-    "total_conflicts": 23,
+    "total_conflicts": 22,
     "critical_conflicts": 0,
-    "high_conflicts": 23,
+    "high_conflicts": 22,
     "warnings": 0,
     "recommendations": 3
   },
@@ -169,15 +169,6 @@
         "docker_container"
       ],
       "suggestion": "Port 5120 is used by another container. Use: [5111, 5112, 5113]"
-    },
-    {
-      "port": 5075,
-      "severity": "high",
-      "services": [
-        "project-simulation",
-        "docker_container"
-      ],
-      "suggestion": "Port 5075 is used by another container. Use: [5066, 5067, 5068]"
     },
     {
       "port": 8501,

@@ -91,7 +91,7 @@ class DocStoreCache:
         # Sort params for consistent key generation
         sorted_params = json.dumps(params, sort_keys=True, default=str)
         key_content = f"{operation}:{sorted_params}"
-        key_hash = hashlib.md5(key_content.encode()).hexdigest()[:16]
+        key_hash = hashlib.sha256(key_content.encode()).hexdigest()[:16]
         return f"{self.cache_prefix}{operation}:{key_hash}"
 
     def _calculate_size(self, value: Any) -> int:

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable, Type, Union, TypeVar
 from datetime import datetime, timedelta
 import json
-import pickle
+# import pickle  # Not used - using JSON for serialization
 import asyncio
 import threading
 

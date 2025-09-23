@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any, Tuple
 from services.prompt_store.core.repository import BaseRepository
 from services.prompt_store.core.entities import ABTest, ABTestResult
 from services.prompt_store.db.queries import execute_query, serialize_json, deserialize_json
+from services.shared.utilities import validate_sql_identifier
 
 
 class ABTestRepository(BaseRepository[ABTest]):
@@ -57,8 +58,17 @@ class ABTestRepository(BaseRepository[ABTest]):
 
     def save(self, entity: ABTest) -> ABTest:
         """Save A/B test to database."""
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
+
+        # Validate column names to prevent SQL injection
         row = self._entity_to_row(entity)
         columns = list(row.keys())
+        for col in columns:
+            if not validate_sql_identifier(col):
+                raise ValueError(f"Invalid column name: {col}")
+
         placeholders = ",".join("?" * len(columns))
         values = [row[col] for col in columns]
 
@@ -66,14 +76,18 @@ class ABTestRepository(BaseRepository[ABTest]):
             INSERT OR REPLACE INTO {self.table_name}
             ({','.join(columns)})
             VALUES ({placeholders})
-        """
+        """  # nosec: Table and column names validated above
 
         execute_query(query, values)
         return entity
 
     def get_by_id(self, entity_id: str) -> Optional[ABTest]:
         """Get A/B test by ID."""
-        query = f"SELECT * FROM {self.table_name} WHERE id = ?"
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
+
+        query = f"SELECT * FROM {self.table_name} WHERE id = ?"  # nosec: Table name validated above
         row = execute_query(query, (entity_id,), fetch_one=True)
         return self._row_to_entity(row) if row else None
 
@@ -167,7 +181,7 @@ class ABTestRepository(BaseRepository[ABTest]):
 
         if user_id:
             # Consistent hashing based on user_id
-            hash_value = int(hashlib.md5(f"{test_id}:{user_id}".encode()).hexdigest(), 16)
+            hash_value = int(hashlib.sha256(f"{test_id}:{user_id}".encode()).hexdigest(), 16)
             # Normalize to 0-1 range
             normalized = (hash_value % 1000) / 1000.0
             selected = "A" if normalized < test.traffic_split else "B"

@@ -447,16 +447,16 @@ class EnvironmentManager:
         self.environment_configs[Environment.PRODUCTION.value] = prod_config
 
         # Save default configs
-        self._save_default_configs()
+        await self._save_default_configs()
 
-    def _save_default_configs(self) -> None:
+    async def _save_default_configs(self) -> None:
         """Save default configurations to files."""
         try:
             self.config_dir.mkdir(parents=True, exist_ok=True)
 
             for env_name, config in self.environment_configs.items():
                 config_file = self.config_dir / f"env_{env_name}.yaml"
-                config_yaml = self.export_environment_config(config.environment, "yaml")
+                config_yaml = await self.export_environment_config(config.environment, "yaml")
 
                 if config_yaml:
                     with open(config_file, 'w') as f:

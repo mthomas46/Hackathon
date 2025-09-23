@@ -5,7 +5,6 @@ FastAPI application providing comprehensive API discovery, testing, monitoring,
 analytics, and management capabilities for enterprise API ecosystems.
 """
 
-import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -13,13 +12,12 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
 
 # Import stub classes from modules
 from modules.discovery import DiscoveryClient
@@ -29,8 +27,8 @@ from modules.testing import APITester
 from modules.analytics import UsageAnalytics, PerformanceInsights, ErrorTracking, UsagePatterns
 from modules.developer_tools import ClientCodeGenerator, APIValidator, IntegrationTester
 from modules.topology import TopologyAnalyzer, TopologyVisualizer, DependencyGraphBuilder, TopologyMetrics
-from modules.security import AuthenticationManager, AuthorizationManager, AuditLogger, AccessControlManager, SecurityMonitor
-from modules.performance import CacheManager, TieredCache, MemoryCache, PerformanceMonitor, BottleneckDetector
+from modules.security import AuthenticationManager, AuthorizationManager
+from modules.performance import CacheManager, PerformanceMonitor
 
 # Configure logging
 logging.basicConfig(

@@ -1,5 +1,5 @@
 {
-  "validation_timestamp": 1758657788.617964,
+  "validation_timestamp": 1758661566.7388532,
   "connectivity_score": 62.5,
   "overall_status": "DEGRADED",
   "dependency_validation": {
@@ -124,7 +124,7 @@
         "passed": false,
         "status_code": 200,
         "expected_status": 201,
-        "execution_time": 0.0015048980712890625,
+        "execution_time": 0.0021092891693115234,
         "url": "http://localhost:5087/api/v1/documents",
         "error": "Expected status 201, got 200",
         "response_valid_json": true
@@ -133,35 +133,35 @@
         "test_name": "document_analysis_workflow",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0012829303741455078,
+        "execution_time": 0.001155853271484375,
         "url": "http://localhost:5080/api/v1/analysis/analyze"
       },
       "llm_provider_check": {
         "test_name": "llm_provider_check",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0010082721710205078,
+        "execution_time": 0.0011138916015625,
         "url": "http://localhost:5055/api/v1/providers"
       },
       "service_discovery_check": {
         "test_name": "service_discovery_check",
         "passed": false,
-        "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0012888908386230469,
+        "error": "[Errno 54] Connection reset by peer",
+        "execution_time": 0.0005962848663330078,
         "url": "http://localhost:5045/api/v1/discovery/services"
       },
       "orchestrator_services_check": {
         "test_name": "orchestrator_services_check",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.001558065414428711,
+        "execution_time": 0.0015437602996826172,
         "url": "http://localhost:5099/api/v1/services"
       },
       "doc_store_to_analysis_integration": {
         "test_name": "doc_store_to_analysis_integration",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0012478828430175781,
+        "execution_time": 0.0011823177337646484,
         "url": "http://localhost:5080/api/v1/analysis/capabilities"
       }
     },
@@ -199,7 +199,7 @@
       "cli": "",
       "architecture-digitizer": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
       "github-mcp": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
-      "project-simulation": "0.0.0.0:5075->5075/tcp, :::5075->5075/tcp",
+      "project-simulation": "",
       "frontend": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
       "summarizer-hub": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
       "source-agent": "0.0.0.0:5085->5070/tcp, [::]:5085->5070/tcp"

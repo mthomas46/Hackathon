@@ -1,5 +1,6 @@
 """Document Analysis Manager for CLI operations."""
 
+import json
 from typing import Dict, Any, List, Optional
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
@@ -89,8 +90,8 @@ class DocumentAnalysisManager(BaseManager):
             criteria_input = await self.get_user_input("Selection criteria (JSON format)", default='{"limit": 10}')
 
             try:
-                criteria = eval(criteria_input) if criteria_input else {"limit": 10}
-            except:
+                criteria = json.loads(criteria_input) if criteria_input else {"limit": 10}
+            except (json.JSONDecodeError, ValueError):
                 criteria = {"limit": 10}
 
             # Confirm analysis
