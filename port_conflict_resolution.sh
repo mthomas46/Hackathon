@@ -76,10 +76,6 @@ echo 'Resolving port 5110 conflict...'
 echo 'Resolving port 5120 conflict...'
 # Add your resolution commands here
 
-# Resolving conflict on port 5075
-echo 'Resolving port 5075 conflict...'
-# Add your resolution commands here
-
 # Resolving conflict on port 8501
 echo 'Resolving port 8501 conflict...'
 # Add your resolution commands here

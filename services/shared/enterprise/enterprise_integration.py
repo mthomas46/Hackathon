@@ -263,7 +263,7 @@ class ServiceMeshClient:
             'data': kwargs.get('json', kwargs.get('data', {}))
         }
         key_string = json.dumps(key_data, sort_keys=True)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
     def _get_current_workflow_context(self) -> Optional[WorkflowContext]:
         """Get current workflow context from context variables."""

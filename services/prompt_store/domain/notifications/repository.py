@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 from services.prompt_store.db.queries import execute_query
 from services.prompt_store.core.entities import BaseEntity
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import generate_id, utc_now, validate_sql_identifier
 
 
 class WebhookEntity(BaseEntity):
@@ -129,6 +129,11 @@ class NotificationsRepository:
         self.notifications_table = "notifications"
         self.deliveries_table = "webhook_deliveries"
 
+        # Validate table names to prevent SQL injection
+        for table_name in [self.webhooks_table, self.notifications_table, self.deliveries_table]:
+            if not validate_sql_identifier(table_name):
+                raise ValueError(f"Invalid table name: {table_name}")
+
     # Webhook CRUD operations
     def create_webhook(self, webhook_data: Dict[str, Any]) -> WebhookEntity:
         """Create a new webhook."""
@@ -148,7 +153,7 @@ class NotificationsRepository:
             INSERT INTO {self.webhooks_table}
             (id, name, url, events, secret, is_active, retry_count, timeout_seconds, created_by, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
+        """  # nosec: Table name validated in __init__
 
         execute_query(query, (
             webhook.id, webhook.name, webhook.url, json.dumps(webhook.events),
@@ -166,7 +171,7 @@ class NotificationsRepository:
                    created_by, created_at, updated_at
             FROM {self.webhooks_table}
             WHERE id = ?
-        """
+        """  # nosec: Table name validated in __init__
 
         row = execute_query(query, (webhook_id,), fetch_one=True)
         if not row:

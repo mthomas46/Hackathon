@@ -2,6 +2,13 @@
 # Comprehensive ignore file for Python microservices project
 
 ## Python
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.ci_test/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 **/__pycache__/

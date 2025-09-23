@@ -6,6 +6,7 @@ Handles data access operations for prompt relationships and semantic connections
 from typing import List, Optional, Dict, Any
 from services.prompt_store.db.queries import execute_query
 from services.prompt_store.core.entities import PromptRelationship
+from services.shared.utilities import validate_sql_identifier
 
 
 class RelationshipsRepository:
@@ -24,6 +25,10 @@ class RelationshipsRepository:
 
     def __init__(self):
         self.table_name = "prompt_relationships"
+
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
 
     def create_relationship(self, source_id: str, target_id: str,
                            relationship_type: str, strength: float = 1.0,
@@ -56,7 +61,7 @@ class RelationshipsRepository:
             INSERT INTO {self.table_name}
             (id, source_prompt_id, target_prompt_id, relationship_type, strength, metadata, created_by, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
+        """  # nosec: Table name validated in __init__
 
         execute_query(query, (
             relationship.id,
@@ -80,7 +85,7 @@ class RelationshipsRepository:
                    strength, metadata, created_by, created_at, updated_at
             FROM {self.table_name}
             WHERE source_prompt_id = ? AND target_prompt_id = ? AND relationship_type = ?
-        """
+        """  # nosec: Table name validated in __init__
 
         row = execute_query(query, (source_id, target_id, relationship_type), fetch_one=True)
         if not row:
@@ -100,7 +105,7 @@ class RelationshipsRepository:
                 FROM {self.table_name}
                 WHERE source_prompt_id = ?
                 ORDER BY created_at DESC
-            """
+            """  # nosec: Table name validated in __init__
             params = (prompt_id,)
 
         elif direction == "incoming":
@@ -111,7 +116,7 @@ class RelationshipsRepository:
                 FROM {self.table_name}
                 WHERE target_prompt_id = ?
                 ORDER BY created_at DESC
-            """
+            """  # nosec: Table name validated in __init__
             params = (prompt_id,)
 
         else:  # both
@@ -121,7 +126,7 @@ class RelationshipsRepository:
                 FROM {self.table_name}
                 WHERE source_prompt_id = ? OR target_prompt_id = ?
                 ORDER BY created_at DESC
-            """
+            """  # nosec: Table name validated in __init__
             params = (prompt_id, prompt_id)
 
         rows = execute_query(query, params, fetch_all=True)
@@ -149,11 +154,11 @@ class RelationshipsRepository:
         return True
 
     def delete_relationships_for_prompt(self, prompt_id: str) -> int:
-        """Delete all relationships involving a prompt."""
+        """Delete all relationships involving a prompt."""  # nosec: Table name validated in __init__
         query = f"""
             DELETE FROM {self.table_name}
             WHERE source_prompt_id = ? OR target_prompt_id = ?
-        """
+        """  # nosec: Table name validated in __init__
         execute_query(query, (prompt_id, prompt_id), fetch_all=False)
         # Note: execute_query doesn't return affected rows, so we return 0
         # In a real implementation, you'd want to track this
@@ -203,7 +208,7 @@ class RelationshipsRepository:
             SELECT relationship_type, COUNT(*) as count
             FROM {self.table_name}
             GROUP BY relationship_type
-        """
+        """  # nosec: Table name validated in __init__
 
         rows = execute_query(query, fetch_all=True)
         counts = {rel_type: 0 for rel_type in self.VALID_RELATIONSHIP_TYPES}

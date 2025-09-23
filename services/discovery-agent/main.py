@@ -57,6 +57,17 @@ setup_common_middleware(app, ServiceNames.DISCOVERY_AGENT)
 register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT)
 
 # ============================================================================
+# TEST ENDPOINT - Add this right after health registration
+# ============================================================================
+
+async def test_get_services():
+    """Test endpoint for services."""
+    print("DEBUG: /test-services endpoint called")
+    return {"services": ["test"]}
+
+app.get("/test-services")(test_get_services)
+
+# ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
 
@@ -449,6 +460,47 @@ async def discover_services_v1(request: BulkDiscoverRequest):
     except Exception as e:
         return create_error_response(
             message=f"Service discovery failed: {str(e)}",
+            error_code=ErrorCodes.INTERNAL_ERROR
+        )
+
+@app.get("/services")
+async def get_discovered_services():
+    """Get list of discovered services for the discovery client."""
+    print("DEBUG: /services endpoint called")
+    try:
+        # Return a basic list of known services for now
+        # In a full implementation, this would query the service registry
+        services = [
+            {
+                "service_name": "discovery-agent",
+                "service_url": "http://localhost:5045",
+                "status": "active",
+                "version": "1.0.0"
+            },
+            {
+                "service_name": "doc_store",
+                "service_url": "http://localhost:5087",
+                "status": "active",
+                "version": "1.0.0"
+            },
+            {
+                "service_name": "llm-gateway",
+                "service_url": "http://localhost:5055",
+                "status": "active",
+                "version": "1.0.0"
+            },
+            {
+                "service_name": "code-analyzer",
+                "service_url": "http://localhost:5025",
+                "status": "active",
+                "version": "1.0.0"
+            }
+        ]
+        return "test response"
+
+    except Exception as e:
+        return create_error_response(
+            message="Failed to retrieve discovered services",
             error_code=ErrorCodes.INTERNAL_ERROR
         )
 

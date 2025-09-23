@@ -28,7 +28,7 @@ RUN groupadd -r simulation && useradd -r -g simulation simulation
 WORKDIR /app
 
 # Copy requirements first for better caching
-COPY services/project-simulation/requirements.txt .
+COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN freshclam
 
 # Copy application code for scanning
-COPY services/project-simulation/ .
+COPY . .
 
 # Scan for malware (optional - can be enabled in CI/CD)
 # RUN clamscan --infected --recursive /app || true
@@ -82,7 +82,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --chown=simulation:simulation services/project-simulation/ .
+COPY --chown=simulation:simulation . .
 
 # Create logs directory and set permissions
 RUN mkdir -p logs && chown -R simulation:simulation logs
@@ -92,7 +92,7 @@ RUN find . -type f -name "*.pyc" -delete && \
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 # Set proper permissions on scripts
-RUN chmod +x main.py && \
+RUN chmod +x main.py 2>/dev/null || true && \
     chmod 755 .
 
 # Health check
@@ -123,7 +123,7 @@ LABEL maintainer="Hackathon Team" \
       org.opencontainers.image.vendor="Hackathon Team"
 
 # Default command
-CMD ["python", "main.py"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "5075", "--log-level", "info"]
 
 # ============================================================================
 # Stage 4: Development Stage - For Local Development
@@ -147,7 +147,7 @@ RUN groupadd -r dev && useradd -r -g dev devuser
 WORKDIR /app
 
 # Copy application code
-COPY services/project-simulation/ .
+COPY . .
 
 # Create logs directory
 RUN mkdir -p logs && chown -R devuser:dev devuser
@@ -201,7 +201,7 @@ RUN groupadd -r test && useradd -r -g test testuser
 WORKDIR /app
 
 # Copy application code
-COPY services/project-simulation/ .
+COPY . .
 
 # Switch to testing user
 USER testuser

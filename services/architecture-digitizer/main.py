@@ -36,7 +36,7 @@ from services.shared.monitoring.metrics import (
     record_architecture_digitizer_request,
 )
 from services.shared.utilities import attach_self_register, get_service_client, setup_common_middleware
-from services.shared.utilities.logging_client import get_log_collector_client
+# from services.shared.utilities.logging_client import get_log_collector_client
 
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
@@ -388,7 +388,7 @@ async def startup_event():
     try:
         # Use a fallback service name if ARCHITECTURE_DIGITIZER doesn't exist in ServiceNames
         service_name = getattr(ServiceNames, "ARCHITECTURE_DIGITIZER", SERVICE_NAME)
-        logger_client = await get_log_collector_client(service_name)
+        # logger_client = await get_log_collector_client(service_name)
         if logger_client:
             await logger_client.log_business_event(
                 "architecture_digitizer_startup",

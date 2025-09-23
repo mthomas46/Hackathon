@@ -436,7 +436,7 @@ class ProviderRouter:
         # This would integrate with embedding providers
         # For now, return a mock embedding
         import hashlib
-        hash_obj = hashlib.md5(text.encode())
+        hash_obj = hashlib.sha256(text.encode())
         # Convert hash to list of floats (mock implementation)
         embedding = [int(hash_obj.hexdigest()[i:i+2], 16) / 255.0 for i in range(0, 32, 2)]
         return embedding

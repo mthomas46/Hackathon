@@ -174,7 +174,7 @@ except ImportError:
         required_deps = ['fastapi', 'uvicorn', 'pydantic', 'httpx', 'websockets']
         for dep in required_deps:
             try:
-                __import__(dep)
+                __import__(dep)  # nosec: Safe import check for known dependencies
             except ImportError:
                 self.issues['missing_dependencies'].append(f"{dep} not available")
 

@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-import pickle
+# import pickle  # Not used - using safe serializers instead
 from typing import Any, Dict, List, Optional, Callable, Union
 from datetime import datetime
 import threading

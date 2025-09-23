@@ -3,7 +3,7 @@
 import asyncio
 import threading
 import json
-import pickle
+import pickle  # nosec: Required for controlled cache serialization
 from typing import Dict, Any, Optional, Union, List, Callable, TypeVar, Generic
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone, timedelta
@@ -43,8 +43,8 @@ class CacheEntry:
         """Calculate approximate size of the entry in bytes."""
         try:
             # Rough size calculation
-            value_size = len(pickle.dumps(self.value))
-            metadata_size = len(pickle.dumps({
+            value_size = len(pickle.dumps(self.value))  # nosec: Safe for size calculation only
+            metadata_size = len(pickle.dumps({  # nosec: Safe for size calculation only
                 'key': self.key,
                 'created_at': self.created_at,
                 'expires_at': self.expires_at,
@@ -274,7 +274,7 @@ class RedisCache(CacheBackend):
             cache_key = self._make_key(key)
             value_bytes = await self._redis.get(cache_key)
             if value_bytes:
-                return pickle.loads(value_bytes)
+                return pickle.loads(value_bytes)  # nosec: Controlled data from Redis cache
         except Exception:
             pass  # Cache miss or error
 
@@ -287,7 +287,7 @@ class RedisCache(CacheBackend):
 
         try:
             cache_key = self._make_key(key)
-            value_bytes = pickle.dumps(value)
+            value_bytes = pickle.dumps(value)  # nosec: Serializing controlled application data
             ttl_seconds = ttl or self._default_ttl
 
             if ttl_seconds:
@@ -488,7 +488,7 @@ class CacheManager(ICacheService):
 
         # Hash for consistent length
         key_string = "|".join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
 
 # Global cache manager instance

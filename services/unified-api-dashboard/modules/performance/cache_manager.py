@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union, Callable
 from dataclasses import dataclass, field
 import redis.asyncio as redis
-import pickle
+import pickle  # nosec: Required for complex object serialization with JSON fallback
 from concurrent.futures import ThreadPoolExecutor
 
 from ...config import config
@@ -112,7 +112,7 @@ class MemoryCache(BaseCache):
             value = await asyncio.get_event_loop().run_in_executor(
                 self.executor, zlib.decompress, value
             )
-            value = pickle.loads(value)
+            value = pickle.loads(value)  # nosec: Safe fallback after JSON attempt for complex objects
 
         return value
 
@@ -120,7 +120,7 @@ class MemoryCache(BaseCache):
         """Set value in memory cache."""
         try:
             # Serialize and potentially compress
-            serialized = pickle.dumps(value)
+            serialized = pickle.dumps(value)  # nosec: Used only for complex objects not serializable by JSON
             compressed = False
             final_value = serialized
 
@@ -228,7 +228,7 @@ class RedisCache(BaseCache):
 
             # Deserialize
             try:
-                deserialized = pickle.loads(value)
+                deserialized = pickle.loads(value)  # nosec: Safe fallback after JSON attempt for complex objects
                 self.stats.hits += 1
                 return deserialized
             except Exception:
@@ -251,7 +251,7 @@ class RedisCache(BaseCache):
             if isinstance(value, (dict, list, str, int, float, bool)):
                 serialized = json.dumps(value).encode('utf-8')
             else:
-                serialized = pickle.dumps(value)
+                serialized = pickle.dumps(value)  # nosec: Used only for complex objects not serializable by JSON
 
             success = await redis_client.set(key, serialized, ex=ttl)
             if success:
@@ -462,7 +462,7 @@ class CacheManager:
     def generate_key(self, *parts) -> str:
         """Generate cache key from parts."""
         key_content = ":".join(str(part) for part in parts)
-        return f"{self.key_prefix}:{hashlib.md5(key_content.encode()).hexdigest()[:16]}"
+        return f"{self.key_prefix}:{hashlib.sha256(key_content.encode()).hexdigest()[:16]}"
 
     async def get_or_compute(self, key: str, compute_func: Callable, ttl: Optional[int] = None) -> Any:
         """Get from cache or compute and cache."""

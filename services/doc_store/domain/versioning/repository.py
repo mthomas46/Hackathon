@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
 from ...core.entities import DocumentVersion
+from services.shared.utilities import validate_sql_identifier
 
 
 class VersioningRepository(BaseRepository[DocumentVersion]):
@@ -14,6 +15,10 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
 
     def __init__(self):
         super().__init__("document_versions")
+
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
 
     def _row_to_entity(self, row: Dict[str, Any]) -> DocumentVersion:
         """Convert database row to DocumentVersion entity."""

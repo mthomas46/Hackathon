@@ -44,9 +44,9 @@
     },
     "analysis-service": {
       "dependencies": [
+        "doc_store",
         "llm-gateway",
-        "redis",
-        "doc_store"
+        "redis"
       ],
       "dependents": [
         "frontend",
@@ -66,8 +66,8 @@
     },
     "frontend": {
       "dependencies": [
-        "analysis-service",
-        "orchestrator"
+        "orchestrator",
+        "analysis-service"
       ],
       "dependents": [],
       "health_status": "unknown"
@@ -98,9 +98,9 @@
     },
     "llm-gateway": {
       "dependencies": [
-        "bedrock-proxy",
+        "ollama",
         "redis",
-        "ollama"
+        "bedrock-proxy"
       ],
       "dependents": [
         "analysis-service",

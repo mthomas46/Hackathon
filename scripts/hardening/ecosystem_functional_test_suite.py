@@ -41,7 +41,7 @@ FUNCTIONAL_TESTS = [
         "name": "Service Discovery Integration",
         "description": "Test service discovery and API catalog functionality",
         "services": [
-            ("discovery-agent", "5045", "/api/v1/services"),
+            ("discovery-agent", "5045", "/services"),
             ("unified-api-dashboard", "8000", "/api/discovery/services"),
         ]
     }

@@ -69,9 +69,9 @@
 
 ### analysis-service
 **Depends on:**
+  - ✅ doc_store
   - ✅ llm-gateway
   - ✅ redis
-  - ✅ doc_store
 **Required by:**
   - frontend
   - interpreter
@@ -85,8 +85,8 @@
 
 ### frontend
 **Depends on:**
-  - ✅ analysis-service
   - ✅ orchestrator
+  - ✅ analysis-service
 
 ### ollama
 **No dependencies**
@@ -106,9 +106,9 @@
 
 ### llm-gateway
 **Depends on:**
-  - ✅ bedrock-proxy
-  - ✅ redis
   - ✅ ollama
+  - ✅ redis
+  - ✅ bedrock-proxy
 **Required by:**
   - analysis-service
   - mock-data-generator
