@@ -434,7 +434,7 @@ class TestExecuteWithResilience:
         async def successful_operation():
             return "success"
 
-        result = await execute_with_resilience("test_service", "dummy_method")
+        await execute_with_resilience("test_service", "dummy_method")
         # This would require a real service client setup
         # For this test, we just verify the function exists and can be called
 

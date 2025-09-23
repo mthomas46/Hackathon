@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from services.shared.core.responses import create_error_response, create_success_response
+from services.shared.core.responses import create_success_response
 
 # Shared modules (these work with absolute imports)
 from services.shared.monitoring.health import register_health_endpoints

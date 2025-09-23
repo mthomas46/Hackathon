@@ -4,7 +4,6 @@ This module provides workflow orchestration capabilities that integrate
 with the ecosystem orchestrator service for complex cross-service workflows.
 """
 
-import asyncio
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -223,7 +222,6 @@ class SimulationWorkflowOrchestrator:
         """Analyze document consistency and identify potential issues."""
         try:
             consistency_issues = []
-            naming_consistency = {}
             content_references = {}
 
             for doc in documents:

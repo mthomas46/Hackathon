@@ -2,9 +2,9 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from ..models import SemanticSimilarityRequest, SemanticSimilarityResponse, SimilarityMatrix, SimilarityPair
+from ..models import SemanticSimilarityRequest, SemanticSimilarityResponse, SimilarityPair
 from .base_handler import AnalysisResult, BaseAnalysisHandler
 
 logger = logging.getLogger(__name__)

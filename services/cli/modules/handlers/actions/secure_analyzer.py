@@ -72,8 +72,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Display analysis metadata
             metadata = rx.get("metadata", {})
             if metadata:
-                console.print("
-[bold blue]📊 Analysis Metadata[/bold blue]"                print_kv(console, "Processed at", metadata.get("processed_at", "unknown"))
+                console.print("\n[bold blue]📊 Analysis Metadata[/bold blue]")
+                print_kv(console, "Processed at", metadata.get("processed_at", "unknown"))
                 print_kv(console, "Processing time", f"{metadata.get('processing_time_ms', 0)}ms")
                 print_kv(console, "Content size", f"{metadata.get('content_size_bytes', 0)} bytes")
 
@@ -124,7 +124,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                     print_kv(console, "Reason", rec.get("reason", ""))
 
                     if rec.get("security_features"):
-                        console.print("  Security Features:"                        for feature in rec["security_features"]:
+                        console.print("  Security Features:")
+                        for feature in rec["security_features"]:
                             console.print(f"    • {feature}")
             else:
                 console.print("[yellow]⚠️  No suitable providers found[/yellow]")
@@ -132,8 +133,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Display analysis summary
             summary = rx.get("summary", {})
             if summary:
-                console.print("
-[bold green]📊 Summary[/bold green]"                print_kv(console, "Risk Level", summary.get("risk_level", "unknown"))
+                console.print("\n[bold green]📊 Summary[/bold green]")
+                print_kv(console, "Risk Level", summary.get("risk_level", "unknown"))
                 print_kv(console, "Compliance Status", summary.get("compliance_status", "unknown"))
                 print_kv(console, "Processing Time", f"{summary.get('processing_time_ms', 0)}ms")
 
@@ -178,8 +179,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             summary = rx.get("summary", {})
             if summary:
-                console.print("
-[bold purple]📋 Summary[/bold purple]"                print_kv(console, "Content", summary.get("content", ""))
+                console.print("\n[bold purple]📋 Summary[/bold purple]")
+                print_kv(console, "Content", summary.get("content", ""))
                 print_kv(console, "Length", f"{summary.get('length', 0)} characters")
                 print_kv(console, "Format", summary.get("format", "unknown"))
 
@@ -189,8 +190,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Display security metadata
             security = rx.get("security", {})
             if security:
-                console.print("
-[bold red]🔒 Security Information[/bold red]"                print_kv(console, "Risk Level", security.get("risk_level", "unknown"))
+                console.print("\n[bold red]🔒 Security Information[/bold red]")
+                print_kv(console, "Risk Level", security.get("risk_level", "unknown"))
                 print_kv(console, "Provider Used", security.get("provider_used", "unknown"))
                 print_kv(console, "Policies Applied", str(security.get("policies_applied", [])))
 
@@ -200,8 +201,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Display processing metadata
             metadata = rx.get("metadata", {})
             if metadata:
-                console.print("
-[bold blue]⚙️  Processing Info[/bold blue]"                print_kv(console, "Processing Time", f"{metadata.get('processing_time_ms', 0)}ms")
+                console.print("\n[bold blue]⚙️  Processing Info[/bold blue]")
+                print_kv(console, "Processing Time", f"{metadata.get('processing_time_ms', 0)}ms")
                 print_kv(console, "Provider Response Time", f"{metadata.get('provider_response_time_ms', 0)}ms")
 
         else:

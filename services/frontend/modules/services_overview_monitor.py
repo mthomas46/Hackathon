@@ -4,8 +4,7 @@ Provides comprehensive system-wide monitoring and health dashboard
 for all services in the LLM Documentation Ecosystem.
 """
 
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from services.shared.utilities import utc_now
 

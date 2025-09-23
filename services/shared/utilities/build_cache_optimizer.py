@@ -8,10 +8,9 @@ import hashlib
 import json
 import logging
 import os
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -263,7 +262,7 @@ class BuildCacheOptimizer:
             # Look for RUN layers that come before this COPY but don't depend on its files
             for run_idx, run_layer in run_layers:
                 if run_idx < copy_idx:
-                    run_deps = set(run_layer.dependencies)
+                    set(run_layer.dependencies)
 
                     # If RUN doesn't depend on files that COPY provides, suggest reordering
                     file_deps = {dep for dep in copy_deps if dep.startswith("file:")}

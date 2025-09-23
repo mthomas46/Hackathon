@@ -5,7 +5,6 @@ testing event creation, serialization, deserialization, and event handling.
 """
 
 from datetime import datetime
-from uuid import uuid4
 
 import pytest
 from simulation.domain.events import (
@@ -32,7 +31,6 @@ from simulation.domain.events import (
     WorkflowOrchestrationCompleted,
     event_from_dict,
 )
-from simulation.domain.value_objects import ProjectStatus, ProjectType
 
 
 class TestDomainEventBase:

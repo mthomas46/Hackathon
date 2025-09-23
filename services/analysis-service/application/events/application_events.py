@@ -45,7 +45,6 @@ class ApplicationEvent(ABC):
     @abstractmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ApplicationEvent":
         """Create event from dictionary representation."""
-        pass
 
 
 @dataclass(frozen=True)

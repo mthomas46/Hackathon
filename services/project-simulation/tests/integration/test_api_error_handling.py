@@ -4,8 +4,6 @@ This module contains comprehensive tests for API error handling, edge cases,
 and robust error response validation in the Project Simulation Service.
 """
 
-import json
-from typing import Any, Dict, List
 
 import pytest
 from fastapi.testclient import TestClient
@@ -105,7 +103,7 @@ class TestAPIRateLimiting:
         rate_headers = ["x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]
 
         # At least some rate limiting should be in place
-        has_rate_limit = any(header in response.headers for header in rate_headers)
+        any(header in response.headers for header in rate_headers)
         # This is optional - rate limiting may not be implemented yet
 
     def test_rate_limit_exceeded_response(self, test_client: TestClient):
@@ -146,10 +144,7 @@ class TestAPIConcurrency:
 
     def test_concurrent_requests_handling(self, test_client: TestClient):
         """Test handling of concurrent requests."""
-        import asyncio
-        from concurrent.futures import ThreadPoolExecutor
 
-        import httpx
 
         # Make multiple concurrent requests
         def make_request():

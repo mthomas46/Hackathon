@@ -4,12 +4,11 @@ Predicts when documentation will need updates based on risk assessment,
 historical patterns, usage data, and business requirements.
 """
 
-import json
 import logging
 import time
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
     import warnings
@@ -42,8 +41,6 @@ except ImportError:
     r2_score = None
     stats = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 

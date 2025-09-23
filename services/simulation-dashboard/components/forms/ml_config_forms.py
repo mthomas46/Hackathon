@@ -4,7 +4,7 @@ This module provides form components for configuring machine learning models,
 training parameters, and prediction settings.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import streamlit as st
 from infrastructure.dependencies import dependency_manager

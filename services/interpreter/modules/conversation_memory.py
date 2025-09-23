@@ -6,7 +6,6 @@ Enables the interpreter to maintain context, learn from previous queries,
 and provide more intelligent responses based on conversation history.
 """
 
-import json
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta

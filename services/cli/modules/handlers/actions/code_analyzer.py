@@ -72,16 +72,18 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             # Display complexity
             if data.get("complexity"):
-                console.print("
-[bold blue]📊 Complexity Analysis[/bold blue]"                complexity = data["complexity"]
+                console.print("\n[bold blue]📊 Complexity Analysis[/bold blue]")
+                complexity = data["complexity"]
                 console.print(f"  • Overall: {complexity.get('overall', 'N/A')}")
 
                 if complexity.get("functions"):
-                    console.print("  • Function complexity:"                    for func_name, score in complexity["functions"].items():
+                    console.print("  • Function complexity:")
+                    for func_name, score in complexity["functions"].items():
                         console.print(f"    └─ {func_name}: {score}")
 
                 if complexity.get("classes"):
-                    console.print("  • Class complexity:"                    for class_name, score in complexity["classes"].items():
+                    console.print("  • Class complexity:")
+                    for class_name, score in complexity["classes"].items():
                         console.print(f"    └─ {class_name}: {score}")
 
             # Display imports and patterns

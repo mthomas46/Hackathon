@@ -1,7 +1,6 @@
 """Tests for Application DTOs (Data Transfer Objects)."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -20,16 +19,15 @@ from ...application.dto.response_dtos import (
     AnalysisResponse,
     AnalysisResultResponse,
     DocumentResponse,
-    DocumentsListResponse,
     ErrorResponse,
     FindingResponse,
     FindingsListResponse,
     PaginatedResponse,
     SuccessResponse,
 )
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
+from ...domain.entities.document import DocumentStatus
+from ...domain.entities.finding import FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
 

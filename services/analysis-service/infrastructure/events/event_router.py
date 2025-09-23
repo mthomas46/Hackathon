@@ -5,7 +5,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Pattern
 
-from .event_bus import DomainEvent, EventEnvelope, EventType
+from .event_bus import EventEnvelope, EventType
 from .event_handlers import EventHandler, EventHandlerRegistry
 
 
@@ -19,17 +19,14 @@ class EventRouter(ABC):
     @abstractmethod
     async def route_event(self, envelope: EventEnvelope) -> List[EventHandler]:
         """Route event to appropriate handlers."""
-        pass
 
     @abstractmethod
     def add_route(self, pattern: str, handler: EventHandler) -> None:
         """Add routing rule."""
-        pass
 
     @abstractmethod
     def remove_route(self, pattern: str) -> bool:
         """Remove routing rule."""
-        pass
 
 
 class TopicBasedEventRouter(EventRouter):

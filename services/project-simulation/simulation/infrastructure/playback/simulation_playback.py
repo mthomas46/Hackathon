@@ -5,13 +5,11 @@ retrieving documents and prompts that were used during the original simulation.
 """
 
 import asyncio
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ...application.services.simulation_application_service import SimulationApplicationService
-from ...domain.entities.simulation import Simulation, SimulationId
 from ...infrastructure.logging import SimulationLogger
 
 

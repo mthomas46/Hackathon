@@ -7,7 +7,6 @@ extracted from the main CLI service to improve maintainability.
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
 from services.shared.auth.credentials import get_secret
@@ -204,7 +203,7 @@ class PromptManager(BaseManager):
 
         try:
             url = f"{self.clients.prompt_store_url()}/prompts/{prompt_id}"
-            response = await self.clients.delete_json(url)
+            await self.clients.delete_json(url)
             self.console.print("[green]✅ Prompt deleted successfully![/green]")
 
         except Exception as e:

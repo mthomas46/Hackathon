@@ -16,12 +16,11 @@ import pickle  # nosec: Required for complex object serialization with JSON fall
 import zlib
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
 import redis.asyncio as redis
 
-from ...config import config
 
 
 @dataclass
@@ -492,7 +491,6 @@ class CacheManager:
         """Invalidate cache keys matching a pattern."""
         # In a real implementation, this would scan for keys matching the pattern
         # For simplicity, we'll rely on explicit invalidation
-        pass
 
     def add_prefetch_rule(self, trigger_key: str, prefetch_func: Callable):
         """Add a prefetch rule."""

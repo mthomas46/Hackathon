@@ -12,7 +12,6 @@ class Specification(ABC):
     @abstractmethod
     def is_satisfied_by(self, candidate: Any) -> bool:
         """Check if candidate satisfies the specification."""
-        pass
 
     def __and__(self, other: "Specification") -> "Specification":
         """Combine specifications with AND logic."""

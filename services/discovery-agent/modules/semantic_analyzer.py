@@ -5,7 +5,7 @@ to intelligently categorize and analyze discovered tools.
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 try:
     from services.shared.clients import ServiceClients

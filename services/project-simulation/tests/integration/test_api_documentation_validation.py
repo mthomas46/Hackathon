@@ -6,11 +6,8 @@ and documentation generation accuracy.
 """
 
 import json
-import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock
 
 import pytest
 import yaml
@@ -389,7 +386,6 @@ class TestInteractiveDocumentation:
         }
 
         # Test search functionality
-        search_results = {}
 
         def search_docs(query):
             results = []

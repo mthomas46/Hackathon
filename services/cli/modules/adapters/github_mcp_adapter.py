@@ -6,7 +6,7 @@ for GitHub tool invocation, repository operations, and GitHub API interactions.
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 
@@ -102,7 +102,7 @@ class GitHubMCPAdapter(BaseServiceAdapter):
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute GitHub MCP commands"""
         try:
-            start_time = time.time()
+            time.time()
 
             if command == "list_repos":
                 return await self._list_repositories(kwargs)

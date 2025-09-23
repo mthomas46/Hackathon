@@ -4,7 +4,6 @@ Handles security-aware routing and content analysis to ensure sensitive content
 is routed to appropriate LLM providers based on security policies.
 """
 
-import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 

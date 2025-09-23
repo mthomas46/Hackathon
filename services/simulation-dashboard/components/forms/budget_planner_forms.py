@@ -6,7 +6,6 @@ including cost estimation, ROI calculation, and financial analysis.
 
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 

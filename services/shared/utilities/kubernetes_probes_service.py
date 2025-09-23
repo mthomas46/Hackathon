@@ -9,12 +9,10 @@ health check infrastructure:
 These probes leverage the existing health check service for comprehensive validation.
 """
 
-import asyncio
-import json
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 logger = logging.getLogger(__name__)
 

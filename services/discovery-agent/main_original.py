@@ -14,13 +14,11 @@ Responsibilities:
 Dependencies: shared middlewares, httpx for HTTP requests, orchestrator service for registration.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import httpx
 from fastapi import FastAPI
-from pydantic import BaseModel
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.constants_new import ServiceNames
 from services.shared.core.responses.responses import create_success_response
 
 # ============================================================================
@@ -46,17 +44,7 @@ from .modules.semantic_analyzer import semantic_tool_analyzer
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
 from .modules.shared_utils import (
-    build_discovery_context,
-    build_registration_payload,
-    compute_schema_hash,
-    create_discovery_response,
-    create_discovery_success_response,
-    extract_endpoints_from_spec,
-    fetch_openapi_spec,
-    get_orchestrator_url,
     handle_discovery_error,
-    register_with_orchestrator,
-    validate_discovery_request,
 )
 
 # ============================================================================

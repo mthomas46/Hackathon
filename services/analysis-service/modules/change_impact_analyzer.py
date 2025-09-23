@@ -4,13 +4,11 @@ Analyzes how document changes affect related content, dependencies, and the over
 documentation ecosystem, providing insights for change management and impact assessment.
 """
 
-import json
 import logging
 import re
 import time
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
     import warnings
@@ -35,8 +33,6 @@ except ImportError:
     nx = None
     SequenceMatcher = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -611,7 +607,7 @@ class ChangeImpactAnalyzer:
         recommendations = []
 
         overall_impact = impact_analysis["overall_impact"]
-        document_impacts = impact_analysis["document_impacts"]
+        impact_analysis["document_impacts"]
         change_analysis = impact_analysis["change_analysis"]
 
         impact_level = overall_impact["impact_level"]

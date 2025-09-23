@@ -12,17 +12,15 @@ This module provides event-driven workflow orchestration capabilities including:
 import asyncio
 import json
 import uuid
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional
 
-import aio_pika
 import redis.asyncio as redis
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.intelligent_caching import get_service_cache
 from services.shared.monitoring.logging import fire_and_forget
 
 

@@ -6,20 +6,16 @@ and rollback capabilities.
 """
 
 import copy
-import json
 import logging
 import re
 import time
-from collections import Counter, defaultdict
-from datetime import datetime
 from difflib import SequenceMatcher
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import language_tool_python
     import nltk
-    from nltk.corpus import stopwords
-    from nltk.tokenize import sent_tokenize, word_tokenize
+    from nltk.tokenize import sent_tokenize
 
     AUTOMATED_REMEDIATION_AVAILABLE = True
 except ImportError:
@@ -27,8 +23,6 @@ except ImportError:
     nltk = None
     language_tool_python = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -566,7 +560,7 @@ class AutomatedRemediator:
                 backup = self._create_backup(content, metadata or {})
 
             # Determine confidence threshold based on level
-            threshold = self.confidence_thresholds.get(confidence_level, self.confidence_thresholds["medium"])
+            self.confidence_thresholds.get(confidence_level, self.confidence_thresholds["medium"])
 
             # Analyze document structure
             structure_analysis = self._analyze_document_structure(content)

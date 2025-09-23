@@ -6,14 +6,11 @@ Tests cover connection handling, message routing, and error scenarios.
 """
 
 import asyncio
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-import websockets
-from simulation.presentation.websockets.simulation_websocket import SimulationWebSocketHandler, WebSocketEventType
+from simulation.presentation.websockets.simulation_websocket import SimulationWebSocketHandler
 from starlette.websockets import WebSocketDisconnect
 
 
@@ -110,7 +107,7 @@ class TestWebSocketMessageHandling:
     @pytest.mark.asyncio
     async def test_simulation_status_update_message(self):
         """Test handling of simulation status update messages."""
-        handler = SimulationWebSocketHandler()
+        SimulationWebSocketHandler()
 
         message = {
             "type": "simulation_status",
@@ -129,7 +126,7 @@ class TestWebSocketMessageHandling:
     @pytest.mark.asyncio
     async def test_document_generation_progress_message(self):
         """Test handling of document generation progress messages."""
-        handler = SimulationWebSocketHandler()
+        SimulationWebSocketHandler()
 
         message = {
             "type": "document_progress",
@@ -148,7 +145,7 @@ class TestWebSocketMessageHandling:
     @pytest.mark.asyncio
     async def test_error_message_broadcasting(self):
         """Test broadcasting of error messages via WebSocket."""
-        handler = SimulationWebSocketHandler()
+        SimulationWebSocketHandler()
 
         error_message = {
             "type": "error",
@@ -168,7 +165,7 @@ class TestWebSocketMessageHandling:
     @pytest.mark.asyncio
     async def test_websocket_message_acknowledgment(self):
         """Test client acknowledgment of received messages."""
-        handler = SimulationWebSocketHandler()
+        SimulationWebSocketHandler()
 
         ack_message = {"type": "ack", "message_id": "msg-123", "timestamp": datetime.now().isoformat()}
 
@@ -268,19 +265,16 @@ class TestWebSocketSecurity:
     async def test_websocket_origin_validation(self):
         """Test WebSocket origin validation for security."""
         # This would test CORS-like validation for WebSocket connections
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_rate_limiting(self):
         """Test rate limiting for WebSocket messages."""
         # Test that rapid message sending is limited
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_authentication(self):
         """Test WebSocket authentication and authorization."""
         # Test that only authenticated users can connect
-        pass
 
 
 class TestWebSocketPerformance:
@@ -289,7 +283,7 @@ class TestWebSocketPerformance:
     @pytest.mark.asyncio
     async def test_high_frequency_message_handling(self):
         """Test handling of high-frequency messages."""
-        handler = SimulationWebSocketHandler()
+        SimulationWebSocketHandler()
 
         # Simulate many rapid messages
         messages = [{"type": "update", "id": i, "timestamp": datetime.now().isoformat()} for i in range(100)]

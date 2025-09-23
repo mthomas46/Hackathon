@@ -18,7 +18,6 @@ Usage:
 """
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -143,7 +142,7 @@ class TestRunner:
         # Add parallel execution
         if parallel:
             try:
-                import pytest_xdist
+                pass
 
                 cmd.extend(["-n", "auto"])
             except ImportError:

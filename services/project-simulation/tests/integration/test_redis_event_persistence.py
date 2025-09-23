@@ -8,10 +8,10 @@ import asyncio
 import json
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -257,7 +257,7 @@ class TestRedisEventStore:
         event_store = RedisEventStore(redis_client=mock_redis)
 
         # Test cleanup of expired keys
-        cleaned_count = event_store.cleanup_expired_events()
+        event_store.cleanup_expired_events()
 
         # Verify cleanup operations
         mock_redis.keys.assert_called_once_with("simulation_events:*")
@@ -511,7 +511,7 @@ class TestEventReplayManager:
             timing_differences.append(time.time())
 
         start_time = time.time()
-        replay_result = asyncio.run(replay_manager.replay_events("sim-123", mock_handler))
+        asyncio.run(replay_manager.replay_events("sim-123", mock_handler))
         total_time = time.time() - start_time
 
         # With 2x speed, 5-minute gap should take ~2.5 seconds instead of 5

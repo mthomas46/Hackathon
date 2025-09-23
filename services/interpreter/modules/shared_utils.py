@@ -6,8 +6,7 @@ to eliminate code duplication and ensure consistency.
 
 import os
 import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.core.responses.responses import create_error_response, create_success_response
@@ -16,7 +15,7 @@ from services.shared.core.responses.responses import create_error_response, crea
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import generate_id, utc_now
-from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.utilities.error_handling import ValidationException
 
 # Global configuration for interpreter service
 _DEFAULT_TIMEOUT = 30

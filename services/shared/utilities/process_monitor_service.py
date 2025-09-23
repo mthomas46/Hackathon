@@ -12,15 +12,13 @@ Provides comprehensive runtime monitoring including:
 import asyncio
 import gc
 import logging
-import resource
-import sys
 import threading
 import time
 import tracemalloc
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 

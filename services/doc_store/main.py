@@ -9,9 +9,8 @@ from fastapi import FastAPI
 # ============================================================================
 # SHARED INFRASTRUCTURE - Core service setup
 # ============================================================================
-from services.shared.core.config.config import get_config_value, load_yaml_config
+from services.shared.core.config.config import get_config_value
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.health import register_health_endpoints
 from services.shared.utilities.error_handling import install_error_handlers
 from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
 

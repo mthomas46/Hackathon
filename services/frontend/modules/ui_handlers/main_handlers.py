@@ -3,7 +3,6 @@
 Handles general dashboard functionality and main page rendering.
 """
 
-from typing import Any, Dict, Optional
 
 from fastapi.responses import HTMLResponse
 

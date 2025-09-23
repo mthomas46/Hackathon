@@ -9,12 +9,10 @@ from typing import Any, Dict, List, Optional
 from services.shared.core.constants_new import ErrorCodes
 from services.shared.core.responses.responses import create_error_response, create_success_response
 
-from .shared_utils import get_orchestrator_service_client
 
 # Import LangGraph components
 try:
     from .langgraph.engine import LangGraphWorkflowEngine
-    from .langgraph.state import create_workflow_state
     from .workflows import create_document_analysis_workflow
     from .workflows.end_to_end_test import end_to_end_test_workflow
 
@@ -268,9 +266,9 @@ class WorkflowHandlers:
     async def handle_workflow_history(request) -> Dict[str, Any]:
         """Get workflow execution history."""
         try:
-            workflow_id = request.workflow_id
-            limit = request.limit
-            status_filter = request.status_filter
+            request.workflow_id
+            request.limit
+            request.status_filter
 
             # Placeholder - would integrate with actual workflow history
             history = []

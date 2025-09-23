@@ -4,7 +4,6 @@ Handles comprehensive system-wide monitoring dashboard
 showing health and status of all services in the ecosystem.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..services_overview_monitor import services_overview_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )
@@ -25,7 +23,7 @@ class ServicesOverviewUIHandlers:
     def handle_services_overview() -> HTMLResponse:
         """Render comprehensive services overview dashboard."""
         try:
-            clients = get_frontend_clients()
+            get_frontend_clients()
 
             # Get comprehensive services overview
             overview_data = services_overview_monitor.get_services_overview()

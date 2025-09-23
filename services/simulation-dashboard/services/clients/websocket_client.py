@@ -7,10 +7,7 @@ event notifications, and ecosystem status changes.
 
 import asyncio
 import json
-import threading
-import time
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, Optional, Set
 
 try:
     import websockets
@@ -26,7 +23,6 @@ from infrastructure.logging.logger import get_dashboard_logger
 class WebSocketClientError(Exception):
     """Base exception for WebSocket client errors."""
 
-    pass
 
 
 class WebSocketClient:

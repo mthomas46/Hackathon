@@ -4,12 +4,11 @@ Advanced document summarization and categorization service for the LLM Documenta
 """
 
 import base64
-import json
 import os
 import re
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -2886,8 +2885,8 @@ async def analyze_alignment_simple(request: Dict[str, Any]):
     """Simple alignment analysis endpoint for testing."""
     try:
         documents = request.get("documents", [])
-        analysis_types = request.get("analysis_types", ["terminology"])
-        strictness_level = request.get("strictness_level", "medium")
+        request.get("analysis_types", ["terminology"])
+        request.get("strictness_level", "medium")
 
         # Simple mock response for testing
         result = {

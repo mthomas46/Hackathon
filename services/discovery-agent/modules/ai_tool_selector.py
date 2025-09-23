@@ -4,9 +4,8 @@ This module provides Phase 3 AI-powered tool selection and multi-service workflo
 generation using intelligent analysis of tool capabilities and requirements.
 """
 
-import asyncio
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 try:
     from services.shared.clients import ServiceClients

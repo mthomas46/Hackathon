@@ -6,13 +6,11 @@ and dynamic service registration for the simulation service ecosystem integratio
 """
 
 import asyncio
-import json
 import sys
 import threading
-import weakref
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -384,7 +382,6 @@ class SimulationServiceDiscovery:
         """Perform service discovery."""
         # In a real implementation, this would query service registries,
         # check DNS, or use other discovery mechanisms
-        pass
 
     async def _perform_health_checks(self):
         """Perform health checks on all registered services."""

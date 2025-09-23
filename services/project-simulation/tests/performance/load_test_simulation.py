@@ -6,19 +6,16 @@ and scalability validation.
 """
 
 import asyncio
-import json
 import statistics
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.domain.value_objects import ComplexityLevel, ProjectType
-from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.logging import get_simulation_logger
 
 

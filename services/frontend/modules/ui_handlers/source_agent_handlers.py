@@ -4,14 +4,12 @@ Handles source agent service visualization, including document fetching,
 data normalization, and code analysis operations across GitHub, Jira, and Confluence.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )
@@ -25,7 +23,7 @@ class SourceAgentUIHandlers:
     def handle_source_agent_dashboard() -> HTMLResponse:
         """Render source agent service monitoring dashboard."""
         try:
-            clients = get_frontend_clients()
+            get_frontend_clients()
 
             # Get source agent status and cached data
             status_data = source_agent_monitor.get_source_status()

@@ -3,21 +3,17 @@
 Handles HTTP requests and responses for prompt lifecycle operations.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastapi import HTTPException
 
 from services.prompt_store.core.handler import BaseHandler
 from services.prompt_store.core.models import (
     BulkLifecycleUpdate,
-    LifecycleCountsResponse,
-    LifecycleHistoryResponse,
-    LifecycleStatusResponse,
-    LifecycleTransitionValidation,
     PromptLifecycleUpdate,
 )
 from services.prompt_store.domain.lifecycle.service import LifecycleService
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.responses.responses import create_success_response
 
 
 class LifecycleHandlers(BaseHandler):

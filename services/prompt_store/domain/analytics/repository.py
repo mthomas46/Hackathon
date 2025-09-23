@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
-from .entities import PromptPerformanceMetrics, UserSatisfactionScore
+from .entities import PromptPerformanceMetrics
 
 
 class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):

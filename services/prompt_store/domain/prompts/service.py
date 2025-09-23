@@ -4,7 +4,7 @@ Handles business logic for prompts following domain-driven design.
 """
 
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import Prompt
 from services.prompt_store.core.service import BaseService
@@ -18,7 +18,7 @@ from services.prompt_store.infrastructure.utils import (
     sanitize_prompt_content,
     validate_template_variables,
 )
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import generate_id
 
 
 class PromptService(BaseService[Prompt]):

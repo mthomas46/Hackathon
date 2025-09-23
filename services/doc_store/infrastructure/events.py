@@ -4,7 +4,6 @@ Provides event emission, subscription, and notification capabilities.
 """
 
 import asyncio
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Awaitable, Callable, Dict, List, Optional

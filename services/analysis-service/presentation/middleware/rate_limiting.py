@@ -3,7 +3,7 @@
 import asyncio
 import time
 from collections import defaultdict
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware

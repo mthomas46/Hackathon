@@ -3,7 +3,7 @@
 Handles HTTP requests and responses for webhook management and notification monitoring.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastapi import HTTPException
 

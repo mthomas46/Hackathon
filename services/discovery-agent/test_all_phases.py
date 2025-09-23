@@ -5,12 +5,10 @@ including security scanning, monitoring, AI tool selection, semantic analysis,
 performance optimization, and orchestrator integration.
 """
 
-import asyncio
-import json
 import os
 import tempfile
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from modules.ai_tool_selector import ai_tool_selector
@@ -21,7 +19,6 @@ from modules.security_scanner import tool_security_scanner
 from modules.semantic_analyzer import semantic_tool_analyzer
 
 # Import all the new modules
-from modules.tool_discovery import tool_discovery_service
 from modules.tool_registry import tool_registry_storage
 
 

@@ -1,7 +1,7 @@
 """Summarization Service Domain Service"""
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.summarization_request import SummarizationRequest
 
@@ -240,7 +240,7 @@ class SummarizationService:
 
     def generate_summarization_prompt(self, request: SummarizationRequest, provider: str) -> str:
         """Generate a summarization prompt for the specified provider."""
-        provider_info = self._ai_providers.get(provider, {})
+        self._ai_providers.get(provider, {})
 
         prompt_parts = [f"Please provide a {request.style} summary of the following content:"]
 

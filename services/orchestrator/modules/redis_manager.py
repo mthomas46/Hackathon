@@ -13,10 +13,9 @@ Provides robust Redis connection management with:
 import asyncio
 import json
 import time
-import traceback
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
@@ -314,7 +313,7 @@ class RedisManager:
         if self.connection_state == RedisConnectionState.CIRCUIT_OPEN:
             return False
 
-        old_state = self.connection_state
+        self.connection_state
         self.connection_state = RedisConnectionState.CONNECTING
         self.metrics.connection_attempts += 1
         self.metrics.last_connection_attempt = datetime.now()
@@ -361,7 +360,7 @@ class RedisManager:
             await self.connection_pool.disconnect()
             self.connection_pool = None
 
-        old_state = self.connection_state
+        self.connection_state
         self.connection_state = RedisConnectionState.DISCONNECTED
         self._notify_connection_listeners(self.connection_state)
 

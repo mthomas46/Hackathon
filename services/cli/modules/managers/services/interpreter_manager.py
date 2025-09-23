@@ -8,10 +8,8 @@ import json
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Prompt
 from rich.table import Table
-from rich.text import Text
 
 from ...base.base_manager import BaseManager
 
@@ -578,10 +576,8 @@ class InterpreterManager(BaseManager):
                             ):
                                 successful_tests += 1
                                 status_icon = "✅"
-                                status_color = "green"
                             else:
                                 status_icon = "❌"
-                                status_color = "red"
 
                             self.console.print(
                                 f'  {status_icon} "{example[:50]}..." -> {recognized_intent} ({confidence:.2f})'

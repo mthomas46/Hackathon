@@ -6,9 +6,8 @@ service connections, health monitoring, and system settings.
 
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-import plotly.express as px
 import plotly.graph_objects as go
 import psutil
 import streamlit as st

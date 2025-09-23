@@ -7,19 +7,17 @@ and service mesh compatibility for the entire ecosystem.
 """
 
 import asyncio
-import base64
 import hashlib
-import hmac
 import json
 import uuid
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 
 # import jwt  # Optional dependency for JWT token validation
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import redis.asyncio as redis
@@ -424,11 +422,11 @@ def standardized_api_handler(api_version: APIVersion = APIVersion.V1):
                 std_request = StandardizedAPIRequest.from_request(request)
 
                 # Set context variables
-                request_token = request_id_context.set(std_request.request_id)
+                request_id_context.set(std_request.request_id)
                 if std_request.workflow_context:
-                    workflow_token = workflow_id_context.set(std_request.workflow_context.workflow_id)
-                    user_token = user_id_context.set(std_request.workflow_context.user_id)
-                    correlation_token = correlation_id_context.set(std_request.workflow_context.correlation_id)
+                    workflow_id_context.set(std_request.workflow_context.workflow_id)
+                    user_id_context.set(std_request.workflow_context.user_id)
+                    correlation_id_context.set(std_request.workflow_context.correlation_id)
 
                 # Call the actual handler
                 result = await func(request, std_request)
@@ -609,7 +607,6 @@ class StandardizedAPIManager:
 
     async def initialize(self):
         """Initialize API manager."""
-        pass
 
     def create_response(self, success: bool, message: str, data: Any = None, **kwargs) -> StandardizedAPIResponse:
         """Create standardized API response."""
@@ -624,7 +621,6 @@ class ContextPropagationManager:
 
     async def initialize(self):
         """Initialize context manager."""
-        pass
 
     def get_current_context(self) -> Optional[RequestContext]:
         """Get current request context."""

@@ -5,7 +5,6 @@ Advanced confidence scoring algorithm for PR approval recommendations
 based on multiple factors including alignment, quality, risks, and completeness.
 """
 
-import math
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional

@@ -6,10 +6,9 @@ allowing clients to receive live progress updates and event notifications.
 
 import asyncio
 import json
-import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field

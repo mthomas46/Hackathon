@@ -1,9 +1,7 @@
 """Tests for Application Events system."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock
-from uuid import uuid4
 
 import pytest
 
@@ -13,17 +11,11 @@ from ...application.events.application_events import (
     AnalysisRequestedEvent,
     ApplicationEvent,
     DocumentCreatedEvent,
-    DocumentUpdatedEvent,
     FindingCreatedEvent,
-    FindingResolvedEvent,
 )
 from ...application.events.event_bus import EventBus
 from ...application.events.event_publisher import EventPublisher
 from ...application.events.event_subscriber import EventSubscriber
-from ...domain.entities.analysis import Analysis
-from ...domain.entities.document import Document
-from ...domain.entities.finding import Finding
-from ...domain.value_objects.analysis_type import AnalysisType
 
 
 class TestApplicationEvents:

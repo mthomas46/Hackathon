@@ -6,11 +6,9 @@ compliance monitoring, access control, and security monitoring.
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-import pytest_asyncio
-from freezegun import freeze_time
 
 from ....modules.security.access_control import AccessControlManager, PermissionManager
 from ....modules.security.audit import AuditEventType, AuditLogger, ComplianceMonitor
@@ -19,12 +17,10 @@ from ....modules.security.auth import (
     AuthorizationManager,
     AuthToken,
     Permission,
-    User,
     UserManager,
     UserRole,
 )
 from ....modules.security.security_monitor import SecurityMonitor, ThreatDetector
-from ...conftest import *
 
 
 class TestUserManager:

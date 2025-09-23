@@ -6,16 +6,11 @@ Tests cover API maturity levels, real-time communication, error handling,
 and user interaction patterns.
 """
 
-import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
 
 try:
     import websockets
@@ -25,7 +20,7 @@ except ImportError:
     WEBSOCKETS_AVAILABLE = False
 
 try:
-    import httpx
+    pass
 
     HTTPX_AVAILABLE = True
 except ImportError:
@@ -153,7 +148,6 @@ class TestHATEOASImplementation:
         """Test that HATEOAS links are actually functional and point to valid endpoints."""
         # This would require a running server to test link functionality
         # For now, we'll test the link structure and format
-        pass
 
 
 class TestWebSocketEndpoints:
@@ -175,7 +169,7 @@ class TestWebSocketEndpoints:
                 async with websockets.connect(uri) as websocket:
                     # Test basic connection
                     assert websocket is not None
-            except Exception as e:
+            except Exception:
                 # In test environment, connection will fail, but we can test the setup
                 pass
 
@@ -192,7 +186,7 @@ class TestWebSocketEndpoints:
             try:
                 async with websockets.connect(uri) as websocket:
                     assert websocket is not None
-            except Exception as e:
+            except Exception:
                 # Expected in test environment
                 pass
 
@@ -200,7 +194,6 @@ class TestWebSocketEndpoints:
         """Test that WebSocket endpoints are properly registered."""
         # Test that WebSocket routes are available
         # This is more of a configuration test
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_message_format(self):
@@ -261,12 +254,10 @@ class TestAPIErrorHandling:
         """Test internal server error responses."""
         # This would require mocking an internal error
         # For now, test the error response structure
-        pass
 
     def test_rate_limiting_error_response(self, test_client):
         """Test rate limiting error responses."""
         # This would require rate limiting middleware to be active
-        pass
 
     def test_cors_headers_are_present(self, test_client):
         """Test that CORS headers are properly set."""
@@ -295,17 +286,14 @@ class TestCLIFunctionality:
         """Test that CLI scripts can be executed."""
         # This would require running actual CLI scripts
         # For now, test script structure
-        pass
 
     def test_cli_help_functionality(self):
         """Test CLI help and usage information."""
         # Test --help flags and usage messages
-        pass
 
     def test_cli_error_handling(self):
         """Test CLI error handling and user feedback."""
         # Test invalid arguments and error messages
-        pass
 
 
 class TestAPIResponseFormats:
@@ -388,7 +376,7 @@ class TestAPIPerformance:
         import time
 
         start_time = time.time()
-        response = test_client.get("/health")
+        test_client.get("/health")
         end_time = time.time()
 
         response_time = end_time - start_time
@@ -399,12 +387,10 @@ class TestAPIPerformance:
     def test_concurrent_requests_handled_properly(self, test_client):
         """Test that concurrent requests are handled properly."""
         # This would require multiple concurrent requests
-        pass
 
     def test_large_payload_handling(self, test_client):
         """Test handling of large request payloads."""
         # Test with large simulation configurations
-        pass
 
 
 # Fixtures

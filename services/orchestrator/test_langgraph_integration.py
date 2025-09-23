@@ -6,7 +6,6 @@ by testing the core components and workflows.
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -114,7 +113,7 @@ async def test_workflow_execution():
         engine = LangGraphWorkflowEngine()
 
         # Initialize basic tools
-        tools = await engine.initialize_tools(["logging_service"])
+        await engine.initialize_tools(["logging_service"])
 
         # Create test workflow state
         test_state = create_workflow_state(workflow_type="test_execution", input_data={"test": True})
@@ -137,9 +136,7 @@ async def main():
 
     # Check if LangGraph is available
     try:
-        import langchain_core
-        import langchain_openai
-        import langgraph
+        pass
 
         print("✓ LangGraph dependencies available")
     except ImportError as e:

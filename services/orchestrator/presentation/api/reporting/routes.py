@@ -6,16 +6,15 @@ Provides endpoints for:
 - Report retrieval and download
 """
 
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from ....main import container
 from .dtos import (
     GenerateReportRequest,
     ReportListResponse,
     ReportResponse,
-    ReportSummaryResponse,
     ReportTemplateResponse,
     ReportTemplatesListResponse,
 )

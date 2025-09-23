@@ -233,7 +233,7 @@ def render_resource_actions(
     """Render action buttons for a single resource."""
     resource_id = resource_row["id"]
     resource_name = resource_row["name"]
-    resource_status = resource_row["status"]
+    resource_row["status"]
     current_allocation = resource_row["allocated"]
     capacity = resource_row["capacity"]
     utilization = resource_row["utilization"]
@@ -399,7 +399,6 @@ def generate_resource_recommendations(df: pd.DataFrame) -> List[Dict[str, str]]:
 def generate_sample_resource_data(count: int = 8) -> List[Dict[str, Any]]:
     """Generate sample resource data for testing."""
     resource_types = ["CPU", "Memory", "Storage", "Network", "GPU", "Database"]
-    statuses = ["healthy", "warning", "critical"]
 
     resources = []
 

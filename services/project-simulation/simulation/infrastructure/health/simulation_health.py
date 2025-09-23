@@ -5,9 +5,8 @@ following the established patterns from services/shared/health/ for consistency
 and reusability across the ecosystem.
 """
 
-import asyncio
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -22,7 +21,7 @@ from simulation.infrastructure.monitoring.simulation_monitoring import get_simul
 
 # Import shared health patterns (with fallbacks)
 try:
-    from monitoring.health import HealthStatus, register_health_endpoints
+    from monitoring.health import HealthStatus
 
     # Create simple mock implementations for missing classes
     class HealthCheck:

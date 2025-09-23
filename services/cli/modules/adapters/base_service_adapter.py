@@ -6,7 +6,6 @@ This creates a unified pattern for service communication, health monitoring,
 and feature access across the entire ecosystem.
 """
 
-import asyncio
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -85,22 +84,18 @@ class BaseServiceAdapter(ABC):
     @abstractmethod
     def get_service_info(self) -> ServiceInfo:
         """Get standardized service information"""
-        pass
 
     @abstractmethod
     async def health_check(self) -> CommandResult:
         """Perform standardized health check"""
-        pass
 
     @abstractmethod
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
         """Get list of available commands: (name, description, usage)"""
-        pass
 
     @abstractmethod
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute a service-specific command"""
-        pass
 
     # Standard helper methods
     async def ping(self) -> CommandResult:

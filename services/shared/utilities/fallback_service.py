@@ -9,14 +9,12 @@ Provides multiple layers of fallback mechanisms:
 """
 
 import asyncio
-import hashlib
-import json
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -164,7 +162,7 @@ class ServiceFallback:
 
     async def execute(self) -> FallbackResult:
         """Execute with fallback logic."""
-        start_time = time.time()
+        time.time()
 
         if self.strategy == FallbackStrategy.CACHE_FIRST:
             return await self._cache_first_fallback()

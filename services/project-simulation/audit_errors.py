@@ -14,10 +14,8 @@ This script systematically checks for common error patterns we've been fixing:
 import ast
 import os
 import re
-import subprocess
-import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 
 
 class CodebaseAuditor:
@@ -162,7 +160,7 @@ except ImportError:
 
         # Check if PyYAML is available
         try:
-            import yaml
+            pass
         except ImportError:
             self.issues["missing_dependencies"].append("PyYAML not available")
 

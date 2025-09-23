@@ -4,10 +4,8 @@ This module contains prompt-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.
 """
 
-from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
 from services.shared.auth.credentials import get_secret
@@ -20,8 +18,6 @@ from .shared_utils import (
     create_search_results_table,
     extract_variables_from_content,
     format_prompt_details,
-    get_cli_clients,
-    get_default_timeout,
     parse_tags_input,
     validate_prompt_data,
 )
@@ -224,7 +220,7 @@ class PromptManager:
 
         try:
             url = f"{self.clients.prompt_store_url()}/prompts/{prompt_id}"
-            response = await self.clients.delete_json(url)
+            await self.clients.delete_json(url)
             self.console.print("[green]✅ Prompt deleted successfully![/green]")
 
         except Exception as e:

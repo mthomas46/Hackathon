@@ -5,12 +5,11 @@ analysis_service patterns to provide comprehensive project analysis, insights, a
 intelligent recommendations for the Project Simulation Service.
 """
 
-import json
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -558,7 +557,7 @@ class AnalyticsIntegrationManager:
             all_recommendations.extend(insight.recommendations)
 
         # Remove duplicates and prioritize by insight priority
-        unique_recommendations = list(set(all_recommendations))
+        list(set(all_recommendations))
 
         # Sort by priority (critical first)
         priority_order = {

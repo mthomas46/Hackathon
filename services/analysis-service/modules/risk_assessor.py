@@ -4,12 +4,10 @@ Provides comprehensive risk assessment for documentation, identifying areas most
 at risk for documentation drift, quality degradation, and maintenance issues.
 """
 
-import json
 import logging
 import time
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
     import warnings
@@ -34,8 +32,6 @@ except ImportError:
     train_test_split = None
     mean_absolute_error = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -327,7 +323,7 @@ class RiskAssessor:
         # Factor-specific recommendations
         for factor_name, factor_data in risk_scores.items():
             risk_score = factor_data["risk_score"]
-            value = factor_data["value"]
+            factor_data["value"]
 
             if factor_name == "document_age" and risk_score > 0.7:
                 recommendations.append(".1f")

@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 from ..entities.workflow import Workflow
 from ..entities.workflow_action import WorkflowAction
 from ..entities.workflow_execution import WorkflowExecution
-from ..value_objects.action_result import ActionResult, ActionStatus
+from ..value_objects.action_result import ActionResult
 
 
 class WorkflowExecutor:
@@ -150,7 +150,7 @@ class WorkflowExecutor:
         endpoint = action.config.get("endpoint")
 
         if external_services and service_name in external_services:
-            service_client = external_services[service_name]
+            external_services[service_name]
             # Make actual service call here
             return {"status": "success", "service": service_name, "endpoint": endpoint}
 

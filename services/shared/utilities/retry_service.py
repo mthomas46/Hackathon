@@ -11,7 +11,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
+from typing import Awaitable, Callable, Dict, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -134,7 +134,7 @@ class RetryService:
 
         metrics = self._metrics[operation_name]
         metrics.total_attempts += 1
-        start_time = time.time()
+        time.time()
 
         last_exception = None
 

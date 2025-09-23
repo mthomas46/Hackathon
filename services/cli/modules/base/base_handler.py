@@ -18,7 +18,6 @@ class BaseHandler(ABC):
     @abstractmethod
     async def handle_command(self, command: str, **kwargs) -> Dict[str, Any]:
         """Handle a specific command. Return result dict."""
-        pass
 
     async def validate_input(self, *args) -> Any:
         """Validate input data. Supports multiple calling patterns."""

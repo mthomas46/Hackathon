@@ -3,7 +3,6 @@
 Handles workflow and job status visualization.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -27,9 +26,9 @@ class WorkflowUIHandlers:
 
             # Get workflow and job status data
             workflow_data = fetch_service_data("orchestrator", "/api/workflows/jobs/status", clients=clients)
-            active_jobs = workflow_data.get("active_jobs", [])
-            workflow_stats = workflow_data.get("workflow_stats", {})
-            recent_history = workflow_data.get("recent_history", [])
+            workflow_data.get("active_jobs", [])
+            workflow_data.get("workflow_stats", {})
+            workflow_data.get("recent_history", [])
 
             html = """
 <!DOCTYPE html>

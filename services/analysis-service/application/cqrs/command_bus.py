@@ -1,7 +1,6 @@
 """Command bus for CQRS pattern with event publishing."""
 
 import logging
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type
 from uuid import uuid4
 

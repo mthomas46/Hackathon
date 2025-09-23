@@ -1,8 +1,6 @@
 """Unit tests for simulation control panel functionality."""
 
-import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from pages.controls import (

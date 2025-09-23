@@ -6,7 +6,6 @@ This module provides LangGraph awareness and integration capabilities
 for the Summarizer Hub Service, enabling intelligent summarization in workflows.
 """
 
-import asyncio
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

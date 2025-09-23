@@ -13,13 +13,11 @@ Handles comprehensive integration with all ecosystem services including:
 - analysis-service: Document analysis and consistency checking
 """
 
-import asyncio
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 from services.shared.clients import ServiceClients
 from services.shared.config import get_config_value
-from services.shared.constants_new import ErrorCodes, ServiceNames
+from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
 from services.shared.utilities import utc_now
 

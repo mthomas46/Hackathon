@@ -4,16 +4,15 @@ This module tests the automatic tool discovery and registration system
 that integrates with LangGraph workflows in the LLM Documentation Ecosystem.
 """
 
-import asyncio
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any, Dict
+from unittest.mock import patch
 
 import pytest
-from modules.discovery_handler import DiscoveryHandler, discovery_handler
+from modules.discovery_handler import discovery_handler
 from modules.models import ToolDiscoveryRequest
 
 # Import the modules we need to test
-from modules.tool_discovery import ToolDiscoveryService, tool_discovery_service
+from modules.tool_discovery import ToolDiscoveryService
 
 
 class TestToolDiscoveryService:
@@ -334,13 +333,11 @@ class TestOrchestratorIntegration:
         """Test the orchestrator's tool discovery endpoint."""
         # This would test the /tools/discover endpoint
         # Mock the discovery agent call
-        pass
 
     @pytest.mark.asyncio
     async def test_startup_tool_discovery(self):
         """Test automatic tool discovery during orchestrator startup."""
         # This would test the startup event handler
-        pass
 
 
 if __name__ == "__main__":

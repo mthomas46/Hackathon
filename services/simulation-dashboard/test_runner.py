@@ -160,13 +160,13 @@ def check_test_environment():
 
     # Check if pytest is available
     try:
-        import pytest
+        pass
     except ImportError:
         issues.append("❌ pytest not installed")
 
     # Check if coverage is available
     try:
-        import pytest_cov
+        pass
     except ImportError:
         issues.append("⚠️  pytest-cov not installed (coverage reports unavailable)")
 

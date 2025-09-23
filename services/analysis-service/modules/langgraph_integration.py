@@ -6,7 +6,6 @@ This module provides comprehensive LangGraph awareness and integration capabilit
 for the Analysis Service with enterprise-grade error handling, caching, and monitoring.
 """
 
-import asyncio
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -17,18 +16,13 @@ from langchain_core.tools import BaseTool, tool
 from services.shared.core.constants_new import ServiceNames
 from services.shared.enterprise_error_handling import (
     ErrorCategory,
-    ErrorContext,
     ErrorSeverity,
     enterprise_error_handler,
-    error_context,
     with_error_handling,
 )
 from services.shared.enterprise_integration import (
     ServiceMeshClient,
-    WorkflowContext,
-    create_workflow_context,
     get_current_workflow_context,
-    standardized_api_handler,
 )
 from services.shared.intelligent_caching import get_service_cache
 from services.shared.monitoring.logging import fire_and_forget
@@ -71,10 +65,10 @@ class AnalysisServiceLangGraphIntegration:
                 current_workflow = get_current_workflow_context()
                 if current_workflow:
                     workflow_id = current_workflow.workflow_id
-                    user_id = current_workflow.user_id
+                    current_workflow.user_id
                 else:
                     workflow_id = workflow_context.get("workflow_id") if workflow_context else None
-                    user_id = workflow_context.get("user_id") if workflow_context else None
+                    workflow_context.get("user_id") if workflow_context else None
 
                 # Check cache first
                 cache_key = f"analysis_{doc_id}_{'_'.join(analysis_types)}_{workflow_id or 'no_workflow'}"

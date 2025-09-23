@@ -12,7 +12,7 @@ from infrastructure.config.config import get_config
 
 def render_footer():
     """Render the main footer component."""
-    config = get_config()
+    get_config()
 
     # Create footer container with muted styling
     st.markdown("---")
@@ -112,7 +112,6 @@ def render_performance_info():
     st.markdown("**⚡ Performance**")
 
     # Calculate some basic metrics
-    import time
 
     import streamlit.runtime.caching as caching
 

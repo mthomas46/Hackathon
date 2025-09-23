@@ -22,7 +22,6 @@ class EventHandler(ABC):
     @abstractmethod
     async def handle(self, event: DomainEvent, envelope: EventEnvelope) -> None:
         """Handle the event."""
-        pass
 
     def can_handle(self, event: DomainEvent) -> bool:
         """Check if handler can handle this event type."""
@@ -67,7 +66,6 @@ class AsyncEventHandler(EventHandler):
     @abstractmethod
     async def _handle_event(self, event: DomainEvent, envelope: EventEnvelope) -> None:
         """Handle the actual event."""
-        pass
 
 
 class FunctionEventHandler(EventHandler):

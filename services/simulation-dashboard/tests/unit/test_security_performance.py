@@ -4,20 +4,15 @@ This module contains comprehensive tests for security validation, performance be
 load testing, and security monitoring capabilities of the simulation dashboard.
 """
 
-import concurrent.futures
 import hashlib
 import os
 import sys
-import threading
 import time
 from datetime import datetime, timedelta
-from queue import Queue
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import numpy as np
-import psutil
 import pytest
-import requests
 
 # Add the dashboard service to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))

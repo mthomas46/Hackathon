@@ -1,11 +1,9 @@
 """Finding factory for creating findings with proper categorization."""
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..entities import Finding, FindingId, Severity
+from ..entities import Finding, Severity
 from ..entities.document import DocumentId
-from ..entities.value_objects import Location, Suggestion
 from ..services import FindingService
 
 

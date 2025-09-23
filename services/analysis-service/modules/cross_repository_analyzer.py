@@ -5,15 +5,11 @@ identifying patterns, inconsistencies, and opportunities for documentation
 improvement at the organizational level.
 """
 
-import asyncio
-import json
 import logging
 import re
 import time
 from collections import Counter, defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set
 
 try:
     from services.shared.core.constants_new import ErrorCodes

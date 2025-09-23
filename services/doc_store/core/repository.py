@@ -4,7 +4,6 @@ Provides common CRUD operations and utilities for all repositories.
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from .entities import BaseEntity
@@ -21,12 +20,10 @@ class BaseRepository(Generic[T], ABC):
     @abstractmethod
     def _row_to_entity(self, row: Dict[str, Any]) -> T:
         """Convert database row to entity."""
-        pass
 
     @abstractmethod
     def _entity_to_row(self, entity: T) -> Dict[str, Any]:
         """Convert entity to database row."""
-        pass
 
     def get_by_id(self, entity_id: str) -> Optional[T]:
         """Get entity by ID."""

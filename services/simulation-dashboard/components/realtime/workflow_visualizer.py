@@ -13,16 +13,13 @@ Key Features:
 - Multi-workflow concurrent monitoring
 """
 
-import asyncio
 import random
-import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -223,7 +220,7 @@ class RealTimeWorkflowVisualizer:
 
                 with col2:
                     if workflow.estimated_duration:
-                        remaining = max(0, workflow.estimated_duration - elapsed_time)
+                        max(0, workflow.estimated_duration - elapsed_time)
                         st.metric("Remaining", ".0f", "seconds")
                     else:
                         st.metric("Remaining", "Unknown")
@@ -297,7 +294,7 @@ class RealTimeWorkflowVisualizer:
                 st.metric("Steps", len(workflow.steps))
 
             with col4:
-                success_rate = self._calculate_workflow_success_rate(workflow)
+                self._calculate_workflow_success_rate(workflow)
                 st.metric("Success", ".1f")
 
             st.markdown("---")
@@ -319,15 +316,15 @@ class RealTimeWorkflowVisualizer:
 
         with col2:
             completed_count = len(self.completed_workflows)
-            completion_rate = (completed_count / total_workflows * 100) if total_workflows > 0 else 0
+            (completed_count / total_workflows * 100) if total_workflows > 0 else 0
             st.metric("Completion Rate", ".1f")
 
         with col3:
-            avg_duration = self._calculate_average_duration()
+            self._calculate_average_duration()
             st.metric("Avg Duration", ".1f")
 
         with col4:
-            success_rate = self._calculate_overall_success_rate()
+            self._calculate_overall_success_rate()
             st.metric("Success Rate", ".1f")
 
         # Performance trends chart
@@ -407,8 +404,8 @@ class RealTimeWorkflowVisualizer:
             return "00:00"
 
         elapsed = datetime.now() - workflow.start_time
-        minutes = int(elapsed.total_seconds() // 60)
-        seconds = int(elapsed.total_seconds() % 60)
+        int(elapsed.total_seconds() // 60)
+        int(elapsed.total_seconds() % 60)
 
         return "02d"
 
@@ -456,7 +453,6 @@ class RealTimeWorkflowVisualizer:
     def add_workflow_event_handler(self, event_type: str, handler: Callable) -> None:
         """Add an event handler for workflow events."""
         # This would integrate with the WebSocket event system
-        pass
 
     def export_workflow_data(self, format: str = "json") -> str:
         """Export workflow data for external analysis."""

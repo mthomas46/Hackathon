@@ -1,6 +1,5 @@
 """Event Streaming Service Domain Service"""
 
-import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 

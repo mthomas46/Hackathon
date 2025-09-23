@@ -1,7 +1,6 @@
 """Health Status Value Object"""
 
 from enum import Enum
-from typing import Optional
 
 
 class HealthStatus(Enum):

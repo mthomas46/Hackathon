@@ -17,8 +17,7 @@ Dependencies: None (standalone service with external API calls)
 import time
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
 from services.shared.core.constants_new import ServiceNames
@@ -388,7 +387,7 @@ async def startup_event():
 
     try:
         # Use a fallback service name if ARCHITECTURE_DIGITIZER doesn't exist in ServiceNames
-        service_name = getattr(ServiceNames, "ARCHITECTURE_DIGITIZER", SERVICE_NAME)
+        getattr(ServiceNames, "ARCHITECTURE_DIGITIZER", SERVICE_NAME)
         # logger_client = await get_log_collector_client(service_name)
         if logger_client:
             await logger_client.log_business_event(

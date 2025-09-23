@@ -3,7 +3,7 @@
 Contains all Pydantic models used for API requests and responses.
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from pydantic import BaseModel, field_validator
 

@@ -9,8 +9,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest
@@ -286,7 +285,7 @@ class TestCircuitBreakerMetrics:
 
         # Track state changes
         state_changes = []
-        original_state = breaker.state
+        breaker.state
 
         # Open the breaker
         with pytest.raises(Exception):

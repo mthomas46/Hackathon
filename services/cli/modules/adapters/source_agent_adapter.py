@@ -6,7 +6,7 @@ for document fetching, normalization, code analysis, and source management featu
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 
@@ -100,7 +100,7 @@ class SourceAgentAdapter(BaseServiceAdapter):
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute Source Agent commands"""
         try:
-            start_time = time.time()
+            time.time()
 
             if command == "fetch":
                 return await self._fetch_document(kwargs)

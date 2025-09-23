@@ -6,18 +6,16 @@ integrating with the existing ecosystem CLI framework.
 
 import argparse
 import asyncio
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.presentation.websockets.simulation_websocket import notify_ecosystem_status, notify_simulation_progress
 
 
 class SimulationCLI:

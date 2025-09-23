@@ -9,7 +9,6 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
 from urllib.parse import urljoin
 
@@ -21,19 +20,16 @@ from infrastructure.config.config import get_config
 class SimulationClientError(Exception):
     """Base exception for simulation client errors."""
 
-    pass
 
 
 class SimulationServiceConnectionError(SimulationClientError):
     """Exception raised when connection to simulation service fails."""
 
-    pass
 
 
 class SimulationAPIError(SimulationClientError):
     """Exception raised when simulation API returns an error."""
 
-    pass
 
 
 class SimulationClient:

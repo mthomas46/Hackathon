@@ -4,16 +4,8 @@ This module contains comprehensive tests for validating the enterprise testing f
 including unit test validation, mocking patterns, test fixtures, and performance benchmarking.
 """
 
-import json
-import os
-import shutil
-import subprocess
-import sys
-import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
 
 import psutil
 import pytest
@@ -255,7 +247,7 @@ class TestPerformanceBenchmarking:
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         # Perform some operations
-        data = [i for i in range(10000)]
+        [i for i in range(10000)]
 
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_delta = final_memory - initial_memory

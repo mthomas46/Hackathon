@@ -8,16 +8,13 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ...domain.entities.simulation import SimulationType
-from ...domain.services.project_simulation_service import ProjectSimulationService
-from ...domain.value_objects import SimulationStatus
 from ...infrastructure.config.simulation_config_loader import (
     SimulationConfigFile,
     create_sample_simulation_config,
     get_simulation_config_loader,
     load_simulation_config,
 )
-from ...infrastructure.logging import SimulationLogger
-from ...presentation.websockets.simulation_websocket import notify_simulation_event, notify_simulation_progress
+from ...presentation.websockets.simulation_websocket import notify_simulation_progress
 
 
 class SimulationApplicationService:

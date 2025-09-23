@@ -185,8 +185,8 @@ class ToolDiscoveryService:
         categories = []
         operation_id = endpoint.get("operation_id", "").lower()
         method = endpoint.get("method", "").lower()
-        path = endpoint.get("path", "").lower()
-        summary = endpoint.get("summary", "").lower()
+        endpoint.get("path", "").lower()
+        endpoint.get("summary", "").lower()
 
         # CRUD operations
         if operation_id.startswith("create") or method == "post":

@@ -1,7 +1,7 @@
 """Base Models - Common model definitions and utilities."""
 
 from datetime import datetime, timezone
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Type
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, field_validator

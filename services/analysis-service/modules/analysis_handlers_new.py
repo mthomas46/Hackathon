@@ -6,7 +6,7 @@ handler modules in the handlers/ package with proper dependency injection.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from .handlers import handler_registry
 from .handlers.factory import create_handler, get_handler_factory, initialize_handlers

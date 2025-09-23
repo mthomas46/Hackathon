@@ -4,16 +4,12 @@ This module contains tests for validating OpenAPI specification compliance,
 schema validation, and API contract testing.
 """
 
-import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, patch
+from typing import Any, Dict, List
 
 import jsonschema
 import pytest
-import requests
-import yaml
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -563,7 +559,7 @@ class TestOpenAPILinting:
 
         # Check schema naming
         schemas = list(spec["components"]["schemas"].keys())
-        mixed_case_schemas = [s for s in schemas if "_" in s and any(c.isupper() for c in s)]
+        [s for s in schemas if "_" in s and any(c.isupper() for c in s)]
 
         # Schema names should be consistent
         if len(schemas) > 1:

@@ -1,6 +1,5 @@
 """Tests for domain value objects."""
 
-from typing import Any, Dict
 
 import pytest
 

@@ -3,7 +3,7 @@
 Handles database operations for prompts following domain-driven design.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import Prompt
 from services.prompt_store.core.repository import BaseRepository

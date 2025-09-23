@@ -7,11 +7,8 @@ test behavior and reliable data isolation.
 
 import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-from unittest.mock import MagicMock
+from typing import Any, Dict, List, Optional
 
-from services.project_simulation.simulation.domain.entities.project import Project
-from services.project_simulation.simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
 class MockProjectRepository:

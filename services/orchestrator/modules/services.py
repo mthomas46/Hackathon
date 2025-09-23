@@ -4,7 +4,7 @@ This module contains all service discovery and information endpoints,
 extracted from the main orchestrator service to improve maintainability.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from services.shared.core.constants_new import ServiceNames
 

@@ -5,10 +5,10 @@ Provides Prometheus-compatible metrics for monitoring and observability.
 
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import psutil
-from fastapi import Request, Response
+from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, Gauge, Histogram, generate_latest
 

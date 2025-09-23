@@ -1,13 +1,11 @@
 """Tests for domain services."""
 
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
+from ...domain.entities.document import DocumentStatus
+from ...domain.entities.finding import FindingSeverity
 from ...domain.services.analysis_service import AnalysisService
 from ...domain.services.document_service import DocumentService
 from ...domain.services.finding_service import FindingService
@@ -162,7 +160,7 @@ class TestDocumentService:
     async def test_get_documents_by_repository(self, document_service, test_data_populator):
         """Test getting documents by repository."""
         # Setup test data
-        documents = test_data_populator.create_test_documents(3)
+        test_data_populator.create_test_documents(3)
 
         # Execute
         repo_docs = await document_service.get_documents_by_repository("test-repo-001")
@@ -199,7 +197,7 @@ class TestFindingService:
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
         analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
-        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
 
         analysis_id = analyses[0].id
 
@@ -217,7 +215,7 @@ class TestFindingService:
         # Setup test data with different severities
         documents = test_data_populator.create_test_documents(1)
         analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
-        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
 
         # Execute
         high_severity_findings = await finding_service.get_findings_by_severity(FindingSeverity.HIGH)
@@ -384,7 +382,7 @@ class TestDomainServicePerformance:
     async def test_document_service_query_performance(self, document_service, test_data_populator, performance_timer):
         """Test document query performance."""
         # Setup test data
-        documents = test_data_populator.create_test_documents(50)
+        test_data_populator.create_test_documents(50)
 
         # Test query performance
         performance_timer.start()

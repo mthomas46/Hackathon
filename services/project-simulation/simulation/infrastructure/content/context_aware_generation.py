@@ -6,19 +6,17 @@ realistic, intelligent content that reflects the actual project environment and 
 characteristics.
 """
 
-import json
 import random
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 # Import simulation domain
-from simulation.domain.value_objects import ComplexityLevel, ProjectType, TeamMemberRole
 from simulation.infrastructure.integration.service_clients import get_ecosystem_client
 from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.utilities.simulation_utilities import get_simulation_cache, get_simulation_validator
@@ -179,7 +177,7 @@ class ContentContext:
     def _generate_work_patterns(self, member: Dict[str, Any]) -> Dict[str, Any]:
         """Generate work patterns for team member."""
         role = member.get("role", "").lower()
-        experience = member.get("experience_years", 2)
+        member.get("experience_years", 2)
 
         if "architect" in role:
             return {"planning_focus": 0.8, "coding_focus": 0.2, "review_focus": 0.9, "meeting_frequency": "daily"}
@@ -329,7 +327,7 @@ class ContentContext:
         current_date = datetime.now()
 
         # Calculate timeline metrics
-        total_duration = sum(phase.get("duration_days", 7) for phase in phases)
+        sum(phase.get("duration_days", 7) for phase in phases)
         elapsed_phases = 0
         current_phase = None
 

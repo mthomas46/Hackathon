@@ -1,7 +1,7 @@
 """Domain validators for business rule validation."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import List
 
 from ..entities import Analysis, Document, Finding, Repository
 
@@ -31,7 +31,6 @@ class DomainValidator(ABC):
     @abstractmethod
     def validate(self, entity) -> ValidationResult:
         """Validate domain entity."""
-        pass
 
 
 class DocumentValidator(DomainValidator):

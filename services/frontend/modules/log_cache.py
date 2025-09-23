@@ -5,12 +5,10 @@ supports real-time log streaming for visualization and troubleshooting.
 """
 
 import asyncio
-import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-import httpx
 
 from services.shared.utilities import utc_now
 

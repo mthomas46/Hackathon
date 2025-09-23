@@ -62,7 +62,7 @@ class SummaryProcessor:
     def identify_action_items(self, summary_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Identify actionable items from summary data."""
         action_items = []
-        findings = summary_data.get("findings", [])
+        summary_data.get("findings", [])
         recommendations = summary_data.get("recommendations", [])
 
         # Create action items from recommendations

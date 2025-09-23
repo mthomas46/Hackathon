@@ -40,7 +40,6 @@ class Workflow:
         """Validate workflow after initialization."""
         # Only validate required fields if they are explicitly set (not defaults)
         # Domain validation will handle comprehensive validation
-        pass
 
         # Validate parameter names are unique
         param_names = [p.name for p in self.parameters]

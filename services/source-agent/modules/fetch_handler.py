@@ -7,7 +7,6 @@ import base64
 import os
 from typing import Any, Dict
 
-from fastapi import HTTPException
 
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import cached_get
@@ -36,14 +35,14 @@ class FetchHandler:
                     "github-mcp/tools/github.get_repo/invoke", {"arguments": {"owner": owner, "repo": repo}}
                 )
                 result = (mcp_resp or {}).get("result", {})
-                title = f"{result.get('full_name', f'{owner}/{repo}')}"
+                f"{result.get('full_name', f'{owner}/{repo}')}"
                 content = f"Repository: {result.get('full_name', f'{owner}/{repo}')}\nStars: {result.get('stars', 0)}\nTopics: {', '.join(result.get('topics', []))}"
                 doc = build_readme_doc(owner, repo, content)
                 context = build_source_agent_context("fetch", req.source, doc.id)
                 return create_source_agent_success_response(
                     "retrieved", {"document": doc.model_dump(), "source": req.source, "via": "github-mcp"}, **context
                 )
-            except Exception as e:
+            except Exception:
                 # Fallback to direct GitHub fetch below
                 pass
 

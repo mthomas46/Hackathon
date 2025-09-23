@@ -4,8 +4,7 @@ Orchestrates LLM-assisted prompt refinement with document storage and comparison
 """
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.infrastructure.cache import prompt_store_cache
@@ -16,7 +15,7 @@ from services.shared.utilities import generate_id, utc_now
 
 # Import doc store client
 try:
-    from services.doc_store.domain.documents.service import DocumentService
+    pass
 
     DOC_STORE_AVAILABLE = True
 except ImportError:

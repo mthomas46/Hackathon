@@ -14,7 +14,7 @@ import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Callable, Dict, List, Union
 
 import aiofiles
 
@@ -192,7 +192,6 @@ class LazyLoader:
         """Prefetch related data based on access patterns."""
         # This would analyze the data and prefetch related items
         # Implementation depends on specific use case
-        pass
 
 
 class ProgressiveLoader:
@@ -279,7 +278,7 @@ class ProgressiveLoader:
                 # If we get here, quality loading succeeded
                 break
 
-            except Exception as e:
+            except Exception:
                 # Try next quality level
                 continue
 

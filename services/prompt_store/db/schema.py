@@ -3,9 +3,7 @@
 Contains all table creation statements and indexes.
 """
 
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from ..db.connection import get_prompt_store_connection, return_prompt_store_connection
 

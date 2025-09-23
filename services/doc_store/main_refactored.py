@@ -22,7 +22,7 @@ def create_app() -> FastAPI:
     """Create and configure FastAPI application."""
 
     # Load configuration
-    _cfg = load_yaml_config("services/doc_store/config.yaml")
+    load_yaml_config("services/doc_store/config.yaml")
 
     # Create FastAPI app
     app = FastAPI(

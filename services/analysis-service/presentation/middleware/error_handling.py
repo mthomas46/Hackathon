@@ -1,8 +1,7 @@
 """Error handling middleware for consistent API error responses."""
 
 import logging
-import traceback
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse

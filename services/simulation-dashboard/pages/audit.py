@@ -4,19 +4,13 @@ This module provides comprehensive auditing capabilities for simulation operatio
 including event tracking, compliance reporting, and audit trail management.
 """
 
-import asyncio
 import json
-import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
-from infrastructure.config.config import get_config
-from plotly.subplots import make_subplots
 
-from services.clients.simulation_client import SimulationClient
 
 
 def render_audit_page():
@@ -151,7 +145,7 @@ def render_event_analysis():
         st.metric("Active Users", users)
 
     with col3:
-        avg_events_per_day = len(events) / max(1, (datetime.now() - get_earliest_event_date(events)).days)
+        len(events) / max(1, (datetime.now() - get_earliest_event_date(events)).days)
         st.metric("Avg Events/Day", ".1f")
 
     with col4:
@@ -192,7 +186,7 @@ def render_compliance_reports():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        compliance_score = compliance_data.get("overall_score", 0)
+        compliance_data.get("overall_score", 0)
         st.metric("Compliance Score", ".1f")
 
     with col2:
@@ -645,7 +639,7 @@ def render_compliance_categories(compliance_data: Dict[str, Any]):
                 st.write(f"**{category}**")
 
             with col2:
-                score = data.get("score", 0)
+                data.get("score", 0)
                 st.metric("Score", ".1f")
 
             with col3:

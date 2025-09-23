@@ -6,20 +6,17 @@ from workflow execution results, enabling users to get tangible deliverables fro
 
 import csv
 import json
-import os
 import tempfile
 import uuid
 import zipfile
 from datetime import datetime, timedelta
-from io import BytesIO, StringIO
+from io import StringIO
 from pathlib import Path
-from typing import Any, BinaryIO, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-import markdown
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from services.shared.clients import ServiceClients

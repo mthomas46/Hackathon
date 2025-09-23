@@ -7,7 +7,7 @@ service status checking and system diagnostics.
 from typing import Any, Dict, List, Optional, Tuple
 
 from rich.console import Console
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Prompt
 from rich.table import Table
 
 from services.shared.core.constants_new import ServiceNames

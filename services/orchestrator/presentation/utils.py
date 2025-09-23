@@ -4,7 +4,7 @@ Utility functions for the presentation layer (API routes and DTOs).
 These functions handle common presentation concerns like response formatting and request processing.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.core.responses.responses import create_error_response, create_success_response

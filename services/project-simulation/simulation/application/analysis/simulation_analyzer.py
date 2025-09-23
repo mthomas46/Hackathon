@@ -1873,7 +1873,7 @@ class SimulationAnalyzer:
                 # Fallback analysis if service unavailable
                 return self._fallback_document_analysis(documents)
 
-        except Exception as e:
+        except Exception:
             # Service unavailable - return fallback analysis
             return self._fallback_document_analysis(documents)
 

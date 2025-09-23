@@ -4,16 +4,12 @@ This version ensures all enhanced endpoints are properly registered with FastAPI
 and can handle the test requirements for ecosystem registration.
 """
 
-import asyncio
-import json
-import os
 import re
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
@@ -23,7 +19,7 @@ from services.shared.core.responses.responses import create_error_response, crea
 # SHARED MODULES
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities import setup_common_middleware
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS
@@ -529,7 +525,7 @@ async def get_discovered_services():
         ]
         return "test response"
 
-    except Exception as e:
+    except Exception:
         return create_error_response(
             message="Failed to retrieve discovered services", error_code=ErrorCodes.INTERNAL_ERROR
         )

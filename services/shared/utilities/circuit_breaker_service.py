@@ -8,11 +8,10 @@ import asyncio
 import logging
 import threading
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar
 
-from .resilience import EnhancedCircuitBreaker, FailureType, ResilienceManager, ResourceLimiter
+from .resilience import EnhancedCircuitBreaker, ResilienceManager, ResourceLimiter
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")

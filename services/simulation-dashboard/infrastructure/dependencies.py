@@ -6,10 +6,9 @@ features are not available.
 """
 
 import importlib
-import sys
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from infrastructure.logging.logger import get_dashboard_logger
 
@@ -78,7 +77,7 @@ class DependencyManager:
             logger.info(f"✅ Dependency {name} is available")
             return True
 
-        except ImportError as e:
+        except ImportError:
             dependency.status = DependencyStatus.MISSING
             self._checked_dependencies[name] = False
 

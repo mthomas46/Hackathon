@@ -11,18 +11,14 @@ import json
 
 # from prometheus_client import Counter, Gauge, Histogram, CollectorRegistry  # Optional for metrics collection
 import socket
-import subprocess
-import threading
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional
 
 import aiohttp
 import psutil
-import redis.asyncio as redis
-from aiohttp import web
 
 from ..caching.intelligent_caching import get_cache_metrics
 from ..core.constants_new import ServiceNames

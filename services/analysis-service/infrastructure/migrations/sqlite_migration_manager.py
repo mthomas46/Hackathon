@@ -347,7 +347,6 @@ class SQLiteMigrationManager(MigrationManager):
             cursor.execute(f"""
                 DELETE FROM {self.migration_table}
                 WHERE migration_id IN (
-            """)  # nosec: Table name validated by _is_valid_table_name()
                     SELECT migration_id
                     FROM {self.migration_table}
                     WHERE executed_at < datetime('now', '-{days_to_keep} days')
@@ -359,7 +358,7 @@ class SQLiteMigrationManager(MigrationManager):
                         HAVING executed_at = MAX(executed_at)
                     )
                 )
-            """)
+            """)  # nosec: Table name validated by _is_valid_table_name()
 
             deleted_count = cursor.rowcount
             conn.commit()

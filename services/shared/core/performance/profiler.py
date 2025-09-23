@@ -1,16 +1,11 @@
 """Performance Profiler - Advanced profiling and performance monitoring tools."""
 
-import asyncio
-import gc
-import os
-import sys
 import threading
-import time
 import tracemalloc
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 import psutil
 

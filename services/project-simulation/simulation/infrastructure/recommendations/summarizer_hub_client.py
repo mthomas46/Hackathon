@@ -47,7 +47,7 @@ class SummarizerHubClient:
                 # Fallback to basic analysis
                 return await self._fallback_document_analysis(document)
 
-        except Exception as e:
+        except Exception:
             # Service unavailable - return fallback analysis
             return await self._fallback_document_analysis(document)
 

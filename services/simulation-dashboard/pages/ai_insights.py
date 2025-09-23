@@ -4,11 +4,9 @@ This module provides AI-powered insights, intelligent recommendations,
 and predictive analytics for simulation operations and performance optimization.
 """
 
-import asyncio
-import time
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -19,12 +17,10 @@ from plotly.subplots import make_subplots
 
 warnings.filterwarnings("ignore")
 
-from infrastructure.config.config import get_config
 
 # Import dependency management system
 from infrastructure.dependencies import check_ml_availability, dependency_manager, safe_import
 
-from services.clients.simulation_client import SimulationClient
 
 # Safely import ML libraries with graceful degradation
 sklearn = safe_import("sklearn")
@@ -42,25 +38,21 @@ LIGHTGBM_AVAILABLE = ml_availability.get("lightgbm", False)
 # Import specific classes if available
 if SKLEARN_AVAILABLE and sklearn:
     try:
-        import joblib
         from sklearn.ensemble import IsolationForest, RandomForestRegressor
         from sklearn.metrics import mean_squared_error, r2_score
         from sklearn.model_selection import train_test_split
-        from sklearn.preprocessing import StandardScaler
     except ImportError:
         SKLEARN_AVAILABLE = False
 
 if STATSMODELS_AVAILABLE and statsmodels:
     try:
-        import statsmodels.api as sm
-        from statsmodels.tsa.arima.model import ARIMA
-        from statsmodels.tsa.statespace.sarimax import SARIMAX
+        pass
     except ImportError:
         STATSMODELS_AVAILABLE = False
 
 if PROPHET_AVAILABLE and prophet:
     try:
-        from prophet import Prophet
+        pass
     except ImportError:
         PROPHET_AVAILABLE = False
 
@@ -1199,7 +1191,6 @@ def generate_sample_data() -> list:
 
 def display_basic_statistics(data: list):
     """Display basic statistical analysis."""
-    import numpy as np
 
     st.markdown("#### 📊 Statistical Summary")
 
@@ -1267,7 +1258,7 @@ def display_anomaly_results(results: dict):
         st.metric("Anomalies Found", len(results["anomalies"]))
 
     with col3:
-        anomaly_rate = (len(results["anomalies"]) / results["total_points"]) * 100
+        (len(results["anomalies"]) / results["total_points"]) * 100
         st.metric("Anomaly Rate", ".2f")
 
     if results["anomalies"]:

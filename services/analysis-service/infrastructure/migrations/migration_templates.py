@@ -1,9 +1,8 @@
 """Migration Templates - Generates migration templates and boilerplate code."""
 
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 
 class MigrationTemplateGenerator:
@@ -412,6 +411,6 @@ from infrastructure.migrations.sqlite_migration_manager import SQLiteMigrationMa
 
 manager = SQLiteMigrationManager("database.db")
 migration = manager.get_migration("{migration_id or 'target_migration'}")
-result = await manager.rollback_migration_with_tracking(migration)
-print(f"Rollback result: {result.status}")
+result = await manager.rollback_migration_with_tracking(migration)  # noqa: F821
+print(f"Rollback result: {result.status}")  # noqa: F821
 """

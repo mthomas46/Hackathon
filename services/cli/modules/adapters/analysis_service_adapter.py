@@ -7,7 +7,7 @@ quality metrics, and architectural analysis.
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 
@@ -118,7 +118,7 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute Analysis Service commands"""
         try:
-            start_time = time.time()
+            time.time()
 
             if command == "status":
                 return await self._get_service_status()

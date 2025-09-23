@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import EnvVars
 from services.shared.html import render_list, render_table  # type: ignore
 
 

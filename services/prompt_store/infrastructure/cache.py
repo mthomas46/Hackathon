@@ -6,8 +6,8 @@ Provides Redis and local caching capabilities for prompts and analytics.
 import json
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
 

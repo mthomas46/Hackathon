@@ -6,10 +6,8 @@ readability, structure, completeness, technical accuracy, and overall quality me
 
 import logging
 import re
-import statistics
 import time
-from collections import Counter
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 try:
     import nltk
@@ -34,8 +32,6 @@ except ImportError:
     word_tokenize = None
     stopwords = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 

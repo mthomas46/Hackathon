@@ -15,11 +15,10 @@ Dependencies: shared middlewares, httpx for HTTP requests, orchestrator service 
 """
 
 import re
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import Body, FastAPI, Query
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
@@ -51,11 +50,9 @@ from .modules.shared_utils import (
     build_discovery_context,
     build_registration_payload,
     compute_schema_hash,
-    create_discovery_response,
     create_discovery_success_response,
     extract_endpoints_from_spec,
     fetch_openapi_spec,
-    get_orchestrator_url,
     handle_discovery_error,
     register_with_orchestrator,
     validate_discovery_request,

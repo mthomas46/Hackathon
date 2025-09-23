@@ -3,7 +3,6 @@
 Handles data access operations for prompt lifecycle transitions and status management.
 """
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import Prompt

@@ -9,13 +9,12 @@ Features:
 - Performance monitoring
 """
 
-import asyncio
 import hashlib
 import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

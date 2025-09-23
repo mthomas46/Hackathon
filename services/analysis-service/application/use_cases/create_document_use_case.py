@@ -3,13 +3,13 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from ...domain.entities import Document, DocumentId
+from ...domain.entities import Document
 from ...domain.exceptions import DocumentValidationException
 from ...domain.factories import DocumentFactory
 from ...domain.services import DocumentService
 from ...domain.validation import DocumentValidator
 from ...infrastructure.repositories import DocumentRepository
-from ..dto import CreateDocumentRequest, DocumentResponse
+from ..dto import DocumentResponse
 
 
 @dataclass

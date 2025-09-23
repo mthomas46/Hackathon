@@ -7,7 +7,7 @@ documentation, and other critical implementation gaps in PRs.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List
 
 
 class GapType(Enum):

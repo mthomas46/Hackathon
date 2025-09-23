@@ -4,24 +4,19 @@ This module provides advanced analytics capabilities including real-time analyti
 predictive modeling dashboard, causal analysis, and advanced visualization engine.
 """
 
-import asyncio
-import time
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 warnings.filterwarnings("ignore")
 
-from infrastructure.config.config import get_config
 
-from services.clients.simulation_client import SimulationClient
 
 
 def render_advanced_analytics_page():

@@ -5,14 +5,11 @@ including distribution algorithms, failover scenarios, health checks,
 and performance under load.
 """
 
-import asyncio
 import random
 import statistics
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 

@@ -6,8 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from .base import BaseResponse, ErrorResponse, SuccessResponse
-from .common import FilterCriteria
+from .base import BaseResponse
 
 
 class AnalysisType(str, Enum):

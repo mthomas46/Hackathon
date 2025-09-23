@@ -1,6 +1,5 @@
 """Semantic analyzer adapter for external semantic analysis services."""
 
-import asyncio
 import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
@@ -57,22 +56,18 @@ class SemanticAnalyzerAdapter(ABC):
         self, document_text: str, document_id: str, compare_texts: Optional[List[str]] = None
     ) -> SemanticAnalysisResult:
         """Analyze semantic similarity of document."""
-        pass
 
     @abstractmethod
     async def extract_keywords(self, document_text: str, document_id: str) -> List[str]:
         """Extract keywords from document."""
-        pass
 
     @abstractmethod
     async def cluster_documents(self, documents: List[Dict[str, Any]], num_clusters: int = 5) -> List[Dict[str, Any]]:
         """Cluster documents by semantic similarity."""
-        pass
 
     @abstractmethod
     def is_available(self) -> bool:
         """Check if the service is available."""
-        pass
 
 
 class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):

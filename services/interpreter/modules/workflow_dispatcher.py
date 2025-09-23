@@ -5,10 +5,8 @@ with deep orchestrator integration and context-aware workflow selection. It unde
 main workflows available in the ecosystem and maps user intents to optimal execution paths.
 """
 
-import json
-import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.shared.clients import ServiceClients
 from services.shared.constants_new import ServiceNames
@@ -384,7 +382,7 @@ class WorkflowDispatcher:
             return 0.7  # Good score if no required params
 
         # Check if we have entity data that could satisfy required params
-        entity_types = set(entities.keys())
+        set(entities.keys())
         param_types = set(required_params)
 
         # Basic compatibility mapping

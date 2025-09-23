@@ -10,10 +10,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.text import Text
 
 from ...base.base_manager import BaseManager
 
@@ -393,7 +391,7 @@ class MemoryAgentManager(BaseManager):
                         else:
                             failed += 1
 
-                    except Exception as e:
+                    except Exception:
                         failed += 1
 
                 self.console.print(f"[green]✅ CSV bulk store complete: {stored} stored, {failed} failed[/green]")
@@ -468,7 +466,7 @@ class MemoryAgentManager(BaseManager):
     async def bulk_delete_by_type(self):
         """Bulk delete memory items by type."""
         try:
-            memory_type = Prompt.ask("[bold cyan]Memory type to delete[/bold cyan]")
+            Prompt.ask("[bold cyan]Memory type to delete[/bold cyan]")
 
             # This would require a delete endpoint in the memory agent
             # For now, show placeholder

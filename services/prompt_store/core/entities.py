@@ -22,13 +22,11 @@ class BaseEntity(ABC):
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Convert entity to dictionary representation."""
-        pass
 
     @classmethod
     @abstractmethod
     def from_dict(cls, data: Dict[str, Any]) -> "BaseEntity":
         """Create entity from dictionary representation."""
-        pass
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""

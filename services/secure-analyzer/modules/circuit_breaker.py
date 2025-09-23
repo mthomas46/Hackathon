@@ -7,7 +7,6 @@ to prevent cascade failures and allow recovery time.
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Optional
 
 # Default configuration values
 DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES = 5

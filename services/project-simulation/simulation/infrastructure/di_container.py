@@ -5,13 +5,11 @@ existing ecosystem patterns from services/shared/core/di/ while adding
 simulation-specific enhancements for enterprise-grade service management.
 """
 
-import inspect
 import sys
 import threading
-import weakref
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -45,7 +43,6 @@ except ImportError:
 
     def create_simulation_health_endpoints():
         """Mock health endpoints function."""
-        pass
 
 
 from simulation.application.services.simulation_application_service import SimulationApplicationService
@@ -53,7 +50,6 @@ from simulation.domain.services.simulation_domain_service import get_simulation_
 from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 from simulation.infrastructure.repositories.in_memory_repositories import (
     get_project_repository,
-    get_simulation_repository,
     get_team_repository,
     get_timeline_repository,
 )
@@ -523,7 +519,7 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         health_status = {}
         for service_name in self.get_registered_services():
             try:
-                service = self.get_service(service_name)
+                self.get_service(service_name)
                 # Simple health check - service is healthy if it can be instantiated
                 health_status[service_name] = {
                     "healthy": True,

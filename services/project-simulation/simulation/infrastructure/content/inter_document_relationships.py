@@ -10,14 +10,13 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import networkx as nx
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.infrastructure.content.context_aware_generation import ContentContext
 from simulation.infrastructure.content.personality_driven_generation import PersonalityDrivenGenerator
 from simulation.infrastructure.content.timeline_based_generation import TimelineAwareContentGenerator
 from simulation.infrastructure.logging import get_simulation_logger
@@ -571,7 +570,7 @@ class DocumentRelationshipManager:
         for rel in relationships["outgoing_relationships"]:
             rel_type = rel["relationship_type"]
             target_title = rel["target_doc_title"]
-            target_type = rel["target_doc_type"]
+            rel["target_doc_type"]
 
             if rel_type == RelationshipType.PREREQUISITE.value:
                 cross_refs["prerequisites"].append(f"Prerequisites: {target_title}")

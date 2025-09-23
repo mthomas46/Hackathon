@@ -3,8 +3,8 @@
 Following domain-driven design principles with generic service implementation.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from abc import ABC
+from typing import Any, Dict, Generic, Optional, TypeVar
 
 from ..core.entities import BaseEntity
 from ..core.repository import BaseRepository

@@ -4,7 +4,6 @@ Provides visualization and monitoring capabilities for notification service
 owner resolution, notification delivery, and dead letter queue management.
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
@@ -165,7 +164,7 @@ class NotificationServiceMonitor:
             dlq_response = await clients.get_json(f"{notification_url}/dlq?limit={limit}")
             return dlq_response.get("items", [])
 
-        except Exception as e:
+        except Exception:
             return []
 
     def _calculate_notification_stats(self) -> Dict[str, Any]:

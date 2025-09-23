@@ -19,7 +19,6 @@ class BaseEntity(ABC):
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Convert entity to dictionary representation."""
-        pass
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""

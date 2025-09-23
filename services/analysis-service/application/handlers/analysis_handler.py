@@ -1,7 +1,7 @@
 """Analysis handler for HTTP requests."""
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ..services.analysis_application_service import AnalysisApplicationService
 

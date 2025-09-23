@@ -7,16 +7,15 @@ invalidation, performance monitoring, and workflow-aware optimization.
 """
 
 import asyncio
-import hashlib
 import json
 import os
 import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 
@@ -345,7 +344,7 @@ class IntelligentCache:
             # Evict least recently used
             lru_key, _ = self.lru_order.popitem(last=False)
             if lru_key in self.cache:
-                entry = self.cache[lru_key]
+                self.cache[lru_key]
                 del self.cache[lru_key]
                 self.lfu_count.pop(lru_key, None)
 

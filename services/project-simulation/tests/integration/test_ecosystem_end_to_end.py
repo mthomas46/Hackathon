@@ -5,16 +5,12 @@ simulation workflows, cross-service data consistency, and ecosystem integration.
 """
 
 import asyncio
-import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock
 
-import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -186,7 +182,6 @@ class TestCompleteSimulationWorkflow:
 
     def test_simulation_with_failure_recovery(self):
         """Test simulation workflow with failure and recovery scenarios."""
-        simulation_id = "sim-failure-test"
         failure_events = []
 
         def simulate_service_failure(service_name, error_type):

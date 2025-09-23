@@ -4,8 +4,6 @@ Provides visualization and monitoring capabilities for bedrock proxy
 service AI invocations and template-based responses.
 """
 
-import asyncio
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now

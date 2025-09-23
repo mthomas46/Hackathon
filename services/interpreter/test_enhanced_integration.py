@@ -6,19 +6,16 @@ LangGraph workflow discovery, and prompt engineering.
 """
 
 import asyncio
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from modules.ecosystem_context import ecosystem_context
 from modules.langgraph_discovery import langgraph_discovery
 
 # Import the enhanced modules
-from modules.models import UserQuery
 from modules.orchestrator_integration import orchestrator_integration
 from modules.prompt_engineering import prompt_engineer
 
-from services.shared.constants_new import ServiceNames
 
 
 class TestEcosystemContextIntegration:
@@ -246,7 +243,7 @@ class TestLangGraphDiscovery:
         assert valid_result["valid"] is True
 
         # Test invalid parameters
-        invalid_result = await langgraph_discovery.validate_langgraph_workflow(workflow_name, invalid_params)
+        await langgraph_discovery.validate_langgraph_workflow(workflow_name, invalid_params)
         assert valid_result["valid"] is True  # Should still be valid for unknown params
 
     @pytest.mark.asyncio

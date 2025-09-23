@@ -5,10 +5,8 @@ the interpreter to execute complex workflows and coordinate multiple services
 to produce tangible outputs from natural language queries.
 """
 
-import asyncio
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 from services.shared.clients import ServiceClients
 from services.shared.constants_new import ServiceNames
@@ -362,7 +360,7 @@ class OrchestratorIntegration:
                 "action": action,
             }
 
-        except Exception as e:
+        except Exception:
             # For now, create mock results to demonstrate the flow
             return await self._create_mock_service_result(service_name, action, parameters)
 

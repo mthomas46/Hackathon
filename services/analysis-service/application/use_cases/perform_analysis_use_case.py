@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from ...domain.entities import Analysis, Document, Finding
+from ...domain.entities import Analysis, Finding
 from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
-from ...domain.exceptions import AnalysisExecutionException, AnalysisTimeoutException, DocumentNotFoundException
+from ...domain.exceptions import DocumentNotFoundException
 from ...domain.services import AnalysisService, FindingService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
-from ..dto import AnalysisResultResponse, FindingResponse, PerformAnalysisRequest
+from ..dto import AnalysisResultResponse, FindingResponse
 from ..events import AnalysisCompletedEvent, AnalysisFailedEvent, AnalysisRequestedEvent, EventBus, FindingCreatedEvent
 
 logger = logging.getLogger(__name__)

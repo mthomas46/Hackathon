@@ -1,6 +1,5 @@
 """Sentiment analyzer adapter for external sentiment analysis services."""
 
-import asyncio
 import time
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -61,17 +60,14 @@ class SentimentAnalyzerAdapter(ABC):
     @abstractmethod
     async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
         """Analyze sentiment of document."""
-        pass
 
     @abstractmethod
     async def analyze_tone(self, document_text: str, document_id: str) -> Dict[str, Any]:
         """Analyze tone and writing style of document."""
-        pass
 
     @abstractmethod
     def is_available(self) -> bool:
         """Check if the service is available."""
-        pass
 
 
 class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
@@ -235,7 +231,7 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
     def is_available(self) -> bool:
         """Check if transformers service is available."""
         try:
-            import transformers
+            pass
 
             return True
         except ImportError:

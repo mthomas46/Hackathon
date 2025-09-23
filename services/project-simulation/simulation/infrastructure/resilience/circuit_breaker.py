@@ -4,10 +4,9 @@ This module implements the circuit breaker pattern for resilient service
 communication and graceful failure handling.
 """
 
-import asyncio
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, Optional
@@ -173,7 +172,6 @@ class ServiceCircuitBreaker:
 class CircuitBreakerOpenException(Exception):
     """Exception raised when circuit breaker is open."""
 
-    pass
 
 
 class EcosystemCircuitBreakerRegistry:
@@ -302,7 +300,7 @@ class ResilientServiceClient:
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check with circuit breaker protection."""
         try:
-            result = await self.execute_request("health_check")
+            await self.execute_request("health_check")
             return {
                 "service": self.service_name,
                 "healthy": True,

@@ -2,12 +2,10 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from ..models import (
-    MaintenanceForecastRequest,
     MaintenanceForecastResponse,
-    PortfolioMaintenanceForecastRequest,
     PortfolioMaintenanceForecastResponse,
 )
 from .base_handler import AnalysisResult, BaseAnalysisHandler
@@ -88,7 +86,7 @@ class MaintenanceAnalysisHandler(BaseAnalysisHandler):
         from datetime import timedelta
 
         # Mock maintenance forecast
-        forecast_period = kwargs.get("forecast_period_days", 180)
+        kwargs.get("forecast_period_days", 180)
 
         maintenance_forecast = {
             "next_maintenance_date": (datetime.now(timezone.utc) + timedelta(days=random.randint(30, 90))).isoformat(),

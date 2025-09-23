@@ -5,10 +5,8 @@ Central control plane for the LLM Documentation Ecosystem following DDD principl
 Organized into bounded contexts with clear separation of concerns.
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI
 
@@ -20,9 +18,7 @@ if parent_dir not in sys.path:
 from services.shared.core.constants_new import ServiceNames
 
 # Shared utilities
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities.error_handling import register_exception_handlers
-from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.utilities import setup_common_middleware
 
 from .domain.health_monitoring.services import HealthCheckService, SystemMonitoringService
 from .domain.infrastructure.services import DLQService, EventStreamingService, SagaService, TracingService
@@ -306,7 +302,7 @@ def register_bounded_context_routers(app):
             module = __import__(module_path, fromlist=["router"])
             router = getattr(module, "router")
             app.include_router(router, prefix=prefix, tags=tags)
-        except (ImportError, AttributeError) as e:
+        except (ImportError, AttributeError):
             print(f"⚠️  {context_name} routes not available")
 
 

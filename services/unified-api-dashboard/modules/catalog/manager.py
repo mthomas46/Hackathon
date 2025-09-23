@@ -3,7 +3,7 @@ API Catalog Manager - Service Documentation and Search
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ Basic structure for code analysis capabilities that will be used by prompt store
 for generating prompts from code repositories.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from fastapi import FastAPI
 from pydantic import BaseModel

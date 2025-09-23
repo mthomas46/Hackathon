@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ...domain.entities import Analysis, Document, Finding
+from ...domain.entities import Analysis
 from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
 from ...domain.services import AnalysisService, DocumentService, FindingService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository

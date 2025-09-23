@@ -5,16 +5,10 @@ enabling full CLI functionality through web interface.
 """
 
 import asyncio
-import queue
-import subprocess
-import threading
-import time
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
 
-from .shared_utils import get_cli_url, get_frontend_clients
 
 
 class CLIMonitor:

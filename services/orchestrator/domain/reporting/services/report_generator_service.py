@@ -1,14 +1,11 @@
 """Report Generator Service Domain Service"""
 
 import json
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ..value_objects.approval_recommendation import ApprovalRecommendation
 from ..value_objects.confidence_level import ConfidenceLevel
 from ..value_objects.pr_confidence_report import PRConfidenceReport
-from ..value_objects.report_format import ReportFormat
-from ..value_objects.report_type import ReportType
 
 
 class ReportGeneratorService:

@@ -1,6 +1,5 @@
 """Database Migration - Core migration abstractions and interfaces."""
 
-import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -98,17 +97,14 @@ class Migration(ABC):
     @abstractmethod
     async def up(self, context: "MigrationExecutionContext") -> None:
         """Execute the migration (upgrade)."""
-        pass
 
     @abstractmethod
     async def down(self, context: "MigrationExecutionContext") -> None:
         """Rollback the migration (downgrade)."""
-        pass
 
     @abstractmethod
     def is_reversible(self) -> bool:
         """Check if migration can be rolled back."""
-        pass
 
     def get_dependencies(self) -> List[MigrationDependency]:
         """Get migration dependencies."""
@@ -179,7 +175,6 @@ class DataMigration(Migration):
     async def up(self, context: "MigrationExecutionContext") -> None:
         """Execute data migration."""
         # Default implementation - subclasses should override
-        pass
 
     async def down(self, context: "MigrationExecutionContext") -> None:
         """Rollback data migration."""

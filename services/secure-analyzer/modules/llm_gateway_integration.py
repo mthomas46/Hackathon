@@ -7,9 +7,8 @@ Provides integration between the Secure Analyzer and LLM Gateway for:
 - Automated security policy generation and enforcement
 """
 
-import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from services.shared.core.config.config import get_config_value
 from services.shared.core.constants_new import ServiceNames

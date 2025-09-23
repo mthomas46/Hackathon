@@ -5,12 +5,8 @@ and generation patterns in the content generation system.
 """
 
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, patch
 
-import pytest
-from simulation.domain.value_objects import ComplexityLevel, DocumentId, DocumentMetadata, DocumentType, ProjectType
+from simulation.domain.value_objects import DocumentId, DocumentMetadata, DocumentType
 
 
 def get_all_document_types():

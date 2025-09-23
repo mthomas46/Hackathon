@@ -1,17 +1,15 @@
 """Tests for domain repositories."""
 
-from typing import List
 
 import pytest
 
 from ...domain.entities.analysis import Analysis, AnalysisStatus
 from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.finding import FindingSeverity
 from ...domain.repositories.analysis_repository import AnalysisRepository
 from ...domain.repositories.document_repository import DocumentRepository
 from ...domain.repositories.finding_repository import FindingRepository
 from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
 from ...infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
 from ...infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository
 from ...infrastructure.repositories.in_memory.finding_repository import InMemoryFindingRepository
@@ -96,7 +94,7 @@ class TestDocumentRepository:
     async def test_get_documents_by_repository(self, document_repository, test_data_populator):
         """Test getting documents by repository."""
         # Setup test data
-        documents = test_data_populator.create_test_documents(3)
+        test_data_populator.create_test_documents(3)
 
         # Get documents by repository
         repo_docs = await document_repository.get_by_repository_id("test-repo-001")
@@ -151,7 +149,7 @@ class TestAnalysisRepository:
         """Test getting analyses by document."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 3)
+        test_data_populator.create_test_analyses([doc.id for doc in documents], 3)
 
         document_id = documents[0].id
 
@@ -187,7 +185,7 @@ class TestAnalysisRepository:
         """Test getting analyses by type."""
         # Setup test data with different types
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
+        test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
 
         # Get analyses by type
         semantic_analyses = await analysis_repository.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
@@ -238,7 +236,7 @@ class TestFindingRepository:
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
         analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
-        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
 
         analysis_id = analyses[0].id
 
@@ -255,7 +253,7 @@ class TestFindingRepository:
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
         analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 2)
-        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 2)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 2)
 
         document_id = documents[0].id
 
@@ -272,7 +270,7 @@ class TestFindingRepository:
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
         analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
-        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
 
         # Get findings by severity
         high_findings = await finding_repository.get_by_severity(FindingSeverity.HIGH)
@@ -387,7 +385,7 @@ class TestRepositoryPerformance:
     async def test_query_performance(self, document_repository, test_data_populator, performance_timer):
         """Test repository query performance."""
         # Setup test data
-        documents = test_data_populator.create_test_documents(50)
+        test_data_populator.create_test_documents(50)
 
         # Test query performance
         performance_timer.start()

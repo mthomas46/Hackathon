@@ -2,11 +2,10 @@
 
 import asyncio
 import json
-import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .event_bus import DomainEvent, EventEnvelope
 
@@ -116,37 +115,30 @@ class DeadLetterQueue(ABC):
         error_type: Optional[str] = None,
     ) -> None:
         """Add event to dead letter queue."""
-        pass
 
     @abstractmethod
     async def get_pending_events(self, limit: int = 100) -> List[DeadLetterEntry]:
         """Get events pending retry."""
-        pass
 
     @abstractmethod
     async def mark_retry_successful(self, event_id: str) -> bool:
         """Mark retry as successful and remove from queue."""
-        pass
 
     @abstractmethod
     async def mark_retry_failed(self, event_id: str, error_message: str) -> bool:
         """Mark retry as failed and update entry."""
-        pass
 
     @abstractmethod
     async def get_failed_events(self, limit: int = 100) -> List[DeadLetterEntry]:
         """Get permanently failed events."""
-        pass
 
     @abstractmethod
     async def purge_old_events(self, days_old: int = 30) -> int:
         """Purge events older than specified days."""
-        pass
 
     @abstractmethod
     async def get_stats(self) -> Dict[str, Any]:
         """Get queue statistics."""
-        pass
 
 
 class InMemoryDeadLetterQueue(DeadLetterQueue):
@@ -301,7 +293,7 @@ class RedisDeadLetterQueue(DeadLetterQueue):
         entries_data = await self.redis.lrange(self.queue_key, 0, limit - 1)
 
         entries = []
-        current_time = datetime.utcnow()
+        datetime.utcnow()
 
         for entry_data in entries_data:
             try:

@@ -7,12 +7,11 @@ moved from the orchestrator to the dedicated analysis service.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ..modules.analysis.pr_confidence_scorer import pr_confidence_scorer
 from ..modules.analysis.pr_cross_reference_analyzer import pr_cross_reference_analyzer
 from ..modules.analysis.pr_gap_detector import pr_gap_detector
-from .models import AnalysisRequest, AnalysisResponse, FindingsResponse
 from .shared_utils import get_analysis_service_client
 
 

@@ -7,7 +7,6 @@ import psutil
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ...shared.logging import fire_and_forget
 
 
 class MetricsCollector:
@@ -108,7 +107,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except Exception as exc:
+        except Exception:
             # Record error metrics
             duration = time.time() - start_time
             self.metrics.record_request(request.method, request.url.path, duration, 500)  # Internal server error

@@ -7,9 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import yaml
 
-from .application_service import ApplicationService, ServiceContext
+from .application_service import ApplicationService
 
 
 class ConfigurationSource(ABC):
@@ -18,17 +17,14 @@ class ConfigurationSource(ABC):
     @abstractmethod
     def load(self) -> Dict[str, Any]:
         """Load configuration from source."""
-        pass
 
     @abstractmethod
     def save(self, config: Dict[str, Any]) -> None:
         """Save configuration to source."""
-        pass
 
     @abstractmethod
     def can_save(self) -> bool:
         """Check if source supports saving."""
-        pass
 
 
 class FileConfigurationSource(ConfigurationSource):
@@ -439,7 +435,7 @@ class ConfigurationService(ApplicationService):
 
         # Add configuration-specific health info
         try:
-            config_summary = await self.get_config_summary()
+            await self.get_config_summary()
             validation_issues = await self.validate_config(await self.load_config())
 
             health["configuration"] = {

@@ -6,9 +6,8 @@ Enhanced with ecosystem context awareness for project-specific understanding.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
-from services.shared.core.models.models import Document, Finding
 
 from .ecosystem_context import ecosystem_context
 
@@ -180,7 +179,7 @@ class IntentRecognizer:
 
             # Create patterns for service-specific actions
             for capability in capabilities:
-                capability_words = capability.replace("_", " ").split()
+                capability.replace("_", " ").split()
                 action_words = ["analyze", "check", "create", "find", "generate", "process", "scan"]
 
                 # Create intent patterns for service + capability combinations

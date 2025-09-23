@@ -7,16 +7,13 @@ for all services in the ecosystem, with detailed audit results and integration p
 """
 
 import asyncio
-import inspect
 import json
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Dict, List
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 
 
 class IntegrationDepth(Enum):
@@ -316,7 +313,7 @@ class ServiceIntegrationAuditor:
 
     async def _assess_performance(self, audit_result: ServiceAuditResult):
         """Assess service performance characteristics."""
-        service_name = audit_result.service_name
+        audit_result.service_name
 
         findings = []
         score = 0.0
@@ -342,7 +339,7 @@ class ServiceIntegrationAuditor:
 
     async def _assess_security(self, audit_result: ServiceAuditResult):
         """Assess service security posture."""
-        service_name = audit_result.service_name
+        audit_result.service_name
 
         findings = []
         score = 0.0

@@ -5,7 +5,7 @@ Provides consistent interface and error handling patterns.
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -28,4 +28,3 @@ class UseCase(ABC):
         Returns:
             Result of the use case execution (varies by implementation)
         """
-        pass

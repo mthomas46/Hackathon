@@ -1,9 +1,9 @@
 """Finding repository implementation."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from ...domain.entities import DocumentId, Finding, FindingId
+from ...domain.entities import Finding
 
 
 class FindingRepository(ABC):
@@ -12,37 +12,30 @@ class FindingRepository(ABC):
     @abstractmethod
     async def save(self, finding: Finding) -> None:
         """Save a finding."""
-        pass
 
     @abstractmethod
     async def get_by_id(self, finding_id: str) -> Optional[Finding]:
         """Get finding by ID."""
-        pass
 
     @abstractmethod
     async def get_by_document_id(self, document_id: str) -> List[Finding]:
         """Get all findings for a document."""
-        pass
 
     @abstractmethod
     async def get_all(self) -> List[Finding]:
         """Get all findings."""
-        pass
 
     @abstractmethod
     async def get_by_category(self, category: str) -> List[Finding]:
         """Get findings by category."""
-        pass
 
     @abstractmethod
     async def get_unresolved(self) -> List[Finding]:
         """Get all unresolved findings."""
-        pass
 
     @abstractmethod
     async def delete(self, finding_id: str) -> bool:
         """Delete a finding."""
-        pass
 
 
 class InMemoryFindingRepository(FindingRepository):
