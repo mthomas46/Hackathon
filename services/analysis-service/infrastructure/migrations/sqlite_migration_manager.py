@@ -105,12 +105,16 @@ class SQLiteMigrationManager(MigrationManager):
         try:
             cursor = conn.cursor()
 
+            # Validate table name to prevent SQL injection
+            if not self._is_valid_table_name(self.migration_table):
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
+
             # Get all completed migrations
             cursor.execute(f"""
                 SELECT migration_id FROM {self.migration_table}
                 WHERE status = ?
                 ORDER BY executed_at
-            """, (MigrationStatus.COMPLETED.value,))
+            """, (MigrationStatus.COMPLETED.value,))  # nosec: Table name validated by _is_valid_table_name()
 
             executed_migration_ids = [row[0] for row in cursor.fetchall()]
             self.executed_migrations = set(executed_migration_ids)
@@ -163,7 +167,7 @@ class SQLiteMigrationManager(MigrationManager):
         if migration:
             # Create a simple checksum based on migration content
             content = f"{migration.migration_id}{migration.name}{migration.version}"
-            return hashlib.md5(content.encode()).hexdigest()
+            return hashlib.sha256(content.encode()).hexdigest()
 
         return ""
 
@@ -218,12 +222,16 @@ class SQLiteMigrationManager(MigrationManager):
         try:
             cursor = conn.cursor()
 
+            # Validate table name to prevent SQL injection
+            if not self._is_valid_table_name(self.migration_table):
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
+
             cursor.execute(f"""
                 SELECT migration_id, name, version, migration_type, executed_at,
                        duration_seconds, status, error_message, rollback_available
                 FROM {self.migration_table}
                 ORDER BY executed_at DESC
-            """)
+            """)  # nosec: Table name validated by _is_valid_table_name()
 
             history = []
             for row in cursor.fetchall():
@@ -253,12 +261,16 @@ class SQLiteMigrationManager(MigrationManager):
         try:
             cursor = conn.cursor()
 
+            # Validate table name to prevent SQL injection
+            if not self._is_valid_table_name(self.migration_table):
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
+
             cursor.execute(f"""
                 SELECT migration_id, name, version, migration_type, executed_at,
                        duration_seconds, status, error_message, rollback_available
                 FROM {self.migration_table}
                 WHERE migration_id = ?
-            """, (migration_id,))
+            """, (migration_id,))  # nosec: Table name validated by _is_valid_table_name()
 
             row = cursor.fetchone()
             if row:
@@ -327,10 +339,15 @@ class SQLiteMigrationManager(MigrationManager):
         try:
             cursor = conn.cursor()
 
+            # Validate table name to prevent SQL injection
+            if not self._is_valid_table_name(self.migration_table):
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
+
             # Delete old records but keep the most recent of each migration
             cursor.execute(f"""
                 DELETE FROM {self.migration_table}
                 WHERE migration_id IN (
+            """)  # nosec: Table name validated by _is_valid_table_name()
                     SELECT migration_id
                     FROM {self.migration_table}
                     WHERE executed_at < datetime('now', '-{days_to_keep} days')
@@ -356,6 +373,27 @@ class SQLiteMigrationManager(MigrationManager):
         finally:
             self._close_connection()
 
+    def _is_valid_table_name(self, table_name: str) -> bool:
+        """Validate table name to prevent SQL injection.
+
+        Args:
+            table_name: Table name to validate
+
+        Returns:
+            True if table name is safe, False otherwise
+        """
+        import re
+
+        # Only allow alphanumeric characters and underscores
+        # Must start with letter or underscore
+        # Must be reasonable length
+        if not table_name or len(table_name) > 64:
+            return False
+
+        # Check pattern: starts with letter/underscore, followed by alphanumeric/underscore
+        pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+        return bool(re.match(pattern, table_name))
+
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check."""
         try:
@@ -367,8 +405,12 @@ class SQLiteMigrationManager(MigrationManager):
             cursor.execute("SELECT 1")
             cursor.fetchone()
 
+            # Validate table name to prevent SQL injection
+            if not self._is_valid_table_name(self.migration_table):
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
+
             # Get migration table info
-            cursor.execute(f"SELECT COUNT(*) FROM {self.migration_table}")
+            cursor.execute(f"SELECT COUNT(*) FROM {self.migration_table}")  # nosec: Table name validated by _is_valid_table_name()
             migration_count = cursor.fetchone()[0]
 
             self._close_connection()

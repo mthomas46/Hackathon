@@ -1,0 +1,330 @@
+# Default values for unified-api-dashboard Helm chart
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+  # Domain configuration
+  domain: "api-dashboard.local"
+
+  # TLS configuration
+  tls:
+    enabled: true
+    issuer: "letsencrypt-prod"
+
+# Application settings
+replicaCount: 3
+
+image:
+  registry: docker.io
+  repository: your-registry/unified-api-dashboard
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+  metricsPort: 9090
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: api-dashboard.local
+      paths:
+      - path: /
+        pathType: Prefix
+  tls:
+   - secretName: api-dashboard-tls
+     hosts:
+       - api-dashboard.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - unified-api-dashboard
+        topologyKey: kubernetes.io/hostname
+
+# Application configuration
+config:
+  service:
+    name: unified-api-dashboard
+    port: 8000
+    version: "1.0.0"
+
+  environment: production
+  logLevel: INFO
+  metricsEnabled: true
+
+  # Database configuration
+  redis:
+    host: redis-service
+    port: 6379
+    db: 0
+    ssl: false
+
+  postgres:
+    host: postgres-service
+    port: 5432
+    database: api_dashboard
+    ssl: true
+
+  # External services
+  discoveryAgent:
+    url: http://discovery-agent-service:8080
+
+  # Performance settings
+  cache:
+    enabled: true
+    ttl: 3600
+    maxSize: 1000
+
+  rateLimiting:
+    requestsPerMinute: 1000
+    burstLimit: 50
+
+  # Feature flags
+  features:
+    analytics: true
+    securityMonitoring: true
+    auditLogging: true
+    topologyAnalysis: true
+    developerTools: true
+
+  # Security settings
+  cors:
+    origins: ["https://dashboard.your-domain.com"]
+    credentials: true
+
+  # Monitoring
+  monitoring:
+    prometheusEnabled: true
+    metricsPath: /metrics
+    healthCheckPath: /health
+
+# Secrets - these should be provided via external secret management
+secrets:
+  jwtSecret: ""
+  auditSecret: ""
+  redisPassword: ""
+  postgresPassword: ""
+  databaseUrl: ""
+
+# Persistence settings
+persistence:
+  logs:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+    accessMode: ReadWriteOnce
+
+  cache:
+    enabled: true
+    size: 5Gi
+    storageClass: fast-ssd
+    accessMode: ReadWriteOnce
+
+# Monitoring stack
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: true
+      size: 20Gi
+    retention: "30d"
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+  persistence:
+    enabled: true
+    size: 10Gi
+
+loki:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 10Gi
+
+promtail:
+  enabled: true
+
+# Database dependencies
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    username: "dashboard"
+    password: ""
+    database: "api_dashboard"
+  persistence:
+    enabled: true
+    size: 20Gi
+
+# External services
+externalServices:
+  discoveryAgent:
+    enabled: false
+    image:
+      repository: discovery-agent
+      tag: latest
+    service:
+      port: 8080
+
+# Network policies
+networkPolicy:
+  enabled: true
+  allowedIngressPods:
+    - api-dashboard
+  allowedEgressPods:
+    - redis
+    - postgres
+    - discovery-agent
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Service monitoring
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  interval: 30s
+  scrapeTimeout: 10s
+
+# Alert manager rules
+alerts:
+  enabled: true
+  rules:
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is {{ $value }}%"
+
+    - alert: HighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency detected"
+        description: "95th percentile latency is {{ $value }}s"
+
+# Backup configuration
+backup:
+  enabled: false
+  schedule: "0 2 * * *"
+  retention: 30
+  s3:
+    bucket: ""
+    region: ""
+    accessKey: ""
+    secretKey: ""
+
+# Security scanning
+security:
+  enabled: true
+  trivy:
+    enabled: true
+  falco:
+    enabled: false
+
+# Certificate management
+certManager:
+  enabled: true
+  issuer:
+    name: letsencrypt-prod
+    email: admin@your-domain.com
+
+# Load balancer configuration
+loadBalancer:
+  enabled: false
+  type: "application"
+  healthCheck:
+    enabled: true
+    path: /health
+    interval: 30
+    timeout: 10
+    healthyThreshold: 2
+    unhealthyThreshold: 3

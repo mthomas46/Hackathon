@@ -14,12 +14,12 @@
       {
         "name": "SERVICE_NAME",
         "value": "interpreter",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
         "value": "5120",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -48,7 +48,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "log-collector",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -82,7 +82,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "source-agent",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -97,7 +97,7 @@
       {
         "name": "ENVIRONMENT",
         "value": "development",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "DOC_STORE_URL",
@@ -121,12 +121,12 @@
       {
         "name": "SERVICE_NAME",
         "value": "frontend",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
         "value": "3000",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -160,7 +160,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "notification-service",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -208,7 +208,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "code-analyzer",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -223,6 +223,90 @@
       {
         "name": "ENVIRONMENT",
         "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "project-simulation": {
+    "score": 100,
+    "variables_count": 15,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONUNBUFFERED",
+        "value": "1 \\",
+        "source": "dockerfile"
+      },
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "project-simulation",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5075",
+        "source": "docker-compose"
+      },
+      {
+        "name": "LLM_GATEWAY_URL",
+        "value": "http://llm-gateway:5055",
+        "source": "docker-compose"
+      },
+      {
+        "name": "MOCK_DATA_GENERATOR_URL",
+        "value": "http://mock-data-generator:5065",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DOC_STORE_URL",
+        "value": "http://doc_store:5087",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ANALYSIS_SERVICE_URL",
+        "value": "http://analysis-service:5080",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ORCHESTRATOR_URL",
+        "value": "http://orchestrator:5099",
+        "source": "docker-compose"
+      },
+      {
+        "name": "NOTIFICATION_SERVICE_URL",
+        "value": "http://notification-service:5130",
+        "source": "docker-compose"
+      },
+      {
+        "name": "LOG_COLLECTOR_URL",
+        "value": "http://log-collector:5080",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DDD_ARCHITECTURE",
+        "value": "true",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DDD_CONFIG_FILE",
+        "value": "config/ddd_config.yaml",
         "source": "docker-compose"
       }
     ]
@@ -242,12 +326,12 @@
       {
         "name": "SERVICE_NAME",
         "value": "prompt_store",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
         "value": "5110",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -276,12 +360,12 @@
       {
         "name": "SERVICE_NAME",
         "value": "summarizer-hub",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
-        "value": "5080",
-        "source": "dockerfile"
+        "value": "5160",
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -336,6 +420,11 @@
         "name": "SERVICE_NAME",
         "value": "llm-gateway",
         "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5055",
+        "source": "port-registry"
       },
       {
         "name": "REDIS_HOST",
@@ -431,11 +520,6 @@
         "name": "RATE_LIMIT_COOLDOWN_SECONDS",
         "value": "60",
         "source": "docker-compose"
-      },
-      {
-        "name": "SERVICE_PORT",
-        "value": "5055",
-        "source": "port-registry"
       }
     ]
   },
@@ -454,7 +538,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "secure-analyzer",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -512,12 +596,12 @@
       {
         "name": "SERVICE_NAME",
         "value": "architecture-digitizer",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
-        "value": "5022",
-        "source": "dockerfile"
+        "value": "5105",
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -527,6 +611,100 @@
       {
         "name": "ENVIRONMENT",
         "value": "development",
+        "source": "docker-compose"
+      }
+    ]
+  },
+  "simulation-dashboard": {
+    "score": 100,
+    "variables_count": 17,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONUNBUFFERED",
+        "value": "1 \\",
+        "source": "dockerfile"
+      },
+      {
+        "name": "PATH",
+        "value": "\"/opt/venv/bin:$PATH\"",
+        "source": "dockerfile"
+      },
+      {
+        "name": "PYTHONPATH",
+        "value": "/app",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "simulation-dashboard",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_DEBUG",
+        "value": "false",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_PORT",
+        "value": "8501",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_HOST",
+        "value": "0.0.0.0",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_SIMULATION_SERVICE_HOST",
+        "value": "project-simulation",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_SIMULATION_SERVICE_PORT",
+        "value": "5075",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_ANALYSIS_SERVICE_URL",
+        "value": "http://analysis-service:5080",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_HEALTH_SERVICE_URL",
+        "value": "http://notification-service:5130",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_WEBSOCKET_ENABLED",
+        "value": "true",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS",
+        "value": "5",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_WEBSOCKET_HEARTBEAT_INTERVAL",
+        "value": "30.0",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_PERFORMANCE_ENABLE_COMPRESSION",
+        "value": "true",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS",
+        "value": "10",
         "source": "docker-compose"
       }
     ]
@@ -546,7 +724,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "analysis-service",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -600,12 +778,12 @@
       {
         "name": "SERVICE_NAME",
         "value": "memory-agent",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
-        "value": "5160",
-        "source": "dockerfile"
+        "value": "5090",
+        "source": "docker-compose"
       },
       {
         "name": "REDIS_HOST",
@@ -634,7 +812,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "discovery-agent",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -694,7 +872,7 @@
   },
   "mock-data-generator": {
     "score": 100,
-    "variables_count": 7,
+    "variables_count": 8,
     "issues_count": 0,
     "conflicts_count": 0,
     "issues": [],
@@ -712,6 +890,11 @@
       {
         "name": "SERVICE_NAME",
         "value": "mock-data-generator",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "5065",
         "source": "docker-compose"
       },
       {
@@ -770,7 +953,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "doc_store",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",
@@ -799,6 +982,130 @@
       }
     ]
   },
+  "unified-api-dashboard": {
+    "score": 100,
+    "variables_count": 23,
+    "issues_count": 0,
+    "conflicts_count": 0,
+    "issues": [],
+    "variables": [
+      {
+        "name": "PYTHONDONTWRITEBYTECODE",
+        "value": "1 \\",
+        "source": "dockerfile"
+      },
+      {
+        "name": "PYTHONPATH",
+        "value": "/app/services/unified-api-dashboard",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "unified-api-dashboard",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SERVICE_PORT",
+        "value": "8000",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ENVIRONMENT",
+        "value": "development",
+        "source": "docker-compose"
+      },
+      {
+        "name": "LOG_LEVEL",
+        "value": "INFO",
+        "source": "docker-compose"
+      },
+      {
+        "name": "METRICS_ENABLED",
+        "value": "true",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "redis",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_PORT",
+        "value": "6379",
+        "source": "docker-compose"
+      },
+      {
+        "name": "REDIS_PASSWORD",
+        "value": "${REDIS_PASSWORD:-}",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DISCOVERY_AGENT_URL",
+        "value": "http://discovery-agent:5045",
+        "source": "docker-compose"
+      },
+      {
+        "name": "DOC_STORE_URL",
+        "value": "http://doc_store:5087",
+        "source": "docker-compose"
+      },
+      {
+        "name": "ANALYSIS_SERVICE_URL",
+        "value": "http://analysis-service:5080",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CODE_ANALYZER_URL",
+        "value": "http://code-analyzer:5025",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SECURE_ANALYZER_URL",
+        "value": "http://secure-analyzer:5100",
+        "source": "docker-compose"
+      },
+      {
+        "name": "SUMMARIZER_HUB_URL",
+        "value": "http://summarizer-hub:5160",
+        "source": "docker-compose"
+      },
+      {
+        "name": "LLM_GATEWAY_URL",
+        "value": "http://llm-gateway:5055",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CACHE_ENABLED",
+        "value": "true",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CACHE_TTL",
+        "value": "3600",
+        "source": "docker-compose"
+      },
+      {
+        "name": "RATE_LIMIT_REQUESTS_PER_MINUTE",
+        "value": "1000",
+        "source": "docker-compose"
+      },
+      {
+        "name": "JWT_SECRET_KEY",
+        "value": "${JWT_SECRET_KEY:-dev-jwt-secret-key-change-in-production}",
+        "source": "docker-compose"
+      },
+      {
+        "name": "AUDIT_SECRET_KEY",
+        "value": "${AUDIT_SECRET_KEY:-dev-audit-secret-key-change-in-production}",
+        "source": "docker-compose"
+      },
+      {
+        "name": "CORS_ORIGINS",
+        "value": "http://localhost:3000,http://localhost:8501,http://localhost:8000",
+        "source": "docker-compose"
+      }
+    ]
+  },
   "orchestrator": {
     "score": 100,
     "variables_count": 6,
@@ -814,7 +1121,7 @@
       {
         "name": "SERVICE_NAME",
         "value": "orchestrator",
-        "source": "dockerfile"
+        "source": "docker-compose"
       },
       {
         "name": "SERVICE_PORT",

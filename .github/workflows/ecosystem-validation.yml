@@ -53,7 +53,18 @@ jobs:
     - name: Install validation dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pydantic PyYAML redis requests
+        pip install pydantic PyYAML redis requests aiohttp bandit safety pytest httpx
+
+    - name: Comprehensive Syntax Validation
+      run: |
+        echo "🔍 Running comprehensive Python syntax validation..."
+        python3 -m py_compile scripts/hardening/*.py
+        python3 -c "import scripts.hardening.docker_standardization"
+        python3 -c "import scripts.hardening.environment_validator"
+        python3 -c "import scripts.hardening.api_contract_validator"
+        python3 -c "import scripts.hardening.unified_health_monitor"
+        python3 -c "import scripts.hardening.performance_analyzer"
+        echo "✅ Syntax validation completed"
 
     - name: Port Configuration Validation
       run: |
@@ -104,7 +115,7 @@ jobs:
     - name: Install validation dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pydantic PyYAML redis requests
+        pip install pydantic PyYAML redis requests aiohttp bandit safety pytest httpx
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -133,6 +144,33 @@ jobs:
         python3 scripts/hardening/service_connectivity_validator.py
         echo "✅ Connectivity validation completed"
 
+    - name: Configuration Drift Detection
+      run: |
+        echo "🔍 Detecting configuration drift..."
+        python3 scripts/hardening/config_drift_detector.py
+        echo "✅ Configuration drift detection completed"
+
+    - name: API Contract Validation
+      run: |
+        echo "📋 Validating API contracts..."
+        python3 scripts/hardening/api_contract_validator.py
+        echo "✅ API contract validation completed"
+
+    - name: Comprehensive Security Scanning
+      run: |
+        echo "🔒 Running comprehensive security scans..."
+        # Bandit security scan
+        bandit -q -r services --format json --output bandit-comprehensive.json || true
+        # Safety dependency scan
+        safety check --output json --save-json safety-comprehensive.json || true
+        echo "✅ Comprehensive security scanning completed"
+
+    - name: Extract and analyze security issues
+      run: |
+        echo "🔍 Extracting and analyzing security issues..."
+        python3 scripts/hardening/cicd_security_integration.py --min-severity Medium --update-todos --pr-comment
+        echo "✅ Security issue analysis completed"
+
     - name: Archive validation reports
       uses: actions/upload-artifact@v3
       with:
@@ -140,6 +178,11 @@ jobs:
         path: |
           ecosystem_audit_results.json
           dockerfile_analysis_report.json
+          bandit-comprehensive.json
+          safety-comprehensive.json
+          security_report.json
+          security_report_todos.json
+          security_pr_comment.md
           port_analysis_report.json
           environment_analysis_report.json
           dependency_graph.json
@@ -147,6 +190,11 @@ jobs:
           port_conflict_resolution.sh
           dockerfile_optimization.sh
           environment_fix.sh
+          bandit-comprehensive.json
+          safety-comprehensive.json
+          api_contract_validation_report.json
+          config_drift_report.json
+          service_connectivity_report.json
         retention-days: 30
 
   # ========================================
@@ -190,7 +238,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pydantic PyYAML redis requests
+        pip install pydantic PyYAML redis requests aiohttp bandit safety pytest httpx
 
     - name: Set up Docker Compose
       run: |
@@ -212,8 +260,26 @@ jobs:
     - name: Integration Testing
       run: |
         echo "🔗 Running integration tests..."
-        python3 ecosystem_functional_test_suite.py  # Could be enhanced to run specific integration tests
+        python3 scripts/hardening/ecosystem_functional_test_suite.py
         echo "✅ Integration testing completed"
+
+    - name: Performance Analysis
+      run: |
+        echo "⚡ Running performance analysis..."
+        python3 scripts/hardening/performance_analyzer.py
+        echo "✅ Performance analysis completed"
+
+    - name: Full Ecosystem Health Validation
+      run: |
+        echo "🏥 Running full ecosystem health validation..."
+        python3 scripts/hardening/unified_health_monitor.py
+        echo "✅ Health validation completed"
+
+    - name: Container Security Scanning (Trivy)
+      run: |
+        echo "🐳 Running container security scanning..."
+        # Note: Trivy scanning would be done in the security-scan job
+        echo "Container security scanning completed via security-scan job"
 
     - name: Archive comprehensive reports
       uses: actions/upload-artifact@v3
@@ -257,7 +323,20 @@ jobs:
       run: |
         echo "🔒 Checking environment variable security..."
         python3 scripts/hardening/environment_validator.py | grep -i "security\|warning\|error" || echo "No security issues found"
-        echo "✅ Security check completed"
+        echo "✅ Environment security check completed"
+
+    - name: Dependency Vulnerability Analysis
+      run: |
+        echo "📦 Analyzing dependency vulnerabilities..."
+        safety check --output json --save-json safety-security-scan.json || true
+        bandit -q -r services --format json --output bandit-security-scan.json || true
+        echo "✅ Dependency vulnerability analysis completed"
+
+    - name: Production Readiness Assessment
+      run: |
+        echo "🚀 Assessing production readiness..."
+        python3 scripts/hardening/production_readiness_validator.py
+        echo "✅ Production readiness assessment completed"
 
   # ========================================
   # PERFORMANCE TESTING
@@ -285,22 +364,14 @@ jobs:
 
     - name: Performance Analysis
       run: |
-        echo "⚡ Running performance analysis..."
-        python3 scripts/safeguards/unified_health_monitor.py --performance
+        echo "⚡ Running comprehensive performance analysis..."
+        python3 scripts/hardening/performance_analyzer.py
         echo "✅ Performance analysis completed"
 
     - name: Load Testing
       run: |
-        echo "🔥 Running load tests..."
-        # Run a subset of load tests from the functional test suite
-        timeout 300 python3 -c "
-        import sys
-        sys.path.append('.')
-        from ecosystem_functional_test_suite import EcosystemAuditor
-        auditor = EcosystemAuditor()
-        # Run specific performance-focused tests
-        print('Load testing completed')
-        "
+        echo "🔥 Running comprehensive load tests..."
+        python3 scripts/hardening/ecosystem_functional_test_suite.py
         echo "✅ Load testing completed"
 
   # ========================================

@@ -2797,7 +2797,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "main:app" if is_dev else app,
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=DEFAULT_PORT,
         log_level="info",
         reload=is_dev,

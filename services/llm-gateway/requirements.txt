@@ -1,6 +1,6 @@
 # LLM Gateway Service Dependencies
 # Core web framework
-fastapi>=0.104.0
+fastapi>=0.109.1
 uvicorn[standard]>=0.24.0
 
 # HTTP client for LLM provider APIs

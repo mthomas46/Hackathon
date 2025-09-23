@@ -28,6 +28,10 @@ echo 'Optimizing notification-service...'
 echo 'Optimizing code-analyzer...'
 # Add optimization commands here
 
+# Optimizing project-simulation
+echo 'Optimizing project-simulation...'
+# Add optimization commands here
+
 # Optimizing prompt_store
 echo 'Optimizing prompt_store...'
 # Add optimization commands here
@@ -50,6 +54,10 @@ echo 'Optimizing cli...'
 
 # Optimizing architecture-digitizer
 echo 'Optimizing architecture-digitizer...'
+# Add optimization commands here
+
+# Optimizing simulation-dashboard
+echo 'Optimizing simulation-dashboard...'
 # Add optimization commands here
 
 # Optimizing analysis-service
@@ -78,6 +86,10 @@ echo 'Optimizing ollama...'
 
 # Optimizing doc_store
 echo 'Optimizing doc_store...'
+# Add optimization commands here
+
+# Optimizing unified-api-dashboard
+echo 'Optimizing unified-api-dashboard...'
 # Add optimization commands here
 
 # Optimizing orchestrator

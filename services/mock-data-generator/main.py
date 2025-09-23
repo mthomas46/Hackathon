@@ -2293,25 +2293,27 @@ if __name__ == "__main__":
     print(f"🚀 Starting {SERVICE_TITLE} Service (v{SERVICE_VERSION})...")
     print(f"🔗 LLM Gateway: {LLM_GATEWAY_URL}")
     print(f"📄 Doc Store: {DOC_STORE_URL}")
-    print("
-✨ Enhanced Features Available:"    print("  🏗️  Bulk Collections - Generate large datasets with custom distributions")
+    print("")
+    print("✨ Enhanced Features Available:")
+    print("  🏗️  Bulk Collections - Generate large datasets with custom distributions")
     print("  🎭 Ecosystem Scenarios - Complete testing environments (code_review, documentation, analysis)")
     print("  📋 Collection Templates - Pre-configured data generation templates")
     print("  🔗 Data Relationships - Interconnected data with realistic dependencies")
     print("  📤 Export Formats - JSON, CSV, XML, YAML export capabilities")
     print("  📊 Data Overview - Comprehensive ecosystem data analytics")
     print(f"  🎯 New Data Types: {len([t for t in MockDataType if t.value not in ['confluence_page', 'github_repo', 'github_pr', 'jira_issue', 'jira_epic', 'api_docs', 'code_sample', 'workflow_data']])} additional types")
-    print("
-🌐 Service Endpoints:"    print(f"  📡 Health: http://localhost:{DEFAULT_PORT}/health")
+    print("")
+    print("🌐 Service Endpoints:")
+    print(f"  📡 Health: http://localhost:{DEFAULT_PORT}/health")
     print(f"  🏗️  Collections: http://localhost:{DEFAULT_PORT}/collections/generate")
     print(f"  🎭 Scenarios: http://localhost:{DEFAULT_PORT}/scenarios/generate")
     print(f"  📊 Overview: http://localhost:{DEFAULT_PORT}/data/ecosystem-overview")
-    print("
-📖 API Documentation: http://localhost:{DEFAULT_PORT}/docs
-"
+    print("")
+    print(f"📖 API Documentation: http://localhost:{DEFAULT_PORT}/docs")
+    print("")
     uvicorn.run(
         app,
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=DEFAULT_PORT,
         log_level="info"
     )

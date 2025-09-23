@@ -1,9 +1,9 @@
 # Service Dependency Analysis Report
 
 ## Dependency Graph Summary
-- Total Services: 22
+- Total Services: 25
 - Circular Dependencies: 0
-- Dependency Issues: 1
+- Dependency Issues: 2
 
 ## Startup Order
  1. redis
@@ -25,9 +25,12 @@
 17. source-agent
 18. analysis-service
 19. mock-data-generator
-20. frontend
-21. interpreter
-22. cli
+20. unified-api-dashboard
+21. frontend
+22. interpreter
+23. cli
+24. project-simulation
+25. simulation-dashboard
 
 ## Service Dependencies
 ### redis
@@ -40,6 +43,8 @@
   - mock-data-generator
   - memory-agent
   - prompt_store
+  - project-simulation
+  - unified-api-dashboard
   - code-analyzer
 
 ### orchestrator
@@ -50,6 +55,7 @@
   - discovery-agent
   - interpreter
   - cli
+  - project-simulation
 
 ### doc_store
 **Depends on:**
@@ -58,16 +64,20 @@
   - analysis-service
   - source-agent
   - mock-data-generator
+  - project-simulation
+  - unified-api-dashboard
 
 ### analysis-service
 **Depends on:**
+  - ✅ llm-gateway
   - ✅ redis
   - ✅ doc_store
-  - ✅ llm-gateway
 **Required by:**
   - frontend
   - interpreter
   - cli
+  - project-simulation
+  - simulation-dashboard
 
 ### source-agent
 **Depends on:**
@@ -97,17 +107,20 @@
 ### llm-gateway
 **Depends on:**
   - ✅ bedrock-proxy
-  - ✅ ollama
   - ✅ redis
+  - ✅ ollama
 **Required by:**
   - analysis-service
   - mock-data-generator
+  - project-simulation
 
 ### mock-data-generator
 **Depends on:**
   - ✅ llm-gateway
   - ✅ doc_store
   - ✅ redis
+**Required by:**
+  - project-simulation
 
 ### github-mcp
 **No dependencies**
@@ -119,9 +132,14 @@
 ### discovery-agent
 **Depends on:**
   - ✅ orchestrator
+**Required by:**
+  - unified-api-dashboard
 
 ### notification-service
 **No dependencies**
+**Required by:**
+  - project-simulation
+  - simulation-dashboard
 
 ### prompt_store
 **Depends on:**
@@ -142,6 +160,30 @@
   - ✅ orchestrator
   - ✅ analysis-service
 
+### project-simulation
+**Depends on:**
+  - ✅ redis
+  - ✅ doc_store
+  - ✅ llm-gateway
+  - ✅ mock-data-generator
+  - ✅ analysis-service
+  - ✅ orchestrator
+  - ✅ notification-service
+**Required by:**
+  - simulation-dashboard
+
+### simulation-dashboard
+**Depends on:**
+  - ✅ project-simulation
+  - ✅ analysis-service
+  - ✅ notification-service
+
+### unified-api-dashboard
+**Depends on:**
+  - ✅ redis
+  - ✅ discovery-agent
+  - ✅ doc_store
+
 ### code-analyzer
 **Depends on:**
   - ✅ redis
@@ -153,5 +195,7 @@
 **No dependencies**
 
 ## Issues Found
-- ℹ️ **redis**: Service 'redis' has 8 dependents but no dependencies
+- ℹ️ **redis**: Service 'redis' has 10 dependents but no dependencies
   *Suggestion: Consider if this service should have infrastructure dependencies*
+- 🟡 **project-simulation**: Service 'project-simulation' has 7 dependencies
+  *Suggestion: Consider reducing coupling by introducing intermediary services*

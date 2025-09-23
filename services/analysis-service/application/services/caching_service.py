@@ -403,7 +403,7 @@ class ApplicationCache:
         key_parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
 
         key_string = "|".join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
 
 class CachingService(ApplicationService):

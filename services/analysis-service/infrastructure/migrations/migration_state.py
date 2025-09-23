@@ -121,7 +121,7 @@ class MigrationStateManager:
             migration_str += migration.down_sql
 
         # Calculate checksum
-        return hashlib.md5(migration_str.encode()).hexdigest()
+        return hashlib.sha256(migration_str.encode()).hexdigest()
 
     def _load_state(self) -> None:
         """Load state from file."""

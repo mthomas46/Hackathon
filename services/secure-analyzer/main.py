@@ -74,10 +74,12 @@ attach_self_register(app, ServiceNames.SECURE_ANALYZER)
 @app.get("/health")
 async def health():
     """Health check endpoint returning service status and basic information."""
+    from datetime import datetime
     return {
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
+        "timestamp": datetime.utcnow().isoformat(),
         "circuit_breaker_open": circuit_breaker.is_open(),
         "description": "Secure analyzer service is operational"
     }
@@ -354,7 +356,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         app,
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=DEFAULT_PORT,
         log_level="info"
     )

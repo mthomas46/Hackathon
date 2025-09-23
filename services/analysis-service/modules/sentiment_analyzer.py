@@ -51,7 +51,7 @@ class SentimentDetector:
     async def detect_sentiment(self, text: str) -> SentimentResult:
         """Detect sentiment in text using rule-based analysis."""
         # Check cache first
-        cache_key = f"sentiment:{hashlib.md5(text.encode()).hexdigest()}"
+        cache_key = f"sentiment:{hashlib.sha256(text.encode()).hexdigest()}"
         cached_result = await self._cache.get(cache_key)
 
         if cached_result:

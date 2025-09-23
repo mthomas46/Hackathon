@@ -1,11 +1,11 @@
 {
   "summary": {
-    "total_services_analyzed": 21,
-    "total_conflicts": 20,
+    "total_services_analyzed": 24,
+    "total_conflicts": 23,
     "critical_conflicts": 0,
-    "high_conflicts": 20,
+    "high_conflicts": 23,
     "warnings": 0,
-    "recommendations": 2
+    "recommendations": 3
   },
   "conflicts": [
     {
@@ -43,6 +43,15 @@
         "docker_container"
       ],
       "suggestion": "Port 5080 is used by another container. Use: [5070, 5071, 5072]"
+    },
+    {
+      "port": 5085,
+      "severity": "high",
+      "services": [
+        "source-agent",
+        "docker_container"
+      ],
+      "suggestion": "Port 5085 is used by another container. Use: [5076, 5077, 5078]"
     },
     {
       "port": 3000,
@@ -162,6 +171,33 @@
       "suggestion": "Port 5120 is used by another container. Use: [5111, 5112, 5113]"
     },
     {
+      "port": 5075,
+      "severity": "high",
+      "services": [
+        "project-simulation",
+        "docker_container"
+      ],
+      "suggestion": "Port 5075 is used by another container. Use: [5066, 5067, 5068]"
+    },
+    {
+      "port": 8501,
+      "severity": "high",
+      "services": [
+        "simulation-dashboard",
+        "docker_container"
+      ],
+      "suggestion": "Port 8501 is used by another container. Use: [8491, 8492, 8493]"
+    },
+    {
+      "port": 8000,
+      "severity": "high",
+      "services": [
+        "unified-api-dashboard",
+        "docker_container"
+      ],
+      "suggestion": "Port 8000 is used by another container. Use: [7990, 7991, 7992]"
+    },
+    {
       "port": 5025,
       "severity": "high",
       "services": [
@@ -169,15 +205,6 @@
         "docker_container"
       ],
       "suggestion": "Port 5025 is used by another container. Use: [5015, 5016, 5017]"
-    },
-    {
-      "port": 5100,
-      "severity": "high",
-      "services": [
-        "secure-analyzer",
-        "docker_container"
-      ],
-      "suggestion": "Port 5100 is used by another container. Use: [5091, 5092, 5093]"
     },
     {
       "port": 5040,
@@ -192,6 +219,7 @@
   "warnings": [],
   "recommendations": [
     "frontend uses default port 3000. Consider using a service-specific port range (5xxx-8xxx)",
+    "unified-api-dashboard uses default port 8000. Consider using a service-specific port range (5xxx-8xxx)",
     "Large port range detected (3000-11434). Consider consolidating to a smaller range for easier management"
   ],
   "service_ports": {
@@ -283,6 +311,21 @@
     "interpreter": {
       "external": 5120,
       "internal": 5120,
+      "protocol": "tcp"
+    },
+    "project-simulation": {
+      "external": 5075,
+      "internal": 5075,
+      "protocol": "tcp"
+    },
+    "simulation-dashboard": {
+      "external": 8501,
+      "internal": 8501,
+      "protocol": "tcp"
+    },
+    "unified-api-dashboard": {
+      "external": 8000,
+      "internal": 8000,
       "protocol": "tcp"
     },
     "code-analyzer": {

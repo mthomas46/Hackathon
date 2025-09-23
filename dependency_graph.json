@@ -10,6 +10,8 @@
         "mock-data-generator",
         "memory-agent",
         "prompt_store",
+        "project-simulation",
+        "unified-api-dashboard",
         "code-analyzer"
       ],
       "health_status": "unknown"
@@ -22,7 +24,8 @@
         "frontend",
         "discovery-agent",
         "interpreter",
-        "cli"
+        "cli",
+        "project-simulation"
       ],
       "health_status": "unknown"
     },
@@ -33,20 +36,24 @@
       "dependents": [
         "analysis-service",
         "source-agent",
-        "mock-data-generator"
+        "mock-data-generator",
+        "project-simulation",
+        "unified-api-dashboard"
       ],
       "health_status": "unknown"
     },
     "analysis-service": {
       "dependencies": [
+        "llm-gateway",
         "redis",
-        "doc_store",
-        "llm-gateway"
+        "doc_store"
       ],
       "dependents": [
         "frontend",
         "interpreter",
-        "cli"
+        "cli",
+        "project-simulation",
+        "simulation-dashboard"
       ],
       "health_status": "unknown"
     },
@@ -92,12 +99,13 @@
     "llm-gateway": {
       "dependencies": [
         "bedrock-proxy",
-        "ollama",
-        "redis"
+        "redis",
+        "ollama"
       ],
       "dependents": [
         "analysis-service",
-        "mock-data-generator"
+        "mock-data-generator",
+        "project-simulation"
       ],
       "health_status": "unknown"
     },
@@ -107,7 +115,9 @@
         "doc_store",
         "redis"
       ],
-      "dependents": [],
+      "dependents": [
+        "project-simulation"
+      ],
       "health_status": "unknown"
     },
     "github-mcp": {
@@ -126,12 +136,17 @@
       "dependencies": [
         "orchestrator"
       ],
-      "dependents": [],
+      "dependents": [
+        "unified-api-dashboard"
+      ],
       "health_status": "unknown"
     },
     "notification-service": {
       "dependencies": [],
-      "dependents": [],
+      "dependents": [
+        "project-simulation",
+        "simulation-dashboard"
+      ],
       "health_status": "unknown"
     },
     "prompt_store": {
@@ -158,6 +173,39 @@
         "prompt_store",
         "orchestrator",
         "analysis-service"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "project-simulation": {
+      "dependencies": [
+        "redis",
+        "doc_store",
+        "llm-gateway",
+        "mock-data-generator",
+        "analysis-service",
+        "orchestrator",
+        "notification-service"
+      ],
+      "dependents": [
+        "simulation-dashboard"
+      ],
+      "health_status": "unknown"
+    },
+    "simulation-dashboard": {
+      "dependencies": [
+        "project-simulation",
+        "analysis-service",
+        "notification-service"
+      ],
+      "dependents": [],
+      "health_status": "unknown"
+    },
+    "unified-api-dashboard": {
+      "dependencies": [
+        "redis",
+        "discovery-agent",
+        "doc_store"
       ],
       "dependents": [],
       "health_status": "unknown"
@@ -200,9 +248,12 @@
     "source-agent",
     "analysis-service",
     "mock-data-generator",
+    "unified-api-dashboard",
     "frontend",
     "interpreter",
-    "cli"
+    "cli",
+    "project-simulation",
+    "simulation-dashboard"
   ],
   "circular_dependencies": [],
   "issues": [
@@ -211,8 +262,16 @@
       "category": "bottleneck",
       "service": "redis",
       "dependency": "",
-      "message": "Service 'redis' has 8 dependents but no dependencies",
+      "message": "Service 'redis' has 10 dependents but no dependencies",
       "suggestion": "Consider if this service should have infrastructure dependencies"
+    },
+    {
+      "severity": "warning",
+      "category": "complexity",
+      "service": "project-simulation",
+      "dependency": "",
+      "message": "Service 'project-simulation' has 7 dependencies",
+      "suggestion": "Consider reducing coupling by introducing intermediary services"
     }
   ]
 }
