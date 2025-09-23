@@ -2,12 +2,13 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 
 @dataclass(frozen=True)
 class DocumentId:
     """Value object for document identifier."""
+
     value: str
 
     def __post_init__(self):
@@ -20,6 +21,7 @@ class DocumentId:
 @dataclass(frozen=True)
 class Content:
     """Value object for document content."""
+
     text: str
     format: str = "markdown"
 
@@ -33,6 +35,7 @@ class Content:
 @dataclass(frozen=True)
 class Metadata:
     """Value object for document metadata."""
+
     created_at: datetime
     updated_at: datetime
     author: Optional[str] = None
@@ -47,6 +50,7 @@ class Metadata:
 @dataclass
 class Document:
     """Document domain entity."""
+
     id: DocumentId
     title: str
     content: Content
@@ -92,19 +96,16 @@ class Document:
     def to_dict(self) -> Dict[str, Any]:
         """Convert document to dictionary representation."""
         return {
-            'id': self.id.value,
-            'title': self.title,
-            'content': {
-                'text': self.content.text,
-                'format': self.content.format
+            "id": self.id.value,
+            "title": self.title,
+            "content": {"text": self.content.text, "format": self.content.format},
+            "metadata": {
+                "created_at": self.metadata.created_at.isoformat(),
+                "updated_at": self.metadata.updated_at.isoformat(),
+                "author": self.metadata.author,
+                "tags": self.metadata.tags,
+                "properties": self.metadata.properties,
             },
-            'metadata': {
-                'created_at': self.metadata.created_at.isoformat(),
-                'updated_at': self.metadata.updated_at.isoformat(),
-                'author': self.metadata.author,
-                'tags': self.metadata.tags,
-                'properties': self.metadata.properties
-            },
-            'repository_id': self.repository_id,
-            'version': self.version
+            "repository_id": self.repository_id,
+            "version": self.version,
         }

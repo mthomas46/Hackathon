@@ -15,17 +15,19 @@ Responsibilities:
 
 Dependencies: shared middlewares for request tracking; httpx for webhook delivery.
 """
+
 import os
+from typing import Any, Dict, List, Optional
+
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
 
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 from services.shared.utilities import attach_self_register  # type: ignore
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
-from .modules.owner_resolver import owner_resolver
-from .modules.notification_sender import notification_sender
 from .modules.dlq_manager import dlq_manager
+from .modules.notification_sender import notification_sender
+from .modules.owner_resolver import owner_resolver
 
 # Service configuration constants
 SERVICE_NAME = "notification-service"
@@ -39,7 +41,7 @@ MAX_DLQ_LIMIT = 500
 app = FastAPI(
     title="Notification Service",
     version=SERVICE_VERSION,
-    description="Centralized notification service with owner resolution, deduplication, and dead letter queue"
+    description="Centralized notification service with owner resolution, deduplication, and dead letter queue",
 )
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
@@ -52,6 +54,7 @@ class OwnerUpdate(BaseModel):
     Used to update the ownership registry that maps entities to their
     responsible owners and teams for notification routing.
     """
+
     id: str
     """Unique identifier for the entity being updated."""
 
@@ -66,12 +69,13 @@ class OwnerUpdate(BaseModel):
 async def health():
     """Health check endpoint returning service status and basic information."""
     from datetime import datetime
+
     return {
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
         "timestamp": datetime.utcnow().isoformat(),
-        "description": "Notification service is operational"
+        "description": "Notification service is operational",
     }
 
 
@@ -86,12 +90,7 @@ async def owners_update(req: OwnerUpdate):
     Currently implemented as a stub for testing purposes.
     """
     # Stub: in a real system, update ownership registry (DB or config repo)
-    return {
-        "status": "ok",
-        "id": req.id,
-        "owner": req.owner,
-        "team": req.team
-    }
+    return {"status": "ok", "id": req.id, "owner": req.owner, "team": req.team}
 
 
 class NotifyPayload(BaseModel):
@@ -100,6 +99,7 @@ class NotifyPayload(BaseModel):
     Supports multiple notification channels with automatic deduplication
     and metadata enrichment for better notification management.
     """
+
     channel: str
     """Notification channel: 'slack', 'email', or 'webhook'."""
 
@@ -134,7 +134,7 @@ async def notify(req: NotifyPayload):
             title=req.title,
             message=req.message,
             metadata=req.metadata,
-            labels=req.labels
+            labels=req.labels,
         )
         return result
     except Exception as e:
@@ -149,6 +149,7 @@ class ResolveOwnersRequest(BaseModel):
     Used to batch-resolve owner names to their corresponding notification
     channels and targets for efficient bulk operations.
     """
+
     owners: List[str]
     """List of owner names to resolve."""
 
@@ -181,11 +182,5 @@ async def get_dlq(limit: int = 50):
 if __name__ == "__main__":
     """Run the Notification Service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
-
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

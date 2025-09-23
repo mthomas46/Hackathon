@@ -109,21 +109,30 @@ Responsibilities:
 
 Dependencies: Document Store, Prompt Store, Interpreter, Source Agent, Orchestrator.
 """
-from typing import Optional, List, Dict, Any
-import os
+
 import json
+import os
+from typing import Any, Dict, List, Optional
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.responses import create_error_response, create_success_response
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses import create_success_response, create_error_response
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register, get_service_client
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.utilities.utilities import (
+    attach_self_register,
+    generate_id,
+    get_service_client,
+    setup_common_middleware,
+    utc_now,
+)
 
 try:
     import redis.asyncio as aioredis
@@ -131,7 +140,6 @@ except Exception:
     aioredis = None
 
 from services.shared.core.models import Document, Finding
-
 
 # Create shared client instance for all analysis operations
 service_client = get_service_client(timeout=30)
@@ -145,16 +153,100 @@ DEFAULT_PORT = 5020
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import AnalysisRequest, ReportRequest, DocumentDumpRequest, NotifyOwnersRequest, FindingsResponse, ArchitectureAnalysisRequest, SemanticSimilarityRequest, SentimentAnalysisRequest, ToneAnalysisRequest, ContentQualityRequest, TrendAnalysisRequest, PortfolioTrendAnalysisRequest, RiskAssessmentRequest, PortfolioRiskAssessmentRequest, MaintenanceForecastRequest, PortfolioMaintenanceForecastRequest, QualityDegradationDetectionRequest, PortfolioQualityDegradationRequest, ChangeImpactAnalysisRequest, PortfolioChangeImpactRequest, AutomatedRemediationRequest, RemediationPreviewRequest, WorkflowEventRequest, WorkflowStatusRequest, WebhookConfigRequest, CrossRepositoryAnalysisRequest, RepositoryConnectivityRequest, RepositoryConnectorConfigRequest, DistributedTaskRequest, BatchTasksRequest, TaskStatusRequest, CancelTaskRequest, ScaleWorkersRequest, LoadBalancingStrategyRequest, LoadBalancingConfigRequest
-from .modules.analysis_handlers import analysis_handlers
-from .modules.report_handlers import report_handlers
-from .modules.integration_handlers import integration_handlers
+try:
+    # Try relative imports first (when run as module)
+    from .modules.analysis_handlers import analysis_handlers
+    from .modules.integration_handlers import integration_handlers
+    from .modules.models import (
+        AnalysisRequest,
+        ArchitectureAnalysisRequest,
+        AutomatedRemediationRequest,
+        BatchTasksRequest,
+        CancelTaskRequest,
+        ChangeImpactAnalysisRequest,
+        ContentQualityRequest,
+        CrossRepositoryAnalysisRequest,
+        DistributedTaskRequest,
+        DocumentDumpRequest,
+        FindingsResponse,
+        LoadBalancingConfigRequest,
+        LoadBalancingStrategyRequest,
+        MaintenanceForecastRequest,
+        NotifyOwnersRequest,
+        PortfolioChangeImpactRequest,
+        PortfolioMaintenanceForecastRequest,
+        PortfolioQualityDegradationRequest,
+        PortfolioRiskAssessmentRequest,
+        PortfolioTrendAnalysisRequest,
+        QualityDegradationDetectionRequest,
+        RemediationPreviewRequest,
+        ReportRequest,
+        RepositoryConnectivityRequest,
+        RepositoryConnectorConfigRequest,
+        RiskAssessmentRequest,
+        ScaleWorkersRequest,
+        SemanticSimilarityRequest,
+        SentimentAnalysisRequest,
+        TaskStatusRequest,
+        ToneAnalysisRequest,
+        TrendAnalysisRequest,
+        WebhookConfigRequest,
+        WorkflowEventRequest,
+        WorkflowStatusRequest,
+    )
+    from .modules.report_handlers import report_handlers
+except ImportError:
+    # Fallback to absolute imports (when run as script)
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.dirname(__file__))
+    from modules.analysis_handlers import analysis_handlers
+    from modules.integration_handlers import integration_handlers
+    from modules.models import (
+        AnalysisRequest,
+        ArchitectureAnalysisRequest,
+        AutomatedRemediationRequest,
+        BatchTasksRequest,
+        CancelTaskRequest,
+        ChangeImpactAnalysisRequest,
+        ContentQualityRequest,
+        CrossRepositoryAnalysisRequest,
+        DistributedTaskRequest,
+        DocumentDumpRequest,
+        FindingsResponse,
+        LoadBalancingConfigRequest,
+        LoadBalancingStrategyRequest,
+        MaintenanceForecastRequest,
+        NotifyOwnersRequest,
+        PortfolioChangeImpactRequest,
+        PortfolioMaintenanceForecastRequest,
+        PortfolioQualityDegradationRequest,
+        PortfolioRiskAssessmentRequest,
+        PortfolioTrendAnalysisRequest,
+        QualityDegradationDetectionRequest,
+        RemediationPreviewRequest,
+        ReportRequest,
+        RepositoryConnectivityRequest,
+        RepositoryConnectorConfigRequest,
+        RiskAssessmentRequest,
+        ScaleWorkersRequest,
+        SemanticSimilarityRequest,
+        SentimentAnalysisRequest,
+        TaskStatusRequest,
+        ToneAnalysisRequest,
+        TrendAnalysisRequest,
+        WebhookConfigRequest,
+        WorkflowEventRequest,
+        WorkflowStatusRequest,
+    )
+    from modules.report_handlers import report_handlers
 
 # Create FastAPI app directly using shared utilities
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Document analysis and consistency checking service for the LLM Documentation Ecosystem",
-    version=SERVICE_VERSION
+    version=SERVICE_VERSION,
 )
 
 # Use common middleware setup and error handlers to reduce duplication across services
@@ -169,15 +261,12 @@ attach_self_register(app, ServiceNames.ANALYSIS_SERVICE)
 
 # Import shared utilities for consistency
 from .modules.shared_utils import (
-    handle_analysis_error,
-    create_analysis_success_response,
     _create_analysis_error_response,
     build_analysis_context,
-    validate_analysis_targets
+    create_analysis_success_response,
+    handle_analysis_error,
+    validate_analysis_targets,
 )
-
-
-
 
 # API Endpoints
 
@@ -213,8 +302,8 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
                 "total_documents": result.total_documents,
                 "similarity_pairs_found": len(result.similarity_pairs),
                 "processing_time": result.processing_time,
-                "model_used": result.model_used
-            }
+                "model_used": result.model_used,
+            },
         )
 
         return create_success_response(
@@ -224,25 +313,21 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
                 "similarity_pairs": [pair.model_dump() for pair in result.similarity_pairs],
                 "analysis_summary": result.analysis_summary,
                 "processing_time": result.processing_time,
-                "model_used": result.model_used
+                "model_used": result.model_used,
             },
             total_documents=result.total_documents,
             similarity_pairs_found=len(result.similarity_pairs),
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Semantic similarity analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "request": req.model_dump()}
+            "error", "Semantic similarity analysis failed", SERVICE_NAME, {"error": str(e), "request": req.model_dump()}
         )
 
         return create_error_response(
-            f"Semantic similarity analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Semantic similarity analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -264,10 +349,10 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
             SERVICE_NAME,
             {
                 "document_id": result.document_id,
-                "sentiment": result.sentiment_analysis.get('sentiment', 'unknown'),
+                "sentiment": result.sentiment_analysis.get("sentiment", "unknown"),
                 "quality_score": result.quality_score,
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -279,27 +364,21 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
                 "tone_analysis": result.tone_analysis,
                 "quality_score": result.quality_score,
                 "recommendations": result.recommendations,
-                "processing_time": result.processing_time
+                "processing_time": result.processing_time,
             },
             document_id=result.document_id,
             quality_score=result.quality_score,
-            sentiment=result.sentiment_analysis.get('sentiment', 'unknown'),
-            processing_time=result.processing_time
+            sentiment=result.sentiment_analysis.get("sentiment", "unknown"),
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Sentiment analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Sentiment analysis failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
-        return create_error_response(
-            f"Sentiment analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Sentiment analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/tone")
@@ -321,8 +400,8 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
                 "document_id": result.document_id,
                 "primary_tone": result.primary_tone,
                 "analysis_scope": req.analysis_scope,
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -334,27 +413,21 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
                 "tone_indicators": result.tone_indicators,
                 "sentiment_summary": result.sentiment_summary,
                 "clarity_assessment": result.clarity_assessment,
-                "processing_time": result.processing_time
+                "processing_time": result.processing_time,
             },
             document_id=result.document_id,
             primary_tone=result.primary_tone,
             analysis_scope=req.analysis_scope,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Tone analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Tone analysis failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
-        return create_error_response(
-            f"Tone analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/quality")
@@ -375,10 +448,10 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
             SERVICE_NAME,
             {
                 "document_id": result.document_id,
-                "quality_score": result.quality_assessment.get('overall_score', 0.0),
-                "grade": result.quality_assessment.get('grade', 'N/A'),
-                "processing_time": result.processing_time
-            }
+                "quality_score": result.quality_assessment.get("overall_score", 0.0),
+                "grade": result.quality_assessment.get("grade", "N/A"),
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -389,26 +462,22 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
                 "detailed_metrics": result.detailed_metrics,
                 "recommendations": result.recommendations,
                 "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp
+                "analysis_timestamp": result.analysis_timestamp,
             },
             document_id=result.document_id,
-            quality_score=result.quality_assessment.get('overall_score', 0.0),
-            grade=result.quality_assessment.get('grade', 'N/A'),
-            processing_time=result.processing_time
+            quality_score=result.quality_assessment.get("overall_score", 0.0),
+            grade=result.quality_assessment.get("grade", "N/A"),
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Content quality analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Content quality analysis failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
         return create_error_response(
-            f"Content quality analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Content quality analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -434,8 +503,8 @@ async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
                 "confidence": result.confidence,
                 "data_points": result.data_points,
                 "risk_areas_count": len(result.risk_areas),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -452,28 +521,22 @@ async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
                 "data_points": result.data_points,
                 "volatility": result.volatility,
                 "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp
+                "analysis_timestamp": result.analysis_timestamp,
             },
             document_id=result.document_id,
             trend_direction=result.trend_direction,
             confidence=result.confidence,
             data_points=result.data_points,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Trend analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Trend analysis failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
-        return create_error_response(
-            f"Trend analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Trend analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/trends/portfolio")
@@ -494,12 +557,12 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
             "Portfolio trend analysis completed",
             SERVICE_NAME,
             {
-                "total_documents": portfolio_summary.get('total_documents', 0),
-                "analyzed_documents": portfolio_summary.get('analyzed_documents', 0),
-                "overall_trend": portfolio_summary.get('overall_trend', 'unknown'),
-                "high_risk_documents": len(portfolio_summary.get('high_risk_documents', [])),
-                "processing_time": result.processing_time
-            }
+                "total_documents": portfolio_summary.get("total_documents", 0),
+                "analyzed_documents": portfolio_summary.get("analyzed_documents", 0),
+                "overall_trend": portfolio_summary.get("overall_trend", "unknown"),
+                "high_risk_documents": len(portfolio_summary.get("high_risk_documents", [])),
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -508,12 +571,12 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
                 "portfolio_summary": result.portfolio_summary,
                 "document_trends": result.document_trends,
                 "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp
+                "analysis_timestamp": result.analysis_timestamp,
             },
-            total_documents=result.portfolio_summary.get('total_documents', 0),
-            analyzed_documents=result.portfolio_summary.get('analyzed_documents', 0),
-            overall_trend=result.portfolio_summary.get('overall_trend', 'unknown'),
-            processing_time=result.processing_time
+            total_documents=result.portfolio_summary.get("total_documents", 0),
+            analyzed_documents=result.portfolio_summary.get("analyzed_documents", 0),
+            overall_trend=result.portfolio_summary.get("overall_trend", "unknown"),
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -522,12 +585,11 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
             "error",
             "Portfolio trend analysis failed",
             SERVICE_NAME,
-            {"error": str(e), "total_results": len(req.analysis_results)}
+            {"error": str(e), "total_results": len(req.analysis_results)},
         )
 
         return create_error_response(
-            f"Portfolio trend analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Portfolio trend analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -549,12 +611,12 @@ async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
             SERVICE_NAME,
             {
                 "document_id": result.document_id,
-                "overall_risk_score": result.overall_risk.get('overall_score', 0.0),
-                "risk_level": result.overall_risk.get('risk_level', 'unknown'),
+                "overall_risk_score": result.overall_risk.get("overall_score", 0.0),
+                "risk_level": result.overall_risk.get("risk_level", "unknown"),
                 "risk_drivers_count": len(result.risk_drivers),
                 "recommendations_count": len(result.recommendations),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -566,28 +628,22 @@ async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
                 "risk_drivers": result.risk_drivers,
                 "recommendations": result.recommendations,
                 "assessment_timestamp": result.assessment_timestamp,
-                "processing_time": result.processing_time
+                "processing_time": result.processing_time,
             },
             document_id=result.document_id,
-            risk_level=result.overall_risk.get('risk_level', 'unknown'),
-            risk_score=result.overall_risk.get('overall_score', 0.0),
+            risk_level=result.overall_risk.get("risk_level", "unknown"),
+            risk_score=result.overall_risk.get("overall_score", 0.0),
             risk_drivers_count=len(result.risk_drivers),
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Risk assessment failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Risk assessment failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
-        return create_error_response(
-            f"Risk assessment failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Risk assessment failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/risk/portfolio")
@@ -609,12 +665,12 @@ async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
             "Portfolio risk assessment completed",
             SERVICE_NAME,
             {
-                "total_documents": portfolio_summary.get('total_documents', 0),
-                "assessed_documents": portfolio_summary.get('assessed_documents', 0),
-                "average_risk_score": portfolio_summary.get('average_risk_score', 0.0),
+                "total_documents": portfolio_summary.get("total_documents", 0),
+                "assessed_documents": portfolio_summary.get("assessed_documents", 0),
+                "average_risk_score": portfolio_summary.get("average_risk_score", 0.0),
                 "high_risk_documents": len(result.high_risk_documents),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -624,13 +680,13 @@ async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
                 "document_assessments": result.document_assessments,
                 "high_risk_documents": result.high_risk_documents,
                 "processing_time": result.processing_time,
-                "assessment_timestamp": result.assessment_timestamp
+                "assessment_timestamp": result.assessment_timestamp,
             },
-            total_documents=portfolio_summary.get('total_documents', 0),
-            assessed_documents=portfolio_summary.get('assessed_documents', 0),
-            average_risk_score=portfolio_summary.get('average_risk_score', 0.0),
+            total_documents=portfolio_summary.get("total_documents", 0),
+            assessed_documents=portfolio_summary.get("assessed_documents", 0),
+            average_risk_score=portfolio_summary.get("average_risk_score", 0.0),
             high_risk_count=len(result.high_risk_documents),
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -639,12 +695,11 @@ async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
             "error",
             "Portfolio risk assessment failed",
             SERVICE_NAME,
-            {"error": str(e), "total_documents": len(req.documents)}
+            {"error": str(e), "total_documents": len(req.documents)},
         )
 
         return create_error_response(
-            f"Portfolio risk assessment failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Portfolio risk assessment failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -660,19 +715,19 @@ async def forecast_document_maintenance_endpoint(req: MaintenanceForecastRequest
         result = await analysis_handlers.handle_maintenance_forecast(req)
 
         # Log successful forecast
-        forecast_data = result.forecast_data.get('overall_forecast', {})
+        forecast_data = result.forecast_data.get("overall_forecast", {})
         fire_and_forget(
             "info",
             "Maintenance forecast completed",
             SERVICE_NAME,
             {
                 "document_id": result.document_id,
-                "predicted_days": forecast_data.get('predicted_days', 0),
-                "priority_level": forecast_data.get('priority_level', 'unknown'),
-                "urgency_score": forecast_data.get('urgency_score', 0.0),
+                "predicted_days": forecast_data.get("predicted_days", 0),
+                "priority_level": forecast_data.get("priority_level", "unknown"),
+                "urgency_score": forecast_data.get("urgency_score", 0.0),
                 "recommendations_count": len(result.recommendations),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -682,28 +737,22 @@ async def forecast_document_maintenance_endpoint(req: MaintenanceForecastRequest
                 "forecast_data": result.forecast_data,
                 "recommendations": result.recommendations,
                 "processing_time": result.processing_time,
-                "forecast_timestamp": result.forecast_timestamp
+                "forecast_timestamp": result.forecast_timestamp,
             },
             document_id=result.document_id,
-            predicted_days=forecast_data.get('predicted_days', 0),
-            priority_level=forecast_data.get('priority_level', 'unknown'),
-            urgency_score=forecast_data.get('urgency_score', 0.0),
-            processing_time=result.processing_time
+            predicted_days=forecast_data.get("predicted_days", 0),
+            priority_level=forecast_data.get("priority_level", "unknown"),
+            urgency_score=forecast_data.get("urgency_score", 0.0),
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Maintenance forecast failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Maintenance forecast failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
-        return create_error_response(
-            f"Maintenance forecast failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Maintenance forecast failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/maintenance/forecast/portfolio")
@@ -725,12 +774,12 @@ async def forecast_portfolio_maintenance_endpoint(req: PortfolioMaintenanceForec
             "Portfolio maintenance forecast completed",
             SERVICE_NAME,
             {
-                "total_documents": portfolio_summary.get('total_documents', 0),
-                "forecasted_documents": portfolio_summary.get('forecasted_documents', 0),
-                "average_urgency": portfolio_summary.get('average_urgency', 0.0),
-                "maintenance_dates": portfolio_summary.get('maintenance_dates', 0),
-                "processing_time": result.processing_time
-            }
+                "total_documents": portfolio_summary.get("total_documents", 0),
+                "forecasted_documents": portfolio_summary.get("forecasted_documents", 0),
+                "average_urgency": portfolio_summary.get("average_urgency", 0.0),
+                "maintenance_dates": portfolio_summary.get("maintenance_dates", 0),
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -740,13 +789,13 @@ async def forecast_portfolio_maintenance_endpoint(req: PortfolioMaintenanceForec
                 "maintenance_schedule": result.maintenance_schedule,
                 "document_forecasts": result.document_forecasts,
                 "processing_time": result.processing_time,
-                "forecast_timestamp": result.forecast_timestamp
+                "forecast_timestamp": result.forecast_timestamp,
             },
-            total_documents=portfolio_summary.get('total_documents', 0),
-            forecasted_documents=portfolio_summary.get('forecasted_documents', 0),
-            average_urgency=portfolio_summary.get('average_urgency', 0.0),
-            maintenance_dates=portfolio_summary.get('maintenance_dates', 0),
-            processing_time=result.processing_time
+            total_documents=portfolio_summary.get("total_documents", 0),
+            forecasted_documents=portfolio_summary.get("forecasted_documents", 0),
+            average_urgency=portfolio_summary.get("average_urgency", 0.0),
+            maintenance_dates=portfolio_summary.get("maintenance_dates", 0),
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -755,12 +804,11 @@ async def forecast_portfolio_maintenance_endpoint(req: PortfolioMaintenanceForec
             "error",
             "Portfolio maintenance forecast failed",
             SERVICE_NAME,
-            {"error": str(e), "total_documents": len(req.documents)}
+            {"error": str(e), "total_documents": len(req.documents)},
         )
 
         return create_error_response(
-            f"Portfolio maintenance forecast failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Portfolio maintenance forecast failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -777,7 +825,7 @@ async def detect_document_quality_degradation_endpoint(req: QualityDegradationDe
 
         # Log successful detection
         degradation_detected = result.degradation_detected
-        severity_level = result.severity_assessment.get('overall_severity', 'unknown')
+        severity_level = result.severity_assessment.get("overall_severity", "unknown")
         fire_and_forget(
             "info",
             "Quality degradation detection completed",
@@ -788,8 +836,8 @@ async def detect_document_quality_degradation_endpoint(req: QualityDegradationDe
                 "severity_level": severity_level,
                 "data_points": result.data_points,
                 "alerts_count": len(result.alerts),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -808,13 +856,13 @@ async def detect_document_quality_degradation_endpoint(req: QualityDegradationDe
                 "alert_threshold": result.alert_threshold,
                 "alerts": result.alerts,
                 "processing_time": result.processing_time,
-                "detection_timestamp": result.detection_timestamp
+                "detection_timestamp": result.detection_timestamp,
             },
             document_id=result.document_id,
             degradation_detected=result.degradation_detected,
             severity_level=severity_level,
             alerts_count=len(result.alerts),
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -823,12 +871,11 @@ async def detect_document_quality_degradation_endpoint(req: QualityDegradationDe
             "error",
             "Quality degradation detection failed",
             SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            {"error": str(e), "document_id": req.document_id},
         )
 
         return create_error_response(
-            f"Quality degradation detection failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Quality degradation detection failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -846,20 +893,20 @@ async def monitor_portfolio_quality_degradation_endpoint(req: PortfolioQualityDe
         portfolio_summary = result.portfolio_summary
 
         # Log successful monitoring
-        degradation_detected = portfolio_summary.get('degradation_detected', 0)
-        degradation_rate = portfolio_summary.get('degradation_rate', 0.0)
+        degradation_detected = portfolio_summary.get("degradation_detected", 0)
+        degradation_rate = portfolio_summary.get("degradation_rate", 0.0)
         fire_and_forget(
             "info",
             "Portfolio quality degradation monitoring completed",
             SERVICE_NAME,
             {
-                "total_documents": portfolio_summary.get('total_documents', 0),
-                "analyzed_documents": portfolio_summary.get('analyzed_documents', 0),
+                "total_documents": portfolio_summary.get("total_documents", 0),
+                "analyzed_documents": portfolio_summary.get("analyzed_documents", 0),
                 "degradation_detected": degradation_detected,
                 "degradation_rate": degradation_rate,
-                "high_risk_documents": len(portfolio_summary.get('high_risk_documents', [])),
-                "processing_time": result.processing_time
-            }
+                "high_risk_documents": len(portfolio_summary.get("high_risk_documents", [])),
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -869,13 +916,13 @@ async def monitor_portfolio_quality_degradation_endpoint(req: PortfolioQualityDe
                 "degradation_results": result.degradation_results,
                 "alerts_summary": result.alerts_summary,
                 "processing_time": result.processing_time,
-                "monitoring_timestamp": result.monitoring_timestamp
+                "monitoring_timestamp": result.monitoring_timestamp,
             },
-            total_documents=portfolio_summary.get('total_documents', 0),
-            analyzed_documents=portfolio_summary.get('analyzed_documents', 0),
+            total_documents=portfolio_summary.get("total_documents", 0),
+            analyzed_documents=portfolio_summary.get("analyzed_documents", 0),
             degradation_detected=degradation_detected,
             degradation_rate=degradation_rate,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -884,12 +931,11 @@ async def monitor_portfolio_quality_degradation_endpoint(req: PortfolioQualityDe
             "error",
             "Portfolio quality degradation monitoring failed",
             SERVICE_NAME,
-            {"error": str(e), "total_documents": len(req.documents)}
+            {"error": str(e), "total_documents": len(req.documents)},
         )
 
         return create_error_response(
-            f"Portfolio quality degradation monitoring failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Portfolio quality degradation monitoring failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -905,8 +951,8 @@ async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisReque
         result = await analysis_handlers.handle_change_impact_analysis(req)
 
         # Log successful analysis
-        impact_level = result.impact_analysis.get('overall_impact', {}).get('impact_level', 'unknown')
-        affected_docs = result.impact_analysis.get('overall_impact', {}).get('affected_documents_count', 0)
+        impact_level = result.impact_analysis.get("overall_impact", {}).get("impact_level", "unknown")
+        affected_docs = result.impact_analysis.get("overall_impact", {}).get("affected_documents_count", 0)
         fire_and_forget(
             "info",
             "Change impact analysis completed",
@@ -916,8 +962,8 @@ async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisReque
                 "impact_level": impact_level,
                 "affected_documents": affected_docs,
                 "recommendations_count": len(result.recommendations),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -930,27 +976,21 @@ async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisReque
                 "related_documents_analysis": result.related_documents_analysis,
                 "recommendations": result.recommendations,
                 "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp
+                "analysis_timestamp": result.analysis_timestamp,
             },
             document_id=result.document_id,
             impact_level=impact_level,
             affected_documents=affected_docs,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Change impact analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id}
+            "error", "Change impact analysis failed", SERVICE_NAME, {"error": str(e), "document_id": req.document_id}
         )
 
-        return create_error_response(
-            f"Change impact analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Change impact analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/change/impact/portfolio")
@@ -967,9 +1007,9 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
         portfolio_summary = result.portfolio_summary
 
         # Log successful analysis
-        total_changes = portfolio_summary.get('total_changes', 0)
-        analyzed_changes = portfolio_summary.get('analyzed_changes', 0)
-        avg_impact = portfolio_summary.get('average_impact_score', 0.0)
+        total_changes = portfolio_summary.get("total_changes", 0)
+        analyzed_changes = portfolio_summary.get("analyzed_changes", 0)
+        avg_impact = portfolio_summary.get("average_impact_score", 0.0)
         fire_and_forget(
             "info",
             "Portfolio change impact analysis completed",
@@ -978,9 +1018,9 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
                 "total_changes": total_changes,
                 "analyzed_changes": analyzed_changes,
                 "average_impact_score": avg_impact,
-                "high_impact_changes": len(portfolio_summary.get('high_impact_changes', [])),
-                "processing_time": result.processing_time
-            }
+                "high_impact_changes": len(portfolio_summary.get("high_impact_changes", [])),
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -989,12 +1029,12 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
                 "portfolio_summary": result.portfolio_summary,
                 "change_impacts": result.change_impacts,
                 "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp
+                "analysis_timestamp": result.analysis_timestamp,
             },
             total_changes=total_changes,
             analyzed_changes=analyzed_changes,
             average_impact_score=avg_impact,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -1003,12 +1043,11 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
             "error",
             "Portfolio change impact analysis failed",
             SERVICE_NAME,
-            {"error": str(e), "total_changes": len(req.changes)}
+            {"error": str(e), "total_changes": len(req.changes)},
         )
 
         return create_error_response(
-            f"Portfolio change impact analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Portfolio change impact analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -1030,16 +1069,10 @@ async def generate_analysis_report_endpoint(req: dict):
         include_json = req.get("include_json", True)
 
         if not simulation_id:
-            return create_error_response(
-                "simulation_id is required",
-                error_code=ErrorCodes.VALIDATION_ERROR
-            )
+            return create_error_response("simulation_id is required", error_code=ErrorCodes.VALIDATION_ERROR)
 
         if not documents:
-            return create_error_response(
-                "documents list cannot be empty",
-                error_code=ErrorCodes.VALIDATION_ERROR
-            )
+            return create_error_response("documents list cannot be empty", error_code=ErrorCodes.VALIDATION_ERROR)
 
         # Perform comprehensive analysis on all documents
         analysis_results = []
@@ -1057,7 +1090,7 @@ async def generate_analysis_report_endpoint(req: dict):
                     content=doc_content,
                     document_id=doc.get("id", ""),
                     document_type=doc.get("type", "unknown"),
-                    title=doc.get("title", "")
+                    title=doc.get("title", ""),
                 )
 
                 quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
@@ -1070,8 +1103,12 @@ async def generate_analysis_report_endpoint(req: dict):
                         "readability_score": quality_result.readability_score,
                         "issues_found": len(quality_result.issues) if quality_result.issues else 0,
                         "issues": [str(issue) for issue in quality_result.issues] if quality_result.issues else [],
-                        "insights": [str(insight) for insight in quality_result.insights] if quality_result.insights else [],
-                        "timestamp": quality_result.analysis_timestamp.isoformat() if quality_result.analysis_timestamp else None
+                        "insights": (
+                            [str(insight) for insight in quality_result.insights] if quality_result.insights else []
+                        ),
+                        "timestamp": (
+                            quality_result.analysis_timestamp.isoformat() if quality_result.analysis_timestamp else None
+                        ),
                     }
 
                     analysis_results.append(doc_analysis)
@@ -1084,15 +1121,12 @@ async def generate_analysis_report_endpoint(req: dict):
                     "warning",
                     f"Failed to analyze document {doc.get('id', 'unknown')}",
                     SERVICE_NAME,
-                    {"error": str(e), "document_id": doc.get("id", "")}
+                    {"error": str(e), "document_id": doc.get("id", "")},
                 )
                 continue
 
         if not analysis_results:
-            return create_error_response(
-                "No documents could be analyzed",
-                error_code=ErrorCodes.ANALYSIS_FAILED
-            )
+            return create_error_response("No documents could be analyzed", error_code=ErrorCodes.ANALYSIS_FAILED)
 
         # Calculate summary statistics
         avg_quality_score = total_quality_score / len(analysis_results) if analysis_results else 0
@@ -1102,7 +1136,7 @@ async def generate_analysis_report_endpoint(req: dict):
             "analysis_types": ["comprehensive_document_analysis"],
             "documents_with_issues": len([r for r in analysis_results if r["issues_found"] > 0]),
             "average_quality_score": avg_quality_score,
-            "total_issues_found": total_issues
+            "total_issues_found": total_issues,
         }
 
         # Generate report ID
@@ -1120,8 +1154,8 @@ async def generate_analysis_report_endpoint(req: dict):
                 "source": "analysis-service",
                 "report_type": report_type,
                 "processing_time": "completed",
-                "service_version": "1.0.0"
-            }
+                "service_version": "1.0.0",
+            },
         }
 
         # Generate Markdown report if requested
@@ -1136,7 +1170,7 @@ async def generate_analysis_report_endpoint(req: dict):
             "markdown_content": markdown_content if include_markdown else None,
             "report_id": report_id,
             "documents_processed": len(analysis_results),
-            "processing_time": "completed"
+            "processing_time": "completed",
         }
 
         # Log successful report generation
@@ -1148,13 +1182,12 @@ async def generate_analysis_report_endpoint(req: dict):
                 "simulation_id": simulation_id,
                 "report_id": report_id,
                 "documents_analyzed": len(documents),
-                "documents_processed": len(analysis_results)
-            }
+                "documents_processed": len(analysis_results),
+            },
         )
 
         return create_success_response(
-            response_data,
-            message=f"Analysis report generated for {len(analysis_results)} documents"
+            response_data, message=f"Analysis report generated for {len(analysis_results)} documents"
         )
 
     except Exception as e:
@@ -1163,12 +1196,11 @@ async def generate_analysis_report_endpoint(req: dict):
             "error",
             "Analysis report generation failed",
             SERVICE_NAME,
-            {"error": str(e), "simulation_id": req.get("simulation_id", "")}
+            {"error": str(e), "simulation_id": req.get("simulation_id", "")},
         )
 
         return create_error_response(
-            f"Analysis report generation failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Analysis report generation failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -1189,31 +1221,20 @@ async def analyze_pull_request_endpoint(req: dict):
         simulation_id = req.get("simulation_id", "")
 
         if not pr_data:
-            return create_error_response(
-                "Pull request data is required",
-                error_code=ErrorCodes.VALIDATION_ERROR
-            )
+            return create_error_response("Pull request data is required", error_code=ErrorCodes.VALIDATION_ERROR)
 
         # Use the PR analysis handler
         analysis_result = await analyze_pull_request_handler(pr_data, simulation_id)
 
         return create_success_response(
             data=analysis_result,
-            message=f"Pull request analysis completed with health score {analysis_result.get('health_score', 0):.2f}"
+            message=f"Pull request analysis completed with health score {analysis_result.get('health_score', 0):.2f}",
         )
 
     except Exception as e:
-        fire_and_forget(
-            "error",
-            "Pull request analysis failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Pull request analysis failed", SERVICE_NAME, {"error": str(e)})
 
-        return create_error_response(
-            f"Pull request analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Pull request analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 # Test endpoint for PR analysis
@@ -1232,33 +1253,18 @@ async def test_pr_analysis_endpoint():
                 "additions": 150,
                 "deletions": 0,
                 "changes": 150,
-                "patch": "@@ -0,0 +1,50 @@\ndef authenticate_user(username: str, password: str) -> bool:\n    # Complex authentication logic\n    if len(username) < 3 or len(password) < 8:\n        return False\n    \n    # Hash password\n    hashed = hash_password(password)\n    \n    # Check against database\n    user = get_user_from_db(username)\n    if not user:\n        return False\n    \n    return verify_password(password, user.hashed_password)"
+                "patch": "@@ -0,0 +1,50 @@\ndef authenticate_user(username: str, password: str) -> bool:\n    # Complex authentication logic\n    if len(username) < 3 or len(password) < 8:\n        return False\n    \n    # Hash password\n    hashed = hash_password(password)\n    \n    # Check against database\n    user = get_user_from_db(username)\n    if not user:\n        return False\n    \n    return verify_password(password, user.hashed_password)",
             },
-            {
-                "filename": "tests/test_auth.py",
-                "status": "added",
-                "additions": 80,
-                "deletions": 0,
-                "changes": 80
-            }
+            {"filename": "tests/test_auth.py", "status": "added", "additions": 80, "deletions": 0, "changes": 80},
         ],
         "commits": [
-            {
-                "message": "feat: Add user authentication service",
-                "author": "developer@example.com"
-            },
-            {
-                "message": "test: Add authentication tests",
-                "author": "developer@example.com"
-            }
-        ]
+            {"message": "feat: Add user authentication service", "author": "developer@example.com"},
+            {"message": "test: Add authentication tests", "author": "developer@example.com"},
+        ],
     }
 
     result = await analyze_pull_request_handler(test_pr_data, "test_sim_123")
-    return create_success_response(
-        data=result,
-        message="PR analysis test completed successfully"
-    )
+    return create_success_response(data=result, message="PR analysis test completed successfully")
 
 
 async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -> dict:
@@ -1279,14 +1285,10 @@ async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -
     quality_analysis = await analyze_code_quality(changed_files)
 
     # Generate refactoring suggestions
-    refactoring_suggestions = generate_refactoring_suggestions(
-        code_analysis, structural_analysis, quality_analysis
-    )
+    refactoring_suggestions = generate_refactoring_suggestions(code_analysis, structural_analysis, quality_analysis)
 
     # Calculate PR health score
-    pr_health_score = calculate_pr_health_score(
-        code_analysis, commit_analysis, structural_analysis, quality_analysis
-    )
+    pr_health_score = calculate_pr_health_score(code_analysis, commit_analysis, structural_analysis, quality_analysis)
 
     # Generate comprehensive report
     pr_report = {
@@ -1303,13 +1305,15 @@ async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -
         "structural_analysis": structural_analysis,
         "quality_analysis": quality_analysis,
         "refactoring_suggestions": refactoring_suggestions,
-        "recommendations": generate_pr_recommendations({
-            "health_score": pr_health_score,
-            "risk_level": determine_pr_risk_level(pr_health_score),
-            "code_analysis": code_analysis,
-            "commit_analysis": commit_analysis,
-            "quality_analysis": quality_analysis
-        })
+        "recommendations": generate_pr_recommendations(
+            {
+                "health_score": pr_health_score,
+                "risk_level": determine_pr_risk_level(pr_health_score),
+                "code_analysis": code_analysis,
+                "commit_analysis": commit_analysis,
+                "quality_analysis": quality_analysis,
+            }
+        ),
     }
 
     return pr_report
@@ -1325,15 +1329,15 @@ async def analyze_pr_code_changes(changed_files: list) -> dict:
             "lines_removed": 0,
             "files_modified": 0,
             "files_added": 0,
-            "files_deleted": 0
+            "files_deleted": 0,
         },
         "code_patterns": {
             "complex_functions": [],
             "long_methods": [],
             "duplicate_code": [],
             "unused_imports": [],
-            "code_smells": []
-        }
+            "code_smells": [],
+        },
     }
 
     for file_data in changed_files:
@@ -1372,18 +1376,9 @@ def analyze_commit_messages(commits: list) -> dict:
     """Analyze commit messages for quality and consistency."""
     analysis = {
         "total_commits": len(commits),
-        "message_quality": {
-            "good_messages": 0,
-            "needs_improvement": 0,
-            "poor_messages": 0
-        },
-        "patterns": {
-            "descriptive": 0,
-            "concise": 0,
-            "conventional_commits": 0,
-            "has_issue_references": 0
-        },
-        "issues": []
+        "message_quality": {"good_messages": 0, "needs_improvement": 0, "poor_messages": 0},
+        "patterns": {"descriptive": 0, "concise": 0, "conventional_commits": 0, "has_issue_references": 0},
+        "issues": [],
     }
 
     for commit in commits:
@@ -1420,7 +1415,7 @@ def analyze_code_structure(changed_files: list) -> dict:
         "configuration_changes": [],
         "test_coverage_changes": [],
         "documentation_changes": [],
-        "structural_risks": []
+        "structural_risks": [],
     }
 
     for file_data in changed_files:
@@ -1461,11 +1456,13 @@ async def analyze_code_quality(changed_files: list) -> dict:
             if file_data.get("patch") or file_data.get("content"):
                 content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
                 if content:
-                    code_files.append({
-                        "filename": file_data.get("filename", ""),
-                        "content": content,
-                        "type": get_file_type(file_data.get("filename", ""))
-                    })
+                    code_files.append(
+                        {
+                            "filename": file_data.get("filename", ""),
+                            "content": content,
+                            "type": get_file_type(file_data.get("filename", "")),
+                        }
+                    )
 
         if not code_files:
             return {"quality_score": 0.0, "issues": ["No analyzable code content found"]}
@@ -1477,7 +1474,7 @@ async def analyze_code_quality(changed_files: list) -> dict:
                 content=file_info["content"],
                 document_id=file_info["filename"],
                 document_type=file_info["type"],
-                title=file_info["filename"]
+                title=file_info["filename"],
             )
 
             quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
@@ -1486,28 +1483,19 @@ async def analyze_code_quality(changed_files: list) -> dict:
 
         if quality_results:
             avg_quality = sum(r.quality_score for r in quality_results) / len(quality_results)
-            total_issues = sum(len(getattr(r, 'issues', [])) for r in quality_results)
+            total_issues = sum(len(getattr(r, "issues", [])) for r in quality_results)
 
             return {
                 "quality_score": avg_quality,
                 "issues_found": total_issues,
                 "files_analyzed": len(code_files),
-                "detailed_results": [{"file": f, "result": str(r)} for f, r in zip(code_files, quality_results)]
+                "detailed_results": [{"file": f, "result": str(r)} for f, r in zip(code_files, quality_results)],
             }
 
-        return {
-            "quality_score": 0.5,
-            "issues_found": 0,
-            "files_analyzed": len(code_files),
-            "detailed_results": []
-        }
+        return {"quality_score": 0.5, "issues_found": 0, "files_analyzed": len(code_files), "detailed_results": []}
 
     except Exception as e:
-        return {
-            "quality_score": 0.0,
-            "issues_found": 1,
-            "error": str(e)
-        }
+        return {"quality_score": 0.0, "issues_found": 1, "error": str(e)}
 
 
 def analyze_file_content(file_data: dict, file_type: str) -> dict:
@@ -1517,7 +1505,7 @@ def analyze_file_content(file_data: dict, file_type: str) -> dict:
         "long_methods": [],
         "duplicate_code": [],
         "unused_imports": [],
-        "code_smells": []
+        "code_smells": [],
     }
 
     try:
@@ -1526,7 +1514,7 @@ def analyze_file_content(file_data: dict, file_type: str) -> dict:
         if not content:
             return issues
 
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Basic complexity analysis
         if file_type == "python":
@@ -1561,7 +1549,10 @@ def analyze_python_file(lines: list) -> dict:
             function_lines += 1
 
             # Check for complexity indicators
-            if any(keyword in line.lower() for keyword in ["if", "elif", "for", "while"]) and line.count("and") + line.count("or") > 2:
+            if (
+                any(keyword in line.lower() for keyword in ["if", "elif", "for", "while"])
+                and line.count("and") + line.count("or") > 2
+            ):
                 issues["complex_functions"].append(f"{current_function} (line {i+1})")
 
     # Check last function
@@ -1639,7 +1630,10 @@ def analyze_java_file(lines: list) -> dict:
             brace_count += line.count("{") - line.count("}")
 
             # Check for complexity
-            if any(keyword in line for keyword in ["if", "for", "while", "switch"]) and line.count("&&") + line.count("||") > 2:
+            if (
+                any(keyword in line for keyword in ["if", "for", "while", "switch"])
+                and line.count("&&") + line.count("||") > 2
+            ):
                 issues["complex_functions"].append(f"{current_method} (line {i+1})")
 
             # End of method
@@ -1657,52 +1651,52 @@ def extract_content_from_patch(patch: str) -> str:
     if not patch:
         return ""
 
-    lines = patch.split('\n')
+    lines = patch.split("\n")
     content_lines = []
 
     for line in lines:
-        if line.startswith('+') and not line.startswith('+++'):
+        if line.startswith("+") and not line.startswith("+++"):
             content_lines.append(line[1:])  # Remove the + prefix
-        elif line.startswith(' ') and not line.startswith('@@'):
+        elif line.startswith(" ") and not line.startswith("@@"):
             content_lines.append(line[1:])  # Remove the space prefix for context
 
-    return '\n'.join(content_lines)
+    return "\n".join(content_lines)
 
 
 def get_file_type(filename: str) -> str:
     """Determine file type from filename."""
-    if filename.endswith(('.py', '.pyc')):
-        return 'python'
-    elif filename.endswith(('.js', '.jsx')):
-        return 'javascript'
-    elif filename.endswith(('.ts', '.tsx')):
-        return 'typescript'
-    elif filename.endswith(('.java',)):
-        return 'java'
-    elif filename.endswith(('.cpp', '.c++', '.cc', '.cxx', '.hpp', '.h')):
-        return 'cpp'
-    elif filename.endswith(('.cs',)):
-        return 'csharp'
-    elif filename.endswith(('.php',)):
-        return 'php'
-    elif filename.endswith(('.rb',)):
-        return 'ruby'
-    elif filename.endswith(('.go',)):
-        return 'go'
-    elif filename.endswith(('.rs',)):
-        return 'rust'
-    elif filename.endswith(('.html', '.htm')):
-        return 'html'
-    elif filename.endswith(('.css',)):
-        return 'css'
-    elif filename.endswith(('.md', '.markdown')):
-        return 'markdown'
-    elif filename.endswith(('.json',)):
-        return 'json'
-    elif filename.endswith(('.xml', '.yml', '.yaml')):
-        return 'config'
+    if filename.endswith((".py", ".pyc")):
+        return "python"
+    elif filename.endswith((".js", ".jsx")):
+        return "javascript"
+    elif filename.endswith((".ts", ".tsx")):
+        return "typescript"
+    elif filename.endswith((".java",)):
+        return "java"
+    elif filename.endswith((".cpp", ".c++", ".cc", ".cxx", ".hpp", ".h")):
+        return "cpp"
+    elif filename.endswith((".cs",)):
+        return "csharp"
+    elif filename.endswith((".php",)):
+        return "php"
+    elif filename.endswith((".rb",)):
+        return "ruby"
+    elif filename.endswith((".go",)):
+        return "go"
+    elif filename.endswith((".rs",)):
+        return "rust"
+    elif filename.endswith((".html", ".htm")):
+        return "html"
+    elif filename.endswith((".css",)):
+        return "css"
+    elif filename.endswith((".md", ".markdown")):
+        return "markdown"
+    elif filename.endswith((".json",)):
+        return "json"
+    elif filename.endswith((".xml", ".yml", ".yaml")):
+        return "config"
     else:
-        return 'other'
+        return "other"
 
 
 def is_good_commit_message(message: str) -> bool:
@@ -1716,7 +1710,7 @@ def is_good_commit_message(message: str) -> bool:
         return False
 
     # Should not end with period
-    if message.endswith('.'):
+    if message.endswith("."):
         return False
 
     # Should be descriptive but not too long
@@ -1728,8 +1722,8 @@ def is_good_commit_message(message: str) -> bool:
 
 def is_conventional_commit(message: str) -> bool:
     """Check if commit follows conventional commit format."""
-    conventional_types = ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'perf', 'ci', 'build', 'revert']
-    first_word = message.split(':')[0].strip().lower()
+    conventional_types = ["feat", "fix", "docs", "style", "refactor", "test", "chore", "perf", "ci", "build", "revert"]
+    first_word = message.split(":")[0].strip().lower()
     return first_word in conventional_types
 
 
@@ -1742,58 +1736,72 @@ def generate_refactoring_suggestions(code_analysis: dict, structural_analysis: d
         patterns = code_analysis["code_patterns"]
 
         if patterns.get("complex_functions"):
-            suggestions.append({
-                "type": "complexity_reduction",
-                "priority": "high",
-                "description": f"Simplify {len(patterns['complex_functions'])} complex functions",
-                "affected_items": patterns["complex_functions"][:5],  # Top 5
-                "estimated_effort": "medium"
-            })
+            suggestions.append(
+                {
+                    "type": "complexity_reduction",
+                    "priority": "high",
+                    "description": f"Simplify {len(patterns['complex_functions'])} complex functions",
+                    "affected_items": patterns["complex_functions"][:5],  # Top 5
+                    "estimated_effort": "medium",
+                }
+            )
 
         if patterns.get("long_methods"):
-            suggestions.append({
-                "type": "method_extraction",
-                "priority": "medium",
-                "description": f"Extract {len(patterns['long_methods'])} long methods into smaller functions",
-                "affected_items": patterns["long_methods"][:5],
-                "estimated_effort": "medium"
-            })
+            suggestions.append(
+                {
+                    "type": "method_extraction",
+                    "priority": "medium",
+                    "description": f"Extract {len(patterns['long_methods'])} long methods into smaller functions",
+                    "affected_items": patterns["long_methods"][:5],
+                    "estimated_effort": "medium",
+                }
+            )
 
     # Structural suggestions
     if structural_analysis.get("structural_risks"):
-        suggestions.append({
-            "type": "structural_improvement",
-            "priority": "high",
-            "description": "Address structural risks identified in the changes",
-            "affected_items": structural_analysis["structural_risks"],
-            "estimated_effort": "high"
-        })
+        suggestions.append(
+            {
+                "type": "structural_improvement",
+                "priority": "high",
+                "description": "Address structural risks identified in the changes",
+                "affected_items": structural_analysis["structural_risks"],
+                "estimated_effort": "high",
+            }
+        )
 
     # Quality suggestions
     if quality_analysis.get("quality_score", 0) < 0.6:
-        suggestions.append({
-            "type": "quality_improvement",
-            "priority": "high",
-            "description": f"Improve code quality (current score: {quality_analysis.get('quality_score', 0):.2f})",
-            "affected_items": [f"{quality_analysis.get('issues_found', 0)} quality issues found"],
-            "estimated_effort": "medium"
-        })
+        suggestions.append(
+            {
+                "type": "quality_improvement",
+                "priority": "high",
+                "description": f"Improve code quality (current score: {quality_analysis.get('quality_score', 0):.2f})",
+                "affected_items": [f"{quality_analysis.get('issues_found', 0)} quality issues found"],
+                "estimated_effort": "medium",
+            }
+        )
 
     # Testing suggestions
-    if (code_analysis.get("change_metrics", {}).get("files_modified", 0) > 0 and
-        len(structural_analysis.get("test_coverage_changes", [])) == 0):
-        suggestions.append({
-            "type": "test_coverage",
-            "priority": "medium",
-            "description": "Add tests for modified functionality",
-            "affected_items": ["Modified files without corresponding tests"],
-            "estimated_effort": "medium"
-        })
+    if (
+        code_analysis.get("change_metrics", {}).get("files_modified", 0) > 0
+        and len(structural_analysis.get("test_coverage_changes", [])) == 0
+    ):
+        suggestions.append(
+            {
+                "type": "test_coverage",
+                "priority": "medium",
+                "description": "Add tests for modified functionality",
+                "affected_items": ["Modified files without corresponding tests"],
+                "estimated_effort": "medium",
+            }
+        )
 
     return suggestions
 
 
-def calculate_pr_health_score(code_analysis: dict, commit_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> float:
+def calculate_pr_health_score(
+    code_analysis: dict, commit_analysis: dict, structural_analysis: dict, quality_analysis: dict
+) -> float:
     """Calculate overall health score for the pull request."""
     scores = []
 
@@ -1911,7 +1919,7 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
     md_lines.append("")
 
     # Overall quality indicator
-    avg_score = summary['average_quality_score']
+    avg_score = summary["average_quality_score"]
     if avg_score >= 0.8:
         quality_indicator = "🟢 **High Quality** - Documents are well-structured and clear"
     elif avg_score >= 0.6:
@@ -1964,7 +1972,7 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
     md_lines.append("## 💡 Recommendations")
     md_lines.append("")
 
-    if summary['documents_with_issues'] > 0:
+    if summary["documents_with_issues"] > 0:
         md_lines.append(f"Found {summary['documents_with_issues']} documents with issues that need attention:")
         md_lines.append("")
         md_lines.append("- Review documents with low quality scores (< 0.6)")
@@ -2008,8 +2016,8 @@ async def remediate_document_endpoint(req: AutomatedRemediationRequest):
                 "changes_applied": changes_applied,
                 "safety_status": safety_status,
                 "content_length": len(result.original_content),
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -2022,26 +2030,18 @@ async def remediate_document_endpoint(req: AutomatedRemediationRequest):
                 "changes_applied": changes_applied,
                 "safety_status": safety_status,
                 "processing_time": result.processing_time,
-                "remediation_timestamp": result.remediation_timestamp
+                "remediation_timestamp": result.remediation_timestamp,
             },
             changes_applied=changes_applied,
             safety_status=safety_status,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Automated remediation failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Automated remediation failed", SERVICE_NAME, {"error": str(e)})
 
-        return create_error_response(
-            f"Automated remediation failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Automated remediation failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/remediate/preview")
@@ -2064,8 +2064,8 @@ async def preview_remediation_endpoint(req: RemediationPreviewRequest):
                 "preview_available": result.preview_available,
                 "fix_count": fix_count,
                 "content_length": len(req.content),
-                "processing_time": result.estimated_processing_time
-            }
+                "processing_time": result.estimated_processing_time,
+            },
         )
 
         return create_success_response(
@@ -2075,26 +2075,18 @@ async def preview_remediation_endpoint(req: RemediationPreviewRequest):
                 "proposed_fixes": result.proposed_fixes,
                 "fix_count": fix_count,
                 "estimated_processing_time": result.estimated_processing_time,
-                "preview_timestamp": result.preview_timestamp
+                "preview_timestamp": result.preview_timestamp,
             },
             preview_available=result.preview_available,
             fix_count=fix_count,
-            estimated_processing_time=result.estimated_processing_time
+            estimated_processing_time=result.estimated_processing_time,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Remediation preview failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Remediation preview failed", SERVICE_NAME, {"error": str(e)})
 
-        return create_error_response(
-            f"Remediation preview failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Remediation preview failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/workflows/events")
@@ -2123,8 +2115,8 @@ async def process_workflow_event_endpoint(req: WorkflowEventRequest):
                 "priority": priority,
                 "analysis_types_count": analysis_count,
                 "estimated_processing_time": result.estimated_processing_time,
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -2137,12 +2129,12 @@ async def process_workflow_event_endpoint(req: WorkflowEventRequest):
                 "estimated_processing_time": result.estimated_processing_time,
                 "processing_time": result.processing_time,
                 "event_type": result.event_type,
-                "event_action": result.event_action
+                "event_action": result.event_action,
             },
             workflow_id=workflow_id,
             priority=priority,
             analysis_types_count=analysis_count,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -2151,12 +2143,11 @@ async def process_workflow_event_endpoint(req: WorkflowEventRequest):
             "error",
             "Workflow event processing failed",
             SERVICE_NAME,
-            {"event_type": req.event_type, "event_action": req.action, "error": str(e)}
+            {"event_type": req.event_type, "event_action": req.action, "error": str(e)},
         )
 
         return create_error_response(
-            f"Workflow event processing failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Workflow event processing failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2170,26 +2161,20 @@ async def get_workflow_status_endpoint(workflow_id: str):
     try:
         # Create status request
         from .modules.models import WorkflowStatusRequest
+
         req = WorkflowStatusRequest(workflow_id=workflow_id)
 
         result = await analysis_handlers.handle_workflow_status(req)
 
-        if result.status == 'not_found':
-            return create_error_response(
-                "Workflow not found",
-                error_code=ErrorCodes.RESOURCE_NOT_FOUND
-            )
+        if result.status == "not_found":
+            return create_error_response("Workflow not found", error_code=ErrorCodes.RESOURCE_NOT_FOUND)
 
         # Log status check
         fire_and_forget(
             "info",
             "Workflow status retrieved",
             SERVICE_NAME,
-            {
-                "workflow_id": workflow_id,
-                "status": result.status,
-                "priority": result.priority
-            }
+            {"workflow_id": workflow_id, "status": result.status, "priority": result.priority},
         )
 
         return create_success_response(
@@ -2203,24 +2188,20 @@ async def get_workflow_status_endpoint(workflow_id: str):
                 "completed_at": result.completed_at,
                 "analysis_plan": result.analysis_plan,
                 "results": result.results,
-                "error": result.error
+                "error": result.error,
             },
             status=result.status,
-            priority=result.priority
+            priority=result.priority,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Workflow status retrieval failed",
-            SERVICE_NAME,
-            {"workflow_id": workflow_id, "error": str(e)}
+            "error", "Workflow status retrieval failed", SERVICE_NAME, {"workflow_id": workflow_id, "error": str(e)}
         )
 
         return create_error_response(
-            f"Workflow status retrieval failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Workflow status retrieval failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2242,11 +2223,7 @@ async def get_workflow_queue_status_endpoint():
             "info",
             "Workflow queue status retrieved",
             SERVICE_NAME,
-            {
-                "total_queued": total_queued,
-                "active_workflows": active_workflows,
-                "queues": result.queues
-            }
+            {"total_queued": total_queued, "active_workflows": active_workflows, "queues": result.queues},
         )
 
         return create_success_response(
@@ -2255,24 +2232,18 @@ async def get_workflow_queue_status_endpoint():
                 "queues": result.queues,
                 "total_queued": total_queued,
                 "active_workflows": active_workflows,
-                "recent_events": result.recent_events
+                "recent_events": result.recent_events,
             },
             total_queued=total_queued,
-            active_workflows=active_workflows
+            active_workflows=active_workflows,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Workflow queue status retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Workflow queue status retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Workflow queue status retrieval failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Workflow queue status retrieval failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2294,37 +2265,21 @@ async def configure_webhook_endpoint(req: WebhookConfigRequest):
             "info",
             "Webhook configuration updated",
             SERVICE_NAME,
-            {
-                "configured": configured,
-                "enabled_events_count": events_count,
-                "enabled_events": result.enabled_events
-            }
+            {"configured": configured, "enabled_events_count": events_count, "enabled_events": result.enabled_events},
         )
 
         return create_success_response(
             f"Webhook configuration {'updated' if configured else 'failed'}",
-            {
-                "configured": configured,
-                "enabled_events": result.enabled_events,
-                "webhook_url": result.webhook_url
-            },
+            {"configured": configured, "enabled_events": result.enabled_events, "webhook_url": result.webhook_url},
             configured=configured,
-            enabled_events_count=events_count
+            enabled_events_count=events_count,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Webhook configuration failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Webhook configuration failed", SERVICE_NAME, {"error": str(e)})
 
-        return create_error_response(
-            f"Webhook configuration failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Webhook configuration failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/repositories/analyze")
@@ -2350,8 +2305,8 @@ async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest)
                 "repository_count": repository_count,
                 "overall_score": overall_score,
                 "recommendations_count": recommendations_count,
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -2368,12 +2323,12 @@ async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest)
                 "overall_score": overall_score,
                 "recommendations": result.recommendations,
                 "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp
+                "analysis_timestamp": result.analysis_timestamp,
             },
             repository_count=repository_count,
             overall_score=overall_score,
             recommendations_count=recommendations_count,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -2382,12 +2337,11 @@ async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest)
             "error",
             "Cross-repository analysis failed",
             SERVICE_NAME,
-            {"repository_count": len(req.repositories), "error": str(e)}
+            {"repository_count": len(req.repositories), "error": str(e)},
         )
 
         return create_error_response(
-            f"Cross-repository analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Cross-repository analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2414,8 +2368,8 @@ async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRe
                 "repository_count": repository_count,
                 "connectivity_score": connectivity_score,
                 "cross_references_count": cross_references_count,
-                "processing_time": result.processing_time
-            }
+                "processing_time": result.processing_time,
+            },
         )
 
         return create_success_response(
@@ -2426,12 +2380,12 @@ async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRe
                 "shared_dependencies": result.shared_dependencies,
                 "integration_points": result.integration_points,
                 "connectivity_score": connectivity_score,
-                "processing_time": result.processing_time
+                "processing_time": result.processing_time,
             },
             repository_count=repository_count,
             connectivity_score=connectivity_score,
             cross_references_count=cross_references_count,
-            processing_time=result.processing_time
+            processing_time=result.processing_time,
         )
 
     except Exception as e:
@@ -2440,12 +2394,11 @@ async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRe
             "error",
             "Repository connectivity analysis failed",
             SERVICE_NAME,
-            {"repository_count": len(req.repositories), "error": str(e)}
+            {"repository_count": len(req.repositories), "error": str(e)},
         )
 
         return create_error_response(
-            f"Repository connectivity analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Repository connectivity analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2468,11 +2421,7 @@ async def configure_repository_connector_endpoint(req: RepositoryConnectorConfig
             "info",
             "Repository connector configuration updated",
             SERVICE_NAME,
-            {
-                "connector_type": connector_type,
-                "configured": configured,
-                "supported_features_count": features_count
-            }
+            {"connector_type": connector_type, "configured": configured, "supported_features_count": features_count},
         )
 
         return create_success_response(
@@ -2481,11 +2430,11 @@ async def configure_repository_connector_endpoint(req: RepositoryConnectorConfig
                 "connector_type": connector_type,
                 "configured": configured,
                 "supported_features": result.supported_features,
-                "rate_limits": result.rate_limits
+                "rate_limits": result.rate_limits,
             },
             connector_type=connector_type,
             configured=configured,
-            supported_features_count=features_count
+            supported_features_count=features_count,
         )
 
     except Exception as e:
@@ -2494,12 +2443,11 @@ async def configure_repository_connector_endpoint(req: RepositoryConnectorConfig
             "error",
             "Repository connector configuration failed",
             SERVICE_NAME,
-            {"connector_type": req.connector_type, "error": str(e)}
+            {"connector_type": req.connector_type, "error": str(e)},
         )
 
         return create_error_response(
-            f"Repository connector configuration failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Repository connector configuration failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2515,34 +2463,20 @@ async def get_supported_connectors_endpoint():
 
         # Log request
         total_supported = result.total_supported
-        fire_and_forget(
-            "info",
-            "Supported connectors retrieved",
-            SERVICE_NAME,
-            {"total_supported": total_supported}
-        )
+        fire_and_forget("info", "Supported connectors retrieved", SERVICE_NAME, {"total_supported": total_supported})
 
         return create_success_response(
             f"Retrieved {total_supported} supported repository connectors",
-            {
-                "connectors": result.connectors,
-                "total_supported": total_supported
-            },
-            total_supported=total_supported
+            {"connectors": result.connectors, "total_supported": total_supported},
+            total_supported=total_supported,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Supported connectors retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Supported connectors retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Supported connectors retrieval failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Supported connectors retrieval failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2558,34 +2492,20 @@ async def get_analysis_frameworks_endpoint():
 
         # Log request
         total_frameworks = result.total_frameworks
-        fire_and_forget(
-            "info",
-            "Analysis frameworks retrieved",
-            SERVICE_NAME,
-            {"total_frameworks": total_frameworks}
-        )
+        fire_and_forget("info", "Analysis frameworks retrieved", SERVICE_NAME, {"total_frameworks": total_frameworks})
 
         return create_success_response(
             f"Retrieved {total_frameworks} analysis frameworks",
-            {
-                "frameworks": result.frameworks,
-                "total_frameworks": total_frameworks
-            },
-            total_frameworks=total_frameworks
+            {"frameworks": result.frameworks, "total_frameworks": total_frameworks},
+            total_frameworks=total_frameworks,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Analysis frameworks retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Analysis frameworks retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Analysis frameworks retrieval failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
+            f"Analysis frameworks retrieval failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
         )
 
 
@@ -2606,12 +2526,7 @@ async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
             "info",
             "Distributed task submitted",
             SERVICE_NAME,
-            {
-                "task_id": task_id,
-                "task_type": task_type,
-                "priority": result.priority,
-                "status": result.status
-            }
+            {"task_id": task_id, "task_type": task_type, "priority": result.priority, "status": result.status},
         )
 
         return create_success_response(
@@ -2622,25 +2537,21 @@ async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
                 "status": result.status,
                 "priority": result.priority,
                 "submitted_at": result.submitted_at,
-                "estimated_completion": result.estimated_completion
+                "estimated_completion": result.estimated_completion,
             },
             task_id=task_id,
             task_type=task_type,
-            priority=result.priority
+            priority=result.priority,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Distributed task submission failed",
-            SERVICE_NAME,
-            {"task_type": req.task_type, "error": str(e)}
+            "error", "Distributed task submission failed", SERVICE_NAME, {"task_type": req.task_type, "error": str(e)}
         )
 
         return create_error_response(
-            f"Distributed task submission failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Distributed task submission failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -2660,35 +2571,22 @@ async def submit_batch_tasks_endpoint(req: BatchTasksRequest):
             "info",
             "Batch tasks submitted",
             SERVICE_NAME,
-            {
-                "total_tasks": total_tasks,
-                "submitted_at": result.submitted_at
-            }
+            {"total_tasks": total_tasks, "submitted_at": result.submitted_at},
         )
 
         return create_success_response(
             f"Batch of {total_tasks} tasks submitted successfully",
-            {
-                "task_ids": result.task_ids,
-                "total_tasks": total_tasks,
-                "submitted_at": result.submitted_at
-            },
-            total_tasks=total_tasks
+            {"task_ids": result.task_ids, "total_tasks": total_tasks, "submitted_at": result.submitted_at},
+            total_tasks=total_tasks,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Batch task submission failed",
-            SERVICE_NAME,
-            {"task_count": len(req.tasks), "error": str(e)}
+            "error", "Batch task submission failed", SERVICE_NAME, {"task_count": len(req.tasks), "error": str(e)}
         )
 
-        return create_error_response(
-            f"Batch task submission failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
-        )
+        return create_error_response(f"Batch task submission failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED)
 
 
 @app.get("/distributed/tasks/{task_id}")
@@ -2706,14 +2604,7 @@ async def get_task_status_endpoint(task_id: str):
         status = result.status
         progress = result.progress
         fire_and_forget(
-            "info",
-            "Task status retrieved",
-            SERVICE_NAME,
-            {
-                "task_id": task_id,
-                "status": status,
-                "progress": progress
-            }
+            "info", "Task status retrieved", SERVICE_NAME, {"task_id": task_id, "status": status, "progress": progress}
         )
 
         return create_success_response(
@@ -2730,26 +2621,18 @@ async def get_task_status_endpoint(task_id: str):
                 "assigned_worker": result.assigned_worker,
                 "error_message": result.error_message,
                 "estimated_completion": result.estimated_completion,
-                "retry_count": result.retry_count
+                "retry_count": result.retry_count,
             },
             task_id=task_id,
             status=status,
-            progress=progress
+            progress=progress,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Task status retrieval failed",
-            SERVICE_NAME,
-            {"task_id": task_id, "error": str(e)}
-        )
+        fire_and_forget("error", "Task status retrieval failed", SERVICE_NAME, {"task_id": task_id, "error": str(e)})
 
-        return create_error_response(
-            f"Task status retrieval failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
-        )
+        return create_error_response(f"Task status retrieval failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED)
 
 
 @app.delete("/distributed/tasks/{task_id}")
@@ -2764,41 +2647,25 @@ async def cancel_task_endpoint(task_id: str):
         result = await analysis_handlers.handle_cancel_task(req)
 
         # Log cancellation
-        cancelled = result['cancelled']
+        cancelled = result["cancelled"]
         fire_and_forget(
             "info",
             "Task cancellation attempted",
             SERVICE_NAME,
-            {
-                "task_id": task_id,
-                "cancelled": cancelled,
-                "message": result['message']
-            }
+            {"task_id": task_id, "cancelled": cancelled, "message": result["message"]},
         )
 
         return create_success_response(
-            result['message'],
-            {
-                "task_id": task_id,
-                "cancelled": cancelled,
-                "message": result['message']
-            },
-            cancelled=cancelled
+            result["message"],
+            {"task_id": task_id, "cancelled": cancelled, "message": result["message"]},
+            cancelled=cancelled,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Task cancellation failed",
-            SERVICE_NAME,
-            {"task_id": task_id, "error": str(e)}
-        )
+        fire_and_forget("error", "Task cancellation failed", SERVICE_NAME, {"task_id": task_id, "error": str(e)})
 
-        return create_error_response(
-            f"Task cancellation failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
-        )
+        return create_error_response(f"Task cancellation failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED)
 
 
 @app.get("/distributed/workers")
@@ -2819,11 +2686,7 @@ async def get_workers_status_endpoint():
             "info",
             "Workers status retrieved",
             SERVICE_NAME,
-            {
-                "total_workers": total_workers,
-                "available_workers": available_workers,
-                "busy_workers": busy_workers
-            }
+            {"total_workers": total_workers, "available_workers": available_workers, "busy_workers": busy_workers},
         )
 
         return create_success_response(
@@ -2832,25 +2695,19 @@ async def get_workers_status_endpoint():
                 "workers": result.workers,
                 "total_workers": total_workers,
                 "available_workers": available_workers,
-                "busy_workers": busy_workers
+                "busy_workers": busy_workers,
             },
             total_workers=total_workers,
             available_workers=available_workers,
-            busy_workers=busy_workers
+            busy_workers=busy_workers,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Workers status retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Workers status retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Workers status retrieval failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Workers status retrieval failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -2872,11 +2729,7 @@ async def get_processing_stats_endpoint():
             "info",
             "Processing stats retrieved",
             SERVICE_NAME,
-            {
-                "total_tasks": total_tasks,
-                "completion_rate": completion_rate,
-                "throughput_per_minute": throughput
-            }
+            {"total_tasks": total_tasks, "completion_rate": completion_rate, "throughput_per_minute": throughput},
         )
 
         return create_success_response(
@@ -2888,25 +2741,19 @@ async def get_processing_stats_endpoint():
                 "active_workers": result.active_workers,
                 "avg_processing_time": result.avg_processing_time,
                 "throughput_per_minute": throughput,
-                "completion_rate": completion_rate
+                "completion_rate": completion_rate,
             },
             total_tasks=total_tasks,
             completion_rate=completion_rate,
-            throughput_per_minute=throughput
+            throughput_per_minute=throughput,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Processing stats retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Processing stats retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Processing stats retrieval failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Processing stats retrieval failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -2927,37 +2774,23 @@ async def scale_workers_endpoint(req: ScaleWorkersRequest):
             "info",
             "Workers scaled",
             SERVICE_NAME,
-            {
-                "previous_count": previous_count,
-                "new_count": new_count,
-                "scaled_at": result.scaled_at
-            }
+            {"previous_count": previous_count, "new_count": new_count, "scaled_at": result.scaled_at},
         )
 
         return create_success_response(
             f"Workers scaled from {previous_count} to {new_count}",
-            {
-                "previous_count": previous_count,
-                "new_count": new_count,
-                "scaled_at": result.scaled_at
-            },
+            {"previous_count": previous_count, "new_count": new_count, "scaled_at": result.scaled_at},
             previous_count=previous_count,
-            new_count=new_count
+            new_count=new_count,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Worker scaling failed",
-            SERVICE_NAME,
-            {"target_count": req.target_count, "error": str(e)}
+            "error", "Worker scaling failed", SERVICE_NAME, {"target_count": req.target_count, "error": str(e)}
         )
 
-        return create_error_response(
-            f"Worker scaling failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
-        )
+        return create_error_response(f"Worker scaling failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED)
 
 
 @app.post("/distributed/start")
@@ -2971,38 +2804,24 @@ async def start_distributed_processing_endpoint():
         result = await analysis_handlers.handle_start_processing()
 
         # Log processing start
-        started = result['started']
+        started = result["started"]
         fire_and_forget(
             "info",
             "Distributed processing start attempted",
             SERVICE_NAME,
-            {
-                "started": started,
-                "message": result['message']
-            }
+            {"started": started, "message": result["message"]},
         )
 
         return create_success_response(
-            result['message'],
-            {
-                "started": started,
-                "message": result['message']
-            },
-            started=started
+            result["message"], {"started": started, "message": result["message"]}, started=started
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Distributed processing start failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Distributed processing start failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Distributed processing start failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Distributed processing start failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -3022,10 +2841,7 @@ async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest
             "info",
             "Load balancing strategy changed",
             SERVICE_NAME,
-            {
-                "strategy": current_strategy,
-                "changed_at": result.changed_at
-            }
+            {"strategy": current_strategy, "changed_at": result.changed_at},
         )
 
         return create_success_response(
@@ -3033,23 +2849,19 @@ async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest
             {
                 "current_strategy": current_strategy,
                 "available_strategies": result.available_strategies,
-                "changed_at": result.changed_at
+                "changed_at": result.changed_at,
             },
-            strategy=current_strategy
+            strategy=current_strategy,
         )
 
     except Exception as e:
         # Log the error
         fire_and_forget(
-            "error",
-            "Load balancing strategy change failed",
-            SERVICE_NAME,
-            {"strategy": req.strategy, "error": str(e)}
+            "error", "Load balancing strategy change failed", SERVICE_NAME, {"strategy": req.strategy, "error": str(e)}
         )
 
         return create_error_response(
-            f"Load balancing strategy change failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Load balancing strategy change failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -3071,11 +2883,7 @@ async def get_queue_status_endpoint():
             "info",
             "Queue status retrieved",
             SERVICE_NAME,
-            {
-                "queue_length": queue_length,
-                "queue_efficiency": queue_efficiency,
-                "processing_rate": processing_rate
-            }
+            {"queue_length": queue_length, "queue_efficiency": queue_efficiency, "processing_rate": processing_rate},
         )
 
         return create_success_response(
@@ -3085,25 +2893,19 @@ async def get_queue_status_endpoint():
                 "priority_distribution": result.priority_distribution,
                 "oldest_task_age": result.oldest_task_age,
                 "queue_efficiency": queue_efficiency,
-                "processing_rate": processing_rate
+                "processing_rate": processing_rate,
             },
             queue_length=queue_length,
             queue_efficiency=queue_efficiency,
-            processing_rate=processing_rate
+            processing_rate=processing_rate,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Queue status retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Queue status retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Queue status retrieval failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Queue status retrieval failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -3124,11 +2926,7 @@ async def configure_load_balancing_endpoint(req: LoadBalancingConfigRequest):
             "info",
             "Load balancing configuration updated",
             SERVICE_NAME,
-            {
-                "strategy": strategy,
-                "worker_count": worker_count,
-                "configured_at": result.configured_at
-            }
+            {"strategy": strategy, "worker_count": worker_count, "configured_at": result.configured_at},
         )
 
         return create_success_response(
@@ -3138,24 +2936,18 @@ async def configure_load_balancing_endpoint(req: LoadBalancingConfigRequest):
                 "worker_count": worker_count,
                 "max_queue_size": result.max_queue_size,
                 "enable_auto_scaling": result.enable_auto_scaling,
-                "configured_at": result.configured_at
+                "configured_at": result.configured_at,
             },
             strategy=strategy,
-            worker_count=worker_count
+            worker_count=worker_count,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Load balancing configuration failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Load balancing configuration failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Load balancing configuration failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Load balancing configuration failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -3176,10 +2968,7 @@ async def get_load_balancing_config_endpoint():
             "info",
             "Load balancing configuration retrieved",
             SERVICE_NAME,
-            {
-                "strategy": strategy,
-                "worker_count": worker_count
-            }
+            {"strategy": strategy, "worker_count": worker_count},
         )
 
         return create_success_response(
@@ -3189,24 +2978,18 @@ async def get_load_balancing_config_endpoint():
                 "worker_count": worker_count,
                 "max_queue_size": result.max_queue_size,
                 "enable_auto_scaling": result.enable_auto_scaling,
-                "configured_at": result.configured_at
+                "configured_at": result.configured_at,
             },
             strategy=strategy,
-            worker_count=worker_count
+            worker_count=worker_count,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Load balancing configuration retrieval failed",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", "Load balancing configuration retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
-            f"Load balancing configuration retrieval failed: {str(e)}",
-            error_code=ErrorCodes.PROCESSING_FAILED
+            f"Load balancing configuration retrieval failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
         )
 
 
@@ -3230,7 +3013,9 @@ async def generate_document_dump_report(req: DocumentDumpRequest):
         if req.filter_by_type:
             documents = [d for d in documents if d.get("type", "").lower() in [t.lower() for t in req.filter_by_type]]
         if req.filter_by_category:
-            documents = [d for d in documents if d.get("category", "").lower() in [c.lower() for c in req.filter_by_category]]
+            documents = [
+                d for d in documents if d.get("category", "").lower() in [c.lower() for c in req.filter_by_category]
+            ]
 
         # Sort documents
         reverse_sort = req.sort_order.lower() == "desc"
@@ -3255,14 +3040,11 @@ async def generate_document_dump_report(req: DocumentDumpRequest):
                         "total_documents": len(documents),
                         "filters_applied": {
                             "type_filter": req.filter_by_type,
-                            "category_filter": req.filter_by_category
+                            "category_filter": req.filter_by_category,
                         },
-                        "sorting": {
-                            "sort_by": req.sort_by,
-                            "sort_order": req.sort_order
-                        }
-                    }
-                }
+                        "sorting": {"sort_by": req.sort_by, "sort_order": req.sort_order},
+                    },
+                },
             }
         else:
             # Return markdown/HTML content
@@ -3275,15 +3057,9 @@ async def generate_document_dump_report(req: DocumentDumpRequest):
                 "metadata": {
                     "generated_at": datetime.now().isoformat(),
                     "total_documents": len(documents),
-                    "filters_applied": {
-                        "type_filter": req.filter_by_type,
-                        "category_filter": req.filter_by_category
-                    },
-                    "sorting": {
-                        "sort_by": req.sort_by,
-                        "sort_order": req.sort_order
-                    }
-                }
+                    "filters_applied": {"type_filter": req.filter_by_type, "category_filter": req.filter_by_category},
+                    "sorting": {"sort_by": req.sort_by, "sort_order": req.sort_order},
+                },
             }
 
     except Exception as e:
@@ -3370,7 +3146,7 @@ def generate_document_section(doc: Dict[str, Any], req: DocumentDumpRequest) -> 
             ("Created", format_timestamp(doc.get("dateCreated"))),
             ("Updated", format_timestamp(doc.get("dateUpdated"))),
             ("Author", doc.get("author", "N/A")),
-            ("Tags", ", ".join(doc.get("tags", [])) if doc.get("tags") else "N/A")
+            ("Tags", ", ".join(doc.get("tags", [])) if doc.get("tags") else "N/A"),
         ]
 
         for field_name, field_value in metadata_fields:
@@ -3427,13 +3203,7 @@ def generate_document_section(doc: Dict[str, Any], req: DocumentDumpRequest) -> 
 
 def get_type_icon(doc_type: str) -> str:
     """Get appropriate icon for document type."""
-    icons = {
-        "confluence": "📄",
-        "jira": "🎫",
-        "pull_request": "🔄",
-        "pr": "🔄",
-        "unknown": "📋"
-    }
+    icons = {"confluence": "📄", "jira": "🎫", "pull_request": "🔄", "pr": "🔄", "unknown": "📋"}
     return icons.get(doc_type.lower(), "📋")
 
 
@@ -3515,11 +3285,7 @@ def format_generic_content(content: str) -> List[str]:
 
 
 @app.get("/findings")
-async def get_findings(
-    limit: int = 100,
-    severity: Optional[str] = None,
-    finding_type_filter: Optional[str] = None
-):
+async def get_findings(limit: int = 100, severity: Optional[str] = None, finding_type_filter: Optional[str] = None):
     """Get analysis findings with optional filtering by severity and type.
 
     Retrieves findings from document analysis operations with support for
@@ -3554,10 +3320,7 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
     try:
         # Get all confluence documents
         docs_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/_list")
-        confluence_docs = [
-            doc for doc in docs_response.get("items", [])
-            if doc.get("source_type") == "confluence"
-        ]
+        confluence_docs = [doc for doc in docs_response.get("items", []) if doc.get("source_type") == "confluence"]
 
         # Group by content similarity (simple hash-based for demo)
         content_groups = {}
@@ -3571,22 +3334,24 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
         items = []
         for content_hash, docs in content_groups.items():
             if len(docs) > 1:  # Potential duplicates
-                items.append({
-                    "id": f"consolidation_{content_hash}",
-                    "title": f"Duplicate Content: {docs[0].get('title', 'Unknown')}",
-                    "confidence": 0.92,
-                    "flags": ["duplicate_content"],
-                    "documents": [doc["id"] for doc in docs],
-                    "recommendation": "Merge duplicate pages or update content"
-                })
+                items.append(
+                    {
+                        "id": f"consolidation_{content_hash}",
+                        "title": f"Duplicate Content: {docs[0].get('title', 'Unknown')}",
+                        "confidence": 0.92,
+                        "flags": ["duplicate_content"],
+                        "documents": [doc["id"] for doc in docs],
+                        "recommendation": "Merge duplicate pages or update content",
+                    }
+                )
 
         return {
             "items": items,
             "total": len(items),
             "summary": {
                 "total_duplicates": len(items),
-                "potential_savings": f"{len(items) * 2} hours of maintenance time"
-            }
+                "potential_savings": f"{len(items) * 2} hours of maintenance time",
+            },
         }
 
     except Exception as e:
@@ -3599,14 +3364,11 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
                     "confidence": 0.92,
                     "flags": ["duplicate_content"],
                     "documents": ["confluence:DOCS:page1", "confluence:DOCS:page2"],
-                    "recommendation": "Merge duplicate documentation pages"
+                    "recommendation": "Merge duplicate documentation pages",
                 }
             ],
             "total": 1,
-            "summary": {
-                "total_duplicates": 1,
-                "potential_savings": "2 hours of developer time"
-            }
+            "summary": {"total_duplicates": 1, "potential_savings": "2 hours of developer time"},
         }
 
 
@@ -3623,10 +3385,7 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
     try:
         # Get all Jira documents
         docs_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/_list")
-        jira_docs = [
-            doc for doc in docs_response.get("items", [])
-            if doc.get("source_type") == "jira"
-        ]
+        jira_docs = [doc for doc in docs_response.get("items", []) if doc.get("source_type") == "jira"]
 
         # Analyze staleness based on metadata
         items = []
@@ -3634,19 +3393,18 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
             # Simple staleness calculation based on flags
             flags = doc.get("flags", [])
             if "stale" in flags:
-                items.append({
-                    "id": doc["id"],
-                    "confidence": 0.85,
-                    "flags": ["stale"],
-                    "reason": "No recent updates",
-                    "last_activity": "2023-10-15T14:20:00Z",
-                    "recommendation": "Review ticket relevance or close"
-                })
+                items.append(
+                    {
+                        "id": doc["id"],
+                        "confidence": 0.85,
+                        "flags": ["stale"],
+                        "reason": "No recent updates",
+                        "last_activity": "2023-10-15T14:20:00Z",
+                        "recommendation": "Review ticket relevance or close",
+                    }
+                )
 
-        return {
-            "items": items,
-            "total": len(items)
-        }
+        return {"items": items, "total": len(items)}
 
     except Exception as e:
         # Return mock data for testing
@@ -3658,10 +3416,10 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
                     "flags": ["stale"],
                     "reason": "No updates in 90 days",
                     "last_activity": "2023-10-15T14:20:00Z",
-                    "recommendation": "Review ticket relevance or close"
+                    "recommendation": "Review ticket relevance or close",
                 }
             ],
-            "total": 1
+            "total": 1,
         }
 
 
@@ -3689,26 +3447,24 @@ async def notify_owners(req: NotifyOwnersRequest):
                 "status": "notifications_sent",
                 "findings_processed": len(findings),
                 "channels_used": channels,
-                "notifications_sent": len(findings)
+                "notifications_sent": len(findings),
             }
 
         return {
             "status": "notifications_sent",
             "findings_processed": len(findings),
             "channels_used": channels,
-            "notifications_sent": len(findings)  # Simplified
+            "notifications_sent": len(findings),  # Simplified
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "findings_processed": 0
-        }
+        return {"status": "error", "message": str(e), "findings_processed": 0}
+
 
 # ============================================================================
 # INTEGRATION ENDPOINTS
 # ============================================================================
+
 
 @app.get("/integration/health")
 async def integration_health():
@@ -3723,28 +3479,14 @@ async def integration_health():
         return {
             "analysis_service": "healthy",
             "integrations": health_status,
-            "available_services": [
-                "doc_store",
-                "source-agent",
-                "prompt-store",
-                "interpreter",
-                "orchestrator"
-            ]
+            "available_services": ["doc_store", "source-agent", "prompt-store", "interpreter", "orchestrator"],
         }
     except Exception as e:
-        return {
-            "analysis_service": "healthy",
-            "integrations": {"error": str(e)},
-            "available_services": []
-        }
+        return {"analysis_service": "healthy", "integrations": {"error": str(e)}, "available_services": []}
+
 
 @app.post("/integration/analyze-with-prompt")
-async def analyze_with_prompt(
-    target_id: str,
-    prompt_category: str,
-    prompt_name: str,
-    **variables
-):
+async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name: str, **variables):
     """Analyze documents using customizable prompts from Prompt Store.
 
     Leverages the Prompt Store service to retrieve and execute tailored
@@ -3763,7 +3505,7 @@ async def analyze_with_prompt(
             return _create_analysis_error_response(
                 "Unsupported target type",
                 ErrorCodes.UNSUPPORTED_TARGET_TYPE,
-                {"target_type": type(target).__name__, "supported_types": ["Document", "str"]}
+                {"target_type": type(target).__name__, "supported_types": ["Document", "str"]},
             )  # FURTHER OPTIMIZED: Using shared error utility
 
         # In a real implementation, this would call an LLM with the prompt
@@ -3773,15 +3515,16 @@ async def analyze_with_prompt(
             "target_id": target_id,
             "content_length": len(content),
             "analysis_type": f"{prompt_category}.{prompt_name}",
-            "status": "analysis_prepared"
+            "status": "analysis_prepared",
         }
 
     except Exception as e:
         return _create_analysis_error_response(
             "Analysis failed",
             ErrorCodes.ANALYSIS_FAILED,
-            {"error": str(e), "target_id": target_id, "prompt_category": prompt_category, "prompt_name": prompt_name}
+            {"error": str(e), "target_id": target_id, "prompt_category": prompt_category, "prompt_name": prompt_name},
         )  # FURTHER OPTIMIZED: Using shared error utility
+
 
 @app.post("/integration/natural-language-analysis")
 async def natural_language_analysis(request_data: dict = None):
@@ -3804,7 +3547,7 @@ async def natural_language_analysis(request_data: dict = None):
             return {
                 "interpretation": {"intent": "analyze_document", "confidence": 0.9},
                 "execution": {"status": "completed", "findings": []},
-                "status": "completed"
+                "status": "completed",
             }
 
         # Interpret the query
@@ -3814,23 +3557,17 @@ async def natural_language_analysis(request_data: dict = None):
         if interpretation.get("intent") in ["analyze_document", "consistency_check"]:
             if interpretation.get("workflow"):
                 result = await service_client.execute_workflow(query)
-                return {
-                    "interpretation": interpretation,
-                    "execution": result,
-                    "status": "completed"
-                }
+                return {"interpretation": interpretation, "execution": result, "status": "completed"}
 
-        return {
-            "interpretation": interpretation,
-            "status": "interpreted_only"
-        }
+        return {"interpretation": interpretation, "status": "interpreted_only"}
 
     except Exception as e:
         return _create_analysis_error_response(
             "Natural language analysis failed",
             ErrorCodes.NATURAL_LANGUAGE_ANALYSIS_FAILED,
-            {"error": str(e), "query": query if 'query' in locals() else "unknown"}
+            {"error": str(e), "query": query if "query" in locals() else "unknown"},
         )  # FURTHER OPTIMIZED: Using shared error utility
+
 
 @app.get("/integration/prompts/categories")
 async def get_available_prompt_categories():
@@ -3842,8 +3579,9 @@ async def get_available_prompt_categories():
         return _create_analysis_error_response(
             "Failed to retrieve prompt categories",
             ErrorCodes.CATEGORY_RETRIEVAL_FAILED,
-            {"error": str(e), "categories": []}
+            {"error": str(e), "categories": []},
         )  # FURTHER OPTIMIZED: Using shared error utility
+
 
 @app.post("/integration/log-analysis")
 async def log_analysis_usage(request_data: dict = None):
@@ -3873,8 +3611,8 @@ async def log_analysis_usage(request_data: dict = None):
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
                     "response_time_ms": response_time_ms,
-                    "success": success
-                }
+                    "success": success,
+                },
             }
 
         await service_client.log_prompt_usage(
@@ -3883,7 +3621,7 @@ async def log_analysis_usage(request_data: dict = None):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             response_time_ms=response_time_ms,
-            success=success
+            success=success,
         )
         return {"status": "logged"}
     except Exception as e:
@@ -3902,10 +3640,7 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
         # Get the appropriate analyzer for the analysis type
         analyzer = integration_handlers.get_architecture_analyzer(req.analysis_type)
         if not analyzer:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported architecture analysis type: {req.analysis_type}"
-            )
+            raise HTTPException(status_code=400, detail=f"Unsupported architecture analysis type: {req.analysis_type}")
 
         # Perform the analysis
         results = await analyzer.analyze_architecture(req.components, req.connections, req.options or {})
@@ -3918,8 +3653,8 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
             {
                 "analysis_type": req.analysis_type,
                 "component_count": len(req.components),
-                "connection_count": len(req.connections)
-            }
+                "connection_count": len(req.connections),
+            },
         )
 
         return create_success_response(
@@ -3927,22 +3662,14 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
             results,
             analysis_type=req.analysis_type,
             component_count=len(req.components),
-            connection_count=len(req.connections)
+            connection_count=len(req.connections),
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            f"Architecture analysis failed: {req.analysis_type}",
-            SERVICE_NAME,
-            {"error": str(e)}
-        )
+        fire_and_forget("error", f"Architecture analysis failed: {req.analysis_type}", SERVICE_NAME, {"error": str(e)})
 
-        return create_error_response(
-            f"Architecture analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Architecture analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/pr-confidence/analyze")
@@ -3953,10 +3680,7 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
     and documentation to provide confidence scores and recommendations.
     """
     try:
-        from .modules.pr_confidence_analysis import (
-            PRConfidenceAnalysisRequest,
-            pr_confidence_analysis_service
-        )
+        from .modules.pr_confidence_analysis import PRConfidenceAnalysisRequest, pr_confidence_analysis_service
 
         # Create request object from dict
         analysis_request = PRConfidenceAnalysisRequest(
@@ -3965,7 +3689,7 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
             confluence_docs=req.get("confluence_docs"),
             analysis_scope=req.get("analysis_scope", "comprehensive"),
             include_recommendations=req.get("include_recommendations", True),
-            confidence_threshold=req.get("confidence_threshold", 0.7)
+            confidence_threshold=req.get("confidence_threshold", 0.7),
         )
 
         # Perform the analysis
@@ -3980,8 +3704,8 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
                 "workflow_id": result.workflow_id,
                 "confidence_score": result.confidence_score,
                 "confidence_level": result.confidence_level,
-                "approval_recommendation": result.approval_recommendation
-            }
+                "approval_recommendation": result.approval_recommendation,
+            },
         )
 
         return create_success_response(
@@ -4000,26 +3724,18 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
                 "strengths": result.strengths,
                 "improvement_areas": result.improvement_areas,
                 "risk_assessment": result.risk_assessment,
-                "analysis_duration": result.analysis_duration
+                "analysis_duration": result.analysis_duration,
             },
             workflow_id=result.workflow_id,
             confidence_score=result.confidence_score,
-            analysis_duration=result.analysis_duration
+            analysis_duration=result.analysis_duration,
         )
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            f"PR confidence analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "request": str(req)}
-        )
+        fire_and_forget("error", f"PR confidence analysis failed", SERVICE_NAME, {"error": str(e), "request": str(req)})
 
-        return create_error_response(
-            f"PR confidence analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"PR confidence analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.get("/pr-confidence/history/{pr_id}")
@@ -4033,13 +3749,12 @@ async def get_pr_analysis_history(pr_id: str):
         return create_success_response(
             f"Retrieved analysis history for PR {pr_id}",
             {"pr_id": pr_id, "history": history},
-            history_count=len(history)
+            history_count=len(history),
         )
 
     except Exception as e:
         return create_error_response(
-            f"Failed to retrieve PR analysis history: {str(e)}",
-            error_code=ErrorCodes.INTERNAL_ERROR
+            f"Failed to retrieve PR analysis history: {str(e)}", error_code=ErrorCodes.INTERNAL_ERROR
         )
 
 
@@ -4051,15 +3766,11 @@ async def get_analysis_statistics():
 
         stats = await pr_confidence_analysis_service.get_analysis_statistics()
 
-        return create_success_response(
-            "Retrieved analysis statistics",
-            stats
-        )
+        return create_success_response("Retrieved analysis statistics", stats)
 
     except Exception as e:
         return create_error_response(
-            f"Failed to retrieve analysis statistics: {str(e)}",
-            error_code=ErrorCodes.INTERNAL_ERROR
+            f"Failed to retrieve analysis statistics: {str(e)}", error_code=ErrorCodes.INTERNAL_ERROR
         )
 
 
@@ -4096,7 +3807,7 @@ async def get_analysis_status():
             "workflow_integration": True,
             "reporting": True,
             "pr_confidence_analysis": True,
-            "architecture_analysis": True
+            "architecture_analysis": True,
         },
         "detectors_available": [
             "semantic_similarity_detector",
@@ -4108,35 +3819,28 @@ async def get_analysis_status():
             "maintenance_detector",
             "impact_detector",
             "consistency_detector",
-            "completeness_detector"
+            "completeness_detector",
         ],
-        "supported_formats": [
-            "text/plain",
-            "text/markdown",
-            "application/json",
-            "text/html"
-        ],
+        "supported_formats": ["text/plain", "text/markdown", "application/json", "text/html"],
         "models_loaded": True,
         "distributed_workers": 0,  # This could be expanded to show actual worker count
-        "queue_status": {
-            "pending_tasks": 0,
-            "processing_tasks": 0,
-            "completed_tasks": 0
-        },
+        "queue_status": {"pending_tasks": 0, "processing_tasks": 0, "completed_tasks": 0},
         "integration_status": {
             "doc_store": "available",
             "orchestrator": "available",
             "prompt_store": "available",
-            "redis": "available"
-        }
+            "redis": "available",
+        },
     }
 
     return analysis_status
+
 
 @app.get("/health")
 async def custom_analysis_health():
     """Custom analysis-service health endpoint with models_loaded field."""
     from datetime import datetime, timezone
+
     from services.shared.monitoring.health import healthy_response
 
     # Get uptime (simplified)
@@ -4147,16 +3851,14 @@ async def custom_analysis_health():
     models_loaded = True  # Analysis service is always "ready" for analysis
 
     return healthy_response(
-        ServiceNames.ANALYSIS_SERVICE,
-        SERVICE_VERSION,
-        uptime_seconds=uptime,
-        models_loaded=models_loaded
+        ServiceNames.ANALYSIS_SERVICE, SERVICE_VERSION, uptime_seconds=uptime, models_loaded=models_loaded
     )
 
 
 # ============================================================================
 # PR ANALYSIS TESTS
 # ============================================================================
+
 
 async def test_pr_analysis_components():
     """Test individual components of PR analysis."""
@@ -4174,7 +3876,7 @@ async def test_pr_analysis_components():
         {"message": "perf: Optimize database queries"},
         {"message": "ci: Update build configuration"},
         {"message": "build: Update package version"},
-        {"message": "revert: Revert previous changes"}
+        {"message": "revert: Revert previous changes"},
     ]
 
     commit_analysis = analyze_commit_messages(commits)
@@ -4187,7 +3889,7 @@ async def test_pr_analysis_components():
         "docs/api.md",
         "config/settings.json",
         "requirements.txt",
-        "Dockerfile"
+        "Dockerfile",
     ]
 
     file_types = {}
@@ -4202,29 +3904,16 @@ async def test_pr_analysis_components():
         {"filename": "src/auth/service.py", "status": "modified"},
         {"filename": "tests/test_auth.py", "status": "added"},
         {"filename": "requirements.txt", "status": "modified"},
-        {"filename": "docs/api.md", "status": "added"}
+        {"filename": "docs/api.md", "status": "added"},
     ]
 
     structure_analysis = analyze_code_structure(changed_files)
     print(f"✅ Structural Analysis: {len(structure_analysis['dependency_changes'])} dependency changes")
 
     # Test health score calculation
-    code_analysis = {
-        "change_metrics": {
-            "lines_added": 200,
-            "lines_removed": 50,
-            "files_modified": 3,
-            "files_added": 2
-        }
-    }
+    code_analysis = {"change_metrics": {"lines_added": 200, "lines_removed": 50, "files_modified": 3, "files_added": 2}}
 
-    commit_analysis = {
-        "message_quality": {
-            "good_messages": 8,
-            "needs_improvement": 2,
-            "poor_messages": 1
-        }
-    }
+    commit_analysis = {"message_quality": {"good_messages": 8, "needs_improvement": 2, "poor_messages": 1}}
 
     structural_analysis = {"structural_risks": ["Dependencies changed without corresponding tests"]}
     quality_analysis = {"quality_score": 0.75}
@@ -4244,7 +3933,7 @@ async def test_pr_analysis_components():
         "risk_level": risk_level,
         "code_analysis": code_analysis,
         "commit_analysis": commit_analysis,
-        "quality_analysis": quality_analysis
+        "quality_analysis": quality_analysis,
     }
 
     recommendations = generate_pr_recommendations(pr_report)
@@ -4257,16 +3946,12 @@ async def test_pr_analysis_components():
         "health_score": health_score,
         "risk_level": risk_level,
         "suggestions": suggestions,
-        "recommendations": recommendations
+        "recommendations": recommendations,
     }
 
 
 if __name__ == "__main__":
     """Run the Analysis Service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

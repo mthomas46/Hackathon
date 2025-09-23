@@ -2,24 +2,24 @@
 
 from .controllers import (
     AnalysisController,
-    RemediationController,
-    WorkflowController,
-    RepositoryController,
     DistributedController,
-    ReportsController,
     FindingsController,
     IntegrationController,
-    PRConfidenceController
+    PRConfidenceController,
+    RemediationController,
+    ReportsController,
+    RepositoryController,
+    WorkflowController,
 )
 
 __all__ = [
-    'AnalysisController',
-    'RemediationController',
-    'WorkflowController',
-    'RepositoryController',
-    'DistributedController',
-    'ReportsController',
-    'FindingsController',
-    'IntegrationController',
-    'PRConfidenceController'
+    "AnalysisController",
+    "RemediationController",
+    "WorkflowController",
+    "RepositoryController",
+    "DistributedController",
+    "ReportsController",
+    "FindingsController",
+    "IntegrationController",
+    "PRConfidenceController",
 ]

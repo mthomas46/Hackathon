@@ -6,28 +6,30 @@ business rules and operations that don't naturally belong to a single aggregate.
 """
 
 import sys
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-import uuid
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.infrastructure.logging import get_simulation_logger
-from simulation.domain.entities.project import Project
-from simulation.domain.entities.timeline import Timeline
-from simulation.domain.entities.team import Team, TeamMemberEntity, TeamRole
-from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus,
-    SimulationStatus
-)
-from simulation.domain.events import (
-    SimulationStarted, SimulationCompleted, ProjectPhaseCompleted,
-    ProjectCreated, ProjectStatusChanged, DocumentGenerated
-)
 from typing import Any, Dict, List
+
+from simulation.domain.entities.project import Project
+from simulation.domain.entities.team import Team, TeamMemberEntity, TeamRole
+from simulation.domain.entities.timeline import Timeline
+from simulation.domain.events import (
+    DocumentGenerated,
+    ProjectCreated,
+    ProjectPhaseCompleted,
+    ProjectStatusChanged,
+    SimulationCompleted,
+    SimulationStarted,
+)
+from simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType, SimulationStatus
+from simulation.infrastructure.logging import get_simulation_logger
 
 # Define TimelineEvent as a simple type alias for now
 TimelineEvent = Dict[str, Any]
@@ -40,10 +42,9 @@ class SimulationDomainService:
         """Initialize the simulation domain service."""
         self.logger = get_simulation_logger()
 
-    def validate_simulation_feasibility(self,
-                                      project: Project,
-                                      timeline: Timeline,
-                                      team: Team) -> Tuple[bool, List[str]]:
+    def validate_simulation_feasibility(
+        self, project: Project, timeline: Timeline, team: Team
+    ) -> Tuple[bool, List[str]]:
         """Validate if a simulation is feasible given project, timeline, and team constraints.
 
         Args:
@@ -84,21 +85,21 @@ class SimulationDomainService:
                 "Simulation feasibility validated successfully",
                 project_id=project.project_id,
                 team_size=len(team.members),
-                timeline_phases=len(timeline.phases)
+                timeline_phases=len(timeline.phases),
             )
         else:
             self.logger.warning(
                 "Simulation feasibility validation failed",
                 project_id=project.project_id,
                 issues_count=len(issues),
-                issues=issues
+                issues=issues,
             )
 
         return is_feasible, issues
 
-    def calculate_simulation_progress(self,
-                                    timeline: Timeline,
-                                    completed_events: List[TimelineEvent]) -> Dict[str, Any]:
+    def calculate_simulation_progress(
+        self, timeline: Timeline, completed_events: List[TimelineEvent]
+    ) -> Dict[str, Any]:
         """Calculate comprehensive simulation progress metrics.
 
         Args:
@@ -125,7 +126,7 @@ class SimulationDomainService:
                 "total_events": len(phase_events),
                 "completed_events": len(completed_phase_events),
                 "progress_percentage": (len(completed_phase_events) / len(phase_events) * 100) if phase_events else 0,
-                "status": phase.status.value
+                "status": phase.status.value,
             }
 
         # Calculate time-based progress
@@ -139,18 +140,15 @@ class SimulationDomainService:
                 "percentage": progress_percentage,
                 "completed_events": completed_count,
                 "total_events": total_events,
-                "remaining_events": total_events - completed_count
+                "remaining_events": total_events - completed_count,
             },
             "phase_progress": phase_progress,
             "time_progress": time_progress,
             "quality_metrics": quality_metrics,
-            "estimated_completion": self._estimate_completion_time(timeline, completed_events)
+            "estimated_completion": self._estimate_completion_time(timeline, completed_events),
         }
 
-    def optimize_team_assignment(self,
-                               project: Project,
-                               team: Team,
-                               timeline: Timeline) -> Dict[str, Any]:
+    def optimize_team_assignment(self, project: Project, team: Team, timeline: Timeline) -> Dict[str, Any]:
         """Optimize team member assignments based on project requirements and timeline.
 
         Args:
@@ -161,12 +159,7 @@ class SimulationDomainService:
         Returns:
             Dictionary with optimization recommendations
         """
-        recommendations = {
-            "reassignments": [],
-            "additional_hiring": [],
-            "skill_gaps": [],
-            "workload_balance": {}
-        }
+        recommendations = {"reassignments": [], "additional_hiring": [], "skill_gaps": [], "workload_balance": {}}
 
         # Analyze current team composition
         current_skills = self._analyze_team_skills(team)
@@ -194,15 +187,12 @@ class SimulationDomainService:
             project_id=project.project_id,
             skill_gaps_count=len(skill_gaps),
             reassignments_count=len(reassignments),
-            hiring_recommendations=len(hiring_needs)
+            hiring_recommendations=len(hiring_needs),
         )
 
         return recommendations
 
-    def assess_project_risks(self,
-                           project: Project,
-                           team: Team,
-                           timeline: Timeline) -> Dict[str, Any]:
+    def assess_project_risks(self, project: Project, team: Team, timeline: Timeline) -> Dict[str, Any]:
         """Assess project risks and provide mitigation strategies.
 
         Args:
@@ -218,7 +208,7 @@ class SimulationDomainService:
             "medium_risk": [],
             "low_risk": [],
             "mitigation_strategies": [],
-            "overall_risk_score": 0.0
+            "overall_risk_score": 0.0,
         }
 
         # Technical complexity risks
@@ -244,7 +234,9 @@ class SimulationDomainService:
 
         # Calculate overall risk score
         total_risks = len(risks["high_risk"]) + len(risks["medium_risk"]) + len(risks["low_risk"])
-        risk_score = (len(risks["high_risk"]) * 3 + len(risks["medium_risk"]) * 2 + len(risks["low_risk"])) / max(total_risks, 1)
+        risk_score = (len(risks["high_risk"]) * 3 + len(risks["medium_risk"]) * 2 + len(risks["low_risk"])) / max(
+            total_risks, 1
+        )
         risks["overall_risk_score"] = min(risk_score, 5.0)  # Cap at 5.0
 
         # Generate mitigation strategies
@@ -255,16 +247,14 @@ class SimulationDomainService:
             project_id=project.project_id,
             high_risks=len(risks["high_risk"]),
             medium_risks=len(risks["medium_risk"]),
-            overall_risk_score=risks["overall_risk_score"]
+            overall_risk_score=risks["overall_risk_score"],
         )
 
         return risks
 
-    def generate_simulation_insights(self,
-                                   project: Project,
-                                   timeline: Timeline,
-                                   team: Team,
-                                   events: List[TimelineEvent]) -> Dict[str, Any]:
+    def generate_simulation_insights(
+        self, project: Project, timeline: Timeline, team: Team, events: List[TimelineEvent]
+    ) -> Dict[str, Any]:
         """Generate intelligent insights about the simulation progress and outcomes.
 
         Args:
@@ -282,7 +272,7 @@ class SimulationDomainService:
             "team_effectiveness": {},
             "timeline_efficiency": {},
             "recommendations": [],
-            "predictive_analysis": {}
+            "predictive_analysis": {},
         }
 
         # Analyze team performance patterns
@@ -358,8 +348,9 @@ class SimulationDomainService:
         """Calculate time-based progress metrics."""
         now = datetime.now()
         total_duration = sum((phase.end_date - phase.start_date).days for phase in timeline.phases)
-        elapsed_duration = sum((min(now, phase.end_date) - phase.start_date).days
-                             for phase in timeline.phases if now >= phase.start_date)
+        elapsed_duration = sum(
+            (min(now, phase.end_date) - phase.start_date).days for phase in timeline.phases if now >= phase.start_date
+        )
 
         time_progress_percentage = (elapsed_duration / total_duration * 100) if total_duration > 0 else 0
 
@@ -368,7 +359,7 @@ class SimulationDomainService:
             "total_days": total_duration,
             "time_progress_percentage": time_progress_percentage,
             "is_ahead": time_progress_percentage > 50,  # Simplified ahead/behind calculation
-            "is_behind": time_progress_percentage < 30
+            "is_behind": time_progress_percentage < 30,
         }
 
     def _calculate_quality_metrics(self, completed_events: List[TimelineEvent]) -> Dict[str, Any]:
@@ -377,7 +368,7 @@ class SimulationDomainService:
             return {"average_quality": 0.0, "quality_distribution": {}, "defect_rate": 0.0}
 
         # Simplified quality calculation
-        quality_scores = [event.quality_score for event in completed_events if hasattr(event, 'quality_score')]
+        quality_scores = [event.quality_score for event in completed_events if hasattr(event, "quality_score")]
         average_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0.8
 
         # Quality distribution
@@ -398,7 +389,7 @@ class SimulationDomainService:
             "average_quality": average_quality,
             "quality_distribution": distribution,
             "defect_rate": defect_rate,
-            "quality_trend": "improving" if average_quality > 0.8 else "stable"
+            "quality_trend": "improving" if average_quality > 0.8 else "stable",
         }
 
     def _estimate_completion_time(self, timeline: Timeline, completed_events: List[TimelineEvent]) -> datetime:
@@ -432,7 +423,7 @@ class SimulationDomainService:
             "api_service": {"backend": 4, "database": 3, "testing": 3, "security": 2},
             "mobile_application": {"mobile": 4, "backend": 2, "ui_ux": 2, "testing": 2},
             "data_science": {"python": 4, "statistics": 3, "machine_learning": 3, "data_viz": 2},
-            "devops_tool": {"infrastructure": 4, "automation": 3, "security": 3, "monitoring": 2}
+            "devops_tool": {"infrastructure": 4, "automation": 3, "security": 3, "monitoring": 2},
         }
 
         requirements = base_requirements.get(project.project_type.value, {})
@@ -440,7 +431,9 @@ class SimulationDomainService:
 
         return {skill: level * complexity_multiplier for skill, level in requirements.items()}
 
-    def _identify_skill_gaps(self, current_skills: Dict[str, float], required_skills: Dict[str, float]) -> List[Dict[str, Any]]:
+    def _identify_skill_gaps(
+        self, current_skills: Dict[str, float], required_skills: Dict[str, float]
+    ) -> List[Dict[str, Any]]:
         """Identify skill gaps in the team."""
         gaps = []
         for skill, required_level in required_skills.items():
@@ -448,13 +441,15 @@ class SimulationDomainService:
             if current_level < required_level:
                 gap_size = required_level - current_level
                 severity = "critical" if gap_size > 2 else "moderate" if gap_size > 1 else "minor"
-                gaps.append({
-                    "skill": skill,
-                    "required_level": required_level,
-                    "current_level": current_level,
-                    "gap_size": gap_size,
-                    "severity": severity
-                })
+                gaps.append(
+                    {
+                        "skill": skill,
+                        "required_level": required_level,
+                        "current_level": current_level,
+                        "gap_size": gap_size,
+                        "severity": severity,
+                    }
+                )
 
         return sorted(gaps, key=lambda x: x["gap_size"], reverse=True)
 
@@ -477,26 +472,31 @@ class SimulationDomainService:
             "max_workload": max_workload,
             "min_workload": min_workload,
             "workload_variance": max_workload - min_workload,
-            "is_balanced": (max_workload - min_workload) / avg_workload < 0.5
+            "is_balanced": (max_workload - min_workload) / avg_workload < 0.5,
         }
 
-    def _generate_reassignment_recommendations(self, team: Team, skill_gaps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _generate_reassignment_recommendations(
+        self, team: Team, skill_gaps: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Generate team reassignment recommendations."""
         recommendations = []
 
         for gap in skill_gaps:
             # Find team members with the required skill
             candidates = [
-                member for member in team.members
+                member
+                for member in team.members
                 if gap["skill"] in member.skills and member.skills[gap["skill"]] >= gap["required_level"]
             ]
 
             if candidates:
-                recommendations.append({
-                    "skill_gap": gap["skill"],
-                    "recommended_member": candidates[0].name,
-                    "rationale": f"Has required skill level {candidates[0].skills[gap['skill']]}"
-                })
+                recommendations.append(
+                    {
+                        "skill_gap": gap["skill"],
+                        "recommended_member": candidates[0].name,
+                        "rationale": f"Has required skill level {candidates[0].skills[gap['skill']]}",
+                    }
+                )
 
         return recommendations
 
@@ -506,13 +506,15 @@ class SimulationDomainService:
 
         critical_gaps = [gap for gap in skill_gaps if gap["severity"] == "critical"]
         for gap in critical_gaps:
-            hiring_needs.append({
-                "skill": gap["skill"],
-                "required_level": gap["required_level"],
-                "priority": "high",
-                "timeline": "immediate",
-                "justification": f"Critical gap of {gap['gap_size']:.1f} in {gap['skill']} skill"
-            })
+            hiring_needs.append(
+                {
+                    "skill": gap["skill"],
+                    "required_level": gap["required_level"],
+                    "priority": "high",
+                    "timeline": "immediate",
+                    "justification": f"Critical gap of {gap['gap_size']:.1f} in {gap['skill']} skill",
+                }
+            )
 
         return hiring_needs
 
@@ -558,7 +560,7 @@ class SimulationDomainService:
         # Check for overlapping phases
         phase_dates = [(phase.start_date, phase.end_date) for phase in timeline.phases]
         for i, (start1, end1) in enumerate(phase_dates):
-            for j, (start2, end2) in enumerate(phase_dates[i+1:], i+1):
+            for j, (start2, end2) in enumerate(phase_dates[i + 1 :], i + 1):
                 if (start1 <= start2 <= end1) or (start2 <= start1 <= end2):
                     risks["medium"].append(f"Phase overlap detected between phases {i+1} and {j+1}")
 
@@ -581,21 +583,28 @@ class SimulationDomainService:
 
         for risk in risks["high"]:
             if "complexity" in risk.lower():
-                strategies.append({
-                    "risk": risk,
-                    "strategy": "Break down complex tasks into smaller, manageable units",
-                    "actions": ["Create detailed technical specifications", "Implement agile development practices"],
-                    "timeline": "immediate",
-                    "owner": "technical_lead"
-                })
+                strategies.append(
+                    {
+                        "risk": risk,
+                        "strategy": "Break down complex tasks into smaller, manageable units",
+                        "actions": [
+                            "Create detailed technical specifications",
+                            "Implement agile development practices",
+                        ],
+                        "timeline": "immediate",
+                        "owner": "technical_lead",
+                    }
+                )
             elif "team" in risk.lower():
-                strategies.append({
-                    "risk": risk,
-                    "strategy": "Augment team with experienced contractors or consultants",
-                    "actions": ["Identify hiring needs", "Start recruitment process"],
-                    "timeline": "2_weeks",
-                    "owner": "project_manager"
-                })
+                strategies.append(
+                    {
+                        "risk": risk,
+                        "strategy": "Augment team with experienced contractors or consultants",
+                        "actions": ["Identify hiring needs", "Start recruitment process"],
+                        "timeline": "2_weeks",
+                        "owner": "project_manager",
+                    }
+                )
 
         return strategies
 
@@ -609,13 +618,18 @@ class SimulationDomainService:
 
             if member_events:
                 completion_rate = len(completed_events) / len(member_events)
-                avg_quality = sum(e.quality_score for e in completed_events if hasattr(e, 'quality_score')) / len(completed_events) if completed_events else 0
+                avg_quality = (
+                    sum(e.quality_score for e in completed_events if hasattr(e, "quality_score"))
+                    / len(completed_events)
+                    if completed_events
+                    else 0
+                )
 
                 member_performance[member.name] = {
                     "completion_rate": completion_rate,
                     "average_quality": avg_quality,
                     "total_events": len(member_events),
-                    "completed_events": len(completed_events)
+                    "completed_events": len(completed_events),
                 }
 
         return member_performance
@@ -637,12 +651,14 @@ class SimulationDomainService:
                     "planned_duration": planned_duration,
                     "actual_duration": actual_completion_time,
                     "efficiency": efficiency,
-                    "is_on_track": efficiency >= 0.8
+                    "is_on_track": efficiency >= 0.8,
                 }
 
         return phase_efficiency
 
-    def _identify_bottlenecks(self, timeline: Timeline, events: List[TimelineEvent], team: Team) -> List[Dict[str, Any]]:
+    def _identify_bottlenecks(
+        self, timeline: Timeline, events: List[TimelineEvent], team: Team
+    ) -> List[Dict[str, Any]]:
         """Identify bottlenecks in the simulation process."""
         bottlenecks = []
 
@@ -652,12 +668,14 @@ class SimulationDomainService:
             completed_count = len([e for e in events if e.phase_id == phase.phase_id and e.status == "completed"])
 
             if phase_events and completed_count / len(phase_events) < 0.5:
-                bottlenecks.append({
-                    "type": "phase_delay",
-                    "phase": phase.name,
-                    "severity": "high",
-                    "description": f"Phase {phase.name} is significantly behind schedule"
-                })
+                bottlenecks.append(
+                    {
+                        "type": "phase_delay",
+                        "phase": phase.name,
+                        "severity": "high",
+                        "description": f"Phase {phase.name} is significantly behind schedule",
+                    }
+                )
 
         # Check for team member overload
         member_workloads = {}
@@ -670,16 +688,20 @@ class SimulationDomainService:
             if workload > avg_workload * 1.5:
                 member = next((m for m in team.members if m.member_id == member_id), None)
                 if member:
-                    bottlenecks.append({
-                        "type": "workload_imbalance",
-                        "member": member.name,
-                        "severity": "medium",
-                        "description": f"{member.name} has {workload} events vs team average of {avg_workload:.1f}"
-                    })
+                    bottlenecks.append(
+                        {
+                            "type": "workload_imbalance",
+                            "member": member.name,
+                            "severity": "medium",
+                            "description": f"{member.name} has {workload} events vs team average of {avg_workload:.1f}",
+                        }
+                    )
 
         return bottlenecks
 
-    def _generate_performance_insights(self, project: Project, timeline: Timeline, team: Team, events: List[TimelineEvent]) -> List[str]:
+    def _generate_performance_insights(
+        self, project: Project, timeline: Timeline, team: Team, events: List[TimelineEvent]
+    ) -> List[str]:
         """Generate performance insights."""
         insights = []
 
@@ -702,7 +724,7 @@ class SimulationDomainService:
             insights.append("Consider augmenting team size for better velocity")
 
         # Quality insights
-        quality_scores = [e.quality_score for e in events if hasattr(e, 'quality_score')]
+        quality_scores = [e.quality_score for e in events if hasattr(e, "quality_score")]
         if quality_scores:
             avg_quality = sum(quality_scores) / len(quality_scores)
             if avg_quality > 0.85:
@@ -720,7 +742,11 @@ class SimulationDomainService:
         # Simple velocity calculation
         recent_events = sorted(events, key=lambda x: x.completed_at or datetime.min, reverse=True)[:10]
         if recent_events:
-            days_span = (recent_events[0].completed_at - recent_events[-1].completed_at).days if recent_events[-1].completed_at else 1
+            days_span = (
+                (recent_events[0].completed_at - recent_events[-1].completed_at).days
+                if recent_events[-1].completed_at
+                else 1
+            )
             velocity = len(recent_events) / max(days_span, 1)
             estimated_days_remaining = remaining_count / velocity if velocity > 0 else 30
         else:
@@ -730,9 +756,9 @@ class SimulationDomainService:
 
         return {
             "estimated_completion_days": estimated_days_remaining,
-            "velocity_events_per_day": velocity if 'velocity' in locals() else 0,
+            "velocity_events_per_day": velocity if "velocity" in locals() else 0,
             "confidence_level": confidence_level,
-            "risk_factors": ["low_velocity"] if velocity < 1 else []
+            "risk_factors": ["low_velocity"] if velocity < 1 else [],
         }
 
     def _generate_actionable_recommendations(self, insights: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -742,30 +768,36 @@ class SimulationDomainService:
         # Based on bottlenecks
         for bottleneck in insights.get("bottleneck_analysis", []):
             if bottleneck["type"] == "phase_delay":
-                recommendations.append({
-                    "category": "timeline",
-                    "priority": "high",
-                    "action": f"Allocate additional resources to {bottleneck['phase']} phase",
-                    "expected_impact": "Reduce phase delay by 30-50%"
-                })
+                recommendations.append(
+                    {
+                        "category": "timeline",
+                        "priority": "high",
+                        "action": f"Allocate additional resources to {bottleneck['phase']} phase",
+                        "expected_impact": "Reduce phase delay by 30-50%",
+                    }
+                )
             elif bottleneck["type"] == "workload_imbalance":
-                recommendations.append({
-                    "category": "team",
-                    "priority": "medium",
-                    "action": f"Rebalance workload for {bottleneck['member']}",
-                    "expected_impact": "Improve team efficiency by 20%"
-                })
+                recommendations.append(
+                    {
+                        "category": "team",
+                        "priority": "medium",
+                        "action": f"Rebalance workload for {bottleneck['member']}",
+                        "expected_impact": "Improve team efficiency by 20%",
+                    }
+                )
 
         # Based on team effectiveness
         team_effectiveness = insights.get("team_effectiveness", {})
         low_performers = [name for name, perf in team_effectiveness.items() if perf.get("completion_rate", 0) < 0.7]
         if low_performers:
-            recommendations.append({
-                "category": "team",
-                "priority": "medium",
-                "action": f"Provide additional support to team members: {', '.join(low_performers)}",
-                "expected_impact": "Improve completion rates by 25%"
-            })
+            recommendations.append(
+                {
+                    "category": "team",
+                    "priority": "medium",
+                    "action": f"Provide additional support to team members: {', '.join(low_performers)}",
+                    "expected_impact": "Improve completion rates by 25%",
+                }
+            )
 
         return recommendations
 
@@ -782,7 +814,4 @@ def get_simulation_domain_service() -> SimulationDomainService:
     return _simulation_domain_service
 
 
-__all__ = [
-    'SimulationDomainService',
-    'get_simulation_domain_service'
-]
+__all__ = ["SimulationDomainService", "get_simulation_domain_service"]

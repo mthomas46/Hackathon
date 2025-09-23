@@ -4,15 +4,16 @@ This module contains comprehensive integration tests for environment management,
 including environment switching, configuration validation, and service health monitoring.
 """
 
-import pytest
-import os
-import tempfile
 import json
-import yaml
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, Any, List, Optional
+import os
 import sys
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+import yaml
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -35,12 +36,12 @@ class TestEnvironmentSwitching:
             assert detected_env == "staging"
 
         # Test config file detection
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump({"environment": "development"}, f)
             config_file = f.name
 
         try:
-            with patch('builtins.open', create=True) as mock_open:
+            with patch("builtins.open", create=True) as mock_open:
                 mock_file = Mock()
                 mock_file.read.return_value = yaml.dump({"environment": "testing"})
                 mock_open.return_value.__enter__.return_value = mock_file
@@ -80,15 +81,11 @@ class TestEnvironmentSwitching:
         base_config = {
             "database": {"host": "localhost", "port": 5432},
             "api": {"host": "0.0.0.0", "port": 8000},
-            "redis": {"host": "localhost", "port": 6379}
+            "redis": {"host": "localhost", "port": 6379},
         }
 
         # Test environment variable overrides
-        overrides = {
-            "DATABASE_HOST": "db.example.com",
-            "API_PORT": "9000",
-            "REDIS_HOST": "redis-cluster"
-        }
+        overrides = {"DATABASE_HOST": "db.example.com", "API_PORT": "9000", "REDIS_HOST": "redis-cluster"}
 
         with patch.dict(os.environ, overrides):
             merged_config = self._apply_environment_overrides(base_config)
@@ -143,14 +140,14 @@ class TestEnvironmentSwitching:
                 "environment": "development",
                 "database": {"type": "sqlite", "path": ":memory:"},
                 "api": {"port": 8000},
-                "logging": {"level": "DEBUG"}
+                "logging": {"level": "DEBUG"},
             },
             {
                 "environment": "production",
                 "database": {"type": "postgresql", "host": "prod-db"},
                 "api": {"port": 443, "ssl": True},
-                "logging": {"level": "WARNING"}
-            }
+                "logging": {"level": "WARNING"},
+            },
         ]
 
         for config in valid_configs:
@@ -167,10 +164,7 @@ class TestEnvironmentSwitching:
             {
                 "database": {"host": "localhost"},  # Missing required fields
             },
-            {
-                "environment": "production",
-                "api": {"port": "not_a_number"}
-            }
+            {"environment": "production", "api": {"port": "not_a_number"}},
         ]
 
         for config in invalid_configs:
@@ -195,37 +189,33 @@ class TestEnvironmentSwitching:
                 "database": {"type": "sqlite", "path": ":memory:"},
                 "api": {"host": "localhost", "port": 8000},
                 "logging": {"level": "DEBUG"},
-                "redis": {"host": "localhost", "port": 6379}
+                "redis": {"host": "localhost", "port": 6379},
             },
             "staging": {
                 "database": {"type": "postgresql", "host": "staging-db"},
                 "api": {"host": "0.0.0.0", "port": 8000},
                 "logging": {"level": "INFO"},
-                "redis": {"host": "staging-redis", "port": 6379}
+                "redis": {"host": "staging-redis", "port": 6379},
             },
             "production": {
                 "database": {"type": "postgresql", "host": "prod-db", "ssl": True},
                 "api": {"host": "0.0.0.0", "port": 443, "ssl": True},
                 "logging": {"level": "WARNING"},
-                "redis": {"host": "prod-redis", "port": 6379, "ssl": True}
-            }
+                "redis": {"host": "prod-redis", "port": 6379, "ssl": True},
+            },
         }
         return configs.get(environment, configs["development"])
 
     def _apply_environment_overrides(self, config):
         """Mock environment variable override application."""
-        overrides = {
-            "DATABASE_HOST": "database.host",
-            "API_PORT": "api.port",
-            "REDIS_HOST": "redis.host"
-        }
+        overrides = {"DATABASE_HOST": "database.host", "API_PORT": "api.port", "REDIS_HOST": "redis.host"}
 
         result = json.loads(json.dumps(config))  # Deep copy
 
         for env_var, config_path in overrides.items():
             value = os.environ.get(env_var)
             if value is not None:
-                keys = config_path.split('.')
+                keys = config_path.split(".")
                 target = result
                 for key in keys[:-1]:
                     if key not in target:
@@ -237,12 +227,7 @@ class TestEnvironmentSwitching:
 
     def _create_environment_context(self, env_name):
         """Mock environment context creation."""
-        return {
-            "name": env_name,
-            "config": self._load_environment_config(env_name),
-            "services": {},
-            "variables": {}
-        }
+        return {"name": env_name, "config": self._load_environment_config(env_name), "services": {}, "variables": {}}
 
     def _switch_to_environment(self, context):
         """Mock environment switching."""
@@ -251,7 +236,7 @@ class TestEnvironmentSwitching:
 
     def _get_active_environment(self):
         """Mock active environment getter."""
-        return getattr(sys.modules[__name__], '_active_context', 'development')
+        return getattr(sys.modules[__name__], "_active_context", "development")
 
     def _validate_environment_config(self, config):
         """Mock environment configuration validation."""
@@ -318,11 +303,11 @@ class TestConfigurationValidation:
             logging:
               level: WARNING
               format: json
-            """
+            """,
         ]
 
         for yaml_config in valid_yaml_configs:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
                 f.write(yaml_config)
                 config_file = f.name
 
@@ -344,18 +329,18 @@ class TestConfigurationValidation:
             {
                 "environment": "development",
                 "database": {"type": "sqlite", "path": ":memory:"},
-                "api": {"host": "localhost", "port": 8000}
+                "api": {"host": "localhost", "port": 8000},
             },
             {
                 "environment": "staging",
                 "database": {"type": "postgresql", "host": "staging-db"},
                 "api": {"host": "0.0.0.0", "port": 8000},
-                "logging": {"level": "INFO"}
-            }
+                "logging": {"level": "INFO"},
+            },
         ]
 
         for json_config in valid_json_configs:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
                 json.dump(json_config, f)
                 config_file = f.name
 
@@ -378,7 +363,7 @@ class TestConfigurationValidation:
                 "database": {"type": "sqlite", "path": ":memory:"},
                 "api": {"host": "localhost", "port": 8000, "cors": True},
                 "logging": {"level": "DEBUG", "format": "text"},
-                "redis": {"host": "localhost", "port": 6379}
+                "redis": {"host": "localhost", "port": 6379},
             }
         ]
 
@@ -393,7 +378,7 @@ class TestConfigurationValidation:
             {
                 "environment": "invalid_env",  # Invalid environment
                 "database": {"type": "sqlite"},
-                "api": {"port": "not_a_number"}  # Invalid port type
+                "api": {"port": "not_a_number"},  # Invalid port type
             },
             {
                 "database": {"host": "localhost"},  # Missing required fields
@@ -401,8 +386,8 @@ class TestConfigurationValidation:
             {
                 "environment": "production",
                 "database": {"type": "unknown_db_type"},  # Invalid database type
-                "api": {"port": 80}  # Invalid port for production
-            }
+                "api": {"port": 80},  # Invalid port for production
+            },
         ]
 
         for config in invalid_configs:
@@ -418,13 +403,13 @@ class TestConfigurationValidation:
         base_config = {
             "environment": "development",
             "database": {"type": "sqlite", "path": ":memory:"},
-            "api": {"host": "localhost", "port": 8000}
+            "api": {"host": "localhost", "port": 8000},
         }
 
         override_config = {
             "database": {"path": "/tmp/test.db"},
             "api": {"port": 9000},
-            "redis": {"host": "redis-server"}
+            "redis": {"host": "redis-server"},
         }
 
         # Test deep merge strategy
@@ -445,10 +430,7 @@ class TestConfigurationValidation:
     def test_configuration_change_tracking(self):
         """Test configuration change tracking and auditing."""
         # Test tracking configuration changes
-        initial_config = {
-            "database": {"host": "localhost", "port": 5432},
-            "api": {"port": 8000}
-        }
+        initial_config = {"database": {"host": "localhost", "port": 5432}, "api": {"port": 8000}}
 
         changes = []
 
@@ -456,7 +438,7 @@ class TestConfigurationValidation:
         change_events = [
             {"path": "database.host", "old_value": "localhost", "new_value": "db.example.com"},
             {"path": "api.port", "old_value": 8000, "new_value": 9000},
-            {"path": "redis.host", "old_value": None, "new_value": "redis.example.com"}
+            {"path": "redis.host", "old_value": None, "new_value": "redis.example.com"},
         ]
 
         for change in change_events:
@@ -482,12 +464,12 @@ class TestConfigurationValidation:
 
     def _parse_yaml_config(self, file_path):
         """Mock YAML configuration parsing."""
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             return yaml.safe_load(f)
 
     def _parse_json_config(self, file_path):
         """Mock JSON configuration parsing."""
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             return json.load(f)
 
     def _get_configuration_schema(self):
@@ -496,26 +478,21 @@ class TestConfigurationValidation:
             "type": "object",
             "required": ["environment", "database", "api"],
             "properties": {
-                "environment": {
-                    "type": "string",
-                    "enum": ["development", "staging", "production", "testing"]
-                },
+                "environment": {"type": "string", "enum": ["development", "staging", "production", "testing"]},
                 "database": {
                     "type": "object",
                     "required": ["type"],
                     "properties": {
                         "type": {"type": "string", "enum": ["sqlite", "postgresql", "mysql"]},
                         "host": {"type": "string"},
-                        "port": {"type": "integer", "minimum": 1024, "maximum": 65535}
-                    }
+                        "port": {"type": "integer", "minimum": 1024, "maximum": 65535},
+                    },
                 },
                 "api": {
                     "type": "object",
-                    "properties": {
-                        "port": {"type": "integer", "minimum": 1024, "maximum": 65535}
-                    }
-                }
-            }
+                    "properties": {"port": {"type": "integer", "minimum": 1024, "maximum": 65535}},
+                },
+            },
         }
 
     def _validate_against_schema(self, config, schema):
@@ -568,7 +545,7 @@ class TestConfigurationValidation:
             "path": change["path"],
             "old_value": change["old_value"],
             "new_value": change["new_value"],
-            "timestamp": "2024-01-01T12:00:00Z"
+            "timestamp": "2024-01-01T12:00:00Z",
         }
         changes_list.append(change_entry)
 
@@ -586,12 +563,8 @@ class TestServiceHealthMonitoring:
                 "expected_response": {
                     "status": "healthy",
                     "timestamp": "2024-01-01T12:00:00Z",
-                    "services": {
-                        "database": "healthy",
-                        "redis": "healthy",
-                        "api": "healthy"
-                    }
-                }
+                    "services": {"database": "healthy", "redis": "healthy", "api": "healthy"},
+                },
             },
             {
                 "url": "/api/v1/health/detailed",
@@ -600,9 +573,9 @@ class TestServiceHealthMonitoring:
                     "status": "healthy",
                     "uptime_seconds": 3600,
                     "memory_usage": {"used": 150, "total": 1000},
-                    "cpu_usage": 25.5
-                }
-            }
+                    "cpu_usage": 25.5,
+                },
+            },
         ]
 
         for endpoint in health_endpoints:
@@ -623,28 +596,17 @@ class TestServiceHealthMonitoring:
         """Test service health status aggregation."""
         # Test various service health scenarios
         health_scenarios = [
-            {
-                "services": {"db": "healthy", "redis": "healthy", "api": "healthy"},
-                "expected_overall": "healthy"
-            },
-            {
-                "services": {"db": "healthy", "redis": "degraded", "api": "healthy"},
-                "expected_overall": "degraded"
-            },
-            {
-                "services": {"db": "unhealthy", "redis": "healthy", "api": "healthy"},
-                "expected_overall": "unhealthy"
-            },
-            {
-                "services": {"db": "healthy", "redis": "healthy", "api": "unknown"},
-                "expected_overall": "degraded"
-            }
+            {"services": {"db": "healthy", "redis": "healthy", "api": "healthy"}, "expected_overall": "healthy"},
+            {"services": {"db": "healthy", "redis": "degraded", "api": "healthy"}, "expected_overall": "degraded"},
+            {"services": {"db": "unhealthy", "redis": "healthy", "api": "healthy"}, "expected_overall": "unhealthy"},
+            {"services": {"db": "healthy", "redis": "healthy", "api": "unknown"}, "expected_overall": "degraded"},
         ]
 
         for scenario in health_scenarios:
             overall_status = self._aggregate_service_health(scenario["services"])
-            assert overall_status == scenario["expected_overall"], \
-                f"Expected {scenario['expected_overall']}, got {overall_status} for services {scenario['services']}"
+            assert (
+                overall_status == scenario["expected_overall"]
+            ), f"Expected {scenario['expected_overall']}, got {overall_status} for services {scenario['services']}"
 
         print("✅ Service health status aggregation validated")
 
@@ -695,7 +657,7 @@ class TestServiceHealthMonitoring:
         health_states = [
             {"status": "healthy", "should_alert": False, "alert_level": None},
             {"status": "degraded", "should_alert": True, "alert_level": "warning"},
-            {"status": "unhealthy", "should_alert": True, "alert_level": "critical"}
+            {"status": "unhealthy", "should_alert": True, "alert_level": "critical"},
         ]
 
         alerts_sent = []
@@ -722,18 +684,18 @@ class TestServiceHealthMonitoring:
             {
                 "name": "simulation-service",
                 "base_url": "http://localhost:8000",
-                "health_endpoints": ["/health", "/api/v1/health"]
+                "health_endpoints": ["/health", "/api/v1/health"],
             },
             {
                 "name": "database-service",
                 "base_url": "http://localhost:5432",
-                "health_endpoints": ["/health/ready", "/health/live"]
+                "health_endpoints": ["/health/ready", "/health/live"],
             },
             {
                 "name": "redis-service",
                 "base_url": "redis://localhost:6379",
-                "health_endpoints": []  # No explicit health endpoints
-            }
+                "health_endpoints": [],  # No explicit health endpoints
+            },
         ]
 
         discovered_endpoints = {}
@@ -793,11 +755,13 @@ class TestServiceHealthMonitoring:
     def _perform_mock_health_check(self):
         """Mock health check operation."""
         import time
+
         time.sleep(0.001)  # Simulate 1ms health check
 
     def _perform_mock_health_check_with_failure_probability(self, failure_rate):
         """Mock health check with configurable failure rate."""
         import random
+
         return random.random() > failure_rate
 
     def _evaluate_health_alert(self, health_state, alerts_list):
@@ -807,7 +771,7 @@ class TestServiceHealthMonitoring:
                 "status": health_state["status"],
                 "level": health_state["alert_level"],
                 "timestamp": "2024-01-01T12:00:00Z",
-                "message": f"Service health changed to {health_state['status']}"
+                "message": f"Service health changed to {health_state['status']}",
             }
             alerts_list.append(alert)
 
@@ -882,13 +846,13 @@ class TestEnvironmentManagementIntegration:
             "development": {
                 "database": {"type": "sqlite", "path": ":memory:"},
                 "api": {"port": 8000},
-                "features": ["debug", "hot_reload"]
+                "features": ["debug", "hot_reload"],
             },
             "production": {
                 "database": {"type": "postgresql", "host": "prod-db"},
                 "api": {"port": 443, "ssl": True},
-                "features": ["ssl", "monitoring"]
-            }
+                "features": ["ssl", "monitoring"],
+            },
         }
 
         # Save configurations
@@ -920,23 +884,23 @@ class TestEnvironmentManagementIntegration:
                 "services": {
                     "database": "sqlite:///:memory:",
                     "redis": "redis://localhost:6379",
-                    "api": "http://localhost:8000"
+                    "api": "http://localhost:8000",
                 }
             },
             "staging": {
                 "services": {
                     "database": "postgresql://staging-db:5432/staging_db",
                     "redis": "redis://staging-redis:6379",
-                    "api": "https://staging-api.example.com"
+                    "api": "https://staging-api.example.com",
                 }
             },
             "production": {
                 "services": {
                     "database": "postgresql://prod-db:5432/prod_db",
                     "redis": "redis://prod-redis-cluster:6379",
-                    "api": "https://api.example.com"
+                    "api": "https://api.example.com",
                 }
-            }
+            },
         }
 
         for env, config in service_discovery_configs.items():
@@ -946,8 +910,9 @@ class TestEnvironmentManagementIntegration:
             # Verify all expected services discovered
             for service_name, expected_url in config["services"].items():
                 assert service_name in discovered_services, f"Service {service_name} not discovered in {env}"
-                assert discovered_services[service_name] == expected_url, \
-                    f"Service URL mismatch for {service_name} in {env}"
+                assert (
+                    discovered_services[service_name] == expected_url
+                ), f"Service URL mismatch for {service_name} in {env}"
 
             # Test service connectivity
             connectivity_results = self._test_service_connectivity(discovered_services)
@@ -961,31 +926,14 @@ class TestEnvironmentManagementIntegration:
 
     def _initialize_environment(self, env_name):
         """Mock environment initialization."""
-        return {
-            "name": env_name,
-            "status": "initialized",
-            "config": {},
-            "services": []
-        }
+        return {"name": env_name, "status": "initialized", "config": {}, "services": []}
 
     def _load_environment_configuration(self, env_name):
         """Mock environment configuration loading."""
         configs = {
-            "development": {
-                "database": {"type": "sqlite"},
-                "api": {"port": 8000},
-                "logging": {"level": "DEBUG"}
-            },
-            "staging": {
-                "database": {"type": "postgresql"},
-                "api": {"port": 8000},
-                "logging": {"level": "INFO"}
-            },
-            "production": {
-                "database": {"type": "postgresql"},
-                "api": {"port": 443},
-                "logging": {"level": "WARNING"}
-            }
+            "development": {"database": {"type": "sqlite"}, "api": {"port": 8000}, "logging": {"level": "DEBUG"}},
+            "staging": {"database": {"type": "postgresql"}, "api": {"port": 8000}, "logging": {"level": "INFO"}},
+            "production": {"database": {"type": "postgresql"}, "api": {"port": 443}, "logging": {"level": "WARNING"}},
         }
         return configs.get(env_name, configs["development"])
 
@@ -1004,14 +952,7 @@ class TestEnvironmentManagementIntegration:
 
     def _perform_environment_health_checks(self, env_name):
         """Mock health checks."""
-        return {
-            "overall": "healthy",
-            "services": {
-                "database": "healthy",
-                "api": "healthy",
-                "redis": "healthy"
-            }
-        }
+        return {"overall": "healthy", "services": {"database": "healthy", "api": "healthy", "redis": "healthy"}}
 
     def _switch_to_environment(self, env_name):
         """Mock environment switching."""
@@ -1043,11 +984,11 @@ class TestEnvironmentManagementIntegration:
 @pytest.fixture
 def temp_config_file():
     """Create a temporary configuration file for testing."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         config = {
             "environment": "testing",
             "database": {"type": "sqlite", "path": ":memory:"},
-            "api": {"host": "localhost", "port": 8000}
+            "api": {"host": "localhost", "port": 8000},
         }
         yaml.dump(config, f)
         config_file = f.name
@@ -1066,7 +1007,7 @@ def mock_environment_config():
         "database": {"type": "sqlite", "path": ":memory:"},
         "api": {"host": "localhost", "port": 8000},
         "logging": {"level": "DEBUG"},
-        "redis": {"host": "localhost", "port": 6379}
+        "redis": {"host": "localhost", "port": 6379},
     }
 
 
@@ -1078,10 +1019,6 @@ def mock_health_response():
     response.json.return_value = {
         "status": "healthy",
         "timestamp": "2024-01-01T12:00:00Z",
-        "services": {
-            "database": "healthy",
-            "redis": "healthy",
-            "api": "healthy"
-        }
+        "services": {"database": "healthy", "redis": "healthy", "api": "healthy"},
     }
     return response

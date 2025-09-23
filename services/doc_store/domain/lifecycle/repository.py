@@ -2,12 +2,14 @@
 
 Handles lifecycle policy and document lifecycle data operations.
 """
+
 import json
-from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from ...core.entities import LifecyclePolicy
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
-from ...core.entities import LifecyclePolicy
 
 
 class LifecycleRepository(BaseRepository[LifecyclePolicy]):
@@ -19,36 +21,35 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
     def _row_to_entity(self, row: Dict[str, Any]) -> LifecyclePolicy:
         """Convert database row to LifecyclePolicy entity."""
         return LifecyclePolicy(
-            id=row['id'],
-            name=row['name'],
-            description=row['description'],
-            conditions=json.loads(row['conditions'] or '{}'),
-            actions=json.loads(row['actions'] or '{}'),
-            priority=row.get('priority', 0),
-            enabled=row.get('enabled', True),
-            created_at=row['created_at'],
-            updated_at=row.get('updated_at')
+            id=row["id"],
+            name=row["name"],
+            description=row["description"],
+            conditions=json.loads(row["conditions"] or "{}"),
+            actions=json.loads(row["actions"] or "{}"),
+            priority=row.get("priority", 0),
+            enabled=row.get("enabled", True),
+            created_at=row["created_at"],
+            updated_at=row.get("updated_at"),
         )
 
     def _entity_to_row(self, entity: LifecyclePolicy) -> Dict[str, Any]:
         """Convert LifecyclePolicy entity to database row."""
         return {
-            'id': entity.id,
-            'name': entity.name,
-            'description': entity.description,
-            'conditions': json.dumps(entity.conditions),
-            'actions': json.dumps(entity.actions),
-            'priority': entity.priority,
-            'enabled': entity.enabled,
-            'created_at': entity.created_at.isoformat(),
-            'updated_at': entity.updated_at.isoformat() if entity.updated_at else None
+            "id": entity.id,
+            "name": entity.name,
+            "description": entity.description,
+            "conditions": json.dumps(entity.conditions),
+            "actions": json.dumps(entity.actions),
+            "priority": entity.priority,
+            "enabled": entity.enabled,
+            "created_at": entity.created_at.isoformat(),
+            "updated_at": entity.updated_at.isoformat() if entity.updated_at else None,
         }
 
     def get_enabled_policies(self) -> List[LifecyclePolicy]:
         """Get all enabled policies ordered by priority."""
         rows = execute_query(
-            f"SELECT * FROM {self.table_name} WHERE enabled = 1 ORDER BY priority DESC, created_at ASC",
-            fetch_all=True
+            f"SELECT * FROM {self.table_name} WHERE enabled = 1 ORDER BY priority DESC, created_at ASC", fetch_all=True
         )
         return [self._row_to_entity(row) for row in rows]
 
@@ -107,31 +108,38 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
 
         if transition_type == "archival":
             # Documents older than archival threshold
-            rows = execute_query("""
+            rows = execute_query(
+                """
                 SELECT d.*, lc.retention_period_days, lc.archival_date
                 FROM documents d
                 LEFT JOIN document_lifecycle lc ON d.id = lc.document_id
                 WHERE lc.archival_date < ?
                 AND lc.current_phase = 'active'
-            """, (cutoff_date,), fetch_all=True)
+            """,
+                (cutoff_date,),
+                fetch_all=True,
+            )
 
         elif transition_type == "deletion":
             # Documents older than deletion threshold
-            rows = execute_query("""
+            rows = execute_query(
+                """
                 SELECT d.*, lc.deletion_date
                 FROM documents d
                 LEFT JOIN document_lifecycle lc ON d.id = lc.document_id
                 WHERE lc.deletion_date < ?
                 AND lc.current_phase IN ('archived', 'retention')
-            """, (cutoff_date,), fetch_all=True)
+            """,
+                (cutoff_date,),
+                fetch_all=True,
+            )
 
         else:
             rows = []
 
         return rows
 
-    def update_document_lifecycle(self, document_id: str, phase: str,
-                                retention_days: int = None) -> None:
+    def update_document_lifecycle(self, document_id: str, phase: str, retention_days: int = None) -> None:
         """Update document lifecycle information."""
         now = datetime.utcnow()
 
@@ -143,67 +151,76 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
             deletion_date = None
 
         # Insert or update lifecycle record
-        execute_query("""
+        execute_query(
+            """
             INSERT OR REPLACE INTO document_lifecycle
             (document_id, current_phase, retention_period_days, archival_date, deletion_date,
              last_reviewed, compliance_status, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            document_id,
-            phase,
-            retention_days,
-            archival_date.isoformat() if archival_date else None,
-            deletion_date.isoformat() if deletion_date else None,
-            now.isoformat(),
-            'compliant',
-            now.isoformat()
-        ))
+        """,
+            (
+                document_id,
+                phase,
+                retention_days,
+                archival_date.isoformat() if archival_date else None,
+                deletion_date.isoformat() if deletion_date else None,
+                now.isoformat(),
+                "compliant",
+                now.isoformat(),
+            ),
+        )
 
     def get_lifecycle_stats(self) -> Dict[str, Any]:
         """Get lifecycle management statistics."""
         # Document phase distribution
-        phase_rows = execute_query("""
+        phase_rows = execute_query(
+            """
             SELECT current_phase, COUNT(*) as count
             FROM document_lifecycle
             GROUP BY current_phase
-        """, fetch_all=True)
+        """,
+            fetch_all=True,
+        )
 
-        phase_stats = {row['current_phase']: row['count'] for row in phase_rows}
+        phase_stats = {row["current_phase"]: row["count"] for row in phase_rows}
 
         # Policy application stats
-        policy_rows = execute_query("""
+        policy_rows = execute_query(
+            """
             SELECT COUNT(DISTINCT document_id) as docs_with_policies
             FROM document_lifecycle
             WHERE applied_policies IS NOT NULL
-        """, fetch_one=True)
+        """,
+            fetch_one=True,
+        )
 
-        policy_count = policy_rows['docs_with_policies'] if policy_rows else 0
+        policy_count = policy_rows["docs_with_policies"] if policy_rows else 0
 
         # Compliance stats
-        compliance_rows = execute_query("""
+        compliance_rows = execute_query(
+            """
             SELECT compliance_status, COUNT(*) as count
             FROM document_lifecycle
             GROUP BY compliance_status
-        """, fetch_all=True)
+        """,
+            fetch_all=True,
+        )
 
-        compliance_stats = {row['compliance_status']: row['count'] for row in compliance_rows}
+        compliance_stats = {row["compliance_status"]: row["count"] for row in compliance_rows}
 
         return {
             "phase_distribution": phase_stats,
             "documents_with_policies": policy_count,
-            "compliance_stats": compliance_stats
+            "compliance_stats": compliance_stats,
         }
 
-    def log_lifecycle_event(self, document_id: str, event_type: str,
-                          details: Dict[str, Any] = None) -> None:
+    def log_lifecycle_event(self, document_id: str, event_type: str, details: Dict[str, Any] = None) -> None:
         """Log a lifecycle event."""
-        execute_query("""
+        execute_query(
+            """
             INSERT INTO lifecycle_events
             (document_id, event_type, details, created_at)
             VALUES (?, ?, ?, ?)
-        """, (
-            document_id,
-            event_type,
-            json.dumps(details or {}),
-            datetime.utcnow().isoformat()
-        ))
+        """,
+            (document_id, event_type, json.dumps(details or {}), datetime.utcnow().isoformat()),
+        )

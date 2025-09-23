@@ -19,7 +19,7 @@ class ExecutionId:
             raise TypeError(f"ExecutionId must be str or UUID, got {type(value)}")
 
     @classmethod
-    def generate(cls) -> 'ExecutionId':
+    def generate(cls) -> "ExecutionId":
         """Generate a new unique execution ID."""
         return cls(uuid.uuid4())
 

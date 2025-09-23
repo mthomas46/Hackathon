@@ -5,15 +5,16 @@ files for simulation parameters, timeline specifications, and team configuration
 Supports YAML and JSON formats with comprehensive validation and error handling.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
-from datetime import datetime, timedelta
-import yaml
 import json
 import os
-from pydantic import BaseModel, Field, validator, ValidationError
+import sys
+from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import yaml
+from pydantic import BaseModel, Field, ValidationError, validator
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -23,6 +24,7 @@ from simulation.infrastructure.logging import get_simulation_logger
 
 class ConfigFileFormat(str, Enum):
     """Supported configuration file formats."""
+
     YAML = "yaml"
     YML = "yml"
     JSON = "json"
@@ -30,6 +32,7 @@ class ConfigFileFormat(str, Enum):
 
 class SimulationType(str, Enum):
     """Types of simulation scenarios."""
+
     FULL_PROJECT = "full_project"
     PHASE_FOCUS = "phase_focus"
     TEAM_DYNAMICS = "team_dynamics"
@@ -40,6 +43,7 @@ class SimulationType(str, Enum):
 
 class ProjectType(str, Enum):
     """Types of projects that can be simulated."""
+
     WEB_APPLICATION = "web_application"
     API_SERVICE = "api_service"
     MOBILE_APPLICATION = "mobile_application"
@@ -50,6 +54,7 @@ class ProjectType(str, Enum):
 
 class ComplexityLevel(str, Enum):
     """Project complexity levels."""
+
     SIMPLE = "simple"
     MEDIUM = "medium"
     COMPLEX = "complex"
@@ -58,6 +63,7 @@ class ComplexityLevel(str, Enum):
 
 class TeamRole(str, Enum):
     """Team member roles in the simulated project."""
+
     PRODUCT_MANAGER = "product_manager"
     TECHNICAL_LEAD = "technical_lead"
     SENIOR_DEVELOPER = "senior_developer"
@@ -71,6 +77,7 @@ class TeamRole(str, Enum):
 
 class ExpertiseLevel(str, Enum):
     """Expertise levels for team members."""
+
     JUNIOR = "junior"
     MID_LEVEL = "mid_level"
     SENIOR = "senior"
@@ -80,6 +87,7 @@ class ExpertiseLevel(str, Enum):
 
 class TimelinePhaseConfig(BaseModel):
     """Configuration for a timeline phase."""
+
     name: str = Field(..., description="Phase name")
     description: str = Field("", description="Phase description")
     duration_days: int = Field(..., ge=1, le=365, description="Phase duration in days")
@@ -91,6 +99,7 @@ class TimelinePhaseConfig(BaseModel):
 
 class TeamMemberConfig(BaseModel):
     """Configuration for a team member."""
+
     name: str = Field(..., description="Team member name")
     role: TeamRole = Field(..., description="Team member role")
     expertise_level: ExpertiseLevel = Field(ExpertiseLevel.MID_LEVEL, description="Expertise level")
@@ -102,6 +111,7 @@ class TeamMemberConfig(BaseModel):
 
 class SimulationConfigFile(BaseModel):
     """Complete simulation configuration from file."""
+
     # Basic project information
     project_name: str = Field(..., description="Project name")
     project_description: str = Field("", description="Project description")
@@ -128,8 +138,7 @@ class SimulationConfigFile(BaseModel):
     # Analysis settings
     enable_analysis: bool = Field(True, description="Enable analysis")
     analysis_types: List[str] = Field(
-        default_factory=lambda: ["quality", "consistency", "patterns"],
-        description="Analysis types to run"
+        default_factory=lambda: ["quality", "consistency", "patterns"], description="Analysis types to run"
     )
 
     # Real-time settings
@@ -145,7 +154,7 @@ class SimulationConfigFile(BaseModel):
     enable_ecosystem_integration: bool = Field(True, description="Enable ecosystem integration")
     custom_service_endpoints: Dict[str, str] = Field(default_factory=dict, description="Custom service endpoints")
 
-    @validator('timeline_phases')
+    @validator("timeline_phases")
     def validate_timeline_phases(cls, v):
         """Validate timeline phases configuration."""
         if not v:
@@ -155,36 +164,36 @@ class SimulationConfigFile(BaseModel):
                     name="Planning",
                     description="Project planning and requirements gathering",
                     duration_days=15,
-                    deliverables=["Requirements Document", "Project Plan"]
+                    deliverables=["Requirements Document", "Project Plan"],
                 ),
                 TimelinePhaseConfig(
                     name="Design",
                     description="System design and architecture",
                     duration_days=30,
-                    deliverables=["System Architecture", "UI/UX Designs"]
+                    deliverables=["System Architecture", "UI/UX Designs"],
                 ),
                 TimelinePhaseConfig(
                     name="Development",
                     description="Core development and implementation",
                     duration_days=60,
-                    deliverables=["Working Software", "Code Repository"]
+                    deliverables=["Working Software", "Code Repository"],
                 ),
                 TimelinePhaseConfig(
                     name="Testing",
                     description="Quality assurance and testing",
                     duration_days=20,
-                    deliverables=["Test Reports", "Quality Metrics"]
+                    deliverables=["Test Reports", "Quality Metrics"],
                 ),
                 TimelinePhaseConfig(
                     name="Deployment",
                     description="Production deployment and release",
                     duration_days=10,
-                    deliverables=["Production Release", "Documentation"]
-                )
+                    deliverables=["Production Release", "Documentation"],
+                ),
             ]
         return v
 
-    @validator('team_members')
+    @validator("team_members")
     def validate_team_members(cls, v):
         """Validate team members configuration."""
         if not v:
@@ -195,29 +204,29 @@ class SimulationConfigFile(BaseModel):
                     role=TeamRole.PRODUCT_MANAGER,
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["Product Strategy", "Requirements", "Agile"],
-                    productivity_multiplier=0.9
+                    productivity_multiplier=0.9,
                 ),
                 TeamMemberConfig(
                     name="Bob Smith",
                     role=TeamRole.TECHNICAL_LEAD,
                     expertise_level=ExpertiseLevel.EXPERT,
                     skills=["Architecture", "Python", "Leadership"],
-                    productivity_multiplier=1.2
+                    productivity_multiplier=1.2,
                 ),
                 TeamMemberConfig(
                     name="Carol Williams",
                     role=TeamRole.SENIOR_DEVELOPER,
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["Python", "FastAPI", "React", "PostgreSQL"],
-                    productivity_multiplier=1.1
+                    productivity_multiplier=1.1,
                 ),
                 TeamMemberConfig(
                     name="David Brown",
                     role=TeamRole.QA_ENGINEER,
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["Testing", "Automation", "Quality Assurance"],
-                    productivity_multiplier=1.0
-                )
+                    productivity_multiplier=1.0,
+                ),
             ]
         return v
 
@@ -247,7 +256,7 @@ class SimulationConfigLoader:
             file_format = self._detect_file_format(file_path)
 
             # Load file content
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 if file_format in [ConfigFileFormat.YAML, ConfigFileFormat.YML]:
                     raw_config = yaml.safe_load(f)
                 elif file_format == ConfigFileFormat.JSON:
@@ -265,7 +274,7 @@ class SimulationConfigLoader:
                 "Configuration file loaded successfully",
                 file_path=str(file_path),
                 project_name=config.project_name,
-                simulation_type=config.simulation_type.value
+                simulation_type=config.simulation_type.value,
             )
 
             return config
@@ -274,36 +283,33 @@ class SimulationConfigLoader:
             self.logger.error(
                 "Configuration validation failed",
                 file_path=str(file_path),
-                errors=[{"field": err['loc'], "message": err['msg']} for err in e.errors()]
+                errors=[{"field": err["loc"], "message": err["msg"]} for err in e.errors()],
             )
             raise ValueError(f"Invalid configuration file: {e}") from e
 
         except Exception as e:
-            self.logger.error(
-                "Failed to load configuration file",
-                file_path=str(file_path),
-                error=str(e)
-            )
+            self.logger.error("Failed to load configuration file", file_path=str(file_path), error=str(e))
             raise
 
     def create_config_from_dict(self, config_dict: Dict[str, Any]) -> SimulationConfigFile:
         """Create a configuration object from a dictionary."""
         try:
             config = SimulationConfigFile(**config_dict)
-            self.logger.info(
-                "Configuration created from dictionary",
-                project_name=config.project_name
-            )
+            self.logger.info("Configuration created from dictionary", project_name=config.project_name)
             return config
         except ValidationError as e:
             self.logger.error(
                 "Configuration validation failed",
-                errors=[{"field": err['loc'], "message": err['msg']} for err in e.errors()]
+                errors=[{"field": err["loc"], "message": err["msg"]} for err in e.errors()],
             )
             raise ValueError(f"Invalid configuration: {e}") from e
 
-    def save_config_file(self, config: SimulationConfigFile, file_path: Union[str, Path],
-                        file_format: ConfigFileFormat = ConfigFileFormat.YAML) -> None:
+    def save_config_file(
+        self,
+        config: SimulationConfigFile,
+        file_path: Union[str, Path],
+        file_format: ConfigFileFormat = ConfigFileFormat.YAML,
+    ) -> None:
         """Save a configuration object to a file."""
         file_path = Path(file_path)
 
@@ -315,7 +321,7 @@ class SimulationConfigLoader:
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Save to file
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 if file_format in [ConfigFileFormat.YAML, ConfigFileFormat.YML]:
                     yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
                 elif file_format == ConfigFileFormat.JSON:
@@ -324,21 +330,16 @@ class SimulationConfigLoader:
                     raise ValueError(f"Unsupported file format: {file_format}")
 
             self.logger.info(
-                "Configuration file saved successfully",
-                file_path=str(file_path),
-                project_name=config.project_name
+                "Configuration file saved successfully", file_path=str(file_path), project_name=config.project_name
             )
 
         except Exception as e:
-            self.logger.error(
-                "Failed to save configuration file",
-                file_path=str(file_path),
-                error=str(e)
-            )
+            self.logger.error("Failed to save configuration file", file_path=str(file_path), error=str(e))
             raise
 
-    def create_sample_config_file(self, file_path: Union[str, Path],
-                                project_name: str = "Sample E-commerce Platform") -> SimulationConfigFile:
+    def create_sample_config_file(
+        self, file_path: Union[str, Path], project_name: str = "Sample E-commerce Platform"
+    ) -> SimulationConfigFile:
         """Create a sample configuration file with realistic defaults."""
         sample_config = SimulationConfigFile(
             project_name=project_name,
@@ -354,7 +355,7 @@ class SimulationConfigLoader:
                     description="Requirements gathering and project planning",
                     duration_days=20,
                     deliverables=["Business Requirements", "Technical Specifications", "Project Roadmap"],
-                    team_allocation={"product_manager": 0.8, "business_analyst": 0.6}
+                    team_allocation={"product_manager": 0.8, "business_analyst": 0.6},
                 ),
                 TimelinePhaseConfig(
                     name="Architecture Design",
@@ -362,7 +363,7 @@ class SimulationConfigLoader:
                     duration_days=25,
                     deliverables=["System Architecture Diagram", "API Specifications", "Database Design"],
                     dependencies=["Discovery & Planning"],
-                    team_allocation={"technical_lead": 1.0, "senior_developer": 0.7}
+                    team_allocation={"technical_lead": 1.0, "senior_developer": 0.7},
                 ),
                 TimelinePhaseConfig(
                     name="Core Development",
@@ -370,7 +371,7 @@ class SimulationConfigLoader:
                     duration_days=45,
                     deliverables=["User Service", "Product Service", "Order Service", "Payment Integration"],
                     dependencies=["Architecture Design"],
-                    team_allocation={"senior_developer": 1.0, "developer": 0.8, "qa_engineer": 0.6}
+                    team_allocation={"senior_developer": 1.0, "developer": 0.8, "qa_engineer": 0.6},
                 ),
                 TimelinePhaseConfig(
                     name="Frontend Development",
@@ -378,7 +379,7 @@ class SimulationConfigLoader:
                     duration_days=30,
                     deliverables=["React Frontend", "Admin Dashboard", "Mobile Responsive Design"],
                     dependencies=["Architecture Design"],
-                    team_allocation={"senior_developer": 0.8, "developer": 1.0, "designer": 0.5}
+                    team_allocation={"senior_developer": 0.8, "developer": 1.0, "designer": 0.5},
                 ),
                 TimelinePhaseConfig(
                     name="Testing & QA",
@@ -386,7 +387,7 @@ class SimulationConfigLoader:
                     duration_days=20,
                     deliverables=["Unit Tests", "Integration Tests", "E2E Tests", "Performance Tests"],
                     dependencies=["Core Development", "Frontend Development"],
-                    team_allocation={"qa_engineer": 1.0, "senior_developer": 0.3}
+                    team_allocation={"qa_engineer": 1.0, "senior_developer": 0.3},
                 ),
                 TimelinePhaseConfig(
                     name="Deployment & Launch",
@@ -394,8 +395,8 @@ class SimulationConfigLoader:
                     duration_days=10,
                     deliverables=["Production Deployment", "Monitoring Setup", "Documentation"],
                     dependencies=["Testing & QA"],
-                    team_allocation={"devops_engineer": 1.0, "technical_lead": 0.5}
-                )
+                    team_allocation={"devops_engineer": 1.0, "technical_lead": 0.5},
+                ),
             ],
             team_members=[
                 TeamMemberConfig(
@@ -404,7 +405,7 @@ class SimulationConfigLoader:
                     expertise_level=ExpertiseLevel.EXPERT,
                     skills=["Product Strategy", "Agile", "E-commerce", "Stakeholder Management"],
                     productivity_multiplier=0.9,
-                    cost_per_hour=75.0
+                    cost_per_hour=75.0,
                 ),
                 TeamMemberConfig(
                     name="Mike Rodriguez",
@@ -412,7 +413,7 @@ class SimulationConfigLoader:
                     expertise_level=ExpertiseLevel.EXPERT,
                     skills=["System Architecture", "Python", "Microservices", "AWS"],
                     productivity_multiplier=1.2,
-                    cost_per_hour=85.0
+                    cost_per_hour=85.0,
                 ),
                 TeamMemberConfig(
                     name="Emily Johnson",
@@ -420,7 +421,7 @@ class SimulationConfigLoader:
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["Python", "FastAPI", "PostgreSQL", "Docker", "Kubernetes"],
                     productivity_multiplier=1.1,
-                    cost_per_hour=65.0
+                    cost_per_hour=65.0,
                 ),
                 TeamMemberConfig(
                     name="David Kim",
@@ -428,7 +429,7 @@ class SimulationConfigLoader:
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["React", "TypeScript", "Node.js", "GraphQL"],
                     productivity_multiplier=1.1,
-                    cost_per_hour=65.0
+                    cost_per_hour=65.0,
                 ),
                 TeamMemberConfig(
                     name="Lisa Wong",
@@ -436,7 +437,7 @@ class SimulationConfigLoader:
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["Test Automation", "Selenium", "pytest", "Performance Testing"],
                     productivity_multiplier=1.0,
-                    cost_per_hour=55.0
+                    cost_per_hour=55.0,
                 ),
                 TeamMemberConfig(
                     name="Tom Anderson",
@@ -444,8 +445,8 @@ class SimulationConfigLoader:
                     expertise_level=ExpertiseLevel.SENIOR,
                     skills=["Docker", "Kubernetes", "CI/CD", "AWS", "Terraform"],
                     productivity_multiplier=1.0,
-                    cost_per_hour=70.0
-                )
+                    cost_per_hour=70.0,
+                ),
             ],
             max_team_size=8,
             include_document_generation=True,
@@ -458,16 +459,14 @@ class SimulationConfigLoader:
             max_execution_time_minutes=120,
             generate_realistic_delays=True,
             capture_metrics=True,
-            enable_ecosystem_integration=True
+            enable_ecosystem_integration=True,
         )
 
         # Save the sample configuration
         self.save_config_file(sample_config, file_path)
 
         self.logger.info(
-            "Sample configuration file created",
-            file_path=str(file_path),
-            project_name=sample_config.project_name
+            "Sample configuration file created", file_path=str(file_path), project_name=sample_config.project_name
         )
 
         return sample_config
@@ -475,16 +474,16 @@ class SimulationConfigLoader:
     def _detect_file_format(self, file_path: Path) -> ConfigFileFormat:
         """Detect the file format from the file extension."""
         suffix = file_path.suffix.lower()
-        if suffix in ['.yaml', '.yml']:
+        if suffix in [".yaml", ".yml"]:
             return ConfigFileFormat.YAML
-        elif suffix == '.json':
+        elif suffix == ".json":
             return ConfigFileFormat.JSON
         else:
             # Try to detect from content
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     first_char = f.read(1)
-                    if first_char == '{':
+                    if first_char == "{":
                         return ConfigFileFormat.JSON
                     else:
                         return ConfigFileFormat.YAML
@@ -507,9 +506,7 @@ class SimulationConfigLoader:
 
         # Check team size
         if len(config.team_members) > config.max_team_size:
-            issues.append(
-                f"Team size exceeds maximum: {len(config.team_members)} > {config.max_team_size}"
-            )
+            issues.append(f"Team size exceeds maximum: {len(config.team_members)} > {config.max_team_size}")
 
         # Check for required roles
         required_roles = [TeamRole.PRODUCT_MANAGER, TeamRole.TECHNICAL_LEAD]
@@ -543,24 +540,25 @@ def load_simulation_config(file_path: Union[str, Path]) -> SimulationConfigFile:
     return get_simulation_config_loader().load_config_file(file_path)
 
 
-def create_sample_simulation_config(file_path: Union[str, Path],
-                                  project_name: str = "Sample Project") -> SimulationConfigFile:
+def create_sample_simulation_config(
+    file_path: Union[str, Path], project_name: str = "Sample Project"
+) -> SimulationConfigFile:
     """Convenience function to create a sample configuration file."""
     return get_simulation_config_loader().create_sample_config_file(file_path, project_name)
 
 
 __all__ = [
-    'SimulationConfigLoader',
-    'SimulationConfigFile',
-    'TimelinePhaseConfig',
-    'TeamMemberConfig',
-    'SimulationType',
-    'ProjectType',
-    'ComplexityLevel',
-    'TeamRole',
-    'ExpertiseLevel',
-    'ConfigFileFormat',
-    'get_simulation_config_loader',
-    'load_simulation_config',
-    'create_sample_simulation_config'
+    "SimulationConfigLoader",
+    "SimulationConfigFile",
+    "TimelinePhaseConfig",
+    "TeamMemberConfig",
+    "SimulationType",
+    "ProjectType",
+    "ComplexityLevel",
+    "TeamRole",
+    "ExpertiseLevel",
+    "ConfigFileFormat",
+    "get_simulation_config_loader",
+    "load_simulation_config",
+    "create_sample_simulation_config",
 ]

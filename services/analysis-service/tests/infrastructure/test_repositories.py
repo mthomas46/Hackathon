@@ -1,31 +1,25 @@
 """Tests for Repository Implementations - In-memory and SQLite repositories."""
 
-import pytest
 import asyncio
-import tempfile
 import os
-from unittest.mock import Mock, AsyncMock, patch
+import tempfile
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, Mock, patch
 
-from ...infrastructure.repositories.document_repository import (
-    DocumentRepository, InMemoryDocumentRepository
-)
-from ...infrastructure.repositories.analysis_repository import (
-    AnalysisRepository, InMemoryAnalysisRepository
-)
-from ...infrastructure.repositories.finding_repository import (
-    FindingRepository, InMemoryFindingRepository
-)
-from ...infrastructure.repositories.sqlite_document_repository import SQLiteDocumentRepository
-from ...infrastructure.repositories.sqlite_analysis_repository import SQLiteAnalysisRepository
-from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
+import pytest
 
-from ...domain.entities.document import Document, DocumentStatus
 from ...domain.entities.analysis import Analysis, AnalysisStatus
+from ...domain.entities.document import Document, DocumentStatus
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
+from ...infrastructure.repositories.analysis_repository import AnalysisRepository, InMemoryAnalysisRepository
+from ...infrastructure.repositories.document_repository import DocumentRepository, InMemoryDocumentRepository
+from ...infrastructure.repositories.finding_repository import FindingRepository, InMemoryFindingRepository
+from ...infrastructure.repositories.sqlite_analysis_repository import SQLiteAnalysisRepository
+from ...infrastructure.repositories.sqlite_document_repository import SQLiteDocumentRepository
+from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
 
 
 class TestDocumentRepositoryInterface:
@@ -34,11 +28,9 @@ class TestDocumentRepositoryInterface:
     def test_repository_interface_definition(self):
         """Test that DocumentRepository defines the expected interface."""
         # This is a base class test to ensure the interface is properly defined
-        repo_methods = [method for method in dir(DocumentRepository) if not method.startswith('_')]
+        repo_methods = [method for method in dir(DocumentRepository) if not method.startswith("_")]
 
-        expected_methods = [
-            'save', 'get_by_id', 'get_all', 'get_by_author', 'delete'
-        ]
+        expected_methods = ["save", "get_by_id", "get_all", "get_by_author", "delete"]
 
         for method in expected_methods:
             assert method in repo_methods, f"Method {method} should be defined in DocumentRepository"
@@ -76,13 +68,13 @@ class TestInMemoryDocumentRepository:
     def sample_document(self):
         """Create a sample document for testing."""
         return Document(
-            id='test-doc-123',
-            title='Test Document',
-            content='This is test content',
-            repository_id='repo-456',
-            author='test-author',
-            version='1.0.0',
-            status=DocumentStatus.ACTIVE
+            id="test-doc-123",
+            title="Test Document",
+            content="This is test content",
+            repository_id="repo-456",
+            author="test-author",
+            version="1.0.0",
+            status=DocumentStatus.ACTIVE,
         )
 
     def test_repository_creation(self, repository):
@@ -121,7 +113,7 @@ class TestInMemoryDocumentRepository:
     @pytest.mark.asyncio
     async def test_get_by_id_nonexistent_document(self, repository):
         """Test getting a non-existent document by ID."""
-        retrieved = await repository.get_by_id('non-existent-id')
+        retrieved = await repository.get_by_id("non-existent-id")
 
         assert retrieved is None
 
@@ -132,11 +124,11 @@ class TestInMemoryDocumentRepository:
         docs = []
         for i in range(3):
             doc = Document(
-                id=f'test-doc-{i}',
-                title=f'Document {i}',
-                content=f'Content {i}',
-                repository_id='repo-123',
-                author=f'author-{i}'
+                id=f"test-doc-{i}",
+                title=f"Document {i}",
+                content=f"Content {i}",
+                repository_id="repo-123",
+                author=f"author-{i}",
             )
             await repository.save(doc)
             docs.append(doc)
@@ -154,26 +146,26 @@ class TestInMemoryDocumentRepository:
     async def test_get_by_author(self, repository):
         """Test getting documents by author."""
         # Create documents with different authors
-        authors = ['alice', 'bob', 'alice', 'charlie']
+        authors = ["alice", "bob", "alice", "charlie"]
         docs = []
 
         for i, author in enumerate(authors):
             doc = Document(
-                id=f'test-doc-{i}',
-                title=f'Document {i}',
-                content=f'Content {i}',
-                repository_id='repo-123',
-                author=author
+                id=f"test-doc-{i}",
+                title=f"Document {i}",
+                content=f"Content {i}",
+                repository_id="repo-123",
+                author=author,
             )
             await repository.save(doc)
             docs.append(doc)
 
         # Get documents by author
-        alice_docs = await repository.get_by_author('alice')
+        alice_docs = await repository.get_by_author("alice")
 
         assert len(alice_docs) == 2
         for doc in alice_docs:
-            assert doc.author == 'alice'
+            assert doc.author == "alice"
 
     @pytest.mark.asyncio
     async def test_delete_existing_document(self, repository, sample_document):
@@ -191,7 +183,7 @@ class TestInMemoryDocumentRepository:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_document(self, repository):
         """Test deleting a non-existent document."""
-        result = await repository.delete('non-existent-id')
+        result = await repository.delete("non-existent-id")
 
         assert result is False
 
@@ -201,16 +193,16 @@ class TestInMemoryDocumentRepository:
         await repository.save(sample_document)
 
         # Modify document
-        sample_document.title = 'Updated Title'
-        sample_document.version = '2.0.0'
+        sample_document.title = "Updated Title"
+        sample_document.version = "2.0.0"
 
         # Save again (update)
         await repository.save(sample_document)
 
         # Verify update
         retrieved = await repository.get_by_id(sample_document.id.value)
-        assert retrieved.title == 'Updated Title'
-        assert retrieved.version == '2.0.0'
+        assert retrieved.title == "Updated Title"
+        assert retrieved.version == "2.0.0"
 
     @pytest.mark.asyncio
     async def test_repository_isolation(self):
@@ -218,21 +210,9 @@ class TestInMemoryDocumentRepository:
         repo1 = InMemoryDocumentRepository()
         repo2 = InMemoryDocumentRepository()
 
-        doc1 = Document(
-            id='doc-1',
-            title='Document 1',
-            content='Content 1',
-            repository_id='repo-1',
-            author='author-1'
-        )
+        doc1 = Document(id="doc-1", title="Document 1", content="Content 1", repository_id="repo-1", author="author-1")
 
-        doc2 = Document(
-            id='doc-2',
-            title='Document 2',
-            content='Content 2',
-            repository_id='repo-2',
-            author='author-2'
-        )
+        doc2 = Document(id="doc-2", title="Document 2", content="Content 2", repository_id="repo-2", author="author-2")
 
         # Save to repo1
         await repo1.save(doc1)
@@ -244,15 +224,15 @@ class TestInMemoryDocumentRepository:
         assert len(repo1._documents) == 1
         assert len(repo2._documents) == 1
 
-        retrieved1 = await repo1.get_by_id('doc-1')
-        retrieved2 = await repo2.get_by_id('doc-2')
+        retrieved1 = await repo1.get_by_id("doc-1")
+        retrieved2 = await repo2.get_by_id("doc-2")
 
         assert retrieved1 == doc1
         assert retrieved2 == doc2
 
         # Cross-repository queries should return None
-        cross_retrieved1 = await repo1.get_by_id('doc-2')
-        cross_retrieved2 = await repo2.get_by_id('doc-1')
+        cross_retrieved1 = await repo1.get_by_id("doc-2")
+        cross_retrieved2 = await repo2.get_by_id("doc-1")
 
         assert cross_retrieved1 is None
         assert cross_retrieved2 is None
@@ -270,10 +250,10 @@ class TestInMemoryAnalysisRepository:
     def sample_analysis(self):
         """Create a sample analysis for testing."""
         return Analysis(
-            id='test-analysis-123',
-            document_id='doc-456',
+            id="test-analysis-123",
+            document_id="doc-456",
             analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-            status=AnalysisStatus.COMPLETED
+            status=AnalysisStatus.COMPLETED,
         )
 
     def test_repository_creation(self, repository):
@@ -301,20 +281,20 @@ class TestInMemoryAnalysisRepository:
         analyses = []
         for i in range(3):
             analysis = Analysis(
-                id=f'analysis-{i}',
-                document_id=f'doc-{i % 2}',  # 2 docs, 3 analyses (2 for doc-0, 1 for doc-1)
+                id=f"analysis-{i}",
+                document_id=f"doc-{i % 2}",  # 2 docs, 3 analyses (2 for doc-0, 1 for doc-1)
                 analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-                status=AnalysisStatus.COMPLETED
+                status=AnalysisStatus.COMPLETED,
             )
             await repository.save(analysis)
             analyses.append(analysis)
 
         # Get analyses for doc-0
-        doc_analyses = await repository.get_by_document_id('doc-0')
+        doc_analyses = await repository.get_by_document_id("doc-0")
 
         assert len(doc_analyses) == 2
         for analysis in doc_analyses:
-            assert analysis.document_id == 'doc-0'
+            assert analysis.document_id == "doc-0"
 
     @pytest.mark.asyncio
     async def test_get_by_status(self, repository):
@@ -323,10 +303,7 @@ class TestInMemoryAnalysisRepository:
 
         for i, status in enumerate(statuses):
             analysis = Analysis(
-                id=f'analysis-{i}',
-                document_id='doc-123',
-                analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-                status=status
+                id=f"analysis-{i}", document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY, status=status
             )
             await repository.save(analysis)
 
@@ -343,10 +320,7 @@ class TestInMemoryAnalysisRepository:
 
         for i, analysis_type in enumerate(types):
             analysis = Analysis(
-                id=f'analysis-{i}',
-                document_id='doc-123',
-                analysis_type=analysis_type,
-                status=AnalysisStatus.COMPLETED
+                id=f"analysis-{i}", document_id="doc-123", analysis_type=analysis_type, status=AnalysisStatus.COMPLETED
             )
             await repository.save(analysis)
 
@@ -369,14 +343,14 @@ class TestInMemoryFindingRepository:
     def sample_finding(self):
         """Create a sample finding for testing."""
         return Finding(
-            id='test-finding-123',
-            analysis_id='analysis-456',
-            document_id='doc-789',
-            title='Test Finding',
-            description='This is a test finding',
+            id="test-finding-123",
+            analysis_id="analysis-456",
+            document_id="doc-789",
+            title="Test Finding",
+            description="This is a test finding",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.8),
-            category='code_quality'
+            category="code_quality",
         )
 
     def test_repository_creation(self, repository):
@@ -404,50 +378,50 @@ class TestInMemoryFindingRepository:
         findings = []
         for i in range(3):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id=f'analysis-{i % 2}',  # 2 analyses, 3 findings (2 for analysis-0, 1 for analysis-1)
-                document_id='doc-123',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"finding-{i}",
+                analysis_id=f"analysis-{i % 2}",  # 2 analyses, 3 findings (2 for analysis-0, 1 for analysis-1)
+                document_id="doc-123",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
             findings.append(finding)
 
         # Get findings for analysis-0
-        analysis_findings = await repository.get_by_analysis_id('analysis-0')
+        analysis_findings = await repository.get_by_analysis_id("analysis-0")
 
         assert len(analysis_findings) == 2
         for finding in analysis_findings:
-            assert finding.analysis_id == 'analysis-0'
+            assert finding.analysis_id == "analysis-0"
 
     @pytest.mark.asyncio
     async def test_get_by_document_id(self, repository):
         """Test getting findings by document ID."""
         # Create findings for different documents
-        documents = ['doc-1', 'doc-2', 'doc-1']  # 2 docs, 3 findings (2 for doc-1, 1 for doc-2)
+        documents = ["doc-1", "doc-2", "doc-1"]  # 2 docs, 3 findings (2 for doc-1, 1 for doc-2)
 
         for i, doc_id in enumerate(documents):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id='analysis-123',
+                id=f"finding-{i}",
+                analysis_id="analysis-123",
                 document_id=doc_id,
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
         # Get findings for doc-1
-        doc_findings = await repository.get_by_document_id('doc-1')
+        doc_findings = await repository.get_by_document_id("doc-1")
 
         assert len(doc_findings) == 2
         for finding in doc_findings:
-            assert finding.document_id == 'doc-1'
+            assert finding.document_id == "doc-1"
 
     @pytest.mark.asyncio
     async def test_get_by_severity(self, repository):
@@ -456,14 +430,14 @@ class TestInMemoryFindingRepository:
 
         for i, severity in enumerate(severities):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id='analysis-123',
-                document_id='doc-123',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"finding-{i}",
+                analysis_id="analysis-123",
+                document_id="doc-123",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=severity,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
@@ -481,7 +455,7 @@ class TestSQLiteDocumentRepository:
     async def repository(self):
         """Create a fresh SQLite document repository for each test."""
         # Use in-memory SQLite database for testing
-        repo = SQLiteDocumentRepository(':memory:')
+        repo = SQLiteDocumentRepository(":memory:")
         await repo.initialize()
         yield repo
         await repo.close()
@@ -490,13 +464,13 @@ class TestSQLiteDocumentRepository:
     def sample_document(self):
         """Create a sample document for testing."""
         return Document(
-            id='test-doc-123',
-            title='Test Document',
-            content='This is test content',
-            repository_id='repo-456',
-            author='test-author',
-            version='1.0.0',
-            status=DocumentStatus.ACTIVE
+            id="test-doc-123",
+            title="Test Document",
+            content="This is test content",
+            repository_id="repo-456",
+            author="test-author",
+            version="1.0.0",
+            status=DocumentStatus.ACTIVE,
         )
 
     @pytest.mark.asyncio
@@ -505,7 +479,7 @@ class TestSQLiteDocumentRepository:
         assert repository is not None
         assert isinstance(repository, DocumentRepository)
         assert isinstance(repository, SQLiteDocumentRepository)
-        assert repository.database_path == ':memory:'
+        assert repository.database_path == ":memory:"
 
     @pytest.mark.asyncio
     async def test_save_and_retrieve_document(self, repository, sample_document):
@@ -527,11 +501,11 @@ class TestSQLiteDocumentRepository:
         docs = []
         for i in range(3):
             doc = Document(
-                id=f'test-doc-{i}',
-                title=f'Document {i}',
-                content=f'Content {i}',
-                repository_id='repo-123',
-                author=f'author-{i}'
+                id=f"test-doc-{i}",
+                title=f"Document {i}",
+                content=f"Content {i}",
+                repository_id="repo-123",
+                author=f"author-{i}",
             )
             await repository.save(doc)
             docs.append(doc)
@@ -548,24 +522,24 @@ class TestSQLiteDocumentRepository:
     async def test_get_by_author_sqlite(self, repository):
         """Test getting documents by author with SQLite."""
         # Create documents with different authors
-        authors = ['alice', 'bob', 'alice', 'charlie']
+        authors = ["alice", "bob", "alice", "charlie"]
 
         for i, author in enumerate(authors):
             doc = Document(
-                id=f'test-doc-{i}',
-                title=f'Document {i}',
-                content=f'Content {i}',
-                repository_id='repo-123',
-                author=author
+                id=f"test-doc-{i}",
+                title=f"Document {i}",
+                content=f"Content {i}",
+                repository_id="repo-123",
+                author=author,
             )
             await repository.save(doc)
 
         # Get documents by author
-        alice_docs = await repository.get_by_author('alice')
+        alice_docs = await repository.get_by_author("alice")
 
         assert len(alice_docs) == 2
         for doc in alice_docs:
-            assert doc.author == 'alice'
+            assert doc.author == "alice"
 
     @pytest.mark.asyncio
     async def test_delete_document_sqlite(self, repository, sample_document):
@@ -590,16 +564,16 @@ class TestSQLiteDocumentRepository:
         await repository.save(sample_document)
 
         # Modify document
-        sample_document.title = 'Updated Title'
-        sample_document.version = '2.0.0'
+        sample_document.title = "Updated Title"
+        sample_document.version = "2.0.0"
 
         # Save again (update)
         await repository.save(sample_document)
 
         # Verify update
         retrieved = await repository.get_by_id(sample_document.id.value)
-        assert retrieved.title == 'Updated Title'
-        assert retrieved.version == '2.0.0'
+        assert retrieved.title == "Updated Title"
+        assert retrieved.version == "2.0.0"
 
 
 class TestRepositoryIntegration:
@@ -615,16 +589,24 @@ class TestRepositoryIntegration:
         assert isinstance(memory_repo, DocumentRepository)
 
         # SQLite repository (in-memory database)
-        sqlite_repo = SQLiteDocumentRepository(':memory:')
+        sqlite_repo = SQLiteDocumentRepository(":memory:")
         await sqlite_repo.initialize()
         assert isinstance(sqlite_repo, DocumentRepository)
 
         # Both should have the same interface
-        memory_methods = [method for method in dir(memory_repo) if not method.startswith('_') and callable(getattr(memory_repo, method))]
-        sqlite_methods = [method for method in dir(sqlite_repo) if not method.startswith('_') and callable(getattr(sqlite_repo, method))]
+        memory_methods = [
+            method
+            for method in dir(memory_repo)
+            if not method.startswith("_") and callable(getattr(memory_repo, method))
+        ]
+        sqlite_methods = [
+            method
+            for method in dir(sqlite_repo)
+            if not method.startswith("_") and callable(getattr(sqlite_repo, method))
+        ]
 
         # Core methods should be the same
-        core_methods = ['save', 'get_by_id', 'get_all', 'get_by_author', 'delete']
+        core_methods = ["save", "get_by_id", "get_all", "get_by_author", "delete"]
         for method in core_methods:
             assert method in memory_methods
             assert method in sqlite_methods
@@ -641,29 +623,25 @@ class TestRepositoryIntegration:
 
         # Create related entities
         doc = Document(
-            id='doc-123',
-            title='Test Document',
-            content='Test content',
-            repository_id='repo-456',
-            author='test-author'
+            id="doc-123", title="Test Document", content="Test content", repository_id="repo-456", author="test-author"
         )
 
         analysis = Analysis(
-            id='analysis-456',
-            document_id='doc-123',
+            id="analysis-456",
+            document_id="doc-123",
             analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-            status=AnalysisStatus.COMPLETED
+            status=AnalysisStatus.COMPLETED,
         )
 
         finding = Finding(
-            id='finding-789',
-            analysis_id='analysis-456',
-            document_id='doc-123',
-            title='Test Finding',
-            description='Test description',
+            id="finding-789",
+            analysis_id="analysis-456",
+            document_id="doc-123",
+            title="Test Finding",
+            description="Test description",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.8),
-            category='test'
+            category="test",
         )
 
         # Save entities
@@ -672,16 +650,16 @@ class TestRepositoryIntegration:
         await finding_repo.save(finding)
 
         # Verify relationships
-        retrieved_doc = await doc_repo.get_by_id('doc-123')
+        retrieved_doc = await doc_repo.get_by_id("doc-123")
         assert retrieved_doc is not None
 
-        doc_analyses = await analysis_repo.get_by_document_id('doc-123')
+        doc_analyses = await analysis_repo.get_by_document_id("doc-123")
         assert len(doc_analyses) == 1
-        assert doc_analyses[0].id.value == 'analysis-456'
+        assert doc_analyses[0].id.value == "analysis-456"
 
-        analysis_findings = await finding_repo.get_by_analysis_id('analysis-456')
+        analysis_findings = await finding_repo.get_by_analysis_id("analysis-456")
         assert len(analysis_findings) == 1
-        assert analysis_findings[0].id.value == 'finding-789'
+        assert analysis_findings[0].id.value == "finding-789"
 
     @pytest.mark.asyncio
     async def test_repository_transaction_simulation(self):
@@ -692,11 +670,11 @@ class TestRepositoryIntegration:
         docs = []
         for i in range(5):
             doc = Document(
-                id=f'doc-{i}',
-                title=f'Document {i}',
-                content=f'Content {i}',
-                repository_id='repo-123',
-                author='test-author'
+                id=f"doc-{i}",
+                title=f"Document {i}",
+                content=f"Content {i}",
+                repository_id="repo-123",
+                author="test-author",
             )
             docs.append(doc)
 
@@ -729,16 +707,17 @@ class TestRepositoryPerformance:
         docs = []
         for i in range(100):
             doc = Document(
-                id=f'bulk-doc-{i:03d}',
-                title=f'Bulk Document {i}',
-                content=f'Content for document {i}',
-                repository_id='bulk-repo',
-                author='bulk-author'
+                id=f"bulk-doc-{i:03d}",
+                title=f"Bulk Document {i}",
+                content=f"Content for document {i}",
+                repository_id="bulk-repo",
+                author="bulk-author",
             )
             docs.append(doc)
 
         # Measure bulk save performance
         import time
+
         start_time = time.time()
 
         for doc in docs:
@@ -759,23 +738,24 @@ class TestRepositoryPerformance:
         repo = InMemoryDocumentRepository()
 
         # Setup test data
-        authors = ['alice', 'bob', 'charlie'] * 50  # 150 documents total
+        authors = ["alice", "bob", "charlie"] * 50  # 150 documents total
 
         for i in range(150):
             doc = Document(
-                id=f'perf-doc-{i:03d}',
-                title=f'Performance Document {i}',
-                content=f'Content {i}',
-                repository_id='perf-repo',
-                author=authors[i % len(authors)]
+                id=f"perf-doc-{i:03d}",
+                title=f"Performance Document {i}",
+                content=f"Content {i}",
+                repository_id="perf-repo",
+                author=authors[i % len(authors)],
             )
             await repo.save(doc)
 
         # Measure query performance
         import time
+
         start_time = time.time()
 
-        alice_docs = await repo.get_by_author('alice')
+        alice_docs = await repo.get_by_author("alice")
         all_docs = await repo.get_all()
 
         query_time = time.time() - start_time
@@ -796,7 +776,7 @@ class TestRepositoryErrorHandling:
         """Test SQLite repository connection error handling."""
         # Try to create repository with invalid database path
         with pytest.raises(Exception):
-            repo = SQLiteDocumentRepository('/invalid/path/database.db')
+            repo = SQLiteDocumentRepository("/invalid/path/database.db")
             await repo.initialize()
 
     @pytest.mark.asyncio
@@ -808,10 +788,7 @@ class TestRepositoryErrorHandling:
         # Document constructor should handle validation
         try:
             invalid_doc = Document(
-                id='',  # Invalid empty ID
-                title='Invalid Document',
-                content='Content',
-                repository_id='repo-123'
+                id="", title="Invalid Document", content="Content", repository_id="repo-123"  # Invalid empty ID
             )
             # If we get here, the repository should handle it gracefully
             await repo.save(invalid_doc)
@@ -826,11 +803,11 @@ class TestRepositoryErrorHandling:
 
         async def save_document(i: int):
             doc = Document(
-                id=f'concurrent-doc-{i}',
-                title=f'Concurrent Document {i}',
-                content=f'Content {i}',
-                repository_id='concurrent-repo',
-                author='concurrent-author'
+                id=f"concurrent-doc-{i}",
+                title=f"Concurrent Document {i}",
+                content=f"Content {i}",
+                repository_id="concurrent-repo",
+                author="concurrent-author",
             )
             await repo.save(doc)
             return doc
@@ -862,13 +839,13 @@ class TestRepositoryEdgeCases:
         all_docs = await repo.get_all()
         assert len(all_docs) == 0
 
-        retrieved = await repo.get_by_id('non-existent')
+        retrieved = await repo.get_by_id("non-existent")
         assert retrieved is None
 
-        author_docs = await repo.get_by_author('non-existent-author')
+        author_docs = await repo.get_by_author("non-existent-author")
         assert len(author_docs) == 0
 
-        delete_result = await repo.delete('non-existent')
+        delete_result = await repo.delete("non-existent")
         assert delete_result is False
 
     @pytest.mark.asyncio
@@ -879,13 +856,13 @@ class TestRepositoryEdgeCases:
         # Create documents with large content
         large_docs = []
         for i in range(10):
-            large_content = 'x' * 10000  # 10KB content per document
+            large_content = "x" * 10000  # 10KB content per document
             doc = Document(
-                id=f'large-doc-{i}',
-                title=f'Large Document {i}',
+                id=f"large-doc-{i}",
+                title=f"Large Document {i}",
                 content=large_content,
-                repository_id='large-repo',
-                author='large-author'
+                repository_id="large-repo",
+                author="large-author",
             )
             large_docs.append(doc)
             await repo.save(doc)
@@ -905,20 +882,20 @@ class TestRepositoryEdgeCases:
 
         # Create document with special characters
         special_doc = Document(
-            id='special-doc-ñáéíóú',
-            title='Document with ñáéíóú 🚀 📚 💻',
-            content='Content with special chars: @#$%^&*()[]{}',
-            repository_id='special-repo',
-            author='special-author@domain.com'
+            id="special-doc-ñáéíóú",
+            title="Document with ñáéíóú 🚀 📚 💻",
+            content="Content with special chars: @#$%^&*()[]{}",
+            repository_id="special-repo",
+            author="special-author@domain.com",
         )
 
         await repo.save(special_doc)
 
         # Verify retrieval works
-        retrieved = await repo.get_by_id('special-doc-ñáéíóú')
+        retrieved = await repo.get_by_id("special-doc-ñáéíóú")
         assert retrieved is not None
-        assert retrieved.title == 'Document with ñáéíóú 🚀 📚 💻'
-        assert '🚀' in retrieved.title
+        assert retrieved.title == "Document with ñáéíóú 🚀 📚 💻"
+        assert "🚀" in retrieved.title
 
     @pytest.mark.asyncio
     async def test_repository_null_empty_values(self):
@@ -927,17 +904,17 @@ class TestRepositoryEdgeCases:
 
         # Create document with empty/None values where allowed
         doc = Document(
-            id='empty-doc',
-            title='Empty Document',
-            content='',  # Empty content (might be allowed)
-            repository_id='empty-repo',
-            author=''  # Empty author
+            id="empty-doc",
+            title="Empty Document",
+            content="",  # Empty content (might be allowed)
+            repository_id="empty-repo",
+            author="",  # Empty author
         )
 
         await repo.save(doc)
 
         # Verify it was saved
-        retrieved = await repo.get_by_id('empty-doc')
+        retrieved = await repo.get_by_id("empty-doc")
         assert retrieved is not None
-        assert retrieved.content == ''
-        assert retrieved.author == ''
+        assert retrieved.content == ""
+        assert retrieved.author == ""

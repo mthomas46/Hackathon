@@ -1,11 +1,11 @@
 """Distributed Trace Value Object"""
 
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from .trace_status import TraceStatus
 from .trace_span import TraceSpan
+from .trace_status import TraceStatus
 
 
 class DistributedTrace:
@@ -18,7 +18,7 @@ class DistributedTrace:
         root_operation: str = "",
         status: TraceStatus = TraceStatus.ACTIVE,
         spans: Optional[List[TraceSpan]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self._trace_id = trace_id or str(uuid4())
         self._root_service = root_service.strip()
@@ -132,7 +132,7 @@ class DistributedTrace:
             "metadata": self._metadata,
             "created_at": self._created_at.isoformat(),
             "service_count": self.service_count,
-            "span_count": self.span_count
+            "span_count": self.span_count,
         }
 
         if self._completed_at:

@@ -4,10 +4,11 @@ Following domain-driven design principles with generic repository implementation
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any, TypeVar, Generic
+from typing import Any, Dict, Generic, List, Optional, TypeVar
+
 from ..core.entities import BaseEntity
 
-T = TypeVar('T', bound=BaseEntity)
+T = TypeVar("T", bound=BaseEntity)
 
 
 class BaseRepository(ABC, Generic[T]):

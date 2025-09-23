@@ -4,11 +4,12 @@ This module provides table components for displaying audit trails,
 compliance logs, and security event tracking.
 """
 
-import streamlit as st
-from typing import Dict, Any, Optional, List, Callable
-import pandas as pd
 from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional
+
 import numpy as np
+import pandas as pd
+import streamlit as st
 
 
 def render_audit_table(

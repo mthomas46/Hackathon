@@ -1,13 +1,13 @@
 """Application Notification Service - Event-driven notifications and alerts."""
 
 import asyncio
-import smtplib
 import json
-from typing import Dict, Any, Optional, List
+import smtplib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Any, Dict, List, Optional
 
 from .application_service import ApplicationService, ServiceContext
 
@@ -15,6 +15,7 @@ from .application_service import ApplicationService, ServiceContext
 @dataclass
 class NotificationMessage:
     """Notification message structure."""
+
     recipient: str
     subject: str
     body: str
@@ -33,10 +34,10 @@ class NotificationMessage:
         if not self.body:
             raise ValueError("Body is required")
 
-        if self.message_type not in ['info', 'warning', 'error', 'critical']:
+        if self.message_type not in ["info", "warning", "error", "critical"]:
             raise ValueError(f"Invalid message type: {self.message_type}")
 
-        if self.priority not in ['low', 'normal', 'high', 'urgent']:
+        if self.priority not in ["low", "normal", "high", "urgent"]:
             raise ValueError(f"Invalid priority: {self.priority}")
 
 
@@ -69,7 +70,7 @@ class EmailNotificationChannel(NotificationChannel):
         smtp_username: Optional[str] = None,
         smtp_password: Optional[str] = None,
         use_tls: bool = True,
-        from_address: str = "noreply@analysis-service.com"
+        from_address: str = "noreply@analysis-service.com",
     ):
         """Initialize email notification channel."""
         self.smtp_server = smtp_server
@@ -92,25 +93,18 @@ class EmailNotificationChannel(NotificationChannel):
         try:
             # Create message
             msg = MIMEMultipart()
-            msg['From'] = self.from_address
-            msg['To'] = message.recipient
-            msg['Subject'] = message.subject
+            msg["From"] = self.from_address
+            msg["To"] = message.recipient
+            msg["Subject"] = message.subject
 
             # Add body
-            body_part = MIMEText(message.body, 'plain')
+            body_part = MIMEText(message.body, "plain")
             msg.attach(body_part)
 
             # Add metadata as JSON attachment if present
             if message.metadata:
-                metadata_part = MIMEText(
-                    json.dumps(message.metadata, indent=2),
-                    'json'
-                )
-                metadata_part.add_header(
-                    'Content-Disposition',
-                    'attachment',
-                    filename='metadata.json'
-                )
+                metadata_part = MIMEText(json.dumps(message.metadata, indent=2), "json")
+                metadata_part.add_header("Content-Disposition", "attachment", filename="metadata.json")
                 msg.attach(metadata_part)
 
             # Send email
@@ -154,20 +148,18 @@ class WebhookNotificationChannel(NotificationChannel):
             import aiohttp
 
             payload = {
-                'recipient': message.recipient,
-                'subject': message.subject,
-                'body': message.body,
-                'type': message.message_type,
-                'priority': message.priority,
-                'metadata': message.metadata or {},
-                'timestamp': asyncio.get_event_loop().time()
+                "recipient": message.recipient,
+                "subject": message.subject,
+                "body": message.body,
+                "type": message.message_type,
+                "priority": message.priority,
+                "metadata": message.metadata or {},
+                "timestamp": asyncio.get_event_loop().time(),
             }
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    self.webhook_url,
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds)
+                    self.webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=self.timeout_seconds)
                 ) as response:
                     return response.status == 200
 
@@ -199,25 +191,23 @@ class SlackNotificationChannel(NotificationChannel):
 
             # Format message for Slack
             slack_message = {
-                'channel': self.channel,
-                'text': f"*{message.subject}*\n\n{message.body}",
-                'attachments': []
+                "channel": self.channel,
+                "text": f"*{message.subject}*\n\n{message.body}",
+                "attachments": [],
             }
 
             # Add metadata as attachment if present
             if message.metadata:
                 attachment = {
-                    'title': 'Additional Details',
-                    'text': json.dumps(message.metadata, indent=2),
-                    'color': self._get_color_for_priority(message.priority)
+                    "title": "Additional Details",
+                    "text": json.dumps(message.metadata, indent=2),
+                    "color": self._get_color_for_priority(message.priority),
                 }
-                slack_message['attachments'].append(attachment)
+                slack_message["attachments"].append(attachment)
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    self.webhook_url,
-                    json=slack_message,
-                    timeout=aiohttp.ClientTimeout(total=10)
+                    self.webhook_url, json=slack_message, timeout=aiohttp.ClientTimeout(total=10)
                 ) as response:
                     return response.status == 200
 
@@ -227,13 +217,8 @@ class SlackNotificationChannel(NotificationChannel):
 
     def _get_color_for_priority(self, priority: str) -> str:
         """Get color for priority level."""
-        color_map = {
-            'low': 'good',
-            'normal': '#439FE0',
-            'high': 'warning',
-            'urgent': 'danger'
-        }
-        return color_map.get(priority, '#439FE0')
+        color_map = {"low": "good", "normal": "#439FE0", "high": "warning", "urgent": "danger"}
+        return color_map.get(priority, "#439FE0")
 
 
 class ConsoleNotificationChannel(NotificationChannel):
@@ -289,25 +274,21 @@ class ApplicationNotifier:
         event_type: str,
         channels: List[str],
         conditions: Optional[Dict[str, Any]] = None,
-        template: Optional[str] = None
+        template: Optional[str] = None,
     ) -> None:
         """Add notification rule."""
         self.notification_rules[rule_name] = {
-            'event_type': event_type,
-            'channels': channels,
-            'conditions': conditions or {},
-            'template': template
+            "event_type": event_type,
+            "channels": channels,
+            "conditions": conditions or {},
+            "template": template,
         }
 
     def get_available_channels(self) -> List[str]:
         """Get list of available channels."""
         return [name for name, channel in self.channels.items() if channel.is_available()]
 
-    async def send_notification(
-        self,
-        channels: List[str],
-        message: NotificationMessage
-    ) -> Dict[str, bool]:
+    async def send_notification(self, channels: List[str], message: NotificationMessage) -> Dict[str, bool]:
         """Send notification through specified channels."""
         results = {}
 
@@ -321,11 +302,7 @@ class ApplicationNotifier:
 
         return results
 
-    async def send_notification_by_rule(
-        self,
-        rule_name: str,
-        event_data: Dict[str, Any]
-    ) -> Dict[str, bool]:
+    async def send_notification_by_rule(self, rule_name: str, event_data: Dict[str, Any]) -> Dict[str, bool]:
         """Send notification based on rule."""
         if rule_name not in self.notification_rules:
             return {}
@@ -333,14 +310,14 @@ class ApplicationNotifier:
         rule = self.notification_rules[rule_name]
 
         # Check conditions
-        if not self._check_conditions(rule['conditions'], event_data):
+        if not self._check_conditions(rule["conditions"], event_data):
             return {}
 
         # Create message
         message = self._create_message_from_rule(rule, event_data)
 
         # Send notification
-        return await self.send_notification(rule['channels'], message)
+        return await self.send_notification(rule["channels"], message)
 
     def _check_conditions(self, conditions: Dict[str, Any], event_data: Dict[str, Any]) -> bool:
         """Check if conditions are met."""
@@ -349,11 +326,11 @@ class ApplicationNotifier:
 
             if isinstance(expected_value, dict):
                 # Complex condition
-                if '$gte' in expected_value and actual_value < expected_value['$gte']:
+                if "$gte" in expected_value and actual_value < expected_value["$gte"]:
                     return False
-                if '$lte' in expected_value and actual_value > expected_value['$lte']:
+                if "$lte" in expected_value and actual_value > expected_value["$lte"]:
                     return False
-                if '$eq' in expected_value and actual_value != expected_value['$eq']:
+                if "$eq" in expected_value and actual_value != expected_value["$eq"]:
                     return False
             else:
                 # Simple equality
@@ -364,11 +341,11 @@ class ApplicationNotifier:
 
     def _create_message_from_rule(self, rule: Dict[str, Any], event_data: Dict[str, Any]) -> NotificationMessage:
         """Create notification message from rule."""
-        event_type = rule['event_type']
+        event_type = rule["event_type"]
 
         # Default template if none provided
-        if rule.get('template'):
-            template = rule['template']
+        if rule.get("template"):
+            template = rule["template"]
         else:
             template = f"Event: {event_type}\n\nDetails: {{event_data}}"
 
@@ -377,21 +354,17 @@ class ApplicationNotifier:
         body = template.format(event_data=json.dumps(event_data, indent=2))
 
         # Determine recipient based on event data
-        recipient = event_data.get('recipient', 'admin@company.com')
+        recipient = event_data.get("recipient", "admin@company.com")
 
         # Determine message type based on event
-        message_type = 'info'
-        if 'error' in event_data or 'failed' in event_type.lower():
-            message_type = 'error'
-        elif 'warning' in event_data:
-            message_type = 'warning'
+        message_type = "info"
+        if "error" in event_data or "failed" in event_type.lower():
+            message_type = "error"
+        elif "warning" in event_data:
+            message_type = "warning"
 
         return NotificationMessage(
-            recipient=recipient,
-            subject=subject,
-            body=body,
-            message_type=message_type,
-            metadata=event_data
+            recipient=recipient, subject=subject, body=body, message_type=message_type, metadata=event_data
         )
 
 
@@ -410,7 +383,7 @@ class NotificationService(ApplicationService):
     def _setup_default_channels(self) -> None:
         """Setup default notification channels."""
         # Console channel for development
-        self.notifier.add_channel('console', ConsoleNotificationChannel())
+        self.notifier.add_channel("console", ConsoleNotificationChannel())
 
         # Add other channels based on configuration
         # This would be expanded based on actual configuration
@@ -419,26 +392,20 @@ class NotificationService(ApplicationService):
         """Setup default notification rules."""
         # Analysis failure notifications
         self.notifier.add_notification_rule(
-            'analysis_failed',
-            'analysis_failed',
-            ['console'],  # Would be ['email', 'slack'] in production
-            {'severity': 'high'}
+            "analysis_failed",
+            "analysis_failed",
+            ["console"],  # Would be ['email', 'slack'] in production
+            {"severity": "high"},
         )
 
         # System health alerts
         self.notifier.add_notification_rule(
-            'system_critical',
-            'system_health_check',
-            ['console'],
-            {'status': 'critical'}
+            "system_critical", "system_health_check", ["console"], {"status": "critical"}
         )
 
         # High-priority findings
         self.notifier.add_notification_rule(
-            'high_priority_finding',
-            'finding_created',
-            ['console'],
-            {'severity': 'critical'}
+            "high_priority_finding", "finding_created", ["console"], {"severity": "critical"}
         )
 
     async def send_notification(
@@ -449,7 +416,7 @@ class NotificationService(ApplicationService):
         body: str,
         message_type: str = "info",
         priority: str = "normal",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, bool]:
         """Send notification."""
         async with self.operation_context("send_notification"):
@@ -459,7 +426,7 @@ class NotificationService(ApplicationService):
                 body=body,
                 message_type=message_type,
                 priority=priority,
-                metadata=metadata
+                metadata=metadata,
             )
 
             results = await self.notifier.send_notification(channels, message)
@@ -476,23 +443,18 @@ class NotificationService(ApplicationService):
 
             return results
 
-    async def add_notification_channel(
-        self,
-        name: str,
-        channel_type: str,
-        config: Dict[str, Any]
-    ) -> None:
+    async def add_notification_channel(self, name: str, channel_type: str, config: Dict[str, Any]) -> None:
         """Add notification channel."""
         async with self.operation_context("add_notification_channel"):
             channel = None
 
-            if channel_type == 'email':
+            if channel_type == "email":
                 channel = EmailNotificationChannel(**config)
-            elif channel_type == 'webhook':
+            elif channel_type == "webhook":
                 channel = WebhookNotificationChannel(**config)
-            elif channel_type == 'slack':
+            elif channel_type == "slack":
                 channel = SlackNotificationChannel(**config)
-            elif channel_type == 'console':
+            elif channel_type == "console":
                 channel = ConsoleNotificationChannel()
             else:
                 raise ValueError(f"Unsupported channel type: {channel_type}")
@@ -506,25 +468,20 @@ class NotificationService(ApplicationService):
         event_type: str,
         channels: List[str],
         conditions: Optional[Dict[str, Any]] = None,
-        template: Optional[str] = None
+        template: Optional[str] = None,
     ) -> None:
         """Add notification rule."""
         async with self.operation_context("add_notification_rule"):
-            self.notifier.add_notification_rule(
-                rule_name, event_type, channels, conditions, template
-            )
+            self.notifier.add_notification_rule(rule_name, event_type, channels, conditions, template)
             self.logger.info(f"Added notification rule: {rule_name}")
 
-    async def process_event_notification(
-        self,
-        event_type: str,
-        event_data: Dict[str, Any]
-    ) -> None:
+    async def process_event_notification(self, event_type: str, event_data: Dict[str, Any]) -> None:
         """Process event for notifications."""
         # Find matching rules
         matching_rules = [
-            rule_name for rule_name, rule in self.notifier.notification_rules.items()
-            if rule['event_type'] == event_type
+            rule_name
+            for rule_name, rule in self.notifier.notification_rules.items()
+            if rule["event_type"] == event_type
         ]
 
         if not matching_rules:
@@ -545,9 +502,9 @@ class NotificationService(ApplicationService):
     async def get_notification_status(self) -> Dict[str, Any]:
         """Get notification service status."""
         return {
-            'channels': self.notifier.get_available_channels(),
-            'rules_count': len(self.notifier.notification_rules),
-            'rules': list(self.notifier.notification_rules.keys())
+            "channels": self.notifier.get_available_channels(),
+            "rules_count": len(self.notifier.notification_rules),
+            "rules": list(self.notifier.notification_rules.keys()),
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -557,14 +514,14 @@ class NotificationService(ApplicationService):
         # Add notification-specific health info
         try:
             status = await self.get_notification_status()
-            health['notification_service'] = {
-                'available_channels': status['channels'],
-                'notification_rules': status['rules_count'],
-                'rules': status['rules']
+            health["notification_service"] = {
+                "available_channels": status["channels"],
+                "notification_rules": status["rules_count"],
+                "rules": status["rules"],
             }
 
         except Exception as e:
-            health['notification_service'] = {'error': str(e)}
+            health["notification_service"] = {"error": str(e)}
 
         return health
 

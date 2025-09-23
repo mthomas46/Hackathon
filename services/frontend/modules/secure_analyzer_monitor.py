@@ -3,11 +3,13 @@
 Provides visualization and monitoring capabilities for secure analyzer
 service content detection, policy enforcement, and secure summarization.
 """
-from typing import Dict, Any, List, Optional
+
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_secure_analyzer_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_secure_analyzer_url
 
 
 class SecureAnalyzerMonitor:
@@ -44,7 +46,7 @@ class SecureAnalyzerMonitor:
                 "recent_detections": self._detections[-10:] if self._detections else [],  # Last 10 detections
                 "recent_suggestions": self._suggestions[-10:] if self._suggestions else [],  # Last 10 suggestions
                 "recent_summaries": self._summaries[-10:] if self._summaries else [],  # Last 10 summaries
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -60,20 +62,18 @@ class SecureAnalyzerMonitor:
                 "recent_detections": [],
                 "recent_suggestions": [],
                 "recent_summaries": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
-    async def detect_content(self, content: str, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None) -> Dict[str, Any]:
+    async def detect_content(
+        self, content: str, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Detect sensitive content in provided text."""
         try:
             clients = get_frontend_clients()
             secure_url = get_secure_analyzer_url()
 
-            payload = {
-                "content": content,
-                "keywords": keywords or [],
-                "keyword_document": keyword_document
-            }
+            payload = {"content": content, "keywords": keywords or [], "keyword_document": keyword_document}
 
             response = await clients.post_json(f"{secure_url}/detect", payload)
 
@@ -87,7 +87,7 @@ class SecureAnalyzerMonitor:
                 "sensitive": response.get("sensitive", False),
                 "matches": response.get("matches", []),
                 "topics": response.get("topics", []),
-                "response": response
+                "response": response,
             }
 
             self._detections.insert(0, detection_result)  # Add to front
@@ -101,27 +101,21 @@ class SecureAnalyzerMonitor:
                 "sensitive": detection_result["sensitive"],
                 "matches": detection_result["matches"],
                 "topics": detection_result["topics"],
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
-    async def suggest_models(self, content: str, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None) -> Dict[str, Any]:
+    async def suggest_models(
+        self, content: str, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get model suggestions based on content sensitivity."""
         try:
             clients = get_frontend_clients()
             secure_url = get_secure_analyzer_url()
 
-            payload = {
-                "content": content,
-                "keywords": keywords or [],
-                "keyword_document": keyword_document
-            }
+            payload = {"content": content, "keywords": keywords or [], "keyword_document": keyword_document}
 
             response = await clients.post_json(f"{secure_url}/suggest", payload)
 
@@ -135,7 +129,7 @@ class SecureAnalyzerMonitor:
                 "sensitive": response.get("sensitive", False),
                 "allowed_models": response.get("allowed_models", []),
                 "suggestion": response.get("suggestion", ""),
-                "response": response
+                "response": response,
             }
 
             self._suggestions.insert(0, suggestion_result)  # Add to front
@@ -149,17 +143,21 @@ class SecureAnalyzerMonitor:
                 "sensitive": suggestion_result["sensitive"],
                 "allowed_models": suggestion_result["allowed_models"],
                 "suggestion": suggestion_result["suggestion"],
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
-    async def secure_summarize(self, content: str, providers: Optional[List[Dict[str, Any]]] = None, override_policy: bool = False, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None, prompt: Optional[str] = None) -> Dict[str, Any]:
+    async def secure_summarize(
+        self,
+        content: str,
+        providers: Optional[List[Dict[str, Any]]] = None,
+        override_policy: bool = False,
+        keywords: Optional[List[str]] = None,
+        keyword_document: Optional[str] = None,
+        prompt: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Generate secure summary with policy enforcement."""
         try:
             clients = get_frontend_clients()
@@ -171,7 +169,7 @@ class SecureAnalyzerMonitor:
                 "override_policy": override_policy,
                 "keywords": keywords or [],
                 "keyword_document": keyword_document,
-                "prompt": prompt
+                "prompt": prompt,
             }
 
             response = await clients.post_json(f"{secure_url}/summarize", payload)
@@ -190,7 +188,7 @@ class SecureAnalyzerMonitor:
                 "policy_enforced": response.get("policy_enforced", False),
                 "topics_detected": response.get("topics_detected", []),
                 "summary_length": len(response.get("summary", "")),
-                "response": response
+                "response": response,
             }
 
             self._summaries.insert(0, summary_result)  # Add to front
@@ -206,15 +204,11 @@ class SecureAnalyzerMonitor:
                 "confidence": summary_result["confidence"],
                 "policy_enforced": summary_result["policy_enforced"],
                 "topics_detected": summary_result["topics_detected"],
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
     def _calculate_analysis_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached analysis results."""
@@ -224,7 +218,7 @@ class SecureAnalyzerMonitor:
                 "sensitive_content_detected": 0,
                 "detection_accuracy": 0,
                 "total_suggestions": 0,
-                "total_summaries": 0
+                "total_summaries": 0,
             }
 
         total_detections = len(self._detections)
@@ -241,7 +235,7 @@ class SecureAnalyzerMonitor:
             "sensitive_content_detected": sensitive_detections,
             "detection_accuracy": round(detection_accuracy, 1),
             "total_suggestions": total_suggestions,
-            "total_summaries": total_summaries
+            "total_summaries": total_summaries,
         }
 
     def get_detection_history(self, limit: int = 20) -> List[Dict[str, Any]]:

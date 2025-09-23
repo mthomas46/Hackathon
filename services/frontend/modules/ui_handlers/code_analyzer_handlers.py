@@ -2,15 +2,14 @@
 
 Handles code analyzer service visualization.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
+
+from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
 
 
 class CodeAnalyzerUIHandlers:
@@ -843,4 +842,6 @@ class CodeAnalyzerUIHandlers:
 """
             return create_html_response(html, "Code Analyzer Dashboard")
         except Exception as e:
-            return handle_frontend_error("render code analyzer dashboard", e, **build_frontend_context("render_code_analyzer_dashboard"))
+            return handle_frontend_error(
+                "render code analyzer dashboard", e, **build_frontend_context("render_code_analyzer_dashboard")
+            )

@@ -1,13 +1,13 @@
 """Ingestion Orchestrator Service Domain Service"""
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import asyncio
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.ingestion_request import IngestionRequest
 from ..value_objects.ingestion_result import IngestionResult
-from ..value_objects.ingestion_status import IngestionStatus
 from ..value_objects.ingestion_source_type import IngestionSourceType
+from ..value_objects.ingestion_status import IngestionStatus
 
 
 class IngestionOrchestratorService:
@@ -27,7 +27,7 @@ class IngestionOrchestratorService:
         scope: Optional[Dict[str, Any]] = None,
         priority: int = 5,
         requested_by: Optional[str] = None,
-        tags: Optional[List[str]] = None
+        tags: Optional[List[str]] = None,
     ) -> IngestionRequest:
         """
         Create a new ingestion request.
@@ -53,7 +53,7 @@ class IngestionOrchestratorService:
             scope=scope,
             priority=priority,
             requested_by=requested_by,
-            tags=tags
+            tags=tags,
         )
 
     async def start_ingestion(self, request: IngestionRequest) -> IngestionResult:
@@ -67,10 +67,7 @@ class IngestionOrchestratorService:
             IngestionResult: The initial ingestion result
         """
         # Create initial result
-        result = IngestionResult(
-            request_id=request.request_id,
-            status=IngestionStatus.QUEUED
-        )
+        result = IngestionResult(request_id=request.request_id, status=IngestionStatus.QUEUED)
 
         # Store as active ingestion
         self._active_ingestions[result.ingestion_id] = result
@@ -171,10 +168,7 @@ class IngestionOrchestratorService:
         Returns:
             IngestionResult or None: The ingestion result if found
         """
-        return (
-            self._active_ingestions.get(ingestion_id) or
-            self._completed_ingestions.get(ingestion_id)
-        )
+        return self._active_ingestions.get(ingestion_id) or self._completed_ingestions.get(ingestion_id)
 
     def get_request_ingestions(self, request_id: str) -> List[IngestionResult]:
         """
@@ -235,10 +229,7 @@ class IngestionOrchestratorService:
         total_successful = sum(r.successful_items for r in self._completed_ingestions.values())
         total_failed = sum(r.failed_items for r in self._completed_ingestions.values())
 
-        successful_ingestions = len([
-            r for r in self._completed_ingestions.values()
-            if r.is_successful
-        ])
+        successful_ingestions = len([r for r in self._completed_ingestions.values() if r.is_successful])
 
         return {
             "active_ingestions": active_count,
@@ -249,7 +240,7 @@ class IngestionOrchestratorService:
             "success_rate": successful_ingestions / completed_count if completed_count > 0 else 0,
             "total_items_processed": total_successful + total_failed,
             "total_successful_items": total_successful,
-            "total_failed_items": total_failed
+            "total_failed_items": total_failed,
         }
 
     def cleanup_old_ingestions(self, max_age_days: int = 30) -> int:

@@ -1,18 +1,19 @@
 """Metrics utilities for CLI operations."""
 
-from typing import Dict, Any
-from services.shared.monitoring.logging import fire_and_forget
 import time
+from typing import Any, Dict
+
+from services.shared.monitoring.logging import fire_and_forget
 
 
 def log_cli_operation(operation: str, success: bool = True, duration: float = 0.0, **context):
     """Log CLI operation metrics."""
     log_data = {
-        'operation': operation,
-        'success': success,
-        'duration_ms': duration * 1000,
-        'service': 'cli',
-        'timestamp': time.time()
+        "operation": operation,
+        "success": success,
+        "duration_ms": duration * 1000,
+        "service": "cli",
+        "timestamp": time.time(),
     }
     log_data.update(context)
 
@@ -21,12 +22,7 @@ def log_cli_operation(operation: str, success: bool = True, duration: float = 0.
 
 def log_cli_command(command: str, args: Dict[str, Any] = None, **context):
     """Log CLI command execution."""
-    log_data = {
-        'command': command,
-        'args': args or {},
-        'service': 'cli',
-        'timestamp': time.time()
-    }
+    log_data = {"command": command, "args": args or {}, "service": "cli", "timestamp": time.time()}
     log_data.update(context)
 
     fire_and_forget("info", f"CLI command: {command}", "cli", log_data)
@@ -34,6 +30,7 @@ def log_cli_command(command: str, args: Dict[str, Any] = None, **context):
 
 def create_operation_timer():
     """Create a context manager for timing operations."""
+
     class OperationTimer:
         def __init__(self):
             self.start_time = None
@@ -54,15 +51,15 @@ def create_operation_timer():
     return OperationTimer()
 
 
-def track_api_call(endpoint: str, method: str = 'GET', success: bool = True, duration: float = 0.0, **context):
+def track_api_call(endpoint: str, method: str = "GET", success: bool = True, duration: float = 0.0, **context):
     """Track API call metrics."""
     log_data = {
-        'api_endpoint': endpoint,
-        'method': method,
-        'success': success,
-        'duration_ms': duration * 1000,
-        'service': 'cli',
-        'timestamp': time.time()
+        "api_endpoint": endpoint,
+        "method": method,
+        "success": success,
+        "duration_ms": duration * 1000,
+        "service": "cli",
+        "timestamp": time.time(),
     }
     log_data.update(context)
 
@@ -72,11 +69,11 @@ def track_api_call(endpoint: str, method: str = 'GET', success: bool = True, dur
 def track_cache_operation(operation: str, cache_key: str, hit: bool = True, **context):
     """Track cache operation metrics."""
     log_data = {
-        'cache_operation': operation,
-        'cache_key': cache_key,
-        'hit': hit,
-        'service': 'cli',
-        'timestamp': time.time()
+        "cache_operation": operation,
+        "cache_key": cache_key,
+        "hit": hit,
+        "service": "cli",
+        "timestamp": time.time(),
     }
     log_data.update(context)
 
@@ -87,10 +84,10 @@ def create_metrics_summary() -> Dict[str, Any]:
     """Create a summary of CLI metrics (placeholder for future implementation)."""
     # This would typically aggregate metrics from a metrics store
     return {
-        'total_operations': 0,
-        'successful_operations': 0,
-        'failed_operations': 0,
-        'average_duration_ms': 0.0,
-        'popular_commands': [],
-        'error_rate': 0.0
+        "total_operations": 0,
+        "successful_operations": 0,
+        "failed_operations": 0,
+        "average_duration_ms": 0.0,
+        "popular_commands": [],
+        "error_rate": 0.0,
     }

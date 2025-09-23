@@ -4,21 +4,15 @@ This module contains integration tests for mock-data-generator service workflows
 testing end-to-end content generation, validation, and storage integration.
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, Mock, patch
 
-from simulation.infrastructure.clients.ecosystem_clients import (
-    MockDataGeneratorClient, get_mock_data_generator_client
-)
-from simulation.infrastructure.content.content_generation_pipeline import (
-    ContentGenerationPipeline
-)
-from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, DocumentType, DocumentMetadata
-)
+import pytest
+from simulation.domain.value_objects import ComplexityLevel, DocumentMetadata, DocumentType, ProjectType
+from simulation.infrastructure.clients.ecosystem_clients import MockDataGeneratorClient, get_mock_data_generator_client
+from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
 
 
 class TestMockDataGeneratorClientIntegration:
@@ -27,9 +21,10 @@ class TestMockDataGeneratorClientIntegration:
     @pytest.fixture
     async def mock_client(self):
         """Create Mock Data Generator client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="mock_data_generator", endpoint=Mock(base_url="http://mock-service:5065", timeout_seconds=30))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="mock_data_generator", endpoint=Mock(base_url="http://mock-service:5065", timeout_seconds=30))],
+        ):
             client = MockDataGeneratorClient()
             yield client
 
@@ -37,16 +32,16 @@ class TestMockDataGeneratorClientIntegration:
     async def test_mock_client_initialization(self, mock_client):
         """Test Mock Data Generator client initialization."""
         assert mock_client is not None
-        assert hasattr(mock_client, 'generate_project_documents')
-        assert hasattr(mock_client, 'generate_timeline_events')
-        assert hasattr(mock_client, 'generate_team_activities')
-        assert hasattr(mock_client, 'generate_phase_documents')
+        assert hasattr(mock_client, "generate_project_documents")
+        assert hasattr(mock_client, "generate_timeline_events")
+        assert hasattr(mock_client, "generate_team_activities")
+        assert hasattr(mock_client, "generate_phase_documents")
 
     @pytest.mark.asyncio
     async def test_generate_project_documents_workflow(self, mock_client):
         """Test end-to-end project documents generation workflow."""
         # Mock the HTTP response
-        with patch.object(mock_client, '_client') as mock_http_client:
+        with patch.object(mock_client, "_client") as mock_http_client:
             mock_response = Mock()
             mock_response.json.return_value = {
                 "documents": [
@@ -54,26 +49,16 @@ class TestMockDataGeneratorClientIntegration:
                         "type": "confluence_page",
                         "title": "Project Requirements",
                         "content": "# Project Requirements\n\n## Overview\nDetailed requirements...",
-                        "metadata": {
-                            "author": "product@example.com",
-                            "quality_score": 0.9
-                        }
+                        "metadata": {"author": "product@example.com", "quality_score": 0.9},
                     },
                     {
                         "type": "jira_ticket",
                         "title": "Setup CI/CD Pipeline",
                         "content": "Implement automated deployment pipeline...",
-                        "metadata": {
-                            "assignee": "dev@example.com",
-                            "priority": "high"
-                        }
-                    }
+                        "metadata": {"assignee": "dev@example.com", "priority": "high"},
+                    },
                 ],
-                "generation_stats": {
-                    "total_documents": 2,
-                    "generation_time": 1.5,
-                    "quality_score": 0.85
-                }
+                "generation_stats": {"total_documents": 2, "generation_time": 1.5, "quality_score": 0.85},
             }
             mock_http_client.post.return_value = mock_response
 
@@ -82,7 +67,7 @@ class TestMockDataGeneratorClientIntegration:
                 "project_type": "web_application",
                 "complexity": "medium",
                 "team_size": 5,
-                "duration_weeks": 8
+                "duration_weeks": 8,
             }
 
             result = await mock_client.generate_project_documents(request_data)
@@ -105,7 +90,7 @@ class TestMockDataGeneratorClientIntegration:
     @pytest.mark.asyncio
     async def test_generate_timeline_events_integration(self, mock_client):
         """Test timeline events generation integration."""
-        with patch.object(mock_client, '_client') as mock_http_client:
+        with patch.object(mock_client, "_client") as mock_http_client:
             mock_response = Mock()
             mock_response.json.return_value = {
                 "events": [
@@ -113,27 +98,27 @@ class TestMockDataGeneratorClientIntegration:
                         "event_type": "milestone",
                         "title": "Sprint 1 Complete",
                         "date": (datetime.now() + timedelta(days=14)).isoformat(),
-                        "description": "Completed first sprint with all planned features"
+                        "description": "Completed first sprint with all planned features",
                     },
                     {
                         "event_type": "phase_start",
                         "title": "Development Phase Begins",
                         "date": (datetime.now() + timedelta(days=21)).isoformat(),
-                        "description": "Starting development of core features"
-                    }
+                        "description": "Starting development of core features",
+                    },
                 ],
                 "timeline_stats": {
                     "total_events": 2,
                     "date_range": "4 weeks",
-                    "event_types": ["milestone", "phase_start"]
-                }
+                    "event_types": ["milestone", "phase_start"],
+                },
             }
             mock_http_client.post.return_value = mock_response
 
             request_data = {
                 "project_id": "test-123",
                 "duration_weeks": 8,
-                "milestones": ["Sprint 1", "Development Start", "Beta Release"]
+                "milestones": ["Sprint 1", "Development Start", "Beta Release"],
             }
 
             result = await mock_client.generate_timeline_events(request_data)
@@ -151,7 +136,7 @@ class TestMockDataGeneratorClientIntegration:
     @pytest.mark.asyncio
     async def test_generate_team_activities_integration(self, mock_client):
         """Test team activities generation integration."""
-        with patch.object(mock_client, '_client') as mock_http_client:
+        with patch.object(mock_client, "_client") as mock_http_client:
             mock_response = Mock()
             mock_response.json.return_value = {
                 "activities": [
@@ -160,29 +145,29 @@ class TestMockDataGeneratorClientIntegration:
                         "activity_type": "code_commit",
                         "description": "Committed authentication module",
                         "timestamp": datetime.now().isoformat(),
-                        "metadata": {"lines_changed": 150}
+                        "metadata": {"lines_changed": 150},
                     },
                     {
                         "member_id": "qa_001",
                         "activity_type": "test_execution",
                         "description": "Executed regression test suite",
                         "timestamp": (datetime.now() + timedelta(hours=2)).isoformat(),
-                        "metadata": {"tests_passed": 45, "tests_failed": 2}
-                    }
+                        "metadata": {"tests_passed": 45, "tests_failed": 2},
+                    },
                 ],
                 "activity_stats": {
                     "total_activities": 2,
                     "unique_members": 2,
                     "activity_types": ["code_commit", "test_execution"],
-                    "time_span": "2 hours"
-                }
+                    "time_span": "2 hours",
+                },
             }
             mock_http_client.post.return_value = mock_response
 
             request_data = {
                 "team_members": ["dev_001", "qa_001", "pm_001"],
                 "duration_hours": 8,
-                "activity_types": ["code_commit", "test_execution", "meeting"]
+                "activity_types": ["code_commit", "test_execution", "meeting"],
             }
 
             result = await mock_client.generate_team_activities(request_data)
@@ -200,7 +185,7 @@ class TestMockDataGeneratorClientIntegration:
     @pytest.mark.asyncio
     async def test_generate_phase_documents_integration(self, mock_client):
         """Test phase-specific documents generation integration."""
-        with patch.object(mock_client, '_client') as mock_http_client:
+        with patch.object(mock_client, "_client") as mock_http_client:
             mock_response = Mock()
             mock_response.json.return_value = {
                 "phase_documents": [
@@ -211,9 +196,9 @@ class TestMockDataGeneratorClientIntegration:
                                 "type": "requirements_doc",
                                 "title": "Requirements Specification",
                                 "content": "# Requirements\n\n## Functional Requirements...",
-                                "word_count": 1200
+                                "word_count": 1200,
                             }
-                        ]
+                        ],
                     },
                     {
                         "phase": "development",
@@ -222,22 +207,18 @@ class TestMockDataGeneratorClientIntegration:
                                 "type": "design_doc",
                                 "title": "System Architecture",
                                 "content": "# Architecture\n\n## Overview...",
-                                "word_count": 800
+                                "word_count": 800,
                             },
                             {
                                 "type": "api_documentation",
                                 "title": "API Reference",
                                 "content": "# API Documentation\n\n## Endpoints...",
-                                "word_count": 600
-                            }
-                        ]
-                    }
+                                "word_count": 600,
+                            },
+                        ],
+                    },
                 ],
-                "phase_stats": {
-                    "total_phases": 2,
-                    "total_documents": 3,
-                    "avg_quality_score": 0.88
-                }
+                "phase_stats": {"total_phases": 2, "total_documents": 3, "avg_quality_score": 0.88},
             }
             mock_http_client.post.return_value = mock_response
 
@@ -246,8 +227,8 @@ class TestMockDataGeneratorClientIntegration:
                 "phase_requirements": {
                     "planning": ["requirements_doc"],
                     "development": ["design_doc", "api_documentation"],
-                    "testing": ["test_plan"]
-                }
+                    "testing": ["test_plan"],
+                },
             }
 
             result = await mock_client.generate_phase_documents(request_data)
@@ -264,7 +245,7 @@ class TestMockDataGeneratorClientIntegration:
     @pytest.mark.asyncio
     async def test_generate_ecosystem_scenario_integration(self, mock_client):
         """Test ecosystem scenario generation integration."""
-        with patch.object(mock_client, '_client') as mock_http_client:
+        with patch.object(mock_client, "_client") as mock_http_client:
             mock_response = Mock()
             mock_response.json.return_value = {
                 "scenario": {
@@ -274,32 +255,28 @@ class TestMockDataGeneratorClientIntegration:
                         {
                             "service": "user_service",
                             "documents": ["api_doc", "deployment_guide"],
-                            "complexity": "medium"
+                            "complexity": "medium",
                         },
                         {
                             "service": "payment_service",
                             "documents": ["security_audit", "compliance_report"],
-                            "complexity": "high"
-                        }
+                            "complexity": "high",
+                        },
                     ],
-                    "integration_points": [
-                        "user_authentication",
-                        "payment_processing",
-                        "order_management"
-                    ]
+                    "integration_points": ["user_authentication", "payment_processing", "order_management"],
                 },
                 "scenario_stats": {
                     "total_services": 2,
                     "total_documents": 4,
-                    "complexity_distribution": {"medium": 1, "high": 1}
-                }
+                    "complexity_distribution": {"medium": 1, "high": 1},
+                },
             }
             mock_http_client.post.return_value = mock_response
 
             request_data = {
                 "scenario_type": "ecommerce_platform",
                 "services": ["user_service", "payment_service", "order_service"],
-                "integration_requirements": ["authentication", "payment", "inventory"]
+                "integration_requirements": ["authentication", "payment", "inventory"],
             }
 
             result = await mock_client.generate_ecosystem_scenario(request_data)
@@ -320,9 +297,13 @@ class TestContentGenerationPipelineIntegration:
     @pytest.fixture
     async def pipeline(self):
         """Create Content Generation Pipeline for testing."""
-        with patch('simulation.infrastructure.content.content_generation_pipeline.get_mock_data_generator_client') as mock_get_client, \
-             patch('simulation.infrastructure.content.content_generation_pipeline.get_doc_store_client') as mock_get_doc_store, \
-             patch('simulation.infrastructure.content.content_generation_pipeline.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.content.content_generation_pipeline.get_mock_data_generator_client"
+        ) as mock_get_client, patch(
+            "simulation.infrastructure.content.content_generation_pipeline.get_doc_store_client"
+        ) as mock_get_doc_store, patch(
+            "simulation.infrastructure.content.content_generation_pipeline.get_analysis_service_client"
+        ) as mock_get_analysis:
 
             # Create mock clients
             mock_client = AsyncMock()
@@ -346,7 +327,7 @@ class TestContentGenerationPipelineIntegration:
                     "type": "confluence_page",
                     "title": "Test Document",
                     "content": "# Test Content",
-                    "metadata": {"quality_score": 0.9}
+                    "metadata": {"quality_score": 0.9},
                 }
             ]
         }
@@ -355,18 +336,13 @@ class TestContentGenerationPipelineIntegration:
         pipeline.analysis_client.analyze_documents.return_value = {
             "overall_quality": 0.9,
             "issues": [],
-            "recommendations": ["Good quality document"]
+            "recommendations": ["Good quality document"],
         }
 
         # Mock doc store response
         pipeline.doc_store_client.store_document.return_value = "doc_123"
 
-        phase_config = {
-            "phase": "planning",
-            "project_type": "web_application",
-            "complexity": "medium",
-            "team_size": 5
-        }
+        phase_config = {"phase": "planning", "project_type": "web_application", "complexity": "medium", "team_size": 5}
 
         result = await pipeline.execute_document_generation(phase_config)
 
@@ -388,7 +364,7 @@ class TestContentGenerationPipelineIntegration:
                     "type": "confluence_page",
                     "title": "Requirements Document",
                     "content": "# Requirements\n\n## Overview\nRequirements here...",
-                    "metadata": {"space": "Engineering", "quality_score": 0.85}
+                    "metadata": {"space": "Engineering", "quality_score": 0.85},
                 }
             ]
         }
@@ -396,16 +372,12 @@ class TestContentGenerationPipelineIntegration:
         pipeline.analysis_client.analyze_documents.return_value = {
             "overall_quality": 0.85,
             "issues": [],
-            "recommendations": ["Well-structured document"]
+            "recommendations": ["Well-structured document"],
         }
 
         pipeline.doc_store_client.store_document.return_value = "confluence_doc_123"
 
-        phase_config = {
-            "phase": "planning",
-            "document_types": ["confluence_page"],
-            "project_name": "Test Project"
-        }
+        phase_config = {"phase": "planning", "document_types": ["confluence_page"], "project_name": "Test Project"}
 
         documents = await pipeline.execute_document_generation(phase_config)
 
@@ -424,7 +396,7 @@ class TestContentGenerationPipelineIntegration:
                     "type": "jira_ticket",
                     "title": "Implement User Authentication",
                     "content": "As a user, I want to login...",
-                    "metadata": {"priority": "high", "assignee": "dev@example.com"}
+                    "metadata": {"priority": "high", "assignee": "dev@example.com"},
                 }
             ]
         }
@@ -432,16 +404,12 @@ class TestContentGenerationPipelineIntegration:
         pipeline.analysis_client.analyze_documents.return_value = {
             "overall_quality": 0.9,
             "issues": [],
-            "recommendations": ["Clear acceptance criteria"]
+            "recommendations": ["Clear acceptance criteria"],
         }
 
         pipeline.doc_store_client.store_document.return_value = "jira_ticket_123"
 
-        phase_config = {
-            "phase": "development",
-            "document_types": ["jira_ticket"],
-            "project_key": "PROJ"
-        }
+        phase_config = {"phase": "development", "document_types": ["jira_ticket"], "project_key": "PROJ"}
 
         documents = await pipeline.execute_document_generation(phase_config)
 
@@ -459,7 +427,7 @@ class TestContentGenerationPipelineIntegration:
                     "type": "github_pr",
                     "title": "feat: Add user authentication",
                     "content": "## Description\nImplements user login functionality...",
-                    "metadata": {"base_branch": "main", "head_branch": "feature/auth"}
+                    "metadata": {"base_branch": "main", "head_branch": "feature/auth"},
                 }
             ]
         }
@@ -467,16 +435,12 @@ class TestContentGenerationPipelineIntegration:
         pipeline.analysis_client.analyze_documents.return_value = {
             "overall_quality": 0.88,
             "issues": [],
-            "recommendations": ["Good PR description"]
+            "recommendations": ["Good PR description"],
         }
 
         pipeline.doc_store_client.store_document.return_value = "github_pr_123"
 
-        phase_config = {
-            "phase": "development",
-            "document_types": ["github_pr"],
-            "repository": "myorg/myproject"
-        }
+        phase_config = {"phase": "development", "document_types": ["github_pr"], "repository": "myorg/myproject"}
 
         documents = await pipeline.execute_document_generation(phase_config)
 
@@ -492,7 +456,9 @@ class TestContentValidationIntegration:
     @pytest.mark.asyncio
     async def test_content_quality_validation_integration(self):
         """Test content quality validation with analysis service."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -503,22 +469,19 @@ class TestContentValidationIntegration:
                         "id": "doc_1",
                         "quality_score": 0.85,
                         "issues": ["Minor formatting issue"],
-                        "recommendations": ["Use consistent heading styles"]
+                        "recommendations": ["Use consistent heading styles"],
                     }
                 ],
                 "overall_quality": 0.85,
-                "summary": "Good quality with minor issues"
+                "summary": "Good quality with minor issues",
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             documents = [
-                {
-                    "id": "doc_1",
-                    "content": "# Test Document\n\n## Section\nContent here...",
-                    "type": "confluence_page"
-                }
+                {"id": "doc_1", "content": "# Test Document\n\n## Section\nContent here...", "type": "confluence_page"}
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -530,7 +493,7 @@ class TestContentValidationIntegration:
     @pytest.mark.asyncio
     async def test_content_storage_validation_integration(self):
         """Test content storage validation with doc store."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client') as mock_get_doc_store:
+        with patch("simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client") as mock_get_doc_store:
             mock_doc_store_client = AsyncMock()
             mock_get_doc_store.return_value = mock_doc_store_client
 
@@ -538,12 +501,13 @@ class TestContentValidationIntegration:
             mock_doc_store_client.store_document.return_value = "stored_doc_123"
 
             from simulation.infrastructure.clients.ecosystem_clients import get_doc_store_client
+
             doc_store_client = get_doc_store_client()
 
             document_id = await doc_store_client.store_document(
                 title="Test Document",
                 content="# Test Content",
-                metadata={"quality_score": 0.9, "author": "test@example.com"}
+                metadata={"quality_score": 0.9, "author": "test@example.com"},
             )
 
             assert document_id == "stored_doc_123"
@@ -552,7 +516,7 @@ class TestContentValidationIntegration:
     @pytest.mark.asyncio
     async def test_content_retrieval_validation_integration(self):
         """Test content retrieval validation."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client') as mock_get_doc_store:
+        with patch("simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client") as mock_get_doc_store:
             mock_doc_store_client = AsyncMock()
             mock_get_doc_store.return_value = mock_doc_store_client
 
@@ -561,10 +525,11 @@ class TestContentValidationIntegration:
                 "id": "doc_123",
                 "title": "Retrieved Document",
                 "content": "# Retrieved Content",
-                "metadata": {"quality_score": 0.9}
+                "metadata": {"quality_score": 0.9},
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_doc_store_client
+
             doc_store_client = get_doc_store_client()
 
             document = await doc_store_client.get_document("doc_123")
@@ -580,9 +545,13 @@ class TestEndToEndContentGenerationWorkflow:
     @pytest.mark.asyncio
     async def test_complete_content_generation_workflow(self):
         """Test complete content generation workflow from request to storage."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client') as mock_get_mock_client, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client') as mock_get_doc_store:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
+        ) as mock_get_mock_client, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client"
+        ) as mock_get_doc_store:
 
             # Setup mock clients
             mock_client = AsyncMock()
@@ -600,17 +569,17 @@ class TestEndToEndContentGenerationWorkflow:
                         "type": "confluence_page",
                         "title": "Project Architecture",
                         "content": "# Architecture\n\n## Overview\nSystem architecture...",
-                        "metadata": {"quality_score": 0.9}
+                        "metadata": {"quality_score": 0.9},
                     }
                 ],
-                "generation_stats": {"total_documents": 1}
+                "generation_stats": {"total_documents": 1},
             }
 
             # Mock analysis response
             analysis_client.analyze_documents.return_value = {
                 "overall_quality": 0.9,
                 "issues": [],
-                "recommendations": ["Excellent document quality"]
+                "recommendations": ["Excellent document quality"],
             }
 
             # Mock storage response
@@ -618,13 +587,14 @@ class TestEndToEndContentGenerationWorkflow:
 
             # Execute the workflow
             from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+
             pipeline = ContentGenerationPipeline()
 
             phase_config = {
                 "phase": "design",
                 "project_type": "web_application",
                 "document_types": ["architecture_doc"],
-                "complexity": "high"
+                "complexity": "high",
             }
 
             generated_documents = await pipeline.execute_document_generation(phase_config)
@@ -644,7 +614,9 @@ class TestEndToEndContentGenerationWorkflow:
     @pytest.mark.asyncio
     async def test_content_generation_error_handling(self):
         """Test error handling in content generation workflow."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client') as mock_get_mock_client:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
+        ) as mock_get_mock_client:
             mock_client = AsyncMock()
             mock_get_mock_client.return_value = mock_client
 
@@ -652,6 +624,7 @@ class TestEndToEndContentGenerationWorkflow:
             mock_client.generate_project_documents.side_effect = Exception("Generation service unavailable")
 
             from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+
             pipeline = ContentGenerationPipeline()
 
             phase_config = {"phase": "planning", "project_type": "web_app"}
@@ -663,8 +636,11 @@ class TestEndToEndContentGenerationWorkflow:
     @pytest.mark.asyncio
     async def test_content_generation_with_validation_failures(self):
         """Test content generation with validation failures."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client') as mock_get_mock_client, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
+        ) as mock_get_mock_client, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
 
             mock_client = AsyncMock()
             analysis_client = AsyncMock()
@@ -681,10 +657,11 @@ class TestEndToEndContentGenerationWorkflow:
             analysis_client.analyze_documents.return_value = {
                 "overall_quality": 0.3,
                 "issues": ["Missing title", "Empty content", "Poor formatting"],
-                "recommendations": ["Add proper title", "Include meaningful content"]
+                "recommendations": ["Add proper title", "Include meaningful content"],
             }
 
             from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+
             pipeline = ContentGenerationPipeline()
 
             phase_config = {"phase": "planning", "quality_threshold": 0.7}
@@ -703,9 +680,13 @@ class TestContentGenerationPerformance:
     @pytest.mark.asyncio
     async def test_content_generation_performance(self):
         """Test content generation performance metrics."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client') as mock_get_mock_client, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client') as mock_get_doc_store:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
+        ) as mock_get_mock_client, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client"
+        ) as mock_get_doc_store:
 
             mock_client = AsyncMock()
             analysis_client = AsyncMock()
@@ -717,23 +698,20 @@ class TestContentGenerationPerformance:
 
             # Mock responses with timing data
             mock_client.generate_project_documents.return_value = {
-                "documents": [
-                    {"type": "confluence_page", "title": "Test", "content": "Content", "metadata": {}}
-                ],
-                "generation_time": 0.5
+                "documents": [{"type": "confluence_page", "title": "Test", "content": "Content", "metadata": {}}],
+                "generation_time": 0.5,
             }
 
-            analysis_client.analyze_documents.return_value = {
-                "overall_quality": 0.9,
-                "analysis_time": 0.2
-            }
+            analysis_client.analyze_documents.return_value = {"overall_quality": 0.9, "analysis_time": 0.2}
 
             doc_store_client.store_document.return_value = "doc_123"
 
             from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+
             pipeline = ContentGenerationPipeline()
 
             import time
+
             start_time = time.time()
 
             phase_config = {"phase": "planning", "performance_tracking": True}
@@ -749,7 +727,9 @@ class TestContentGenerationPerformance:
     @pytest.mark.asyncio
     async def test_concurrent_content_generation(self):
         """Test concurrent content generation for multiple phases."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client') as mock_get_mock_client:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
+        ) as mock_get_mock_client:
             mock_client = AsyncMock()
             mock_get_mock_client.return_value = mock_client
 
@@ -762,7 +742,7 @@ class TestContentGenerationPerformance:
                             "type": "confluence_page",
                             "title": f"{phase.title()} Phase Document",
                             "content": f"# {phase.title()} Content",
-                            "metadata": {"phase": phase}
+                            "metadata": {"phase": phase},
                         }
                     ]
                 }

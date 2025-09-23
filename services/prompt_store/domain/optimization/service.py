@@ -2,21 +2,21 @@
 
 import asyncio
 import random
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from ...core.service import BaseService
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
+
+from ...core.service import BaseService
 from ...infrastructure.cache import prompt_store_cache
 
 
 class ABTest(BaseService):
     """A/B testing entity for prompt optimization."""
 
-    def __init__(self, test_id: str, prompt_a_id: str, prompt_b_id: str,
-                 traffic_percentage: float = 50.0):
+    def __init__(self, test_id: str, prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0):
         self.test_id = test_id
         self.prompt_a_id = prompt_a_id
         self.prompt_b_id = prompt_b_id
@@ -50,6 +50,7 @@ class ABTest(BaseService):
 
     def get_results(self) -> Dict[str, Any]:
         """Get current test results."""
+
         def calculate_metrics(results):
             requests = results["requests"]
             if requests == 0:
@@ -57,22 +58,16 @@ class ABTest(BaseService):
             return {
                 "conversion_rate": results["successes"] / requests,
                 "average_score": results["total_score"] / requests,
-                "requests": requests
+                "requests": requests,
             }
 
         return {
             "test_id": self.test_id,
             "status": self.status,
             "start_time": self.start_time.isoformat(),
-            "prompt_a": {
-                "id": self.prompt_a_id,
-                **calculate_metrics(self.results_a)
-            },
-            "prompt_b": {
-                "id": self.prompt_b_id,
-                **calculate_metrics(self.results_b)
-            },
-            "winner": self.determine_winner()
+            "prompt_a": {"id": self.prompt_a_id, **calculate_metrics(self.results_a)},
+            "prompt_b": {"id": self.prompt_b_id, **calculate_metrics(self.results_b)},
+            "winner": self.determine_winner(),
         }
 
     def determine_winner(self) -> Optional[str]:
@@ -98,8 +93,7 @@ class OptimizationService:
         self.clients = ServiceClients()
         self.active_tests: Dict[str, ABTest] = {}
 
-    async def create_ab_test(self, prompt_a_id: str, prompt_b_id: str,
-                           traffic_percentage: float = 50.0) -> ABTest:
+    async def create_ab_test(self, prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0) -> ABTest:
         """Create a new A/B test between two prompt variants."""
         test_id = generate_id()
         test = ABTest(test_id, prompt_a_id, prompt_b_id, traffic_percentage)
@@ -118,9 +112,7 @@ class OptimizationService:
             cached = await prompt_store_cache.get(f"ab_test:{test_id}")
             if cached:
                 # Recreate test from cached data (simplified)
-                test = ABTest(cached["test_id"],
-                            cached["prompt_a"]["id"],
-                            cached["prompt_b"]["id"])
+                test = ABTest(cached["test_id"], cached["prompt_a"]["id"], cached["prompt_b"]["id"])
                 self.active_tests[test_id] = test
 
         if test and test.status == "running":
@@ -128,8 +120,7 @@ class OptimizationService:
 
         return None
 
-    async def record_test_result(self, test_id: str, prompt_id: str,
-                               success: bool, score: float = 0.0):
+    async def record_test_result(self, test_id: str, prompt_id: str, success: bool, score: float = 0.0):
         """Record the result of using a prompt in an A/B test."""
         test = self.active_tests.get(test_id)
         if test:
@@ -172,12 +163,11 @@ class OptimizationService:
             "variations_created": 0,
             "tests_started": 0,
             "improvements_applied": 0,
-            "cycle_id": generate_id()
+            "cycle_id": generate_id(),
         }
 
         # Cache the optimization cycle
-        await prompt_store_cache.set(f"optimization:{optimization_cycle['cycle_id']}",
-                                   optimization_cycle, ttl=3600)
+        await prompt_store_cache.set(f"optimization:{optimization_cycle['cycle_id']}", optimization_cycle, ttl=3600)
 
         return optimization_cycle
 
@@ -213,7 +203,7 @@ class OptimizationService:
             variations = [
                 f"Improved version 1: {prompt_content}",
                 f"Enhanced version 2: {prompt_content}",
-                f"Optimized version 3: {prompt_content}"
+                f"Optimized version 3: {prompt_content}",
             ]
 
         return variations[:count]

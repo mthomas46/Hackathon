@@ -7,15 +7,15 @@ for the Discovery Agent Service, enabling automated tool discovery and registrat
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class DiscoveryAgentLangGraphIntegration:
@@ -31,8 +31,9 @@ class DiscoveryAgentLangGraphIntegration:
         """Initialize LangGraph tools for discovery agent."""
 
         @tool
-        async def discover_service_tools_langgraph(service_name: str, service_url: str,
-                                                 workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def discover_service_tools_langgraph(
+            service_name: str, service_url: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Discover tools for a service within LangGraph workflow context."""
             try:
                 # Check cache first
@@ -43,7 +44,7 @@ class DiscoveryAgentLangGraphIntegration:
                         "success": True,
                         "discovered_tools": cached_result,
                         "source": "cache",
-                        "workflow_integration": "completed"
+                        "workflow_integration": "completed",
                     }
 
                 # Enhance discovery with workflow context
@@ -53,16 +54,12 @@ class DiscoveryAgentLangGraphIntegration:
                     "workflow_context": workflow_context or {},
                     "discovery_timestamp": datetime.now().isoformat(),
                     "langgraph_driven": True,
-                    "auto_registration": True
+                    "auto_registration": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/discover/tools",
-                    {
-                        "service_name": service_name,
-                        "service_url": service_url,
-                        "context": discovery_context
-                    }
+                    {"service_name": service_name, "service_url": service_url, "context": discovery_context},
                 )
 
                 # Cache the discovery result
@@ -79,7 +76,7 @@ class DiscoveryAgentLangGraphIntegration:
                     "discovered_tools": result,
                     "source": "fresh_discovery",
                     "workflow_integration": "completed",
-                    "cached_for_future": True
+                    "cached_for_future": True,
                 }
 
             except Exception as e:
@@ -87,8 +84,9 @@ class DiscoveryAgentLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def register_tools_with_orchestrator_langgraph(tools_data: Dict[str, Any],
-                                                          workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def register_tools_with_orchestrator_langgraph(
+            tools_data: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Register discovered tools with orchestrator within workflow context."""
             try:
                 # Enhance registration with workflow context
@@ -97,16 +95,12 @@ class DiscoveryAgentLangGraphIntegration:
                     "workflow_context": workflow_context or {},
                     "registration_timestamp": datetime.now().isoformat(),
                     "langgraph_driven": True,
-                    "auto_registration": True
+                    "auto_registration": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/register/tools",
-                    {
-                        "tools_data": tools_data,
-                        "target": "orchestrator",
-                        "context": registration_context
-                    }
+                    {"tools_data": tools_data, "target": "orchestrator", "context": registration_context},
                 )
 
                 # Update workflow context with registration result
@@ -117,14 +111,14 @@ class DiscoveryAgentLangGraphIntegration:
                         registration_record = {
                             "tools_registered": len(tools_data.get("tools", [])),
                             "registration_timestamp": datetime.now().isoformat(),
-                            "workflow_id": workflow_id
+                            "workflow_id": workflow_id,
                         }
 
                 return {
                     "success": True,
                     "registration_result": result,
                     "workflow_integration": "completed",
-                    "tools_registered": len(tools_data.get("tools", []))
+                    "tools_registered": len(tools_data.get("tools", [])),
                 }
 
             except Exception as e:
@@ -132,23 +126,21 @@ class DiscoveryAgentLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def validate_service_compatibility_langgraph(service_name: str,
-                                                        workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def validate_service_compatibility_langgraph(
+            service_name: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Validate service compatibility for tool discovery within workflow."""
             try:
                 validation_context = {
                     "service_name": service_name,
                     "workflow_context": workflow_context or {},
                     "validation_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate",
-                    {
-                        "service_name": service_name,
-                        "validation_context": validation_context
-                    }
+                    {"service_name": service_name, "validation_context": validation_context},
                 )
 
                 # Store validation result in service capabilities
@@ -157,22 +149,23 @@ class DiscoveryAgentLangGraphIntegration:
                     self.service_capabilities[service_name] = {
                         "compatibility_status": compatibility_status,
                         "last_validated": datetime.now().isoformat(),
-                        "validation_context": validation_context
+                        "validation_context": validation_context,
                     }
 
                 return {
                     "success": True,
                     "validation_result": result,
                     "workflow_integration": "completed",
-                    "service_compatible": result.get("compatibility_status") == "compatible"
+                    "service_compatible": result.get("compatibility_status") == "compatible",
                 }
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_service_capabilities_langgraph(service_name: str,
-                                                   workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def get_service_capabilities_langgraph(
+            service_name: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Get discovered capabilities for a service within workflow."""
             try:
                 # Check local cache first
@@ -182,13 +175,11 @@ class DiscoveryAgentLangGraphIntegration:
                         "success": True,
                         "capabilities": cached_capabilities,
                         "source": "cache",
-                        "workflow_integration": "completed"
+                        "workflow_integration": "completed",
                     }
 
                 # Query service capabilities
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/capabilities/{service_name}"
-                )
+                result = await self.service_client.get_json(f"{self.service_name}/api/v1/capabilities/{service_name}")
 
                 # Cache the result
                 if result.get("success"):
@@ -198,28 +189,27 @@ class DiscoveryAgentLangGraphIntegration:
                     "success": True,
                     "capabilities": result,
                     "source": "fresh_query",
-                    "workflow_integration": "completed"
+                    "workflow_integration": "completed",
                 }
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def discover_ecosystem_services_langgraph(workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def discover_ecosystem_services_langgraph(
+            workflow_context: Optional[Dict[str, Any]] = None,
+        ) -> Dict[str, Any]:
             """Discover all available services in the ecosystem."""
             try:
                 discovery_context = {
                     "workflow_context": workflow_context or {},
                     "ecosystem_discovery_timestamp": datetime.now().isoformat(),
                     "langgraph_driven": True,
-                    "comprehensive_scan": True
+                    "comprehensive_scan": True,
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/discover/ecosystem",
-                    {
-                        "context": discovery_context
-                    }
+                    f"{self.service_name}/api/v1/discover/ecosystem", {"context": discovery_context}
                 )
 
                 # Update local capabilities cache
@@ -233,7 +223,7 @@ class DiscoveryAgentLangGraphIntegration:
                     "success": True,
                     "ecosystem_services": result,
                     "workflow_integration": "completed",
-                    "services_discovered": len(result.get("services", []))
+                    "services_discovered": len(result.get("services", [])),
                 }
 
             except Exception as e:
@@ -245,7 +235,7 @@ class DiscoveryAgentLangGraphIntegration:
             "register_tools_with_orchestrator_langgraph": register_tools_with_orchestrator_langgraph,
             "validate_service_compatibility_langgraph": validate_service_compatibility_langgraph,
             "get_service_capabilities_langgraph": get_service_capabilities_langgraph,
-            "discover_ecosystem_services_langgraph": discover_ecosystem_services_langgraph
+            "discover_ecosystem_services_langgraph": discover_ecosystem_services_langgraph,
         }
 
     async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
@@ -271,7 +261,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "action": "discover_tools",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["tool_discovery", "openapi_parsing", "service_introspection"]
+                "capabilities": ["tool_discovery", "openapi_parsing", "service_introspection"],
             }
 
         elif "register" in instruction_lower or "integrate" in instruction_lower:
@@ -279,7 +269,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "action": "register_tools",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["tool_registration", "orchestrator_integration", "workflow_setup"]
+                "capabilities": ["tool_registration", "orchestrator_integration", "workflow_setup"],
             }
 
         elif "validate" in instruction_lower or "check" in instruction_lower:
@@ -287,7 +277,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "action": "validate_compatibility",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["compatibility_validation", "service_health_check", "capability_assessment"]
+                "capabilities": ["compatibility_validation", "service_health_check", "capability_assessment"],
             }
 
         elif "capability" in instruction_lower or "feature" in instruction_lower:
@@ -295,7 +285,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "action": "get_capabilities",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["capability_discovery", "feature_enumeration", "service_introspection"]
+                "capabilities": ["capability_discovery", "feature_enumeration", "service_introspection"],
             }
 
         elif "ecosystem" in instruction_lower or "services" in instruction_lower:
@@ -303,7 +293,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "action": "discover_ecosystem",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["ecosystem_discovery", "service_enumeration", "capability_mapping"]
+                "capabilities": ["ecosystem_discovery", "service_enumeration", "capability_mapping"],
             }
 
         else:
@@ -311,7 +301,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "action": "general_discovery",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["service_discovery", "tool_discovery", "capability_assessment"]
+                "capabilities": ["service_discovery", "tool_discovery", "capability_assessment"],
             }
 
     async def _process_discovery_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -321,14 +311,14 @@ class DiscoveryAgentLangGraphIntegration:
             "content": response,
             "timestamp": datetime.now().isoformat(),
             "processed_by": self.service_name,
-            "response_type": "discovery_workflow"
+            "response_type": "discovery_workflow",
         }
 
         return {
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "next_actions": ["await_workflow_instructions", "prepare_discovery_tools"]
+            "next_actions": ["await_workflow_instructions", "prepare_discovery_tools"],
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -341,25 +331,16 @@ class DiscoveryAgentLangGraphIntegration:
                 "service_introspection",
                 "tool_registration",
                 "compatibility_validation",
-                "ecosystem_discovery"
+                "ecosystem_discovery",
             ],
-            "tool_categories": [
-                "discovery_tools",
-                "registration_tools",
-                "validation_tools",
-                "capability_tools"
-            ],
-            "message_types": [
-                "discovery_instructions",
-                "workflow_responses",
-                "service_commands"
-            ],
+            "tool_categories": ["discovery_tools", "registration_tools", "validation_tools", "capability_tools"],
+            "message_types": ["discovery_instructions", "workflow_responses", "service_commands"],
             "integration_features": [
                 "workflow_context_awareness",
                 "caching_optimization",
                 "auto_registration",
-                "capability_tracking"
-            ]
+                "capability_tracking",
+            ],
         }
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
@@ -369,10 +350,12 @@ class DiscoveryAgentLangGraphIntegration:
             "langgraph_integration": "active",
             "cached_tools_count": len(self.discovered_tools_cache),
             "known_services_count": len(self.service_capabilities),
-            "total_capabilities_tracked": sum(len(capabilities) if isinstance(capabilities, list) else 1
-                                            for capabilities in self.service_capabilities.values()),
+            "total_capabilities_tracked": sum(
+                len(capabilities) if isinstance(capabilities, list) else 1
+                for capabilities in self.service_capabilities.values()
+            ),
             "last_activity": datetime.now().isoformat(),
-            "capabilities_ready": True
+            "capabilities_ready": True,
         }
 
     def get_discovery_performance_summary(self) -> Dict[str, Any]:
@@ -383,7 +366,7 @@ class DiscoveryAgentLangGraphIntegration:
             "cache_hit_ratio": 0,  # Would be calculated from actual usage
             "average_discovery_time": 0,  # Would be tracked from actual calls
             "service_types": {},
-            "recent_discoveries": []
+            "recent_discoveries": [],
         }
 
         # Analyze service types
@@ -410,8 +393,9 @@ class DiscoveryAgentLangGraphIntegration:
         if service_name:
             # Clear cache for specific service
             removed_tools = 0
-            cache_keys_to_remove = [key for key in self.discovered_tools_cache.keys()
-                                  if key.startswith(f"{service_name}_")]
+            cache_keys_to_remove = [
+                key for key in self.discovered_tools_cache.keys() if key.startswith(f"{service_name}_")
+            ]
 
             for cache_key in cache_keys_to_remove:
                 del self.discovered_tools_cache[cache_key]
@@ -424,7 +408,7 @@ class DiscoveryAgentLangGraphIntegration:
                 "cache_cleared": True,
                 "service_name": service_name,
                 "tools_removed": removed_tools,
-                "capabilities_removed": 1 if service_name in self.service_capabilities else 0
+                "capabilities_removed": 1 if service_name in self.service_capabilities else 0,
             }
         else:
             # Clear all caches
@@ -434,11 +418,7 @@ class DiscoveryAgentLangGraphIntegration:
             self.discovered_tools_cache.clear()
             self.service_capabilities.clear()
 
-            return {
-                "cache_cleared": True,
-                "total_tools_removed": total_tools,
-                "total_services_removed": total_services
-            }
+            return {"cache_cleared": True, "total_tools_removed": total_tools, "total_services_removed": total_services}
 
 
 # Global instance for easy access

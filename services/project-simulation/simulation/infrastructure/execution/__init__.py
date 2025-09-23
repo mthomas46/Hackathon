@@ -6,6 +6,4 @@ the domain layer (DDD aggregates) with the actual simulation execution logic.
 
 from .simulation_execution_engine import SimulationExecutionEngine
 
-__all__ = [
-    'SimulationExecutionEngine'
-]
+__all__ = ["SimulationExecutionEngine"]

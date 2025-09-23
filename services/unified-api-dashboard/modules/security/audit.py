@@ -10,20 +10,21 @@ Comprehensive audit logging and compliance monitoring system:
 """
 
 import asyncio
-import json
 import hashlib
 import hmac
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Set, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
+import json
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ...config import config
 
 
 class AuditEventType(Enum):
     """Types of audit events."""
+
     AUTH_LOGIN = "auth.login"
     AUTH_LOGOUT = "auth.logout"
     AUTH_FAILED = "auth.failed"
@@ -51,6 +52,7 @@ class AuditEventType(Enum):
 
 class ComplianceStandard(Enum):
     """Supported compliance standards."""
+
     GDPR = "gdpr"
     HIPAA = "hipaa"
     SOX = "sox"
@@ -61,6 +63,7 @@ class ComplianceStandard(Enum):
 @dataclass
 class AuditEvent:
     """Audit event record."""
+
     event_id: str
     event_type: AuditEventType
     user_id: str
@@ -79,6 +82,7 @@ class AuditEvent:
 @dataclass
 class ComplianceRule:
     """Compliance monitoring rule."""
+
     rule_id: str
     name: str
     description: str
@@ -92,6 +96,7 @@ class ComplianceRule:
 @dataclass
 class ComplianceViolation:
     """Compliance violation record."""
+
     violation_id: str
     rule_id: str
     event_id: str
@@ -133,7 +138,7 @@ class AuditLogger:
         details: Dict[str, Any] = None,
         ip_address: str = None,
         user_agent: str = None,
-        compliance_flags: Set[ComplianceStandard] = None
+        compliance_flags: Set[ComplianceStandard] = None,
     ) -> str:
         """Log an audit event with cryptographic integrity."""
         event_id = str(uuid.uuid4())
@@ -149,7 +154,7 @@ class AuditLogger:
             resource=resource,
             action=action,
             details=details or {},
-            compliance_flags=compliance_flags or set()
+            compliance_flags=compliance_flags or set(),
         )
 
         # Create hash chain for tamper-proof audit trail
@@ -160,7 +165,7 @@ class AuditLogger:
             "timestamp": event.timestamp.isoformat(),
             "resource": event.resource,
             "action": event.action,
-            "details": event.details
+            "details": event.details,
         }
 
         data_str = json.dumps(event_data, sort_keys=True)
@@ -172,11 +177,7 @@ class AuditLogger:
             event.hash_chain = hashlib.sha256(chain_data).hexdigest()
 
         # Sign the event
-        event.signature = hmac.new(
-            self.secret_key.encode(),
-            data_str.encode(),
-            hashlib.sha256
-        ).hexdigest()
+        event.signature = hmac.new(self.secret_key.encode(), data_str.encode(), hashlib.sha256).hexdigest()
 
         self.events.append(event)
         self.last_hash = current_hash
@@ -193,7 +194,7 @@ class AuditLogger:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[AuditEvent]:
         """Query audit events with filtering."""
         filtered_events = self.events
@@ -213,7 +214,7 @@ class AuditLogger:
         # Sort by timestamp descending
         filtered_events.sort(key=lambda e: e.timestamp, reverse=True)
 
-        return filtered_events[offset:offset + limit]
+        return filtered_events[offset : offset + limit]
 
     async def get_event_by_id(self, event_id: str) -> Optional[AuditEvent]:
         """Get specific audit event by ID."""
@@ -236,27 +237,21 @@ class AuditLogger:
                 "timestamp": event.timestamp.isoformat(),
                 "resource": event.resource,
                 "action": event.action,
-                "details": event.details
+                "details": event.details,
             }
 
             data_str = json.dumps(event_data, sort_keys=True)
             calculated_hash = hashlib.sha256(data_str.encode()).hexdigest()
 
             # Verify signature
-            expected_signature = hmac.new(
-                self.secret_key.encode(),
-                data_str.encode(),
-                hashlib.sha256
-            ).hexdigest()
+            expected_signature = hmac.new(self.secret_key.encode(), data_str.encode(), hashlib.sha256).hexdigest()
 
             if event.signature != expected_signature:
                 violations.append(f"Event {event.event_id}: signature verification failed")
 
             # Verify hash chain
             if current_hash and event.hash_chain:
-                expected_chain = hashlib.sha256(
-                    f"{current_hash}:{calculated_hash}".encode()
-                ).hexdigest()
+                expected_chain = hashlib.sha256(f"{current_hash}:{calculated_hash}".encode()).hexdigest()
                 if event.hash_chain != expected_chain:
                     violations.append(f"Event {event.event_id}: hash chain verification failed")
 
@@ -265,33 +260,29 @@ class AuditLogger:
         return len(violations) == 0, violations
 
     async def export_audit_log(
-        self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        format: str = "json"
+        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, format: str = "json"
     ) -> str:
         """Export audit log for compliance or backup."""
-        events = await self.get_events(
-            start_date=start_date,
-            end_date=end_date,
-            limit=10000  # Large limit for export
-        )
+        events = await self.get_events(start_date=start_date, end_date=end_date, limit=10000)  # Large limit for export
 
         if format == "json":
-            return json.dumps([
-                {
-                    "event_id": e.event_id,
-                    "event_type": e.event_type.value,
-                    "user_id": e.user_id,
-                    "username": e.username,
-                    "timestamp": e.timestamp.isoformat(),
-                    "resource": e.resource,
-                    "action": e.action,
-                    "details": e.details,
-                    "compliance_flags": [f.value for f in e.compliance_flags]
-                }
-                for e in events
-            ], indent=2)
+            return json.dumps(
+                [
+                    {
+                        "event_id": e.event_id,
+                        "event_type": e.event_type.value,
+                        "user_id": e.user_id,
+                        "username": e.username,
+                        "timestamp": e.timestamp.isoformat(),
+                        "resource": e.resource,
+                        "action": e.action,
+                        "details": e.details,
+                        "compliance_flags": [f.value for f in e.compliance_flags],
+                    }
+                    for e in events
+                ],
+                indent=2,
+            )
 
         return ""
 
@@ -326,10 +317,9 @@ class ComplianceMonitor:
                 conditions={
                     "event_types": ["api.access"],
                     "resources": ["personal_data", "user_data"],
-                    "requires_audit": True
-                }
+                    "requires_audit": True,
+                },
             ),
-
             "gdpr_data_deletion": ComplianceRule(
                 rule_id="gdpr_data_deletion",
                 name="GDPR Right to Erasure",
@@ -339,10 +329,9 @@ class ComplianceMonitor:
                 conditions={
                     "event_types": ["api.delete"],
                     "resources": ["personal_data", "user_data"],
-                    "max_processing_days": 30
-                }
+                    "max_processing_days": 30,
+                },
             ),
-
             "hipaa_access_control": ComplianceRule(
                 rule_id="hipaa_access_control",
                 name="HIPAA Access Control",
@@ -352,10 +341,9 @@ class ComplianceMonitor:
                 conditions={
                     "event_types": ["api.access"],
                     "resources": ["health_data", "phi"],
-                    "authorized_roles_only": ["admin", "manager", "auditor"]
-                }
+                    "authorized_roles_only": ["admin", "manager", "auditor"],
+                },
             ),
-
             "sox_financial_audit": ComplianceRule(
                 rule_id="sox_financial_audit",
                 name="SOX Financial Data Audit",
@@ -365,27 +353,20 @@ class ComplianceMonitor:
                 conditions={
                     "event_types": ["api.modify", "api.create"],
                     "resources": ["financial_data", "billing"],
-                    "requires_audit_trail": True
-                }
+                    "requires_audit_trail": True,
+                },
             ),
-
             "iso_security_incident": ComplianceRule(
                 rule_id="iso_security_incident",
                 name="ISO 27001 Security Incident Reporting",
                 description="Security incidents must be reported within 24 hours",
                 standard=ComplianceStandard.ISO_27001,
                 severity="high",
-                conditions={
-                    "event_types": ["security.alert"],
-                    "max_reporting_hours": 24
-                }
-            )
+                conditions={"event_types": ["security.alert"], "max_reporting_hours": 24},
+            ),
         }
 
-    async def check_compliance(
-        self,
-        event: AuditEvent
-    ) -> List[ComplianceViolation]:
+    async def check_compliance(self, event: AuditEvent) -> List[ComplianceViolation]:
         """Check event against compliance rules and return violations."""
         violations = []
 
@@ -400,11 +381,7 @@ class ComplianceMonitor:
 
         return violations
 
-    async def _check_rule_violation(
-        self,
-        rule: ComplianceRule,
-        event: AuditEvent
-    ) -> Optional[ComplianceViolation]:
+    async def _check_rule_violation(self, rule: ComplianceRule, event: AuditEvent) -> Optional[ComplianceViolation]:
         """Check if event violates a specific compliance rule."""
         conditions = rule.conditions
 
@@ -434,30 +411,22 @@ class ComplianceMonitor:
                 "rule_name": rule.name,
                 "standard": rule.standard.value,
                 "conditions": conditions,
-                "event_details": {
-                    "type": event.event_type.value,
-                    "resource": event.resource,
-                    "action": event.action
-                }
+                "event_details": {"type": event.event_type.value, "resource": event.resource, "action": event.action},
             },
             severity=rule.severity,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
         return violation
 
     async def get_violations(
-        self,
-        standard: Optional[ComplianceStandard] = None,
-        resolved: Optional[bool] = None,
-        limit: int = 100
+        self, standard: Optional[ComplianceStandard] = None, resolved: Optional[bool] = None, limit: int = 100
     ) -> List[ComplianceViolation]:
         """Get compliance violations with filtering."""
         violations = list(self.violations.values())
 
         if standard:
-            violations = [v for v in violations
-                         if self.rules[v.rule_id].standard == standard]
+            violations = [v for v in violations if self.rules[v.rule_id].standard == standard]
 
         if resolved is not None:
             violations = [v for v in violations if v.resolved == resolved]
@@ -465,11 +434,7 @@ class ComplianceMonitor:
         violations.sort(key=lambda v: v.timestamp, reverse=True)
         return violations[:limit]
 
-    async def resolve_violation(
-        self,
-        violation_id: str,
-        resolution_notes: str
-    ) -> bool:
+    async def resolve_violation(self, violation_id: str, resolution_notes: str) -> bool:
         """Mark violation as resolved."""
         violation = self.violations.get(violation_id)
         if not violation:
@@ -481,32 +446,25 @@ class ComplianceMonitor:
         return True
 
     async def generate_compliance_report(
-        self,
-        standard: ComplianceStandard,
-        start_date: datetime,
-        end_date: datetime
+        self, standard: ComplianceStandard, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
         """Generate compliance report for a specific standard."""
         violations = await self.get_violations(standard=standard, resolved=False)
 
         # Filter by date range
-        violations = [v for v in violations
-                     if start_date <= v.timestamp <= end_date]
+        violations = [v for v in violations if start_date <= v.timestamp <= end_date]
 
         report = {
             "standard": standard.value,
-            "period": {
-                "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat()
-            },
+            "period": {"start_date": start_date.isoformat(), "end_date": end_date.isoformat()},
             "summary": {
                 "total_violations": len(violations),
                 "severity_breakdown": {
                     "critical": len([v for v in violations if v.severity == "critical"]),
                     "high": len([v for v in violations if v.severity == "high"]),
                     "medium": len([v for v in violations if v.severity == "medium"]),
-                    "low": len([v for v in violations if v.severity == "low"])
-                }
+                    "low": len([v for v in violations if v.severity == "low"]),
+                },
             },
             "violations": [
                 {
@@ -516,12 +474,12 @@ class ComplianceMonitor:
                     "user_id": v.user_id,
                     "severity": v.severity,
                     "timestamp": v.timestamp.isoformat(),
-                    "details": v.details
+                    "details": v.details,
                 }
                 for v in violations
             ],
             "compliance_status": "compliant" if len(violations) == 0 else "non_compliant",
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
         return report
@@ -538,7 +496,7 @@ class ComplianceMonitor:
                 "total_violations": len(violations),
                 "critical_violations": critical_violations,
                 "status": "compliant" if len(violations) == 0 else "non_compliant",
-                "last_checked": datetime.now().isoformat()
+                "last_checked": datetime.now().isoformat(),
             }
 
         return status

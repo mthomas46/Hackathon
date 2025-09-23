@@ -5,8 +5,7 @@ from typing import Optional, Protocol
 
 
 class SecretProvider(Protocol):
-    def get_secret(self, name: str) -> Optional[str]:
-        ...
+    def get_secret(self, name: str) -> Optional[str]: ...
 
 
 class EnvSecretProvider:
@@ -38,5 +37,3 @@ def get_secret(name: str, default: Optional[str] = None) -> Optional[str]:
         return value
     except Exception:
         return default
-
-

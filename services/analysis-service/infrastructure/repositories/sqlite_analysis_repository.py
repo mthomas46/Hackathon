@@ -1,12 +1,12 @@
 """SQLite implementation of analysis repository."""
 
-import sqlite3
 import json
-from typing import List, Optional, Dict, Any
+import sqlite3
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ...domain.entities import Analysis, AnalysisId, DocumentId
-from ...domain.entities.value_objects import AnalysisType, AnalysisConfiguration
+from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
 from .analysis_repository import AnalysisRepository
 
 
@@ -21,7 +21,8 @@ class SQLiteAnalysisRepository(AnalysisRepository):
     def _init_db(self) -> None:
         """Initialize database schema."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS analyses (
                     id TEXT PRIMARY KEY,
                     document_id TEXT NOT NULL,
@@ -35,7 +36,8 @@ class SQLiteAnalysisRepository(AnalysisRepository):
                     created_at TEXT NOT NULL,
                     FOREIGN KEY (document_id) REFERENCES documents(id)
                 )
-            """)
+            """
+            )
 
             # Create indexes for performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_analyses_document ON analyses(document_id)")
@@ -46,32 +48,38 @@ class SQLiteAnalysisRepository(AnalysisRepository):
     async def save(self, analysis: Analysis) -> None:
         """Save an analysis to SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO analyses
                 (id, document_id, analysis_type, status, configuration,
                  started_at, completed_at, result, error_message, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                analysis.id.value,
-                analysis.document_id.value,
-                analysis.analysis_type,
-                analysis.status.value,
-                json.dumps(analysis.configuration),
-                analysis.started_at.isoformat() if analysis.started_at else None,
-                analysis.completed_at.isoformat() if analysis.completed_at else None,
-                json.dumps(analysis.result) if analysis.result else None,
-                analysis.error_message,
-                analysis.created_at.isoformat()
-            ))
+            """,
+                (
+                    analysis.id.value,
+                    analysis.document_id.value,
+                    analysis.analysis_type,
+                    analysis.status.value,
+                    json.dumps(analysis.configuration),
+                    analysis.started_at.isoformat() if analysis.started_at else None,
+                    analysis.completed_at.isoformat() if analysis.completed_at else None,
+                    json.dumps(analysis.result) if analysis.result else None,
+                    analysis.error_message,
+                    analysis.created_at.isoformat(),
+                ),
+            )
 
     async def get_by_id(self, analysis_id: str) -> Optional[Analysis]:
         """Get analysis by ID from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_type, status, configuration,
                        started_at, completed_at, result, error_message, created_at
                 FROM analyses WHERE id = ?
-            """, (analysis_id,))
+            """,
+                (analysis_id,),
+            )
 
             row = cursor.fetchone()
             if not row:
@@ -82,33 +90,41 @@ class SQLiteAnalysisRepository(AnalysisRepository):
     async def get_by_document_id(self, document_id: str) -> List[Analysis]:
         """Get all analyses for a document from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_type, status, configuration,
                        started_at, completed_at, result, error_message, created_at
                 FROM analyses WHERE document_id = ? ORDER BY created_at DESC
-            """, (document_id,))
+            """,
+                (document_id,),
+            )
 
             return [self._row_to_analysis(row) for row in cursor.fetchall()]
 
     async def get_all(self) -> List[Analysis]:
         """Get all analyses from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_type, status, configuration,
                        started_at, completed_at, result, error_message, created_at
                 FROM analyses ORDER BY created_at DESC
-            """)
+            """
+            )
 
             return [self._row_to_analysis(row) for row in cursor.fetchall()]
 
     async def get_by_status(self, status: str) -> List[Analysis]:
         """Get analyses by status from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_type, status, configuration,
                        started_at, completed_at, result, error_message, created_at
                 FROM analyses WHERE status = ? ORDER BY created_at DESC
-            """, (status,))
+            """,
+                (status,),
+            )
 
             return [self._row_to_analysis(row) for row in cursor.fetchall()]
 
@@ -120,8 +136,18 @@ class SQLiteAnalysisRepository(AnalysisRepository):
 
     def _row_to_analysis(self, row) -> Analysis:
         """Convert database row to Analysis entity."""
-        id, document_id, analysis_type, status, configuration_json, \
-        started_at_str, completed_at_str, result_json, error_message, created_at_str = row
+        (
+            id,
+            document_id,
+            analysis_type,
+            status,
+            configuration_json,
+            started_at_str,
+            completed_at_str,
+            result_json,
+            error_message,
+            created_at_str,
+        ) = row
 
         # Parse dates
         started_at = datetime.fromisoformat(started_at_str) if started_at_str else None
@@ -146,5 +172,5 @@ class SQLiteAnalysisRepository(AnalysisRepository):
             completed_at=completed_at,
             result=result,
             error_message=error_message,
-            created_at=created_at
+            created_at=created_at,
         )

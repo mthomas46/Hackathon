@@ -13,13 +13,14 @@ Usage:
     python manage_events.py --help
 """
 
-import sys
-import os
 import argparse
-import requests
 import json
+import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import requests
 
 # Add the project root to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))

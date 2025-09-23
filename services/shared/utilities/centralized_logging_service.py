@@ -8,31 +8,33 @@ Provides enterprise-grade log management with:
 - Real-time log streaming
 - Integration with existing logging service
 """
+
 import asyncio
-import json
-import time
-import threading
-import sqlite3
 import gzip
+import hashlib
+import json
+import logging
 import os
+import re
 import shutil
-from typing import Dict, Any, List, Optional, Callable, AsyncIterator
+import sqlite3
+import threading
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
-import re
 from pathlib import Path
-from collections import defaultdict, deque
-import aiofiles
-import hashlib
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
+import aiofiles
 
 logger = logging.getLogger(__name__)
 
 
 class LogLevel(Enum):
     """Log levels for filtering and analysis."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -42,15 +44,17 @@ class LogLevel(Enum):
 
 class LogStorageType(Enum):
     """Storage types for log persistence."""
-    MEMORY = "memory"        # In-memory only (development)
-    SQLITE = "sqlite"        # SQLite database (small deployments)
-    FILE = "file"           # File-based with rotation (medium deployments)
+
+    MEMORY = "memory"  # In-memory only (development)
+    SQLITE = "sqlite"  # SQLite database (small deployments)
+    FILE = "file"  # File-based with rotation (medium deployments)
     DISTRIBUTED = "distributed"  # For future distributed storage
 
 
 @dataclass
 class LogEntry:
     """Structured log entry for storage."""
+
     id: str
     timestamp: float
     level: str
@@ -67,48 +71,49 @@ class LogEntry:
     tags: List[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LogEntry':
+    def from_dict(cls, data: Dict[str, Any]) -> "LogEntry":
         """Create LogEntry from dictionary."""
         return cls(
-            id=data.get('id', str(hashlib.md5(json.dumps(data, sort_keys=True).encode()).hexdigest())),
-            timestamp=data.get('timestamp', time.time()),
-            level=data.get('level', 'INFO'),
-            service_name=data.get('service_name', 'unknown'),
-            message=data.get('message', ''),
-            correlation_id=data.get('correlation_id'),
-            operation=data.get('operation'),
-            user_id=data.get('user_id'),
-            session_id=data.get('session_id'),
-            request_id=data.get('request_id'),
-            extra_data=data.get('extra_data', {}),
-            stack_trace=data.get('stack_trace'),
-            performance_data=data.get('performance_data'),
-            tags=data.get('tags', [])
+            id=data.get("id", str(hashlib.md5(json.dumps(data, sort_keys=True).encode()).hexdigest())),
+            timestamp=data.get("timestamp", time.time()),
+            level=data.get("level", "INFO"),
+            service_name=data.get("service_name", "unknown"),
+            message=data.get("message", ""),
+            correlation_id=data.get("correlation_id"),
+            operation=data.get("operation"),
+            user_id=data.get("user_id"),
+            session_id=data.get("session_id"),
+            request_id=data.get("request_id"),
+            extra_data=data.get("extra_data", {}),
+            stack_trace=data.get("stack_trace"),
+            performance_data=data.get("performance_data"),
+            tags=data.get("tags", []),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
-            'id': self.id,
-            'timestamp': self.timestamp,
-            'level': self.level,
-            'service_name': self.service_name,
-            'message': self.message,
-            'correlation_id': self.correlation_id,
-            'operation': self.operation,
-            'user_id': self.user_id,
-            'session_id': self.session_id,
-            'request_id': self.request_id,
-            'extra_data': self.extra_data,
-            'stack_trace': self.stack_trace,
-            'performance_data': self.performance_data,
-            'tags': self.tags
+            "id": self.id,
+            "timestamp": self.timestamp,
+            "level": self.level,
+            "service_name": self.service_name,
+            "message": self.message,
+            "correlation_id": self.correlation_id,
+            "operation": self.operation,
+            "user_id": self.user_id,
+            "session_id": self.session_id,
+            "request_id": self.request_id,
+            "extra_data": self.extra_data,
+            "stack_trace": self.stack_trace,
+            "performance_data": self.performance_data,
+            "tags": self.tags,
         }
 
 
 @dataclass
 class LogQuery:
     """Query parameters for log retrieval."""
+
     service_name: Optional[str] = None
     level: Optional[str] = None
     correlation_id: Optional[str] = None
@@ -127,6 +132,7 @@ class LogQuery:
 @dataclass
 class LogRetentionPolicy:
     """Log retention policy configuration."""
+
     max_age_days: int = 30
     max_size_mb: int = 1000
     compression_enabled: bool = True
@@ -187,8 +193,7 @@ class MemoryLogStorage(LogStorageBackend):
         if query.end_time:
             filtered_logs = [log for log in filtered_logs if log.timestamp <= query.end_time]
         if query.message_contains:
-            filtered_logs = [log for log in filtered_logs
-                           if query.message_contains.lower() in log.message.lower()]
+            filtered_logs = [log for log in filtered_logs if query.message_contains.lower() in log.message.lower()]
 
         # Apply ordering
         if query.order_by == "timestamp":
@@ -218,7 +223,7 @@ class MemoryLogStorage(LogStorageBackend):
                 "total_logs": total_logs,
                 "services": dict(service_counts),
                 "levels": dict(level_counts),
-                "memory_usage_mb": len(self._logs) * 0.5  # Rough estimate
+                "memory_usage_mb": len(self._logs) * 0.5,  # Rough estimate
             }
 
     async def cleanup_old_logs(self, retention_policy: LogRetentionPolicy) -> int:
@@ -243,7 +248,8 @@ class SQLiteLogStorage(LogStorageBackend):
     def _init_db(self) -> None:
         """Initialize SQLite database."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS logs (
                     id TEXT PRIMARY KEY,
                     timestamp REAL,
@@ -260,43 +266,49 @@ class SQLiteLogStorage(LogStorageBackend):
                     performance_data TEXT,
                     tags TEXT
                 )
-            ''')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON logs(timestamp)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_service ON logs(service_name)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_correlation ON logs(correlation_id)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_level ON logs(level)')
+            """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON logs(timestamp)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_service ON logs(service_name)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_correlation ON logs(correlation_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_level ON logs(level)")
 
     async def store_log(self, log_entry: LogEntry) -> None:
         """Store log in SQLite database."""
+
         def _store():
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute('''
+                conn.execute(
+                    """
                     INSERT OR REPLACE INTO logs
                     (id, timestamp, level, service_name, message, correlation_id,
                      operation, user_id, session_id, request_id, extra_data,
                      stack_trace, performance_data, tags)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    log_entry.id,
-                    log_entry.timestamp,
-                    log_entry.level,
-                    log_entry.service_name,
-                    log_entry.message,
-                    log_entry.correlation_id,
-                    log_entry.operation,
-                    log_entry.user_id,
-                    log_entry.session_id,
-                    log_entry.request_id,
-                    json.dumps(log_entry.extra_data),
-                    log_entry.stack_trace,
-                    json.dumps(log_entry.performance_data) if log_entry.performance_data else None,
-                    json.dumps(log_entry.tags)
-                ))
+                """,
+                    (
+                        log_entry.id,
+                        log_entry.timestamp,
+                        log_entry.level,
+                        log_entry.service_name,
+                        log_entry.message,
+                        log_entry.correlation_id,
+                        log_entry.operation,
+                        log_entry.user_id,
+                        log_entry.session_id,
+                        log_entry.request_id,
+                        json.dumps(log_entry.extra_data),
+                        log_entry.stack_trace,
+                        json.dumps(log_entry.performance_data) if log_entry.performance_data else None,
+                        json.dumps(log_entry.tags),
+                    ),
+                )
 
         await asyncio.get_event_loop().run_in_executor(None, _store)
 
     async def query_logs(self, query: LogQuery) -> List[LogEntry]:
         """Query logs from SQLite database."""
+
         def _query():
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
@@ -340,41 +352,46 @@ class SQLiteLogStorage(LogStorageBackend):
     def _row_to_log_entry(self, row) -> LogEntry:
         """Convert database row to LogEntry."""
         return LogEntry(
-            id=row['id'],
-            timestamp=row['timestamp'],
-            level=row['level'],
-            service_name=row['service_name'],
-            message=row['message'],
-            correlation_id=row['correlation_id'],
-            operation=row['operation'],
-            user_id=row['user_id'],
-            session_id=row['session_id'],
-            request_id=row['request_id'],
-            extra_data=json.loads(row['extra_data']) if row['extra_data'] else {},
-            stack_trace=row['stack_trace'],
-            performance_data=json.loads(row['performance_data']) if row['performance_data'] else None,
-            tags=json.loads(row['tags']) if row['tags'] else []
+            id=row["id"],
+            timestamp=row["timestamp"],
+            level=row["level"],
+            service_name=row["service_name"],
+            message=row["message"],
+            correlation_id=row["correlation_id"],
+            operation=row["operation"],
+            user_id=row["user_id"],
+            session_id=row["session_id"],
+            request_id=row["request_id"],
+            extra_data=json.loads(row["extra_data"]) if row["extra_data"] else {},
+            stack_trace=row["stack_trace"],
+            performance_data=json.loads(row["performance_data"]) if row["performance_data"] else None,
+            tags=json.loads(row["tags"]) if row["tags"] else [],
         )
 
     async def get_log_stats(self) -> Dict[str, Any]:
         """Get SQLite storage statistics."""
+
         def _stats():
             with sqlite3.connect(self.db_path) as conn:
                 # Get total count
                 total_logs = conn.execute("SELECT COUNT(*) FROM logs").fetchone()[0]
 
                 # Get service breakdown
-                service_rows = conn.execute("""
+                service_rows = conn.execute(
+                    """
                     SELECT service_name, COUNT(*) as count
                     FROM logs GROUP BY service_name
                     ORDER BY count DESC LIMIT 10
-                """).fetchall()
+                """
+                ).fetchall()
 
                 # Get level breakdown
-                level_rows = conn.execute("""
+                level_rows = conn.execute(
+                    """
                     SELECT level, COUNT(*) as count
                     FROM logs GROUP BY level
-                """).fetchall()
+                """
+                ).fetchall()
 
                 # Get database file size
                 db_size = os.path.getsize(self.db_path) if os.path.exists(self.db_path) else 0
@@ -384,7 +401,7 @@ class SQLiteLogStorage(LogStorageBackend):
                     "total_logs": total_logs,
                     "database_size_mb": db_size / (1024 * 1024),
                     "services": {row[0]: row[1] for row in service_rows},
-                    "levels": {row[0]: row[1] for row in level_rows}
+                    "levels": {row[0]: row[1] for row in level_rows},
                 }
 
         return await asyncio.get_event_loop().run_in_executor(None, _stats)
@@ -425,7 +442,7 @@ class FileLogStorage(LogStorageBackend):
         log_line = json.dumps(log_entry.to_dict()) + "\n"
 
         def _write():
-            with open(log_file, 'a', encoding='utf-8') as f:
+            with open(log_file, "a", encoding="utf-8") as f:
                 f.write(log_line)
 
         await asyncio.get_event_loop().run_in_executor(None, _write)
@@ -457,8 +474,8 @@ class FileLogStorage(LogStorageBackend):
 
         # Apply final pagination
         if query.offset > 0:
-            results = results[query.offset:]
-        results = results[:query.limit]
+            results = results[query.offset :]
+        results = results[: query.limit]
 
         return results
 
@@ -469,7 +486,7 @@ class FileLogStorage(LogStorageBackend):
         def _read_file():
             entries = []
             try:
-                with open(log_file, 'r', encoding='utf-8') as f:
+                with open(log_file, "r", encoding="utf-8") as f:
                     for line in f:
                         if line.strip():
                             try:
@@ -506,6 +523,7 @@ class FileLogStorage(LogStorageBackend):
 
     async def get_log_stats(self) -> Dict[str, Any]:
         """Get file storage statistics."""
+
         def _stats():
             total_size = 0
             file_count = 0
@@ -518,15 +536,15 @@ class FileLogStorage(LogStorageBackend):
 
                 # Sample some entries for stats (performance optimization)
                 try:
-                    with open(log_file, 'r', encoding='utf-8') as f:
+                    with open(log_file, "r", encoding="utf-8") as f:
                         for i, line in enumerate(f):
                             if i >= 100:  # Sample first 100 entries per file
                                 break
                             if line.strip():
                                 try:
                                     data = json.loads(line)
-                                    service_counts[data.get('service_name', 'unknown')] += 1
-                                    level_counts[data.get('level', 'INFO')] += 1
+                                    service_counts[data.get("service_name", "unknown")] += 1
+                                    level_counts[data.get("level", "INFO")] += 1
                                 except json.JSONDecodeError:
                                     continue
                 except Exception:
@@ -537,20 +555,21 @@ class FileLogStorage(LogStorageBackend):
                 "total_files": file_count,
                 "total_size_mb": total_size / (1024 * 1024),
                 "services_sample": dict(list(service_counts.items())[:10]),
-                "levels_sample": dict(level_counts)
+                "levels_sample": dict(level_counts),
             }
 
         return await asyncio.get_event_loop().run_in_executor(None, _stats)
 
     async def cleanup_old_logs(self, retention_policy: LogRetentionPolicy) -> int:
         """Clean up old log files."""
+
         def _cleanup():
             removed_files = 0
             cutoff_date = datetime.now() - timedelta(days=retention_policy.max_age_days)
 
             for log_file in self.log_directory.glob("logs_*.jsonl"):
                 # Extract date from filename
-                date_match = re.search(r'logs_(\d{4}-\d{2}-\d{2})\.jsonl', log_file.name)
+                date_match = re.search(r"logs_(\d{4}-\d{2}-\d{2})\.jsonl", log_file.name)
                 if date_match:
                     file_date = datetime.strptime(date_match.group(1), "%Y-%m-%d")
                     if file_date < cutoff_date:
@@ -559,8 +578,8 @@ class FileLogStorage(LogStorageBackend):
                             archive_file = Path(retention_policy.archive_path) / f"{log_file.name}.gz"
                             archive_file.parent.mkdir(exist_ok=True)
 
-                            with open(log_file, 'rb') as f_in:
-                                with gzip.open(archive_file, 'wb') as f_out:
+                            with open(log_file, "rb") as f_in:
+                                with gzip.open(archive_file, "wb") as f_out:
                                     shutil.copyfileobj(f_in, f_out)
 
                         # Remove original file
@@ -614,27 +633,19 @@ class CentralizedLoggingService:
         """Get all logs for a specific correlation ID."""
         return await self.query_logs(correlation_id=correlation_id, order_by="timestamp")
 
-    async def get_error_logs(self, service_name: Optional[str] = None,
-                           start_time: Optional[float] = None,
-                           limit: int = 100) -> List[LogEntry]:
+    async def get_error_logs(
+        self, service_name: Optional[str] = None, start_time: Optional[float] = None, limit: int = 100
+    ) -> List[LogEntry]:
         """Get error and critical logs."""
         return await self.query_logs(
-            service_name=service_name,
-            level="ERROR",
-            start_time=start_time,
-            limit=limit,
-            order_desc=True
+            service_name=service_name, level="ERROR", start_time=start_time, limit=limit, order_desc=True
         )
 
-    async def get_performance_logs(self, service_name: Optional[str] = None,
-                                 operation: Optional[str] = None,
-                                 start_time: Optional[float] = None) -> List[LogEntry]:
+    async def get_performance_logs(
+        self, service_name: Optional[str] = None, operation: Optional[str] = None, start_time: Optional[float] = None
+    ) -> List[LogEntry]:
         """Get performance-related logs."""
-        logs = await self.query_logs(
-            service_name=service_name,
-            operation=operation,
-            start_time=start_time
-        )
+        logs = await self.query_logs(service_name=service_name, operation=operation, start_time=start_time)
 
         # Filter for logs with performance data
         return [log for log in logs if log.performance_data]
@@ -667,16 +678,17 @@ class CentralizedLoggingService:
             "retention_policy": {
                 "max_age_days": self.retention_policy.max_age_days,
                 "max_size_mb": self.retention_policy.max_size_mb,
-                "compression_enabled": self.retention_policy.compression_enabled
-            }
+                "compression_enabled": self.retention_policy.compression_enabled,
+            },
         }
 
     def add_alert_callback(self, callback: Callable[[str, Dict[str, Any]], None]) -> None:
         """Add callback for logging alerts."""
         self._alert_callbacks.append(callback)
 
-    async def stream_logs(self, service_name: Optional[str] = None,
-                         level: Optional[str] = None) -> AsyncIterator[LogEntry]:
+    async def stream_logs(
+        self, service_name: Optional[str] = None, level: Optional[str] = None
+    ) -> AsyncIterator[LogEntry]:
         """Stream logs in real-time."""
         queue = asyncio.Queue()
         self._log_stream_listeners.append(queue)

@@ -2,7 +2,8 @@
 
 Handles consistency analysis and response normalization.
 """
-from typing import Dict, Any, List
+
+from typing import Any, Dict, List
 
 
 class ResponseProcessor:

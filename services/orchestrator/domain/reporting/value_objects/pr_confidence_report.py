@@ -1,11 +1,11 @@
 """PR Confidence Report Value Object"""
 
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from .confidence_level import ConfidenceLevel
 from .approval_recommendation import ApprovalRecommendation
+from .confidence_level import ConfidenceLevel
 
 
 class PRConfidenceReport:
@@ -29,7 +29,7 @@ class PRConfidenceReport:
         analysis_duration: float,
         jira_ticket: Optional[str] = None,
         ai_provider: str = "local_llm",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self._report_id = str(uuid4())
         self._workflow_id = workflow_id.strip()
@@ -175,7 +175,7 @@ class PRConfidenceReport:
     @property
     def blocking_gaps(self) -> List[Dict[str, Any]]:
         """Get gaps that block approval."""
-        return [gap for gap in self._detected_gaps if gap.get('blocking_approval', False)]
+        return [gap for gap in self._detected_gaps if gap.get("blocking_approval", False)]
 
     @property
     def has_critical_concerns(self) -> bool:
@@ -186,9 +186,9 @@ class PRConfidenceReport:
     def is_ready_for_approval(self) -> bool:
         """Check if the PR is ready for approval based on analysis."""
         return (
-            self._approval_recommendation == ApprovalRecommendation.APPROVE and
-            len(self.blocking_gaps) == 0 and
-            not self.has_critical_concerns
+            self._approval_recommendation == ApprovalRecommendation.APPROVE
+            and len(self.blocking_gaps) == 0
+            and not self.has_critical_concerns
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -216,7 +216,7 @@ class PRConfidenceReport:
             "metadata": self._metadata,
             "gap_count": self.gap_count,
             "blocking_gaps_count": len(self.blocking_gaps),
-            "is_ready_for_approval": self.is_ready_for_approval
+            "is_ready_for_approval": self.is_ready_for_approval,
         }
 
     def __repr__(self) -> str:

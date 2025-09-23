@@ -2,7 +2,9 @@
 
 Handles analytics-related HTTP requests and responses.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from ...core.handler import BaseHandler
 from .service import AnalyticsService
 
@@ -27,10 +29,10 @@ class AnalyticsHandlers(BaseHandler):
                 "quality_metrics": self.service.get_quality_metrics(),
                 "temporal_trends": analytics.temporal_trends,
                 "content_insights": analytics.content_insights,
-                "relationship_insights": analytics.relationship_insights
+                "relationship_insights": analytics.relationship_insights,
             },
             operation="get_analytics",
-            days_back=days_back
+            days_back=days_back,
         )
 
     async def handle_get_analytics_summary(self) -> Dict[str, Any]:

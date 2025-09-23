@@ -7,16 +7,16 @@ Provides multiple layers of fallback mechanisms:
 - Service degradation strategies with feature toggles
 - Stale-while-revalidate patterns for improved user experience
 """
+
 import asyncio
-import time
+import hashlib
 import json
+import logging
 import threading
-from typing import Dict, Any, List, Optional, Callable, Awaitable, TypeVar, Union
+import time
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
-import hashlib
-
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, Union
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -24,8 +24,9 @@ T = TypeVar("T")
 
 class FallbackStrategy(Enum):
     """Strategies for fallback behavior."""
-    CACHE_FIRST = "cache_first"      # Try cache first, fallback to source
-    SOURCE_FIRST = "source_first"    # Try source first, fallback to cache
+
+    CACHE_FIRST = "cache_first"  # Try cache first, fallback to source
+    SOURCE_FIRST = "source_first"  # Try source first, fallback to cache
     STALE_WHILE_REVALIDATE = "stale_while_revalidate"  # Serve stale data while refreshing
     DEGRADED_MODE = "degraded_mode"  # Limited functionality mode
     STATIC_FALLBACK = "static_fallback"  # Return static/default data
@@ -33,15 +34,17 @@ class FallbackStrategy(Enum):
 
 class FallbackPriority(Enum):
     """Priority levels for fallback execution."""
+
     CRITICAL = 1  # Must work, system breaking without it
-    HIGH = 2      # Important but system can limp along
-    MEDIUM = 3    # Nice to have, degrades user experience
-    LOW = 4       # Optional, purely for enhancement
+    HIGH = 2  # Important but system can limp along
+    MEDIUM = 3  # Nice to have, degrades user experience
+    LOW = 4  # Optional, purely for enhancement
 
 
 @dataclass
 class FallbackResult:
     """Result of a fallback operation."""
+
     success: bool
     data: Any = None
     source: str = "unknown"  # cache, primary, secondary, static
@@ -54,6 +57,7 @@ class FallbackResult:
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     data: Any
     timestamp: float
     ttl_seconds: float
@@ -92,12 +96,7 @@ class CacheFallback:
                 self._evict_lru()
 
             ttl = ttl_seconds or self.default_ttl
-            entry = CacheEntry(
-                data=data,
-                timestamp=time.time(),
-                ttl_seconds=ttl,
-                etag=etag
-            )
+            entry = CacheEntry(data=data, timestamp=time.time(), ttl_seconds=ttl, etag=etag)
             self._cache[key] = entry
 
     def invalidate(self, key: str) -> bool:
@@ -125,7 +124,7 @@ class CacheFallback:
                 "expired_entries": expired_entries,
                 "active_entries": total_entries - expired_entries,
                 "total_accesses": total_accesses,
-                "hit_rate": total_accesses / max(1, sum(entry.access_count + 1 for entry in self._cache.values()))
+                "hit_rate": total_accesses / max(1, sum(entry.access_count + 1 for entry in self._cache.values())),
             }
 
     def _is_expired(self, entry: CacheEntry) -> bool:
@@ -138,8 +137,7 @@ class CacheFallback:
             return
 
         # Find entry with oldest last_accessed time
-        oldest_key = min(self._cache.keys(),
-                        key=lambda k: self._cache[k].last_accessed)
+        oldest_key = min(self._cache.keys(), key=lambda k: self._cache[k].last_accessed)
         del self._cache[oldest_key]
 
 
@@ -154,7 +152,7 @@ class ServiceFallback:
         strategy: FallbackStrategy = FallbackStrategy.SOURCE_FIRST,
         priority: FallbackPriority = FallbackPriority.MEDIUM,
         cache_fallback: Optional[CacheFallback] = None,
-        cache_key_func: Optional[Callable[[], str]] = None
+        cache_key_func: Optional[Callable[[], str]] = None,
     ):
         self.name = name
         self.primary_func = primary_func
@@ -183,12 +181,7 @@ class ServiceFallback:
         if self.cache_fallback:
             cached_data = self.cache_fallback.get(cache_key)
             if cached_data is not None:
-                return FallbackResult(
-                    success=True,
-                    data=cached_data,
-                    source="cache",
-                    degraded=False
-                )
+                return FallbackResult(success=True, data=cached_data, source="cache", degraded=False)
 
         # Cache miss, try primary then fallbacks
         return await self._try_sources(cache_key)
@@ -212,12 +205,7 @@ class ServiceFallback:
 
         # Return stale data if available
         if stale_data is not None:
-            return FallbackResult(
-                success=True,
-                data=stale_data,
-                source="cache_stale",
-                degraded=True
-            )
+            return FallbackResult(success=True, data=stale_data, source="cache_stale", degraded=True)
 
         # No stale data, try sources
         return await self._try_sources(cache_key)
@@ -236,10 +224,7 @@ class ServiceFallback:
                     self.cache_fallback.set(cache_key, data)
 
                 return FallbackResult(
-                    success=True,
-                    data=data,
-                    source=source_type,
-                    degraded=i > 0  # Any fallback is considered degraded
+                    success=True, data=data, source=source_type, degraded=i > 0  # Any fallback is considered degraded
                 )
 
             except Exception as e:
@@ -250,11 +235,7 @@ class ServiceFallback:
                 continue
 
         # All sources failed
-        return FallbackResult(
-            success=False,
-            error="All fallback sources failed",
-            degraded=True
-        )
+        return FallbackResult(success=False, error="All fallback sources failed", degraded=True)
 
     async def _background_revalidate(self, cache_key: str) -> None:
         """Background revalidation for stale-while-revalidate."""
@@ -309,7 +290,7 @@ class DegradationStrategy:
         return {
             "current_level": self._current_level,
             "features": dict(self._features),
-            "available_levels": list(self._degradation_levels.keys())
+            "available_levels": list(self._degradation_levels.keys()),
         }
 
 
@@ -329,7 +310,7 @@ class FallbackService:
         fallback_funcs: List[Callable[[], Awaitable[T]]],
         strategy: FallbackStrategy = FallbackStrategy.SOURCE_FIRST,
         priority: FallbackPriority = FallbackPriority.MEDIUM,
-        use_global_cache: bool = True
+        use_global_cache: bool = True,
     ) -> None:
         """Register a fallback configuration."""
         cache = self._global_cache if use_global_cache else CacheFallback()
@@ -342,7 +323,7 @@ class FallbackService:
             strategy=strategy,
             priority=priority,
             cache_fallback=cache,
-            cache_key_func=cache_key_func
+            cache_key_func=cache_key_func,
         )
 
         self._fallbacks[name] = fallback
@@ -358,30 +339,22 @@ class FallbackService:
     async def execute_with_fallback(self, name: str) -> FallbackResult:
         """Execute a registered fallback."""
         if name not in self._fallbacks:
-            return FallbackResult(
-                success=False,
-                error=f"Fallback '{name}' not registered"
-            )
+            return FallbackResult(success=False, error=f"Fallback '{name}' not registered")
 
         try:
             result = await self._fallbacks[name].execute()
 
             # Alert on fallback usage
             if result.degraded:
-                await self._trigger_alert("degraded_fallback", {
-                    "fallback_name": name,
-                    "source": result.source,
-                    "error": result.error
-                })
+                await self._trigger_alert(
+                    "degraded_fallback", {"fallback_name": name, "source": result.source, "error": result.error}
+                )
 
             return result
 
         except Exception as e:
             logger.error(f"Fallback execution failed for {name}: {e}")
-            return FallbackResult(
-                success=False,
-                error=str(e)
-            )
+            return FallbackResult(success=False, error=str(e))
 
     def invalidate_cache(self, fallback_name: Optional[str] = None, key: Optional[str] = None) -> None:
         """Invalidate cache entries."""
@@ -429,7 +402,7 @@ class FallbackService:
         stats = {
             "total_fallbacks": len(self._fallbacks),
             "cache_stats": self._global_cache.get_stats(),
-            "degradation_strategies": len(self._degradation_strategies)
+            "degradation_strategies": len(self._degradation_strategies),
         }
 
         # Add per-fallback stats
@@ -443,7 +416,7 @@ class FallbackService:
                 "strategy": fallback.strategy.value,
                 "priority": fallback.priority.value,
                 "fallback_count": len(fallback.fallback_funcs),
-                "cache_stats": cache_stats
+                "cache_stats": cache_stats,
             }
 
         stats["fallbacks"] = fallback_stats
@@ -451,10 +424,7 @@ class FallbackService:
 
     def get_degradation_status(self) -> Dict[str, Any]:
         """Get degradation status for all services."""
-        return {
-            service_name: strategy.get_status()
-            for service_name, strategy in self._degradation_strategies.items()
-        }
+        return {service_name: strategy.get_status() for service_name, strategy in self._degradation_strategies.items()}
 
 
 # Global instance
@@ -481,7 +451,7 @@ def register_fallback(
     primary_func: Callable[[], Awaitable[T]],
     fallback_funcs: List[Callable[[], Awaitable[T]]],
     strategy: FallbackStrategy = FallbackStrategy.SOURCE_FIRST,
-    priority: FallbackPriority = FallbackPriority.MEDIUM
+    priority: FallbackPriority = FallbackPriority.MEDIUM,
 ) -> None:
     """Convenience function to register fallback."""
     service = get_fallback_service()

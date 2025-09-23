@@ -4,19 +4,13 @@ This module contains comprehensive unit tests for the Project aggregate,
 testing business rules, invariants, state transitions, and domain behavior.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from simulation.domain.entities.project import (
-    Project, ProjectId, TeamMember, ProjectPhase
-)
-from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus
-)
-from simulation.domain.events import (
-    ProjectCreated, ProjectStatusChanged, ProjectPhaseCompleted
-)
+import pytest
+from simulation.domain.entities.project import Project, ProjectId, ProjectPhase, TeamMember
+from simulation.domain.events import ProjectCreated, ProjectPhaseCompleted, ProjectStatusChanged
+from simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
 class TestProjectId:
@@ -73,7 +67,7 @@ class TestTeamMember:
             communication_style="direct",
             work_style="focused",
             specialization=["backend", "api"],
-            productivity_multiplier=1.2
+            productivity_multiplier=1.2,
         )
 
         assert member.id == "dev-001"
@@ -91,7 +85,7 @@ class TestTeamMember:
             expertise_level="senior",
             communication_style="direct",
             work_style="focused",
-            specialization=["backend", "api"]
+            specialization=["backend", "api"],
         )
 
         # Should handle tasks in specialization
@@ -108,7 +102,7 @@ class TestTeamMember:
             role="developer",
             expertise_level="junior",
             communication_style="collaborative",
-            work_style="agile"
+            work_style="agile",
         )
         assert basic_member.can_handle_task("unknown") == False
 
@@ -122,7 +116,7 @@ class TestTeamMember:
             communication_style="direct",
             work_style="focused",
             specialization=["backend"],
-            productivity_multiplier=1.3
+            productivity_multiplier=1.3,
         )
 
         # Full productivity for specialized task
@@ -142,7 +136,7 @@ class TestProjectPhase:
             duration_days=14,
             deliverables=["api", "database", "tests"],
             dependencies=["design"],
-            team_allocation={"developer": 3, "qa": 1}
+            team_allocation={"developer": 3, "qa": 1},
         )
 
         assert phase.name == "development"
@@ -206,7 +200,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=5,
             complexity=ComplexityLevel.COMPLEX,
-            duration_weeks=12
+            duration_weeks=12,
         )
 
         assert project.name == "E-commerce Platform"
@@ -229,7 +223,7 @@ class TestProjectAggregate:
             type=ProjectType.API_SERVICE,
             team_size=3,
             complexity=ComplexityLevel.MEDIUM,
-            duration_weeks=8
+            duration_weeks=8,
         )
 
         assert project.type == ProjectType.API_SERVICE
@@ -244,7 +238,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         member = TeamMember(
@@ -253,7 +247,7 @@ class TestProjectAggregate:
             role="developer",
             expertise_level="senior",
             communication_style="direct",
-            work_style="focused"
+            work_style="focused",
         )
 
         project.add_team_member(member)
@@ -271,19 +265,29 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=1,  # Only 1 member allowed
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Add first member
-        member1 = TeamMember(id="dev-001", name="John", role="developer",
-                           expertise_level="senior", communication_style="direct",
-                           work_style="focused")
+        member1 = TeamMember(
+            id="dev-001",
+            name="John",
+            role="developer",
+            expertise_level="senior",
+            communication_style="direct",
+            work_style="focused",
+        )
         project.add_team_member(member1)
 
         # Try to add second member - should fail
-        member2 = TeamMember(id="dev-002", name="Jane", role="developer",
-                           expertise_level="senior", communication_style="direct",
-                           work_style="focused")
+        member2 = TeamMember(
+            id="dev-002",
+            name="Jane",
+            role="developer",
+            expertise_level="senior",
+            communication_style="direct",
+            work_style="focused",
+        )
 
         with pytest.raises(ValueError, match="already has maximum team size"):
             project.add_team_member(member2)
@@ -297,7 +301,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         member = TeamMember(
@@ -306,7 +310,7 @@ class TestProjectAggregate:
             role="developer",
             expertise_level="senior",
             communication_style="direct",
-            work_style="focused"
+            work_style="focused",
         )
 
         # Add member first time
@@ -325,7 +329,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         member = TeamMember(
@@ -334,7 +338,7 @@ class TestProjectAggregate:
             role="developer",
             expertise_level="senior",
             communication_style="direct",
-            work_style="focused"
+            work_style="focused",
         )
 
         project.add_team_member(member)
@@ -352,7 +356,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Start the first phase (planning - no dependencies)
@@ -371,7 +375,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Try to start development phase without completing planning
@@ -387,7 +391,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         project.start_phase("planning")
@@ -412,7 +416,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         original_status = project.status
@@ -437,7 +441,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Initially no current phase
@@ -459,7 +463,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Initially no completed phases
@@ -482,17 +486,25 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=5,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Add members with different roles
         dev_member = TeamMember(
-            id="dev-001", name="John", role="developer",
-            expertise_level="senior", communication_style="direct", work_style="focused"
+            id="dev-001",
+            name="John",
+            role="developer",
+            expertise_level="senior",
+            communication_style="direct",
+            work_style="focused",
         )
         qa_member = TeamMember(
-            id="qa-001", name="Jane", role="qa",
-            expertise_level="senior", communication_style="direct", work_style="focused"
+            id="qa-001",
+            name="Jane",
+            role="qa",
+            expertise_level="senior",
+            communication_style="direct",
+            work_style="focused",
         )
 
         project.add_team_member(dev_member)
@@ -515,7 +527,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Initially 0% progress
@@ -541,10 +553,10 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=8
+            duration_weeks=8,
         )
         # Manually set created_at for testing
-        object.__setattr__(project, 'created_at', created_at)
+        object.__setattr__(project, "created_at", created_at)
 
         estimated_completion = project.get_estimated_completion_date()
         expected_completion = created_at + timedelta(weeks=8)
@@ -562,10 +574,10 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
         # Manually set created_at for testing
-        object.__setattr__(project, 'created_at', created_at)
+        object.__setattr__(project, "created_at", created_at)
 
         assert project.is_overdue() == True
 
@@ -577,7 +589,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=12  # Plenty of time
+            duration_weeks=12,  # Plenty of time
         )
 
         assert on_time_project.is_overdue() == False
@@ -591,7 +603,7 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Should have ProjectCreated event initially
@@ -624,7 +636,7 @@ class TestProjectAggregate:
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
             duration_weeks=4,
-            status=ProjectStatus.IN_PROGRESS
+            status=ProjectStatus.IN_PROGRESS,
         )
 
         expected_str = f"Project(id={project_id}, name='Test Project', status=in_progress)"
@@ -640,25 +652,18 @@ class TestProjectAggregate:
             type=ProjectType.WEB_APPLICATION,
             team_size=3,
             complexity=ComplexityLevel.SIMPLE,
-            duration_weeks=4
+            duration_weeks=4,
         )
 
         # Create custom phases with dependencies
-        planning_phase = ProjectPhase(
-            name="custom_planning",
-            duration_days=5,
-            deliverables=["plan"]
-        )
+        planning_phase = ProjectPhase(name="custom_planning", duration_days=5, deliverables=["plan"])
 
         dev_phase = ProjectPhase(
-            name="custom_development",
-            duration_days=10,
-            deliverables=["code"],
-            dependencies=["custom_planning"]
+            name="custom_development", duration_days=10, deliverables=["code"], dependencies=["custom_planning"]
         )
 
         # Manually set phases for testing
-        object.__setattr__(project, 'phases', [planning_phase, dev_phase])
+        object.__setattr__(project, "phases", [planning_phase, dev_phase])
 
         # Should be able to start planning (no dependencies)
         project.start_phase("custom_planning")

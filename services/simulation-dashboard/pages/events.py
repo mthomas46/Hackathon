@@ -4,17 +4,18 @@ This module provides the event timeline and replay visualization interface,
 allowing users to explore simulation events chronologically and replay event sequences.
 """
 
-import streamlit as st
+import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
+from infrastructure.config.config import get_config
 from plotly.subplots import make_subplots
-import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-import json
 
 from services.clients.simulation_client import SimulationClient
-from infrastructure.config.config import get_config
 
 
 def render_events_page():
@@ -26,11 +27,7 @@ def render_events_page():
     initialize_events_state()
 
     # Create tabs for different event views
-    tab1, tab2, tab3 = st.tabs([
-        "📊 Event Timeline",
-        "🎬 Event Replay",
-        "📈 Event Analytics"
-    ])
+    tab1, tab2, tab3 = st.tabs(["📊 Event Timeline", "🎬 Event Replay", "📈 Event Analytics"])
 
     with tab1:
         render_event_timeline()
@@ -44,23 +41,18 @@ def render_events_page():
 
 def initialize_events_state():
     """Initialize session state for events page."""
-    if 'selected_simulation_events' not in st.session_state:
+    if "selected_simulation_events" not in st.session_state:
         st.session_state.selected_simulation_events = None
 
-    if 'event_filters' not in st.session_state:
-        st.session_state.event_filters = {
-            'event_types': [],
-            'start_date': None,
-            'end_date': None,
-            'tags': []
-        }
+    if "event_filters" not in st.session_state:
+        st.session_state.event_filters = {"event_types": [], "start_date": None, "end_date": None, "tags": []}
 
-    if 'replay_config' not in st.session_state:
+    if "replay_config" not in st.session_state:
         st.session_state.replay_config = {
-            'speed_multiplier': 1.0,
-            'include_system_events': False,
-            'max_events': 100,
-            'is_replaying': False
+            "speed_multiplier": 1.0,
+            "include_system_events": False,
+            "max_events": 100,
+            "is_replaying": False,
         }
 
 
@@ -76,14 +68,11 @@ def render_event_timeline():
 
         if simulations:
             simulation_options = ["Select a simulation..."] + [
-                f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}"
-                for sim in simulations
+                f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}" for sim in simulations
             ]
 
             selected_sim_option = st.selectbox(
-                "Select Simulation for Timeline",
-                options=simulation_options,
-                key="timeline_simulation_selector"
+                "Select Simulation for Timeline", options=simulation_options, key="timeline_simulation_selector"
             )
 
             if selected_sim_option and selected_sim_option != "Select a simulation...":
@@ -141,30 +130,30 @@ def render_event_replay():
             "Playback Speed",
             min_value=0.1,
             max_value=5.0,
-            value=st.session_state.replay_config['speed_multiplier'],
+            value=st.session_state.replay_config["speed_multiplier"],
             step=0.1,
-            help="Speed multiplier for event replay"
+            help="Speed multiplier for event replay",
         )
-        st.session_state.replay_config['speed_multiplier'] = speed_multiplier
+        st.session_state.replay_config["speed_multiplier"] = speed_multiplier
 
     with col2:
         include_system = st.checkbox(
             "Include System Events",
-            value=st.session_state.replay_config['include_system_events'],
-            help="Include system-level events in replay"
+            value=st.session_state.replay_config["include_system_events"],
+            help="Include system-level events in replay",
         )
-        st.session_state.replay_config['include_system_events'] = include_system
+        st.session_state.replay_config["include_system_events"] = include_system
 
     with col3:
         max_events = st.slider(
             "Max Events",
             min_value=10,
             max_value=500,
-            value=st.session_state.replay_config['max_events'],
+            value=st.session_state.replay_config["max_events"],
             step=10,
-            help="Maximum number of events to replay"
+            help="Maximum number of events to replay",
         )
-        st.session_state.replay_config['max_events'] = max_events
+        st.session_state.replay_config["max_events"] = max_events
 
     with col4:
         if st.button("▶️ Start Replay", type="primary", key="start_replay"):
@@ -174,7 +163,7 @@ def render_event_replay():
             stop_event_replay()
 
     # Replay status
-    if st.session_state.replay_config['is_replaying']:
+    if st.session_state.replay_config["is_replaying"]:
         st.success("🎬 Replay in progress...")
         render_replay_progress()
     else:
@@ -187,7 +176,7 @@ def render_event_replay():
     replay_placeholder = st.empty()
 
     # Event sequence display
-    if st.session_state.replay_config['is_replaying']:
+    if st.session_state.replay_config["is_replaying"]:
         display_replay_sequence(replay_placeholder)
 
 
@@ -226,22 +215,22 @@ def render_event_filters(events: List[Dict[str, Any]]):
 
     # Event type filter
     with col1:
-        available_event_types = list(set(event.get('event_type', 'Unknown') for event in events))
+        available_event_types = list(set(event.get("event_type", "Unknown") for event in events))
         selected_event_types = st.multiselect(
             "Event Types",
             options=available_event_types,
-            default=st.session_state.event_filters['event_types'] or available_event_types[:5],
-            help="Filter events by type"
+            default=st.session_state.event_filters["event_types"] or available_event_types[:5],
+            help="Filter events by type",
         )
-        st.session_state.event_filters['event_types'] = selected_event_types
+        st.session_state.event_filters["event_types"] = selected_event_types
 
     # Time range filter
     with col2:
         # Get date range from events
         if events:
-            timestamps = [event.get('timestamp', '') for event in events if event.get('timestamp')]
+            timestamps = [event.get("timestamp", "") for event in events if event.get("timestamp")]
             if timestamps:
-                dates = [datetime.fromisoformat(ts.replace('Z', '+00:00')) for ts in timestamps if ts]
+                dates = [datetime.fromisoformat(ts.replace("Z", "+00:00")) for ts in timestamps if ts]
                 if dates:
                     min_date = min(dates).date()
                     max_date = max(dates).date()
@@ -251,28 +240,28 @@ def render_event_filters(events: List[Dict[str, Any]]):
                         value=(min_date, max_date),
                         min_value=min_date,
                         max_value=max_date,
-                        help="Filter events by date range"
+                        help="Filter events by date range",
                     )
 
                     if len(date_range) == 2:
-                        st.session_state.event_filters['start_date'] = date_range[0]
-                        st.session_state.event_filters['end_date'] = date_range[1]
+                        st.session_state.event_filters["start_date"] = date_range[0]
+                        st.session_state.event_filters["end_date"] = date_range[1]
 
     # Tags filter
     with col3:
         available_tags = []
         for event in events:
-            available_tags.extend(event.get('tags', []))
+            available_tags.extend(event.get("tags", []))
         available_tags = list(set(available_tags))
 
         if available_tags:
             selected_tags = st.multiselect(
                 "Tags",
                 options=available_tags,
-                default=st.session_state.event_filters['tags'],
-                help="Filter events by tags"
+                default=st.session_state.event_filters["tags"],
+                help="Filter events by tags",
             )
-            st.session_state.event_filters['tags'] = selected_tags
+            st.session_state.event_filters["tags"] = selected_tags
 
 
 def apply_event_filters(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -280,28 +269,31 @@ def apply_event_filters(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     filtered_events = events
 
     # Event type filter
-    if st.session_state.event_filters['event_types']:
+    if st.session_state.event_filters["event_types"]:
         filtered_events = [
-            event for event in filtered_events
-            if event.get('event_type') in st.session_state.event_filters['event_types']
+            event
+            for event in filtered_events
+            if event.get("event_type") in st.session_state.event_filters["event_types"]
         ]
 
     # Date range filter
-    if st.session_state.event_filters['start_date'] and st.session_state.event_filters['end_date']:
-        start_date = st.session_state.event_filters['start_date']
-        end_date = st.session_state.event_filters['end_date']
+    if st.session_state.event_filters["start_date"] and st.session_state.event_filters["end_date"]:
+        start_date = st.session_state.event_filters["start_date"]
+        end_date = st.session_state.event_filters["end_date"]
 
         filtered_events = [
-            event for event in filtered_events
-            if event.get('timestamp') and
-               start_date <= datetime.fromisoformat(event['timestamp'].replace('Z', '+00:00')).date() <= end_date
+            event
+            for event in filtered_events
+            if event.get("timestamp")
+            and start_date <= datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00")).date() <= end_date
         ]
 
     # Tags filter
-    if st.session_state.event_filters['tags']:
+    if st.session_state.event_filters["tags"]:
         filtered_events = [
-            event for event in filtered_events
-            if any(tag in event.get('tags', []) for tag in st.session_state.event_filters['tags'])
+            event
+            for event in filtered_events
+            if any(tag in event.get("tags", []) for tag in st.session_state.event_filters["tags"])
         ]
 
     return filtered_events
@@ -318,17 +310,19 @@ def render_timeline_visualization(events: List[Dict[str, Any]]):
     # Prepare data for timeline
     timeline_data = []
     for event in events:
-        timestamp = event.get('timestamp', '')
+        timestamp = event.get("timestamp", "")
         if timestamp:
             try:
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                timeline_data.append({
-                    'timestamp': dt,
-                    'event_type': event.get('event_type', 'Unknown'),
-                    'description': get_event_description(event),
-                    'simulation_id': event.get('simulation_id', 'Unknown'),
-                    'correlation_id': event.get('correlation_id', 'Unknown')
-                })
+                dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                timeline_data.append(
+                    {
+                        "timestamp": dt,
+                        "event_type": event.get("event_type", "Unknown"),
+                        "description": get_event_description(event),
+                        "simulation_id": event.get("simulation_id", "Unknown"),
+                        "correlation_id": event.get("correlation_id", "Unknown"),
+                    }
+                )
             except:
                 continue
 
@@ -338,18 +332,14 @@ def render_timeline_visualization(events: List[Dict[str, Any]]):
         # Create timeline scatter plot
         fig = px.scatter(
             df,
-            x='timestamp',
-            y='event_type',
-            color='event_type',
-            title='Event Timeline',
-            hover_data=['description', 'simulation_id', 'correlation_id']
+            x="timestamp",
+            y="event_type",
+            color="event_type",
+            title="Event Timeline",
+            hover_data=["description", "simulation_id", "correlation_id"],
         )
 
-        fig.update_layout(
-            xaxis_title="Time",
-            yaxis_title="Event Type",
-            height=500
-        )
+        fig.update_layout(xaxis_title="Time", yaxis_title="Event Type", height=500)
 
         fig.update_xaxes(tickformat="%H:%M:%S")
         fig.update_traces(marker=dict(size=8))
@@ -370,23 +360,25 @@ def render_event_details_table(events: List[Dict[str, Any]]):
     # Prepare data for table
     table_data = []
     for event in events:
-        timestamp = event.get('timestamp', '')
+        timestamp = event.get("timestamp", "")
         if timestamp:
             try:
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
             except:
                 formatted_time = timestamp
         else:
             formatted_time = "Unknown"
 
-        table_data.append({
-            'Time': formatted_time,
-            'Event Type': event.get('event_type', 'Unknown'),
-            'Description': get_event_description(event),
-            'Simulation': event.get('simulation_id', 'Unknown'),
-            'Correlation ID': event.get('correlation_id', 'Unknown')[:8] + "..."
-        })
+        table_data.append(
+            {
+                "Time": formatted_time,
+                "Event Type": event.get("event_type", "Unknown"),
+                "Description": get_event_description(event),
+                "Simulation": event.get("simulation_id", "Unknown"),
+                "Correlation ID": event.get("correlation_id", "Unknown")[:8] + "...",
+            }
+        )
 
     if table_data:
         df = pd.DataFrame(table_data)
@@ -400,7 +392,7 @@ def render_event_details_table(events: List[Dict[str, Any]]):
                 data=csv_data,
                 file_name=f"simulation_events_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv",
-                key="export_events_csv"
+                key="export_events_csv",
             )
 
 
@@ -411,7 +403,7 @@ def render_event_type_distribution(events: List[Dict[str, Any]]):
     # Count events by type
     event_counts = {}
     for event in events:
-        event_type = event.get('event_type', 'Unknown')
+        event_type = event.get("event_type", "Unknown")
         event_counts[event_type] = event_counts.get(event_type, 0) + 1
 
     if event_counts:
@@ -419,22 +411,22 @@ def render_event_type_distribution(events: List[Dict[str, Any]]):
         labels = list(event_counts.keys())
         values = list(event_counts.values())
 
-        fig = go.Figure(data=[go.Pie(
-            labels=labels,
-            values=values,
-            title="Event Types Distribution",
-            marker_colors=px.colors.qualitative.Set3
-        )])
+        fig = go.Figure(
+            data=[
+                go.Pie(
+                    labels=labels,
+                    values=values,
+                    title="Event Types Distribution",
+                    marker_colors=px.colors.qualitative.Set3,
+                )
+            ]
+        )
 
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
 
         # Summary table
-        summary_data = {
-            'Event Type': labels,
-            'Count': values,
-            'Percentage': [".1f" for v in values]
-        }
+        summary_data = {"Event Type": labels, "Count": values, "Percentage": [".1f" for v in values]}
 
         st.table(pd.DataFrame(summary_data))
 
@@ -450,10 +442,10 @@ def render_event_frequency_chart(events: List[Dict[str, Any]]):
     # Group events by time intervals
     time_intervals = {}
     for event in events:
-        timestamp = event.get('timestamp', '')
+        timestamp = event.get("timestamp", "")
         if timestamp:
             try:
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 # Group by minute intervals
                 interval = dt.replace(second=0, microsecond=0)
                 time_intervals[interval] = time_intervals.get(interval, 0) + 1
@@ -467,20 +459,19 @@ def render_event_frequency_chart(events: List[Dict[str, Any]]):
         counts = [count for _, count in sorted_intervals]
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=counts,
-            mode='lines+markers',
-            name='Event Frequency',
-            line=dict(color='blue', width=2),
-            marker=dict(size=6)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=counts,
+                mode="lines+markers",
+                name="Event Frequency",
+                line=dict(color="blue", width=2),
+                marker=dict(size=6),
+            )
+        )
 
         fig.update_layout(
-            title="Event Frequency Over Time",
-            xaxis_title="Time",
-            yaxis_title="Number of Events",
-            height=400
+            title="Event Frequency Over Time", xaxis_title="Time", yaxis_title="Number of Events", height=400
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -495,7 +486,7 @@ def render_event_correlations(events: List[Dict[str, Any]]):
         return
 
     # Analyze event sequences
-    event_sequence = [event.get('event_type', 'Unknown') for event in events]
+    event_sequence = [event.get("event_type", "Unknown") for event in events]
 
     # Find common patterns
     patterns = {}
@@ -520,11 +511,11 @@ def render_event_insights(events: List[Dict[str, Any]]):
     insights = generate_event_insights(events)
 
     for insight in insights:
-        if insight['type'] == 'success':
+        if insight["type"] == "success":
             st.success(f"✅ {insight['message']}")
-        elif insight['type'] == 'warning':
+        elif insight["type"] == "warning":
             st.warning(f"⚠️ {insight['message']}")
-        elif insight['type'] == 'info':
+        elif insight["type"] == "info":
             st.info(f"ℹ️ {insight['message']}")
 
 
@@ -547,34 +538,40 @@ def generate_mock_events(simulation_id: str) -> List[Dict[str, Any]]:
     base_time = datetime.now() - timedelta(hours=2)
 
     event_types = [
-        "SimulationStarted", "ProjectCreated", "DocumentGenerated", "WorkflowExecuted",
-        "PhaseStarted", "MilestoneAchieved", "DocumentGenerated", "WorkflowExecuted",
-        "PhaseCompleted", "SimulationCompleted"
+        "SimulationStarted",
+        "ProjectCreated",
+        "DocumentGenerated",
+        "WorkflowExecuted",
+        "PhaseStarted",
+        "MilestoneAchieved",
+        "DocumentGenerated",
+        "WorkflowExecuted",
+        "PhaseCompleted",
+        "SimulationCompleted",
     ]
 
     events = []
     for i, event_type in enumerate(event_types):
         event_time = base_time + timedelta(minutes=i * 5)
 
-        events.append({
-            'event_id': f"evt_{i+1}_{simulation_id}",
-            'event_type': event_type,
-            'timestamp': event_time.isoformat(),
-            'simulation_id': simulation_id,
-            'correlation_id': f"corr_{i+1}",
-            'tags': ['simulation', 'development'],
-            'data': {
-                'description': get_event_description({'event_type': event_type}),
-                'sequence_number': i + 1
+        events.append(
+            {
+                "event_id": f"evt_{i+1}_{simulation_id}",
+                "event_type": event_type,
+                "timestamp": event_time.isoformat(),
+                "simulation_id": simulation_id,
+                "correlation_id": f"corr_{i+1}",
+                "tags": ["simulation", "development"],
+                "data": {"description": get_event_description({"event_type": event_type}), "sequence_number": i + 1},
             }
-        })
+        )
 
     return events
 
 
 def get_event_description(event: Dict[str, Any]) -> str:
     """Get human-readable description for an event."""
-    event_type = event.get('event_type', 'Unknown')
+    event_type = event.get("event_type", "Unknown")
 
     descriptions = {
         "SimulationStarted": "Simulation execution began",
@@ -588,7 +585,7 @@ def get_event_description(event: Dict[str, Any]) -> str:
         "PhaseCompleted": "Project phase finished",
         "MilestoneAchieved": "Project milestone was reached",
         "TeamMemberAdded": "Team member was added to project",
-        "DocumentAnalysisCompleted": "Document analysis finished"
+        "DocumentAnalysisCompleted": "Document analysis finished",
     }
 
     return descriptions.get(event_type, f"Event: {event_type}")
@@ -596,20 +593,20 @@ def get_event_description(event: Dict[str, Any]) -> str:
 
 def start_event_replay():
     """Start event replay sequence."""
-    st.session_state.replay_config['is_replaying'] = True
-    st.session_state.replay_config['replay_start_time'] = datetime.now()
+    st.session_state.replay_config["is_replaying"] = True
+    st.session_state.replay_config["replay_start_time"] = datetime.now()
     st.rerun()
 
 
 def stop_event_replay():
     """Stop event replay sequence."""
-    st.session_state.replay_config['is_replaying'] = False
+    st.session_state.replay_config["is_replaying"] = False
     st.rerun()
 
 
 def render_replay_progress():
     """Render replay progress indicator."""
-    start_time = st.session_state.replay_config.get('replay_start_time')
+    start_time = st.session_state.replay_config.get("replay_start_time")
     if start_time:
         elapsed = (datetime.now() - start_time).total_seconds()
         progress = min(elapsed / 30, 1.0)  # Assume 30 second replay
@@ -625,33 +622,36 @@ def display_replay_sequence(placeholder):
         placeholder.info("No events to replay.")
         return
 
-    max_events = min(len(events), config['max_events'])
-    speed_multiplier = config['speed_multiplier']
+    max_events = min(len(events), config["max_events"])
+    speed_multiplier = config["speed_multiplier"]
 
     for i in range(max_events):
-        if not st.session_state.replay_config['is_replaying']:
+        if not st.session_state.replay_config["is_replaying"]:
             break
 
         event = events[i]
 
         # Display current event
-        placeholder.markdown(f"""
+        placeholder.markdown(
+            f"""
         ### 🎬 Replaying Event {i + 1}/{max_events}
         **{event['event_type']}** - {get_event_description(event)}
 
         *Time: {event['timestamp']}*
-        """)
+        """
+        )
 
         # Wait based on speed multiplier
         import time
+
         time.sleep(1.0 / speed_multiplier)
 
         # Update placeholder
         placeholder.empty()
 
     # Replay finished
-    if st.session_state.replay_config['is_replaying']:
-        st.session_state.replay_config['is_replaying'] = False
+    if st.session_state.replay_config["is_replaying"]:
+        st.session_state.replay_config["is_replaying"] = False
         placeholder.success("🎬 Event replay completed!")
         st.rerun()
 
@@ -664,49 +664,43 @@ def generate_event_insights(events: List[Dict[str, Any]]) -> List[Dict[str, Any]
         return insights
 
     # Analyze event patterns
-    event_types = [e.get('event_type', 'Unknown') for e in events]
+    event_types = [e.get("event_type", "Unknown") for e in events]
     total_events = len(events)
 
     # Success pattern analysis
     if "SimulationCompleted" in event_types:
-        insights.append({
-            'type': 'success',
-            'message': 'Simulation completed successfully with comprehensive event tracking'
-        })
+        insights.append(
+            {"type": "success", "message": "Simulation completed successfully with comprehensive event tracking"}
+        )
 
     # Frequency analysis
-    document_events = sum(1 for e in event_types if 'Document' in e)
+    document_events = sum(1 for e in event_types if "Document" in e)
     if document_events > total_events * 0.3:
-        insights.append({
-            'type': 'info',
-            'message': 'High document generation activity indicates productive simulation'
-        })
+        insights.append(
+            {"type": "info", "message": "High document generation activity indicates productive simulation"}
+        )
 
     # Error analysis
-    error_events = sum(1 for e in event_types if 'Failed' in e)
+    error_events = sum(1 for e in event_types if "Failed" in e)
     if error_events > 0:
-        insights.append({
-            'type': 'warning',
-            'message': f'Detected {error_events} error events - review simulation configuration'
-        })
+        insights.append(
+            {"type": "warning", "message": f"Detected {error_events} error events - review simulation configuration"}
+        )
 
     # Timeline analysis
     if len(events) > 1:
         timestamps = []
         for event in events:
-            ts = event.get('timestamp', '')
+            ts = event.get("timestamp", "")
             if ts:
                 try:
-                    timestamps.append(datetime.fromisoformat(ts.replace('Z', '+00:00')))
+                    timestamps.append(datetime.fromisoformat(ts.replace("Z", "+00:00")))
                 except:
                     continue
 
         if len(timestamps) > 1:
             duration = (max(timestamps) - min(timestamps)).total_seconds()
-            insights.append({
-                'type': 'info',
-                'message': '.1f'
-            })
+            insights.append({"type": "info", "message": ".1f"})
 
     return insights
 
@@ -715,19 +709,7 @@ def get_available_simulations() -> List[Dict[str, Any]]:
     """Get list of available simulations."""
     # Mock data - in real implementation, this would call the simulation service
     return [
-        {
-            'id': 'sim_001',
-            'name': 'E-commerce Platform Development',
-            'status': 'completed'
-        },
-        {
-            'id': 'sim_002',
-            'name': 'Mobile App Development',
-            'status': 'running'
-        },
-        {
-            'id': 'sim_003',
-            'name': 'API Service Implementation',
-            'status': 'completed'
-        }
+        {"id": "sim_001", "name": "E-commerce Platform Development", "status": "completed"},
+        {"id": "sim_002", "name": "Mobile App Development", "status": "running"},
+        {"id": "sim_003", "name": "API Service Implementation", "status": "completed"},
     ]

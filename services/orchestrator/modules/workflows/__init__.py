@@ -11,6 +11,6 @@ from .document_analysis import create_document_analysis_workflow
 # from .quality_assurance import create_quality_assurance_workflow
 
 __all__ = [
-    'create_document_analysis_workflow'
+    "create_document_analysis_workflow"
     # Additional workflows will be added here as implemented
 ]

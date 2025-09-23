@@ -6,13 +6,14 @@ implementation details.
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import List, Optional, Protocol
 
 from .entities.project import Project, ProjectId
-from .entities.timeline import Timeline, TimelineId
-from .entities.team import Team, TeamId
 from .entities.simulation import Simulation, SimulationId
+from .entities.team import Team, TeamId
+from .entities.timeline import Timeline, TimelineId
 
 
 class IProjectRepository(ABC):

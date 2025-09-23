@@ -3,15 +3,17 @@
 Handles source agent service visualization, including document fetching,
 data normalization, and code analysis operations across GitHub, Jira, and Confluence.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
 from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
+    build_frontend_context,
     create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
     handle_frontend_error,
-    build_frontend_context
 )
 from ..source_agent_monitor import source_agent_monitor
 
@@ -39,7 +41,7 @@ class SourceAgentUIHandlers:
                 "recent_fetches": fetch_history,
                 "recent_normalizations": normalization_history,
                 "recent_analyses": analysis_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -1057,4 +1059,6 @@ class UserAPI:
 """
             return create_html_response(html, "Source Agent Dashboard")
         except Exception as e:
-            return handle_frontend_error("render source agent dashboard", e, **build_frontend_context("render_source_agent_dashboard"))
+            return handle_frontend_error(
+                "render source agent dashboard", e, **build_frontend_context("render_source_agent_dashboard")
+            )

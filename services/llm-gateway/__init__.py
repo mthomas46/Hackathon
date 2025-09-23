@@ -40,5 +40,5 @@ __all__ = [
     "SERVICE_NAME",
     "SERVICE_TITLE",
     "SERVICE_DESCRIPTION",
-    "DEFAULT_PORT"
+    "DEFAULT_PORT",
 ]

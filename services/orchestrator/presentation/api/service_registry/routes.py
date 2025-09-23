@@ -6,15 +6,19 @@ Provides endpoints for:
 - Service metadata management
 """
 
-from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 
-from .dtos import (
-    ServiceRegistrationRequest, ServiceUnregistrationRequest,
-    PollOpenAPIRequest, ServiceInfoResponse, RegistryEntryResponse,
-    ServiceListResponse
-)
+from fastapi import APIRouter, Depends, HTTPException
+
 from ....main import container
+from .dtos import (
+    PollOpenAPIRequest,
+    RegistryEntryResponse,
+    ServiceInfoResponse,
+    ServiceListResponse,
+    ServiceRegistrationRequest,
+    ServiceUnregistrationRequest,
+)
 
 router = APIRouter()
 
@@ -24,6 +28,7 @@ async def register_service(request: ServiceRegistrationRequest):
     """Register a new service with the registry."""
     try:
         from ....application.service_registry.commands import RegisterServiceCommand
+
         command = RegisterServiceCommand(
             service_id=request.service_name,  # Using name as ID for simplicity
             name=request.service_name,
@@ -33,7 +38,7 @@ async def register_service(request: ServiceRegistrationRequest):
             openapi_url=None,  # Could be derived or provided
             capabilities=request.capabilities,
             endpoints=[],  # Would be populated from OpenAPI spec
-            metadata=request.metadata or {}
+            metadata=request.metadata or {},
         )
         result = await container.register_service_use_case.execute(command)
         if result.is_failure():
@@ -51,6 +56,7 @@ async def unregister_service(request: ServiceUnregistrationRequest):
     try:
         from ....application.service_registry.commands import UnregisterServiceCommand
         from ....domain.service_registry.value_objects.service_id import ServiceId
+
         command = UnregisterServiceCommand(service_id=ServiceId(request.service_name))
         result = await container.unregister_service_use_case.execute(command)
         if result.is_failure():
@@ -68,6 +74,7 @@ async def get_service(service_name: str):
     try:
         from ....application.service_registry.queries import GetServiceQuery
         from ....domain.service_registry.value_objects.service_id import ServiceId
+
         query = GetServiceQuery(service_id=ServiceId(service_name))
         result = await container.get_service_use_case.execute(query)
         if result.is_failure():
@@ -85,17 +92,14 @@ async def list_services(
     capability: Optional[str] = None,
     status: Optional[str] = None,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
 ):
     """List services in the registry with optional filters."""
     try:
         from ....application.service_registry.queries import ListServicesQuery
+
         query = ListServicesQuery(
-            category_filter=category,
-            capability_filter=capability,
-            status_filter=status,
-            limit=limit,
-            offset=offset
+            category_filter=category, capability_filter=capability, status_filter=status, limit=limit, offset=offset
         )
         result = await container.list_services_use_case.execute(query)
         if result.is_failure():
@@ -116,7 +120,7 @@ async def poll_openapi_specs(request: PollOpenAPIRequest):
             "message": f"OpenAPI polling initiated for {len(request.service_urls)} services",
             "status": "initiated",
             "services_polled": request.service_urls,
-            "force_refresh": request.force_refresh
+            "force_refresh": request.force_refresh,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to poll OpenAPI specs: {str(e)}")
@@ -138,10 +142,10 @@ async def list_service_capabilities():
                 "sentiment-analysis",
                 "entity-recognition",
                 "question-answering",
-                "workflow-execution"
+                "workflow-execution",
             ],
             "total_services": 0,  # Would be populated from registry
-            "services_by_capability": {}  # Would map capabilities to service lists
+            "services_by_capability": {},  # Would map capabilities to service lists
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list capabilities: {str(e)}")
@@ -158,7 +162,7 @@ async def get_registry_health():
             "status": "healthy",
             "total_services": len(services.data.services) if services.is_success() else 0,
             "timestamp": "2024-01-01T00:00:00Z",  # Would use actual timestamp
-            "uptime": "99.9%"  # Would calculate actual uptime
+            "uptime": "99.9%",  # Would calculate actual uptime
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get registry health: {str(e)}")
@@ -173,7 +177,7 @@ async def ping_service(service_name: str):
             "service_name": service_name,
             "status": "reachable",
             "response_time_ms": 150,
-            "last_checked": "2024-01-01T00:00:00Z"
+            "last_checked": "2024-01-01T00:00:00Z",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to ping service: {str(e)}")

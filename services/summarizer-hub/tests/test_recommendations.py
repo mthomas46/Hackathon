@@ -3,15 +3,16 @@ Unit tests for Summarizer-Hub recommendation endpoints.
 Following TDD principles with comprehensive test coverage.
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
-from typing import List, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Import the FastAPI app and test client
 from fastapi.testclient import TestClient
-from main import app, SimpleSummarizer
+from main import SimpleSummarizer, app
 
 
 class TestRecommendationEndpoints:
@@ -25,9 +26,7 @@ class TestRecommendationEndpoints:
     def test_recommendations_endpoint_structure(self):
         """Test that recommendations endpoint accepts proper request structure."""
         # Test with empty documents list
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": []
-        })
+        response = self.client.post("/api/v1/recommendations", json={"documents": []})
         assert response.status_code == 422  # Validation error for empty documents
 
     def test_recommendations_endpoint_with_valid_data(self):
@@ -37,25 +36,25 @@ class TestRecommendationEndpoints:
                 "id": "doc1",
                 "title": "API Guide",
                 "content": "This is an API guide with comprehensive information about using the API.",
-                "type": "api_docs"
+                "type": "api_docs",
             },
             {
                 "id": "doc2",
                 "title": "API Reference",
                 "content": "This is an API reference with comprehensive information about using the API.",
-                "type": "api_docs"
+                "type": "api_docs",
             },
             {
                 "id": "doc3",
                 "title": "Old Documentation",
                 "content": "This is old documentation that may be outdated.",
                 "dateCreated": "2020-01-01T00:00:00Z",
-                "type": "tutorial"
-            }
+                "type": "tutorial",
+            },
         ]
 
         # Mock the LLM calls to avoid external dependencies
-        with patch('main.SimpleSummarizer.generate_recommendations') as mock_generate:
+        with patch("main.SimpleSummarizer.generate_recommendations") as mock_generate:
             mock_generate.return_value = {
                 "recommendations": [
                     {
@@ -69,11 +68,7 @@ class TestRecommendationEndpoints:
                         "expected_impact": "Reduce maintenance overhead by 40%",
                         "effort_level": "medium",
                         "tags": ["consolidation", "api_docs"],
-                        "metadata": {
-                            "document_type": "api_docs",
-                            "document_count": 2,
-                            "average_similarity": 0.85
-                        }
+                        "metadata": {"document_type": "api_docs", "document_count": 2, "average_similarity": 0.85},
                     },
                     {
                         "id": "rec2",
@@ -87,21 +82,24 @@ class TestRecommendationEndpoints:
                         "effort_level": "medium",
                         "tags": ["outdated", "maintenance"],
                         "age_days": 1461,
-                        "metadata": {"last_updated": "2020-01-01T00:00:00Z"}
-                    }
+                        "metadata": {"last_updated": "2020-01-01T00:00:00Z"},
+                    },
                 ],
                 "total_documents": 3,
                 "recommendations_count": 2,
                 "processing_time": 0.5,
                 "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
-                "confidence_threshold": 0.4
+                "confidence_threshold": 0.4,
             }
 
-            response = self.client.post("/api/v1/recommendations", json={
-                "documents": documents,
-                "recommendation_types": ["consolidation", "outdated"],
-                "confidence_threshold": 0.4
-            })
+            response = self.client.post(
+                "/api/v1/recommendations",
+                json={
+                    "documents": documents,
+                    "recommendation_types": ["consolidation", "outdated"],
+                    "confidence_threshold": 0.4,
+                },
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -127,25 +125,25 @@ class TestRecommendationEndpoints:
     def test_recommendations_endpoint_with_invalid_data(self):
         """Test recommendations endpoint with invalid data."""
         # Test with missing content field
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": [{"id": "doc1", "title": "Test"}]  # Missing content
-        })
+        response = self.client.post(
+            "/api/v1/recommendations", json={"documents": [{"id": "doc1", "title": "Test"}]}  # Missing content
+        )
         assert response.status_code == 422
 
         # Test with missing id field
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": [{"title": "Test", "content": "Test content"}]  # Missing id
-        })
+        response = self.client.post(
+            "/api/v1/recommendations", json={"documents": [{"title": "Test", "content": "Test content"}]}  # Missing id
+        )
         assert response.status_code == 422
 
     def test_recommendations_endpoint_filters_by_type(self):
         """Test that recommendations can be filtered by type."""
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"}
+            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
         ]
 
-        with patch('main.SimpleSummarizer.generate_recommendations') as mock_generate:
+        with patch("main.SimpleSummarizer.generate_recommendations") as mock_generate:
             mock_generate.return_value = {
                 "recommendations": [
                     {
@@ -159,21 +157,20 @@ class TestRecommendationEndpoints:
                         "expected_impact": "Reduce overhead",
                         "effort_level": "medium",
                         "tags": ["consolidation"],
-                        "metadata": {}
+                        "metadata": {},
                     }
                 ],
                 "total_documents": 2,
                 "recommendations_count": 1,
                 "processing_time": 0.3,
                 "recommendation_types": ["consolidation"],
-                "confidence_threshold": 0.4
+                "confidence_threshold": 0.4,
             }
 
             # Test with specific recommendation types
-            response = self.client.post("/api/v1/recommendations", json={
-                "documents": documents,
-                "recommendation_types": ["consolidation"]
-            })
+            response = self.client.post(
+                "/api/v1/recommendations", json={"documents": documents, "recommendation_types": ["consolidation"]}
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -185,10 +182,10 @@ class TestRecommendationEndpoints:
         """Test that confidence threshold filtering works."""
         documents = [
             {"id": "doc1", "title": "High Quality", "content": "Excellent content", "type": "guide"},
-            {"id": "doc2", "title": "Low Quality", "content": "Poor", "type": "guide"}
+            {"id": "doc2", "title": "Low Quality", "content": "Poor", "type": "guide"},
         ]
 
-        with patch('main.SimpleSummarizer.generate_recommendations') as mock_generate:
+        with patch("main.SimpleSummarizer.generate_recommendations") as mock_generate:
             mock_generate.return_value = {
                 "recommendations": [
                     {
@@ -202,21 +199,20 @@ class TestRecommendationEndpoints:
                         "expected_impact": "Improve user experience",
                         "effort_level": "low",
                         "tags": ["quality"],
-                        "metadata": {"issues": ["content too short"]}
+                        "metadata": {"issues": ["content too short"]},
                     }
                 ],
                 "total_documents": 2,
                 "recommendations_count": 1,
                 "processing_time": 0.2,
                 "recommendation_types": ["quality"],
-                "confidence_threshold": 0.8
+                "confidence_threshold": 0.8,
             }
 
             # Test with high confidence threshold
-            response = self.client.post("/api/v1/recommendations", json={
-                "documents": documents,
-                "confidence_threshold": 0.8
-            })
+            response = self.client.post(
+                "/api/v1/recommendations", json={"documents": documents, "confidence_threshold": 0.8}
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -243,12 +239,7 @@ class TestSimpleSummarizerRecommendations:
     def test_generate_recommendations_single_document(self):
         """Test recommendations with single document."""
         documents = [
-            {
-                "id": "doc1",
-                "title": "Single Document",
-                "content": "This is a single document.",
-                "type": "guide"
-            }
+            {"id": "doc1", "title": "Single Document", "content": "This is a single document.", "type": "guide"}
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
@@ -261,7 +252,7 @@ class TestSimpleSummarizerRecommendations:
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API documentation content", "type": "api_docs"},
             {"id": "doc2", "title": "API Reference", "content": "API documentation content", "type": "api_docs"},
-            {"id": "doc3", "title": "API Examples", "content": "API documentation content", "type": "api_docs"}
+            {"id": "doc3", "title": "API Examples", "content": "API documentation content", "type": "api_docs"},
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
@@ -278,9 +269,24 @@ class TestSimpleSummarizerRecommendations:
     def test_generate_recommendations_duplicate_detection(self):
         """Test duplicate recommendation generation."""
         documents = [
-            {"id": "doc1", "title": "User Guide", "content": "How to use the system effectively with detailed instructions and examples", "type": "guide"},
-            {"id": "doc2", "title": "User Manual", "content": "How to use the system effectively with detailed instructions and examples", "type": "guide"},
-            {"id": "doc3", "title": "Quick Start", "content": "This is a completely different document about getting started quickly", "type": "guide"}
+            {
+                "id": "doc1",
+                "title": "User Guide",
+                "content": "How to use the system effectively with detailed instructions and examples",
+                "type": "guide",
+            },
+            {
+                "id": "doc2",
+                "title": "User Manual",
+                "content": "How to use the system effectively with detailed instructions and examples",
+                "type": "guide",
+            },
+            {
+                "id": "doc3",
+                "title": "Quick Start",
+                "content": "This is a completely different document about getting started quickly",
+                "type": "guide",
+            },
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
@@ -305,7 +311,7 @@ class TestSimpleSummarizerRecommendations:
                 "content": "Outdated information",
                 "dateCreated": old_date,
                 "dateUpdated": old_date,
-                "type": "guide"
+                "type": "guide",
             },
             {
                 "id": "doc2",
@@ -313,8 +319,8 @@ class TestSimpleSummarizerRecommendations:
                 "content": "Current information",
                 "dateCreated": recent_date,
                 "dateUpdated": recent_date,
-                "type": "guide"
-            }
+                "type": "guide",
+            },
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
@@ -335,14 +341,14 @@ class TestSimpleSummarizerRecommendations:
                 "id": "doc1",
                 "title": "Poor Documentation",
                 "content": "This is very short.",  # Short content
-                "type": "guide"
+                "type": "guide",
             },
             {
                 "id": "doc2",
                 "title": "Good Documentation",
                 "content": "This is a comprehensive guide with examples and detailed information about the topic.",
-                "type": "guide"
-            }
+                "type": "guide",
+            },
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
@@ -361,7 +367,7 @@ class TestSimpleSummarizerRecommendations:
             {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
             {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
             {"id": "doc3", "title": "Old Doc", "content": "Old content", "dateCreated": "2020-01-01", "type": "guide"},
-            {"id": "doc4", "title": "Short Doc", "content": "Short", "type": "guide"}
+            {"id": "doc4", "title": "Short Doc", "content": "Short", "type": "guide"},
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
@@ -379,14 +385,11 @@ class TestSimpleSummarizerRecommendations:
         """Test that confidence threshold filtering works."""
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"}
+            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
         ]
 
         # Test with very high confidence threshold
-        result = asyncio.run(self.summarizer.generate_recommendations(
-            documents,
-            confidence_threshold=0.9
-        ))
+        result = asyncio.run(self.summarizer.generate_recommendations(documents, confidence_threshold=0.9))
 
         # Should filter out low-confidence recommendations
         for rec in result["recommendations"]:
@@ -397,14 +400,13 @@ class TestSimpleSummarizerRecommendations:
         documents = [
             {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
             {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
-            {"id": "doc3", "title": "Old Doc", "content": "Old content", "dateCreated": "2020-01-01", "type": "guide"}
+            {"id": "doc3", "title": "Old Doc", "content": "Old content", "dateCreated": "2020-01-01", "type": "guide"},
         ]
 
         # Test requesting only consolidation recommendations
-        result = asyncio.run(self.summarizer.generate_recommendations(
-            documents,
-            recommendation_types=["consolidation"]
-        ))
+        result = asyncio.run(
+            self.summarizer.generate_recommendations(documents, recommendation_types=["consolidation"])
+        )
 
         # Should only include consolidation recommendations
         rec_types = set(rec["type"] for rec in result["recommendations"])
@@ -421,46 +423,42 @@ class TestRecommendationDataValidation:
     def test_recommendations_endpoint_validation(self):
         """Test comprehensive input validation."""
         # Test invalid document structure
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": "not_a_list"
-        })
+        response = self.client.post("/api/v1/recommendations", json={"documents": "not_a_list"})
         assert response.status_code == 422
 
         # Test document without required fields
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": [{"title": "Test"}]  # Missing id and content
-        })
+        response = self.client.post(
+            "/api/v1/recommendations", json={"documents": [{"title": "Test"}]}  # Missing id and content
+        )
         assert response.status_code == 422
 
         # Test with invalid recommendation types
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": [
-                {"id": "doc1", "title": "Test", "content": "Test content"}
-            ],
-            "recommendation_types": "not_a_list"
-        })
+        response = self.client.post(
+            "/api/v1/recommendations",
+            json={
+                "documents": [{"id": "doc1", "title": "Test", "content": "Test content"}],
+                "recommendation_types": "not_a_list",
+            },
+        )
         assert response.status_code == 422
 
         # Test with invalid confidence threshold
-        response = self.client.post("/api/v1/recommendations", json={
-            "documents": [
-                {"id": "doc1", "title": "Test", "content": "Test content"}
-            ],
-            "confidence_threshold": "not_a_number"
-        })
+        response = self.client.post(
+            "/api/v1/recommendations",
+            json={
+                "documents": [{"id": "doc1", "title": "Test", "content": "Test content"}],
+                "confidence_threshold": "not_a_number",
+            },
+        )
         assert response.status_code == 422
 
     def test_recommendations_endpoint_error_handling(self):
         """Test error handling in recommendation endpoints."""
-        documents = [
-            {"id": "doc1", "title": "Test", "content": "Test content"}
-        ]
+        documents = [{"id": "doc1", "title": "Test", "content": "Test content"}]
 
         # Mock an exception in the summarizer
-        with patch('main.SimpleSummarizer.generate_recommendations', side_effect=Exception("Test error")):
-            response = self.client.post("/api/v1/recommendations", json={
-                "documents": documents
-            })
+        with patch("main.SimpleSummarizer.generate_recommendations", side_effect=Exception("Test error")):
+            response = self.client.post("/api/v1/recommendations", json={"documents": documents})
 
             assert response.status_code == 200  # Should still return 200 with error in response
             data = response.json()
@@ -532,7 +530,7 @@ print(response.json())
 ## Support
 
 For help, contact support@example.com or visit our GitHub repository.
-"""
+""",
         }
 
         result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
@@ -547,7 +545,7 @@ For help, contact support@example.com or visit our GitHub repository.
         document = {
             "id": "doc2",
             "title": "Poor Documentation",
-            "content": "This is a very short document. It has some stuff but not much. It uses passive voice a lot and doesn't explain anything clearly. There are some things that could be better but it's not clear what to do. The document lacks structure and examples."
+            "content": "This is a very short document. It has some stuff but not much. It uses passive voice a lot and doesn't explain anything clearly. There are some things that could be better but it's not clear what to do. The document lacks structure and examples.",
         }
 
         result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
@@ -598,7 +596,9 @@ For help, contact support@example.com or visit our GitHub repository.
         assert has_complex or has_passive
 
         # Test passive voice detection
-        passive_content = "The system is used by users. Data is processed by the server. Results are returned to the client."
+        passive_content = (
+            "The system is used by users. Data is processed by the server. Results are returned to the client."
+        )
         metrics = {"word_count": len(passive_content.split())}
         issues = self.summarizer._analyze_clarity_and_readability(passive_content, metrics)
 
@@ -628,7 +628,11 @@ For help, contact support@example.com or visit our GitHub repository.
     def test_analyze_structure_and_organization(self):
         """Test structure and organization analysis."""
         # Test poor structure - make it much longer to trigger detection
-        unstructured_content = ("This is a long document without any headings or structure. " * 50) + "It just keeps going on and on with lots of text that doesn't have any clear organization or logical flow. There are no sections to break up the content and make it easier to read and understand. " * 20
+        unstructured_content = (
+            ("This is a long document without any headings or structure. " * 50)
+            + "It just keeps going on and on with lots of text that doesn't have any clear organization or logical flow. There are no sections to break up the content and make it easier to read and understand. "
+            * 20
+        )
         title = "Long Document"
         metrics = {"structure_score": 1.0}
         issues = self.summarizer._analyze_structure_and_organization(unstructured_content, title, metrics)
@@ -694,7 +698,7 @@ Final section content.
             "structure_score": 0.9,
             "consistency_score": 0.9,
             "completeness_score": 0.9,
-            "word_count": 500
+            "word_count": 500,
         }
         issues = []
 
@@ -707,13 +711,9 @@ Final section content.
             "structure_score": 0.3,
             "consistency_score": 0.3,
             "completeness_score": 0.3,
-            "word_count": 20
+            "word_count": 20,
         }
-        issues = [
-            {"severity": "high"},
-            {"severity": "critical"},
-            {"severity": "medium"}
-        ]
+        issues = [{"severity": "high"}, {"severity": "critical"}, {"severity": "medium"}]
 
         score = self.summarizer._calculate_overall_quality_score(metrics, issues)
         assert score < 0.5
@@ -794,13 +794,13 @@ API calls are limited to 1000 requests per hour. Rate limit headers are included
 
 ## Support
 For help, contact support@example.com or visit our GitHub repository for code examples and issue tracking.
-"""
+""",
             },
             {
                 "id": "poor_doc",
                 "title": "Poor Documentation",
-                "content": "This document is very short and unclear. It doesn't explain anything well and lacks examples or structure. Very confusing content that doesn't help users understand anything."
-            }
+                "content": "This document is very short and unclear. It doesn't explain anything well and lacks examples or structure. Very confusing content that doesn't help users understand anything.",
+            },
         ]
 
         # Test comprehensive recommendations

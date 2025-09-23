@@ -1,8 +1,9 @@
 """Table formatting utilities for CLI display."""
 
-from typing import Dict, Any, List, Optional
-from rich.table import Table
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
+from rich.table import Table
 
 
 class TableFormatter:
@@ -33,14 +34,11 @@ class TableFormatter:
         table.add_column("Created", style="yellow")
 
         for workflow in workflows:
-            status = workflow.get('status', 'unknown')
+            status = workflow.get("status", "unknown")
             status_display = self._format_status(status)
 
             table.add_row(
-                workflow.get('id', ''),
-                workflow.get('name', ''),
-                status_display,
-                workflow.get('created_at', '')
+                workflow.get("id", ""), workflow.get("name", ""), status_display, workflow.get("created_at", "")
             )
 
         return table
@@ -54,16 +52,11 @@ class TableFormatter:
         table.add_column("Findings", style="yellow")
 
         for analysis in analyses:
-            status = analysis.get('status', 'unknown')
+            status = analysis.get("status", "unknown")
             status_display = self._format_status(status)
-            findings_count = len(analysis.get('findings', []))
+            findings_count = len(analysis.get("findings", []))
 
-            table.add_row(
-                analysis.get('id', ''),
-                analysis.get('type', ''),
-                status_display,
-                str(findings_count)
-            )
+            table.add_row(analysis.get("id", ""), analysis.get("type", ""), status_display, str(findings_count))
 
         return table
 
@@ -77,24 +70,21 @@ class TableFormatter:
 
         for config in configs:
             table.add_row(
-                config.get('service', ''),
-                config.get('filename', ''),
-                config.get('type', ''),
-                config.get('size', '')
+                config.get("service", ""), config.get("filename", ""), config.get("type", ""), config.get("size", "")
             )
 
         return table
 
     def _format_health_status(self, service: str, data: Dict[str, Any]) -> tuple[str, str]:
         """Format health status for display."""
-        status = data.get('status', 'unknown')
+        status = data.get("status", "unknown")
 
-        if status == 'healthy':
+        if status == "healthy":
             status_display = "[green]✓ Healthy[/green]"
             details = "OK"
-        elif status == 'unhealthy':
+        elif status == "unhealthy":
             status_display = "[red]✗ Unhealthy[/red]"
-            details = data.get('error', 'Unknown error')
+            details = data.get("error", "Unknown error")
         else:
             status_display = "[yellow]? Unknown[/yellow]"
             details = f"Status: {status}"
@@ -104,13 +94,13 @@ class TableFormatter:
     def _format_status(self, status: str) -> str:
         """Format status string for display."""
         status = status.lower()
-        if status == 'completed' or status == 'success':
+        if status == "completed" or status == "success":
             return "[green]✓ Completed[/green]"
-        elif status == 'running' or status == 'in_progress':
+        elif status == "running" or status == "in_progress":
             return "[blue]⟳ Running[/blue]"
-        elif status == 'failed' or status == 'error':
+        elif status == "failed" or status == "error":
             return "[red]✗ Failed[/red]"
-        elif status == 'pending':
+        elif status == "pending":
             return "[yellow]⏳ Pending[/yellow]"
         else:
             return f"[dim]{status}[/dim]"

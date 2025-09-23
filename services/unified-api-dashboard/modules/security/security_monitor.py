@@ -10,20 +10,21 @@ Advanced security monitoring system:
 """
 
 import asyncio
-import json
-import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Set, Tuple, Callable
-from dataclasses import dataclass, field
-from enum import Enum
-import re
 import ipaddress
+import json
+import re
+import statistics
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from ...config import config
 
 
 class ThreatLevel(Enum):
     """Threat severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -32,6 +33,7 @@ class ThreatLevel(Enum):
 
 class ThreatType(Enum):
     """Types of security threats."""
+
     BRUTE_FORCE = "brute_force"
     SQL_INJECTION = "sql_injection"
     XSS = "xss"
@@ -47,6 +49,7 @@ class ThreatType(Enum):
 @dataclass
 class SecurityEvent:
     """Security event record."""
+
     event_id: str
     threat_type: ThreatType
     threat_level: ThreatLevel
@@ -65,6 +68,7 @@ class SecurityEvent:
 @dataclass
 class ThreatPattern:
     """Threat detection pattern."""
+
     pattern_id: str
     name: str
     threat_type: ThreatType
@@ -79,6 +83,7 @@ class ThreatPattern:
 @dataclass
 class SecurityMetrics:
     """Security monitoring metrics."""
+
     total_events: int = 0
     events_by_threat_type: Dict[str, int] = field(default_factory=dict)
     events_by_severity: Dict[str, int] = field(default_factory=dict)
@@ -91,6 +96,7 @@ class SecurityMetrics:
 @dataclass
 class BehavioralProfile:
     """User behavioral profile for anomaly detection."""
+
     user_id: str
     normal_patterns: Dict[str, Any] = field(default_factory=dict)
     login_times: List[datetime] = field(default_factory=list)
@@ -123,72 +129,48 @@ class SecurityMonitor:
                 threat_type=ThreatType.BRUTE_FORCE,
                 description="Multiple failed login attempts from same IP",
                 severity=ThreatLevel.HIGH,
-                conditions={
-                    "failed_logins_threshold": 5,
-                    "time_window_minutes": 15,
-                    "same_ip_only": True
-                }
+                conditions={"failed_logins_threshold": 5, "time_window_minutes": 15, "same_ip_only": True},
             ),
-
             "unusual_login_time": ThreatPattern(
                 pattern_id="unusual_login_time",
                 name="Unusual Login Time",
                 threat_type=ThreatType.ANOMALOUS_BEHAVIOR,
                 description="Login at unusual time for user",
                 severity=ThreatLevel.MEDIUM,
-                conditions={
-                    "deviation_threshold": 2.0,  # Standard deviations
-                    "minimum_samples": 10
-                }
+                conditions={"deviation_threshold": 2.0, "minimum_samples": 10},  # Standard deviations
             ),
-
             "suspicious_ip": ThreatPattern(
                 pattern_id="suspicious_ip",
                 name="Suspicious IP Address",
                 threat_type=ThreatType.UNAUTHORIZED_ACCESS,
                 description="Access from known suspicious IP",
                 severity=ThreatLevel.HIGH,
-                conditions={
-                    "blacklist_check": True,
-                    "geographic_anomaly": True
-                }
+                conditions={"blacklist_check": True, "geographic_anomaly": True},
             ),
-
             "rapid_api_calls": ThreatPattern(
                 pattern_id="rapid_api_calls",
                 name="Rapid API Calls",
                 threat_type=ThreatType.SUSPICIOUS_TRAFFIC,
                 description="Unusually high number of API calls",
                 severity=ThreatLevel.MEDIUM,
-                conditions={
-                    "calls_per_minute_threshold": 100,
-                    "burst_window_seconds": 60
-                }
+                conditions={"calls_per_minute_threshold": 100, "burst_window_seconds": 60},
             ),
-
             "privilege_escalation": ThreatPattern(
                 pattern_id="privilege_escalation",
                 name="Privilege Escalation Attempt",
                 threat_type=ThreatType.UNAUTHORIZED_ACCESS,
                 description="Attempt to access higher privilege resources",
                 severity=ThreatLevel.CRITICAL,
-                conditions={
-                    "permission_denied_count": 3,
-                    "time_window_minutes": 10
-                }
+                conditions={"permission_denied_count": 3, "time_window_minutes": 10},
             ),
-
             "data_exfiltration": ThreatPattern(
                 pattern_id="data_exfiltration",
                 name="Potential Data Exfiltration",
                 threat_type=ThreatType.DATA_EXFILTRATION,
                 description="Large data downloads or unusual export patterns",
                 severity=ThreatLevel.HIGH,
-                conditions={
-                    "data_volume_threshold_mb": 100,
-                    "unusual_export_pattern": True
-                }
-            )
+                conditions={"data_volume_threshold_mb": 100, "unusual_export_pattern": True},
+            ),
         }
 
     async def monitor_event(
@@ -197,7 +179,7 @@ class SecurityMonitor:
         user_id: Optional[str] = None,
         username: Optional[str] = None,
         ip_address: str = None,
-        details: Dict[str, Any] = None
+        details: Dict[str, Any] = None,
     ) -> List[SecurityEvent]:
         """Monitor an event and detect potential threats."""
         detected_threats = []
@@ -214,12 +196,12 @@ class SecurityMonitor:
                 # Update metrics
                 self.metrics.total_events += 1
                 threat_type_key = pattern.threat_type.value
-                self.metrics.events_by_threat_type[threat_type_key] = \
+                self.metrics.events_by_threat_type[threat_type_key] = (
                     self.metrics.events_by_threat_type.get(threat_type_key, 0) + 1
+                )
 
                 severity_key = pattern.severity.value
-                self.metrics.events_by_severity[severity_key] = \
-                    self.metrics.events_by_severity.get(severity_key, 0) + 1
+                self.metrics.events_by_severity[severity_key] = self.metrics.events_by_severity.get(severity_key, 0) + 1
 
                 # Trigger alerts for high/critical threats
                 if pattern.severity in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]:
@@ -238,7 +220,7 @@ class SecurityMonitor:
         user_id: str,
         username: str,
         ip_address: str,
-        details: Dict[str, Any]
+        details: Dict[str, Any],
     ) -> Optional[SecurityEvent]:
         """Check if an event matches a threat pattern."""
         conditions = pattern.conditions
@@ -266,10 +248,7 @@ class SecurityMonitor:
         return None
 
     async def _check_brute_force(
-        self,
-        pattern: ThreatPattern,
-        ip_address: str,
-        conditions: Dict[str, Any]
+        self, pattern: ThreatPattern, ip_address: str, conditions: Dict[str, Any]
     ) -> Optional[SecurityEvent]:
         """Check for brute force login attempts."""
         threshold = conditions["failed_logins_threshold"]
@@ -278,10 +257,9 @@ class SecurityMonitor:
         # Count failed logins from this IP in the time window
         cutoff_time = datetime.now() - timedelta(minutes=time_window)
         recent_failures = [
-            e for e in self.events
-            if e.threat_type == ThreatType.BRUTE_FORCE
-            and e.source_ip == ip_address
-            and e.timestamp > cutoff_time
+            e
+            for e in self.events
+            if e.threat_type == ThreatType.BRUTE_FORCE and e.source_ip == ip_address and e.timestamp > cutoff_time
         ]
 
         if len(recent_failures) >= threshold:
@@ -296,19 +274,16 @@ class SecurityMonitor:
                 details={
                     "failed_attempts": len(recent_failures) + 1,
                     "time_window_minutes": time_window,
-                    "threshold": threshold
+                    "threshold": threshold,
                 },
                 timestamp=datetime.now(),
-                confidence_score=0.9
+                confidence_score=0.9,
             )
 
         return None
 
     async def _check_unusual_login_time(
-        self,
-        pattern: ThreatPattern,
-        user_id: str,
-        conditions: Dict[str, Any]
+        self, pattern: ThreatPattern, user_id: str, conditions: Dict[str, Any]
     ) -> Optional[SecurityEvent]:
         """Check for unusual login times."""
         profile = self.behavioral_profiles.get(user_id)
@@ -339,19 +314,16 @@ class SecurityMonitor:
                     "current_hour": current_hour,
                     "normal_hour": mean_hour,
                     "deviation": deviation,
-                    "threshold": conditions["deviation_threshold"]
+                    "threshold": conditions["deviation_threshold"],
                 },
                 timestamp=datetime.now(),
-                confidence_score=min(0.8, deviation / 5.0)
+                confidence_score=min(0.8, deviation / 5.0),
             )
 
         return None
 
     async def _check_suspicious_ip(
-        self,
-        pattern: ThreatPattern,
-        ip_address: str,
-        conditions: Dict[str, Any]
+        self, pattern: ThreatPattern, ip_address: str, conditions: Dict[str, Any]
     ) -> Optional[SecurityEvent]:
         """Check for suspicious IP addresses."""
         # Simplified IP blacklist check (would use real threat intelligence in production)
@@ -376,10 +348,10 @@ class SecurityMonitor:
                         details={
                             "ip_address": ip_address,
                             "suspicious_range": suspicious_range,
-                            "check_type": "rfc1918_private"
+                            "check_type": "rfc1918_private",
                         },
                         timestamp=datetime.now(),
-                        confidence_score=0.7
+                        confidence_score=0.7,
                     )
         except ValueError:
             pass
@@ -387,10 +359,7 @@ class SecurityMonitor:
         return None
 
     async def _check_rapid_api_calls(
-        self,
-        pattern: ThreatPattern,
-        user_id: str,
-        conditions: Dict[str, Any]
+        self, pattern: ThreatPattern, user_id: str, conditions: Dict[str, Any]
     ) -> Optional[SecurityEvent]:
         """Check for rapid API call patterns."""
         threshold = conditions["calls_per_minute_threshold"]
@@ -399,10 +368,9 @@ class SecurityMonitor:
         # Count API calls in time window
         cutoff_time = datetime.now() - timedelta(seconds=window_seconds)
         recent_calls = [
-            e for e in self.events
-            if e.user_id == user_id
-            and e.timestamp > cutoff_time
-            and str(e.threat_type).startswith("api.")
+            e
+            for e in self.events
+            if e.user_id == user_id and e.timestamp > cutoff_time and str(e.threat_type).startswith("api.")
         ]
 
         if len(recent_calls) >= threshold:
@@ -417,19 +385,16 @@ class SecurityMonitor:
                 details={
                     "call_count": len(recent_calls),
                     "threshold": threshold,
-                    "time_window_seconds": window_seconds
+                    "time_window_seconds": window_seconds,
                 },
                 timestamp=datetime.now(),
-                confidence_score=0.8
+                confidence_score=0.8,
             )
 
         return None
 
     async def _check_privilege_escalation(
-        self,
-        pattern: ThreatPattern,
-        user_id: str,
-        conditions: Dict[str, Any]
+        self, pattern: ThreatPattern, user_id: str, conditions: Dict[str, Any]
     ) -> Optional[SecurityEvent]:
         """Check for privilege escalation attempts."""
         threshold = conditions["permission_denied_count"]
@@ -438,10 +403,9 @@ class SecurityMonitor:
         # Count recent permission denials
         cutoff_time = datetime.now() - timedelta(minutes=time_window)
         recent_denials = [
-            e for e in self.events
-            if e.user_id == user_id
-            and e.threat_type == ThreatType.UNAUTHORIZED_ACCESS
-            and e.timestamp > cutoff_time
+            e
+            for e in self.events
+            if e.user_id == user_id and e.threat_type == ThreatType.UNAUTHORIZED_ACCESS and e.timestamp > cutoff_time
         ]
 
         if len(recent_denials) >= threshold:
@@ -456,21 +420,15 @@ class SecurityMonitor:
                 details={
                     "denial_count": len(recent_denials),
                     "threshold": threshold,
-                    "time_window_minutes": time_window
+                    "time_window_minutes": time_window,
                 },
                 timestamp=datetime.now(),
-                confidence_score=0.9
+                confidence_score=0.9,
             )
 
         return None
 
-    async def _update_behavioral_profile(
-        self,
-        user_id: str,
-        event_type: str,
-        ip_address: str,
-        details: Dict[str, Any]
-    ):
+    async def _update_behavioral_profile(self, user_id: str, event_type: str, ip_address: str, details: Dict[str, Any]):
         """Update user behavioral profile."""
         if user_id not in self.behavioral_profiles:
             self.behavioral_profiles[user_id] = BehavioralProfile(user_id=user_id)
@@ -499,7 +457,7 @@ class SecurityMonitor:
             "user_id": threat.user_id,
             "source_ip": threat.source_ip,
             "timestamp": threat.timestamp.isoformat(),
-            "confidence_score": threat.confidence_score
+            "confidence_score": threat.confidence_score,
         }
 
         # Call all registered alert callbacks
@@ -532,7 +490,7 @@ class SecurityMonitor:
         threat_type: Optional[ThreatType] = None,
         severity: Optional[ThreatLevel] = None,
         mitigated: Optional[bool] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[SecurityEvent]:
         """Query security events with filtering."""
         filtered_events = self.events
@@ -566,7 +524,7 @@ class ThreatDetector:
             "login_frequency": 2.5,  # Standard deviations
             "api_call_volume": 3.0,
             "error_rate": 2.0,
-            "session_duration": 2.5
+            "session_duration": 2.5,
         }
 
     async def analyze_baseline(self, time_window_hours: int = 24):
@@ -575,9 +533,9 @@ class ThreatDetector:
 
         # Analyze login patterns
         login_events = [
-            e for e in self.security_monitor.events
-            if e.timestamp > cutoff_time
-            and e.threat_type == ThreatType.ANOMALOUS_BEHAVIOR
+            e
+            for e in self.security_monitor.events
+            if e.timestamp > cutoff_time and e.threat_type == ThreatType.ANOMALOUS_BEHAVIOR
         ]
 
         if login_events:
@@ -585,7 +543,7 @@ class ThreatDetector:
             self.baseline_metrics["login_patterns"] = {
                 "mean_hour": statistics.mean(login_hours),
                 "std_hour": statistics.stdev(login_hours) if len(login_hours) > 1 else 1,
-                "sample_count": len(login_hours)
+                "sample_count": len(login_hours),
             }
 
         # This would be expanded with more sophisticated ML models in production
@@ -605,31 +563,32 @@ class ThreatDetector:
                 if std_hour > 0:
                     deviation = abs(login_hour - mean_hour) / std_hour
                     if deviation > self.anomaly_thresholds["login_frequency"]:
-                        anomalies.append({
-                            "anomaly_type": "unusual_login_time",
-                            "severity": "medium",
-                            "confidence": min(0.9, deviation / 5.0),
-                            "details": {
-                                "current_hour": login_hour,
-                                "baseline_hour": mean_hour,
-                                "deviation": deviation
+                        anomalies.append(
+                            {
+                                "anomaly_type": "unusual_login_time",
+                                "severity": "medium",
+                                "confidence": min(0.9, deviation / 5.0),
+                                "details": {
+                                    "current_hour": login_hour,
+                                    "baseline_hour": mean_hour,
+                                    "deviation": deviation,
+                                },
                             }
-                        })
+                        )
 
         # Check API call volume anomalies
         if "api_calls_per_minute" in current_metrics:
             # Simplified volume check (would use time series analysis in production)
             call_rate = current_metrics["api_calls_per_minute"]
             if call_rate > 100:  # Arbitrary threshold
-                anomalies.append({
-                    "anomaly_type": "high_api_call_volume",
-                    "severity": "low",
-                    "confidence": 0.7,
-                    "details": {
-                        "call_rate": call_rate,
-                        "threshold": 100
+                anomalies.append(
+                    {
+                        "anomaly_type": "high_api_call_volume",
+                        "severity": "low",
+                        "confidence": 0.7,
+                        "details": {"call_rate": call_rate, "threshold": 100},
                     }
-                })
+                )
 
         return anomalies
 

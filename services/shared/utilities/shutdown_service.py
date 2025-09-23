@@ -7,22 +7,23 @@ Provides comprehensive shutdown procedures that ensure:
 - Timeout-based forced shutdown
 - Lifecycle management
 """
+
 import asyncio
+import atexit
+import logging
 import signal
 import threading
 import time
-import logging
-from typing import Callable, Awaitable, List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-import atexit
-
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ShutdownPhase(Enum):
     """Shutdown phases for orderly shutdown."""
+
     NORMAL = "normal"  # Graceful shutdown
     FAST = "fast"  # Quick shutdown (less graceful)
     FORCE = "force"  # Immediate shutdown
@@ -31,6 +32,7 @@ class ShutdownPhase(Enum):
 @dataclass
 class ShutdownHook:
     """A shutdown hook with priority and timeout."""
+
     name: str
     callback: Callable[[], Awaitable[None]]
     priority: int = 100  # Lower numbers execute first
@@ -41,6 +43,7 @@ class ShutdownHook:
 @dataclass
 class ShutdownMetrics:
     """Metrics for shutdown process."""
+
     start_time: float = field(default_factory=time.time)
     phase_start_time: float = field(default_factory=time.time)
     total_duration: float = 0.0
@@ -121,7 +124,7 @@ class GracefulShutdownService:
 
     def _signal_handler(self, signum, frame) -> None:
         """Handle shutdown signals."""
-        signal_name = signal.Signals(signum).name if hasattr(signal, 'Signals') else str(signum)
+        signal_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
         logger.info(f"Received shutdown signal: {signal_name}")
 
         # Determine shutdown phase based on signal
@@ -133,21 +136,13 @@ class GracefulShutdownService:
             phase = ShutdownPhase.FORCE
 
         # Start shutdown in background thread to avoid blocking signal handler
-        threading.Thread(
-            target=self._start_shutdown_sync,
-            args=(phase,),
-            daemon=True
-        ).start()
+        threading.Thread(target=self._start_shutdown_sync, args=(phase,), daemon=True).start()
 
     def _reload_handler(self, signum, frame) -> None:
         """Handle reload signals."""
         logger.info("Received reload signal, triggering graceful restart")
         # For now, treat as normal shutdown
-        threading.Thread(
-            target=self._start_shutdown_sync,
-            args=(ShutdownPhase.NORMAL,),
-            daemon=True
-        ).start()
+        threading.Thread(target=self._start_shutdown_sync, args=(ShutdownPhase.NORMAL,), daemon=True).start()
 
     def _atexit_handler(self) -> None:
         """Handle process exit."""
@@ -225,7 +220,9 @@ class GracefulShutdownService:
         self._metrics.connections_drained = 0 if drain_success else self._connection_drainer.active_connections
 
         if not drain_success:
-            logger.warning(f"Could not drain all connections ({self._connection_drainer.active_connections} still active)")
+            logger.warning(
+                f"Could not drain all connections ({self._connection_drainer.active_connections} still active)"
+            )
 
     async def _execute_shutdown_hooks(self, phase: ShutdownPhase) -> None:
         """Execute shutdown hooks in priority order."""
@@ -290,6 +287,7 @@ class GracefulShutdownService:
 
         # Exit immediately
         import sys
+
         sys.exit(1)
 
     def register_shutdown_hook(
@@ -298,16 +296,10 @@ class GracefulShutdownService:
         callback: Callable[[], Awaitable[None]],
         priority: int = 100,
         timeout: float = 10.0,
-        required: bool = True
+        required: bool = True,
     ) -> None:
         """Register a shutdown hook."""
-        hook = ShutdownHook(
-            name=name,
-            callback=callback,
-            priority=priority,
-            timeout=timeout,
-            required=required
-        )
+        hook = ShutdownHook(name=name, callback=callback, priority=priority, timeout=timeout, required=required)
         self._hooks.append(hook)
         logger.debug(f"Registered shutdown hook: {name} (priority: {priority})")
 
@@ -341,7 +333,7 @@ class GracefulShutdownService:
             "hooks_failed": self._metrics.hooks_failed,
             "connections_drained": self._metrics.connections_drained,
             "resources_cleaned": self._metrics.resources_cleaned,
-            "active_connections": self._connection_drainer.active_connections
+            "active_connections": self._connection_drainer.active_connections,
         }
 
 
@@ -368,7 +360,7 @@ def register_shutdown_hook(
     callback: Callable[[], Awaitable[None]],
     priority: int = 100,
     timeout: float = 10.0,
-    required: bool = True
+    required: bool = True,
 ) -> None:
     """Convenience function to register shutdown hook."""
     service = get_shutdown_service()

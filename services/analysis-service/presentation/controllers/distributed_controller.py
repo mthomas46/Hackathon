@@ -1,18 +1,19 @@
 """Distributed Controller - Handles distributed processing endpoints."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException
 
-from ...modules.models import (
-    DistributedTaskRequest,
-    BatchTasksRequest,
-    TaskStatusRequest,
-    CancelTaskRequest,
-    ScaleWorkersRequest,
-    LoadBalancingStrategyRequest,
-    LoadBalancingConfigRequest
-)
 from ...modules.analysis_handlers import analysis_handlers
+from ...modules.models import (
+    BatchTasksRequest,
+    CancelTaskRequest,
+    DistributedTaskRequest,
+    LoadBalancingConfigRequest,
+    LoadBalancingStrategyRequest,
+    ScaleWorkersRequest,
+    TaskStatusRequest,
+)
 
 
 class DistributedController:
@@ -51,9 +52,7 @@ class DistributedController:
             Retrieves detailed status information for a specific distributed task
             including progress, results, worker assignment, and performance metrics.
             """
-            return await analysis_handlers.handle_get_task_status(
-                TaskStatusRequest(task_id=task_id)
-            )
+            return await analysis_handlers.handle_get_task_status(TaskStatusRequest(task_id=task_id))
 
         @self.router.delete("/distributed/tasks/{task_id}")
         async def cancel_task_endpoint(task_id: str):
@@ -62,9 +61,7 @@ class DistributedController:
             Cancels a running distributed task and releases associated resources.
             Provides graceful shutdown and cleanup of task state.
             """
-            return await analysis_handlers.handle_cancel_task(
-                CancelTaskRequest(task_id=task_id)
-            )
+            return await analysis_handlers.handle_cancel_task(CancelTaskRequest(task_id=task_id))
 
         @self.router.get("/distributed/workers")
         async def get_workers_status_endpoint():

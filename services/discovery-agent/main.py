@@ -4,43 +4,50 @@ This version ensures all enhanced endpoints are properly registered with FastAPI
 and can handle the test requirements for ecosystem registration.
 """
 
+import asyncio
+import json
 import os
 import re
-import httpx
-import asyncio
-from pathlib import Path
-from fastapi import FastAPI, HTTPException, Query, Body
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
-import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import httpx
+from fastapi import Body, FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.responses.responses import create_error_response, create_success_response
 
 # ============================================================================
 # SHARED MODULES
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response, create_error_response
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import setup_common_middleware, attach_self_register
+from services.shared.utilities import attach_self_register, setup_common_middleware
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS
 # ============================================================================
 
+
 class DiscoverRequest(BaseModel):
     """Request model for single service discovery"""
+
     name: str = Field(..., description="Service name")
-    base_url: str = Field(..., description="Base URL of the service") 
+    base_url: str = Field(..., description="Base URL of the service")
     openapi_url: Optional[str] = Field(None, description="OpenAPI spec URL")
     spec: Optional[Dict[str, Any]] = Field(None, description="Inline OpenAPI spec")
     dry_run: bool = Field(False, description="Dry run mode for testing")
 
+
 class BulkDiscoverRequest(BaseModel):
     """Request model for bulk service discovery"""
+
     services: List[Dict[str, str]] = Field(..., description="List of services to discover")
     auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
     include_health_check: bool = Field(True, description="Check service health before discovery")
     dry_run: bool = Field(False, description="Dry run mode for testing")
+
 
 # ============================================================================
 # ENHANCED DISCOVERY AGENT APPLICATION
@@ -49,7 +56,7 @@ class BulkDiscoverRequest(BaseModel):
 app = FastAPI(
     title="Enhanced Discovery Agent",
     description="Advanced service discovery with ecosystem integration",
-    version="2.0.0"
+    version="2.0.0",
 )
 
 # Setup middleware and health endpoints
@@ -60,10 +67,12 @@ register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT)
 # TEST ENDPOINT - Add this right after health registration
 # ============================================================================
 
+
 async def test_get_services():
     """Test endpoint for services."""
     print("DEBUG: /test-services endpoint called")
     return {"services": ["test"]}
+
 
 app.get("/test-services")(test_get_services)
 
@@ -71,27 +80,29 @@ app.get("/test-services")(test_get_services)
 # UTILITY FUNCTIONS
 # ============================================================================
 
+
 def normalize_service_url(url: str, service_name: str = None) -> str:
     """Normalize service URL to use Docker internal networking when appropriate"""
     if not url:
         return url
-        
+
     # If it's a localhost URL and we have a service name, try Docker internal URL
     if "localhost" in url or "127.0.0.1" in url:
         if service_name:
             # Extract port from URL
-            port_match = re.search(r':(\d+)', url)
+            port_match = re.search(r":(\d+)", url)
             if port_match:
                 port = port_match.group(1)
                 return f"http://{service_name}:{port}"
-    
+
     return url
+
 
 def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Extract endpoints from OpenAPI specification"""
     endpoints = []
     paths = spec.get("paths", {})
-    
+
     for path, methods in paths.items():
         for method, details in methods.items():
             if method.upper() in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
@@ -104,24 +115,25 @@ def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "tags": details.get("tags", []),
                     "parameters": details.get("parameters", []),
                     "request_body": details.get("requestBody"),
-                    "responses": details.get("responses", {})
+                    "responses": details.get("responses", {}),
                 }
                 endpoints.append(endpoint)
-    
+
     return endpoints
+
 
 async def fetch_openapi_spec_with_fallback(base_url: str, openapi_url: str = None) -> Optional[Dict[str, Any]]:
     """Fetch OpenAPI spec with fallback to common endpoints"""
     urls_to_try = []
-    
+
     if openapi_url:
         urls_to_try.append(openapi_url)
-    
+
     # Common OpenAPI spec locations
     common_paths = ["/openapi.json", "/docs/openapi.json", "/api/openapi.json"]
     for path in common_paths:
         urls_to_try.append(f"{base_url}{path}")
-    
+
     async with httpx.AsyncClient(timeout=30.0) as client:
         for url in urls_to_try:
             try:
@@ -136,33 +148,37 @@ async def fetch_openapi_spec_with_fallback(base_url: str, openapi_url: str = Non
             except Exception as e:
                 print(f"❌ Error fetching from {url}: {e}")
                 continue
-    
+
     return None
+
 
 # ============================================================================
 # ENHANCED DISCOVERY ENDPOINTS
 # ============================================================================
+
 
 @app.post("/discover")
 async def discover_service(request: DiscoverRequest):
     """Enhanced single service discovery with network URL normalization"""
     try:
         print(f"🔍 Starting discovery for service: {request.name}")
-        
+
         # Normalize URLs for Docker networking
         original_base_url = request.base_url
         normalized_base_url = normalize_service_url(request.base_url, request.name)
-        normalized_openapi_url = normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
-        
+        normalized_openapi_url = (
+            normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
+        )
+
         print(f"🔗 URL normalization: {original_base_url} → {normalized_base_url}")
-        
+
         # Fetch OpenAPI spec with fallback
         spec = None
         if normalized_openapi_url:
             spec = await fetch_openapi_spec_with_fallback(normalized_base_url, normalized_openapi_url)
         else:
             spec = await fetch_openapi_spec_with_fallback(normalized_base_url)
-        
+
         if not spec and not request.spec:
             return create_error_response(
                 message="Failed to discover endpoints",
@@ -175,20 +191,20 @@ async def discover_service(request: DiscoverRequest):
                         normalized_openapi_url,
                         f"{normalized_base_url}/openapi.json",
                         f"{normalized_base_url}/docs/openapi.json",
-                        f"{normalized_base_url}/api/openapi.json"
-                    ]
-                }
+                        f"{normalized_base_url}/api/openapi.json",
+                    ],
+                },
             )
-        
+
         # Use provided spec if fetching failed
         if not spec and request.spec:
             spec = request.spec
-        
+
         # Extract endpoints and process
         endpoints = extract_endpoints_from_spec(spec)
-        
+
         print(f"✅ Discovered {len(endpoints)} endpoints for {request.name}")
-        
+
         # Create discovery response
         discovery_data = {
             "service_name": request.name,
@@ -199,31 +215,28 @@ async def discover_service(request: DiscoverRequest):
             "tools_count": len(endpoints),  # Simple mapping for now
             "endpoints": endpoints,
             "dry_run": request.dry_run,
-            "discovery_timestamp": datetime.utcnow().isoformat() + "Z"
+            "discovery_timestamp": datetime.utcnow().isoformat() + "Z",
         }
-        
+
         return create_success_response(discovery_data)
-        
+
     except Exception as e:
         print(f"❌ Discovery failed for {request.name}: {e}")
         return create_error_response(
             message="Failed to discover endpoints",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={
-                "error": str(e),
-                "service": ServiceNames.DISCOVERY_AGENT,
-                "service_name": request.name
-            }
+            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT, "service_name": request.name},
         )
+
 
 @app.post("/discover-ecosystem")
 async def discover_ecosystem(request: BulkDiscoverRequest):
     """Comprehensive ecosystem discovery for multiple services"""
     try:
         print("🌐 Starting ecosystem discovery...")
-        
+
         services_to_discover = []
-        
+
         # Auto-detect services if requested
         if request.auto_detect:
             print("🔍 Auto-detecting Docker services...")
@@ -238,14 +251,14 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                 {"name": "cli", "port": "5057"},
                 {"name": "memory_agent", "port": "5058"},
             ]
-            
+
             for service in known_services:
                 service_data = {
                     "name": service["name"],
                     "base_url": f"http://{service['name']}:{service['port']}",
-                    "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json"
+                    "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json",
                 }
-                
+
                 if request.include_health_check:
                     # Check if service is healthy before adding
                     try:
@@ -262,7 +275,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                         continue
                 else:
                     services_to_discover.append(service_data)
-        
+
         # Add explicitly requested services
         for service in request.services:
             service_data = {
@@ -272,30 +285,30 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
             if "openapi_url" in service:
                 service_data["openapi_url"] = normalize_service_url(service["openapi_url"], service.get("name"))
             services_to_discover.append(service_data)
-        
+
         print(f"🎯 Will attempt to discover {len(services_to_discover)} services")
-        
+
         # Discover all services
         discovery_results = {}
         total_endpoints = 0
         total_tools = 0
         successful_discoveries = 0
         failed_discoveries = []
-        
+
         for service_data in services_to_discover:
             try:
                 print(f"🔍 Discovering {service_data['name']}...")
-                
+
                 discover_request = DiscoverRequest(
                     name=service_data["name"],
                     base_url=service_data["base_url"],
                     openapi_url=service_data.get("openapi_url"),
-                    dry_run=request.dry_run
+                    dry_run=request.dry_run,
                 )
-                
+
                 # Call discovery function directly
                 result = await discover_service(discover_request)
-                
+
                 if result.get("success", False):
                     service_result = result["data"]
                     discovery_results[service_data["name"]] = service_result
@@ -304,41 +317,40 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                     successful_discoveries += 1
                     print(f"✅ {service_data['name']}: {service_result.get('endpoints_count', 0)} endpoints")
                 else:
-                    failed_discoveries.append({
-                        "service": service_data["name"],
-                        "error": result.get("message", "Unknown error")
-                    })
+                    failed_discoveries.append(
+                        {"service": service_data["name"], "error": result.get("message", "Unknown error")}
+                    )
                     print(f"❌ {service_data['name']}: {result.get('message', 'Failed')}")
-                    
+
             except Exception as e:
-                failed_discoveries.append({
-                    "service": service_data["name"],
-                    "error": str(e)
-                })
+                failed_discoveries.append({"service": service_data["name"], "error": str(e)})
                 print(f"❌ {service_data['name']}: {e}")
-        
+
         print(f"🎉 Ecosystem discovery complete: {successful_discoveries}/{len(services_to_discover)} successful")
-        
-        return create_success_response({
-            "ecosystem_discovery": {
-                "services_discovered": successful_discoveries,
-                "total_services_attempted": len(services_to_discover),
-                "total_endpoints_discovered": total_endpoints,
-                "total_tools_generated": total_tools,
-                "failed_discoveries": failed_discoveries,
-                "discovery_results": discovery_results,
-                "registry_updated": not request.dry_run,
-                "discovery_timestamp": datetime.utcnow().isoformat() + "Z"
+
+        return create_success_response(
+            {
+                "ecosystem_discovery": {
+                    "services_discovered": successful_discoveries,
+                    "total_services_attempted": len(services_to_discover),
+                    "total_endpoints_discovered": total_endpoints,
+                    "total_tools_generated": total_tools,
+                    "failed_discoveries": failed_discoveries,
+                    "discovery_results": discovery_results,
+                    "registry_updated": not request.dry_run,
+                    "discovery_timestamp": datetime.utcnow().isoformat() + "Z",
+                }
             }
-        })
-        
+        )
+
     except Exception as e:
         print(f"❌ Ecosystem discovery failed: {e}")
         return create_error_response(
             message="Ecosystem discovery failed",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT}
+            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT},
         )
+
 
 @app.get("/registry/stats")
 async def get_registry_stats():
@@ -350,22 +362,31 @@ async def get_registry_stats():
             "last_discovery": datetime.utcnow().isoformat() + "Z",
             "discovery_runs": 1,
             "service_types": [
-                "orchestrator", "doc_store", "prompt_store", "analysis_service",
-                "cli", "memory_agent", "source_agent", "github_mcp"
+                "orchestrator",
+                "doc_store",
+                "prompt_store",
+                "analysis_service",
+                "cli",
+                "memory_agent",
+                "source_agent",
+                "github_mcp",
             ],
             "capabilities": [
-                "service_discovery", "bulk_discovery", "health_monitoring",
-                "docker_networking", "openapi_parsing", "endpoint_extraction"
-            ]
+                "service_discovery",
+                "bulk_discovery",
+                "health_monitoring",
+                "docker_networking",
+                "openapi_parsing",
+                "endpoint_extraction",
+            ],
         }
         return create_success_response(stats)
-        
+
     except Exception as e:
         return create_error_response(
-            message="Failed to get registry stats",
-            error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e)}
+            message="Failed to get registry stats", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
         )
+
 
 @app.post("/api/v1/discover/services")
 async def discover_services_v1(request: BulkDiscoverRequest):
@@ -382,7 +403,7 @@ async def discover_services_v1(request: BulkDiscoverRequest):
                 {"name": "doc_store", "port": 5087},
                 {"name": "analysis-service", "port": 5080},
                 {"name": "llm-gateway", "port": 5055},
-                {"name": "frontend", "port": 3000}
+                {"name": "frontend", "port": 3000},
             ]
 
             for service_info in known_services:
@@ -396,22 +417,26 @@ async def discover_services_v1(request: BulkDiscoverRequest):
                         is_healthy = response.status_code == 200
 
                         if is_healthy:
-                            discovered_services.append({
-                                "name": service_info["name"],
-                                "url": service_url,
-                                "port": service_info["port"],
-                                "status": "healthy",
-                                "last_checked": datetime.now().isoformat()
-                            })
+                            discovered_services.append(
+                                {
+                                    "name": service_info["name"],
+                                    "url": service_url,
+                                    "port": service_info["port"],
+                                    "status": "healthy",
+                                    "last_checked": datetime.now().isoformat(),
+                                }
+                            )
 
                 except Exception:
-                    discovered_services.append({
-                        "name": service_info["name"],
-                        "url": service_url,
-                        "port": service_info["port"],
-                        "status": "unreachable",
-                        "last_checked": datetime.now().isoformat()
-                    })
+                    discovered_services.append(
+                        {
+                            "name": service_info["name"],
+                            "url": service_url,
+                            "port": service_info["port"],
+                            "status": "unreachable",
+                            "last_checked": datetime.now().isoformat(),
+                        }
+                    )
 
         # Process explicitly provided services
         for service_info in request.services:
@@ -429,39 +454,45 @@ async def discover_services_v1(request: BulkDiscoverRequest):
             else:
                 health_status = "not_checked"
 
-            discovered_services.append({
-                "name": service_name,
-                "url": service_url,
-                "status": health_status,
-                "last_checked": datetime.now().isoformat()
-            })
+            discovered_services.append(
+                {
+                    "name": service_name,
+                    "url": service_url,
+                    "status": health_status,
+                    "last_checked": datetime.now().isoformat(),
+                }
+            )
 
-        discovery_results.append({
-            "discovery_id": f"discovery_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "services_discovered": len(discovered_services),
-            "services_healthy": sum(1 for s in discovered_services if s["status"] == "healthy"),
-            "services_unreachable": sum(1 for s in discovered_services if s["status"] == "unreachable"),
-            "timestamp": datetime.now().isoformat(),
-            "auto_detection_enabled": request.auto_detect,
-            "health_checks_enabled": request.include_health_check
-        })
-
-        return create_success_response({
-            "discovery_results": discovery_results,
-            "discovered_services": discovered_services,
-            "summary": {
-                "total_services": len(discovered_services),
-                "healthy_services": sum(1 for s in discovered_services if s["status"] == "healthy"),
-                "unreachable_services": sum(1 for s in discovered_services if s["status"] == "unreachable"),
-                "discovery_method": "auto_detect" if request.auto_detect else "manual"
+        discovery_results.append(
+            {
+                "discovery_id": f"discovery_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "services_discovered": len(discovered_services),
+                "services_healthy": sum(1 for s in discovered_services if s["status"] == "healthy"),
+                "services_unreachable": sum(1 for s in discovered_services if s["status"] == "unreachable"),
+                "timestamp": datetime.now().isoformat(),
+                "auto_detection_enabled": request.auto_detect,
+                "health_checks_enabled": request.include_health_check,
             }
-        })
+        )
+
+        return create_success_response(
+            {
+                "discovery_results": discovery_results,
+                "discovered_services": discovered_services,
+                "summary": {
+                    "total_services": len(discovered_services),
+                    "healthy_services": sum(1 for s in discovered_services if s["status"] == "healthy"),
+                    "unreachable_services": sum(1 for s in discovered_services if s["status"] == "unreachable"),
+                    "discovery_method": "auto_detect" if request.auto_detect else "manual",
+                },
+            }
+        )
 
     except Exception as e:
         return create_error_response(
-            message=f"Service discovery failed: {str(e)}",
-            error_code=ErrorCodes.INTERNAL_ERROR
+            message=f"Service discovery failed: {str(e)}", error_code=ErrorCodes.INTERNAL_ERROR
         )
+
 
 @app.get("/services")
 async def get_discovered_services():
@@ -475,34 +506,34 @@ async def get_discovered_services():
                 "service_name": "discovery-agent",
                 "service_url": "http://localhost:5045",
                 "status": "active",
-                "version": "1.0.0"
+                "version": "1.0.0",
             },
             {
                 "service_name": "doc_store",
                 "service_url": "http://localhost:5087",
                 "status": "active",
-                "version": "1.0.0"
+                "version": "1.0.0",
             },
             {
                 "service_name": "llm-gateway",
                 "service_url": "http://localhost:5055",
                 "status": "active",
-                "version": "1.0.0"
+                "version": "1.0.0",
             },
             {
                 "service_name": "code-analyzer",
                 "service_url": "http://localhost:5025",
                 "status": "active",
-                "version": "1.0.0"
-            }
+                "version": "1.0.0",
+            },
         ]
         return "test response"
 
     except Exception as e:
         return create_error_response(
-            message="Failed to retrieve discovered services",
-            error_code=ErrorCodes.INTERNAL_ERROR
+            message="Failed to retrieve discovered services", error_code=ErrorCodes.INTERNAL_ERROR
         )
+
 
 @app.get("/monitoring/dashboard")
 async def get_monitoring_dashboard():
@@ -513,29 +544,27 @@ async def get_monitoring_dashboard():
             "service_status": "active",
             "discovery_events_count": 0,
             "recent_discoveries": [],
-            "performance_metrics": {
-                "avg_discovery_time": 2.5,
-                "success_rate": 85,
-                "total_endpoints_discovered": 0
-            },
+            "performance_metrics": {"avg_discovery_time": 2.5, "success_rate": 85, "total_endpoints_discovered": 0},
             "network_status": {
                 "docker_network": "accessible",
                 "localhost_conversion": "enabled",
-                "health_checks": "integrated"
-            }
+                "health_checks": "integrated",
+            },
         }
         return create_success_response(dashboard)
-        
+
     except Exception as e:
         return create_error_response(
             message="Failed to create monitoring dashboard",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e)}
+            details={"error": str(e)},
         )
+
 
 # ============================================================================
 # STARTUP EVENT
 # ============================================================================
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -546,6 +575,8 @@ async def startup_event():
     print("✅ Docker network integration ready")
     print("✅ All enhanced endpoints registered")
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=5045)

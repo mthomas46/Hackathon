@@ -5,13 +5,13 @@ consistent, enterprise-grade error handling across the simulation service and
 its ecosystem integrations.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable, Type, Union
-from datetime import datetime
-import traceback
 import asyncio
 import functools
+import sys
+import traceback
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -21,11 +21,11 @@ from simulation.infrastructure.utilities.simulation_utilities import get_simulat
 
 # Import shared error handling patterns (with fallbacks)
 try:
-    from shared.error_handling.handlers import ErrorHandler as SharedErrorHandler
-    from shared.error_handling.context import ErrorContext
     from shared.error_handling.classification import ErrorClassifier
-    from shared.error_handling.recovery import ErrorRecoveryManager
+    from shared.error_handling.context import ErrorContext
+    from shared.error_handling.handlers import ErrorHandler as SharedErrorHandler
     from shared.error_handling.logging import ErrorLogger
+    from shared.error_handling.recovery import ErrorRecoveryManager
 except ImportError:
     # Fallback implementations
     class ErrorContext:
@@ -86,7 +86,7 @@ except ImportError:
                 "context": context.__dict__,
                 "traceback": traceback.format_exc(),
                 "recovery_strategy": recovery_strategy.__name__ if recovery_strategy else None,
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
             self.error_logger.log_error(error, context)
@@ -117,9 +117,7 @@ class SimulationErrorHandlingIntegration:
     def _setup_recovery_strategies(self):
         """Set up error recovery strategies."""
         # Timeout recovery - exponential backoff
-        self.shared_error_handler.recovery_manager.register_strategy(
-            "timeout", self._timeout_recovery_strategy
-        )
+        self.shared_error_handler.recovery_manager.register_strategy("timeout", self._timeout_recovery_strategy)
 
         # Connection recovery - circuit breaker pattern
         self.shared_error_handler.recovery_manager.recovery_manager.register_strategy(
@@ -127,9 +125,7 @@ class SimulationErrorHandlingIntegration:
         )
 
         # Validation recovery - user-friendly error messages
-        self.shared_error_handler.recovery_manager.register_strategy(
-            "validation", self._validation_recovery_strategy
-        )
+        self.shared_error_handler.recovery_manager.register_strategy("validation", self._validation_recovery_strategy)
 
         # Authorization recovery - re-authentication
         self.shared_error_handler.recovery_manager.register_strategy(
@@ -137,16 +133,11 @@ class SimulationErrorHandlingIntegration:
         )
 
         # Not found recovery - fallback or creation
-        self.shared_error_handler.recovery_manager.register_strategy(
-            "not_found", self._not_found_recovery_strategy
-        )
+        self.shared_error_handler.recovery_manager.register_strategy("not_found", self._not_found_recovery_strategy)
 
-    async def handle_simulation_error(self,
-                                    error: Exception,
-                                    operation: str,
-                                    service: str = None,
-                                    simulation_id: str = None,
-                                    **kwargs) -> Dict[str, Any]:
+    async def handle_simulation_error(
+        self, error: Exception, operation: str, service: str = None, simulation_id: str = None, **kwargs
+    ) -> Dict[str, Any]:
         """Handle simulation-specific errors using shared patterns."""
         try:
             # Create error context
@@ -155,7 +146,7 @@ class SimulationErrorHandlingIntegration:
                 service=service or "simulation_service",
                 user_id=kwargs.get("user_id"),
                 simulation_id=simulation_id,
-                **kwargs
+                **kwargs,
             )
 
             # Track error metrics
@@ -175,10 +166,7 @@ class SimulationErrorHandlingIntegration:
         except Exception as handler_error:
             # Fallback error handling
             self.logger.error(
-                "Error in error handler",
-                error=str(handler_error),
-                original_error=str(error),
-                operation=operation
+                "Error in error handler", error=str(handler_error), original_error=str(error), operation=operation
             )
 
             return {
@@ -186,7 +174,7 @@ class SimulationErrorHandlingIntegration:
                 "error_message": "Error handler failed",
                 "original_error": str(error),
                 "handler_error": str(handler_error),
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
     def _track_error_metrics(self, error: Exception, context: ErrorContext):
@@ -205,42 +193,40 @@ class SimulationErrorHandlingIntegration:
         if len(self.error_timestamps[error_type]) > 100:
             self.error_timestamps[error_type] = self.error_timestamps[error_type][-100:]
 
-    async def _enhance_error_handling(self,
-                                    error: Exception,
-                                    context: ErrorContext,
-                                    shared_result: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enhance_error_handling(
+        self, error: Exception, context: ErrorContext, shared_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Enhance error handling with simulation-specific logic."""
         enhanced_result = shared_result.copy()
 
         # Add simulation-specific enhancements
-        enhanced_result.update({
-            "simulation_context": {
-                "operation": context.operation,
-                "service": context.service,
-                "simulation_id": getattr(context, 'simulation_id', None),
-                "user_impact": self._assess_user_impact(error, context),
-                "recovery_suggestions": await self._generate_recovery_suggestions(error, context)
-            },
-            "ecosystem_impact": self._assess_ecosystem_impact(error, context),
-            "business_impact": self._assess_business_impact(error, context)
-        })
+        enhanced_result.update(
+            {
+                "simulation_context": {
+                    "operation": context.operation,
+                    "service": context.service,
+                    "simulation_id": getattr(context, "simulation_id", None),
+                    "user_impact": self._assess_user_impact(error, context),
+                    "recovery_suggestions": await self._generate_recovery_suggestions(error, context),
+                },
+                "ecosystem_impact": self._assess_ecosystem_impact(error, context),
+                "business_impact": self._assess_business_impact(error, context),
+            }
+        )
 
         return enhanced_result
 
-    async def _log_comprehensive_error(self,
-                                     error: Exception,
-                                     context: ErrorContext,
-                                     result: Dict[str, Any]):
+    async def _log_comprehensive_error(self, error: Exception, context: ErrorContext, result: Dict[str, Any]):
         """Log comprehensive error information."""
         log_data = {
             "error_type": result.get("error_type"),
             "operation": context.operation,
             "service": context.service,
-            "simulation_id": getattr(context, 'simulation_id', None),
+            "simulation_id": getattr(context, "simulation_id", None),
             "user_impact": result.get("simulation_context", {}).get("user_impact"),
             "business_impact": result.get("business_impact"),
             "recovery_strategy": result.get("recovery_strategy"),
-            "traceback": result.get("traceback", "").split("\n")[-1]  # Last line only for brevity
+            "traceback": result.get("traceback", "").split("\n")[-1],  # Last line only for brevity
         }
 
         # Log at appropriate level based on business impact
@@ -275,39 +261,27 @@ class SimulationErrorHandlingIntegration:
         error_type = self.shared_error_handler.classifier.classify_error(error)
 
         if error_type == "timeout":
-            suggestions.extend([
-                "Check network connectivity",
-                "Consider increasing timeout values",
-                "Retry the operation"
-            ])
+            suggestions.extend(
+                ["Check network connectivity", "Consider increasing timeout values", "Retry the operation"]
+            )
 
         elif error_type == "connection":
-            suggestions.extend([
-                "Verify service availability",
-                "Check network configuration",
-                "Contact system administrator"
-            ])
+            suggestions.extend(
+                ["Verify service availability", "Check network configuration", "Contact system administrator"]
+            )
 
         elif error_type == "validation":
-            suggestions.extend([
-                "Review input data format",
-                "Check required fields",
-                "Validate data constraints"
-            ])
+            suggestions.extend(["Review input data format", "Check required fields", "Validate data constraints"])
 
         elif error_type == "authorization":
-            suggestions.extend([
-                "Verify authentication credentials",
-                "Check user permissions",
-                "Re-authenticate if necessary"
-            ])
+            suggestions.extend(
+                ["Verify authentication credentials", "Check user permissions", "Re-authenticate if necessary"]
+            )
 
         elif error_type == "not_found":
-            suggestions.extend([
-                "Verify resource identifiers",
-                "Check if resource exists",
-                "Review operation parameters"
-            ])
+            suggestions.extend(
+                ["Verify resource identifiers", "Check if resource exists", "Review operation parameters"]
+            )
 
         return suggestions
 
@@ -331,8 +305,11 @@ class SimulationErrorHandlingIntegration:
         error_type = self.shared_error_handler.classifier.classify_error(error)
 
         # Critical business impact
-        if (error_type in ["connection", "authorization"] and
-            context.operation in ["start_simulation", "save_results", "generate_reports"]):
+        if error_type in ["connection", "authorization"] and context.operation in [
+            "start_simulation",
+            "save_results",
+            "generate_reports",
+        ]:
             return "critical"
 
         # High business impact
@@ -353,7 +330,7 @@ class SimulationErrorHandlingIntegration:
             "max_attempts": 3,
             "base_delay": 1.0,
             "max_delay": 30.0,
-            "jitter": True
+            "jitter": True,
         }
 
     async def _connection_recovery_strategy(self, error: Exception, context: ErrorContext) -> Dict[str, Any]:
@@ -362,7 +339,7 @@ class SimulationErrorHandlingIntegration:
             "strategy": "circuit_breaker",
             "failure_threshold": 5,
             "recovery_timeout": 60,
-            "expected_exception": "ConnectionError"
+            "expected_exception": "ConnectionError",
         }
 
     async def _validation_recovery_strategy(self, error: Exception, context: ErrorContext) -> Dict[str, Any]:
@@ -373,8 +350,8 @@ class SimulationErrorHandlingIntegration:
             "error_messages": {
                 "required": "This field is required",
                 "type": "Invalid data type",
-                "constraint": "Value does not meet requirements"
-            }
+                "constraint": "Value does not meet requirements",
+            },
         }
 
     async def _authorization_recovery_strategy(self, error: Exception, context: ErrorContext) -> Dict[str, Any]:
@@ -383,7 +360,7 @@ class SimulationErrorHandlingIntegration:
             "strategy": "re_authentication",
             "redirect_url": "/auth/login",
             "preserve_context": True,
-            "max_attempts": 3
+            "max_attempts": 3,
         }
 
     async def _not_found_recovery_strategy(self, error: Exception, context: ErrorContext) -> Dict[str, Any]:
@@ -392,7 +369,7 @@ class SimulationErrorHandlingIntegration:
             "strategy": "fallback_or_create",
             "fallback_options": ["default_value", "create_resource", "search_similar"],
             "auto_create": context.operation.startswith("get_"),
-            "user_confirmation": True
+            "user_confirmation": True,
         }
 
     def get_error_statistics(self) -> Dict[str, Any]:
@@ -405,7 +382,7 @@ class SimulationErrorHandlingIntegration:
             "error_counts_by_type": self.error_counts.copy(),
             "error_rates_per_hour": {},
             "recent_errors": [],
-            "top_error_types": sorted(self.error_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+            "top_error_types": sorted(self.error_counts.items(), key=lambda x: x[1], reverse=True)[:5],
         }
 
         # Calculate error rates
@@ -429,19 +406,18 @@ class SimulationErrorHandlingIntegration:
         results = []
 
         # Process errors in parallel for better performance
-        tasks = [self.handle_simulation_error(error, context.operation,
-                                            context.service, **context.metadata)
-                for error, context in errors]
+        tasks = [
+            self.handle_simulation_error(error, context.operation, context.service, **context.metadata)
+            for error, context in errors
+        ]
 
         bulk_results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for i, result in enumerate(bulk_results):
             if isinstance(result, Exception):
-                results.append({
-                    "error": str(result),
-                    "original_context": errors[i][1].__dict__,
-                    "processing_failed": True
-                })
+                results.append(
+                    {"error": str(result), "original_context": errors[i][1].__dict__, "processing_failed": True}
+                )
             else:
                 results.append(result)
 
@@ -451,7 +427,7 @@ class SimulationErrorHandlingIntegration:
             "processed_errors": len([r for r in results if not r.get("processing_failed", False)]),
             "failed_processing": len([r for r in results if r.get("processing_failed", False)]),
             "error_types": {},
-            "business_impacts": {}
+            "business_impacts": {},
         }
 
         for result in results:
@@ -460,18 +436,17 @@ class SimulationErrorHandlingIntegration:
                 business_impact = result.get("business_impact", "unknown")
 
                 bulk_stats["error_types"][error_type] = bulk_stats["error_types"].get(error_type, 0) + 1
-                bulk_stats["business_impacts"][business_impact] = bulk_stats["business_impacts"].get(business_impact, 0) + 1
+                bulk_stats["business_impacts"][business_impact] = (
+                    bulk_stats["business_impacts"].get(business_impact, 0) + 1
+                )
 
-        return {
-            "results": results,
-            "bulk_statistics": bulk_stats,
-            "processing_time": datetime.now()
-        }
+        return {"results": results, "bulk_statistics": bulk_stats, "processing_time": datetime.now()}
 
 
 # Error handling decorator
 def simulation_error_handler(operation: str = None, service: str = None):
     """Decorator for consistent error handling in simulation operations."""
+
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -485,14 +460,13 @@ def simulation_error_handler(operation: str = None, service: str = None):
                 return await func(*args, **kwargs)
             except Exception as e:
                 # Handle the error
-                result = await error_integration.handle_simulation_error(
-                    e, op_name, service, **kwargs
-                )
+                result = await error_integration.handle_simulation_error(e, op_name, service, **kwargs)
 
                 # Re-raise with enhanced context
                 raise type(e)(f"{str(e)} - See error context: {result.get('simulation_context', {})}")
 
         return wrapper
+
     return decorator
 
 
@@ -509,7 +483,7 @@ def get_simulation_error_handling_integration() -> SimulationErrorHandlingIntegr
 
 
 __all__ = [
-    'SimulationErrorHandlingIntegration',
-    'simulation_error_handler',
-    'get_simulation_error_handling_integration'
+    "SimulationErrorHandlingIntegration",
+    "simulation_error_handler",
+    "get_simulation_error_handling_integration",
 ]

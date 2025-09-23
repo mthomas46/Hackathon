@@ -3,11 +3,13 @@
 Provides visualization and monitoring capabilities for source agent
 service document fetching, normalization, and code analysis operations.
 """
-from typing import Dict, Any, List, Optional
+
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_source_agent_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_source_agent_url
 
 
 class SourceAgentMonitor:
@@ -44,9 +46,11 @@ class SourceAgentMonitor:
                 "sources": sources_response,
                 "operation_stats": self._calculate_operation_stats(),
                 "recent_fetches": self._fetches[-10:] if self._fetches else [],  # Last 10 fetches
-                "recent_normalizations": self._normalizations[-10:] if self._normalizations else [],  # Last 10 normalizations
+                "recent_normalizations": (
+                    self._normalizations[-10:] if self._normalizations else []
+                ),  # Last 10 normalizations
                 "recent_analyses": self._analyses[-10:] if self._analyses else [],  # Last 10 analyses
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -63,20 +67,18 @@ class SourceAgentMonitor:
                 "recent_fetches": [],
                 "recent_normalizations": [],
                 "recent_analyses": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
-    async def fetch_document(self, source: str, identifier: str, scope: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def fetch_document(
+        self, source: str, identifier: str, scope: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Fetch document from specified source."""
         try:
             clients = get_frontend_clients()
             source_url = get_source_agent_url()
 
-            payload = {
-                "source": source,
-                "identifier": identifier,
-                "scope": scope or {}
-            }
+            payload = {"source": source, "identifier": identifier, "scope": scope or {}}
 
             response = await clients.post_json(f"{source_url}/docs/fetch", payload)
 
@@ -88,7 +90,7 @@ class SourceAgentMonitor:
                 "identifier": identifier,
                 "scope": scope,
                 "success": "document" in response,
-                "response": response
+                "response": response,
             }
 
             self._fetches.insert(0, fetch_result)  # Add to front
@@ -101,29 +103,21 @@ class SourceAgentMonitor:
                 "fetch_id": fetch_result["id"],
                 "source": source,
                 "document": response.get("document"),
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "source": source,
-                "identifier": identifier,
-                "response": None
-            }
+            return {"success": False, "error": str(e), "source": source, "identifier": identifier, "response": None}
 
-    async def normalize_data(self, source: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> Dict[str, Any]:
+    async def normalize_data(
+        self, source: str, data: Dict[str, Any], correlation_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Normalize data from specified source."""
         try:
             clients = get_frontend_clients()
             source_url = get_source_agent_url()
 
-            payload = {
-                "source": source,
-                "data": data,
-                "correlation_id": correlation_id
-            }
+            payload = {"source": source, "data": data, "correlation_id": correlation_id}
 
             response = await clients.post_json(f"{source_url}/normalize", payload)
 
@@ -135,7 +129,7 @@ class SourceAgentMonitor:
                 "correlation_id": correlation_id,
                 "success": "envelope" in response,
                 "envelope_id": response.get("envelope", {}).get("id") if "envelope" in response else None,
-                "response": response
+                "response": response,
             }
 
             self._normalizations.insert(0, normalization_result)  # Add to front
@@ -148,7 +142,7 @@ class SourceAgentMonitor:
                 "normalization_id": normalization_result["id"],
                 "source": source,
                 "envelope": response.get("envelope"),
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
@@ -157,7 +151,7 @@ class SourceAgentMonitor:
                 "error": str(e),
                 "source": source,
                 "correlation_id": correlation_id,
-                "response": None
+                "response": None,
             }
 
     async def analyze_code(self, text: str) -> Dict[str, Any]:
@@ -178,7 +172,7 @@ class SourceAgentMonitor:
                 "success": "analysis" in response,
                 "endpoint_count": response.get("endpoint_count", 0),
                 "patterns_found": response.get("patterns_found", []),
-                "response": response
+                "response": response,
             }
 
             self._analyses.insert(0, analysis_result)  # Add to front
@@ -192,16 +186,11 @@ class SourceAgentMonitor:
                 "analysis": response.get("analysis"),
                 "endpoint_count": analysis_result["endpoint_count"],
                 "patterns_found": analysis_result["patterns_found"],
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "code_length": len(text),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "code_length": len(text), "response": None}
 
     def _calculate_operation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached operations."""
@@ -211,7 +200,7 @@ class SourceAgentMonitor:
                 "fetch_operations": 0,
                 "normalization_operations": 0,
                 "analysis_operations": 0,
-                "success_rate": 0
+                "success_rate": 0,
             }
 
         total_fetches = len(self._fetches)
@@ -221,9 +210,9 @@ class SourceAgentMonitor:
 
         # Calculate success rates
         successful_operations = (
-            sum(1 for f in self._fetches if f.get("success")) +
-            sum(1 for n in self._normalizations if n.get("success")) +
-            sum(1 for a in self._analyses if a.get("success"))
+            sum(1 for f in self._fetches if f.get("success"))
+            + sum(1 for n in self._normalizations if n.get("success"))
+            + sum(1 for a in self._analyses if a.get("success"))
         )
 
         success_rate = round((successful_operations / total_operations) * 100, 1) if total_operations > 0 else 0
@@ -240,7 +229,7 @@ class SourceAgentMonitor:
             "normalization_operations": total_normalizations,
             "analysis_operations": total_analyses,
             "success_rate": success_rate,
-            "source_distribution": source_counts
+            "source_distribution": source_counts,
         }
 
     def get_fetch_history(self, limit: int = 20) -> List[Dict[str, Any]]:

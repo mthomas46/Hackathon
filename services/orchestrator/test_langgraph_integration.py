@@ -6,8 +6,8 @@ by testing the core components and workflows.
 """
 
 import asyncio
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -61,9 +61,7 @@ async def test_workflow_state():
     try:
         # Create workflow state
         state = create_workflow_state(
-            workflow_type="test_workflow",
-            input_data={"test_param": "test_value"},
-            user_id="test_user"
+            workflow_type="test_workflow", input_data={"test_param": "test_value"}, user_id="test_user"
         )
         print("✓ Workflow state created")
 
@@ -90,6 +88,7 @@ async def test_service_tools():
     try:
         # Test tool creation for a service
         from services.shared.utilities import get_service_client
+
         service_client = get_service_client()
 
         tools = await create_service_tools("logging_service", service_client)
@@ -118,10 +117,7 @@ async def test_workflow_execution():
         tools = await engine.initialize_tools(["logging_service"])
 
         # Create test workflow state
-        test_state = create_workflow_state(
-            workflow_type="test_execution",
-            input_data={"test": True}
-        )
+        test_state = create_workflow_state(workflow_type="test_execution", input_data={"test": True})
 
         print("✓ Basic workflow execution components ready")
 
@@ -141,9 +137,10 @@ async def main():
 
     # Check if LangGraph is available
     try:
-        import langgraph
         import langchain_core
         import langchain_openai
+        import langgraph
+
         print("✓ LangGraph dependencies available")
     except ImportError as e:
         print(f"✗ LangGraph dependencies missing: {e}")
@@ -151,12 +148,7 @@ async def main():
         return
 
     # Run tests
-    tests = [
-        test_langgraph_engine,
-        test_workflow_state,
-        test_service_tools,
-        test_workflow_execution
-    ]
+    tests = [test_langgraph_engine, test_workflow_state, test_service_tools, test_workflow_execution]
 
     results = []
     for test_func in tests:

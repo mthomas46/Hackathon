@@ -16,24 +16,27 @@ Responsibilities:
 
 Dependencies: shared middlewares for request tracking and metrics.
 """
+
 import time
+from typing import Any, Dict, List, Optional
+
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
 
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 from services.shared.standardized_logger import StandardizedLogger, performance_monitor
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
 try:
-    from .modules.log_storage import log_storage
     from .modules.log_stats import calculate_log_statistics
+    from .modules.log_storage import log_storage
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
-    from modules.log_storage import log_storage
     from modules.log_stats import calculate_log_statistics
+    from modules.log_storage import log_storage
 
 # Service configuration constants
 SERVICE_NAME = "log-collector"
@@ -45,22 +48,25 @@ DEFAULT_MAX_LOGS = 5000
 DEFAULT_QUERY_LIMIT = 100
 
 # Initialize standardized logger and monitoring
-logger = StandardizedLogger(SERVICE_NAME, {
-    "log_level": "INFO",
-    "structured_logging": True,
-    "monitoring_enabled": True,
-    "metrics_interval": 30,
-    "console_logging": True,
-    "log_file": f"/tmp/{SERVICE_NAME}.log",
-    "max_log_size": 10485760,  # 10MB
-    "backup_count": 5
-})
+logger = StandardizedLogger(
+    SERVICE_NAME,
+    {
+        "log_level": "INFO",
+        "structured_logging": True,
+        "monitoring_enabled": True,
+        "metrics_interval": 30,
+        "console_logging": True,
+        "log_file": f"/tmp/{SERVICE_NAME}.log",
+        "max_log_size": 10485760,  # 10MB
+        "backup_count": 5,
+    },
+)
 logger.start_monitoring()
 
 app = FastAPI(
     title="Log Collector",
     version=SERVICE_VERSION,
-    description="Centralized log collection service for distributed systems with standardized logging"
+    description="Centralized log collection service for distributed systems with standardized logging",
 )
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
@@ -75,6 +81,7 @@ class LogItem(BaseModel):
     All log entries follow this standard format to enable consistent
     storage, filtering, and analysis across the system.
     """
+
     service: str
     """Service name that generated the log entry (e.g., 'api-gateway', 'user-service')."""
 
@@ -104,13 +111,14 @@ async def health(request: Request):
     try:
         # Get health data
         from datetime import datetime
+
         health_data = {
             "status": "healthy",
             "service": SERVICE_NAME,
             "version": SERVICE_VERSION,
             "timestamp": datetime.utcnow().isoformat(),
             "count": log_storage.get_count(),
-            "description": "Log collection service is operational"
+            "description": "Log collection service is operational",
         }
 
         # Add monitoring data from standardized logger
@@ -119,8 +127,7 @@ async def health(request: Request):
 
         # Log successful health check
         response_time = time.time() - start_time
-        logger_instance.log_request("GET", "/health", 200, response_time,
-                                  extra={"log_count": health_data["count"]})
+        logger_instance.log_request("GET", "/health", 200, response_time, extra={"log_count": health_data["count"]})
 
         return health_data
 
@@ -134,7 +141,7 @@ async def health(request: Request):
             "status": "unhealthy",
             "service": SERVICE_NAME,
             "error": str(e),
-            "description": "Log collection service encountered an error"
+            "description": "Log collection service encountered an error",
         }
 
 
@@ -154,31 +161,38 @@ async def put_log(item: LogItem, request: Request, response: Response):
 
         # Log successful log storage
         response_time = time.time() - start_time
-        logger_instance.log_request("POST", "/logs", 200, response_time,
-                                  extra={
-                                      "log_service": item.service,
-                                      "log_level": item.level,
-                                      "total_logs": count
-                                  })
+        logger_instance.log_request(
+            "POST",
+            "/logs",
+            200,
+            response_time,
+            extra={"log_service": item.service, "log_level": item.level, "total_logs": count},
+        )
 
         # Log business event for log collection
-        logger_instance.log_business_event("log_collected", {
-            "service": item.service,
-            "level": item.level,
-            "message_length": len(item.message),
-            "has_context": item.context is not None
-        })
+        logger_instance.log_business_event(
+            "log_collected",
+            {
+                "service": item.service,
+                "level": item.level,
+                "message_length": len(item.message),
+                "has_context": item.context is not None,
+            },
+        )
 
         return {"status": "ok", "count": count}
 
     except Exception as e:
         # Log error
         response_time = time.time() - start_time
-        logger_instance.log_error(e, {
-            "endpoint": "/logs",
-            "log_service": item.service if item else "unknown",
-            "log_level": item.level if item else "unknown"
-        })
+        logger_instance.log_error(
+            e,
+            {
+                "endpoint": "/logs",
+                "log_service": item.service if item else "unknown",
+                "log_level": item.level if item else "unknown",
+            },
+        )
 
         response.status_code = 500
         return {"status": "error", "message": "Failed to store log entry"}
@@ -190,6 +204,7 @@ class LogBatch(BaseModel):
     Used when multiple log entries need to be submitted together,
     reducing the number of individual API calls.
     """
+
     items: List[LogItem]
     """List of log entries to store."""
 
@@ -211,37 +226,34 @@ async def put_logs(batch: LogBatch, request: Request, response: Response):
 
         # Log successful batch storage
         response_time = time.time() - start_time
-        logger_instance.log_request("POST", "/logs/batch", 200, response_time,
-                                  extra={
-                                      "batch_size": len(batch.items),
-                                      "total_logs": count
-                                  })
+        logger_instance.log_request(
+            "POST", "/logs/batch", 200, response_time, extra={"batch_size": len(batch.items), "total_logs": count}
+        )
 
         # Log business event for batch collection
-        logger_instance.log_business_event("log_batch_collected", {
-            "batch_size": len(batch.items),
-            "total_logs": count,
-            "services": list(set(item.service for item in batch.items)),
-            "levels": list(set(item.level for item in batch.items))
-        })
+        logger_instance.log_business_event(
+            "log_batch_collected",
+            {
+                "batch_size": len(batch.items),
+                "total_logs": count,
+                "services": list(set(item.service for item in batch.items)),
+                "levels": list(set(item.level for item in batch.items)),
+            },
+        )
 
         return {"status": "ok", "count": count, "added": len(batch.items)}
 
     except Exception as e:
         # Log error
         response_time = time.time() - start_time
-        logger_instance.log_error(e, {
-            "endpoint": "/logs/batch",
-            "batch_size": len(batch.items) if batch else 0
-        })
+        logger_instance.log_error(e, {"endpoint": "/logs/batch", "batch_size": len(batch.items) if batch else 0})
 
         response.status_code = 500
         return {"status": "error", "message": "Failed to store log batch"}
 
 
 @app.get("/logs")
-async def list_logs(request: Request, service: Optional[str] = None, level: Optional[str] = None,
-                   limit: int = 100):
+async def list_logs(request: Request, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100):
     """Retrieve logs with optional filtering by service and/or log level.
 
     Supports filtering logs by service name, log level, and limiting the number
@@ -256,24 +268,20 @@ async def list_logs(request: Request, service: Optional[str] = None, level: Opti
 
         # Log successful query
         response_time = time.time() - start_time
-        logger_instance.log_request("GET", "/logs", 200, response_time,
-                                  extra={
-                                      "service_filter": service,
-                                      "level_filter": level,
-                                      "limit": limit,
-                                      "results_count": len(logs)
-                                  })
+        logger_instance.log_request(
+            "GET",
+            "/logs",
+            200,
+            response_time,
+            extra={"service_filter": service, "level_filter": level, "limit": limit, "results_count": len(logs)},
+        )
 
         return {"items": logs}
 
     except Exception as e:
         # Log error
         response_time = time.time() - start_time
-        logger_instance.log_error(e, {
-            "endpoint": "/logs",
-            "service_filter": service,
-            "level_filter": level
-        })
+        logger_instance.log_error(e, {"endpoint": "/logs", "service_filter": service, "level_filter": level})
 
         return {"error": "Failed to retrieve logs", "message": str(e)}
 
@@ -295,19 +303,27 @@ async def stats(request: Request):
 
         # Log successful stats query
         response_time = time.time() - start_time
-        logger_instance.log_request("GET", "/stats", 200, response_time,
-                                  extra={
-                                      "total_logs": stats_data.get("total_logs", 0),
-                                      "services_count": len(stats_data.get("by_service", {})),
-                                      "error_rate": stats_data.get("error_rate", 0)
-                                  })
+        logger_instance.log_request(
+            "GET",
+            "/stats",
+            200,
+            response_time,
+            extra={
+                "total_logs": stats_data.get("total_logs", 0),
+                "services_count": len(stats_data.get("by_service", {})),
+                "error_rate": stats_data.get("error_rate", 0),
+            },
+        )
 
         # Log business event for stats access
-        logger_instance.log_business_event("log_stats_accessed", {
-            "total_logs": stats_data.get("total_logs", 0),
-            "unique_services": len(stats_data.get("by_service", {})),
-            "time_range": stats_data.get("time_range", "unknown")
-        })
+        logger_instance.log_business_event(
+            "log_stats_accessed",
+            {
+                "total_logs": stats_data.get("total_logs", 0),
+                "unique_services": len(stats_data.get("by_service", {})),
+                "time_range": stats_data.get("time_range", "unknown"),
+            },
+        )
 
         return stats_data
 
@@ -321,8 +337,9 @@ async def stats(request: Request):
 
 if __name__ == "__main__":
     """Run the Log Collector service directly."""
-    import uvicorn
     import atexit
+
+    import uvicorn
 
     # Log service startup
     logger.info("Starting Log Collector service", port=DEFAULT_PORT, version=SERVICE_VERSION)
@@ -334,16 +351,9 @@ if __name__ == "__main__":
         logger.stop_monitoring()
 
     try:
-        uvicorn.run(
-            app,
-            host="127.0.0.1",
-            port=DEFAULT_PORT,
-            log_level="info"
-        )
+        uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")
     except KeyboardInterrupt:
         logger.info("Service interrupted by user")
     except Exception as e:
         logger.error(f"Service failed to start: {e}")
         raise
-
-

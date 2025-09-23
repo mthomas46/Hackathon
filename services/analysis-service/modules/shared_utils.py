@@ -5,9 +5,10 @@ to eliminate redundancy and ensure consistency.
 """
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
+
 try:
-    from services.shared.core.constants_new import ErrorCodes, EnvVars, ServiceNames
+    from services.shared.core.constants_new import EnvVars, ErrorCodes, ServiceNames
 except ImportError:
     # Fallback for testing or when shared services are not available
     class ErrorCodes:
@@ -22,8 +23,10 @@ except ImportError:
         ANALYSIS_SERVICE = "analysis-service"
         DOC_STORE = "doc-store"
         ORCHESTRATOR = "orchestrator"
+
+
 try:
-    from services.shared.core.responses.responses import create_success_response, create_error_response
+    from services.shared.core.responses.responses import create_error_response, create_success_response
     from services.shared.monitoring.logging import fire_and_forget
     from services.shared.utilities.error_handling import ValidationException
 except ImportError:
@@ -40,6 +43,7 @@ except ImportError:
     class ValidationException(Exception):
         pass
 
+
 # Configuration constants for analysis service with secure validation
 def _validate_float_env_var(var_name: str, default: str) -> float:
     """Safely validate and convert environment variable to float."""
@@ -53,6 +57,7 @@ def _validate_float_env_var(var_name: str, default: str) -> float:
     except (ValueError, TypeError):
         return float(default)
 
+
 def _validate_int_env_var(var_name: str, default: str, min_val: int = 0, max_val: int = 100) -> int:
     """Safely validate and convert environment variable to int."""
     value = os.environ.get(var_name, default)
@@ -65,6 +70,7 @@ def _validate_int_env_var(var_name: str, default: str, min_val: int = 0, max_val
     except (ValueError, TypeError):
         return int(default)
 
+
 _DEFAULT_DRIFT_OVERLAP_THRESHOLD = _validate_float_env_var("DRIFT_OVERLAP_THRESHOLD", "0.1")
 _DEFAULT_CRITICAL_SCORE = _validate_int_env_var("CRITICAL_SCORE", "90", 0, 100)
 _DEFAULT_HIGH_PRIORITY_SCORE = _validate_int_env_var("HIGH_PRIORITY_SCORE", "80", 0, 100)
@@ -74,6 +80,7 @@ _DEFAULT_MEDIUM_PRIORITY_SCORE = _validate_int_env_var("MEDIUM_PRIORITY_SCORE", 
 def get_analysis_service_client():
     """Get analysis service client with standardized error handling."""
     from services.shared.utilities import get_service_client
+
     try:
         return get_service_client()
     except Exception as e:
@@ -100,28 +107,20 @@ def handle_analysis_error(operation: str, error: Exception, **context) -> Dict[s
     return create_error_response(
         f"Failed to {operation}",
         error_code=ErrorCodes.SERVICE_COMMUNICATION_FAILED,
-        details={"error": str(error), **context}
+        details={"error": str(error), **context},
     )
 
 
 def create_analysis_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
     """Standardized success response creation for analysis operations."""
     fire_and_forget("info", f"Analysis {operation} completed successfully", ServiceNames.ANALYSIS_SERVICE, context)
-    return create_success_response(
-        f"Analysis {operation} completed successfully",
-        data,
-        **context
-    )
+    return create_success_response(f"Analysis {operation} completed successfully", data, **context)
 
 
 def _create_analysis_error_response(message: str, error_code: str, details: Dict[str, Any]) -> Dict[str, Any]:
     """Create standardized error response for analysis operations."""
     fire_and_forget("error", f"Analysis error: {message}", ServiceNames.ANALYSIS_SERVICE, details)
-    return create_error_response(
-        message,
-        error_code=error_code,
-        details=details
-    )
+    return create_error_response(message, error_code=error_code, details=details)
 
 
 def build_analysis_context(operation: str, **kwargs) -> Dict[str, Any]:
@@ -134,17 +133,11 @@ def build_analysis_context(operation: str, **kwargs) -> Dict[str, Any]:
 def validate_analysis_targets(targets: list) -> None:
     """Validate analysis targets and raise exception if invalid."""
     if not targets:
-        raise ValidationException(
-            "No targets specified for analysis",
-            {"targets": ["Cannot be empty"]}
-        )
+        raise ValidationException("No targets specified for analysis", {"targets": ["Cannot be empty"]})
 
     for target in targets:
         if not isinstance(target, str):
-            raise ValidationException(
-                f"Invalid target format: {target}",
-                {"targets": ["All targets must be strings"]}
-            )
+            raise ValidationException(f"Invalid target format: {target}", {"targets": ["All targets must be strings"]})
 
 
 def get_drift_overlap_threshold() -> float:
@@ -168,15 +161,15 @@ def get_medium_priority_score() -> int:
 
 
 __all__ = [
-    'get_analysis_service_client',
-    'get_service_url',
-    'handle_analysis_error',
-    'create_analysis_success_response',
-    '_create_analysis_error_response',
-    'build_analysis_context',
-    'validate_analysis_targets',
-    'get_drift_overlap_threshold',
-    'get_critical_score',
-    'get_high_priority_score',
-    'get_medium_priority_score'
+    "get_analysis_service_client",
+    "get_service_url",
+    "handle_analysis_error",
+    "create_analysis_success_response",
+    "_create_analysis_error_response",
+    "build_analysis_context",
+    "validate_analysis_targets",
+    "get_drift_overlap_threshold",
+    "get_critical_score",
+    "get_high_priority_score",
+    "get_medium_priority_score",
 ]

@@ -1,6 +1,7 @@
-from typing import Dict, Any, Optional, List
 import os
 import re
+from typing import Any, Dict, List, Optional
+
 from ..integrations.clients import ServiceClients  # type: ignore
 
 
@@ -91,6 +92,7 @@ async def try_fetch_codeowners(owner: str, repo: str, branch: str = "main") -> O
     raw = os.environ.get("GITHUB_RAW_BASE", "https://raw.githubusercontent.com")
     candidates = [f".github/CODEOWNERS", f"CODEOWNERS"]
     import httpx  # fallback path for raw text when ServiceClients returns JSON
+
     async with httpx.AsyncClient(timeout=10) as client:
         for p in candidates:
             url = f"{raw}/{owner}/{repo}/{branch}/{p}"
@@ -116,7 +118,6 @@ async def derive_github_owners(owner: str, repo: str, path: str) -> List[str]:
         return []
 
 
-
 def merge_codeowners_with_blame(
     codeowners_mapping: Dict[str, List[str]],
     file_path: str,
@@ -135,5 +136,3 @@ def merge_codeowners_with_blame(
             seen.add(o)
             out.append(o)
     return out[:20]
-
-

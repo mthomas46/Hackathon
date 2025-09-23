@@ -1,11 +1,7 @@
 """Relationships domain package."""
 
+from .handlers import RelationshipsHandlers
 from .repository import RelationshipsRepository
 from .service import RelationshipsService
-from .handlers import RelationshipsHandlers
 
-__all__ = [
-    "RelationshipsRepository",
-    "RelationshipsService",
-    "RelationshipsHandlers"
-]
+__all__ = ["RelationshipsRepository", "RelationshipsService", "RelationshipsHandlers"]

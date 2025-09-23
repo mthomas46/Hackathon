@@ -20,7 +20,7 @@ class ReportFormat(Enum):
             ReportFormat.HTML: "text/html",
             ReportFormat.PDF: "application/pdf",
             ReportFormat.TEXT: "text/plain",
-            ReportFormat.XML: "application/xml"
+            ReportFormat.XML: "application/xml",
         }
         return content_types[self]
 
@@ -32,7 +32,7 @@ class ReportFormat(Enum):
             ReportFormat.HTML: ".html",
             ReportFormat.PDF: ".pdf",
             ReportFormat.TEXT: ".txt",
-            ReportFormat.XML: ".xml"
+            ReportFormat.XML: ".xml",
         }
         return extensions[self]
 

@@ -4,27 +4,27 @@ This module extends the services/shared/monitoring/ infrastructure with comprehe
 simulation-specific metrics collection, performance monitoring, and alerting capabilities.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable, Union
-from datetime import datetime, timedelta
 import asyncio
+import sys
 import threading
 import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
+from simulation.domain.value_objects import ComplexityLevel, ProjectType, SimulationStatus
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.domain.value_objects import SimulationStatus, ProjectType, ComplexityLevel
 
 # Import shared monitoring (with fallbacks)
 try:
-    from shared.monitoring.metrics import MetricsCollector, MetricType, MetricConfig
-    from shared.monitoring.alerts import AlertManager, AlertLevel, AlertRule
-    from shared.monitoring.health import HealthMonitor, HealthIndicator
+    from shared.monitoring.alerts import AlertLevel, AlertManager, AlertRule
+    from shared.monitoring.health import HealthIndicator, HealthMonitor
+    from shared.monitoring.metrics import MetricConfig, MetricsCollector, MetricType
 except ImportError:
     # Fallback implementations
     class MetricType(str, Enum):
@@ -49,11 +49,9 @@ except ImportError:
 
         def record_metric(self, name: str, value: Union[int, float], labels: Dict[str, str] = None):
             if name in self.metrics:
-                self.metrics[name]["values"].append({
-                    "value": value,
-                    "labels": labels or {},
-                    "timestamp": datetime.now()
-                })
+                self.metrics[name]["values"].append(
+                    {"value": value, "labels": labels or {}, "timestamp": datetime.now()}
+                )
 
         def get_metric_value(self, name: str, labels: Dict[str, str] = None) -> Optional[float]:
             if name not in self.metrics:
@@ -89,12 +87,9 @@ except ImportError:
             triggered_alerts = []
             for rule in self.rules:
                 if rule.condition(metrics):
-                    triggered_alerts.append({
-                        "rule": rule.name,
-                        "level": rule.level,
-                        "message": rule.message,
-                        "timestamp": datetime.now()
-                    })
+                    triggered_alerts.append(
+                        {"rule": rule.name, "level": rule.level, "message": rule.message, "timestamp": datetime.now()}
+                    )
             return triggered_alerts
 
     class HealthIndicator:
@@ -135,77 +130,69 @@ class SimulationMetricsCollector(MetricsCollector):
                 name="simulation_active_count",
                 type=MetricType.GAUGE,
                 description="Number of currently active simulations",
-                labels=["project_type", "complexity"]
+                labels=["project_type", "complexity"],
             ),
             MetricConfig(
                 name="simulation_completed_total",
                 type=MetricType.COUNTER,
                 description="Total number of completed simulations",
-                labels=["project_type", "complexity", "status"]
+                labels=["project_type", "complexity", "status"],
             ),
             MetricConfig(
                 name="simulation_duration_seconds",
                 type=MetricType.HISTOGRAM,
                 description="Duration of simulation execution",
-                labels=["project_type", "complexity"]
+                labels=["project_type", "complexity"],
             ),
             MetricConfig(
                 name="simulation_success_rate",
                 type=MetricType.GAUGE,
                 description="Simulation success rate percentage",
-                labels=["project_type", "complexity"]
+                labels=["project_type", "complexity"],
             ),
             MetricConfig(
                 name="document_generation_count",
                 type=MetricType.COUNTER,
                 description="Number of documents generated",
-                labels=["document_type", "simulation_id"]
+                labels=["document_type", "simulation_id"],
             ),
             MetricConfig(
                 name="ecosystem_service_calls",
                 type=MetricType.COUNTER,
                 description="Number of calls to ecosystem services",
-                labels=["service_name", "operation"]
+                labels=["service_name", "operation"],
             ),
             MetricConfig(
                 name="ecosystem_service_response_time",
                 type=MetricType.HISTOGRAM,
                 description="Response time for ecosystem service calls",
-                labels=["service_name", "operation"]
+                labels=["service_name", "operation"],
             ),
             MetricConfig(
                 name="simulation_queue_depth",
                 type=MetricType.GAUGE,
-                description="Number of simulations waiting in queue"
+                description="Number of simulations waiting in queue",
             ),
-            MetricConfig(
-                name="memory_usage_mb",
-                type=MetricType.GAUGE,
-                description="Current memory usage in MB"
-            ),
-            MetricConfig(
-                name="cpu_usage_percent",
-                type=MetricType.GAUGE,
-                description="Current CPU usage percentage"
-            ),
+            MetricConfig(name="memory_usage_mb", type=MetricType.GAUGE, description="Current memory usage in MB"),
+            MetricConfig(name="cpu_usage_percent", type=MetricType.GAUGE, description="Current CPU usage percentage"),
             MetricConfig(
                 name="phase_completion_rate",
                 type=MetricType.GAUGE,
                 description="Phase completion rate",
-                labels=["phase_name", "simulation_id"]
+                labels=["phase_name", "simulation_id"],
             ),
             MetricConfig(
                 name="quality_score_average",
                 type=MetricType.GAUGE,
                 description="Average quality score of generated content",
-                labels=["content_type"]
+                labels=["content_type"],
             ),
             MetricConfig(
                 name="error_rate_percent",
                 type=MetricType.GAUGE,
                 description="Error rate percentage for operations",
-                labels=["operation_type"]
-            )
+                labels=["operation_type"],
+            ),
         ]
 
         for metric_config in simulation_metrics:
@@ -213,37 +200,38 @@ class SimulationMetricsCollector(MetricsCollector):
 
     def record_simulation_start(self, simulation_id: str, project_type: str, complexity: str):
         """Record simulation start event."""
-        current_active = self.get_metric_value("simulation_active_count", {"project_type": project_type, "complexity": complexity}) or 0
+        current_active = (
+            self.get_metric_value("simulation_active_count", {"project_type": project_type, "complexity": complexity})
+            or 0
+        )
         self.record_metric(
-            "simulation_active_count",
-            current_active + 1,
-            {"project_type": project_type, "complexity": complexity}
+            "simulation_active_count", current_active + 1, {"project_type": project_type, "complexity": complexity}
         )
         self.logger.info("Recorded simulation start", simulation_id=simulation_id)
 
-    def record_simulation_completion(self, simulation_id: str, project_type: str, complexity: str,
-                                   status: str, duration_seconds: float):
+    def record_simulation_completion(
+        self, simulation_id: str, project_type: str, complexity: str, status: str, duration_seconds: float
+    ):
         """Record simulation completion event."""
         # Update active count
-        current_active = self.get_metric_value("simulation_active_count", {"project_type": project_type, "complexity": complexity}) or 0
+        current_active = (
+            self.get_metric_value("simulation_active_count", {"project_type": project_type, "complexity": complexity})
+            or 0
+        )
         self.record_metric(
             "simulation_active_count",
             max(0, current_active - 1),
-            {"project_type": project_type, "complexity": complexity}
+            {"project_type": project_type, "complexity": complexity},
         )
 
         # Record completion
         self.record_metric(
-            "simulation_completed_total",
-            1,
-            {"project_type": project_type, "complexity": complexity, "status": status}
+            "simulation_completed_total", 1, {"project_type": project_type, "complexity": complexity, "status": status}
         )
 
         # Record duration
         self.record_metric(
-            "simulation_duration_seconds",
-            duration_seconds,
-            {"project_type": project_type, "complexity": complexity}
+            "simulation_duration_seconds", duration_seconds, {"project_type": project_type, "complexity": complexity}
         )
 
         self.logger.info("Recorded simulation completion", simulation_id=simulation_id, duration=duration_seconds)
@@ -251,22 +239,20 @@ class SimulationMetricsCollector(MetricsCollector):
     def record_document_generation(self, simulation_id: str, document_type: str, count: int = 1):
         """Record document generation event."""
         self.record_metric(
-            "document_generation_count",
-            count,
-            {"document_type": document_type, "simulation_id": simulation_id}
+            "document_generation_count", count, {"document_type": document_type, "simulation_id": simulation_id}
         )
 
     def record_ecosystem_service_call(self, service_name: str, operation: str, response_time: float):
         """Record ecosystem service call."""
         self.record_metric("ecosystem_service_calls", 1, {"service_name": service_name, "operation": operation})
-        self.record_metric("ecosystem_service_response_time", response_time, {"service_name": service_name, "operation": operation})
+        self.record_metric(
+            "ecosystem_service_response_time", response_time, {"service_name": service_name, "operation": operation}
+        )
 
     def update_simulation_success_rate(self, project_type: str, complexity: str, success_rate: float):
         """Update simulation success rate."""
         self.record_metric(
-            "simulation_success_rate",
-            success_rate,
-            {"project_type": project_type, "complexity": complexity}
+            "simulation_success_rate", success_rate, {"project_type": project_type, "complexity": complexity}
         )
 
     def update_queue_depth(self, depth: int):
@@ -281,9 +267,7 @@ class SimulationMetricsCollector(MetricsCollector):
     def record_phase_completion(self, simulation_id: str, phase_name: str, completion_rate: float):
         """Record phase completion rate."""
         self.record_metric(
-            "phase_completion_rate",
-            completion_rate,
-            {"phase_name": phase_name, "simulation_id": simulation_id}
+            "phase_completion_rate", completion_rate, {"phase_name": phase_name, "simulation_id": simulation_id}
         )
 
     def record_quality_score(self, content_type: str, score: float):
@@ -306,49 +290,59 @@ class SimulationAlertManager(AlertManager):
         """Initialize simulation-specific alert rules."""
 
         # High error rate alert
-        self.add_rule(AlertRule(
-            name="high_error_rate",
-            condition=lambda metrics: self._check_error_rate(metrics, "simulation", 10.0),
-            level=AlertLevel.ERROR,
-            message="Simulation error rate exceeds 10%",
-            cooldown_seconds=300
-        ))
+        self.add_rule(
+            AlertRule(
+                name="high_error_rate",
+                condition=lambda metrics: self._check_error_rate(metrics, "simulation", 10.0),
+                level=AlertLevel.ERROR,
+                message="Simulation error rate exceeds 10%",
+                cooldown_seconds=300,
+            )
+        )
 
         # Simulation queue depth alert
-        self.add_rule(AlertRule(
-            name="simulation_queue_overflow",
-            condition=lambda metrics: self._check_queue_depth(metrics, 20),
-            level=AlertLevel.WARNING,
-            message="Simulation queue depth exceeds 20",
-            cooldown_seconds=600
-        ))
+        self.add_rule(
+            AlertRule(
+                name="simulation_queue_overflow",
+                condition=lambda metrics: self._check_queue_depth(metrics, 20),
+                level=AlertLevel.WARNING,
+                message="Simulation queue depth exceeds 20",
+                cooldown_seconds=600,
+            )
+        )
 
         # Low success rate alert
-        self.add_rule(AlertRule(
-            name="low_success_rate",
-            condition=lambda metrics: self._check_success_rate(metrics, 70.0),
-            level=AlertLevel.WARNING,
-            message="Simulation success rate below 70%",
-            cooldown_seconds=600
-        ))
+        self.add_rule(
+            AlertRule(
+                name="low_success_rate",
+                condition=lambda metrics: self._check_success_rate(metrics, 70.0),
+                level=AlertLevel.WARNING,
+                message="Simulation success rate below 70%",
+                cooldown_seconds=600,
+            )
+        )
 
         # High memory usage alert
-        self.add_rule(AlertRule(
-            name="high_memory_usage",
-            condition=lambda metrics: self._check_memory_usage(metrics, 80.0),
-            level=AlertLevel.WARNING,
-            message="Memory usage exceeds 80%",
-            cooldown_seconds=300
-        ))
+        self.add_rule(
+            AlertRule(
+                name="high_memory_usage",
+                condition=lambda metrics: self._check_memory_usage(metrics, 80.0),
+                level=AlertLevel.WARNING,
+                message="Memory usage exceeds 80%",
+                cooldown_seconds=300,
+            )
+        )
 
         # Ecosystem service failure alert
-        self.add_rule(AlertRule(
-            name="ecosystem_service_failure",
-            condition=lambda metrics: self._check_service_failures(metrics, 5),
-            level=AlertLevel.CRITICAL,
-            message="Multiple ecosystem service failures detected",
-            cooldown_seconds=300
-        ))
+        self.add_rule(
+            AlertRule(
+                name="ecosystem_service_failure",
+                condition=lambda metrics: self._check_service_failures(metrics, 5),
+                level=AlertLevel.CRITICAL,
+                message="Multiple ecosystem service failures detected",
+                cooldown_seconds=300,
+            )
+        )
 
     def _check_error_rate(self, metrics: Dict[str, Any], operation_type: str, threshold: float) -> bool:
         """Check if error rate exceeds threshold."""
@@ -455,11 +449,12 @@ class SimulationHealthMonitor(HealthMonitor):
                 "total": total_indicators,
                 "healthy": healthy_count,
                 "degraded": degraded_count,
-                "unhealthy": unhealthy_count
+                "unhealthy": unhealthy_count,
             },
             "timestamp": datetime.now(),
-            "details": {name: {"status": ind.status, "last_check": ind.last_check}
-                       for name, ind in self.indicators.items()}
+            "details": {
+                name: {"status": ind.status, "last_check": ind.last_check} for name, ind in self.indicators.items()
+            },
         }
 
 
@@ -502,9 +497,7 @@ class SimulationMonitoringService:
         try:
             if event_type == "simulation_started":
                 self.metrics_collector.record_simulation_start(
-                    simulation_id,
-                    kwargs.get("project_type", "unknown"),
-                    kwargs.get("complexity", "unknown")
+                    simulation_id, kwargs.get("project_type", "unknown"), kwargs.get("complexity", "unknown")
                 )
 
             elif event_type == "simulation_completed":
@@ -513,21 +506,19 @@ class SimulationMonitoringService:
                     kwargs.get("project_type", "unknown"),
                     kwargs.get("complexity", "unknown"),
                     kwargs.get("status", "unknown"),
-                    kwargs.get("duration_seconds", 0)
+                    kwargs.get("duration_seconds", 0),
                 )
 
             elif event_type == "document_generated":
                 self.metrics_collector.record_document_generation(
-                    simulation_id,
-                    kwargs.get("document_type", "unknown"),
-                    kwargs.get("count", 1)
+                    simulation_id, kwargs.get("document_type", "unknown"), kwargs.get("count", 1)
                 )
 
             elif event_type == "ecosystem_service_call":
                 self.metrics_collector.record_ecosystem_service_call(
                     kwargs.get("service_name", "unknown"),
                     kwargs.get("operation", "unknown"),
-                    kwargs.get("response_time", 0)
+                    kwargs.get("response_time", 0),
                 )
 
         except Exception as e:
@@ -540,7 +531,7 @@ class SimulationMonitoringService:
             "metrics": self._get_current_metrics(),
             "health": self.health_monitor.get_overall_health_status(),
             "alerts": self.alert_manager.check_alerts(self._get_current_metrics()),
-            "performance_summary": self._get_performance_summary()
+            "performance_summary": self._get_performance_summary(),
         }
 
     def _monitoring_loop(self):
@@ -560,7 +551,7 @@ class SimulationMonitoringService:
                             "Monitoring alert triggered",
                             alert_name=alert["rule"],
                             level=alert["level"],
-                            message=alert["message"]
+                            message=alert["message"],
                         )
 
                 # Sleep until next collection
@@ -594,7 +585,7 @@ class SimulationMonitoringService:
             "memory_usage_mb": self.metrics_collector.get_metric_value("memory_usage_mb"),
             "cpu_usage_percent": self.metrics_collector.get_metric_value("cpu_usage_percent"),
             "error_rate_percent": self.metrics_collector.get_metric_value("error_rate_percent"),
-            "ecosystem_service_calls": {}  # Would be populated from actual metrics
+            "ecosystem_service_calls": {},  # Would be populated from actual metrics
         }
 
     def _get_performance_summary(self) -> Dict[str, Any]:
@@ -603,7 +594,7 @@ class SimulationMonitoringService:
             "average_response_time": self.metrics_collector.get_metric_value("ecosystem_service_response_time"),
             "total_simulations_completed": self.metrics_collector.get_metric_value("simulation_completed_total"),
             "current_active_simulations": self.metrics_collector.get_metric_value("simulation_active_count"),
-            "average_simulation_duration": self.metrics_collector.get_metric_value("simulation_duration_seconds")
+            "average_simulation_duration": self.metrics_collector.get_metric_value("simulation_duration_seconds"),
         }
 
 
@@ -620,9 +611,9 @@ def get_simulation_monitoring_service() -> SimulationMonitoringService:
 
 
 __all__ = [
-    'SimulationMetricsCollector',
-    'SimulationAlertManager',
-    'SimulationHealthMonitor',
-    'SimulationMonitoringService',
-    'get_simulation_monitoring_service'
+    "SimulationMetricsCollector",
+    "SimulationAlertManager",
+    "SimulationHealthMonitor",
+    "SimulationMonitoringService",
+    "get_simulation_monitoring_service",
 ]

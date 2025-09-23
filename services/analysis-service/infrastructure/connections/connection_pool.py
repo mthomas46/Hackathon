@@ -3,15 +3,16 @@
 import asyncio
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Generic, TypeVar, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from contextlib import asynccontextmanager
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
 
 class ConnectionState(Enum):
     """Connection state enumeration."""
+
     AVAILABLE = "available"
     IN_USE = "in_use"
     VALIDATING = "validating"
@@ -22,15 +23,17 @@ class ConnectionState(Enum):
 
 class PoolExhaustionPolicy(Enum):
     """Pool exhaustion handling policies."""
+
     BLOCK = "block"  # Block until connection available
-    GROW = "grow"    # Grow pool beyond max size
-    FAIL = "fail"    # Fail with exception
-    WAIT = "wait"    # Wait with timeout
+    GROW = "grow"  # Grow pool beyond max size
+    FAIL = "fail"  # Fail with exception
+    WAIT = "wait"  # Wait with timeout
 
 
 @dataclass
 class ConnectionPoolConfig:
     """Configuration for connection pools."""
+
     min_size: int = 1
     max_size: int = 10
     max_idle_time: int = 300  # seconds
@@ -56,14 +59,15 @@ class ConnectionPoolConfig:
             raise ValueError("retry_attempts cannot be negative")
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class PooledConnection(Generic[T]):
     """Wrapper for pooled connections."""
+
     connection: T
-    pool: 'ConnectionPool[T]'
+    pool: "ConnectionPool[T]"
     created_at: datetime = field(default_factory=datetime.utcnow)
     last_used_at: datetime = field(default_factory=datetime.utcnow)
     state: ConnectionState = ConnectionState.AVAILABLE
@@ -108,7 +112,7 @@ class PooledConnection(Generic[T]):
 
     async def validate(self) -> bool:
         """Validate connection health."""
-        if not hasattr(self.pool, 'validate_connection'):
+        if not hasattr(self.pool, "validate_connection"):
             return True
 
         try:
@@ -121,7 +125,7 @@ class PooledConnection(Generic[T]):
         """Close the connection."""
         self.state = ConnectionState.CLOSING
         try:
-            if hasattr(self.pool, 'close_connection'):
+            if hasattr(self.pool, "close_connection"):
                 await self.pool.close_connection(self.connection)
             self.state = ConnectionState.CLOSED
         except Exception:
@@ -238,10 +242,7 @@ class ConnectionPool(ABC, Generic[T]):
                 else:
                     # Wait for available connection
                     try:
-                        pooled_conn = await asyncio.wait_for(
-                            self._available.get(),
-                            timeout=self.config.acquire_timeout
-                        )
+                        pooled_conn = await asyncio.wait_for(self._available.get(), timeout=self.config.acquire_timeout)
                     except asyncio.TimeoutError:
                         raise RuntimeError("Connection acquire timeout")
 
@@ -265,9 +266,7 @@ class ConnectionPool(ABC, Generic[T]):
             self._in_use.remove(pooled_conn)
 
         # Check if connection should be destroyed
-        if (pooled_conn.is_expired or
-            pooled_conn.is_idle_expired or
-            pooled_conn.error_count > 3):
+        if pooled_conn.is_expired or pooled_conn.is_idle_expired or pooled_conn.error_count > 3:
             await self._destroy_connection(pooled_conn)
             return
 
@@ -328,21 +327,21 @@ class ConnectionPool(ABC, Generic[T]):
     def get_stats(self) -> Dict[str, Any]:
         """Get pool statistics."""
         return {
-            'pool_size': len(self._connections),
-            'available_count': self._available.qsize(),
-            'in_use_count': len(self._in_use),
-            'created_count': self._created_count,
-            'destroyed_count': self._destroyed_count,
-            'acquired_count': self._acquired_count,
-            'released_count': self._released_count,
-            'failed_count': self._failed_count,
-            'closed': self._closed,
-            'config': {
-                'min_size': self.config.min_size,
-                'max_size': self.config.max_size,
-                'max_idle_time': self.config.max_idle_time,
-                'max_lifetime': self.config.max_lifetime
-            }
+            "pool_size": len(self._connections),
+            "available_count": self._available.qsize(),
+            "in_use_count": len(self._in_use),
+            "created_count": self._created_count,
+            "destroyed_count": self._destroyed_count,
+            "acquired_count": self._acquired_count,
+            "released_count": self._released_count,
+            "failed_count": self._failed_count,
+            "closed": self._closed,
+            "config": {
+                "min_size": self.config.min_size,
+                "max_size": self.config.max_size,
+                "max_idle_time": self.config.max_idle_time,
+                "max_lifetime": self.config.max_lifetime,
+            },
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -359,9 +358,9 @@ class ConnectionPool(ABC, Generic[T]):
             connection_test_passed = False
 
         return {
-            'healthy': not self._closed and connection_test_passed,
-            'status': 'healthy' if (not self._closed and connection_test_passed) else 'unhealthy',
-            'pool_stats': stats,
-            'connection_test_passed': connection_test_passed,
-            'timestamp': datetime.utcnow().isoformat()
+            "healthy": not self._closed and connection_test_passed,
+            "status": "healthy" if (not self._closed and connection_test_passed) else "unhealthy",
+            "pool_stats": stats,
+            "connection_test_passed": connection_test_passed,
+            "timestamp": datetime.utcnow().isoformat(),
         }

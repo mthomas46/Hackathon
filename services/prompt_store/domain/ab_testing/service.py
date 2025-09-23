@@ -5,9 +5,10 @@ Handles business logic for A/B testing operations.
 
 import asyncio
 import statistics
-from typing import List, Optional, Dict, Any, Tuple
-from services.prompt_store.core.service import BaseService
+from typing import Any, Dict, List, Optional, Tuple
+
 from services.prompt_store.core.entities import ABTest, ABTestResult, Prompt
+from services.prompt_store.core.service import BaseService
 from services.prompt_store.domain.ab_testing.repository import ABTestRepository, ABTestResultRepository
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.infrastructure.cache import prompt_store_cache
@@ -60,7 +61,7 @@ class ABTestService(BaseService[ABTest]):
             test_metric=data.get("test_metric", "response_quality"),
             traffic_split=traffic_split,
             target_audience=data.get("target_audience", {}),
-            created_by=data.get("created_by", "api_user")
+            created_by=data.get("created_by", "api_user"),
         )
 
         # Save to database
@@ -71,8 +72,9 @@ class ABTestService(BaseService[ABTest]):
 
         return saved_test
 
-    def select_prompt_for_test(self, test_id: str, user_id: Optional[str] = None,
-                              session_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def select_prompt_for_test(
+        self, test_id: str, user_id: Optional[str] = None, session_id: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Select a prompt variant for A/B testing."""
         test = self.get_entity(test_id)
         if not test or not test.is_active:
@@ -97,7 +99,7 @@ class ABTestService(BaseService[ABTest]):
             "selected_prompt": selected_prompt.to_dict(),
             "variant": "A" if selected_prompt_id == test.prompt_a_id else "B",
             "user_id": user_id,
-            "session_id": session_id
+            "session_id": session_id,
         }
 
     def get_test_results(self, test_id: str) -> Dict[str, Any]:
@@ -125,11 +127,17 @@ class ABTestService(BaseService[ABTest]):
             "prompt_b": prompt_b.to_dict(),
             "results": aggregated_results,
             "winner": winner,
-            "confidence_assessment": self._assess_confidence(aggregated_results)
+            "confidence_assessment": self._assess_confidence(aggregated_results),
         }
 
-    def record_test_result(self, test_id: str, prompt_id: str, metric_value: float,
-                          sample_size: int = 1, metadata: Optional[Dict[str, Any]] = None) -> ABTestResult:
+    def record_test_result(
+        self,
+        test_id: str,
+        prompt_id: str,
+        metric_value: float,
+        sample_size: int = 1,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> ABTestResult:
         """Record a result for an A/B test."""
         test = self.get_entity(test_id)
         if not test:
@@ -151,7 +159,7 @@ class ABTestService(BaseService[ABTest]):
             metric_value=metric_value,
             sample_size=sample_size,
             confidence_level=confidence_level,
-            statistical_significance=statistical_significance
+            statistical_significance=statistical_significance,
         )
 
         saved_result = self.result_repository.save(result)
@@ -265,28 +273,30 @@ class ABTestService(BaseService[ABTest]):
             return {"level": "insufficient_data", "description": "Not enough data to assess confidence"}
 
         total_samples = sum(r.get("total_samples", 0) for r in aggregated_results.values())
-        avg_confidence = sum(r.get("average_confidence", 0) for r in aggregated_results.values()) / len(aggregated_results)
+        avg_confidence = sum(r.get("average_confidence", 0) for r in aggregated_results.values()) / len(
+            aggregated_results
+        )
 
         if total_samples < 100:
             return {
                 "level": "low",
                 "description": f"Low confidence: only {total_samples} total samples",
                 "total_samples": total_samples,
-                "average_confidence": avg_confidence
+                "average_confidence": avg_confidence,
             }
         elif avg_confidence > 0.8:
             return {
                 "level": "high",
                 "description": "High confidence in results",
                 "total_samples": total_samples,
-                "average_confidence": avg_confidence
+                "average_confidence": avg_confidence,
             }
         else:
             return {
                 "level": "medium",
                 "description": "Medium confidence: more data recommended",
                 "total_samples": total_samples,
-                "average_confidence": avg_confidence
+                "average_confidence": avg_confidence,
             }
 
     async def _cache_test(self, test: ABTest) -> None:
@@ -299,8 +309,9 @@ class ABTestService(BaseService[ABTest]):
         cache_key = f"ab_test:{test_id}"
         await prompt_store_cache.delete(cache_key)
 
-    async def _record_test_usage(self, test_id: str, prompt_id: str,
-                               user_id: Optional[str], session_id: Optional[str]) -> None:
+    async def _record_test_usage(
+        self, test_id: str, prompt_id: str, user_id: Optional[str], session_id: Optional[str]
+    ) -> None:
         """Record test usage for analytics."""
         # This would integrate with the usage tracking system
         # For now, just increment counters

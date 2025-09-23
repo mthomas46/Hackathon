@@ -1,7 +1,7 @@
 """Service Registry Repository Implementation"""
 
-from typing import List, Optional
 from threading import Lock
+from typing import List, Optional
 
 from ...domain.service_registry import Service, ServiceId
 from .interfaces import ServiceRepositoryInterface

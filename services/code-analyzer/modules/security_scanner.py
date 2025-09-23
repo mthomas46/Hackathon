@@ -3,7 +3,6 @@
 import re
 from typing import List
 
-
 # Security patterns for detecting sensitive information
 SECURITY_PATTERNS = [
     r"api[_-]?key\s*[:=]\s*['\"][A-Za-z0-9\-_/+=]{8,}['\"]",
@@ -46,7 +45,4 @@ def scan_for_sensitive_content(content: str, additional_keywords: List[str] = No
             if match not in matches:
                 matches.append(match)
 
-    return {
-        "sensitive": bool(matches),
-        "matches": matches[:100]  # Limit results
-    }
+    return {"sensitive": bool(matches), "matches": matches[:100]}  # Limit results

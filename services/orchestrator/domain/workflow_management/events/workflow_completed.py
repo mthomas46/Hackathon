@@ -1,6 +1,6 @@
 """Workflow Completed Event"""
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 from .base_event import DomainEvent
 
@@ -12,9 +12,5 @@ class WorkflowCompletedEvent(DomainEvent):
         super().__init__(
             event_type="workflow.completed",
             aggregate_id=execution_id,
-            event_data={
-                "execution_id": execution_id,
-                "workflow_id": workflow_id,
-                "duration_ms": duration_ms
-            }
+            event_data={"execution_id": execution_id, "workflow_id": workflow_id, "duration_ms": duration_ms},
         )

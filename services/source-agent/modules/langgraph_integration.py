@@ -7,15 +7,15 @@ for the Source Agent Service, enabling repository content fetching in workflows.
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class SourceAgentLangGraphIntegration:
@@ -31,8 +31,9 @@ class SourceAgentLangGraphIntegration:
         """Initialize LangGraph tools for source agent."""
 
         @tool
-        async def fetch_repository_content_langgraph(repo_url: str, file_path: str,
-                                                   workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def fetch_repository_content_langgraph(
+            repo_url: str, file_path: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Fetch repository content within LangGraph workflow context."""
             try:
                 # Check cache first
@@ -43,7 +44,7 @@ class SourceAgentLangGraphIntegration:
                         "success": True,
                         "content": cached_content,
                         "source": "cache",
-                        "workflow_integration": "completed"
+                        "workflow_integration": "completed",
                     }
 
                 # Enhance fetch with workflow context
@@ -52,16 +53,12 @@ class SourceAgentLangGraphIntegration:
                     "file_path": file_path,
                     "workflow_context": workflow_context or {},
                     "fetch_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/fetch",
-                    {
-                        "repo_url": repo_url,
-                        "file_path": file_path,
-                        "context": fetch_context
-                    }
+                    {"repo_url": repo_url, "file_path": file_path, "context": fetch_context},
                 )
 
                 # Cache the result
@@ -74,18 +71,16 @@ class SourceAgentLangGraphIntegration:
                         if workflow_id:
                             if workflow_id not in self.workflow_repositories:
                                 self.workflow_repositories[workflow_id] = []
-                            self.workflow_repositories[workflow_id].append({
-                                "repo_url": repo_url,
-                                "file_path": file_path,
-                                "fetched_at": datetime.now().isoformat()
-                            })
+                            self.workflow_repositories[workflow_id].append(
+                                {"repo_url": repo_url, "file_path": file_path, "fetched_at": datetime.now().isoformat()}
+                            )
 
                 return {
                     "success": True,
                     "content": result,
                     "source": "fresh_fetch",
                     "workflow_integration": "completed",
-                    "cached_for_future": True
+                    "cached_for_future": True,
                 }
 
             except Exception as e:
@@ -93,8 +88,9 @@ class SourceAgentLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def analyze_repository_structure_langgraph(repo_url: str,
-                                                       workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def analyze_repository_structure_langgraph(
+            repo_url: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Analyze repository structure within workflow context."""
             try:
                 analysis_context = {
@@ -102,15 +98,11 @@ class SourceAgentLangGraphIntegration:
                     "workflow_context": workflow_context or {},
                     "analysis_timestamp": datetime.now().isoformat(),
                     "langgraph_driven": True,
-                    "structure_analysis": True
+                    "structure_analysis": True,
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/analyze/structure",
-                    {
-                        "repo_url": repo_url,
-                        "context": analysis_context
-                    }
+                    f"{self.service_name}/api/v1/analyze/structure", {"repo_url": repo_url, "context": analysis_context}
                 )
 
                 # Store analysis result in workflow context
@@ -119,18 +111,20 @@ class SourceAgentLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_repositories:
                             self.workflow_repositories[workflow_id] = []
-                        self.workflow_repositories[workflow_id].append({
-                            "repo_url": repo_url,
-                            "analysis_type": "structure",
-                            "analyzed_at": datetime.now().isoformat(),
-                            "structure_summary": result.get("structure", {})
-                        })
+                        self.workflow_repositories[workflow_id].append(
+                            {
+                                "repo_url": repo_url,
+                                "analysis_type": "structure",
+                                "analyzed_at": datetime.now().isoformat(),
+                                "structure_summary": result.get("structure", {}),
+                            }
+                        )
 
                 return {
                     "success": True,
                     "structure_analysis": result,
                     "workflow_integration": "completed",
-                    "repo_analyzed": repo_url
+                    "repo_analyzed": repo_url,
                 }
 
             except Exception as e:
@@ -138,13 +132,12 @@ class SourceAgentLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_repository_metadata_langgraph(repo_url: str,
-                                                  workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def get_repository_metadata_langgraph(
+            repo_url: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Get repository metadata within workflow context."""
             try:
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/repos/{repo_url}/metadata"
-                )
+                result = await self.service_client.get_json(f"{self.service_name}/api/v1/repos/{repo_url}/metadata")
 
                 # Enhance with workflow context
                 if workflow_context:
@@ -157,25 +150,19 @@ class SourceAgentLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_repositories:
                             self.workflow_repositories[workflow_id] = []
-                        self.workflow_repositories[workflow_id].append({
-                            "repo_url": repo_url,
-                            "access_type": "metadata",
-                            "accessed_at": datetime.now().isoformat()
-                        })
+                        self.workflow_repositories[workflow_id].append(
+                            {"repo_url": repo_url, "access_type": "metadata", "accessed_at": datetime.now().isoformat()}
+                        )
 
-                return {
-                    "success": True,
-                    "metadata": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "metadata": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def search_repository_content_langgraph(repo_url: str, search_query: str,
-                                                   file_pattern: str = "*",
-                                                   workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def search_repository_content_langgraph(
+            repo_url: str, search_query: str, file_pattern: str = "*", workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Search repository content within workflow context."""
             try:
                 search_context = {
@@ -184,7 +171,7 @@ class SourceAgentLangGraphIntegration:
                     "file_pattern": file_pattern,
                     "workflow_context": workflow_context or {},
                     "search_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
@@ -193,8 +180,8 @@ class SourceAgentLangGraphIntegration:
                         "repo_url": repo_url,
                         "query": search_query,
                         "file_pattern": file_pattern,
-                        "context": search_context
-                    }
+                        "context": search_context,
+                    },
                 )
 
                 return {
@@ -205,8 +192,8 @@ class SourceAgentLangGraphIntegration:
                         "repo_url": repo_url,
                         "query": search_query,
                         "file_pattern": file_pattern,
-                        "results_count": len(result.get("results", []))
-                    }
+                        "results_count": len(result.get("results", [])),
+                    },
                 }
 
             except Exception as e:
@@ -224,7 +211,7 @@ class SourceAgentLangGraphIntegration:
                         "repositories": repositories,
                         "source": "workflow_cache",
                         "workflow_id": workflow_id,
-                        "total_accesses": len(repositories)
+                        "total_accesses": len(repositories),
                     }
 
                 # If not in cache, return empty result
@@ -233,7 +220,7 @@ class SourceAgentLangGraphIntegration:
                     "repositories": [],
                     "source": "cache_miss",
                     "workflow_id": workflow_id,
-                    "total_accesses": 0
+                    "total_accesses": 0,
                 }
 
             except Exception as e:
@@ -244,7 +231,7 @@ class SourceAgentLangGraphIntegration:
             "analyze_repository_structure_langgraph": analyze_repository_structure_langgraph,
             "get_repository_metadata_langgraph": get_repository_metadata_langgraph,
             "search_repository_content_langgraph": search_repository_content_langgraph,
-            "get_workflow_repositories_langgraph": get_workflow_repositories_langgraph
+            "get_workflow_repositories_langgraph": get_workflow_repositories_langgraph,
         }
 
     async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
@@ -270,7 +257,7 @@ class SourceAgentLangGraphIntegration:
                 "action": "fetch_content",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["content_fetching", "repository_access", "file_retrieval"]
+                "capabilities": ["content_fetching", "repository_access", "file_retrieval"],
             }
 
         elif "analyze" in instruction_lower and "structure" in instruction_lower:
@@ -278,7 +265,7 @@ class SourceAgentLangGraphIntegration:
                 "action": "analyze_structure",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["structure_analysis", "repository_introspection", "codebase_mapping"]
+                "capabilities": ["structure_analysis", "repository_introspection", "codebase_mapping"],
             }
 
         elif "metadata" in instruction_lower or "info" in instruction_lower:
@@ -286,7 +273,7 @@ class SourceAgentLangGraphIntegration:
                 "action": "get_metadata",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["metadata_extraction", "repository_information", "commit_history"]
+                "capabilities": ["metadata_extraction", "repository_information", "commit_history"],
             }
 
         elif "search" in instruction_lower or "find" in instruction_lower:
@@ -294,7 +281,7 @@ class SourceAgentLangGraphIntegration:
                 "action": "search_content",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["content_search", "pattern_matching", "repository_wide_search"]
+                "capabilities": ["content_search", "pattern_matching", "repository_wide_search"],
             }
 
         else:
@@ -302,7 +289,7 @@ class SourceAgentLangGraphIntegration:
                 "action": "general_source_operation",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["repository_operations", "content_access", "source_code_management"]
+                "capabilities": ["repository_operations", "content_access", "source_code_management"],
             }
 
     async def _process_source_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -312,14 +299,14 @@ class SourceAgentLangGraphIntegration:
             "content": response,
             "timestamp": datetime.now().isoformat(),
             "processed_by": self.service_name,
-            "response_type": "source_workflow"
+            "response_type": "source_workflow",
         }
 
         return {
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "next_actions": ["await_workflow_instructions", "prepare_source_tools"]
+            "next_actions": ["await_workflow_instructions", "prepare_source_tools"],
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -332,25 +319,16 @@ class SourceAgentLangGraphIntegration:
                 "repository_structure_analysis",
                 "metadata_extraction",
                 "content_search",
-                "workflow_repository_tracking"
+                "workflow_repository_tracking",
             ],
-            "tool_categories": [
-                "fetching_tools",
-                "analysis_tools",
-                "metadata_tools",
-                "search_tools"
-            ],
-            "message_types": [
-                "source_instructions",
-                "workflow_responses",
-                "repository_commands"
-            ],
+            "tool_categories": ["fetching_tools", "analysis_tools", "metadata_tools", "search_tools"],
+            "message_types": ["source_instructions", "workflow_responses", "repository_commands"],
             "integration_features": [
                 "workflow_context_awareness",
                 "caching_optimization",
                 "repository_tracking",
-                "content_indexing"
-            ]
+                "content_indexing",
+            ],
         }
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
@@ -362,7 +340,7 @@ class SourceAgentLangGraphIntegration:
             "active_workflows": len(self.workflow_repositories),
             "total_repository_accesses": sum(len(repos) for repos in self.workflow_repositories.values()),
             "last_activity": datetime.now().isoformat(),
-            "capabilities_ready": True
+            "capabilities_ready": True,
         }
 
     def get_source_performance_summary(self) -> Dict[str, Any]:
@@ -374,20 +352,27 @@ class SourceAgentLangGraphIntegration:
             "cache_hit_ratio": 0,  # Would be calculated from actual usage
             "average_fetch_time": 0,  # Would be tracked from actual calls
             "repository_types": {},
-            "recent_activity": []
+            "recent_activity": [],
         }
 
         # Get recent workflow activity
         recent_workflows = []
         for workflow_id, repositories in list(self.workflow_repositories.items())[-5:]:
             if repositories:
-                recent_workflows.append({
-                    "workflow_id": workflow_id,
-                    "last_access": max(repo["accessed_at"] if "accessed_at" in repo
-                                     else repo.get("fetched_at", repo.get("analyzed_at", ""))
-                                     for repo in repositories),
-                    "total_accesses": len(repositories)
-                })
+                recent_workflows.append(
+                    {
+                        "workflow_id": workflow_id,
+                        "last_access": max(
+                            (
+                                repo["accessed_at"]
+                                if "accessed_at" in repo
+                                else repo.get("fetched_at", repo.get("analyzed_at", ""))
+                            )
+                            for repo in repositories
+                        ),
+                        "total_accesses": len(repositories),
+                    }
+                )
 
         summary["recent_activity"] = recent_workflows
 
@@ -398,18 +383,13 @@ class SourceAgentLangGraphIntegration:
         if repo_url:
             # Clear cache for specific repository
             removed_items = 0
-            cache_keys_to_remove = [key for key in self.repository_cache.keys()
-                                  if key.startswith(f"{repo_url}_")]
+            cache_keys_to_remove = [key for key in self.repository_cache.keys() if key.startswith(f"{repo_url}_")]
 
             for cache_key in cache_keys_to_remove:
                 del self.repository_cache[cache_key]
                 removed_items += 1
 
-            return {
-                "cache_cleared": True,
-                "repo_url": repo_url,
-                "items_removed": removed_items
-            }
+            return {"cache_cleared": True, "repo_url": repo_url, "items_removed": removed_items}
         else:
             # Clear all caches
             total_items = len(self.repository_cache)

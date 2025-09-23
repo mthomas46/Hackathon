@@ -1,6 +1,6 @@
 """Domain exceptions for Analysis Service."""
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class DomainException(Exception):
@@ -39,6 +39,7 @@ class BusinessRuleViolation(DomainException):
 
 class DocumentException(DomainException):
     """Base exception for document-related errors."""
+
     pass
 
 
@@ -57,10 +58,7 @@ class DocumentValidationException(DocumentException):
     def __init__(self, document_id: str, validation_errors: list):
         """Initialize document validation exception."""
         message = f"Document validation failed for {document_id}"
-        super().__init__(message, {
-            "document_id": document_id,
-            "validation_errors": validation_errors
-        })
+        super().__init__(message, {"document_id": document_id, "validation_errors": validation_errors})
         self.document_id = document_id
         self.validation_errors = validation_errors
 
@@ -71,11 +69,9 @@ class DocumentSizeExceededException(DocumentException):
     def __init__(self, document_id: str, size_bytes: int, max_size_bytes: int):
         """Initialize document size exceeded exception."""
         message = f"Document size {size_bytes} bytes exceeds maximum {max_size_bytes} bytes"
-        super().__init__(message, {
-            "document_id": document_id,
-            "size_bytes": size_bytes,
-            "max_size_bytes": max_size_bytes
-        })
+        super().__init__(
+            message, {"document_id": document_id, "size_bytes": size_bytes, "max_size_bytes": max_size_bytes}
+        )
         self.document_id = document_id
         self.size_bytes = size_bytes
         self.max_size_bytes = max_size_bytes
@@ -83,6 +79,7 @@ class DocumentSizeExceededException(DocumentException):
 
 class AnalysisException(DomainException):
     """Base exception for analysis-related errors."""
+
     pass
 
 
@@ -101,11 +98,9 @@ class AnalysisExecutionException(AnalysisException):
     def __init__(self, analysis_id: str, analysis_type: str, error_message: str):
         """Initialize analysis execution exception."""
         message = f"Analysis execution failed for {analysis_type}: {error_message}"
-        super().__init__(message, {
-            "analysis_id": analysis_id,
-            "analysis_type": analysis_type,
-            "error_message": error_message
-        })
+        super().__init__(
+            message, {"analysis_id": analysis_id, "analysis_type": analysis_type, "error_message": error_message}
+        )
         self.analysis_id = analysis_id
         self.analysis_type = analysis_type
         self.error_message = error_message
@@ -117,10 +112,7 @@ class AnalysisTimeoutException(AnalysisException):
     def __init__(self, analysis_id: str, timeout_seconds: int):
         """Initialize analysis timeout exception."""
         message = f"Analysis timed out after {timeout_seconds} seconds"
-        super().__init__(message, {
-            "analysis_id": analysis_id,
-            "timeout_seconds": timeout_seconds
-        })
+        super().__init__(message, {"analysis_id": analysis_id, "timeout_seconds": timeout_seconds})
         self.analysis_id = analysis_id
         self.timeout_seconds = timeout_seconds
 
@@ -136,6 +128,7 @@ class AnalysisAlreadyRunningException(AnalysisException):
 
 class FindingException(DomainException):
     """Base exception for finding-related errors."""
+
     pass
 
 
@@ -159,6 +152,7 @@ class FindingAlreadyResolvedException(FindingException):
 
 class RepositoryException(DomainException):
     """Base exception for repository-related errors."""
+
     pass
 
 
@@ -177,11 +171,7 @@ class RepositoryConnectionException(RepositoryException):
     def __init__(self, repository_id: str, url: str, error_message: str):
         """Initialize repository connection exception."""
         message = f"Failed to connect to repository {repository_id} at {url}: {error_message}"
-        super().__init__(message, {
-            "repository_id": repository_id,
-            "url": url,
-            "error_message": error_message
-        })
+        super().__init__(message, {"repository_id": repository_id, "url": url, "error_message": error_message})
         self.repository_id = repository_id
         self.url = url
         self.error_message = error_message
@@ -193,16 +183,14 @@ class RepositorySyncException(RepositoryException):
     def __init__(self, repository_id: str, error_message: str):
         """Initialize repository sync exception."""
         message = f"Repository synchronization failed for {repository_id}: {error_message}"
-        super().__init__(message, {
-            "repository_id": repository_id,
-            "error_message": error_message
-        })
+        super().__init__(message, {"repository_id": repository_id, "error_message": error_message})
         self.repository_id = repository_id
         self.error_message = error_message
 
 
 class ExternalServiceException(DomainException):
     """Base exception for external service errors."""
+
     pass
 
 
@@ -212,10 +200,7 @@ class SemanticAnalysisException(ExternalServiceException):
     def __init__(self, service_name: str, error_message: str):
         """Initialize semantic analysis exception."""
         message = f"Semantic analysis failed in {service_name}: {error_message}"
-        super().__init__(message, {
-            "service_name": service_name,
-            "error_message": error_message
-        })
+        super().__init__(message, {"service_name": service_name, "error_message": error_message})
         self.service_name = service_name
         self.error_message = error_message
 
@@ -226,10 +211,7 @@ class SentimentAnalysisException(ExternalServiceException):
     def __init__(self, service_name: str, error_message: str):
         """Initialize sentiment analysis exception."""
         message = f"Sentiment analysis failed in {service_name}: {error_message}"
-        super().__init__(message, {
-            "service_name": service_name,
-            "error_message": error_message
-        })
+        super().__init__(message, {"service_name": service_name, "error_message": error_message})
         self.service_name = service_name
         self.error_message = error_message
 
@@ -240,10 +222,7 @@ class ConfigurationException(DomainException):
     def __init__(self, config_key: str, error_message: str):
         """Initialize configuration exception."""
         message = f"Configuration error for {config_key}: {error_message}"
-        super().__init__(message, {
-            "config_key": config_key,
-            "error_message": error_message
-        })
+        super().__init__(message, {"config_key": config_key, "error_message": error_message})
         self.config_key = config_key
         self.error_message = error_message
 
@@ -269,11 +248,9 @@ class ResourceLimitExceededException(DomainException):
     def __init__(self, resource_type: str, current_count: int, max_limit: int):
         """Initialize resource limit exceeded exception."""
         message = f"Resource limit exceeded for {resource_type}: {current_count}/{max_limit}"
-        super().__init__(message, {
-            "resource_type": resource_type,
-            "current_count": current_count,
-            "max_limit": max_limit
-        })
+        super().__init__(
+            message, {"resource_type": resource_type, "current_count": current_count, "max_limit": max_limit}
+        )
         self.resource_type = resource_type
         self.current_count = current_count
         self.max_limit = max_limit

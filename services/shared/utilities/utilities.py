@@ -15,21 +15,22 @@ All functions are designed to be thread-safe and handle edge cases gracefully.
 Used by all services for consistent behavior and reduced code duplication.
 """
 
-import re
 import hashlib
-import uuid
 import os
-import httpx
+import re
+import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union, Tuple
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import httpx
 
 from ..core.constants_new import Patterns
-
 
 # ============================================================================
 # STRING UTILITIES
 # ============================================================================
+
 
 def clean_string(text: str) -> str:
     """Clean and normalize a string."""
@@ -54,7 +55,7 @@ def validate_sql_identifier(identifier: str) -> bool:
         return False
 
     # Must start with letter or underscore, followed by letters, digits, or underscores
-    pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+    pattern = r"^[a-zA-Z_][a-zA-Z0-9_]*$"
     return bool(re.match(pattern, identifier))
 
 
@@ -74,11 +75,11 @@ def sanitize_sql_identifier(identifier: str) -> str:
         return ""
 
     # Remove any characters that are not alphanumeric or underscore
-    sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', identifier)
+    sanitized = re.sub(r"[^a-zA-Z0-9_]", "_", identifier)
 
     # Ensure it starts with a letter or underscore
-    if sanitized and not sanitized[0].isalpha() and sanitized[0] != '_':
-        sanitized = '_' + sanitized
+    if sanitized and not sanitized[0].isalpha() and sanitized[0] != "_":
+        sanitized = "_" + sanitized
 
     # Truncate to reasonable length
     return sanitized[:64]
@@ -109,14 +110,15 @@ def generate_id(prefix: str = "", length: int = 12) -> str:
 
 def safe_filename(filename: str) -> str:
     """Create a safe filename by removing/replacing unsafe characters."""
-    filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
-    filename = re.sub(r'[^\w\.-]', '_', filename)
+    filename = re.sub(r'[<>:"/\\|?*]', "_", filename)
+    filename = re.sub(r"[^\w\.-]", "_", filename)
     return filename
 
 
 # ============================================================================
 # DATE AND TIME UTILITIES
 # ============================================================================
+
 
 def utc_now() -> datetime:
     """Get current UTC datetime with timezone information.
@@ -170,6 +172,7 @@ def relative_time(dt: datetime) -> str:
 # VALIDATION UTILITIES
 # ============================================================================
 
+
 def is_valid_email(email: str) -> bool:
     """Validate email address format."""
     return bool(re.match(Patterns.EMAIL, email))
@@ -189,8 +192,9 @@ def validate_string_length(text: str, min_len: int = 0, max_len: int = 1000) -> 
     return min_len <= len(text) <= max_len
 
 
-def validate_numeric_range(value: Union[int, float], min_val: Optional[float] = None,
-                          max_val: Optional[float] = None) -> bool:
+def validate_numeric_range(
+    value: Union[int, float], min_val: Optional[float] = None, max_val: Optional[float] = None
+) -> bool:
     """Validate numeric value is within range."""
     if min_val is not None and value < min_val:
         return False
@@ -216,6 +220,7 @@ def deep_merge_dicts(base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, 
 # FILE AND PATH UTILITIES
 # ============================================================================
 
+
 def ensure_directory(path: Union[str, Path]) -> Path:
     """Ensure a directory exists, creating it if necessary."""
     path = Path(path)
@@ -232,7 +237,7 @@ def get_file_size_mb(file_path: Union[str, Path]) -> float:
 def read_file_safe(file_path: Union[str, Path], encoding: str = "utf-8") -> Optional[str]:
     """Safely read a file, returning None if it doesn't exist or can't be read."""
     try:
-        with open(file_path, 'r', encoding=encoding) as f:
+        with open(file_path, "r", encoding=encoding) as f:
             return f.read()
     except (FileNotFoundError, IOError, UnicodeDecodeError):
         return None
@@ -242,7 +247,7 @@ def write_file_safe(file_path: Union[str, Path], content: str, encoding: str = "
     """Safely write content to a file."""
     try:
         ensure_directory(Path(file_path).parent)
-        with open(file_path, 'w', encoding=encoding) as f:
+        with open(file_path, "w", encoding=encoding) as f:
             f.write(content)
         return True
     except IOError:
@@ -253,9 +258,10 @@ def write_file_safe(file_path: Union[str, Path], content: str, encoding: str = "
 # DATA PROCESSING UTILITIES
 # ============================================================================
 
+
 def chunk_list(items: List[Any], chunk_size: int) -> List[List[Any]]:
     """Split a list into chunks of specified size."""
-    return [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
+    return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
 def flatten_list(nested_list: List[List[Any]]) -> List[Any]:
@@ -307,6 +313,7 @@ def find_by(items: List[Dict[str, Any]], key: str, value: Any) -> Optional[Dict[
 # HASHING AND ENCRYPTION UTILITIES
 # ============================================================================
 
+
 def hash_string(text: str, algorithm: str = "sha256") -> str:
     """Generate hash of a string.
 
@@ -334,6 +341,7 @@ def stable_hash(text: str) -> str:
 # SERVICE REGISTRATION UTILITIES
 # ============================================================================
 
+
 def attach_self_register(app, service_name: str) -> None:
     """Register service with the orchestrator or discovery mechanism.
 
@@ -352,11 +360,7 @@ def attach_self_register(app, service_name: str) -> None:
             "info",
             "service_registration",
             service_name,
-            {
-                "service_name": service_name,
-                "status": "registered",
-                "timestamp": utc_now().isoformat()
-            }
+            {"service_name": service_name, "status": "registered", "timestamp": utc_now().isoformat()},
         )
     except ImportError:
         # Fallback if logging is not available
@@ -367,28 +371,32 @@ def get_service_client(timeout: Optional[int] = None) -> Any:
     """Get a configured ServiceClients instance for making HTTP requests."""
     try:
         from ..integrations.clients import ServiceClients
+
         return ServiceClients(timeout=timeout)
     except ImportError:
         # Fallback if clients module is not available
         class DummyServiceClients:
             def __init__(self, timeout=None):
                 self.timeout = timeout or 30
+
             def get_json(self, *args, **kwargs):
                 raise NotImplementedError("ServiceClients not available")
+
             def post_json(self, *args, **kwargs):
                 raise NotImplementedError("ServiceClients not available")
+
         return DummyServiceClients(timeout=timeout)
 
 
-def setup_common_middleware(app, service_name: str, enable_rate_limit: bool = False,
-                           rate_limits: Optional[Dict[str, tuple[float, int]]] = None) -> None:
+def setup_common_middleware(
+    app, service_name: str, enable_rate_limit: bool = False, rate_limits: Optional[Dict[str, tuple[float, int]]] = None
+) -> None:
     """Setup common middleware for FastAPI services."""
     try:
         from .middleware import ServiceMiddleware
+
         middleware = ServiceMiddleware(
-            service_name=service_name,
-            rate_limits=rate_limits,
-            enable_rate_limit=enable_rate_limit
+            service_name=service_name, rate_limits=rate_limits, enable_rate_limit=enable_rate_limit
         )
 
         # Apply middleware to the FastAPI app
@@ -403,7 +411,10 @@ def setup_common_middleware(app, service_name: str, enable_rate_limit: bool = Fa
 # HTTP UTILITIES
 # ============================================================================
 
-async def cached_get(url: str, etag: Optional[str] = None, last_modified: Optional[str] = None, timeout: int = 15) -> Tuple[int, str, Dict[str, str]]:
+
+async def cached_get(
+    url: str, etag: Optional[str] = None, last_modified: Optional[str] = None, timeout: int = 15
+) -> Tuple[int, str, Dict[str, str]]:
     """Perform cached HTTP GET request with ETag and Last-Modified support.
 
     Returns:
@@ -430,6 +441,7 @@ async def cached_get(url: str, etag: Optional[str] = None, last_modified: Option
 # ============================================================================
 # RATE LIMITING UTILITIES
 # ============================================================================
+
 
 class TokenBucket:
     """Token bucket for rate limiting.
@@ -465,4 +477,3 @@ class TokenBucket:
 # ============================================================================
 # CONFIGURATION UTILITIES
 # ============================================================================
-

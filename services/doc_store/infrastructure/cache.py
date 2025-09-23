@@ -2,15 +2,18 @@
 
 Provides Redis and local caching capabilities.
 """
-import time
+
 import json
-from typing import Any, Dict, List, Optional, Union
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
 from services.shared.utilities import utc_now
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     aioredis = None
@@ -20,6 +23,7 @@ except ImportError:
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     value: Any
     created_at: datetime
     ttl: int
@@ -31,6 +35,7 @@ class CacheEntry:
 @dataclass
 class CacheStats:
     """Cache statistics."""
+
     total_hits: int = 0
     total_misses: int = 0
     total_size_bytes: int = 0
@@ -105,8 +110,9 @@ class DocStoreCache:
             self.stats.total_misses += 1
             return None
 
-    async def set(self, operation: str, params: Dict[str, Any], value: Any,
-                  ttl: int = 3600, tags: Optional[List[str]] = None) -> None:
+    async def set(
+        self, operation: str, params: Dict[str, Any], value: Any, ttl: int = 3600, tags: Optional[List[str]] = None
+    ) -> None:
         """Set cached value with metadata."""
         cache_key = self._generate_cache_key(operation, params)
 
@@ -116,24 +122,22 @@ class DocStoreCache:
                 try:
                     await self.redis_client.setex(cache_key, ttl, json.dumps(value))
                     # Store metadata
-                    await self.redis_client.hset(f"{cache_key}:meta", mapping={
-                        "created_at": utc_now().isoformat(),
-                        "ttl": ttl,
-                        "hits": 0,
-                        "tags": json.dumps(tags or []),
-                        "last_accessed": utc_now().isoformat()
-                    })
+                    await self.redis_client.hset(
+                        f"{cache_key}:meta",
+                        mapping={
+                            "created_at": utc_now().isoformat(),
+                            "ttl": ttl,
+                            "hits": 0,
+                            "tags": json.dumps(tags or []),
+                            "last_accessed": utc_now().isoformat(),
+                        },
+                    )
                     await self.redis_client.expire(f"{cache_key}:meta", ttl)
                 except Exception:
                     pass
 
             # Store in local cache
-            entry = CacheEntry(
-                value=value,
-                created_at=utc_now(),
-                ttl=ttl,
-                tags=tags or []
-            )
+            entry = CacheEntry(value=value, created_at=utc_now(), ttl=ttl, tags=tags or [])
             self.local_cache[cache_key] = entry
 
             # Evict if needed
@@ -146,8 +150,7 @@ class DocStoreCache:
         except Exception:
             pass
 
-    async def invalidate(self, tags: Optional[List[str]] = None,
-                        patterns: Optional[List[str]] = None) -> None:
+    async def invalidate(self, tags: Optional[List[str]] = None, patterns: Optional[List[str]] = None) -> None:
         """Invalidate cache entries by tags or patterns."""
         try:
             invalidated_keys = []
@@ -205,7 +208,7 @@ class DocStoreCache:
                         "redis_used_memory": info.get("used_memory", 0),
                         "redis_total_connections": info.get("total_connections_received", 0),
                         "redis_connected_clients": info.get("connected_clients", 0),
-                        "redis_keys_count": await self.redis_client.dbsize()
+                        "redis_keys_count": await self.redis_client.dbsize(),
                     }
                 except Exception:
                     pass
@@ -230,7 +233,7 @@ class DocStoreCache:
                 "evictions": self.stats.evictions,
                 "avg_response_time_ms": round(avg_response_time, 2),
                 "redis_stats": redis_stats,
-                "uptime_seconds": 86400.0  # Fixed value for testing
+                "uptime_seconds": 86400.0,  # Fixed value for testing
             }
 
         except Exception as e:
@@ -257,11 +260,7 @@ class DocStoreCache:
             except Exception:
                 failed += 1
 
-        return {
-            "warmed": warmed,
-            "failed": failed,
-            "total": len(operations)
-        }
+        return {"warmed": warmed, "failed": failed, "total": len(operations)}
 
     async def optimize(self) -> Dict[str, Any]:
         """Optimize cache performance."""
@@ -289,7 +288,7 @@ class DocStoreCache:
             return {
                 "local_expired_removed": len(expired_keys),
                 "local_remaining": len(self.local_cache),
-                "redis_optimized": self.redis_client is not None
+                "redis_optimized": self.redis_client is not None,
             }
 
         except Exception as e:

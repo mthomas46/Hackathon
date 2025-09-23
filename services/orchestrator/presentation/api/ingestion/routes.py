@@ -6,14 +6,12 @@ Provides endpoints for:
 - Listing ingestion history
 """
 
-from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 
-from .dtos import (
-    IngestRequest, IngestionStatusResponse, IngestionListResponse,
-    DocumentMetadataResponse
-)
+from fastapi import APIRouter, Depends, HTTPException
+
 from ....main import container
+from .dtos import DocumentMetadataResponse, IngestionListResponse, IngestionStatusResponse, IngestRequest
 
 router = APIRouter()
 
@@ -23,10 +21,9 @@ async def start_ingestion(request: IngestRequest):
     """Start a document ingestion workflow."""
     try:
         from ....application.ingestion.commands import StartIngestionCommand
+
         command = StartIngestionCommand(
-            source_url=request.source_url,
-            source_type=request.source_type,
-            parameters=request.parameters or {}
+            source_url=request.source_url, source_type=request.source_type, parameters=request.parameters or {}
         )
         result = await container.start_ingestion_use_case.execute(command)
         return result
@@ -39,6 +36,7 @@ async def get_ingestion_status(ingestion_id: str):
     """Get the status of a specific ingestion."""
     try:
         from ....application.ingestion.queries import GetIngestionStatusQuery
+
         query = GetIngestionStatusQuery(ingestion_id=ingestion_id)
         result = await container.get_ingestion_status_use_case.execute(query)
         if not result:
@@ -52,20 +50,13 @@ async def get_ingestion_status(ingestion_id: str):
 
 @router.get("/ingest", response_model=IngestionListResponse)
 async def list_ingestions(
-    status: Optional[str] = None,
-    source_type: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0
+    status: Optional[str] = None, source_type: Optional[str] = None, limit: int = 50, offset: int = 0
 ):
     """List ingestion workflows with optional filters."""
     try:
         from ....application.ingestion.queries import ListIngestionsQuery
-        query = ListIngestionsQuery(
-            status_filter=status,
-            source_type_filter=source_type,
-            limit=limit,
-            offset=offset
-        )
+
+        query = ListIngestionsQuery(status_filter=status, source_type_filter=source_type, limit=limit, offset=offset)
         result = await container.list_ingestions_use_case.execute(query)
         return result
     except Exception as e:
@@ -96,26 +87,26 @@ async def list_ingestion_sources():
                     "type": "github",
                     "name": "GitHub Repository",
                     "description": "Ingest code, issues, and pull requests from GitHub",
-                    "supported_formats": ["markdown", "code", "issues", "pull_requests"]
+                    "supported_formats": ["markdown", "code", "issues", "pull_requests"],
                 },
                 {
                     "type": "gitlab",
                     "name": "GitLab Repository",
                     "description": "Ingest code, issues, and merge requests from GitLab",
-                    "supported_formats": ["markdown", "code", "issues", "merge_requests"]
+                    "supported_formats": ["markdown", "code", "issues", "merge_requests"],
                 },
                 {
                     "type": "jira",
                     "name": "Jira Issues",
                     "description": "Ingest issues and project data from Jira",
-                    "supported_formats": ["issues", "projects", "epics"]
+                    "supported_formats": ["issues", "projects", "epics"],
                 },
                 {
                     "type": "confluence",
                     "name": "Confluence Pages",
                     "description": "Ingest documentation and knowledge base from Confluence",
-                    "supported_formats": ["pages", "blogs", "spaces"]
-                }
+                    "supported_formats": ["pages", "blogs", "spaces"],
+                },
             ]
         }
     except Exception as e:

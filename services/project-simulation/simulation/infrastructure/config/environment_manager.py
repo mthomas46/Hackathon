@@ -14,17 +14,18 @@ Key Features:
 - Configuration drift detection and correction
 """
 
-import sys
-import os
-import json
-import yaml
-from pathlib import Path
-from typing import Dict, Any, Optional, Union, List
-from dataclasses import dataclass, field
-from enum import Enum
 import asyncio
 import hashlib
+import json
+import os
+import sys
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import yaml
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -34,6 +35,7 @@ from simulation.infrastructure.logging import get_simulation_logger
 
 class Environment(str, Enum):
     """Deployment environments."""
+
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -43,6 +45,7 @@ class Environment(str, Enum):
 
 class ServiceStatus(str, Enum):
     """Service status indicators."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -52,6 +55,7 @@ class ServiceStatus(str, Enum):
 @dataclass
 class EnvironmentConfig:
     """Configuration for a specific environment."""
+
     name: str
     environment: Environment
     service_endpoints: Dict[str, str] = field(default_factory=dict)
@@ -75,11 +79,11 @@ class EnvironmentConfig:
             "security_config": self.security_config,
             "feature_flags": self.feature_flags,
             "resource_limits": self.resource_limits,
-            "custom_settings": self.custom_settings
+            "custom_settings": self.custom_settings,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'EnvironmentConfig':
+    def from_dict(cls, data: Dict[str, Any]) -> "EnvironmentConfig":
         """Create from dictionary."""
         return cls(
             name=data["name"],
@@ -91,13 +95,14 @@ class EnvironmentConfig:
             security_config=data.get("security_config", {}),
             feature_flags=data.get("feature_flags", {}),
             resource_limits=data.get("resource_limits", {}),
-            custom_settings=data.get("custom_settings", {})
+            custom_settings=data.get("custom_settings", {}),
         )
 
 
 @dataclass
 class ServiceHealth:
     """Health status of a service."""
+
     name: str
     status: ServiceStatus
     response_time: Optional[float] = None
@@ -140,8 +145,7 @@ class EnvironmentManager:
 
         self.logger.info(f"Environment manager initialized for {self.current_environment.value}")
 
-    async def switch_environment(self, environment: Environment,
-                               validate: bool = True) -> bool:
+    async def switch_environment(self, environment: Environment, validate: bool = True) -> bool:
         """Switch to a different environment."""
         try:
             self.logger.info(f"Switching to environment: {environment.value}")
@@ -199,7 +203,7 @@ class EnvironmentManager:
                     "status": health.status.value,
                     "response_time": health.response_time,
                     "last_check": health.last_check.isoformat() if health.last_check else None,
-                    "version": health.version
+                    "version": health.version,
                 }
 
         return {
@@ -210,7 +214,7 @@ class EnvironmentManager:
             "services_health": services_health,
             "feature_flags": config.feature_flags,
             "resource_limits": config.resource_limits,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
     async def validate_environment(self, environment: Optional[Environment] = None) -> Dict[str, Any]:
@@ -246,7 +250,7 @@ class EnvironmentManager:
             "valid": len(issues) == 0,
             "issues": issues,
             "services_checked": len(config.service_endpoints),
-            "validation_timestamp": datetime.now().isoformat()
+            "validation_timestamp": datetime.now().isoformat(),
         }
 
     async def refresh_service_health(self) -> Dict[str, Any]:
@@ -261,7 +265,7 @@ class EnvironmentManager:
             results[service_name] = {
                 "status": health.status.value,
                 "response_time": health.response_time,
-                "healthy": health.status == ServiceStatus.HEALTHY
+                "healthy": health.status == ServiceStatus.HEALTHY,
             }
 
         return {
@@ -269,7 +273,7 @@ class EnvironmentManager:
             "services_checked": len(results),
             "healthy_services": sum(1 for r in results.values() if r["healthy"]),
             "results": results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def detect_configuration_drift(self) -> Dict[str, Any]:
@@ -284,12 +288,14 @@ class EnvironmentManager:
             # This would check actual running services vs expected
             # For now, just validate the endpoint format
             if not self._is_valid_url(expected_endpoint):
-                drift_issues.append({
-                    "type": "service_endpoint",
-                    "service": service_name,
-                    "expected": expected_endpoint,
-                    "issue": "Invalid endpoint format"
-                })
+                drift_issues.append(
+                    {
+                        "type": "service_endpoint",
+                        "service": service_name,
+                        "expected": expected_endpoint,
+                        "issue": "Invalid endpoint format",
+                    }
+                )
 
         # Check feature flags
         # This would compare with actual running configuration
@@ -301,11 +307,10 @@ class EnvironmentManager:
             "environment": self.current_environment.value,
             "drift_detected": len(drift_issues) > 0,
             "issues": drift_issues,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
-    async def export_environment_config(self, environment: Environment,
-                                      format: str = "yaml") -> Optional[str]:
+    async def export_environment_config(self, environment: Environment, format: str = "yaml") -> Optional[str]:
         """Export environment configuration."""
         if environment.value not in self.environment_configs:
             return None
@@ -318,6 +323,7 @@ class EnvironmentManager:
         elif format.lower() == "yaml":
             try:
                 import yaml
+
                 return yaml.dump(config_dict, default_flow_style=False)
             except ImportError:
                 return json.dumps(config_dict, indent=2)
@@ -336,8 +342,8 @@ class EnvironmentManager:
         # Load YAML/JSON config files
         for config_file in self.config_dir.glob("env*.{yaml,yml,json}"):
             try:
-                with open(config_file, 'r') as f:
-                    if config_file.suffix.lower() in ['.yaml', '.yml']:
+                with open(config_file, "r") as f:
+                    if config_file.suffix.lower() in [".yaml", ".yml"]:
                         config_data = yaml.safe_load(f)
                     else:
                         config_data = json.load(f)
@@ -366,34 +372,23 @@ class EnvironmentManager:
                 "mock_data_generator": "http://localhost:5002",
                 "orchestrator": "http://localhost:5003",
                 "analysis_service": "http://localhost:5004",
-                "llm_gateway": "http://localhost:5005"
+                "llm_gateway": "http://localhost:5005",
             },
             database_config={
                 "url": "postgresql://user:password@localhost:5432/simulation_dev",
                 "pool_size": 10,
-                "max_overflow": 20
+                "max_overflow": 20,
             },
-            cache_config={
-                "redis_url": "redis://localhost:6379/0",
-                "ttl_seconds": 3600
-            },
-            monitoring_config={
-                "enabled": True,
-                "metrics_interval": 30,
-                "health_check_interval": 60
-            },
+            cache_config={"redis_url": "redis://localhost:6379/0", "ttl_seconds": 3600},
+            monitoring_config={"enabled": True, "metrics_interval": 30, "health_check_interval": 60},
             feature_flags={
                 "enable_health_checks": True,
                 "enable_monitoring": True,
                 "enable_debug_logging": True,
                 "enable_cors": True,
-                "enable_swagger": True
+                "enable_swagger": True,
             },
-            resource_limits={
-                "max_simulations": 10,
-                "max_concurrent_workflows": 5,
-                "memory_limit_mb": 1024
-            }
+            resource_limits={"max_simulations": 10, "max_concurrent_workflows": 5, "memory_limit_mb": 1024},
         )
 
         # Production environment
@@ -405,42 +400,38 @@ class EnvironmentManager:
                 "mock_data_generator": "https://mock-data.production.company.com",
                 "orchestrator": "https://orchestrator.production.company.com",
                 "analysis_service": "https://analysis.production.company.com",
-                "llm_gateway": "https://llm-gateway.production.company.com"
+                "llm_gateway": "https://llm-gateway.production.company.com",
             },
             database_config={
                 "url": "postgresql://user:password@prod-db.company.com:5432/simulation_prod",
                 "pool_size": 50,
-                "max_overflow": 100
+                "max_overflow": 100,
             },
             cache_config={
                 "redis_url": "redis://prod-redis.company.com:6379/0",
                 "ttl_seconds": 7200,
-                "cluster_enabled": True
+                "cluster_enabled": True,
             },
             monitoring_config={
                 "enabled": True,
                 "metrics_interval": 15,
                 "health_check_interval": 30,
-                "alerting_enabled": True
+                "alerting_enabled": True,
             },
             security_config={
                 "ssl_enabled": True,
                 "api_key_required": True,
                 "rate_limiting_enabled": True,
-                "audit_logging_enabled": True
+                "audit_logging_enabled": True,
             },
             feature_flags={
                 "enable_health_checks": True,
                 "enable_monitoring": True,
                 "enable_debug_logging": False,
                 "enable_cors": False,
-                "enable_swagger": False
+                "enable_swagger": False,
             },
-            resource_limits={
-                "max_simulations": 100,
-                "max_concurrent_workflows": 50,
-                "memory_limit_mb": 8192
-            }
+            resource_limits={"max_simulations": 100, "max_concurrent_workflows": 50, "memory_limit_mb": 8192},
         )
 
         self.environment_configs[Environment.DEVELOPMENT.value] = dev_config
@@ -459,7 +450,7 @@ class EnvironmentManager:
                 config_yaml = await self.export_environment_config(config.environment, "yaml")
 
                 if config_yaml:
-                    with open(config_file, 'w') as f:
+                    with open(config_file, "w") as f:
                         f.write(config_yaml)
 
         except Exception as e:
@@ -475,6 +466,7 @@ class EnvironmentManager:
 
         # Check hostname patterns
         import socket
+
         hostname = socket.gethostname().lower()
 
         if "prod" in hostname or "production" in hostname:
@@ -515,8 +507,9 @@ class EnvironmentManager:
         # For now, just log the configuration
         self.logger.info(f"Applied configuration for environment: {self.current_environment.value}")
 
-    async def _validate_environment_health(self, environment: Optional[Environment] = None,
-                                         return_issues: bool = False) -> Union[bool, List[str]]:
+    async def _validate_environment_health(
+        self, environment: Optional[Environment] = None, return_issues: bool = False
+    ) -> Union[bool, List[str]]:
         """Validate environment health by checking service endpoints."""
         target_env = environment or self.current_environment
         if not target_env or target_env.value not in self.environment_configs:
@@ -543,14 +536,11 @@ class EnvironmentManager:
 
     async def _check_service_health(self, service_name: str, endpoint: str) -> ServiceHealth:
         """Check the health of a service."""
-        import aiohttp
         import time
 
-        health = ServiceHealth(
-            name=service_name,
-            status=ServiceStatus.UNKNOWN,
-            last_check=datetime.now()
-        )
+        import aiohttp
+
+        health = ServiceHealth(name=service_name, status=ServiceStatus.UNKNOWN, last_check=datetime.now())
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -588,13 +578,16 @@ class EnvironmentManager:
     def _is_valid_url(self, url: str) -> bool:
         """Check if a URL is valid."""
         import re
+
         url_pattern = re.compile(
-            r'^https?://'  # http:// or https://
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-            r'localhost|'  # localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-            r'(?::\d+)?'  # optional port
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+            r"^https?://"  # http:// or https://
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain...
+            r"localhost|"  # localhost...
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+            r"(?::\d+)?"  # optional port
+            r"(?:/?|[/?]\S+)$",
+            re.IGNORECASE,
+        )
 
         return url_pattern.match(url) is not None
 
@@ -618,11 +611,11 @@ async def initialize_environment_management() -> None:
 
 
 __all__ = [
-    'EnvironmentManager',
-    'Environment',
-    'EnvironmentConfig',
-    'ServiceStatus',
-    'ServiceHealth',
-    'get_environment_manager',
-    'initialize_environment_management'
+    "EnvironmentManager",
+    "Environment",
+    "EnvironmentConfig",
+    "ServiceStatus",
+    "ServiceHealth",
+    "get_environment_manager",
+    "initialize_environment_management",
 ]

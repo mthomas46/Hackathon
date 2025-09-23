@@ -5,23 +5,24 @@ integrated with the existing orchestrator infrastructure.
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
-from langgraph.graph import StateGraph, END
 from langchain_core.tools import BaseTool
+from langgraph.graph import END, StateGraph
 
-from .state import WorkflowState, create_workflow_state
-from .tools import create_service_tools
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import utc_now
+
+from ..shared_utils import get_orchestrator_service_client
+from ..startup_discovery import startup_discovery
 from .service_integrations import (
     SERVICE_INTEGRATIONS,
     get_service_integration_tools,
-    initialize_all_service_integrations
+    initialize_all_service_integrations,
 )
-from ..shared_utils import get_orchestrator_service_client
-from ..startup_discovery import startup_discovery
-from services.shared.utilities import utc_now
-from services.shared.monitoring.logging import fire_and_forget
+from .state import WorkflowState, create_workflow_state
+from .tools import create_service_tools
 
 
 class LangGraphWorkflowEngine:
@@ -66,7 +67,9 @@ class LangGraphWorkflowEngine:
         self.tools = tools
         return tools
 
-    async def _create_tools_from_discovery(self, service_name: str, discovery_data: Dict[str, Any]) -> Dict[str, BaseTool]:
+    async def _create_tools_from_discovery(
+        self, service_name: str, discovery_data: Dict[str, Any]
+    ) -> Dict[str, BaseTool]:
         """Create LangChain tools from discovered tool definitions."""
         tools = {}
 
@@ -84,9 +87,10 @@ class LangGraphWorkflowEngine:
 
     async def _create_tool_from_definition(self, service_name: str, tool_def: Dict[str, Any]) -> Optional[BaseTool]:
         """Create a LangChain tool from a discovered tool definition."""
+        import inspect
+
         from langchain_core.tools import tool
         from pydantic import BaseModel, Field
-        import inspect
 
         tool_name = tool_def.get("name", "")
         tool_description = tool_def.get("description", "")
@@ -144,7 +148,7 @@ class LangGraphWorkflowEngine:
         workflow_type: str,
         nodes: Dict[str, Callable],
         edges: List[tuple],
-        conditional_edges: Optional[List[tuple]] = None
+        conditional_edges: Optional[List[tuple]] = None,
     ):
         """Create and compile a LangGraph workflow."""
 
@@ -180,7 +184,7 @@ class LangGraphWorkflowEngine:
         workflow_type: str,
         input_data: Dict[str, Any],
         tools: Optional[Dict[str, BaseTool]] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute a LangGraph workflow."""
 
@@ -191,18 +195,14 @@ class LangGraphWorkflowEngine:
         workflow = self.workflows[workflow_type]
 
         # Create initial workflow state
-        initial_state = create_workflow_state(
-            workflow_type=workflow_type,
-            input_data=input_data,
-            user_id=user_id
-        )
+        initial_state = create_workflow_state(workflow_type=workflow_type, input_data=input_data, user_id=user_id)
 
         # Log workflow start
-        await self._log_workflow_event(initial_state.metadata.workflow_id, "started", {
-            "workflow_type": workflow_type,
-            "input_data": input_data,
-            "user_id": user_id
-        })
+        await self._log_workflow_event(
+            initial_state.metadata.workflow_id,
+            "started",
+            {"workflow_type": workflow_type, "input_data": input_data, "user_id": user_id},
+        )
 
         try:
             # Execute the workflow
@@ -217,11 +217,7 @@ class LangGraphWorkflowEngine:
 
             # Update final state
             result.metadata.updated_at = end_time
-            result.update_metrics({
-                "execution_time": execution_time,
-                "success": True,
-                "end_time": end_time
-            })
+            result.update_metrics({"execution_time": execution_time, "success": True, "end_time": end_time})
 
             # Log successful completion
             await self._log_workflow_event(
@@ -231,8 +227,8 @@ class LangGraphWorkflowEngine:
                     "execution_time": execution_time,
                     "output_data": result.output_data,
                     "service_executions": len(result.service_executions),
-                    "errors": len(result.errors)
-                }
+                    "errors": len(result.errors),
+                },
             )
 
             return {
@@ -242,15 +238,13 @@ class LangGraphWorkflowEngine:
                 "output": result.output_data,
                 "metrics": result.metrics,
                 "service_executions": len(result.service_executions),
-                "errors": len(result.errors)
+                "errors": len(result.errors),
             }
 
         except Exception as e:
             # Log error
             await self._log_workflow_event(
-                initial_state.metadata.workflow_id,
-                "failed",
-                {"error": str(e), "error_type": type(e).__name__}
+                initial_state.metadata.workflow_id, "failed", {"error": str(e), "error_type": type(e).__name__}
             )
 
             # Re-raise the exception
@@ -260,12 +254,7 @@ class LangGraphWorkflowEngine:
         """Log workflow events using the orchestrator's logging infrastructure."""
         try:
             # Use the existing logging infrastructure
-            log_data = {
-                "workflow_id": workflow_id,
-                "event_type": event_type,
-                "timestamp": utc_now(),
-                "data": data
-            }
+            log_data = {"workflow_id": workflow_id, "event_type": event_type, "timestamp": utc_now(), "data": data}
 
             # This would integrate with your existing logging service
             # For now, we'll use a placeholder
@@ -284,12 +273,7 @@ class LangGraphWorkflowEngine:
     async def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
         """Get the status of a running workflow."""
         # Placeholder - would query workflow state from storage
-        return {
-            "workflow_id": workflow_id,
-            "status": "running",
-            "current_step": "processing",
-            "progress": 0.5
-        }
+        return {"workflow_id": workflow_id, "status": "running", "current_step": "processing", "progress": 0.5}
 
     async def cancel_workflow(self, workflow_id: str) -> bool:
         """Cancel a running workflow."""
@@ -310,7 +294,7 @@ class LangGraphWorkflowEngine:
 
         return {
             "workflow_type": workflow_type,
-            "nodes": list(workflow.nodes.keys()) if hasattr(workflow, 'nodes') else [],
+            "nodes": list(workflow.nodes.keys()) if hasattr(workflow, "nodes") else [],
             "compiled": True,
-            "description": f"Compiled LangGraph workflow for {workflow_type}"
+            "description": f"Compiled LangGraph workflow for {workflow_type}",
         }

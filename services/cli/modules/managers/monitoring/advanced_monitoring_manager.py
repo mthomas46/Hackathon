@@ -1,12 +1,13 @@
 """Advanced Monitoring Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
 from rich.prompt import Prompt
 
 from ...base.base_manager import BaseManager
-from .dashboard_manager import DashboardManager
 from .alerting_manager import AlertingManager
+from .dashboard_manager import DashboardManager
 
 
 class AdvancedMonitoringManager(BaseManager):
@@ -29,7 +30,7 @@ class AdvancedMonitoringManager(BaseManager):
             ("5", "Anomaly Detection (Performance, Traffic, Errors)"),
             ("6", "Performance Analytics (Trends, Bottlenecks)"),
             ("7", "Monitoring Configuration (Settings, Integration)"),
-            ("b", "Back to Main Menu")
+            ("b", "Back to Main Menu"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:

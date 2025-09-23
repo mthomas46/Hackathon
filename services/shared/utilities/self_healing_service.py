@@ -7,25 +7,27 @@ Provides comprehensive self-healing capabilities:
 - Predictive maintenance based on metrics
 - Resource leak detection and cleanup
 """
+
 import asyncio
-import time
-import threading
-import subprocess
-import signal
+import json
+import logging
 import os
-import psutil
-from typing import Dict, Any, List, Optional, Callable, Awaitable
+import signal
+import subprocess
+import threading
+import time
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
-import json
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
+import psutil
 
 logger = logging.getLogger(__name__)
 
 
 class HealingAction(Enum):
     """Types of healing actions."""
+
     RESTART_SERVICE = "restart_service"
     RESTART_DEPENDENCY = "restart_dependency"
     CLEAR_CACHE = "clear_cache"
@@ -38,6 +40,7 @@ class HealingAction(Enum):
 
 class FailurePattern(Enum):
     """Patterns of failures that trigger healing."""
+
     CRASH_LOOP = "crash_loop"
     MEMORY_LEAK = "memory_leak"
     HIGH_LATENCY = "high_latency"
@@ -50,6 +53,7 @@ class FailurePattern(Enum):
 @dataclass
 class ServiceInstance:
     """Represents a service instance for monitoring and healing."""
+
     service_name: str
     process_id: Optional[int] = None
     container_id: Optional[str] = None
@@ -65,6 +69,7 @@ class ServiceInstance:
 @dataclass
 class HealingRule:
     """Rule for triggering healing actions."""
+
     name: str
     condition_func: Callable[[Dict[str, Any]], bool]
     action: HealingAction
@@ -79,6 +84,7 @@ class HealingRule:
 @dataclass
 class DataConsistencyCheck:
     """Configuration for data consistency checks."""
+
     name: str
     check_func: Callable[[], Awaitable[bool]]
     repair_func: Optional[Callable[[], Awaitable[bool]]] = None
@@ -95,15 +101,12 @@ class ProcessMonitor:
         self._monitored_processes: Dict[str, ServiceInstance] = {}
         self._lock = threading.Lock()
 
-    def register_process(self, service_name: str, process_id: Optional[int] = None,
-                        container_id: Optional[str] = None) -> None:
+    def register_process(
+        self, service_name: str, process_id: Optional[int] = None, container_id: Optional[str] = None
+    ) -> None:
         """Register a process for monitoring."""
         with self._lock:
-            instance = ServiceInstance(
-                service_name=service_name,
-                process_id=process_id,
-                container_id=container_id
-            )
+            instance = ServiceInstance(service_name=service_name, process_id=process_id, container_id=container_id)
             self._monitored_processes[service_name] = instance
             logger.info(f"Registered process monitoring for {service_name}")
 
@@ -157,7 +160,9 @@ class ProcessMonitor:
         if instance.restart_count > 3 and instance.last_restart:
             time_since_last_restart = time.time() - instance.last_restart
             if time_since_last_restart < time_window:
-                logger.warning(f"Crash loop detected for {service_name}: {instance.restart_count} restarts in {time_window}s")
+                logger.warning(
+                    f"Crash loop detected for {service_name}: {instance.restart_count} restarts in {time_window}s"
+                )
                 return True
         return False
 
@@ -302,39 +307,46 @@ class SelfHealingService:
     def _setup_default_rules(self) -> None:
         """Setup default healing rules."""
         # Crash loop detection and restart
-        self.add_healing_rule(HealingRule(
-            name="crash_loop_restart",
-            condition_func=self._detect_crash_loop,
-            action=HealingAction.RESTART_SERVICE,
-            priority=1,
-            cooldown_seconds=300.0
-        ))
+        self.add_healing_rule(
+            HealingRule(
+                name="crash_loop_restart",
+                condition_func=self._detect_crash_loop,
+                action=HealingAction.RESTART_SERVICE,
+                priority=1,
+                cooldown_seconds=300.0,
+            )
+        )
 
         # Memory leak detection and restart
-        self.add_healing_rule(HealingRule(
-            name="memory_leak_restart",
-            condition_func=self._detect_memory_leak,
-            action=HealingAction.RESTART_SERVICE,
-            priority=2,
-            cooldown_seconds=600.0
-        ))
+        self.add_healing_rule(
+            HealingRule(
+                name="memory_leak_restart",
+                condition_func=self._detect_memory_leak,
+                action=HealingAction.RESTART_SERVICE,
+                priority=2,
+                cooldown_seconds=600.0,
+            )
+        )
 
         # High error rate response
-        self.add_healing_rule(HealingRule(
-            name="high_error_rate_cache_clear",
-            condition_func=self._detect_high_error_rate,
-            action=HealingAction.CLEAR_CACHE,
-            priority=3,
-            cooldown_seconds=120.0
-        ))
+        self.add_healing_rule(
+            HealingRule(
+                name="high_error_rate_cache_clear",
+                condition_func=self._detect_high_error_rate,
+                action=HealingAction.CLEAR_CACHE,
+                priority=3,
+                cooldown_seconds=120.0,
+            )
+        )
 
     def add_healing_rule(self, rule: HealingRule) -> None:
         """Add a healing rule."""
         self._healing_rules.append(rule)
         logger.info(f"Added healing rule: {rule.name}")
 
-    def register_service(self, service_name: str, process_id: Optional[int] = None,
-                        container_id: Optional[str] = None) -> None:
+    def register_service(
+        self, service_name: str, process_id: Optional[int] = None, container_id: Optional[str] = None
+    ) -> None:
         """Register a service for monitoring and healing."""
         self._process_monitor.register_process(service_name, process_id, container_id)
 
@@ -383,11 +395,10 @@ class SelfHealingService:
                         executed_actions.append(rule.name)
 
                         # Alert
-                        await self._trigger_alert("healing_action_executed", {
-                            "rule_name": rule.name,
-                            "action": rule.action.value,
-                            "context": context
-                        })
+                        await self._trigger_alert(
+                            "healing_action_executed",
+                            {"rule_name": rule.name, "action": rule.action.value, "context": context},
+                        )
                     else:
                         logger.error(f"Healing action failed: {rule.name}")
 
@@ -406,10 +417,7 @@ class SelfHealingService:
 
     def _get_rule_context(self, rule: HealingRule) -> Dict[str, Any]:
         """Get context information for rule evaluation."""
-        context = {
-            "timestamp": time.time(),
-            "rule_name": rule.name
-        }
+        context = {"timestamp": time.time(), "rule_name": rule.name}
 
         # Add service-specific information
         for service_name, instance in self._process_monitor._monitored_processes.items():
@@ -480,14 +488,16 @@ class SelfHealingService:
         """Get current healing status."""
         rules_status = []
         for rule in self._healing_rules:
-            rules_status.append({
-                "name": rule.name,
-                "enabled": rule.enabled,
-                "executions": rule.execution_count,
-                "max_executions": rule.max_executions,
-                "last_executed": rule.last_executed,
-                "cooldown_seconds": rule.cooldown_seconds
-            })
+            rules_status.append(
+                {
+                    "name": rule.name,
+                    "enabled": rule.enabled,
+                    "executions": rule.execution_count,
+                    "max_executions": rule.max_executions,
+                    "last_executed": rule.last_executed,
+                    "cooldown_seconds": rule.cooldown_seconds,
+                }
+            )
 
         services_status = {}
         for service_name, instance in self._process_monitor._monitored_processes.items():
@@ -496,13 +506,13 @@ class SelfHealingService:
                 "memory_usage_mb": instance.memory_usage_mb,
                 "cpu_usage_percent": instance.cpu_usage_percent,
                 "restart_count": instance.restart_count,
-                "last_restart": instance.last_restart
+                "last_restart": instance.last_restart,
             }
 
         return {
             "rules": rules_status,
             "services": services_status,
-            "data_checks": list(self._data_checker._checks.keys())
+            "data_checks": list(self._data_checker._checks.keys()),
         }
 
     async def start_monitoring(self, check_interval: float = 60.0) -> None:
@@ -554,8 +564,9 @@ async def trigger_healing_check() -> List[str]:
     return await service.perform_healing_check()
 
 
-def register_service_for_healing(service_name: str, process_id: Optional[int] = None,
-                                container_id: Optional[str] = None) -> None:
+def register_service_for_healing(
+    service_name: str, process_id: Optional[int] = None, container_id: Optional[str] = None
+) -> None:
     """Convenience function to register service for healing."""
     service = get_self_healing_service()
     service.register_service(service_name, process_id, container_id)

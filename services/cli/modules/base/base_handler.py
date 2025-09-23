@@ -1,9 +1,10 @@
 """Base handler class for CLI command handling."""
 
-from typing import Dict, Any, List, Optional, Callable
 from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, List, Optional
+
 from rich.console import Console
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm, Prompt
 
 
 class BaseHandler(ABC):
@@ -27,23 +28,23 @@ class BaseHandler(ABC):
             errors = {}
 
             for field, rules in schema.items():
-                if rules.get('required', False) and field not in data:
+                if rules.get("required", False) and field not in data:
                     errors[field] = "This field is required"
                 elif field in data:
                     value = data[field]
-                    if 'type' in rules:
-                        if rules['type'] == 'string' and not isinstance(value, str):
+                    if "type" in rules:
+                        if rules["type"] == "string" and not isinstance(value, str):
                             errors[field] = "Must be a string"
-                        elif rules['type'] == 'int' and not isinstance(value, int):
+                        elif rules["type"] == "int" and not isinstance(value, int):
                             errors[field] = "Must be an integer"
-                        elif rules['type'] == 'bool' and not isinstance(value, bool):
+                        elif rules["type"] == "bool" and not isinstance(value, bool):
                             errors[field] = "Must be a boolean"
 
-                    if 'min_length' in rules and isinstance(value, str):
-                        if len(value) < rules['min_length']:
+                    if "min_length" in rules and isinstance(value, str):
+                        if len(value) < rules["min_length"]:
                             errors[field] = f"Must be at least {rules['min_length']} characters"
 
-                    if 'choices' in rules and value not in rules['choices']:
+                    if "choices" in rules and value not in rules["choices"]:
                         errors[field] = f"Must be one of: {', '.join(rules['choices'])}"
 
             return errors
@@ -98,15 +99,18 @@ class BaseHandler(ABC):
     async def handle_errors_gracefully(self, operation: str, error: Exception) -> Dict[str, Any]:
         """Handle errors gracefully and return error response."""
         from ..utils.error_utils import handle_cli_error
+
         return handle_cli_error(operation, error)
 
     def log_command(self, command: str, **context):
         """Log command execution."""
         from ..utils.metrics_utils import log_cli_command
+
         log_cli_command(command, **context)
 
-    async def execute_with_retry(self, coro: Callable, max_retries: int = 3,
-                                backoff_factor: float = 1.0, error_handler=None) -> Any:
+    async def execute_with_retry(
+        self, coro: Callable, max_retries: int = 3, backoff_factor: float = 1.0, error_handler=None
+    ) -> Any:
         """Execute coroutine with retry logic."""
         import asyncio
 
@@ -124,7 +128,7 @@ class BaseHandler(ABC):
                     except Exception:
                         pass  # Ignore errors in error handler
 
-                wait_time = backoff_factor * (2 ** attempt)
+                wait_time = backoff_factor * (2**attempt)
                 self.console.print(f"[yellow]Attempt {attempt + 1} failed, retrying in {wait_time:.1f}s...[/yellow]")
                 await asyncio.sleep(wait_time)
 

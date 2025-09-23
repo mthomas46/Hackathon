@@ -3,11 +3,13 @@
 Provides visualization and monitoring capabilities for github-mcp
 service tool invocations and GitHub data operations.
 """
-from typing import Dict, Any, List, Optional
+
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_github_mcp_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_github_mcp_url
 
 
 class GithubMcpMonitor:
@@ -41,8 +43,10 @@ class GithubMcpMonitor:
                 "health": health_response,
                 "info": info_response,
                 "tool_stats": self._calculate_tool_stats(),
-                "recent_invocations": self._tool_invocations[-10:] if self._tool_invocations else [],  # Last 10 invocations
-                "last_updated": utc_now().isoformat()
+                "recent_invocations": (
+                    self._tool_invocations[-10:] if self._tool_invocations else []
+                ),  # Last 10 invocations
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -57,7 +61,7 @@ class GithubMcpMonitor:
                 "info": {},
                 "tool_stats": {},
                 "recent_invocations": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     async def get_available_tools(self, toolsets: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -77,15 +81,19 @@ class GithubMcpMonitor:
         except Exception as e:
             return []
 
-    async def invoke_tool(self, tool_name: str, arguments: Dict[str, Any], mock: Optional[bool] = None, correlation_id: Optional[str] = None) -> Dict[str, Any]:
+    async def invoke_tool(
+        self,
+        tool_name: str,
+        arguments: Dict[str, Any],
+        mock: Optional[bool] = None,
+        correlation_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Invoke a GitHub MCP tool and cache the result."""
         try:
             clients = get_frontend_clients()
             mcp_url = get_github_mcp_url()
 
-            payload = {
-                "arguments": arguments or {}
-            }
+            payload = {"arguments": arguments or {}}
 
             if mock is not None:
                 payload["mock"] = mock
@@ -105,7 +113,7 @@ class GithubMcpMonitor:
                     "correlation_id": correlation_id,
                     "success": response.get("success", True),
                     "result": response.get("result", response),
-                    "response": response
+                    "response": response,
                 }
 
                 self._tool_invocations.insert(0, invocation_result)  # Add to front
@@ -118,23 +126,13 @@ class GithubMcpMonitor:
                     "success": True,
                     "invocation_id": invocation_result["id"],
                     "tool": tool_name,
-                    "result": response
+                    "result": response,
                 }
 
-            return {
-                "success": False,
-                "error": "Tool invocation failed",
-                "tool": tool_name,
-                "result": response
-            }
+            return {"success": False, "error": "Tool invocation failed", "tool": tool_name, "result": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "tool": tool_name,
-                "result": None
-            }
+            return {"success": False, "error": str(e), "tool": tool_name, "result": None}
 
     def _calculate_tool_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached tool invocations."""
@@ -145,7 +143,7 @@ class GithubMcpMonitor:
                 "failed_invocations": 0,
                 "unique_tools_used": 0,
                 "mock_mode_count": 0,
-                "real_mode_count": 0
+                "real_mode_count": 0,
             }
 
         total = len(self._tool_invocations)
@@ -168,7 +166,7 @@ class GithubMcpMonitor:
             "unique_tools_used": len(tools),
             "tools_used": list(tools),
             "mock_mode_count": mock_count,
-            "real_mode_count": real_count
+            "real_mode_count": real_count,
         }
 
     def get_invocation_history(self, limit: int = 20) -> List[Dict[str, Any]]:

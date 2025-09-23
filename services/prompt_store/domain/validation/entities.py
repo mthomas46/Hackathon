@@ -1,14 +1,16 @@
 """Validation domain entities for testing and bias detection."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from ...core.entities import BaseEntity
 
 
 @dataclass
 class PromptTestingResult(BaseEntity):
     """Results from automated prompt testing."""
+
     prompt_id: str
     version: int
     test_suite_id: str
@@ -48,7 +50,7 @@ class PromptTestingResult(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptTestingResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptTestingResult":
         """Create entity from dictionary representation."""
         entity = cls(
             prompt_id=data["prompt_id"],
@@ -61,19 +63,20 @@ class PromptTestingResult(BaseEntity):
             output_quality_score=data["output_quality_score"],
             expected_output_similarity=data["expected_output_similarity"],
             error_message=data.get("error_message"),
-            test_metadata=data.get("test_metadata", {})
+            test_metadata=data.get("test_metadata", {}),
         )
         entity.id = data.get("id")
         if "created_at" in data:
-            entity.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            entity.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data and data["updated_at"]:
-            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return entity
 
 
 @dataclass
 class BiasDetectionResult(BaseEntity):
     """Results from bias detection analysis."""
+
     prompt_id: str
     version: int
     bias_type: str  # "gender", "racial", "cultural", etc.
@@ -111,7 +114,7 @@ class BiasDetectionResult(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BiasDetectionResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "BiasDetectionResult":
         """Create entity from dictionary representation."""
         entity = cls(
             prompt_id=data["prompt_id"],
@@ -122,21 +125,22 @@ class BiasDetectionResult(BaseEntity):
             suggested_alternatives=data["suggested_alternatives"],
             confidence_score=data["confidence_score"],
             analysis_method=data["analysis_method"],
-            resolved=data.get("resolved", False)
+            resolved=data.get("resolved", False),
         )
         entity.id = data.get("id")
         if "resolved_at" in data and data["resolved_at"]:
-            entity.resolved_at = datetime.fromisoformat(data["resolved_at"].replace('Z', '+00:00'))
+            entity.resolved_at = datetime.fromisoformat(data["resolved_at"].replace("Z", "+00:00"))
         if "created_at" in data:
-            entity.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            entity.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data and data["updated_at"]:
-            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return entity
 
 
 @dataclass
 class ValidationReport(BaseEntity):
     """Comprehensive validation report for a prompt."""
+
     prompt_id: str
     version: int
     linting_results: Dict[str, Any]
@@ -170,7 +174,7 @@ class ValidationReport(BaseEntity):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ValidationReport':
+    def from_dict(cls, data: Dict[str, Any]) -> "ValidationReport":
         """Create entity from dictionary representation."""
         entity = cls(
             prompt_id=data["prompt_id"],
@@ -180,11 +184,11 @@ class ValidationReport(BaseEntity):
             testing_results=data["testing_results"],
             overall_score=data["overall_score"],
             issues_count=data["issues_count"],
-            recommendations=data["recommendations"]
+            recommendations=data["recommendations"],
         )
         entity.id = data.get("id")
         if "created_at" in data:
-            entity.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            entity.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data and data["updated_at"]:
-            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return entity

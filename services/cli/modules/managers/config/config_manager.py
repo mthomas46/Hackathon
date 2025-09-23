@@ -1,14 +1,15 @@
 """Main Configuration Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
 
 from ...base.base_manager import BaseManager
-from .service_config_manager import ServiceConfigManager
-from .environment_manager import EnvironmentManager
-from .validation_manager import ValidationManager
 from .docker_manager import DockerManager
+from .environment_manager import EnvironmentManager
+from .service_config_manager import ServiceConfigManager
+from .validation_manager import ValidationManager
 
 
 class ConfigManager(BaseManager):
@@ -33,7 +34,7 @@ class ConfigManager(BaseManager):
             ("5", "Docker Compose Management (Manage deployment configs)"),
             ("6", "Configuration Export/Import (Backup and restore configs)"),
             ("7", "Configuration Audit (Track config changes and history)"),
-            ("b", "Back to Main Menu")
+            ("b", "Back to Main Menu"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -64,7 +65,7 @@ class ConfigManager(BaseManager):
                 ("2", "View Service Configuration"),
                 ("3", "Edit Service Configuration"),
                 ("4", "Show Configuration Hierarchy"),
-                ("b", "Back")
+                ("b", "Back"),
             ]
             self.display.show_menu("Service Configuration", menu_items)
 
@@ -79,9 +80,7 @@ class ConfigManager(BaseManager):
                         if config_files:
                             table_data = [[str(f), f.stat().st_size] for f in config_files]
                             self.display.show_table(
-                                f"Configuration Files for {selected_service}",
-                                ["File Path", "Size (bytes)"],
-                                table_data
+                                f"Configuration Files for {selected_service}", ["File Path", "Size (bytes)"], table_data
                             )
                         else:
                             self.display.show_warning(f"No configuration files found for {selected_service}")
@@ -126,7 +125,7 @@ class ConfigManager(BaseManager):
                 ("4", "Environment Variable Validation"),
                 ("5", "Environment Templates"),
                 ("6", "Export Environment Variables"),
-                ("b", "Back")
+                ("b", "Back"),
             ]
             self.display.show_menu("Environment Variables", menu_items)
 
@@ -164,7 +163,7 @@ class ConfigManager(BaseManager):
                 ("3", "Check Configuration Consistency"),
                 ("4", "Validate Environment References"),
                 ("5", "Configuration Health Check"),
-                ("b", "Back")
+                ("b", "Back"),
             ]
             self.display.show_menu("Configuration Validation", menu_items)
 
@@ -204,7 +203,7 @@ class ConfigManager(BaseManager):
                 ("3", "Service Dependencies Analysis"),
                 ("4", "Environment Variable Substitution"),
                 ("5", "Generate Deployment Config"),
-                ("b", "Back")
+                ("b", "Back"),
             ]
             self.display.show_menu("Docker Compose Management", menu_items)
 
@@ -244,6 +243,7 @@ class ConfigManager(BaseManager):
         """Get list of available services."""
         try:
             from pathlib import Path
+
             services_dir = Path("services")
             if services_dir.exists():
                 return [d.name for d in services_dir.iterdir() if d.is_dir()]

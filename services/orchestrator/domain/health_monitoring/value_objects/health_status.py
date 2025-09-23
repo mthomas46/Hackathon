@@ -24,7 +24,7 @@ class HealthStatus(Enum):
         return self in (HealthStatus.HEALTHY, HealthStatus.DEGRADED)
 
     @classmethod
-    def from_string(cls, value: str) -> 'HealthStatus':
+    def from_string(cls, value: str) -> "HealthStatus":
         """Create HealthStatus from string value."""
         try:
             return cls(value.lower())

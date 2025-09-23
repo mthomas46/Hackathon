@@ -2,13 +2,22 @@
 
 Handles HTTP requests and responses for document operations.
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
+
 from fastapi import HTTPException
-from services.shared.core.responses.responses import create_success_response, create_error_response
+
+from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.utilities import utc_now
+
 from ...core.models import (
-    DocumentRequest, DocumentResponse, DocumentListResponse,
-    MetadataUpdateRequest, SearchRequest, SearchResponse, QualityResponse
+    DocumentListResponse,
+    DocumentRequest,
+    DocumentResponse,
+    MetadataUpdateRequest,
+    QualityResponse,
+    SearchRequest,
+    SearchResponse,
 )
 from .service import DocumentService
 
@@ -30,7 +39,7 @@ class DocumentHandlers:
                 content=request.content,
                 metadata=metadata,
                 document_id=request.id,
-                correlation_id=request.correlation_id
+                correlation_id=request.correlation_id,
             )
 
             # Return direct DocumentResponse without wrapper
@@ -39,7 +48,7 @@ class DocumentHandlers:
                 content=document.content,
                 content_hash=document.content_hash,
                 metadata=document.metadata,
-                created_at=document.created_at.isoformat()
+                created_at=document.created_at.isoformat(),
             )
 
         except ValueError as e:
@@ -59,7 +68,7 @@ class DocumentHandlers:
                 content=document.content,
                 content_hash=document.content_hash,
                 metadata=document.metadata,
-                created_at=document.created_at.isoformat()
+                created_at=document.created_at.isoformat(),
             )
 
         except HTTPException:
@@ -74,9 +83,7 @@ class DocumentHandlers:
 
             # Return DocumentListResponse directly
             return DocumentListResponse(
-                items=result.get("items", []),
-                total=result.get("total", 0),
-                has_more=result.get("has_more", False)
+                items=result.get("items", []), total=result.get("total", 0), has_more=result.get("has_more", False)
             )
 
         except Exception as e:
@@ -88,11 +95,7 @@ class DocumentHandlers:
             self.service.update_entity(document_id, {"metadata": request.metadata})
 
             # Return simple success response
-            return {
-                "success": True,
-                "message": "Document metadata updated successfully",
-                "document_id": document_id
-            }
+            return {"success": True, "message": "Document metadata updated successfully", "document_id": document_id}
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -109,7 +112,7 @@ class DocumentHandlers:
                 items=result["items"],
                 total=result["total"],
                 has_more=result["has_more"],
-                search_time=result.get("search_time", 0.0)
+                search_time=result.get("search_time", 0.0),
             )
 
         except ValueError as e:
@@ -126,7 +129,7 @@ class DocumentHandlers:
                 total_documents=result["total_documents"],
                 average_quality_score=result["average_quality_score"],
                 quality_distribution=result["quality_distribution"],
-                items=result["items"]
+                items=result["items"],
             )
 
         except Exception as e:
@@ -137,12 +140,7 @@ class DocumentHandlers:
         try:
             documents = self.service.get_related_documents(correlation_id)
 
-            return {
-                "success": True,
-                "documents": documents,
-                "correlation_id": correlation_id,
-                "count": len(documents)
-            }
+            return {"success": True, "documents": documents, "correlation_id": correlation_id, "count": len(documents)}
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to get related documents: {str(e)}")
@@ -152,11 +150,7 @@ class DocumentHandlers:
         try:
             self.service.delete_entity(document_id)
 
-            return {
-                "success": True,
-                "message": "Document deleted successfully",
-                "document_id": document_id
-            }
+            return {"success": True, "message": "Document deleted successfully", "document_id": document_id}
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))

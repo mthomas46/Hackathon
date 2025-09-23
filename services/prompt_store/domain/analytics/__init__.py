@@ -1,11 +1,7 @@
 """Analytics domain for Prompt Store service."""
 
+from .handlers import AnalyticsHandlers
 from .repository import AnalyticsRepository
 from .service import AnalyticsService
-from .handlers import AnalyticsHandlers
 
-__all__ = [
-    'AnalyticsRepository',
-    'AnalyticsService',
-    'AnalyticsHandlers'
-]
+__all__ = ["AnalyticsRepository", "AnalyticsService", "AnalyticsHandlers"]

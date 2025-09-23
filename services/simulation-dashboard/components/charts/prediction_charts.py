@@ -4,16 +4,18 @@ This module provides chart components for displaying ML predictions,
 forecasts, and predictive analytics visualizations.
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
 try:
     import plotly.express as px
+
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
@@ -25,7 +27,7 @@ def render_prediction_chart(
     chart_type: str = "line",
     title: str = "Prediction Results",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
     """Render prediction chart for ML model results.
 
@@ -43,66 +45,62 @@ def render_prediction_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not predictions or 'data' not in predictions:
+        if not predictions or "data" not in predictions:
             st.info("No prediction data available")
             return
 
-        data = predictions['data']
+        data = predictions["data"]
 
         if isinstance(data, list) and len(data) > 0:
             df = pd.DataFrame(data)
 
             # Ensure we have the required columns
-            if 'timestamp' not in df.columns or 'predicted_value' not in df.columns:
+            if "timestamp" not in df.columns or "predicted_value" not in df.columns:
                 st.error("❌ Prediction data missing required columns (timestamp, predicted_value)")
                 return
 
             # Convert timestamp if needed
-            if 'timestamp' in df.columns:
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
+            if "timestamp" in df.columns:
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
 
             # Create the chart
             if chart_type == "line":
                 fig = px.line(
                     df,
-                    x='timestamp',
-                    y='predicted_value',
+                    x="timestamp",
+                    y="predicted_value",
                     title=title,
-                    labels={'predicted_value': 'Predicted Value', 'timestamp': 'Time'}
+                    labels={"predicted_value": "Predicted Value", "timestamp": "Time"},
                 )
             elif chart_type == "scatter":
                 fig = px.scatter(
                     df,
-                    x='timestamp',
-                    y='predicted_value',
+                    x="timestamp",
+                    y="predicted_value",
                     title=title,
-                    labels={'predicted_value': 'Predicted Value', 'timestamp': 'Time'}
+                    labels={"predicted_value": "Predicted Value", "timestamp": "Time"},
                 )
             elif chart_type == "area":
                 fig = px.area(
                     df,
-                    x='timestamp',
-                    y='predicted_value',
+                    x="timestamp",
+                    y="predicted_value",
                     title=title,
-                    labels={'predicted_value': 'Predicted Value', 'timestamp': 'Time'}
+                    labels={"predicted_value": "Predicted Value", "timestamp": "Time"},
                 )
             else:
                 # Default to line chart
                 fig = px.line(
                     df,
-                    x='timestamp',
-                    y='predicted_value',
+                    x="timestamp",
+                    y="predicted_value",
                     title=title,
-                    labels={'predicted_value': 'Predicted Value', 'timestamp': 'Time'}
+                    labels={"predicted_value": "Predicted Value", "timestamp": "Time"},
                 )
 
             # Update layout
             fig.update_layout(
-                width=width,
-                height=height,
-                xaxis_title="Time",
-                yaxis_title="Predicted Value",
-                showlegend=True
+                width=width, height=height, xaxis_title="Time", yaxis_title="Predicted Value", showlegend=True
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -120,7 +118,7 @@ def render_forecast_comparison_chart(
     forecast_data: List[Dict[str, Any]],
     title: str = "Historical vs Forecast Comparison",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
     """Render comparison chart between historical and forecast data.
 
@@ -141,13 +139,13 @@ def render_forecast_comparison_chart(
         # Convert to DataFrames
         if historical_data:
             hist_df = pd.DataFrame(historical_data)
-            if 'timestamp' in hist_df.columns:
-                hist_df['timestamp'] = pd.to_datetime(hist_df['timestamp'])
+            if "timestamp" in hist_df.columns:
+                hist_df["timestamp"] = pd.to_datetime(hist_df["timestamp"])
 
         if forecast_data:
             forecast_df = pd.DataFrame(forecast_data)
-            if 'timestamp' in forecast_df.columns:
-                forecast_df['timestamp'] = pd.to_datetime(forecast_df['timestamp'])
+            if "timestamp" in forecast_df.columns:
+                forecast_df["timestamp"] = pd.to_datetime(forecast_df["timestamp"])
 
         # Create subplots
         fig = make_subplots(specs=[[{"secondary_y": False}]])
@@ -156,10 +154,10 @@ def render_forecast_comparison_chart(
         if historical_data and not hist_df.empty:
             fig.add_trace(
                 go.Scatter(
-                    x=hist_df['timestamp'],
-                    y=hist_df.get('actual_value', hist_df.get('value', [])),
-                    name='Historical',
-                    line=dict(color='blue')
+                    x=hist_df["timestamp"],
+                    y=hist_df.get("actual_value", hist_df.get("value", [])),
+                    name="Historical",
+                    line=dict(color="blue"),
                 )
             )
 
@@ -167,21 +165,15 @@ def render_forecast_comparison_chart(
         if forecast_data and not forecast_df.empty:
             fig.add_trace(
                 go.Scatter(
-                    x=forecast_df['timestamp'],
-                    y=forecast_df.get('predicted_value', forecast_df.get('value', [])),
-                    name='Forecast',
-                    line=dict(color='red', dash='dash')
+                    x=forecast_df["timestamp"],
+                    y=forecast_df.get("predicted_value", forecast_df.get("value", [])),
+                    name="Forecast",
+                    line=dict(color="red", dash="dash"),
                 )
             )
 
         # Update layout
-        fig.update_layout(
-            title=title,
-            xaxis_title="Time",
-            yaxis_title="Value",
-            width=width,
-            height=height
-        )
+        fig.update_layout(title=title, xaxis_title="Time", yaxis_title="Value", width=width, height=height)
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -194,7 +186,7 @@ def render_prediction_confidence_chart(
     confidence_intervals: Optional[Dict[str, Any]] = None,
     title: str = "Prediction with Confidence Intervals",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
     """Render prediction chart with confidence intervals.
 
@@ -212,57 +204,57 @@ def render_prediction_confidence_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not predictions or 'data' not in predictions:
+        if not predictions or "data" not in predictions:
             st.info("No prediction data available")
             return
 
-        data = predictions['data']
+        data = predictions["data"]
         df = pd.DataFrame(data)
 
-        if 'timestamp' not in df.columns or 'predicted_value' not in df.columns:
+        if "timestamp" not in df.columns or "predicted_value" not in df.columns:
             st.error("❌ Prediction data missing required columns")
             return
 
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
 
         fig = go.Figure()
 
         # Add prediction line
-        fig.add_trace(go.Scatter(
-            x=df['timestamp'],
-            y=df['predicted_value'],
-            mode='lines',
-            name='Prediction',
-            line=dict(color='blue', width=2)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df["timestamp"],
+                y=df["predicted_value"],
+                mode="lines",
+                name="Prediction",
+                line=dict(color="blue", width=2),
+            )
+        )
 
         # Add confidence intervals if available
-        if confidence_intervals and 'upper' in df.columns and 'lower' in df.columns:
-            fig.add_trace(go.Scatter(
-                x=df['timestamp'],
-                y=df['upper'],
-                mode='lines',
-                name='Upper Confidence',
-                line=dict(color='lightblue', width=1, dash='dot')
-            ))
+        if confidence_intervals and "upper" in df.columns and "lower" in df.columns:
+            fig.add_trace(
+                go.Scatter(
+                    x=df["timestamp"],
+                    y=df["upper"],
+                    mode="lines",
+                    name="Upper Confidence",
+                    line=dict(color="lightblue", width=1, dash="dot"),
+                )
+            )
 
-            fig.add_trace(go.Scatter(
-                x=df['timestamp'],
-                y=df['lower'],
-                mode='lines',
-                name='Lower Confidence',
-                line=dict(color='lightblue', width=1, dash='dot'),
-                fill='tonexty',
-                fillcolor='rgba(173, 216, 230, 0.3)'
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=df["timestamp"],
+                    y=df["lower"],
+                    mode="lines",
+                    name="Lower Confidence",
+                    line=dict(color="lightblue", width=1, dash="dot"),
+                    fill="tonexty",
+                    fillcolor="rgba(173, 216, 230, 0.3)",
+                )
+            )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Time",
-            yaxis_title="Predicted Value",
-            width=width,
-            height=height
-        )
+        fig.update_layout(title=title, xaxis_title="Time", yaxis_title="Predicted Value", width=width, height=height)
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -274,7 +266,7 @@ def render_model_performance_chart(
     performance_data: Dict[str, Any],
     title: str = "Model Performance Metrics",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
     """Render model performance metrics chart.
 
@@ -301,7 +293,7 @@ def render_model_performance_chart(
 
         for key, value in performance_data.items():
             if isinstance(value, (int, float)) and not isinstance(value, bool):
-                metrics.append(key.replace('_', ' ').title())
+                metrics.append(key.replace("_", " ").title())
                 values.append(value)
 
         if not metrics:
@@ -309,27 +301,14 @@ def render_model_performance_chart(
             return
 
         # Create bar chart
-        fig = px.bar(
-            x=metrics,
-            y=values,
-            title=title,
-            labels={'x': 'Metric', 'y': 'Value'}
-        )
+        fig = px.bar(x=metrics, y=values, title=title, labels={"x": "Metric", "y": "Value"})
 
-        fig.update_layout(
-            width=width,
-            height=height,
-            xaxis_title="Performance Metric",
-            yaxis_title="Value"
-        )
+        fig.update_layout(width=width, height=height, xaxis_title="Performance Metric", yaxis_title="Value")
 
         st.plotly_chart(fig, use_container_width=True)
 
         # Display metrics as a table as well
-        metrics_df = pd.DataFrame({
-            'Metric': metrics,
-            'Value': values
-        })
+        metrics_df = pd.DataFrame({"Metric": metrics, "Value": values})
         st.dataframe(metrics_df, use_container_width=True)
 
     except Exception as e:

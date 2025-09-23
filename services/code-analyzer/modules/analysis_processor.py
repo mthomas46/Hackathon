@@ -1,6 +1,7 @@
 """Analysis processing logic for code analyzer service."""
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from services.shared.core.models.models import Document  # type: ignore
 from services.shared.envelopes import DocumentEnvelope  # type: ignore
 from services.shared.utilities import stable_hash  # type: ignore
@@ -17,7 +18,7 @@ def create_analysis_result(
     repo: Optional[str] = None,
     path: Optional[str] = None,
     correlation_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Create a standardized analysis result document and envelope."""
 
@@ -56,7 +57,7 @@ def process_text_analysis(
     path: Optional[str] = None,
     correlation_id: Optional[str] = None,
     language: Optional[str] = None,
-    style_examples: Optional[List[Dict[str, Any]]] = None
+    style_examples: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Process text analysis request."""
 
@@ -86,7 +87,7 @@ def process_text_analysis(
         repo=repo,
         path=path,
         correlation_id=correlation_id,
-        metadata=style_meta
+        metadata=style_meta,
     )
 
 
@@ -95,7 +96,7 @@ def process_files_analysis(
     repo: Optional[str] = None,
     correlation_id: Optional[str] = None,
     language: Optional[str] = None,
-    style_examples: Optional[List[Dict[str, Any]]] = None
+    style_examples: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Process files analysis request."""
 
@@ -103,7 +104,7 @@ def process_files_analysis(
     contents = []
     paths = []
     for f in files:
-        if hasattr(f, 'content') and hasattr(f, 'path'):
+        if hasattr(f, "content") and hasattr(f, "path"):
             # FileItem object
             contents.append(f.content)
             paths.append(f.path)
@@ -133,11 +134,7 @@ def process_files_analysis(
     style_meta["files_analyzed"] = len(files)
 
     # Create result with files in source_link metadata to match test expectations
-    metadata = {
-        **style_meta,
-        "files_analyzed": len(files),
-        "source_link": {"repo": repo, "files": paths}
-    }
+    metadata = {**style_meta, "files_analyzed": len(files), "source_link": {"repo": repo, "files": paths}}
 
     return create_analysis_result(
         source_type="files",
@@ -146,7 +143,7 @@ def process_files_analysis(
         source_refs=[metadata["source_link"]],
         repo=repo,
         correlation_id=correlation_id,
-        metadata=metadata
+        metadata=metadata,
     )
 
 
@@ -155,7 +152,7 @@ def process_patch_analysis(
     repo: Optional[str] = None,
     correlation_id: Optional[str] = None,
     language: Optional[str] = None,
-    style_examples: Optional[List[Dict[str, Any]]] = None
+    style_examples: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Process patch analysis request."""
 
@@ -186,5 +183,5 @@ def process_patch_analysis(
         source_refs=[{"repo": repo}],
         repo=repo,
         correlation_id=correlation_id,
-        metadata=style_meta
+        metadata=style_meta,
     )

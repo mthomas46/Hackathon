@@ -2,25 +2,17 @@
 
 import asyncio
 import hashlib
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
-from .migration import (
-    Migration, MigrationResult, MigrationStatus,
-    MigrationExecutionContext, MigrationDependency
-)
+from .migration import Migration, MigrationDependency, MigrationExecutionContext, MigrationResult, MigrationStatus
 
 
 class MigrationManager:
     """Manages database migration execution and state."""
 
-    def __init__(
-        self,
-        migration_state_manager=None,
-        migration_validator=None,
-        dry_run: bool = False
-    ):
+    def __init__(self, migration_state_manager=None, migration_validator=None, dry_run: bool = False):
         """Initialize migration manager."""
         self.migration_state_manager = migration_state_manager
         self.migration_validator = migration_validator
@@ -32,10 +24,10 @@ class MigrationManager:
 
         # Execution statistics
         self.execution_stats = {
-            'total_migrations': 0,
-            'successful_migrations': 0,
-            'failed_migrations': 0,
-            'total_execution_time': 0.0
+            "total_migrations": 0,
+            "successful_migrations": 0,
+            "failed_migrations": 0,
+            "total_execution_time": 0.0,
         }
 
     def register_migration(self, migration: Migration) -> None:
@@ -44,7 +36,7 @@ class MigrationManager:
             raise ValueError(f"Migration {migration.migration_id} already registered")
 
         self.migrations[migration.migration_id] = migration
-        self.execution_stats['total_migrations'] += 1
+        self.execution_stats["total_migrations"] += 1
 
     def register_migrations(self, migrations: List[Migration]) -> None:
         """Register multiple migrations."""
@@ -55,7 +47,7 @@ class MigrationManager:
         """Unregister a migration."""
         if migration_id in self.migrations:
             del self.migrations[migration_id]
-            self.execution_stats['total_migrations'] -= 1
+            self.execution_stats["total_migrations"] -= 1
             return True
         return False
 
@@ -70,22 +62,18 @@ class MigrationManager:
     def get_pending_migrations(self) -> List[Migration]:
         """Get migrations that haven't been executed yet."""
         return [
-            migration for migration in self.migrations.values()
+            migration
+            for migration in self.migrations.values()
             if migration.migration_id not in self.executed_migrations
         ]
 
     def get_executed_migrations(self) -> List[Migration]:
         """Get migrations that have been executed."""
         return [
-            migration for migration in self.migrations.values()
-            if migration.migration_id in self.executed_migrations
+            migration for migration in self.migrations.values() if migration.migration_id in self.executed_migrations
         ]
 
-    async def execute_migration(
-        self,
-        migration: Migration,
-        context: MigrationExecutionContext
-    ) -> MigrationResult:
+    async def execute_migration(self, migration: Migration, context: MigrationExecutionContext) -> MigrationResult:
         """Execute a single migration."""
         start_time = asyncio.get_event_loop().time()
 
@@ -111,12 +99,12 @@ class MigrationManager:
                 executed_at=datetime.utcnow(),
                 duration_seconds=execution_time,
                 rollback_available=migration.is_reversible(),
-                metadata=context.get_execution_summary()
+                metadata=context.get_execution_summary(),
             )
 
             migration.set_execution_result(result)
-            self.execution_stats['successful_migrations'] += 1
-            self.execution_stats['total_execution_time'] += execution_time
+            self.execution_stats["successful_migrations"] += 1
+            self.execution_stats["total_execution_time"] += execution_time
 
             return result
 
@@ -129,19 +117,17 @@ class MigrationManager:
                 executed_at=datetime.utcnow(),
                 duration_seconds=execution_time,
                 error_message=str(e),
-                metadata=context.get_execution_summary()
+                metadata=context.get_execution_summary(),
             )
 
             migration.set_execution_result(result)
-            self.execution_stats['failed_migrations'] += 1
-            self.execution_stats['total_execution_time'] += execution_time
+            self.execution_stats["failed_migrations"] += 1
+            self.execution_stats["total_execution_time"] += execution_time
 
             raise e
 
     async def execute_pending_migrations(
-        self,
-        context_factory: callable,
-        batch_size: int = 10
+        self, context_factory: callable, batch_size: int = 10
     ) -> List[MigrationResult]:
         """Execute all pending migrations in dependency order."""
         results = []
@@ -185,11 +171,7 @@ class MigrationManager:
         # Sort by dependency order (simplified topological sort)
         return self._sort_by_dependencies(executable)
 
-    async def _execute_batch(
-        self,
-        migrations: List[Migration],
-        context_factory: callable
-    ) -> List[MigrationResult]:
+    async def _execute_batch(self, migrations: List[Migration], context_factory: callable) -> List[MigrationResult]:
         """Execute a batch of migrations."""
         results = []
 
@@ -205,7 +187,7 @@ class MigrationManager:
                     status=MigrationStatus.FAILED,
                     executed_at=datetime.utcnow(),
                     duration_seconds=0.0,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
                 results.append(result)
 
@@ -240,11 +222,7 @@ class MigrationManager:
 
         return sorted_migrations
 
-    async def rollback_migration(
-        self,
-        migration: Migration,
-        context: MigrationExecutionContext
-    ) -> MigrationResult:
+    async def rollback_migration(self, migration: Migration, context: MigrationExecutionContext) -> MigrationResult:
         """Rollback a migration."""
         start_time = asyncio.get_event_loop().time()
 
@@ -266,7 +244,7 @@ class MigrationManager:
                 status=MigrationStatus.ROLLED_BACK,
                 executed_at=datetime.utcnow(),
                 duration_seconds=execution_time,
-                metadata=context.get_execution_summary()
+                metadata=context.get_execution_summary(),
             )
 
             migration.set_execution_result(result)
@@ -279,30 +257,19 @@ class MigrationManager:
                 status=MigrationStatus.FAILED,
                 executed_at=datetime.utcnow(),
                 duration_seconds=execution_time,
-                error_message=f"Rollback failed: {str(e)}"
+                error_message=f"Rollback failed: {str(e)}",
             )
 
             migration.set_execution_result(result)
             raise e
 
-    async def validate_migration_plan(
-        self,
-        target_migrations: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+    async def validate_migration_plan(self, target_migrations: Optional[List[str]] = None) -> Dict[str, Any]:
         """Validate migration execution plan."""
-        validation_result = {
-            'valid': True,
-            'errors': [],
-            'warnings': [],
-            'migration_plan': []
-        }
+        validation_result = {"valid": True, "errors": [], "warnings": [], "migration_plan": []}
 
         # Get target migrations
         if target_migrations:
-            migrations_to_check = [
-                self.migrations[mid] for mid in target_migrations
-                if mid in self.migrations
-            ]
+            migrations_to_check = [self.migrations[mid] for mid in target_migrations if mid in self.migrations]
         else:
             migrations_to_check = self.get_pending_migrations()
 
@@ -311,10 +278,10 @@ class MigrationManager:
         for migration in migrations_to_check:
             for dep in migration.get_required_dependencies():
                 if dep not in all_migration_ids:
-                    validation_result['errors'].append(
+                    validation_result["errors"].append(
                         f"Migration {migration.migration_id} requires missing dependency: {dep}"
                     )
-                    validation_result['valid'] = False
+                    validation_result["valid"] = False
 
         # Check for circular dependencies (simplified)
         for migration in migrations_to_check:
@@ -322,44 +289,44 @@ class MigrationManager:
                 if dep in [m.migration_id for m in migrations_to_check]:
                     dep_migration = self.migrations[dep]
                     if migration.migration_id in dep_migration.get_required_dependencies():
-                        validation_result['errors'].append(
+                        validation_result["errors"].append(
                             f"Circular dependency detected between {migration.migration_id} and {dep}"
                         )
-                        validation_result['valid'] = False
+                        validation_result["valid"] = False
 
         # Build execution plan
         executable_order = []
-        if validation_result['valid']:
+        if validation_result["valid"]:
             try:
                 executable_order = self._sort_by_dependencies(migrations_to_check)
-                validation_result['migration_plan'] = [m.migration_id for m in executable_order]
+                validation_result["migration_plan"] = [m.migration_id for m in executable_order]
             except Exception as e:
-                validation_result['errors'].append(f"Failed to build execution plan: {str(e)}")
-                validation_result['valid'] = False
+                validation_result["errors"].append(f"Failed to build execution plan: {str(e)}")
+                validation_result["valid"] = False
 
         return validation_result
 
     def get_execution_stats(self) -> Dict[str, Any]:
         """Get execution statistics."""
         stats = self.execution_stats.copy()
-        stats['executed_migrations'] = list(self.executed_migrations)
-        stats['pending_migrations'] = len(self.get_pending_migrations())
-        stats['registered_migrations'] = len(self.migrations)
+        stats["executed_migrations"] = list(self.executed_migrations)
+        stats["pending_migrations"] = len(self.get_pending_migrations())
+        stats["registered_migrations"] = len(self.migrations)
 
-        if stats['total_execution_time'] > 0:
-            stats['average_execution_time'] = stats['total_execution_time'] / max(1, stats['successful_migrations'])
+        if stats["total_execution_time"] > 0:
+            stats["average_execution_time"] = stats["total_execution_time"] / max(1, stats["successful_migrations"])
         else:
-            stats['average_execution_time'] = 0.0
+            stats["average_execution_time"] = 0.0
 
         return stats
 
     def reset_stats(self) -> None:
         """Reset execution statistics."""
         self.execution_stats = {
-            'total_migrations': len(self.migrations),
-            'successful_migrations': 0,
-            'failed_migrations': 0,
-            'total_execution_time': 0.0
+            "total_migrations": len(self.migrations),
+            "successful_migrations": 0,
+            "failed_migrations": 0,
+            "total_execution_time": 0.0,
         }
 
     def clear_execution_state(self) -> None:

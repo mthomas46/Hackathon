@@ -7,6 +7,7 @@ from typing import Optional
 @dataclass
 class GetSystemHealthQuery:
     """Query to get overall system health."""
+
     include_metrics: bool = True
     timeout_seconds: float = 5.0
 
@@ -14,6 +15,7 @@ class GetSystemHealthQuery:
 @dataclass
 class GetServiceHealthQuery:
     """Query to get health of a specific service."""
+
     service_name: str
     timeout_seconds: float = 5.0
 
@@ -41,5 +43,6 @@ class CheckSystemReadinessQuery:
 @dataclass
 class ListWorkflowsQuery:
     """Query to list available workflows (moved from old health handlers)."""
+
     limit: int = 50
     offset: int = 0

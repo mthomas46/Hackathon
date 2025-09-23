@@ -4,16 +4,14 @@ This module contains integration tests for content validation, quality checks,
 and consistency validation across the content generation pipeline.
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+from simulation.domain.value_objects import ComplexityLevel, DocumentMetadata, DocumentType, ProjectType
 from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
-from simulation.domain.value_objects import (
-    DocumentType, DocumentMetadata, ProjectType, ComplexityLevel
-)
 
 
 class TestContentQualityValidation:
@@ -22,7 +20,9 @@ class TestContentQualityValidation:
     @pytest.mark.asyncio
     async def test_high_quality_content_validation(self):
         """Test validation of high-quality content."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -33,14 +33,15 @@ class TestContentQualityValidation:
                         "id": "doc_1",
                         "quality_score": 0.95,
                         "issues": [],
-                        "recommendations": ["Excellent document structure"]
+                        "recommendations": ["Excellent document structure"],
                     }
                 ],
                 "overall_quality": 0.95,
-                "summary": "High-quality content with excellent structure"
+                "summary": "High-quality content with excellent structure",
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             # Test content that should score high
@@ -79,11 +80,7 @@ This document provides a comprehensive overview of the system architecture for t
 - Support for 10,000 concurrent users
 - 99.9% uptime SLA
 """,
-                "metadata": {
-                    "author": "architect@example.com",
-                    "word_count": 450,
-                    "complexity": "high"
-                }
+                "metadata": {"author": "architect@example.com", "word_count": 450, "complexity": "high"},
             }
 
             result = await analysis_client.analyze_documents([high_quality_content])
@@ -97,7 +94,9 @@ This document provides a comprehensive overview of the system architecture for t
     @pytest.mark.asyncio
     async def test_low_quality_content_detection(self):
         """Test detection of low-quality content."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -107,25 +106,21 @@ This document provides a comprehensive overview of the system architecture for t
                     {
                         "id": "doc_2",
                         "quality_score": 0.35,
-                        "issues": [
-                            "Missing title",
-                            "Incomplete content",
-                            "Poor formatting",
-                            "Missing metadata"
-                        ],
+                        "issues": ["Missing title", "Incomplete content", "Poor formatting", "Missing metadata"],
                         "recommendations": [
                             "Add a descriptive title",
                             "Expand content with more details",
                             "Use proper markdown formatting",
-                            "Include author and date information"
-                        ]
+                            "Include author and date information",
+                        ],
                     }
                 ],
                 "overall_quality": 0.35,
-                "summary": "Low-quality content requiring significant improvements"
+                "summary": "Low-quality content requiring significant improvements",
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             # Test content that should score low
@@ -134,7 +129,7 @@ This document provides a comprehensive overview of the system architecture for t
                 "type": DocumentType.CONFLUENCE_PAGE.value,
                 "title": "",
                 "content": "todo",
-                "metadata": {}
+                "metadata": {},
             }
 
             result = await analysis_client.analyze_documents([low_quality_content])
@@ -149,7 +144,9 @@ This document provides a comprehensive overview of the system architecture for t
     @pytest.mark.asyncio
     async def test_content_completeness_validation(self):
         """Test content completeness validation."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -162,7 +159,7 @@ This document provides a comprehensive overview of the system architecture for t
                         "completeness_score": 0.95,
                         "issues": ["Minor formatting issue"],
                         "missing_elements": [],
-                        "recommendations": ["Use consistent heading styles"]
+                        "recommendations": ["Use consistent heading styles"],
                     },
                     {
                         "id": "incomplete_doc",
@@ -170,14 +167,15 @@ This document provides a comprehensive overview of the system architecture for t
                         "completeness_score": 0.30,
                         "issues": ["Missing sections", "Incomplete information"],
                         "missing_elements": ["overview", "requirements", "conclusion"],
-                        "recommendations": ["Add overview section", "Include requirements", "Add conclusion"]
-                    }
+                        "recommendations": ["Add overview section", "Include requirements", "Add conclusion"],
+                    },
                 ],
                 "overall_quality": 0.67,
-                "overall_completeness": 0.63
+                "overall_completeness": 0.63,
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             documents = [
@@ -203,15 +201,15 @@ This document outlines the requirements for the new system.
 ## Conclusion
 All requirements have been documented and approved.
 """,
-                    "metadata": {"author": "analyst@example.com", "version": "1.0"}
+                    "metadata": {"author": "analyst@example.com", "version": "1.0"},
                 },
                 {
                     "id": "incomplete_doc",
                     "type": DocumentType.DESIGN_DOC.value,
                     "title": "Incomplete Design Document",
                     "content": "# Design Document\n\nSome design notes...",
-                    "metadata": {}
-                }
+                    "metadata": {},
+                },
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -238,7 +236,9 @@ class TestContentConsistencyValidation:
     @pytest.mark.asyncio
     async def test_cross_document_consistency(self):
         """Test consistency validation across multiple documents."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -249,32 +249,33 @@ class TestContentConsistencyValidation:
                         "id": "req_doc",
                         "consistency_score": 0.95,
                         "consistency_issues": [],
-                        "related_documents": ["design_doc", "test_plan"]
+                        "related_documents": ["design_doc", "test_plan"],
                     },
                     {
                         "id": "design_doc",
                         "consistency_score": 0.90,
                         "consistency_issues": ["Minor terminology difference"],
-                        "related_documents": ["req_doc", "api_doc"]
+                        "related_documents": ["req_doc", "api_doc"],
                     },
                     {
                         "id": "test_plan",
                         "consistency_score": 0.85,
                         "consistency_issues": ["Outdated requirements reference"],
-                        "related_documents": ["req_doc"]
-                    }
+                        "related_documents": ["req_doc"],
+                    },
                 ],
                 "overall_consistency": 0.90,
                 "consistency_matrix": {
                     "req_doc-design_doc": 0.95,
                     "req_doc-test_plan": 0.90,
-                    "design_doc-test_plan": 0.85
+                    "design_doc-test_plan": 0.85,
                 },
                 "terminology_consistency": 0.92,
-                "structural_consistency": 0.88
+                "structural_consistency": 0.88,
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             # Test documents that should be consistent
@@ -289,7 +290,7 @@ class TestContentConsistencyValidation:
 The system shall support user authentication via OAuth 2.0 protocol.
 Users must provide valid credentials to access the system.
 """,
-                    "metadata": {"version": "1.0"}
+                    "metadata": {"version": "1.0"},
                 },
                 {
                     "id": "design_doc",
@@ -301,7 +302,7 @@ Users must provide valid credentials to access the system.
 Implements OAuth 2.0 authentication as specified in requirements.
 Supports user credential validation and session management.
 """,
-                    "metadata": {"version": "1.0"}
+                    "metadata": {"version": "1.0"},
                 },
                 {
                     "id": "test_plan",
@@ -313,8 +314,8 @@ Supports user credential validation and session management.
 Test OAuth 2.0 authentication flow as per requirements v1.0.
 Validate credential processing and error handling.
 """,
-                    "metadata": {"version": "1.0"}
-                }
+                    "metadata": {"version": "1.0"},
+                },
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -335,7 +336,9 @@ Validate credential processing and error handling.
     @pytest.mark.asyncio
     async def test_terminology_consistency_validation(self):
         """Test terminology consistency across documents."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -347,43 +350,44 @@ Validate credential processing and error handling.
                         "terminology_score": 0.95,
                         "terminology_issues": [],
                         "key_terms": ["user", "authentication", "authorization"],
-                        "term_frequency": {"user": 15, "authentication": 8, "authorization": 6}
+                        "term_frequency": {"user": 15, "authentication": 8, "authorization": 6},
                     },
                     {
                         "id": "doc2",
                         "terminology_score": 0.60,
                         "terminology_issues": ["Inconsistent term usage: 'login' vs 'authentication'"],
                         "key_terms": ["user", "login", "authorize"],
-                        "term_frequency": {"user": 12, "login": 10, "authorize": 4}
-                    }
+                        "term_frequency": {"user": 12, "login": 10, "authorize": 4},
+                    },
                 ],
                 "overall_terminology_consistency": 0.78,
                 "terminology_vocabulary": {
                     "consistent_terms": ["user"],
-                    "inconsistent_terms": ["authentication", "login", "authorization", "authorize"]
+                    "inconsistent_terms": ["authentication", "login", "authorization", "authorize"],
                 },
                 "recommended_standardization": {
                     "authentication": "authentication",
                     "login": "authentication",
                     "authorization": "authorization",
-                    "authorize": "authorization"
-                }
+                    "authorize": "authorization",
+                },
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             documents = [
                 {
                     "id": "doc1",
                     "content": "User authentication and authorization are critical security features.",
-                    "metadata": {}
+                    "metadata": {},
                 },
                 {
                     "id": "doc2",
                     "content": "Users need to login and authorize access to protected resources.",
-                    "metadata": {}
-                }
+                    "metadata": {},
+                },
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -403,7 +407,9 @@ Validate credential processing and error handling.
     @pytest.mark.asyncio
     async def test_structural_consistency_validation(self):
         """Test structural consistency across documents."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -416,7 +422,7 @@ Validate credential processing and error handling.
                         "structure_issues": [],
                         "heading_hierarchy": ["#", "##", "###", "####"],
                         "section_count": 8,
-                        "avg_section_length": 150
+                        "avg_section_length": 150,
                     },
                     {
                         "id": "poorly_structured",
@@ -424,18 +430,19 @@ Validate credential processing and error handling.
                         "structure_issues": ["Inconsistent heading levels", "Missing sections"],
                         "heading_hierarchy": ["#", "###", "#", "##"],
                         "section_count": 3,
-                        "avg_section_length": 50
-                    }
+                        "avg_section_length": 50,
+                    },
                 ],
                 "overall_structural_consistency": 0.70,
                 "structural_patterns": {
                     "common_headings": ["Overview", "Requirements", "Design"],
                     "heading_consistency": 0.75,
-                    "section_organization": 0.65
-                }
+                    "section_organization": 0.65,
+                },
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             documents = [
@@ -484,7 +491,7 @@ Server and environment setup.
 ### CI/CD Pipeline
 Automated deployment process.
 """,
-                    "metadata": {}
+                    "metadata": {},
                 },
                 {
                     "id": "poorly_structured",
@@ -505,8 +512,8 @@ Schema info.
 ## Deployment
 How to deploy.
 """,
-                    "metadata": {}
-                }
+                    "metadata": {},
+                },
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -528,9 +535,13 @@ class TestContentValidationPipeline:
     @pytest.mark.asyncio
     async def test_end_to_end_content_validation_pipeline(self):
         """Test the complete content validation pipeline."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client') as mock_get_mock, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis, \
-             patch('simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client') as mock_get_doc_store:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_mock_data_generator_client"
+        ) as mock_get_mock, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis, patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_doc_store_client"
+        ) as mock_get_doc_store:
 
             mock_client = AsyncMock()
             analysis_client = AsyncMock()
@@ -545,7 +556,7 @@ class TestContentValidationPipeline:
                 "type": "confluence_page",
                 "title": "Generated Requirements",
                 "content": "# Requirements\n\n## Overview\nSystem requirements...",
-                "metadata": {"quality_score": 0.8}
+                "metadata": {"quality_score": 0.8},
             }
 
             # Mock analysis with validation results
@@ -559,42 +570,34 @@ class TestContentValidationPipeline:
                         "structure_score": 0.88,
                         "issues": ["Minor formatting issue"],
                         "recommendations": ["Use consistent heading styles"],
-                        "validation_status": "passed"
+                        "validation_status": "passed",
                     }
                 ],
                 "overall_quality": 0.82,
                 "overall_completeness": 0.85,
                 "overall_consistency": 0.90,
-                "validation_summary": {
-                    "passed": 1,
-                    "failed": 0,
-                    "warnings": 1,
-                    "quality_threshold_met": True
-                }
+                "validation_summary": {"passed": 1, "failed": 0, "warnings": 1, "quality_threshold_met": True},
             }
 
             # Mock storage
             doc_store_client.store_document.return_value = "validated_doc_123"
 
             from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+
             pipeline = ContentGenerationPipeline()
 
             phase_config = {
                 "phase_name": "requirements",
-                "project_config": {
-                    "name": "Test Project",
-                    "complexity": "medium"
-                },
+                "project_config": {"name": "Test Project", "complexity": "medium"},
                 "project_type": "web_application",
                 "quality_threshold": 0.7,
-                "validation_enabled": True
+                "validation_enabled": True,
             }
 
             # Debug phase_config
             print(f"Phase config: {phase_config}")
 
             documents = await pipeline.execute_document_generation(phase_config)
-
 
             # For now, let's just check that the pipeline runs without errors
             # The full end-to-end test needs more work on the pipeline logic
@@ -615,7 +618,9 @@ class TestContentValidationPipeline:
     @pytest.mark.asyncio
     async def test_content_validation_with_rejection(self):
         """Test content validation that results in rejection."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -628,19 +633,15 @@ class TestContentValidationPipeline:
                         "completeness_score": 0.2,
                         "issues": ["Missing title", "Empty content", "No metadata"],
                         "recommendations": ["Add title", "Include content", "Add metadata"],
-                        "validation_status": "failed"
+                        "validation_status": "failed",
                     }
                 ],
                 "overall_quality": 0.3,
-                "validation_summary": {
-                    "passed": 0,
-                    "failed": 1,
-                    "warnings": 3,
-                    "quality_threshold_met": False
-                }
+                "validation_summary": {"passed": 0, "failed": 1, "warnings": 3, "quality_threshold_met": False},
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             poor_document = {
@@ -648,7 +649,7 @@ class TestContentValidationPipeline:
                 "type": DocumentType.CONFLUENCE_PAGE.value,
                 "title": "",
                 "content": "",
-                "metadata": {}
+                "metadata": {},
             }
 
             result = await analysis_client.analyze_documents([poor_document])
@@ -672,7 +673,9 @@ class TestContentValidationMetrics:
     @pytest.mark.asyncio
     async def test_validation_metrics_collection(self):
         """Test collection of validation metrics."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -684,15 +687,15 @@ class TestContentValidationMetrics:
                         "quality_score": 0.88,
                         "word_count": 1200,
                         "reading_time_minutes": 6,
-                        "complexity_score": 0.7
+                        "complexity_score": 0.7,
                     },
                     {
                         "id": "doc2",
                         "quality_score": 0.92,
                         "word_count": 800,
                         "reading_time_minutes": 4,
-                        "complexity_score": 0.6
-                    }
+                        "complexity_score": 0.6,
+                    },
                 ],
                 "metrics": {
                     "total_documents": 2,
@@ -701,25 +704,26 @@ class TestContentValidationMetrics:
                     "average_reading_time": 5.0,
                     "quality_distribution": {
                         "excellent": 1,  # > 0.9
-                        "good": 1,       # 0.7-0.9
-                        "needs_improvement": 0  # < 0.7
+                        "good": 1,  # 0.7-0.9
+                        "needs_improvement": 0,  # < 0.7
                     },
                     "processing_time_seconds": 1.2,
-                    "validation_timestamp": datetime.now().isoformat()
+                    "validation_timestamp": datetime.now().isoformat(),
                 },
                 "insights": {
                     "quality_trends": "Consistent high quality across documents",
                     "common_issues": ["Minor formatting inconsistencies"],
-                    "recommendations": ["Standardize formatting guidelines"]
-                }
+                    "recommendations": ["Standardize formatting guidelines"],
+                },
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             documents = [
                 {"id": "doc1", "content": "Longer document content...", "metadata": {}},
-                {"id": "doc2", "content": "Shorter document content...", "metadata": {}}
+                {"id": "doc2", "content": "Shorter document content...", "metadata": {}},
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -743,35 +747,32 @@ class TestContentValidationMetrics:
     @pytest.mark.asyncio
     async def test_validation_performance_monitoring(self):
         """Test validation performance monitoring."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
             # Mock performance metrics
             mock_analysis_client.analyze_documents.return_value = {
-                "documents": [
-                    {
-                        "id": "perf_doc",
-                        "quality_score": 0.85,
-                        "processing_time_seconds": 0.8
-                    }
-                ],
+                "documents": [{"id": "perf_doc", "quality_score": 0.85, "processing_time_seconds": 0.8}],
                 "performance": {
                     "total_processing_time": 0.8,
                     "average_processing_time": 0.8,
                     "documents_per_second": 1.25,
                     "memory_usage_mb": 45.2,
                     "cpu_usage_percent": 12.5,
-                    "peak_memory_mb": 52.1
+                    "peak_memory_mb": 52.1,
                 },
                 "efficiency": {
                     "time_efficiency_score": 0.95,  # Fast processing
                     "resource_efficiency_score": 0.88,  # Good resource usage
-                    "scalability_score": 0.92  # Good concurrent processing
-                }
+                    "scalability_score": 0.92,  # Good concurrent processing
+                },
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             documents = [{"id": "perf_doc", "content": "Test content", "metadata": {}}]
@@ -799,7 +800,9 @@ class TestContentValidationEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_content_validation(self):
         """Test validation of empty or minimal content."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -811,13 +814,14 @@ class TestContentValidationEdgeCases:
                         "issues": ["Empty content", "Missing title", "No metadata"],
                         "recommendations": ["Add meaningful content", "Include title", "Add metadata"],
                         "word_count": 0,
-                        "validation_status": "failed"
+                        "validation_status": "failed",
                     }
                 ],
-                "overall_quality": 0.1
+                "overall_quality": 0.1,
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             empty_document = {
@@ -825,7 +829,7 @@ class TestContentValidationEdgeCases:
                 "type": DocumentType.CONFLUENCE_PAGE.value,
                 "title": "",
                 "content": "",
-                "metadata": {}
+                "metadata": {},
             }
 
             result = await analysis_client.analyze_documents([empty_document])
@@ -840,15 +844,19 @@ class TestContentValidationEdgeCases:
     @pytest.mark.asyncio
     async def test_large_content_validation(self):
         """Test validation of large content documents."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
             # Create large content
-            large_content = "# Large Document\n\n" + "\n\n".join([
-                f"## Section {i}\n\n" + "This is a paragraph with some content. " * 20
-                for i in range(1, 51)  # 50 sections
-            ])
+            large_content = "# Large Document\n\n" + "\n\n".join(
+                [
+                    f"## Section {i}\n\n" + "This is a paragraph with some content. " * 20
+                    for i in range(1, 51)  # 50 sections
+                ]
+            )
 
             mock_analysis_client.analyze_documents.return_value = {
                 "documents": [
@@ -859,13 +867,14 @@ class TestContentValidationEdgeCases:
                         "issues": ["Very long document may need splitting"],
                         "recommendations": ["Consider splitting into multiple documents"],
                         "processing_time_seconds": 2.5,
-                        "validation_status": "passed_with_warnings"
+                        "validation_status": "passed_with_warnings",
                     }
                 ],
-                "overall_quality": 0.75
+                "overall_quality": 0.75,
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             large_document = {
@@ -873,7 +882,7 @@ class TestContentValidationEdgeCases:
                 "type": DocumentType.ARCHITECTURE_DOC.value,
                 "title": "Comprehensive Architecture Document",
                 "content": large_content,
-                "metadata": {"word_count": 5000}
+                "metadata": {"word_count": 5000},
             }
 
             result = await analysis_client.analyze_documents([large_document])
@@ -888,7 +897,9 @@ class TestContentValidationEdgeCases:
     @pytest.mark.asyncio
     async def test_mixed_language_content_validation(self):
         """Test validation of content with mixed languages or special characters."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client') as mock_get_analysis:
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.get_analysis_service_client"
+        ) as mock_get_analysis:
             mock_analysis_client = AsyncMock()
             mock_get_analysis.return_value = mock_analysis_client
 
@@ -901,17 +912,18 @@ class TestContentValidationEdgeCases:
                             "primary_language": "en",
                             "confidence": 0.85,
                             "mixed_languages": True,
-                            "special_characters": True
+                            "special_characters": True,
                         },
                         "issues": ["Mixed language content detected"],
                         "recommendations": ["Use consistent language throughout document"],
-                        "validation_status": "passed_with_warnings"
+                        "validation_status": "passed_with_warnings",
                     }
                 ],
-                "overall_quality": 0.7
+                "overall_quality": 0.7,
             }
 
             from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+
             analysis_client = get_analysis_service_client()
 
             mixed_content = {
@@ -935,7 +947,7 @@ class TestContentValidationEdgeCases:
 2. Implement internationalization
 3. Test in multiple languages
 """,
-                "metadata": {}
+                "metadata": {},
             }
 
             result = await analysis_client.analyze_documents([mixed_content])

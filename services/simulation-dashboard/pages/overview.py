@@ -4,14 +4,13 @@ This module provides the main overview dashboard page with key metrics,
 recent activity, simulation status overview, and quick actions.
 """
 
-import streamlit as st
 import asyncio
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+import streamlit as st
 from infrastructure.logging.logger import get_dashboard_logger
-
 
 logger = get_dashboard_logger("overview_page")
 
@@ -20,10 +19,14 @@ def render_overview_page():
     """Render the main overview dashboard page."""
     # Page header
     st.markdown("## 📊 Dashboard Overview")
-    st.markdown("Welcome to the Project Simulation Dashboard. Monitor your simulations, view key metrics, and access quick actions.")
+    st.markdown(
+        "Welcome to the Project Simulation Dashboard. Monitor your simulations, view key metrics, and access quick actions."
+    )
 
     # Create tabs for different overview sections
-    tab1, tab2, tab3, tab4 = st.tabs(["📈 Key Metrics", "🎯 Active Simulations", "📋 Recent Activity", "⚡ Quick Actions"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📈 Key Metrics", "🎯 Active Simulations", "📋 Recent Activity", "⚡ Quick Actions"]
+    )
 
     with tab1:
         render_key_metrics()
@@ -56,7 +59,7 @@ def render_key_metrics():
             label="Total Simulations",
             value=total_simulations,
             delta="+2 from yesterday",
-            help="Total number of simulations created"
+            help="Total number of simulations created",
         )
 
     with col2:
@@ -65,7 +68,7 @@ def render_key_metrics():
             label="Active Simulations",
             value=active_simulations,
             delta=f"{active_simulations} running",
-            help="Currently running simulations"
+            help="Currently running simulations",
         )
 
     with col3:
@@ -74,7 +77,7 @@ def render_key_metrics():
             label="Success Rate",
             value=f"{success_rate}%",
             delta="+5% from last week",
-            help="Percentage of successful simulations"
+            help="Percentage of successful simulations",
         )
 
     with col4:
@@ -83,7 +86,7 @@ def render_key_metrics():
             label="Avg Duration",
             value=f"{avg_duration}min",
             delta="-2min from last week",
-            help="Average simulation duration"
+            help="Average simulation duration",
         )
 
     # Additional metrics
@@ -98,12 +101,7 @@ def render_additional_metrics():
     with col1:
         st.markdown("**📊 Simulation Types**")
         # Mock data
-        simulation_types = {
-            "Web Application": 45,
-            "Mobile App": 23,
-            "API Service": 18,
-            "Data Pipeline": 14
-        }
+        simulation_types = {"Web Application": 45, "Mobile App": 23, "API Service": 18, "Data Pipeline": 14}
 
         for sim_type, count in simulation_types.items():
             st.progress(count / 100, text=f"{sim_type}: {count}")
@@ -122,7 +120,7 @@ def render_additional_metrics():
         top_performers = [
             ("E-commerce Platform", "98%"),
             ("User Management API", "95%"),
-            ("Analytics Dashboard", "93%")
+            ("Analytics Dashboard", "93%"),
         ]
 
         for name, score in top_performers:
@@ -151,25 +149,25 @@ def render_active_simulations():
 
             with col2:
                 st.markdown(f"**Status:** {sim['status']}")
-                if sim['status'] == 'running':
+                if sim["status"] == "running":
                     st.success("🟢 Running")
-                elif sim['status'] == 'paused':
+                elif sim["status"] == "paused":
                     st.warning("🟡 Paused")
                 else:
                     st.info(f"🔵 {sim['status']}")
 
             with col3:
-                progress = sim.get('progress', 0)
+                progress = sim.get("progress", 0)
                 st.progress(progress / 100, text=f"{progress}% Complete")
 
             with col4:
                 st.markdown(f"**Started:** {sim['start_time']}")
-                if 'estimated_completion' in sim:
+                if "estimated_completion" in sim:
                     st.caption(f"Est. completion: {sim['estimated_completion']}")
 
             with col5:
                 if st.button("👁️ View", key=f"view_{sim['id']}", help=f"Monitor simulation {sim['id']}"):
-                    st.session_state.selected_simulation = sim['id']
+                    st.session_state.selected_simulation = sim["id"]
                     st.session_state.current_page = "monitor"
                     st.rerun()
 
@@ -199,9 +197,9 @@ def render_recent_activity():
                     "simulation_started": "▶️",
                     "simulation_completed": "✅",
                     "simulation_failed": "❌",
-                    "report_generated": "📊"
+                    "report_generated": "📊",
                 }
-                icon = icon_map.get(activity['type'], "📝")
+                icon = icon_map.get(activity["type"], "📝")
                 st.markdown(f"### {icon}")
 
             with col2:
@@ -268,7 +266,7 @@ def render_system_status():
         # Simulation Service Status
         st.markdown("**🎯 Simulation Service**")
         service_status = check_simulation_service_status()
-        if service_status['healthy']:
+        if service_status["healthy"]:
             st.success("✅ Healthy")
         else:
             st.error("❌ Unhealthy")
@@ -278,7 +276,7 @@ def render_system_status():
         # Database Status
         st.markdown("**🗄️ Database**")
         db_status = check_database_status()
-        if db_status['healthy']:
+        if db_status["healthy"]:
             st.success("✅ Connected")
         else:
             st.error("❌ Disconnected")
@@ -288,7 +286,7 @@ def render_system_status():
         # WebSocket Status
         st.markdown("**🔄 Real-time Updates**")
         ws_status = check_websocket_status()
-        if ws_status['connected']:
+        if ws_status["connected"]:
             st.success("✅ Connected")
         else:
             st.warning("⚠️ Disconnected")
@@ -298,8 +296,8 @@ def render_system_status():
         # System Resources
         st.markdown("**💻 System Resources**")
         resources = get_system_resources()
-        cpu_usage = resources['cpu_percent']
-        memory_usage = resources['memory_percent']
+        cpu_usage = resources["cpu_percent"]
+        memory_usage = resources["memory_percent"]
 
         if cpu_usage < 70 and memory_usage < 80:
             st.success("✅ Normal")
@@ -313,25 +311,30 @@ def render_system_status():
 
 # Mock data functions - in real implementation these would call the actual services
 
+
 def get_total_simulations_count() -> int:
     """Get total simulations count."""
     # Mock data
     return 127
+
 
 def get_active_simulations_count() -> int:
     """Get active simulations count."""
     # Mock data
     return 3
 
+
 def get_success_rate() -> int:
     """Get success rate percentage."""
     # Mock data
     return 89
 
+
 def get_average_duration() -> int:
     """Get average duration in minutes."""
     # Mock data
     return 45
+
 
 def get_active_simulations() -> List[Dict[str, Any]]:
     """Get list of active simulations."""
@@ -343,7 +346,7 @@ def get_active_simulations() -> List[Dict[str, Any]]:
             "status": "running",
             "progress": 67,
             "start_time": "2024-01-15 14:30:00",
-            "estimated_completion": "2024-01-15 16:15:00"
+            "estimated_completion": "2024-01-15 16:15:00",
         },
         {
             "id": "sim_002",
@@ -351,16 +354,17 @@ def get_active_simulations() -> List[Dict[str, Any]]:
             "status": "running",
             "progress": 34,
             "start_time": "2024-01-15 15:45:00",
-            "estimated_completion": "2024-01-15 17:30:00"
+            "estimated_completion": "2024-01-15 17:30:00",
         },
         {
             "id": "sim_003",
             "name": "Analytics Dashboard",
             "status": "paused",
             "progress": 12,
-            "start_time": "2024-01-15 16:00:00"
-        }
+            "start_time": "2024-01-15 16:00:00",
+        },
     ]
+
 
 def get_recent_activities() -> List[Dict[str, Any]]:
     """Get recent activities."""
@@ -371,59 +375,51 @@ def get_recent_activities() -> List[Dict[str, Any]]:
             "title": "Simulation Completed",
             "description": "Mobile App Development simulation finished successfully",
             "timestamp": "2024-01-15 14:15:00",
-            "user": "System"
+            "user": "System",
         },
         {
             "type": "report_generated",
             "title": "Report Generated",
             "description": "Executive summary report for Project Alpha",
             "timestamp": "2024-01-15 13:45:00",
-            "user": "john.doe@example.com"
+            "user": "john.doe@example.com",
         },
         {
             "type": "simulation_started",
             "title": "Simulation Started",
             "description": "E-commerce Platform simulation initiated",
             "timestamp": "2024-01-15 13:30:00",
-            "user": "jane.smith@example.com"
+            "user": "jane.smith@example.com",
         },
         {
             "type": "simulation_created",
             "title": "Simulation Created",
             "description": "New simulation: API Service Development",
             "timestamp": "2024-01-15 12:00:00",
-            "user": "System"
-        }
+            "user": "System",
+        },
     ]
+
 
 def check_simulation_service_status() -> Dict[str, Any]:
     """Check simulation service health."""
     # Mock health check
-    return {
-        "healthy": True,
-        "response_time": 45
-    }
+    return {"healthy": True, "response_time": 45}
+
 
 def check_database_status() -> Dict[str, Any]:
     """Check database health."""
     # Mock database check
-    return {
-        "healthy": True,
-        "active_connections": 5
-    }
+    return {"healthy": True, "active_connections": 5}
+
 
 def check_websocket_status() -> Dict[str, Any]:
     """Check WebSocket connection status."""
     # Mock WebSocket check
-    return {
-        "connected": True,
-        "active_connections": 2
-    }
+    return {"connected": True, "active_connections": 2}
+
 
 def get_system_resources() -> Dict[str, Any]:
     """Get system resource usage."""
     # Mock resource data
-    return {
-        "cpu_percent": 23.5,
-        "memory_percent": 45.2
-    }
+    return {"cpu_percent": 23.5, "memory_percent": 45.2}

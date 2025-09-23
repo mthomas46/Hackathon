@@ -2,4 +2,4 @@
 
 from . import api
 
-__all__ = ['api']
+__all__ = ["api"]

@@ -2,9 +2,11 @@
 
 Combines request ID, metrics, and rate limiting middleware.
 """
+
 import time
 import uuid
 from typing import Callable, Dict, Optional
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -52,6 +54,7 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
             # Import here to avoid circular dependency
             try:
                 from ..monitoring.logging import fire_and_forget
+
                 fire_and_forget(
                     "info",
                     "http_request",
@@ -86,6 +89,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         bucket = self._buckets.get(request.url.path)
         if bucket and not bucket.allow():
             from starlette.responses import JSONResponse
+
             return JSONResponse({"detail": "rate_limited"}, status_code=429)
         return await call_next(request)
 
@@ -97,7 +101,7 @@ class ServiceMiddleware:
         self,
         service_name: str,
         rate_limits: Optional[Dict[str, tuple[float, int]]] = None,
-        enable_rate_limit: bool = False
+        enable_rate_limit: bool = False,
     ):
         self.service_name = service_name
         self.rate_limits = rate_limits
@@ -107,7 +111,7 @@ class ServiceMiddleware:
         """Get list of middleware instances for FastAPI app."""
         middlewares = [
             lambda app: RequestIdMiddleware(app),
-            lambda app: RequestMetricsMiddleware(app, self.service_name)
+            lambda app: RequestMetricsMiddleware(app, self.service_name),
         ]
 
         if self.enable_rate_limit and self.rate_limits:

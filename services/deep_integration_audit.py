@@ -7,13 +7,13 @@ for all services in the ecosystem, with detailed audit results and integration p
 """
 
 import asyncio
-import json
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime
-from dataclasses import dataclass, field
-from enum import Enum
 import inspect
+import json
 import os
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
 
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
@@ -21,6 +21,7 @@ from services.shared.monitoring.logging import fire_and_forget
 
 class IntegrationDepth(Enum):
     """Depth of service integration."""
+
     BASIC = "basic"  # Health checks, basic API calls
     INTERMEDIATE = "intermediate"  # Shared data models, event notifications
     ADVANCED = "advanced"  # Deep workflow integration, state synchronization
@@ -29,6 +30,7 @@ class IntegrationDepth(Enum):
 
 class ServiceMaturity(Enum):
     """Service maturity level."""
+
     PROTOTYPE = "prototype"
     DEVELOPMENT = "development"
     STABLE = "stable"
@@ -39,6 +41,7 @@ class ServiceMaturity(Enum):
 @dataclass
 class ServiceAuditResult:
     """Comprehensive service audit result."""
+
     service_name: str
     maturity_level: ServiceMaturity
     current_integration_depth: IntegrationDepth
@@ -72,18 +75,13 @@ class ServiceAuditResult:
 
     def calculate_overall_score(self) -> float:
         """Calculate overall service score."""
-        weights = {
-            'architecture': 0.25,
-            'integration': 0.25,
-            'performance': 0.25,
-            'security': 0.25
-        }
+        weights = {"architecture": 0.25, "integration": 0.25, "performance": 0.25, "security": 0.25}
 
         overall_score = (
-            self.architecture_score * weights['architecture'] +
-            self.integration_score * weights['integration'] +
-            self.performance_score * weights['performance'] +
-            self.security_score * weights['security']
+            self.architecture_score * weights["architecture"]
+            + self.integration_score * weights["integration"]
+            + self.performance_score * weights["performance"]
+            + self.security_score * weights["security"]
         )
 
         return round(overall_score, 2)
@@ -92,6 +90,7 @@ class ServiceAuditResult:
 @dataclass
 class DeepIntegrationPattern:
     """Detailed integration pattern for deep service integration."""
+
     pattern_name: str
     description: str
     integration_type: str
@@ -131,7 +130,7 @@ class ServiceIntegrationAuditor:
             service_name=service_name,
             maturity_level=self._assess_maturity_level(service_name),
             current_integration_depth=self._assess_current_integration_depth(service_name),
-            recommended_integration_depth=self._recommend_integration_depth(service_name)
+            recommended_integration_depth=self._recommend_integration_depth(service_name),
         )
 
         # Perform detailed assessments
@@ -177,7 +176,7 @@ class ServiceIntegrationAuditor:
             ServiceNames.BEDROCK_PROXY: ServiceMaturity.DEVELOPMENT,
             ServiceNames.GITHUB_MCP: ServiceMaturity.PROTOTYPE,
             ServiceNames.FRONTEND: ServiceMaturity.STABLE,
-            ServiceNames.CLI: ServiceMaturity.STABLE
+            ServiceNames.CLI: ServiceMaturity.STABLE,
         }
 
         return maturity_indicators.get(service_name, ServiceMaturity.PROTOTYPE)
@@ -202,7 +201,7 @@ class ServiceIntegrationAuditor:
             ServiceNames.BEDROCK_PROXY: IntegrationDepth.INTERMEDIATE,
             ServiceNames.GITHUB_MCP: IntegrationDepth.BASIC,
             ServiceNames.FRONTEND: IntegrationDepth.ADVANCED,
-            ServiceNames.CLI: IntegrationDepth.ADVANCED
+            ServiceNames.CLI: IntegrationDepth.ADVANCED,
         }
 
         return depth_indicators.get(service_name, IntegrationDepth.BASIC)
@@ -216,7 +215,7 @@ class ServiceIntegrationAuditor:
             ServiceNames.PROMPT_STORE,
             ServiceNames.ORCHESTRATOR,
             ServiceNames.INTERPRETER,
-            ServiceNames.SOURCE_AGENT
+            ServiceNames.SOURCE_AGENT,
         ]
 
         if service_name in core_services:
@@ -230,7 +229,7 @@ class ServiceIntegrationAuditor:
             ServiceNames.CODE_ANALYZER,
             ServiceNames.MEMORY_AGENT,
             ServiceNames.NOTIFICATION_SERVICE,
-            ServiceNames.LOG_COLLECTOR
+            ServiceNames.LOG_COLLECTOR,
         ]
 
         if service_name in supporting_services:
@@ -286,10 +285,14 @@ class ServiceIntegrationAuditor:
             findings.append(f"✅ Integration depth matches recommendation: {current_depth.value}")
             score += 0.9
         elif current_depth.value < recommended_depth.value:
-            findings.append(f"⚠️ Integration depth below recommendation: {current_depth.value} < {recommended_depth.value}")
+            findings.append(
+                f"⚠️ Integration depth below recommendation: {current_depth.value} < {recommended_depth.value}"
+            )
             score += 0.6
         else:
-            findings.append(f"✅ Integration depth exceeds recommendation: {current_depth.value} > {recommended_depth.value}")
+            findings.append(
+                f"✅ Integration depth exceeds recommendation: {current_depth.value} > {recommended_depth.value}"
+            )
             score += 0.8
 
         # Check for service mesh compatibility
@@ -368,98 +371,110 @@ class ServiceIntegrationAuditor:
         patterns = []
 
         if service_name == ServiceNames.ANALYSIS_SERVICE:
-            patterns.extend([
-                {
-                    "pattern_name": "Real-time Document Analysis Pipeline",
-                    "description": "Event-driven document analysis with real-time feedback",
-                    "integration_type": "event_driven",
-                    "complexity_level": "high",
-                    "estimated_effort_days": 10,
-                    "required_components": ["event_store", "analysis_engine", "real_time_processor"],
-                    "data_flow_patterns": ["streaming_analysis", "incremental_processing"],
-                    "event_patterns": ["document_created", "analysis_completed", "quality_alert"],
-                    "implementation_steps": [
-                        "Implement event listeners for document creation",
-                        "Add real-time analysis capabilities",
-                        "Integrate with notification service for alerts",
-                        "Add streaming analysis for large documents"
-                    ]
-                },
-                {
-                    "pattern_name": "Cross-Service Analysis Correlation",
-                    "description": "Correlate analysis results across multiple services",
-                    "integration_type": "data_correlation",
-                    "complexity_level": "medium",
-                    "estimated_effort_days": 7,
-                    "required_components": ["correlation_engine", "analysis_aggregator"],
-                    "data_flow_patterns": ["correlation_analysis", "result_aggregation"],
-                    "implementation_steps": [
-                        "Implement analysis result correlation logic",
-                        "Add cross-service analysis aggregation",
-                        "Create correlation reports and insights"
-                    ]
-                }
-            ])
+            patterns.extend(
+                [
+                    {
+                        "pattern_name": "Real-time Document Analysis Pipeline",
+                        "description": "Event-driven document analysis with real-time feedback",
+                        "integration_type": "event_driven",
+                        "complexity_level": "high",
+                        "estimated_effort_days": 10,
+                        "required_components": ["event_store", "analysis_engine", "real_time_processor"],
+                        "data_flow_patterns": ["streaming_analysis", "incremental_processing"],
+                        "event_patterns": ["document_created", "analysis_completed", "quality_alert"],
+                        "implementation_steps": [
+                            "Implement event listeners for document creation",
+                            "Add real-time analysis capabilities",
+                            "Integrate with notification service for alerts",
+                            "Add streaming analysis for large documents",
+                        ],
+                    },
+                    {
+                        "pattern_name": "Cross-Service Analysis Correlation",
+                        "description": "Correlate analysis results across multiple services",
+                        "integration_type": "data_correlation",
+                        "complexity_level": "medium",
+                        "estimated_effort_days": 7,
+                        "required_components": ["correlation_engine", "analysis_aggregator"],
+                        "data_flow_patterns": ["correlation_analysis", "result_aggregation"],
+                        "implementation_steps": [
+                            "Implement analysis result correlation logic",
+                            "Add cross-service analysis aggregation",
+                            "Create correlation reports and insights",
+                        ],
+                    },
+                ]
+            )
 
         elif service_name == ServiceNames.DOC_STORE:
-            patterns.extend([
-                {
-                    "pattern_name": "Distributed Document Synchronization",
-                    "description": "Real-time synchronization of documents across services",
-                    "integration_type": "distributed_sync",
-                    "complexity_level": "high",
-                    "estimated_effort_days": 12,
-                    "required_components": ["sync_engine", "conflict_resolver", "version_manager"],
-                    "data_flow_patterns": ["bidirectional_sync", "conflict_resolution"],
-                    "event_patterns": ["document_updated", "sync_conflict", "sync_completed"],
-                    "implementation_steps": [
-                        "Implement real-time document synchronization",
-                        "Add conflict resolution strategies",
-                        "Create synchronization monitoring and alerts",
-                        "Add offline synchronization capabilities"
-                    ]
-                }
-            ])
+            patterns.extend(
+                [
+                    {
+                        "pattern_name": "Distributed Document Synchronization",
+                        "description": "Real-time synchronization of documents across services",
+                        "integration_type": "distributed_sync",
+                        "complexity_level": "high",
+                        "estimated_effort_days": 12,
+                        "required_components": ["sync_engine", "conflict_resolver", "version_manager"],
+                        "data_flow_patterns": ["bidirectional_sync", "conflict_resolution"],
+                        "event_patterns": ["document_updated", "sync_conflict", "sync_completed"],
+                        "implementation_steps": [
+                            "Implement real-time document synchronization",
+                            "Add conflict resolution strategies",
+                            "Create synchronization monitoring and alerts",
+                            "Add offline synchronization capabilities",
+                        ],
+                    }
+                ]
+            )
 
         elif service_name == ServiceNames.PROMPT_STORE:
-            patterns.extend([
-                {
-                    "pattern_name": "Dynamic Prompt Optimization",
-                    "description": "AI-powered prompt optimization based on usage patterns",
-                    "integration_type": "ai_driven",
-                    "complexity_level": "high",
-                    "estimated_effort_days": 15,
-                    "required_components": ["optimization_engine", "usage_analyzer", "ml_trainer"],
-                    "data_flow_patterns": ["usage_analysis", "optimization_feedback"],
-                    "event_patterns": ["prompt_used", "optimization_completed", "performance_improved"],
-                    "implementation_steps": [
-                        "Implement usage pattern analysis",
-                        "Add ML-based optimization algorithms",
-                        "Create A/B testing framework for prompts",
-                        "Add real-time optimization feedback"
-                    ]
-                }
-            ])
+            patterns.extend(
+                [
+                    {
+                        "pattern_name": "Dynamic Prompt Optimization",
+                        "description": "AI-powered prompt optimization based on usage patterns",
+                        "integration_type": "ai_driven",
+                        "complexity_level": "high",
+                        "estimated_effort_days": 15,
+                        "required_components": ["optimization_engine", "usage_analyzer", "ml_trainer"],
+                        "data_flow_patterns": ["usage_analysis", "optimization_feedback"],
+                        "event_patterns": ["prompt_used", "optimization_completed", "performance_improved"],
+                        "implementation_steps": [
+                            "Implement usage pattern analysis",
+                            "Add ML-based optimization algorithms",
+                            "Create A/B testing framework for prompts",
+                            "Add real-time optimization feedback",
+                        ],
+                    }
+                ]
+            )
 
         elif service_name == ServiceNames.ORCHESTRATOR:
-            patterns.extend([
-                {
-                    "pattern_name": "Intelligent Workflow Prediction",
-                    "description": "Predict and pre-optimize workflows based on patterns",
-                    "integration_type": "predictive_orchestration",
-                    "complexity_level": "high",
-                    "estimated_effort_days": 20,
-                    "required_components": ["prediction_engine", "pattern_analyzer", "optimization_planner"],
-                    "data_flow_patterns": ["pattern_analysis", "predictive_optimization"],
-                    "event_patterns": ["workflow_predicted", "optimization_applied", "prediction_accuracy_measured"],
-                    "implementation_steps": [
-                        "Implement workflow pattern analysis",
-                        "Add predictive optimization algorithms",
-                        "Create workflow pre-warming capabilities",
-                        "Add prediction accuracy monitoring"
-                    ]
-                }
-            ])
+            patterns.extend(
+                [
+                    {
+                        "pattern_name": "Intelligent Workflow Prediction",
+                        "description": "Predict and pre-optimize workflows based on patterns",
+                        "integration_type": "predictive_orchestration",
+                        "complexity_level": "high",
+                        "estimated_effort_days": 20,
+                        "required_components": ["prediction_engine", "pattern_analyzer", "optimization_planner"],
+                        "data_flow_patterns": ["pattern_analysis", "predictive_optimization"],
+                        "event_patterns": [
+                            "workflow_predicted",
+                            "optimization_applied",
+                            "prediction_accuracy_measured",
+                        ],
+                        "implementation_steps": [
+                            "Implement workflow pattern analysis",
+                            "Add predictive optimization algorithms",
+                            "Create workflow pre-warming capabilities",
+                            "Add prediction accuracy monitoring",
+                        ],
+                    }
+                ]
+            )
 
         return patterns
 
@@ -469,43 +484,51 @@ class ServiceIntegrationAuditor:
 
         # Architecture recommendations
         if audit_result.architecture_score < 0.8:
-            recommendations.append({
-                "category": "architecture",
-                "priority": "high",
-                "description": "Implement domain-driven architecture patterns",
-                "effort_days": 5,
-                "business_value": 0.8
-            })
+            recommendations.append(
+                {
+                    "category": "architecture",
+                    "priority": "high",
+                    "description": "Implement domain-driven architecture patterns",
+                    "effort_days": 5,
+                    "business_value": 0.8,
+                }
+            )
 
         # Integration recommendations
         if audit_result.integration_score < 0.8:
-            recommendations.append({
-                "category": "integration",
-                "priority": "high",
-                "description": "Deepen integration with event-driven patterns",
-                "effort_days": 7,
-                "business_value": 0.9
-            })
+            recommendations.append(
+                {
+                    "category": "integration",
+                    "priority": "high",
+                    "description": "Deepen integration with event-driven patterns",
+                    "effort_days": 7,
+                    "business_value": 0.9,
+                }
+            )
 
         # Performance recommendations
         if audit_result.performance_score < 0.8:
-            recommendations.append({
-                "category": "performance",
-                "priority": "medium",
-                "description": "Implement advanced caching and optimization",
-                "effort_days": 3,
-                "business_value": 0.7
-            })
+            recommendations.append(
+                {
+                    "category": "performance",
+                    "priority": "medium",
+                    "description": "Implement advanced caching and optimization",
+                    "effort_days": 3,
+                    "business_value": 0.7,
+                }
+            )
 
         # Security recommendations
         if audit_result.security_score < 0.8:
-            recommendations.append({
-                "category": "security",
-                "priority": "high",
-                "description": "Enhance security with advanced authentication",
-                "effort_days": 5,
-                "business_value": 0.9
-            })
+            recommendations.append(
+                {
+                    "category": "security",
+                    "priority": "high",
+                    "description": "Enhance security with advanced authentication",
+                    "effort_days": 5,
+                    "business_value": 0.9,
+                }
+            )
 
         return recommendations
 
@@ -568,7 +591,7 @@ class ServiceIntegrationAuditor:
             ServiceNames.BEDROCK_PROXY,
             ServiceNames.GITHUB_MCP,
             ServiceNames.FRONTEND,
-            ServiceNames.CLI
+            ServiceNames.CLI,
         ]
 
         audit_tasks = []
@@ -590,7 +613,7 @@ class ServiceIntegrationAuditor:
             "summary": {},
             "detailed_results": {},
             "recommendations": [],
-            "implementation_roadmap": {}
+            "implementation_roadmap": {},
         }
 
         # Calculate summary statistics
@@ -606,8 +629,9 @@ class ServiceIntegrationAuditor:
             # Integration depth distribution
             current_depth = audit_result.current_integration_depth.value
             recommended_depth = audit_result.recommended_integration_depth.value
-            integration_depth_distribution[f"{current_depth}->{recommended_depth}"] = \
+            integration_depth_distribution[f"{current_depth}->{recommended_depth}"] = (
                 integration_depth_distribution.get(f"{current_depth}->{recommended_depth}", 0) + 1
+            )
 
             # Overall scores
             overall_scores.append(audit_result.calculate_overall_score())
@@ -626,7 +650,7 @@ class ServiceIntegrationAuditor:
                 "estimated_effort_days": audit_result.estimated_effort_days,
                 "business_value_score": audit_result.business_value_score,
                 "deep_integration_patterns": len(audit_result.deep_integration_patterns),
-                "recommended_enhancements": len(audit_result.recommended_enhancements)
+                "recommended_enhancements": len(audit_result.recommended_enhancements),
             }
 
         # Summary statistics
@@ -637,7 +661,7 @@ class ServiceIntegrationAuditor:
             "highest_score": max(overall_scores) if overall_scores else 0,
             "lowest_score": min(overall_scores) if overall_scores else 0,
             "services_above_threshold": len([s for s in overall_scores if s >= 0.8]),
-            "services_below_threshold": len([s for s in overall_scores if s < 0.8])
+            "services_below_threshold": len([s for s in overall_scores if s < 0.8]),
         }
 
         # Generate recommendations
@@ -653,43 +677,54 @@ class ServiceIntegrationAuditor:
         recommendations = []
 
         # Check for common patterns
-        low_maturity_services = [name for name, result in audit_results.items()
-                               if result.maturity_level in [ServiceMaturity.PROTOTYPE, ServiceMaturity.DEVELOPMENT]]
+        low_maturity_services = [
+            name
+            for name, result in audit_results.items()
+            if result.maturity_level in [ServiceMaturity.PROTOTYPE, ServiceMaturity.DEVELOPMENT]
+        ]
 
         if low_maturity_services:
-            recommendations.append({
-                "priority": "high",
-                "category": "maturity",
-                "description": f"Focus on maturing {len(low_maturity_services)} services: {', '.join(low_maturity_services[:5])}",
-                "estimated_effort_months": 3,
-                "business_impact": "high"
-            })
+            recommendations.append(
+                {
+                    "priority": "high",
+                    "category": "maturity",
+                    "description": f"Focus on maturing {len(low_maturity_services)} services: {', '.join(low_maturity_services[:5])}",
+                    "estimated_effort_months": 3,
+                    "business_impact": "high",
+                }
+            )
 
         # Check for integration gaps
-        integration_gaps = [name for name, result in audit_results.items()
-                          if result.current_integration_depth != result.recommended_integration_depth]
+        integration_gaps = [
+            name
+            for name, result in audit_results.items()
+            if result.current_integration_depth != result.recommended_integration_depth
+        ]
 
         if integration_gaps:
-            recommendations.append({
-                "priority": "high",
-                "category": "integration",
-                "description": f"Close integration gaps for {len(integration_gaps)} services",
-                "estimated_effort_months": 2,
-                "business_impact": "high"
-            })
+            recommendations.append(
+                {
+                    "priority": "high",
+                    "category": "integration",
+                    "description": f"Close integration gaps for {len(integration_gaps)} services",
+                    "estimated_effort_months": 2,
+                    "business_impact": "high",
+                }
+            )
 
         # Check for security improvements
-        security_improvements = [name for name, result in audit_results.items()
-                               if result.security_score < 0.8]
+        security_improvements = [name for name, result in audit_results.items() if result.security_score < 0.8]
 
         if security_improvements:
-            recommendations.append({
-                "priority": "critical",
-                "category": "security",
-                "description": f"Address security gaps in {len(security_improvements)} services",
-                "estimated_effort_months": 1,
-                "business_impact": "critical"
-            })
+            recommendations.append(
+                {
+                    "priority": "critical",
+                    "category": "security",
+                    "description": f"Address security gaps in {len(security_improvements)} services",
+                    "estimated_effort_months": 1,
+                    "business_impact": "critical",
+                }
+            )
 
         return recommendations
 
@@ -701,7 +736,7 @@ class ServiceIntegrationAuditor:
             "phase_3_medium": [],
             "phase_4_low": [],
             "total_effort_days": 0,
-            "timeline_months": 0
+            "timeline_months": 0,
         }
 
         for service_name, audit_result in audit_results.items():
@@ -712,7 +747,7 @@ class ServiceIntegrationAuditor:
                 "service": service_name,
                 "effort_days": effort_days,
                 "overall_score": audit_result.calculate_overall_score(),
-                "maturity_level": audit_result.maturity_level.value
+                "maturity_level": audit_result.maturity_level.value,
             }
 
             if priority == "critical":
@@ -743,7 +778,7 @@ async def perform_comprehensive_service_audit():
     audit_report = auditor.generate_audit_report(audit_results)
 
     # Save detailed report
-    with open('/tmp/service_audit_report.json', 'w') as f:
+    with open("/tmp/service_audit_report.json", "w") as f:
         json.dump(audit_report, f, indent=2, default=str)
 
     # Print summary
@@ -758,11 +793,11 @@ async def perform_comprehensive_service_audit():
     print(f"⚠️  Services Below Threshold: {summary['services_below_threshold']}")
 
     print(f"\n🏗️  Maturity Distribution:")
-    for maturity, count in summary['maturity_distribution'].items():
+    for maturity, count in summary["maturity_distribution"].items():
         print(f"   • {maturity.title()}: {count} services")
 
     print(f"\n🛣️  Implementation Roadmap:")
-    roadmap = audit_report['implementation_roadmap']
+    roadmap = audit_report["implementation_roadmap"]
     print(f"   • Phase 1 (Critical): {len(roadmap['phase_1_critical'])} services")
     print(f"   • Phase 2 (High): {len(roadmap['phase_2_high'])} services")
     print(f"   • Phase 3 (Medium): {len(roadmap['phase_3_medium'])} services")

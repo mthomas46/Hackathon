@@ -3,12 +3,13 @@
 Handles HTTP requests and responses for webhook management and notification monitoring.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from fastapi import HTTPException
 
-from services.prompt_store.domain.notifications.service import NotificationsService
 from services.prompt_store.core.models import WebhookCreate
-from services.shared.core.responses.responses import create_success_response, create_error_response
+from services.prompt_store.domain.notifications.service import NotificationsService
+from services.shared.core.responses.responses import create_error_response, create_success_response
 
 
 class NotificationsHandlers:
@@ -17,8 +18,7 @@ class NotificationsHandlers:
     def __init__(self):
         self.notifications_service = NotificationsService()
 
-    async def handle_register_webhook(self, webhook_data: WebhookCreate,
-                                    user_id: str = "api_user") -> Dict[str, Any]:
+    async def handle_register_webhook(self, webhook_data: WebhookCreate, user_id: str = "api_user") -> Dict[str, Any]:
         """Handle webhook registration request."""
 
         try:
@@ -29,8 +29,7 @@ class NotificationsHandlers:
             result = await self.notifications_service.register_webhook(webhook_dict)
 
             response = create_success_response(
-                data=result,
-                message=f"Webhook '{webhook_data.name}' registered successfully"
+                data=result, message=f"Webhook '{webhook_data.name}' registered successfully"
             )
             return response.model_dump()
 
@@ -47,10 +46,7 @@ class NotificationsHandlers:
         try:
             result = self.notifications_service.list_webhooks(active_only)
 
-            response = create_success_response(
-                data=result,
-                message=f"Retrieved {result['count']} webhooks"
-            )
+            response = create_success_response(data=result, message=f"Retrieved {result['count']} webhooks")
             return response.model_dump()
 
         except Exception as e:
@@ -65,10 +61,7 @@ class NotificationsHandlers:
             if not result:
                 raise HTTPException(status_code=404, detail=f"Webhook {webhook_id} not found")
 
-            response = create_success_response(
-                data=result,
-                message=f"Retrieved webhook {webhook_id}"
-            )
+            response = create_success_response(data=result, message=f"Retrieved webhook {webhook_id}")
             return response.model_dump()
 
         except HTTPException:
@@ -77,17 +70,15 @@ class NotificationsHandlers:
             error_response = create_error_response(f"Failed to get webhook: {str(e)}", "INTERNAL_ERROR")
             return error_response.model_dump()
 
-    async def handle_update_webhook(self, webhook_id: str, updates: Dict[str, Any],
-                                  user_id: str = "api_user") -> Dict[str, Any]:
+    async def handle_update_webhook(
+        self, webhook_id: str, updates: Dict[str, Any], user_id: str = "api_user"
+    ) -> Dict[str, Any]:
         """Handle webhook update request."""
 
         try:
             result = await self.notifications_service.update_webhook(webhook_id, updates)
 
-            response = create_success_response(
-                data=result,
-                message=f"Webhook {webhook_id} updated successfully"
-            )
+            response = create_success_response(data=result, message=f"Webhook {webhook_id} updated successfully")
             return response.model_dump()
 
         except ValueError as e:
@@ -103,10 +94,7 @@ class NotificationsHandlers:
         try:
             result = await self.notifications_service.delete_webhook(webhook_id)
 
-            response = create_success_response(
-                data=result,
-                message=f"Webhook {webhook_id} deleted successfully"
-            )
+            response = create_success_response(data=result, message=f"Webhook {webhook_id} deleted successfully")
             return response.model_dump()
 
         except ValueError as e:
@@ -116,17 +104,15 @@ class NotificationsHandlers:
             error_response = create_error_response(f"Failed to delete webhook: {str(e)}", "INTERNAL_ERROR")
             return error_response.model_dump()
 
-    async def handle_notify_event(self, event_type: str, event_data: Dict[str, Any],
-                                user_id: str = "api_user") -> Dict[str, Any]:
+    async def handle_notify_event(
+        self, event_type: str, event_data: Dict[str, Any], user_id: str = "api_user"
+    ) -> Dict[str, Any]:
         """Handle manual event notification trigger."""
 
         try:
             result = await self.notifications_service.notify_event(event_type, event_data)
 
-            response = create_success_response(
-                data=result,
-                message=f"Event '{event_type}' notifications sent"
-            )
+            response = create_success_response(data=result, message=f"Event '{event_type}' notifications sent")
             return response.model_dump()
 
         except Exception as e:
@@ -139,10 +125,7 @@ class NotificationsHandlers:
         try:
             result = await self.notifications_service.process_pending_notifications()
 
-            response = create_success_response(
-                data=result,
-                message=f"Processed {result['processed']} notifications"
-            )
+            response = create_success_response(data=result, message=f"Processed {result['processed']} notifications")
             return response.model_dump()
 
         except Exception as e:
@@ -155,10 +138,7 @@ class NotificationsHandlers:
         try:
             result = self.notifications_service.get_notification_stats()
 
-            response = create_success_response(
-                data=result,
-                message="Retrieved notification statistics"
-            )
+            response = create_success_response(data=result, message="Retrieved notification statistics")
             return response.model_dump()
 
         except Exception as e:
@@ -172,8 +152,7 @@ class NotificationsHandlers:
             result = self.notifications_service.cleanup_old_notifications(days_old)
 
             response = create_success_response(
-                data=result,
-                message=f"Cleaned up {result['records_deleted']} old notification records"
+                data=result, message=f"Cleaned up {result['records_deleted']} old notification records"
             )
             return response.model_dump()
 
@@ -188,17 +167,26 @@ class NotificationsHandlers:
             result = {
                 "valid_event_types": list(self.notifications_service.repo.VALID_EVENT_TYPES),
                 "event_categories": {
-                    "prompt_events": [e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("prompt.")],
-                    "ab_test_events": [e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("ab_test.")],
-                    "bulk_operation_events": [e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("bulk_operation.")],
-                    "relationship_events": [e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("relationship.")],
-                    "refinement_events": [e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("refinement.")]
-                }
+                    "prompt_events": [
+                        e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("prompt.")
+                    ],
+                    "ab_test_events": [
+                        e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("ab_test.")
+                    ],
+                    "bulk_operation_events": [
+                        e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("bulk_operation.")
+                    ],
+                    "relationship_events": [
+                        e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("relationship.")
+                    ],
+                    "refinement_events": [
+                        e for e in self.notifications_service.repo.VALID_EVENT_TYPES if e.startswith("refinement.")
+                    ],
+                },
             }
 
             response = create_success_response(
-                data=result,
-                message=f"Retrieved {len(result['valid_event_types'])} valid event types"
+                data=result, message=f"Retrieved {len(result['valid_event_types'])} valid event types"
             )
             return response.model_dump()
 

@@ -2,8 +2,8 @@
 Health Monitor - Service Health Monitoring and Alerting
 """
 
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +22,13 @@ class HealthMonitor:
                 "status": "healthy",
                 "response_time": 145,
                 "uptime": 99.9,
-                "last_check": "2024-01-01T10:30:00Z"
+                "last_check": "2024-01-01T10:30:00Z",
             },
             {
                 "service": "order-service",
                 "status": "healthy",
                 "response_time": 120,
                 "uptime": 99.8,
-                "last_check": "2024-01-01T10:30:00Z"
-            }
+                "last_check": "2024-01-01T10:30:00Z",
+            },
         ]

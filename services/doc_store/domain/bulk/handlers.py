@@ -2,9 +2,11 @@
 
 Handles bulk operation-related HTTP requests and responses.
 """
-from typing import Dict, Any, List
-from ...core.handler import BaseHandler
+
+from typing import Any, Dict, List
+
 from ...core.entities import BulkDocumentItem
+from ...core.handler import BaseHandler
 from .service import BulkOperationsService
 
 
@@ -24,7 +26,7 @@ class BulkOperationsHandlers(BaseHandler):
         bulk_items = []
         for doc_data in documents:
             # Handle both dict and Pydantic model inputs
-            if hasattr(doc_data, 'model_dump'):
+            if hasattr(doc_data, "model_dump"):
                 # Pydantic model
                 doc_dict = doc_data.model_dump()
             else:
@@ -32,15 +34,15 @@ class BulkOperationsHandlers(BaseHandler):
                 doc_dict = doc_data
 
             item = BulkDocumentItem(
-                id=doc_dict.get('id'),
-                content=doc_dict.get('content', ''),
-                metadata=doc_dict.get('metadata'),
-                correlation_id=doc_dict.get('correlation_id')
+                id=doc_dict.get("id"),
+                content=doc_dict.get("content", ""),
+                metadata=doc_dict.get("metadata"),
+                correlation_id=doc_dict.get("correlation_id"),
             )
             bulk_items.append(item)
 
         # Create bulk operation
-        operation = self.service.create_bulk_operation('create_documents', bulk_items)
+        operation = self.service.create_bulk_operation("create_documents", bulk_items)
 
         return await self._handle_request(lambda: operation.to_dict())
 
@@ -49,7 +51,7 @@ class BulkOperationsHandlers(BaseHandler):
         if not queries:
             return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No queries provided")))
 
-        operation = self.service.create_bulk_operation('search_documents', queries)
+        operation = self.service.create_bulk_operation("search_documents", queries)
 
         return await self._handle_request(lambda: operation.to_dict())
 
@@ -58,7 +60,7 @@ class BulkOperationsHandlers(BaseHandler):
         if not document_ids:
             return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No document IDs provided")))
 
-        operation = self.service.create_bulk_operation('tag_documents', document_ids)
+        operation = self.service.create_bulk_operation("tag_documents", document_ids)
 
         return await self._handle_request(lambda: operation.to_dict())
 
@@ -81,7 +83,9 @@ class BulkOperationsHandlers(BaseHandler):
         cancelled = self.service.cancel_operation(operation_id)
 
         if not cancelled:
-            return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("Operation could not be cancelled")))
+            return await self._handle_request(
+                lambda: (_ for _ in ()).throw(ValueError("Operation could not be cancelled"))
+            )
 
         return await self._handle_request(lambda: {"operation_id": operation_id, "cancelled": True})
 

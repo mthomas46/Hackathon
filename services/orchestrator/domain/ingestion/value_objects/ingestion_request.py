@@ -1,7 +1,7 @@
 """Ingestion Request Value Object"""
 
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .ingestion_source_type import IngestionSourceType
@@ -21,7 +21,7 @@ class IngestionRequest:
         requested_by: Optional[str] = None,
         tags: Optional[List[str]] = None,
         request_id: Optional[str] = None,
-        created_at: Optional[datetime] = None
+        created_at: Optional[datetime] = None,
     ):
         self._request_id = request_id or str(uuid4())
         self._source_url = source_url.strip()
@@ -141,7 +141,7 @@ class IngestionRequest:
             "created_at": self._created_at.isoformat(),
             "has_scope_limits": self.has_scope_limits,
             "requires_authentication": self.requires_authentication,
-            "supports_incremental_sync": self.supports_incremental_sync
+            "supports_incremental_sync": self.supports_incremental_sync,
         }
 
         if self._correlation_id:

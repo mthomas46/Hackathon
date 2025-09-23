@@ -1,11 +1,11 @@
 """SQLite implementation of finding repository."""
 
-import sqlite3
 import json
-from typing import List, Optional, Dict, Any
+import sqlite3
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ...domain.entities import Finding, FindingId, DocumentId, Severity
+from ...domain.entities import DocumentId, Finding, FindingId, Severity
 from .finding_repository import FindingRepository
 
 
@@ -20,7 +20,8 @@ class SQLiteFindingRepository(FindingRepository):
     def _init_db(self) -> None:
         """Initialize database schema."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS findings (
                     id TEXT PRIMARY KEY,
                     document_id TEXT NOT NULL,
@@ -39,7 +40,8 @@ class SQLiteFindingRepository(FindingRepository):
                     FOREIGN KEY (document_id) REFERENCES documents(id),
                     FOREIGN KEY (analysis_id) REFERENCES analyses(id)
                 )
-            """)
+            """
+            )
 
             # Create indexes for performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_document ON findings(document_id)")
@@ -52,36 +54,42 @@ class SQLiteFindingRepository(FindingRepository):
     async def save(self, finding: Finding) -> None:
         """Save a finding to SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO findings
                 (id, document_id, analysis_id, title, description, severity, category,
                  location, suggestion, confidence, metadata, created_at, resolved_at, resolved_by)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                finding.id.value,
-                finding.document_id.value,
-                finding.analysis_id,
-                finding.title,
-                finding.description,
-                finding.severity.value,
-                finding.category,
-                json.dumps(finding.location) if finding.location else None,
-                finding.suggestion,
-                finding.confidence,
-                json.dumps(finding.metadata) if finding.metadata else None,
-                finding.created_at.isoformat(),
-                finding.resolved_at.isoformat() if finding.resolved_at else None,
-                finding.resolved_by
-            ))
+            """,
+                (
+                    finding.id.value,
+                    finding.document_id.value,
+                    finding.analysis_id,
+                    finding.title,
+                    finding.description,
+                    finding.severity.value,
+                    finding.category,
+                    json.dumps(finding.location) if finding.location else None,
+                    finding.suggestion,
+                    finding.confidence,
+                    json.dumps(finding.metadata) if finding.metadata else None,
+                    finding.created_at.isoformat(),
+                    finding.resolved_at.isoformat() if finding.resolved_at else None,
+                    finding.resolved_by,
+                ),
+            )
 
     async def get_by_id(self, finding_id: str) -> Optional[Finding]:
         """Get finding by ID from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_id, title, description, severity, category,
                        location, suggestion, confidence, metadata, created_at, resolved_at, resolved_by
                 FROM findings WHERE id = ?
-            """, (finding_id,))
+            """,
+                (finding_id,),
+            )
 
             row = cursor.fetchone()
             if not row:
@@ -92,44 +100,54 @@ class SQLiteFindingRepository(FindingRepository):
     async def get_by_document_id(self, document_id: str) -> List[Finding]:
         """Get all findings for a document from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_id, title, description, severity, category,
                        location, suggestion, confidence, metadata, created_at, resolved_at, resolved_by
                 FROM findings WHERE document_id = ? ORDER BY created_at DESC
-            """, (document_id,))
+            """,
+                (document_id,),
+            )
 
             return [self._row_to_finding(row) for row in cursor.fetchall()]
 
     async def get_all(self) -> List[Finding]:
         """Get all findings from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_id, title, description, severity, category,
                        location, suggestion, confidence, metadata, created_at, resolved_at, resolved_by
                 FROM findings ORDER BY created_at DESC
-            """)
+            """
+            )
 
             return [self._row_to_finding(row) for row in cursor.fetchall()]
 
     async def get_by_category(self, category: str) -> List[Finding]:
         """Get findings by category from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_id, title, description, severity, category,
                        location, suggestion, confidence, metadata, created_at, resolved_at, resolved_by
                 FROM findings WHERE category = ? ORDER BY created_at DESC
-            """, (category,))
+            """,
+                (category,),
+            )
 
             return [self._row_to_finding(row) for row in cursor.fetchall()]
 
     async def get_unresolved(self) -> List[Finding]:
         """Get all unresolved findings from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, document_id, analysis_id, title, description, severity, category,
                        location, suggestion, confidence, metadata, created_at, resolved_at, resolved_by
                 FROM findings WHERE resolved_at IS NULL ORDER BY created_at DESC
-            """)
+            """
+            )
 
             return [self._row_to_finding(row) for row in cursor.fetchall()]
 
@@ -141,9 +159,22 @@ class SQLiteFindingRepository(FindingRepository):
 
     def _row_to_finding(self, row) -> Finding:
         """Convert database row to Finding entity."""
-        id, document_id, analysis_id, title, description, severity, category, \
-        location_json, suggestion, confidence, metadata_json, created_at_str, \
-        resolved_at_str, resolved_by = row
+        (
+            id,
+            document_id,
+            analysis_id,
+            title,
+            description,
+            severity,
+            category,
+            location_json,
+            suggestion,
+            confidence,
+            metadata_json,
+            created_at_str,
+            resolved_at_str,
+            resolved_by,
+        ) = row
 
         # Parse dates
         created_at = datetime.fromisoformat(created_at_str)
@@ -172,5 +203,5 @@ class SQLiteFindingRepository(FindingRepository):
             metadata=metadata,
             created_at=created_at,
             resolved_at=resolved_at,
-            resolved_by=resolved_by
+            resolved_by=resolved_by,
         )

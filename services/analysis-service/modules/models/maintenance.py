@@ -1,6 +1,7 @@
 """Maintenance Models - Maintenance forecasting request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
 
 from .base import BaseModel
@@ -8,6 +9,7 @@ from .base import BaseModel
 
 class MaintenanceForecastRequest(BaseModel):
     """Request for maintenance forecast."""
+
     document_id: str = Field(..., description="Document ID to forecast")
     forecast_period_days: Optional[int] = Field(180, ge=1, le=365, description="Forecast period")
     factors: Optional[List[str]] = Field(None, description="Factors to consider")
@@ -16,6 +18,7 @@ class MaintenanceForecastRequest(BaseModel):
 
 class MaintenanceForecastResponse(BaseModel):
     """Response for maintenance forecast."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was forecasted")
     maintenance_forecast: Dict[str, Any] = Field(default_factory=dict, description="Maintenance forecast")
@@ -27,6 +30,7 @@ class MaintenanceForecastResponse(BaseModel):
 
 class PortfolioMaintenanceForecastRequest(BaseModel):
     """Request for portfolio maintenance forecast."""
+
     document_ids: List[str] = Field(..., description="Document IDs to forecast")
     forecast_period_days: Optional[int] = Field(180, ge=1, le=365, description="Forecast period")
     factors: Optional[List[str]] = Field(None, description="Factors to consider")
@@ -35,6 +39,7 @@ class PortfolioMaintenanceForecastRequest(BaseModel):
 
 class PortfolioMaintenanceForecastResponse(BaseModel):
     """Response for portfolio maintenance forecast."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_ids: List[str] = Field(..., description="Documents that were forecasted")
     portfolio_forecast: Dict[str, Any] = Field(default_factory=dict, description="Portfolio forecast")
@@ -46,6 +51,7 @@ class PortfolioMaintenanceForecastResponse(BaseModel):
 
 class QualityDegradationDetectionRequest(BaseModel):
     """Request for quality degradation detection."""
+
     document_id: str = Field(..., description="Document ID to analyze")
     detection_period_days: Optional[int] = Field(60, ge=1, le=365, description="Detection period")
     degradation_threshold: Optional[float] = Field(0.1, ge=0.0, le=1.0, description="Degradation threshold")
@@ -54,6 +60,7 @@ class QualityDegradationDetectionRequest(BaseModel):
 
 class QualityDegradationDetectionResponse(BaseModel):
     """Response for quality degradation detection."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was analyzed")
     degradation_detected: bool = Field(..., description="Whether degradation was detected")
@@ -67,6 +74,7 @@ class QualityDegradationDetectionResponse(BaseModel):
 
 class PortfolioQualityDegradationRequest(BaseModel):
     """Request for portfolio quality degradation detection."""
+
     document_ids: List[str] = Field(..., description="Document IDs to analyze")
     detection_period_days: Optional[int] = Field(60, ge=1, le=365, description="Detection period")
     degradation_threshold: Optional[float] = Field(0.1, ge=0.0, le=1.0, description="Degradation threshold")
@@ -75,6 +83,7 @@ class PortfolioQualityDegradationRequest(BaseModel):
 
 class PortfolioQualityDegradationResponse(BaseModel):
     """Response for portfolio quality degradation detection."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_ids: List[str] = Field(..., description="Documents that were analyzed")
     portfolio_degradation: Dict[str, Any] = Field(default_factory=dict, description="Portfolio degradation")

@@ -7,27 +7,29 @@ Provides comprehensive logging infrastructure for the ecosystem with:
 - Performance monitoring
 - Centralized log management
 """
+
 import asyncio
 import json
 import logging
+import os
 import sys
 import threading
 import time
+import traceback
 import uuid
-from typing import Dict, Any, Optional, List, Callable
+from collections import defaultdict, deque
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from collections import defaultdict, deque
-import traceback
-import os
+from typing import Any, Callable, Dict, List, Optional
 
 # Correlation ID context variable
-correlation_id_var: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
+correlation_id_var: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
 
 
 @dataclass
 class LogEntry:
     """Structured log entry."""
+
     timestamp: float
     level: str
     message: str
@@ -45,6 +47,7 @@ class LogEntry:
 @dataclass
 class ErrorAggregation:
     """Aggregated error information."""
+
     error_type: str
     message_pattern: str
     count: int = 0
@@ -76,7 +79,7 @@ class StructuredLogger(logging.Logger):
         session_id=None,
         request_id=None,
         performance_data=None,
-        **kwargs
+        **kwargs,
     ):
         """Log with additional context."""
         # Get correlation ID from context or parameter
@@ -84,21 +87,21 @@ class StructuredLogger(logging.Logger):
 
         # Create structured extra data
         structured_extra = {
-            'correlation_id': corr_id,
-            'service_name': self.service_name,
-            'operation': operation,
-            'user_id': user_id,
-            'session_id': session_id,
-            'request_id': request_id,
-            'performance_data': performance_data,
-            'timestamp': time.time(),
+            "correlation_id": corr_id,
+            "service_name": self.service_name,
+            "operation": operation,
+            "user_id": user_id,
+            "session_id": session_id,
+            "request_id": request_id,
+            "performance_data": performance_data,
+            "timestamp": time.time(),
             **(extra or {}),
-            **kwargs
+            **kwargs,
         }
 
         # Add stack trace for errors
         if level >= logging.ERROR and exc_info:
-            structured_extra['stack_trace'] = ''.join(traceback.format_exception(*exc_info))
+            structured_extra["stack_trace"] = "".join(traceback.format_exception(*exc_info))
 
         super()._log(level, msg, args, exc_info, structured_extra, stack_info, stacklevel)
 
@@ -146,8 +149,8 @@ class LoggingService:
         self._log_queue: deque = deque(maxlen=10000)  # Circular buffer for recent logs
         self._lock = threading.Lock()
         self._error_thresholds = {
-            'high_frequency': 10,  # errors per minute
-            'critical_errors': ['ConnectionError', 'TimeoutError', 'DatabaseError']
+            "high_frequency": 10,  # errors per minute
+            "critical_errors": ["ConnectionError", "TimeoutError", "DatabaseError"],
         }
 
         # Integration with centralized logging
@@ -157,6 +160,7 @@ class LoggingService:
         # Try to initialize centralized logging integration
         try:
             from .centralized_logging_service import get_centralized_logging_service
+
             self._centralized_logging = get_centralized_logging_service()
         except ImportError:
             logger.warning("Centralized logging service not available")
@@ -191,23 +195,23 @@ class LoggingService:
             if len(recent_measurements) >= 10:
                 avg_duration = sum(recent_measurements) / len(recent_measurements)
                 if avg_duration > 5.0:  # 5 second threshold
-                    self._trigger_alert("performance_degradation", {
-                        "operation": operation,
-                        "average_duration": avg_duration,
-                        "sample_size": len(recent_measurements),
-                        "metadata": metadata
-                    })
+                    self._trigger_alert(
+                        "performance_degradation",
+                        {
+                            "operation": operation,
+                            "average_duration": avg_duration,
+                            "sample_size": len(recent_measurements),
+                            "metadata": metadata,
+                        },
+                    )
 
-    def log_error(self, error_type: str, message: str, service_name: str, correlation_id: Optional[str] = None):
+    async def log_error(self, error_type: str, message: str, service_name: str, correlation_id: Optional[str] = None):
         """Log and aggregate errors."""
         with self._lock:
             key = f"{error_type}:{message[:100]}"  # Truncate long messages
 
             if key not in self._error_aggregator:
-                self._error_aggregator[key] = ErrorAggregation(
-                    error_type=error_type,
-                    message_pattern=message[:200]
-                )
+                self._error_aggregator[key] = ErrorAggregation(error_type=error_type, message_pattern=message[:200])
 
             aggregation = self._error_aggregator[key]
             aggregation.count += 1
@@ -215,7 +219,7 @@ class LoggingService:
             aggregation.affected_services.add(service_name)
 
             # Determine severity
-            if error_type in self._error_thresholds['critical_errors']:
+            if error_type in self._error_thresholds["critical_errors"]:
                 aggregation.severity = "critical"
             elif aggregation.count > 100:
                 aggregation.severity = "high"
@@ -224,31 +228,37 @@ class LoggingService:
 
             # Check for high-frequency errors
             time_window = 60  # 1 minute
-            recent_errors = [agg for agg in self._error_aggregator.values()
-                           if time.time() - agg.last_seen < time_window]
+            recent_errors = [
+                agg for agg in self._error_aggregator.values() if time.time() - agg.last_seen < time_window
+            ]
 
-            if len(recent_errors) > self._error_thresholds['high_frequency']:
-                self._trigger_alert("high_error_frequency", {
-                    "error_count": len(recent_errors),
-                    "time_window_seconds": time_window,
-                    "recent_errors": [agg.error_type for agg in recent_errors[:5]]
-                })
+            if len(recent_errors) > self._error_thresholds["high_frequency"]:
+                self._trigger_alert(
+                    "high_error_frequency",
+                    {
+                        "error_count": len(recent_errors),
+                        "time_window_seconds": time_window,
+                        "recent_errors": [agg.error_type for agg in recent_errors[:5]],
+                    },
+                )
 
             # Forward error to centralized logging
-            await self._forward_log_to_centralized({
-                "timestamp": time.time(),
-                "level": "ERROR",
-                "service_name": service_name,
-                "message": message,
-                "correlation_id": correlation_id,
-                "operation": "error_logging",
-                "extra_data": {
-                    "error_type": error_type,
-                    "severity": aggregation.severity,
-                    "error_count": aggregation.count
-                },
-                "tags": ["error", error_type.lower()]
-            })
+            await self._forward_log_to_centralized(
+                {
+                    "timestamp": time.time(),
+                    "level": "ERROR",
+                    "service_name": service_name,
+                    "message": message,
+                    "correlation_id": correlation_id,
+                    "operation": "error_logging",
+                    "extra_data": {
+                        "error_type": error_type,
+                        "severity": aggregation.severity,
+                        "error_count": aggregation.count,
+                    },
+                    "tags": ["error", error_type.lower()],
+                }
+            )
 
     def add_alert_callback(self, callback: Callable[[str, Dict[str, Any]], None]):
         """Add callback for alerts."""
@@ -279,13 +289,11 @@ class LoggingService:
                     "critical": len([e for e in self._error_aggregator.values() if e.severity == "critical"]),
                     "high": len([e for e in self._error_aggregator.values() if e.severity == "high"]),
                     "medium": len([e for e in self._error_aggregator.values() if e.severity == "medium"]),
-                    "low": len([e for e in self._error_aggregator.values() if e.severity == "low"])
+                    "low": len([e for e in self._error_aggregator.values() if e.severity == "low"]),
                 },
                 "most_frequent_errors": sorted(
-                    [(k, v.count) for k, v in self._error_aggregator.items()],
-                    key=lambda x: x[1],
-                    reverse=True
-                )[:10]
+                    [(k, v.count) for k, v in self._error_aggregator.items()], key=lambda x: x[1], reverse=True
+                )[:10],
             }
 
     def get_performance_summary(self) -> Dict[str, Any]:
@@ -300,7 +308,7 @@ class LoggingService:
                         "avg_duration": sum(durations) / len(durations),
                         "min_duration": min(durations),
                         "max_duration": max(durations),
-                        "p95_duration": sorted(durations)[int(len(durations) * 0.95)]
+                        "p95_duration": sorted(durations)[int(len(durations) * 0.95)],
                     }
             return summary
 
@@ -310,7 +318,7 @@ class LoggingService:
             logs = list(self._log_queue)
 
         if format == "json":
-            return json.dumps([log.__dict__ if hasattr(log, '__dict__') else str(log) for log in logs], indent=2)
+            return json.dumps([log.__dict__ if hasattr(log, "__dict__") else str(log) for log in logs], indent=2)
         else:
             return "\n".join(str(log) for log in logs)
 
@@ -322,32 +330,32 @@ class StructuredFormatter(logging.Formatter):
         """Format log record as structured JSON."""
         # Extract structured fields
         structured_data = {
-            'timestamp': record.created,
-            'level': record.levelname,
-            'message': record.getMessage(),
-            'logger': record.name,
-            'correlation_id': getattr(record, 'correlation_id', None),
-            'service_name': getattr(record, 'service_name', None),
-            'operation': getattr(record, 'operation', None),
-            'user_id': getattr(record, 'user_id', None),
-            'session_id': getattr(record, 'session_id', None),
-            'request_id': getattr(record, 'request_id', None),
+            "timestamp": record.created,
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "logger": record.name,
+            "correlation_id": getattr(record, "correlation_id", None),
+            "service_name": getattr(record, "service_name", None),
+            "operation": getattr(record, "operation", None),
+            "user_id": getattr(record, "user_id", None),
+            "session_id": getattr(record, "session_id", None),
+            "request_id": getattr(record, "request_id", None),
         }
 
         # Add performance data if present
-        if hasattr(record, 'performance_data') and record.performance_data:
-            structured_data['performance'] = record.performance_data
+        if hasattr(record, "performance_data") and record.performance_data:
+            structured_data["performance"] = record.performance_data
 
         # Add stack trace if present
-        if hasattr(record, 'stack_trace') and record.stack_trace:
-            structured_data['stack_trace'] = record.stack_trace
+        if hasattr(record, "stack_trace") and record.stack_trace:
+            structured_data["stack_trace"] = record.stack_trace
 
         # Add any extra fields
-        if hasattr(record, 'extra_data') and record.extra_data:
+        if hasattr(record, "extra_data") and record.extra_data:
             structured_data.update(record.extra_data)
 
         # In development, return pretty JSON. In production, return compact JSON
-        if os.getenv('ENVIRONMENT', 'development') == 'development':
+        if os.getenv("ENVIRONMENT", "development") == "development":
             return json.dumps(structured_data, indent=2, default=str)
         else:
             return json.dumps(structured_data, default=str)
@@ -386,7 +394,7 @@ def log_performance(operation: str, duration: float, **metadata):
     service.log_performance(operation, duration, metadata)
 
 
-def log_error(error_type: str, message: str, service_name: str, correlation_id: Optional[str] = None):
+async def log_error(error_type: str, message: str, service_name: str, correlation_id: Optional[str] = None):
     """Convenience function to log errors."""
     service = get_logging_service()
-    service.log_error(error_type, message, service_name, correlation_id)
+    await service.log_error(error_type, message, service_name, correlation_id)

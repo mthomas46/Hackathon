@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from ...domain.workflow_management import Workflow, WorkflowExecution, WorkflowId, ExecutionId
 from ...domain.service_registry import Service, ServiceId
+from ...domain.workflow_management import ExecutionId, Workflow, WorkflowExecution, WorkflowId
 
 
 class WorkflowRepositoryInterface(ABC):
@@ -28,7 +28,7 @@ class WorkflowRepositoryInterface(ABC):
         status_filter: Optional[str] = None,
         created_by_filter: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[Workflow]:
         """List workflows with optional filters."""
         pass
@@ -64,7 +64,7 @@ class WorkflowExecutionRepositoryInterface(ABC):
         status_filter: Optional[str] = None,
         correlation_id_filter: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[WorkflowExecution]:
         """List workflow executions with optional filters."""
         pass

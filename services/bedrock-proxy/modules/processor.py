@@ -3,14 +3,15 @@
 Handles the main request processing pipeline for AI invoke requests,
 including input sanitization, template detection, and response formatting.
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
 
 from .templates import (
+    build_template_sections,
     detect_template_from_prompt,
     generate_default_title,
-    build_template_sections,
     render_markdown,
-    render_text
+    render_text,
 )
 from .utils import sanitize_for_response
 
@@ -90,8 +91,4 @@ def process_invoke_request(
         else render_text(sanitized_title, content_sections)
     )
 
-    return {
-        "output": formatted_body,
-        "model": safe_model,
-        "region": safe_region
-    }
+    return {"output": formatted_body, "model": safe_model, "region": safe_region}

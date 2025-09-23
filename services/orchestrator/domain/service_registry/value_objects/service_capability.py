@@ -18,7 +18,7 @@ class ServiceCapability:
             raise ValueError("Capability name cannot be empty")
 
         # Capability names should be snake_case
-        if ' ' in self._name or self._name.upper() == self._name:
+        if " " in self._name or self._name.upper() == self._name:
             raise ValueError("Capability name should be in snake_case format")
 
     @property

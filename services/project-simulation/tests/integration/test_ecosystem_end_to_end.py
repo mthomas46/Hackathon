@@ -4,15 +4,16 @@ This module contains comprehensive end-to-end tests that validate complete
 simulation workflows, cross-service data consistency, and ecosystem integration.
 """
 
-import pytest
 import asyncio
 import json
-import time
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, Any, List, Optional
-from pathlib import Path
 import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 # Add project path for imports
@@ -33,25 +34,25 @@ class TestCompleteSimulationWorkflow:
                 "name": "E-commerce Platform",
                 "type": "web_application",
                 "complexity": "complex",
-                "description": "Modern e-commerce platform with microservices"
+                "description": "Modern e-commerce platform with microservices",
             },
             "team": {
                 "size": 8,
                 "roles": ["developer", "qa", "designer", "product_manager"],
-                "expertise_levels": ["senior", "intermediate", "junior"]
+                "expertise_levels": ["senior", "intermediate", "junior"],
             },
             "timeline": {
                 "duration_weeks": 12,
                 "milestones": ["planning", "design", "development", "testing", "deployment"],
-                "iterations": 4
+                "iterations": 4,
             },
             "goals": [
                 "Implement user authentication",
                 "Create product catalog",
                 "Build shopping cart functionality",
                 "Set up payment processing",
-                "Deploy to production"
-            ]
+                "Deploy to production",
+            ],
         }
 
         # Step 2: Initialize simulation
@@ -64,18 +65,14 @@ class TestCompleteSimulationWorkflow:
             "status": "created",
             "config": config,
             "created_at": time.time(),
-            "estimated_duration": 12 * 7 * 24 * 3600  # 12 weeks
+            "estimated_duration": 12 * 7 * 24 * 3600,  # 12 weeks
         }
 
         # Step 3: Start simulation execution
         execution_events = []
 
         def record_event(event_type, data):
-            execution_events.append({
-                "type": event_type,
-                "timestamp": time.time(),
-                "data": data
-            })
+            execution_events.append({"type": event_type, "timestamp": time.time(), "data": data})
 
         # Simulate phase progression
         phases = ["initialization", "planning", "design", "development", "testing", "deployment"]
@@ -85,18 +82,20 @@ class TestCompleteSimulationWorkflow:
             # Simulate phase work
             await asyncio.sleep(0.01)  # Minimal delay to simulate work
 
-            record_event("phase_completed", {
-                "phase": phase,
-                "simulation_id": simulation_id,
-                "duration": 0.01,
-                "artifacts_generated": i + 1
-            })
+            record_event(
+                "phase_completed",
+                {"phase": phase, "simulation_id": simulation_id, "duration": 0.01, "artifacts_generated": i + 1},
+            )
 
         # Step 4: Generate documents during simulation
         documents_generated = []
         document_types = [
-            "requirements_doc", "architecture_diagram", "user_story",
-            "technical_design", "test_plan", "deployment_guide"
+            "requirements_doc",
+            "architecture_diagram",
+            "user_story",
+            "technical_design",
+            "test_plan",
+            "deployment_guide",
         ]
 
         for doc_type in document_types:
@@ -108,8 +107,8 @@ class TestCompleteSimulationWorkflow:
                 "metadata": {
                     "phase": phases[len(documents_generated) % len(phases)],
                     "quality_score": 0.85,
-                    "word_count": 500
-                }
+                    "word_count": 500,
+                },
             }
             documents_generated.append(doc_data)
             record_event("document_generated", doc_data)
@@ -120,34 +119,31 @@ class TestCompleteSimulationWorkflow:
 
         for member in team_members:
             activities = [
-                "code_review", "testing", "design_review", "planning_meeting",
-                "deployment_prep", "documentation"
+                "code_review",
+                "testing",
+                "design_review",
+                "planning_meeting",
+                "deployment_prep",
+                "documentation",
             ]
             for activity in activities:
-                team_activities.append({
-                    "member": member,
-                    "activity": activity,
-                    "timestamp": time.time(),
-                    "duration_hours": 2
-                })
+                team_activities.append(
+                    {"member": member, "activity": activity, "timestamp": time.time(), "duration_hours": 2}
+                )
 
         # Step 6: Generate analysis and insights
         analysis_results = {
-            "quality_metrics": {
-                "documentation_completeness": 0.92,
-                "code_quality_score": 0.88,
-                "test_coverage": 0.85
-            },
+            "quality_metrics": {"documentation_completeness": 0.92, "code_quality_score": 0.88, "test_coverage": 0.85},
             "team_performance": {
                 "productivity_index": 0.91,
                 "collaboration_score": 0.87,
-                "delivery_predictability": 0.89
+                "delivery_predictability": 0.89,
             },
             "risk_assessment": {
                 "technical_risks": ["scalability", "security"],
                 "schedule_risks": ["dependency_delays"],
-                "mitigation_strategies": ["agile_methodology", "continuous_integration"]
-            }
+                "mitigation_strategies": ["agile_methodology", "continuous_integration"],
+            },
         }
 
         record_event("analysis_completed", analysis_results)
@@ -163,11 +159,7 @@ class TestCompleteSimulationWorkflow:
             "phases_completed": len(phases),
             "documents_generated": len(documents_generated),
             "team_activities": len(team_activities),
-            "success_metrics": {
-                "on_time_delivery": True,
-                "quality_standards_met": True,
-                "budget_adherence": 0.95
-            }
+            "success_metrics": {"on_time_delivery": True, "quality_standards_met": True, "budget_adherence": 0.95},
         }
 
         record_event("simulation_completed", completion_data)
@@ -199,12 +191,9 @@ class TestCompleteSimulationWorkflow:
 
         def simulate_service_failure(service_name, error_type):
             """Simulate service failure during simulation."""
-            failure_events.append({
-                "service": service_name,
-                "error": error_type,
-                "timestamp": time.time(),
-                "recovered": False
-            })
+            failure_events.append(
+                {"service": service_name, "error": error_type, "timestamp": time.time(), "recovered": False}
+            )
 
             # Simulate recovery
             time.sleep(0.01)  # Recovery time
@@ -235,12 +224,7 @@ class TestCompleteSimulationWorkflow:
                     time.sleep(0.005)  # Simulate work
             except Exception as e:
                 failed_steps += 1
-                failure_events.append({
-                    "service": step,
-                    "error": str(e),
-                    "timestamp": time.time(),
-                    "recovered": False
-                })
+                failure_events.append({"service": step, "error": str(e), "timestamp": time.time(), "recovered": False})
 
         # Validate failure handling
         assert failed_steps > 0, "Should have some failures for testing"
@@ -278,8 +262,8 @@ class TestCrossServiceDataConsistency:
                     "type": "requirements_doc",
                     "quality_score": 0.85,
                     "created_by": "service_a",
-                    "version": "1.0"
-                }
+                    "version": "1.0",
+                },
             },
             "doc_2": {
                 "id": "doc_2",
@@ -289,9 +273,9 @@ class TestCrossServiceDataConsistency:
                     "type": "architecture_diagram",
                     "quality_score": 0.90,
                     "created_by": "service_b",
-                    "version": "1.0"
-                }
-            }
+                    "version": "1.0",
+                },
+            },
         }
 
         # Validate consistency
@@ -329,29 +313,29 @@ class TestCrossServiceDataConsistency:
                 "type": "simulation_started",
                 "service": "simulation_engine",
                 "timestamp": 1000.0,
-                "data": {"simulation_id": "sim_123"}
+                "data": {"simulation_id": "sim_123"},
             },
             {
                 "id": "evt_2",
                 "type": "document_generated",
                 "service": "mock_data_generator",
                 "timestamp": 1001.0,
-                "data": {"document_id": "doc_1", "simulation_id": "sim_123"}
+                "data": {"document_id": "doc_1", "simulation_id": "sim_123"},
             },
             {
                 "id": "evt_3",
                 "type": "analysis_completed",
                 "service": "analysis_service",
                 "timestamp": 1002.0,
-                "data": {"simulation_id": "sim_123", "quality_score": 0.88}
+                "data": {"simulation_id": "sim_123", "quality_score": 0.88},
             },
             {
                 "id": "evt_4",
                 "type": "simulation_completed",
                 "service": "simulation_engine",
                 "timestamp": 1003.0,
-                "data": {"simulation_id": "sim_123", "status": "success"}
-            }
+                "data": {"simulation_id": "sim_123", "status": "success"},
+            },
         ]
 
         # Validate event sequence
@@ -385,26 +369,21 @@ class TestCrossServiceDataConsistency:
             "simulation_config": {
                 "team_size": 8,
                 "roles": ["developer", "qa", "designer"],
-                "members": ["alice", "bob", "carol"]
+                "members": ["alice", "bob", "carol"],
             },
             "project_repository": {
                 "team_size": 8,
                 "active_members": ["alice", "bob", "carol", "dave"],
-                "roles_assigned": {
-                    "alice": "developer",
-                    "bob": "qa",
-                    "carol": "designer",
-                    "dave": "developer"
-                }
+                "roles_assigned": {"alice": "developer", "bob": "qa", "carol": "designer", "dave": "developer"},
             },
             "timeline_service": {
                 "assigned_tasks": {
                     "alice": ["task_1", "task_2"],
                     "bob": ["task_3"],
                     "carol": ["task_4", "task_5"],
-                    "dave": ["task_6"]
+                    "dave": ["task_6"],
                 }
-            }
+            },
         }
 
         # Validate data consistency
@@ -436,7 +415,7 @@ class TestServiceFailureScenarios:
         service_health = {
             "mock_data_generator": {"status": "healthy", "response_time": 0.1},
             "analysis_service": {"status": "degraded", "response_time": 2.0},
-            "doc_store": {"status": "healthy", "response_time": 0.05}
+            "doc_store": {"status": "healthy", "response_time": 0.05},
         }
 
         def route_request_to_service(service_name, request_data):
@@ -449,14 +428,10 @@ class TestServiceFailureScenarios:
                     "status": "success_with_warning",
                     "service": service_name,
                     "response_time": health["response_time"],
-                    "warning": "Service operating in degraded mode"
+                    "warning": "Service operating in degraded mode",
                 }
             elif health["status"] == "healthy":
-                return {
-                    "status": "success",
-                    "service": service_name,
-                    "response_time": health["response_time"]
-                }
+                return {"status": "success", "service": service_name, "response_time": health["response_time"]}
             else:
                 raise Exception(f"Service {service_name} unavailable")
 
@@ -464,7 +439,7 @@ class TestServiceFailureScenarios:
         requests = [
             ("mock_data_generator", {"action": "generate_doc"}),
             ("analysis_service", {"action": "analyze"}),
-            ("doc_store", {"action": "store"})
+            ("doc_store", {"action": "store"}),
         ]
 
         responses = []
@@ -494,7 +469,7 @@ class TestServiceFailureScenarios:
             "mock_data_generator": ["doc_store"],
             "analysis_service": ["doc_store", "mock_data_generator"],
             "timeline_service": [],
-            "doc_store": []
+            "doc_store": [],
         }
 
         service_status = {name: "healthy" for name in service_dependencies.keys()}
@@ -503,23 +478,22 @@ class TestServiceFailureScenarios:
         def simulate_service_failure(service_name, failure_type):
             """Simulate service failure with isolation."""
             service_status[service_name] = "failed"
-            failure_isolation_events.append({
-                "service": service_name,
-                "failure_type": failure_type,
-                "timestamp": time.time(),
-                "isolated": True
-            })
+            failure_isolation_events.append(
+                {"service": service_name, "failure_type": failure_type, "timestamp": time.time(), "isolated": True}
+            )
 
             # Check dependent services
             for dependent, deps in service_dependencies.items():
                 if service_name in deps and service_status[dependent] == "healthy":
                     # Dependent service should handle failure gracefully
-                    failure_isolation_events.append({
-                        "service": dependent,
-                        "event": "dependency_failed",
-                        "failed_dependency": service_name,
-                        "handled_gracefully": True
-                    })
+                    failure_isolation_events.append(
+                        {
+                            "service": dependent,
+                            "event": "dependency_failed",
+                            "failed_dependency": service_name,
+                            "handled_gracefully": True,
+                        }
+                    )
 
         # Simulate cascading failure scenario
         simulate_service_failure("doc_store", "database_connection_lost")
@@ -541,20 +515,20 @@ class TestServiceFailureScenarios:
                 "service": "mock_data_generator",
                 "failure": "network_timeout",
                 "recovery_strategy": "retry_with_backoff",
-                "expected_recovery_time": 5.0
+                "expected_recovery_time": 5.0,
             },
             {
                 "service": "analysis_service",
                 "failure": "memory_exhaustion",
                 "recovery_strategy": "restart_service",
-                "expected_recovery_time": 10.0
+                "expected_recovery_time": 10.0,
             },
             {
                 "service": "doc_store",
                 "failure": "disk_full",
                 "recovery_strategy": "circuit_breaker",
-                "expected_recovery_time": 30.0
-            }
+                "expected_recovery_time": 30.0,
+            },
         ]
 
         recovery_results = []
@@ -569,13 +543,15 @@ class TestServiceFailureScenarios:
             time.sleep(0.01)  # Minimal recovery time for testing
 
             recovery_time = time.time() - start_time
-            recovery_results.append({
-                "service": scenario["service"],
-                "strategy": scenario["recovery_strategy"],
-                "actual_recovery_time": recovery_time,
-                "expected_recovery_time": scenario["expected_recovery_time"],
-                "recovery_successful": recovery_time < scenario["expected_recovery_time"]
-            })
+            recovery_results.append(
+                {
+                    "service": scenario["service"],
+                    "strategy": scenario["recovery_strategy"],
+                    "actual_recovery_time": recovery_time,
+                    "expected_recovery_time": scenario["expected_recovery_time"],
+                    "recovery_successful": recovery_time < scenario["expected_recovery_time"],
+                }
+            )
 
         # Validate recovery results
         successful_recoveries = [r for r in recovery_results if r["recovery_successful"]]
@@ -599,7 +575,7 @@ class TestEcosystemIntegrationMetrics:
             "successful_requests": 0,
             "failed_requests": 0,
             "average_response_time": 0.0,
-            "service_interactions": {}
+            "service_interactions": {},
         }
 
         # Simulate service interactions
@@ -608,7 +584,7 @@ class TestEcosystemIntegrationMetrics:
             ("simulation_engine", "analysis_service", "success", 0.15),
             ("mock_data_generator", "doc_store", "success", 0.05),
             ("analysis_service", "mock_data_generator", "failed", 2.0),
-            ("simulation_engine", "timeline_service", "success", 0.08)
+            ("simulation_engine", "timeline_service", "success", 0.08),
         ]
 
         response_times = []
@@ -626,10 +602,7 @@ class TestEcosystemIntegrationMetrics:
             key = f"{from_service}->{to_service}"
             if key not in interaction_metrics["service_interactions"]:
                 interaction_metrics["service_interactions"][key] = []
-            interaction_metrics["service_interactions"][key].append({
-                "status": status,
-                "response_time": response_time
-            })
+            interaction_metrics["service_interactions"][key].append({"status": status, "response_time": response_time})
 
         # Calculate metrics
         if response_times:
@@ -657,7 +630,7 @@ class TestEcosystemIntegrationMetrics:
             "simulation_request": {
                 "id": "req_123",
                 "project_config": {"name": "Test Project", "complexity": "high"},
-                "processed_by": []
+                "processed_by": [],
             }
         }
 
@@ -666,18 +639,18 @@ class TestEcosystemIntegrationMetrics:
             {
                 "service": "simulation_engine",
                 "transformation": lambda d: {**d, "status": "processing"},
-                "adds_fields": ["status"]
+                "adds_fields": ["status"],
             },
             {
                 "service": "mock_data_generator",
                 "transformation": lambda d: {**d, "documents": ["doc1", "doc2"]},
-                "adds_fields": ["documents"]
+                "adds_fields": ["documents"],
             },
             {
                 "service": "analysis_service",
                 "transformation": lambda d: {**d, "analysis_result": {"quality": 0.85}},
-                "adds_fields": ["analysis_result"]
-            }
+                "adds_fields": ["analysis_result"],
+            },
         ]
 
         current_data = data_flow["simulation_request"]
@@ -713,7 +686,7 @@ def mock_service_ecosystem():
         "mock_data_generator": Mock(),
         "analysis_service": Mock(),
         "doc_store": Mock(),
-        "timeline_service": Mock()
+        "timeline_service": Mock(),
     }
 
     # Configure mock behaviors
@@ -729,17 +702,7 @@ def simulation_test_data():
     """Create test data for simulation workflows."""
     return {
         "simulation_id": "test_sim_001",
-        "project_config": {
-            "name": "Test E-commerce Platform",
-            "type": "web_application",
-            "complexity": "complex"
-        },
-        "team_config": {
-            "size": 6,
-            "roles": ["developer", "qa", "designer", "product_manager"]
-        },
-        "timeline_config": {
-            "duration_weeks": 8,
-            "phases": ["planning", "design", "development", "testing"]
-        }
+        "project_config": {"name": "Test E-commerce Platform", "type": "web_application", "complexity": "complex"},
+        "team_config": {"size": 6, "roles": ["developer", "qa", "designer", "product_manager"]},
+        "timeline_config": {"duration_weeks": 8, "phases": ["planning", "design", "development", "testing"]},
     }

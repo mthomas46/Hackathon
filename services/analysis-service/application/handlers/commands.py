@@ -1,12 +1,13 @@
 """Command classes for CQRS pattern."""
 
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class CreateDocumentCommand:
     """Command to create a new document."""
+
     title: str
     content: str
     format: str = "markdown"
@@ -19,6 +20,7 @@ class CreateDocumentCommand:
 @dataclass
 class UpdateDocumentCommand:
     """Command to update an existing document."""
+
     document_id: str
     title: Optional[str] = None
     content: Optional[str] = None
@@ -31,12 +33,14 @@ class UpdateDocumentCommand:
 @dataclass
 class DeleteDocumentCommand:
     """Command to delete a document."""
+
     document_id: str
 
 
 @dataclass
 class PerformAnalysisCommand:
     """Command to perform analysis on a document."""
+
     document_id: str
     analysis_type: str
     configuration: Optional[Dict[str, Any]] = None
@@ -47,6 +51,7 @@ class PerformAnalysisCommand:
 @dataclass
 class CreateFindingCommand:
     """Command to create a new finding."""
+
     document_id: str
     analysis_id: str
     title: str
@@ -62,6 +67,7 @@ class CreateFindingCommand:
 @dataclass
 class UpdateFindingCommand:
     """Command to update an existing finding."""
+
     finding_id: str
     title: Optional[str] = None
     description: Optional[str] = None
@@ -78,17 +84,20 @@ class UpdateFindingCommand:
 @dataclass
 class DeleteFindingCommand:
     """Command to delete a finding."""
+
     finding_id: str
 
 
 @dataclass
 class CancelAnalysisCommand:
     """Command to cancel a running analysis."""
+
     analysis_id: str
 
 
 @dataclass
 class RetryAnalysisCommand:
     """Command to retry a failed analysis."""
+
     analysis_id: str
     configuration: Optional[Dict[str, Any]] = None

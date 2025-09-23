@@ -8,30 +8,33 @@ analysis integration, and progress tracking.
 import asyncio
 import time
 import uuid
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, AsyncGenerator
 from concurrent.futures import ThreadPoolExecutor
-
-from ..models.configuration import (
-    ProjectConfiguration, SimulationParameters, SimulationProgress,
-    SimulationEvent, EventType, SimulationResult, DocumentMetadata,
-    TicketMetadata, PRMetadata
-)
-
-from .timeline_engine import TimelineEngine
-from .event_system import EventSystem
-from .progress_tracker import ProgressTracker
-
-from ..integrations.doc_store_client import DocStoreClient
-from ..integrations.prompt_store_client import PromptStoreClient
-from ..integrations.orchestrator_client import OrchestratorClient
-from ..integrations.analysis_client import AnalysisClient
-from ..integrations.llm_client import LLMClient
+from datetime import datetime, timedelta
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ..generators.document_generator import DocumentGenerator
-from ..generators.jira_generator import JIRAGenerator
 from ..generators.github_generator import GitHubGenerator
+from ..generators.jira_generator import JIRAGenerator
 from ..generators.user_generator import UserGenerator
+from ..integrations.analysis_client import AnalysisClient
+from ..integrations.doc_store_client import DocStoreClient
+from ..integrations.llm_client import LLMClient
+from ..integrations.orchestrator_client import OrchestratorClient
+from ..integrations.prompt_store_client import PromptStoreClient
+from ..models.configuration import (
+    DocumentMetadata,
+    EventType,
+    PRMetadata,
+    ProjectConfiguration,
+    SimulationEvent,
+    SimulationParameters,
+    SimulationProgress,
+    SimulationResult,
+    TicketMetadata,
+)
+from .event_system import EventSystem
+from .progress_tracker import ProgressTracker
+from .timeline_engine import TimelineEngine
 
 
 class SimulationEngine:
@@ -108,10 +111,7 @@ class SimulationEngine:
         print("✅ Simulation Engine shut down successfully!")
 
     async def run_simulation(
-        self,
-        project_config: ProjectConfiguration,
-        simulation_params: SimulationParameters,
-        simulation_id: str
+        self, project_config: ProjectConfiguration, simulation_params: SimulationParameters, simulation_id: str
     ) -> SimulationResult:
         """Run a complete project simulation."""
         start_time = time.time()
@@ -122,25 +122,19 @@ class SimulationEngine:
             "params": simulation_params,
             "start_time": datetime.now(),
             "status": "running",
-            "progress": SimulationProgress(
-                simulation_id=simulation_id,
-                status="running",
-                start_time=datetime.now()
-            )
+            "progress": SimulationProgress(simulation_id=simulation_id, status="running", start_time=datetime.now()),
         }
 
         try:
             # Publish simulation started event
-            await self.event_system.publish_event(SimulationEvent(
-                type=EventType.SIMULATION_STARTED,
-                details={"project_name": project_config.name}
-            ))
+            await self.event_system.publish_event(
+                SimulationEvent(type=EventType.SIMULATION_STARTED, details={"project_name": project_config.name})
+            )
 
             # Generate team profiles if needed
             if not project_config.team_members:
                 project_config.team_members = await self.user_generator.generate_team_profiles(
-                    project_config.team_size,
-                    project_config.type
+                    project_config.team_size, project_config.type
                 )
 
             # Initialize progress tracking
@@ -162,7 +156,7 @@ class SimulationEngine:
                     documents_created,
                     tickets_created,
                     prs_created,
-                    workflows_executed
+                    workflows_executed,
                 )
 
             # Run final analysis if enabled
@@ -173,7 +167,9 @@ class SimulationEngine:
                 )
 
             # Calculate benefits and inconsistencies
-            benefits_demonstrated = await self._calculate_benefits(project_config, documents_created, workflows_executed)
+            benefits_demonstrated = await self._calculate_benefits(
+                project_config, documents_created, workflows_executed
+            )
             inconsistencies_found = await self._identify_inconsistencies(documents_created, tickets_created)
 
             # Create simulation result
@@ -188,28 +184,29 @@ class SimulationEngine:
                 workflows_executed=workflows_executed,
                 analysis_results=analysis_results,
                 benefits_demonstrated=benefits_demonstrated,
-                inconsistencies_found=inconsistencies_found
+                inconsistencies_found=inconsistencies_found,
             )
 
             # Publish completion event
-            await self.event_system.publish_event(SimulationEvent(
-                type=EventType.SIMULATION_COMPLETED,
-                details={
-                    "execution_time": result.execution_time,
-                    "documents_created": len(documents_created),
-                    "tickets_created": len(tickets_created),
-                    "prs_created": len(prs_created)
-                }
-            ))
+            await self.event_system.publish_event(
+                SimulationEvent(
+                    type=EventType.SIMULATION_COMPLETED,
+                    details={
+                        "execution_time": result.execution_time,
+                        "documents_created": len(documents_created),
+                        "tickets_created": len(tickets_created),
+                        "prs_created": len(prs_created),
+                    },
+                )
+            )
 
             return result
 
         except Exception as e:
             # Publish error event
-            await self.event_system.publish_event(SimulationEvent(
-                type=EventType.ERROR_OCCURRED,
-                details={"error": str(e)}
-            ))
+            await self.event_system.publish_event(
+                SimulationEvent(type=EventType.ERROR_OCCURRED, details={"error": str(e)})
+            )
             raise
 
         finally:
@@ -227,15 +224,15 @@ class SimulationEngine:
         documents_created: List[DocumentMetadata],
         tickets_created: List[TicketMetadata],
         prs_created: List[PRMetadata],
-        workflows_executed: List[Dict[str, Any]]
+        workflows_executed: List[Dict[str, Any]],
     ):
         """Execute a single timeline phase."""
         # Publish phase started event
-        await self.event_system.publish_event(SimulationEvent(
-            type=EventType.PHASE_STARTED,
-            phase=phase.name,
-            details={"duration_days": phase.duration_days}
-        ))
+        await self.event_system.publish_event(
+            SimulationEvent(
+                type=EventType.PHASE_STARTED, phase=phase.name, details={"duration_days": phase.duration_days}
+            )
+        )
 
         # Generate documents for this phase
         phase_documents = await self.document_generator.generate_phase_documents(
@@ -252,18 +249,14 @@ class SimulationEngine:
 
         # Generate JIRA tickets for this phase
         if phase.name.lower() in ["development", "testing"]:
-            phase_tickets = await self.jira_generator.generate_phase_tickets(
-                phase, project_config, simulation_params
-            )
+            phase_tickets = await self.jira_generator.generate_phase_tickets(phase, project_config, simulation_params)
 
             # Store tickets (in a real implementation, this might go to a ticket system)
             tickets_created.extend(phase_tickets)
 
         # Generate GitHub PRs for development phases
         if phase.name.lower() == "development":
-            phase_prs = await self.github_generator.generate_phase_prs(
-                phase, project_config, simulation_params
-            )
+            phase_prs = await self.github_generator.generate_phase_prs(phase, project_config, simulation_params)
 
             # Store PRs (in a real implementation, this might integrate with GitHub)
             prs_created.extend(phase_prs)
@@ -271,7 +264,7 @@ class SimulationEngine:
         # Execute analysis workflows if enabled
         if simulation_params.enable_analysis and self.orchestrator_client:
             phase_workflows = await self.orchestrator_client.execute_phase_workflows(
-                phase, project_config, documents_created[-len(phase_documents):]
+                phase, project_config, documents_created[-len(phase_documents) :]
             )
             workflows_executed.extend(phase_workflows)
 
@@ -286,15 +279,17 @@ class SimulationEngine:
             await asyncio.sleep(min(delay, 1.0))  # Cap at 1 second for responsiveness
 
         # Publish phase completed event
-        await self.event_system.publish_event(SimulationEvent(
-            type=EventType.PHASE_COMPLETED,
-            phase=phase.name,
-            details={
-                "documents_created": len(phase_documents),
-                "tickets_created": len(phase_tickets) if 'phase_tickets' in locals() else 0,
-                "prs_created": len(phase_prs) if 'phase_prs' in locals() else 0
-            }
-        ))
+        await self.event_system.publish_event(
+            SimulationEvent(
+                type=EventType.PHASE_COMPLETED,
+                phase=phase.name,
+                details={
+                    "documents_created": len(phase_documents),
+                    "tickets_created": len(phase_tickets) if "phase_tickets" in locals() else 0,
+                    "prs_created": len(phase_prs) if "phase_prs" in locals() else 0,
+                },
+            )
+        )
 
     async def _run_final_analysis(
         self,
@@ -302,7 +297,7 @@ class SimulationEngine:
         project_config: ProjectConfiguration,
         documents_created: List[DocumentMetadata],
         tickets_created: List[TicketMetadata],
-        prs_created: List[PRMetadata]
+        prs_created: List[PRMetadata],
     ) -> Dict[str, Any]:
         """Run final comprehensive analysis on the simulation results."""
         analysis_results = {}
@@ -323,20 +318,20 @@ class SimulationEngine:
 
             # Run cross-repository analysis
             if documents_created and tickets_created:
-                cross_analysis = await self.analysis_client.analyze_cross_repository(
-                    documents_created, tickets_created
-                )
+                cross_analysis = await self.analysis_client.analyze_cross_repository(documents_created, tickets_created)
                 analysis_results["cross_repository_analysis"] = cross_analysis
 
             # Publish analysis completion event
-            await self.event_system.publish_event(SimulationEvent(
-                type=EventType.ANALYSIS_COMPLETED,
-                details={
-                    "document_analysis": bool(documents_created),
-                    "pr_analysis": bool(prs_created),
-                    "cross_repository_analysis": bool(documents_created and tickets_created)
-                }
-            ))
+            await self.event_system.publish_event(
+                SimulationEvent(
+                    type=EventType.ANALYSIS_COMPLETED,
+                    details={
+                        "document_analysis": bool(documents_created),
+                        "pr_analysis": bool(prs_created),
+                        "cross_repository_analysis": bool(documents_created and tickets_created),
+                    },
+                )
+            )
 
         except Exception as e:
             print(f"Warning: Final analysis failed: {e}")
@@ -348,7 +343,7 @@ class SimulationEngine:
         self,
         project_config: ProjectConfiguration,
         documents_created: List[DocumentMetadata],
-        workflows_executed: List[Dict[str, Any]]
+        workflows_executed: List[Dict[str, Any]],
     ) -> List[str]:
         """Calculate the benefits demonstrated by the ecosystem."""
         benefits = []
@@ -378,9 +373,7 @@ class SimulationEngine:
         return benefits
 
     async def _identify_inconsistencies(
-        self,
-        documents_created: List[DocumentMetadata],
-        tickets_created: List[TicketMetadata]
+        self, documents_created: List[DocumentMetadata], tickets_created: List[TicketMetadata]
     ) -> List[str]:
         """Identify inconsistencies and issues in the generated content."""
         inconsistencies = []
@@ -399,8 +392,7 @@ class SimulationEngine:
 
             # Look for tickets without corresponding documentation
             for ticket_title in ticket_titles:
-                if not any(ticket_title in doc_title or doc_title in ticket_title
-                          for doc_title in doc_titles):
+                if not any(ticket_title in doc_title or doc_title in ticket_title for doc_title in doc_titles):
                     inconsistencies.append(f"Ticket '{ticket_title}' lacks corresponding documentation")
 
         # Check for naming inconsistencies
@@ -417,10 +409,9 @@ class SimulationEngine:
             self.active_simulations[simulation_id]["status"] = "cancelled"
 
             # Publish cancellation event
-            await self.event_system.publish_event(SimulationEvent(
-                type=EventType.SIMULATION_COMPLETED,
-                details={"cancelled": True}
-            ))
+            await self.event_system.publish_event(
+                SimulationEvent(type=EventType.SIMULATION_COMPLETED, details={"cancelled": True})
+            )
 
     async def get_simulation_status(self, simulation_id: str) -> Optional[SimulationProgress]:
         """Get the current status of a simulation."""
@@ -440,7 +431,7 @@ class SimulationEngine:
                 "status": info["status"],
                 "start_time": info["start_time"],
                 "project_name": info["config"].name,
-                "progress": info.get("progress")
+                "progress": info.get("progress"),
             }
             for sim_id, info in self.active_simulations.items()
         ]

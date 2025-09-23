@@ -55,10 +55,10 @@ result = await analyzer.analyze_documents(targets, "consistency")
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Protocol, TypeVar, Generic, Union
 from datetime import datetime
+from typing import Any, Dict, Generic, List, Optional, Protocol, TypeVar, Union
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # Domain Service Interfaces

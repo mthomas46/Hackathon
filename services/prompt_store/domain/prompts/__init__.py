@@ -1,13 +1,8 @@
 """Prompts domain for Prompt Store service."""
 
-from .repository import PromptRepository
-from .versioning_repository import PromptVersioningRepository
-from .service import PromptService
 from .handlers import PromptHandlers
+from .repository import PromptRepository
+from .service import PromptService
+from .versioning_repository import PromptVersioningRepository
 
-__all__ = [
-    'PromptRepository',
-    'PromptVersioningRepository',
-    'PromptService',
-    'PromptHandlers'
-]
+__all__ = ["PromptRepository", "PromptVersioningRepository", "PromptService", "PromptHandlers"]

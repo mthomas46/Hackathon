@@ -1,13 +1,14 @@
 """Tests for Interpreter Service Sample Documents functionality."""
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from modules.sample_documents import SampleDocumentRepository, sample_documents
 
@@ -107,6 +108,7 @@ class TestImportFunctionality:
         """Test direct import of sample_documents module."""
         try:
             from modules.sample_documents import sample_documents as imported_docs
+
             assert imported_docs is not None
             print("✓ Direct import successful")
         except ImportError as e:
@@ -117,6 +119,7 @@ class TestImportFunctionality:
         """Test import of SampleDocumentRepository."""
         try:
             from modules.sample_documents import SampleDocumentRepository
+
             repo = SampleDocumentRepository()
             assert repo is not None
             print("✓ Repository import successful")

@@ -1,6 +1,7 @@
 """Repository Models - Repository analysis request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
 
 from .base import BaseModel
@@ -8,6 +9,7 @@ from .base import BaseModel
 
 class CrossRepositoryAnalysisRequest(BaseModel):
     """Request for cross-repository analysis."""
+
     repository_ids: List[str] = Field(..., description="Repository IDs to analyze")
     analysis_type: Optional[str] = Field("consistency", description="Type of analysis")
     analysis_scope: Optional[str] = Field("all", description="Scope of analysis")
@@ -16,6 +18,7 @@ class CrossRepositoryAnalysisRequest(BaseModel):
 
 class CrossRepositoryAnalysisResponse(BaseModel):
     """Response for cross-repository analysis."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     repository_ids: List[str] = Field(..., description="Repositories analyzed")
     repositories_analyzed: int = Field(..., description="Number of repositories analyzed")
@@ -30,12 +33,14 @@ class CrossRepositoryAnalysisResponse(BaseModel):
 
 class RepositoryConnectivityRequest(BaseModel):
     """Request for repository connectivity analysis."""
+
     repository_id: str = Field(..., description="Repository ID to check")
     connection_timeout_seconds: Optional[int] = Field(30, ge=1, le=300, description="Connection timeout")
 
 
 class RepositoryConnectivityResponse(BaseModel):
     """Response for repository connectivity analysis."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     repository_id: str = Field(..., description="Repository checked")
     connectivity_status: str = Field(..., description="Connectivity status")
@@ -48,6 +53,7 @@ class RepositoryConnectivityResponse(BaseModel):
 
 class RepositoryConnectorConfigRequest(BaseModel):
     """Request for repository connector configuration."""
+
     repository_type: str = Field(..., description="Type of repository")
     connection_details: Dict[str, Any] = Field(..., description="Connection details")
     authentication: Optional[Dict[str, Any]] = Field(None, description="Authentication details")
@@ -56,6 +62,7 @@ class RepositoryConnectorConfigRequest(BaseModel):
 
 class RepositoryConnectorConfigResponse(BaseModel):
     """Response for repository connector configuration."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     connector_id: str = Field(..., description="Connector ID")
     repository_type: str = Field(..., description="Repository type")
@@ -67,6 +74,7 @@ class RepositoryConnectorConfigResponse(BaseModel):
 
 class SupportedConnectorsResponse(BaseModel):
     """Response for supported connectors list."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     connectors: List[Dict[str, Any]] = Field(default_factory=list, description="Available connectors")
     total_count: int = Field(..., description="Total number of connectors")
@@ -75,6 +83,7 @@ class SupportedConnectorsResponse(BaseModel):
 
 class AnalysisFrameworksResponse(BaseModel):
     """Response for available analysis frameworks."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     frameworks: List[Dict[str, Any]] = Field(default_factory=list, description="Available frameworks")
     total_count: int = Field(..., description="Total number of frameworks")

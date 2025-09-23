@@ -16,12 +16,13 @@ import hmac
 import json
 import secrets
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Set, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
-import jwt
+from typing import Any, Dict, List, Optional, Set, Tuple
+
 import bcrypt
+import jwt
 from pydantic import BaseModel, EmailStr, Field
 
 from ...config import config
@@ -29,16 +30,18 @@ from ...config import config
 
 class UserRole(Enum):
     """User roles with hierarchical permissions."""
-    ADMIN = "admin"          # Full system access
-    MANAGER = "manager"      # Service management access
+
+    ADMIN = "admin"  # Full system access
+    MANAGER = "manager"  # Service management access
     DEVELOPER = "developer"  # API access and development tools
-    ANALYST = "analyst"      # Read-only analytics access
-    AUDITOR = "auditor"      # Compliance and audit access
-    GUEST = "guest"          # Limited read-only access
+    ANALYST = "analyst"  # Read-only analytics access
+    AUDITOR = "auditor"  # Compliance and audit access
+    GUEST = "guest"  # Limited read-only access
 
 
 class Permission(Enum):
     """Granular permissions for API operations."""
+
     # API Catalog
     API_CATALOG_READ = "api_catalog:read"
     API_CATALOG_WRITE = "api_catalog:write"
@@ -71,6 +74,7 @@ class Permission(Enum):
 
 class AuthProvider(Enum):
     """Supported authentication providers."""
+
     LOCAL = "local"
     LDAP = "ldap"
     OAUTH2 = "oauth2"
@@ -81,6 +85,7 @@ class AuthProvider(Enum):
 @dataclass
 class User:
     """User account representation."""
+
     user_id: str
     username: str
     email: str
@@ -98,6 +103,7 @@ class User:
 @dataclass
 class Session:
     """User session information."""
+
     session_id: str
     user_id: str
     token: str
@@ -112,6 +118,7 @@ class Session:
 @dataclass
 class AuthToken:
     """Authentication token with claims."""
+
     token: str
     user_id: str
     username: str
@@ -143,7 +150,7 @@ class UserManager:
             email="admin@unified-api.local",
             role=UserRole.ADMIN,
             permissions=set(Permission),
-            mfa_enabled=True
+            mfa_enabled=True,
         )
         self.users["admin"] = admin_user
 
@@ -153,7 +160,7 @@ class UserManager:
         email: str,
         password: str,
         role: UserRole = UserRole.GUEST,
-        provider: AuthProvider = AuthProvider.LOCAL
+        provider: AuthProvider = AuthProvider.LOCAL,
     ) -> User:
         """Create a new user account."""
         if username in [u.username for u in self.users.values()]:
@@ -168,7 +175,7 @@ class UserManager:
             email=email,
             role=role,
             permissions=self._get_default_permissions(role),
-            provider=provider
+            provider=provider,
         )
 
         if hashed_password:
@@ -226,27 +233,33 @@ class UserManager:
         role_permissions = {
             UserRole.ADMIN: set(Permission),
             UserRole.MANAGER: {
-                Permission.API_CATALOG_READ, Permission.API_CATALOG_WRITE,
-                Permission.API_TEST_EXECUTE, Permission.API_TEST_MANAGE,
-                Permission.ANALYTICS_READ, Permission.ANALYTICS_WRITE,
-                Permission.TOPOLOGY_READ, Permission.TOPOLOGY_WRITE,
-                Permission.DEVTOOLS_EXECUTE, Permission.AUDIT_READ
+                Permission.API_CATALOG_READ,
+                Permission.API_CATALOG_WRITE,
+                Permission.API_TEST_EXECUTE,
+                Permission.API_TEST_MANAGE,
+                Permission.ANALYTICS_READ,
+                Permission.ANALYTICS_WRITE,
+                Permission.TOPOLOGY_READ,
+                Permission.TOPOLOGY_WRITE,
+                Permission.DEVTOOLS_EXECUTE,
+                Permission.AUDIT_READ,
             },
             UserRole.DEVELOPER: {
-                Permission.API_CATALOG_READ, Permission.API_CATALOG_WRITE,
-                Permission.API_TEST_EXECUTE, Permission.ANALYTICS_READ,
-                Permission.TOPOLOGY_READ, Permission.DEVTOOLS_EXECUTE
+                Permission.API_CATALOG_READ,
+                Permission.API_CATALOG_WRITE,
+                Permission.API_TEST_EXECUTE,
+                Permission.ANALYTICS_READ,
+                Permission.TOPOLOGY_READ,
+                Permission.DEVTOOLS_EXECUTE,
             },
             UserRole.ANALYST: {
-                Permission.API_CATALOG_READ, Permission.ANALYTICS_READ,
-                Permission.TOPOLOGY_READ, Permission.AUDIT_READ
+                Permission.API_CATALOG_READ,
+                Permission.ANALYTICS_READ,
+                Permission.TOPOLOGY_READ,
+                Permission.AUDIT_READ,
             },
-            UserRole.AUDITOR: {
-                Permission.AUDIT_READ, Permission.API_CATALOG_READ
-            },
-            UserRole.GUEST: {
-                Permission.API_CATALOG_READ
-            }
+            UserRole.AUDITOR: {Permission.AUDIT_READ, Permission.API_CATALOG_READ},
+            UserRole.GUEST: {Permission.API_CATALOG_READ},
         }
         return role_permissions.get(role, set())
 
@@ -264,11 +277,7 @@ class AuthenticationManager:
         self.sessions = {}
 
     async def login(
-        self,
-        username: str,
-        password: str,
-        ip_address: str = None,
-        user_agent: str = None
+        self, username: str, password: str, ip_address: str = None, user_agent: str = None
     ) -> Optional[AuthToken]:
         """Authenticate user and create session."""
         user = await self.user_manager.authenticate_user(username, password)
@@ -283,7 +292,7 @@ class AuthenticationManager:
             "permissions": [p.value for p in user.permissions],
             "exp": datetime.utcnow() + timedelta(hours=8),
             "iat": datetime.utcnow(),
-            "iss": "unified-api-dashboard"
+            "iss": "unified-api-dashboard",
         }
 
         token = jwt.encode(token_data, self.secret_key, algorithm="HS256")
@@ -296,7 +305,7 @@ class AuthenticationManager:
             token=token,
             expires_at=datetime.now() + timedelta(hours=8),
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
         self.sessions[session_id] = session
@@ -307,7 +316,7 @@ class AuthenticationManager:
             username=user.username,
             role=user.role,
             permissions=user.permissions,
-            expires_at=session.expires_at
+            expires_at=session.expires_at,
         )
 
     async def validate_token(self, token: str) -> Optional[AuthToken]:
@@ -316,8 +325,7 @@ class AuthenticationManager:
             payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
 
             # Check if session exists and is active
-            session = next((s for s in self.sessions.values()
-                          if s.token == token and s.is_active), None)
+            session = next((s for s in self.sessions.values() if s.token == token and s.is_active), None)
             if not session:
                 return None
 
@@ -327,7 +335,7 @@ class AuthenticationManager:
                 username=payload["username"],
                 role=UserRole(payload["role"]),
                 permissions=set(Permission(p) for p in payload["permissions"]),
-                expires_at=datetime.fromtimestamp(payload["exp"])
+                expires_at=datetime.fromtimestamp(payload["exp"]),
             )
 
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, KeyError):
@@ -355,7 +363,7 @@ class AuthenticationManager:
             "permissions": [p.value for p in current_auth.permissions],
             "exp": datetime.utcnow() + timedelta(hours=8),
             "iat": datetime.utcnow(),
-            "iss": "unified-api-dashboard"
+            "iss": "unified-api-dashboard",
         }
 
         new_token = jwt.encode(new_token_data, self.secret_key, algorithm="HS256")
@@ -372,7 +380,7 @@ class AuthenticationManager:
             username=current_auth.username,
             role=current_auth.role,
             permissions=current_auth.permissions,
-            expires_at=datetime.now() + timedelta(hours=8)
+            expires_at=datetime.now() + timedelta(hours=8),
         )
 
 
@@ -386,12 +394,7 @@ class AuthorizationManager:
     def __init__(self, user_manager: UserManager):
         self.user_manager = user_manager
 
-    async def check_permission(
-        self,
-        user_id: str,
-        permission: Permission,
-        resource: str = None
-    ) -> bool:
+    async def check_permission(self, user_id: str, permission: Permission, resource: str = None) -> bool:
         """Check if user has specific permission."""
         user = await self.user_manager.get_user(user_id)
         if not user or not user.is_active:
@@ -399,12 +402,7 @@ class AuthorizationManager:
 
         return permission in user.permissions
 
-    async def check_permissions(
-        self,
-        user_id: str,
-        permissions: List[Permission],
-        require_all: bool = True
-    ) -> bool:
+    async def check_permissions(self, user_id: str, permissions: List[Permission], require_all: bool = True) -> bool:
         """Check if user has multiple permissions."""
         user = await self.user_manager.get_user(user_id)
         if not user or not user.is_active:
@@ -439,15 +437,11 @@ class AuthorizationManager:
             UserRole.DEVELOPER: {UserRole.ANALYST},
             UserRole.ANALYST: set(),
             UserRole.AUDITOR: set(),
-            UserRole.GUEST: set()
+            UserRole.GUEST: set(),
         }
 
     async def authorize_api_call(
-        self,
-        user_id: str,
-        method: str,
-        path: str,
-        body: Optional[Dict[str, Any]] = None
+        self, user_id: str, method: str, path: str, body: Optional[Dict[str, Any]] = None
     ) -> Tuple[bool, str]:
         """
         Authorize API call based on method, path, and user permissions.
@@ -459,22 +453,17 @@ class AuthorizationManager:
             # Analytics
             ("/api/analytics", "GET"): Permission.ANALYTICS_READ,
             ("/api/analytics", "POST"): Permission.ANALYTICS_WRITE,
-
             # Topology
             ("/api/topology", "GET"): Permission.TOPOLOGY_READ,
             ("/api/topology", "POST"): Permission.TOPOLOGY_WRITE,
-
             # Developer Tools
             ("/api/tools", "GET"): Permission.DEVTOOLS_EXECUTE,
             ("/api/tools", "POST"): Permission.DEVTOOLS_EXECUTE,
-
             # Testing
             ("/api/test", "GET"): Permission.API_TEST_EXECUTE,
             ("/api/test", "POST"): Permission.API_TEST_MANAGE,
-
             # Audit
             ("/api/audit", "GET"): Permission.AUDIT_READ,
-
             # Admin
             ("/api/admin", "GET"): Permission.ADMIN_SYSTEM,
             ("/api/admin", "POST"): Permission.ADMIN_SYSTEM,

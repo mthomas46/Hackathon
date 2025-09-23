@@ -1,13 +1,13 @@
 """SQLite Migration Manager - SQLite-specific migration implementation."""
 
-import sqlite3
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
-from pathlib import Path
+import sqlite3
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
-from .migration_manager import MigrationManager
 from .migration import MigrationExecutionContext, MigrationResult, MigrationStatus
+from .migration_manager import MigrationManager
 
 
 class SQLiteMigrationManager(MigrationManager):

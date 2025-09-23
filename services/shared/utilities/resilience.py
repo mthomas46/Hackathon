@@ -2,14 +2,15 @@
 
 Combines retry, circuit breaker, rate limiting, and resource management functionality.
 """
+
 import asyncio
 import random
-import time
 import threading
-from typing import Callable, Awaitable, Optional, TypeVar, Dict, Any, List
-from enum import Enum
-from dataclasses import dataclass, field
+import time
 from collections import defaultdict
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
 
 from .utilities import TokenBucket
 
@@ -18,6 +19,7 @@ T = TypeVar("T")
 
 class FailureType(Enum):
     """Types of failures for circuit breaker."""
+
     NETWORK = "network"
     TIMEOUT = "timeout"
     SERVER_ERROR = "server_error"
@@ -28,6 +30,7 @@ class FailureType(Enum):
 @dataclass
 class CircuitBreakerMetrics:
     """Metrics for circuit breaker monitoring."""
+
     total_calls: int = 0
     successful_calls: int = 0
     failed_calls: int = 0
@@ -76,7 +79,7 @@ class EnhancedCircuitBreaker:
         resource_limiter: Optional[ResourceLimiter] = None,
         success_threshold: int = 2,  # consecutive successes to close from half-open
         slow_call_duration: float = 5.0,  # calls slower than this are considered slow
-        slow_call_rate_threshold: float = 0.5  # ratio of slow calls that trigger circuit
+        slow_call_rate_threshold: float = 0.5,  # ratio of slow calls that trigger circuit
     ):
         self.failure_threshold = failure_threshold
         self.reset_timeout = reset_timeout
@@ -212,11 +215,7 @@ async def with_circuit(cb: CircuitBreaker, func: Callable[[], Awaitable[T]]) -> 
         raise
 
 
-async def with_retries(
-    operation: Callable[[], Awaitable[T]],
-    attempts: int = 3,
-    base_delay_ms: int = 100
-) -> T:
+async def with_retries(operation: Callable[[], Awaitable[T]], attempts: int = 3, base_delay_ms: int = 100) -> T:
     """Execute operation with exponential backoff retry logic."""
     last_exc: Exception | None = None
     for i in range(attempts):
@@ -246,7 +245,7 @@ class ResilienceManager:
         retry_base_delay_ms: int = 150,
         rate_limits: Optional[Dict[str, tuple[float, int]]] = None,
         max_concurrent_operations: int = 10,
-        enable_enhanced_circuit_breaker: bool = True
+        enable_enhanced_circuit_breaker: bool = True,
     ):
         # Use enhanced circuit breaker by default
         if enable_enhanced_circuit_breaker:
@@ -254,7 +253,7 @@ class ResilienceManager:
             self.circuit_breaker = EnhancedCircuitBreaker(
                 failure_threshold=circuit_failure_threshold,
                 reset_timeout=circuit_reset_timeout,
-                resource_limiter=resource_limiter
+                resource_limiter=resource_limiter,
             )
         else:
             self.circuit_breaker = CircuitBreaker(circuit_failure_threshold, circuit_reset_timeout)
@@ -272,13 +271,13 @@ class ResilienceManager:
         self,
         operation: Callable[[], Awaitable[T]],
         operation_name: str = "unknown",
-        timeout_seconds: Optional[float] = None
+        timeout_seconds: Optional[float] = None,
     ) -> T:
         """Execute operation with full resilience (circuit + retry + resource limits)."""
         import time as time_module
 
         # Check rate limiting
-        if hasattr(self.circuit_breaker, 'can_acquire_resources'):
+        if hasattr(self.circuit_breaker, "can_acquire_resources"):
             if not self.circuit_breaker.can_acquire_resources():
                 raise RuntimeError(f"Resource limit exceeded for {operation_name}")
 
@@ -297,7 +296,7 @@ class ResilienceManager:
 
             # Record success
             call_duration = time_module.time() - start_time
-            if hasattr(self.circuit_breaker, 'on_success'):
+            if hasattr(self.circuit_breaker, "on_success"):
                 self.circuit_breaker.on_success(call_duration)
 
             # Update operation metrics
@@ -315,12 +314,12 @@ class ResilienceManager:
             raise
         finally:
             # Always release resources
-            if hasattr(self.circuit_breaker, 'release_resources'):
+            if hasattr(self.circuit_breaker, "release_resources"):
                 self.circuit_breaker.release_resources()
 
     def _handle_failure(self, operation_name: str, failure_type: FailureType, duration: float) -> None:
         """Handle operation failure."""
-        if hasattr(self.circuit_breaker, 'on_failure'):
+        if hasattr(self.circuit_breaker, "on_failure"):
             self.circuit_breaker.on_failure(failure_type, duration)
         self._update_operation_metrics(operation_name, "failure", duration, failure_type)
 
@@ -333,8 +332,8 @@ class ResilienceManager:
             return FailureType.TIMEOUT
         elif "connection" in exc_str or "network" in exc_str:
             return FailureType.NETWORK
-        elif hasattr(exc, 'status_code'):
-            status = getattr(exc, 'status_code', 500)
+        elif hasattr(exc, "status_code"):
+            status = getattr(exc, "status_code", 500)
             if 400 <= status < 500:
                 return FailureType.CLIENT_ERROR
             elif status >= 500:
@@ -344,7 +343,9 @@ class ResilienceManager:
 
         return FailureType.SERVER_ERROR
 
-    def _update_operation_metrics(self, operation_name: str, result: str, duration: float, failure_type: Optional[FailureType] = None) -> None:
+    def _update_operation_metrics(
+        self, operation_name: str, result: str, duration: float, failure_type: Optional[FailureType] = None
+    ) -> None:
         """Update operation-specific metrics."""
         metrics = self._operation_metrics[operation_name]
         metrics["total_calls"] = metrics.get("total_calls", 0) + 1
@@ -377,21 +378,21 @@ class ResilienceManager:
 
     def get_circuit_breaker_status(self) -> Dict[str, Any]:
         """Get circuit breaker status and metrics."""
-        status = {"state": self.circuit_breaker._state if hasattr(self.circuit_breaker, '_state') else "unknown"}
+        status = {"state": self.circuit_breaker._state if hasattr(self.circuit_breaker, "_state") else "unknown"}
 
-        if hasattr(self.circuit_breaker, 'metrics'):
+        if hasattr(self.circuit_breaker, "metrics"):
             status["metrics"] = {
                 "total_calls": self.circuit_breaker.metrics.total_calls,
                 "successful_calls": self.circuit_breaker.metrics.successful_calls,
                 "failed_calls": self.circuit_breaker.metrics.failed_calls,
                 "rejected_calls": self.circuit_breaker.metrics.rejected_calls,
-                "state_changes": self.circuit_breaker.metrics.state_changes
+                "state_changes": self.circuit_breaker.metrics.state_changes,
             }
         else:
             # Fallback for basic circuit breaker
             status["metrics"] = {"basic_circuit_breaker": True}
 
-        if hasattr(self.circuit_breaker, 'resource_usage'):
+        if hasattr(self.circuit_breaker, "resource_usage"):
             status["resource_usage"] = self.circuit_breaker.resource_usage
 
         return status

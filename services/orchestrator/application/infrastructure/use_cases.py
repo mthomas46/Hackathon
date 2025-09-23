@@ -1,22 +1,34 @@
 """Infrastructure Application Use Cases"""
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-
-from ...domain.infrastructure.services import DLQService, SagaService, TracingService, EventStreamingService
-from ...domain.infrastructure import SagaInstance, DistributedTrace, DLQEvent
+from ...domain.infrastructure import DistributedTrace, DLQEvent, SagaInstance
+from ...domain.infrastructure.services import DLQService, EventStreamingService, SagaService, TracingService
+from ...shared.application import UseCase
 from .commands import (
-    StartSagaCommand, ExecuteSagaStepCommand, CompensateSagaCommand, CompleteSagaCommand,
-    StartTraceCommand, AddTraceSpanCommand, CompleteTraceCommand,
-    RetryEventCommand, ArchiveEventCommand, PublishEventCommand
+    AddTraceSpanCommand,
+    ArchiveEventCommand,
+    CompensateSagaCommand,
+    CompleteSagaCommand,
+    CompleteTraceCommand,
+    ExecuteSagaStepCommand,
+    PublishEventCommand,
+    RetryEventCommand,
+    StartSagaCommand,
+    StartTraceCommand,
 )
 from .queries import (
-    GetSagaQuery, ListSagasQuery, GetTraceQuery, ListTracesQuery,
-    GetDLQStatsQuery, ListDLQEventsQuery, GetEventStreamStatsQuery, ListEventStreamQuery
+    GetDLQStatsQuery,
+    GetEventStreamStatsQuery,
+    GetSagaQuery,
+    GetTraceQuery,
+    ListDLQEventsQuery,
+    ListEventStreamQuery,
+    ListSagasQuery,
+    ListTracesQuery,
 )
 
 
-from ...shared.application import UseCase
 class StartSagaUseCase(UseCase):
     """Use case for starting a saga."""
 
@@ -26,9 +38,7 @@ class StartSagaUseCase(UseCase):
     async def execute(self, command: StartSagaCommand) -> SagaInstance:
         """Execute the start saga use case."""
         return self.saga_service.start_saga(
-            saga_type=command.saga_type,
-            correlation_id=command.correlation_id,
-            steps=command.steps
+            saga_type=command.saga_type, correlation_id=command.correlation_id, steps=command.steps
         )
 
 
@@ -89,7 +99,7 @@ class ListSagasUseCase(UseCase):
             saga_type_filter=query.saga_type_filter,
             correlation_id_filter=query.correlation_id_filter,
             limit=query.limit,
-            offset=query.offset
+            offset=query.offset,
         )
 
 
@@ -105,7 +115,7 @@ class StartTraceUseCase(UseCase):
             trace_id=command.trace_id,
             service_name=command.service_name,
             operation_name=command.operation_name,
-            parent_span_id=command.parent_span_id
+            parent_span_id=command.parent_span_id,
         )
 
 
@@ -124,7 +134,7 @@ class AddTraceSpanUseCase(UseCase):
             operation_name=command.operation_name,
             start_time=command.start_time,
             duration_ms=command.duration_ms,
-            tags=command.tags
+            tags=command.tags,
         )
 
 
@@ -164,7 +174,7 @@ class ListTracesUseCase(UseCase):
             start_time_after=query.start_time_after,
             start_time_before=query.start_time_before,
             limit=query.limit,
-            offset=query.offset
+            offset=query.offset,
         )
 
 
@@ -191,7 +201,7 @@ class ListDLQEventsUseCase(UseCase):
             event_type_filter=query.event_type_filter,
             service_filter=query.service_filter,
             limit=query.limit,
-            offset=query.offset
+            offset=query.offset,
         )
 
 
@@ -226,7 +236,5 @@ class PublishEventUseCase(UseCase):
     async def execute(self, command: PublishEventCommand) -> Dict[str, Any]:
         """Execute the publish event use case."""
         return self.event_streaming_service.publish_event(
-            event_type=command.event_type,
-            event_data=command.event_data,
-            correlation_id=command.correlation_id
+            event_type=command.event_type, event_data=command.event_data, correlation_id=command.correlation_id
         )

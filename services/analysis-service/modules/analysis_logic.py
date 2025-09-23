@@ -5,7 +5,8 @@ extracted from the main analysis service to improve maintainability.
 """
 
 import re
-from typing import List, Dict, Any, Set
+from typing import Any, Dict, List, Set
+
 try:
     from services.shared.core.models.models import Document, Finding
 except ImportError:
@@ -20,17 +21,17 @@ except ImportError:
             for key, value in kwargs.items():
                 setattr(self, key, value)
 
+
 # Import shared utilities for consistency across analysis modules
 from .shared_utils import (
-    handle_analysis_error,
     build_analysis_context,
-    validate_analysis_targets,
-    get_drift_overlap_threshold,
     get_critical_score,
+    get_drift_overlap_threshold,
     get_high_priority_score,
-    get_medium_priority_score
+    get_medium_priority_score,
+    handle_analysis_error,
+    validate_analysis_targets,
 )
-
 
 # Constants for analysis thresholds and scoring (using shared configuration)
 DRIFT_OVERLAP_THRESHOLD = get_drift_overlap_threshold()
@@ -60,7 +61,7 @@ def _create_finding(
     evidence: List[str],
     suggestion: str,
     score: int,
-    rationale: str
+    rationale: str,
 ) -> Finding:
     """Create a standardized Finding object with consistent structure."""
     return Finding(
@@ -74,7 +75,7 @@ def _create_finding(
         suggestion=suggestion,
         correlation_id=finding_id,
         score=score,
-        rationale=rationale
+        rationale=rationale,
     )
 
 
@@ -113,7 +114,7 @@ def _extract_endpoints_from_docs(docs: List[Document]) -> Set[str]:
             continue
 
         # Find API endpoint patterns in documentation
-        matches = re.findall(r'`(GET|POST|PUT|DELETE|PATCH)\s+(/[^`\s]+)`', doc.content)
+        matches = re.findall(r"`(GET|POST|PUT|DELETE|PATCH)\s+(/[^`\s]+)`", doc.content)
         for method, path in matches:
             endpoints.add(f"{method} {path}")
 
@@ -129,8 +130,8 @@ def _extract_endpoints_from_apis(apis: List[Dict[str, Any]]) -> Set[str]:
             continue
 
         for endpoint in api["endpoints"]:
-            method = endpoint.get('method', 'GET')
-            path = endpoint.get('path', '/')
+            method = endpoint.get("method", "GET")
+            path = endpoint.get("path", "/")
             endpoints.add(f"{method} {path}")
 
     return endpoints
@@ -176,21 +177,23 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
                 if overlap < DRIFT_OVERLAP_THRESHOLD:
                     finding_id = f"drift:{readme_doc.id}:{doc_doc.id}"
 
-                    findings.append(_create_finding(
-                        finding_id=finding_id,
-                        finding_type=FINDING_TYPE_DRIFT,
-                        title="Documentation Drift Detected",
-                        description=f"Low content overlap between {readme_title} and {doc_title}",
-                        severity=SEVERITY_MEDIUM,
-                        source_refs=[
-                            {"id": readme_doc.id, "type": "document"},
-                            {"id": doc_doc.id, "type": "document"}
-                        ],
-                        evidence=[f"Content overlap ratio: {overlap:.3f}"],
-                        suggestion="Review and synchronize documentation to ensure consistency",
-                        score=int(overlap * 100),
-                        rationale=f"Low content overlap ({overlap:.3f}) suggests documentation drift requiring attention"
-                    ))
+                    findings.append(
+                        _create_finding(
+                            finding_id=finding_id,
+                            finding_type=FINDING_TYPE_DRIFT,
+                            title="Documentation Drift Detected",
+                            description=f"Low content overlap between {readme_title} and {doc_title}",
+                            severity=SEVERITY_MEDIUM,
+                            source_refs=[
+                                {"id": readme_doc.id, "type": "document"},
+                                {"id": doc_doc.id, "type": "document"},
+                            ],
+                            evidence=[f"Content overlap ratio: {overlap:.3f}"],
+                            suggestion="Review and synchronize documentation to ensure consistency",
+                            score=int(overlap * 100),
+                            rationale=f"Low content overlap ({overlap:.3f}) suggests documentation drift requiring attention",
+                        )
+                    )
 
         return findings
 
@@ -219,33 +222,37 @@ def detect_api_mismatches(docs: List[Document], apis: List[Dict[str, Any]]) -> L
 
         # Create findings for undocumented endpoints
         for endpoint in undocumented:
-            findings.append(_create_finding(
-                finding_id=f"undocumented:{endpoint}",
-                finding_type=FINDING_TYPE_MISSING_DOC,
-                title="Undocumented API Endpoint",
-                description=f"API endpoint '{endpoint}' exists in implementation but lacks documentation",
-                severity=SEVERITY_HIGH,
-                source_refs=[{"id": endpoint, "type": "endpoint"}],
-                evidence=[f"Endpoint {endpoint} found in API implementation but missing from documentation"],
-                suggestion="Add comprehensive documentation for this endpoint including parameters and responses",
-                score=CRITICAL_SCORE,
-                rationale="Undocumented endpoints create maintenance burden and usability issues for API consumers"
-            ))
+            findings.append(
+                _create_finding(
+                    finding_id=f"undocumented:{endpoint}",
+                    finding_type=FINDING_TYPE_MISSING_DOC,
+                    title="Undocumented API Endpoint",
+                    description=f"API endpoint '{endpoint}' exists in implementation but lacks documentation",
+                    severity=SEVERITY_HIGH,
+                    source_refs=[{"id": endpoint, "type": "endpoint"}],
+                    evidence=[f"Endpoint {endpoint} found in API implementation but missing from documentation"],
+                    suggestion="Add comprehensive documentation for this endpoint including parameters and responses",
+                    score=CRITICAL_SCORE,
+                    rationale="Undocumented endpoints create maintenance burden and usability issues for API consumers",
+                )
+            )
 
         # Create findings for unimplemented endpoints
         for endpoint in unimplemented:
-            findings.append(_create_finding(
-                finding_id=f"unimplemented:{endpoint}",
-                finding_type=FINDING_TYPE_MISSING_IMPL,
-                title="Unimplemented Documented Endpoint",
-                description=f"Documented endpoint '{endpoint}' lacks implementation",
-                severity=SEVERITY_HIGH,
-                source_refs=[{"id": endpoint, "type": "endpoint"}],
-                evidence=[f"Endpoint {endpoint} documented but not found in API implementation"],
-                suggestion="Implement the documented endpoint or remove it from documentation to avoid confusion",
-                score=HIGH_PRIORITY_SCORE,
-                rationale="Documentation promises functionality that doesn't exist, breaking developer expectations"
-            ))
+            findings.append(
+                _create_finding(
+                    finding_id=f"unimplemented:{endpoint}",
+                    finding_type=FINDING_TYPE_MISSING_IMPL,
+                    title="Unimplemented Documented Endpoint",
+                    description=f"Documented endpoint '{endpoint}' lacks implementation",
+                    severity=SEVERITY_HIGH,
+                    source_refs=[{"id": endpoint, "type": "endpoint"}],
+                    evidence=[f"Endpoint {endpoint} documented but not found in API implementation"],
+                    suggestion="Implement the documented endpoint or remove it from documentation to avoid confusion",
+                    score=HIGH_PRIORITY_SCORE,
+                    rationale="Documentation promises functionality that doesn't exist, breaking developer expectations",
+                )
+            )
 
         return findings
 
@@ -263,15 +270,18 @@ def _count_by_attribute(findings: List[Finding], attribute: str) -> Dict[str, in
         counts[value] = counts.get(value, 0) + 1
     return counts
 
+
 def _filter_by_severity(findings: List[Finding], severities: List[str]) -> List[Finding]:
     """Filter findings by severity levels."""
     return [f for f in findings if f.severity in severities]
+
 
 def _calculate_health_score(findings: List[Finding]) -> int:
     """Calculate documentation health score based on findings."""
     high_priority_count = len(_filter_by_severity(findings, [SEVERITY_CRITICAL, SEVERITY_HIGH]))
     # Deduct 5 points per high-priority finding, minimum score of 0
     return max(0, 100 - (high_priority_count * 5))
+
 
 def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
     """Generate comprehensive summary report of findings with improved analysis."""
@@ -286,7 +296,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
                 "critical_issues": 0,
                 "high_priority": 0,
                 "health_score": 100,
-                "recommendations": ["Documentation appears healthy - no issues found"]
+                "recommendations": ["Documentation appears healthy - no issues found"],
             }
 
         # Calculate various metrics
@@ -316,7 +326,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
             "critical_issues": len(critical_issues),
             "high_priority": len(high_priority),
             "health_score": health_score,
-            "recommendations": recommendations
+            "recommendations": recommendations,
         }
 
     except Exception as e:
@@ -330,7 +340,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
             "high_priority": 0,
             "health_score": 0,
             "recommendations": ["Error occurred during report generation"],
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -341,7 +351,7 @@ def _analyze_trends(findings: List[Finding]) -> Dict[str, Any]:
             "increasing": [],
             "stable": [],
             "decreasing": [],
-            "insights": ["No findings available for trend analysis"]
+            "insights": ["No findings available for trend analysis"],
         }
 
     # Count findings by type for trend analysis
@@ -377,12 +387,8 @@ def _analyze_trends(findings: List[Finding]) -> Dict[str, Any]:
     if not insights:
         insights.append("✅ No significant trends identified in current findings")
 
-    return {
-        "increasing": increasing,
-        "stable": stable,
-        "decreasing": decreasing,
-        "insights": insights
-    }
+    return {"increasing": increasing, "stable": stable, "decreasing": decreasing, "insights": insights}
+
 
 def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> Dict[str, Any]:
     """Generate comprehensive trends report showing patterns over time."""
@@ -395,7 +401,7 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
                 "total_findings": 0,
                 "severity_trends": {"increasing": [], "stable": [], "decreasing": []},
                 "type_distribution": {},
-                "insights": ["No findings available for trend analysis"]
+                "insights": ["No findings available for trend analysis"],
             }
 
         # Analyze trends and patterns
@@ -408,20 +414,22 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
             "severity_trends": {
                 "increasing": trends_analysis["increasing"],
                 "stable": trends_analysis["stable"],
-                "decreasing": trends_analysis["decreasing"]
+                "decreasing": trends_analysis["decreasing"],
             },
             "type_distribution": type_distribution,
             "insights": trends_analysis["insights"],
             "recommendations": [
                 "Monitor increasing trend categories closely",
                 "Address stable issues to prevent escalation",
-                "Track decreasing trends as indicators of improvement"
-            ]
+                "Track decreasing trends as indicators of improvement",
+            ],
         }
 
     except Exception as e:
         # Return a minimal report on error rather than failing completely
-        handle_analysis_error("generate trends report", e, total_findings=len(findings), time_window=time_window, **context)
+        handle_analysis_error(
+            "generate trends report", e, total_findings=len(findings), time_window=time_window, **context
+        )
         return {
             "time_window": time_window,
             "total_findings": len(findings) if findings else 0,
@@ -429,5 +437,5 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
             "type_distribution": {},
             "insights": ["Error occurred during trend analysis"],
             "recommendations": ["Unable to generate trend analysis due to error"],
-            "error": str(e)
+            "error": str(e),
         }

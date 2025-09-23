@@ -7,22 +7,24 @@ Provides enterprise-grade health checking capabilities including:
 - Kubernetes-style liveness, readiness, and startup probes
 - Performance and resource health metrics
 """
+
 import asyncio
-import time
+import logging
 import threading
-from typing import Dict, Any, List, Optional, Callable, Awaitable
+import time
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
+from typing import Any, Awaitable, Callable, Dict, List, Optional
+
 import httpx
 import psutil
-
 
 logger = logging.getLogger(__name__)
 
 
 class HealthStatus(Enum):
     """Health status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -31,9 +33,10 @@ class HealthStatus(Enum):
 
 class HealthCheckType(Enum):
     """Types of health checks."""
-    LIVENESS = "liveness"      # Is service alive?
-    READINESS = "readiness"    # Can service accept traffic?
-    STARTUP = "startup"        # Has service started successfully?
+
+    LIVENESS = "liveness"  # Is service alive?
+    READINESS = "readiness"  # Can service accept traffic?
+    STARTUP = "startup"  # Has service started successfully?
     DEPENDENCY = "dependency"  # Are dependencies healthy?
     PERFORMANCE = "performance"  # Performance metrics within bounds?
 
@@ -41,6 +44,7 @@ class HealthCheckType(Enum):
 @dataclass
 class HealthCheckResult:
     """Result of a health check."""
+
     check_name: str
     status: HealthStatus
     message: str
@@ -53,6 +57,7 @@ class HealthCheckResult:
 @dataclass
 class DependencyHealth:
     """Health status of a service dependency."""
+
     service_name: str
     endpoint: str
     required: bool = True
@@ -65,6 +70,7 @@ class DependencyHealth:
 @dataclass
 class ServiceHealth:
     """Overall health status of a service."""
+
     service_name: str
     overall_status: HealthStatus = HealthStatus.UNKNOWN
     last_check: float = 0
@@ -107,7 +113,7 @@ class DatabaseHealthCheck(HealthCheck):
                 status=HealthStatus.HEALTHY,
                 message="Database connection successful",
                 duration_ms=duration,
-                details={"connection_string": self._mask_connection_string()}
+                details={"connection_string": self._mask_connection_string()},
             )
         except Exception as e:
             duration = (time.time() - start_time) * 1000
@@ -116,7 +122,7 @@ class DatabaseHealthCheck(HealthCheck):
                 status=HealthStatus.UNHEALTHY,
                 message=f"Database connection failed: {str(e)}",
                 duration_ms=duration,
-                error=str(e)
+                error=str(e),
             )
 
     def _mask_connection_string(self) -> str:
@@ -147,11 +153,7 @@ class HTTPHealthCheck(HealthCheck):
                         status=HealthStatus.HEALTHY,
                         message=f"HTTP check successful: {response.status_code}",
                         duration_ms=duration,
-                        details={
-                            "url": self.url,
-                            "status_code": response.status_code,
-                            "response_time_ms": duration
-                        }
+                        details={"url": self.url, "status_code": response.status_code, "response_time_ms": duration},
                     )
                 else:
                     return HealthCheckResult(
@@ -162,8 +164,8 @@ class HTTPHealthCheck(HealthCheck):
                         details={
                             "url": self.url,
                             "expected_status": self.expected_status,
-                            "actual_status": response.status_code
-                        }
+                            "actual_status": response.status_code,
+                        },
                     )
         except Exception as e:
             duration = (time.time() - start_time) * 1000
@@ -172,7 +174,7 @@ class HTTPHealthCheck(HealthCheck):
                 status=HealthStatus.UNHEALTHY,
                 message=f"HTTP check failed: {str(e)}",
                 duration_ms=duration,
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -199,12 +201,7 @@ class PerformanceHealthCheck(HealthCheck):
                 status=HealthStatus.HEALTHY if healthy else HealthStatus.DEGRADED,
                 message=f"Performance check: {value:.2f} {'OK' if healthy else 'DEGRADED'}",
                 duration_ms=duration,
-                details={
-                    "value": value,
-                    "threshold": self.threshold,
-                    "operator": self.operator,
-                    "healthy": healthy
-                }
+                details={"value": value, "threshold": self.threshold, "operator": self.operator, "healthy": healthy},
             )
         except Exception as e:
             duration = (time.time() - start_time) * 1000
@@ -213,7 +210,7 @@ class PerformanceHealthCheck(HealthCheck):
                 status=HealthStatus.UNHEALTHY,
                 message=f"Performance check failed: {str(e)}",
                 duration_ms=duration,
-                error=str(e)
+                error=str(e),
             )
 
     def _check_threshold(self, value: float) -> bool:
@@ -232,7 +229,13 @@ class PerformanceHealthCheck(HealthCheck):
 class ResourceHealthCheck(HealthCheck):
     """Health check for system resources."""
 
-    def __init__(self, name: str, resource_type: str = "memory", warning_threshold: float = 80.0, critical_threshold: float = 95.0):
+    def __init__(
+        self,
+        name: str,
+        resource_type: str = "memory",
+        warning_threshold: float = 80.0,
+        critical_threshold: float = 95.0,
+    ):
         super().__init__(name, HealthCheckType.PERFORMANCE)
         self.resource_type = resource_type
         self.warning_threshold = warning_threshold
@@ -247,7 +250,7 @@ class ResourceHealthCheck(HealthCheck):
             elif self.resource_type == "cpu":
                 usage_percent = psutil.cpu_percent(interval=1)
             elif self.resource_type == "disk":
-                usage_percent = psutil.disk_usage('/').percent
+                usage_percent = psutil.disk_usage("/").percent
             else:
                 usage_percent = 0.0
 
@@ -272,8 +275,8 @@ class ResourceHealthCheck(HealthCheck):
                     "resource_type": self.resource_type,
                     "usage_percent": usage_percent,
                     "warning_threshold": self.warning_threshold,
-                    "critical_threshold": self.critical_threshold
-                }
+                    "critical_threshold": self.critical_threshold,
+                },
             )
         except Exception as e:
             duration = (time.time() - start_time) * 1000
@@ -282,7 +285,7 @@ class ResourceHealthCheck(HealthCheck):
                 status=HealthStatus.UNHEALTHY,
                 message=f"Resource check failed: {str(e)}",
                 duration_ms=duration,
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -301,10 +304,7 @@ class HealthCheckService:
         """Register a service for health monitoring."""
         with self._lock:
             if service_name not in self._services:
-                self._services[service_name] = ServiceHealth(
-                    service_name=service_name,
-                    metadata=metadata or {}
-                )
+                self._services[service_name] = ServiceHealth(service_name=service_name, metadata=metadata or {})
                 self._health_checks[service_name] = []
                 logger.info(f"Registered health monitoring for service: {service_name}")
 
@@ -316,17 +316,20 @@ class HealthCheckService:
         self._health_checks[service_name].append(health_check)
         logger.debug(f"Added health check '{health_check.name}' to service '{service_name}'")
 
-    def add_dependency(self, service_name: str, dependency_name: str, endpoint: str,
-                      required: bool = True, timeout_seconds: float = 5.0) -> None:
+    def add_dependency(
+        self,
+        service_name: str,
+        dependency_name: str,
+        endpoint: str,
+        required: bool = True,
+        timeout_seconds: float = 5.0,
+    ) -> None:
         """Add a service dependency to monitor."""
         if service_name not in self._services:
             self.register_service(service_name)
 
         dependency = DependencyHealth(
-            service_name=dependency_name,
-            endpoint=endpoint,
-            required=required,
-            timeout_seconds=timeout_seconds
+            service_name=dependency_name, endpoint=endpoint, required=required, timeout_seconds=timeout_seconds
         )
 
         self._services[service_name].dependencies[dependency_name] = dependency
@@ -355,7 +358,7 @@ class HealthCheckService:
                     check_name=health_check.name,
                     status=HealthStatus.UNHEALTHY,
                     message=f"Health check execution failed: {str(e)}",
-                    error=str(e)
+                    error=str(e),
                 )
                 check_results.append(error_result)
                 service.checks[health_check.name] = error_result
@@ -383,9 +386,7 @@ class HealthCheckService:
         for dep_name, dependency in service.dependencies.items():
             # Simple dependency check - in real implementation, use service discovery
             check = HTTPHealthCheck(
-                f"dependency_{dep_name}",
-                f"http://{dependency.endpoint}",
-                timeout=dependency.timeout_seconds
+                f"dependency_{dep_name}", f"http://{dependency.endpoint}", timeout=dependency.timeout_seconds
             )
 
             try:
@@ -443,10 +444,7 @@ class HealthCheckService:
             except Exception as e:
                 logger.error(f"Failed to check health for service {service_name}: {e}")
                 # Create unhealthy status for failed checks
-                results[service_name] = ServiceHealth(
-                    service_name=service_name,
-                    overall_status=HealthStatus.UNHEALTHY
-                )
+                results[service_name] = ServiceHealth(service_name=service_name, overall_status=HealthStatus.UNHEALTHY)
 
         return results
 
@@ -466,16 +464,18 @@ class HealthCheckService:
             "healthy_services": healthy_services,
             "degraded_services": degraded_services,
             "unhealthy_services": unhealthy_services,
-            "overall_status": self._calculate_ecosystem_status(healthy_services, degraded_services, unhealthy_services, total_services),
+            "overall_status": self._calculate_ecosystem_status(
+                healthy_services, degraded_services, unhealthy_services, total_services
+            ),
             "last_updated": max((s.last_check for s in self._services.values() if s.last_check > 0), default=0),
             "services": {
                 name: {
                     "status": service.overall_status.value,
                     "last_check": service.last_check,
-                    "uptime_seconds": service.uptime_seconds
+                    "uptime_seconds": service.uptime_seconds,
                 }
                 for name, service in self._services.items()
-            }
+            },
         }
 
     def _calculate_ecosystem_status(self, healthy: int, degraded: int, unhealthy: int, total: int) -> str:
@@ -543,8 +543,9 @@ def register_health_checks(service_name: str, checks: List[HealthCheck]) -> None
         service.add_health_check(service_name, check)
 
 
-def add_dependency_check(service_name: str, dependency_name: str, endpoint: str,
-                        required: bool = True, timeout_seconds: float = 5.0) -> None:
+def add_dependency_check(
+    service_name: str, dependency_name: str, endpoint: str, required: bool = True, timeout_seconds: float = 5.0
+) -> None:
     """Convenience function to add dependency check."""
     service = get_health_check_service()
     service.add_dependency(service_name, dependency_name, endpoint, required, timeout_seconds)

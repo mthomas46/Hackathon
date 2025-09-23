@@ -20,12 +20,7 @@ class TestWebSocketEndpoints:
     def test_simulation_websocket_support(self, test_client: TestClient):
         """Test simulation endpoints that support WebSocket updates."""
         # Create a simulation
-        sim_data = {
-            "project_type": "WEB_APPLICATION",
-            "complexity": "MEDIUM",
-            "team_size": 5,
-            "duration_days": 30
-        }
+        sim_data = {"project_type": "WEB_APPLICATION", "complexity": "MEDIUM", "team_size": 5, "duration_days": 30}
 
         response = test_client.post("/api/v1/simulations", json=sim_data)
         if response.status_code == 201:
@@ -46,7 +41,7 @@ class TestWebSocketMessageFormats:
             "simulation_id": "test-123",
             "progress_percentage": 50.0,
             "current_phase": "development",
-            "status": "running"
+            "status": "running",
         }
 
         required_fields = ["type", "simulation_id", "progress_percentage"]
@@ -61,7 +56,7 @@ class TestWebSocketMessageFormats:
             "type": "simulation_event",
             "simulation_id": "test-123",
             "event_type": "document_generated",
-            "data": {"document_id": "doc-456"}
+            "data": {"document_id": "doc-456"},
         }
 
         required_fields = ["type", "simulation_id", "event_type"]
@@ -74,4 +69,5 @@ class TestWebSocketMessageFormats:
 def test_client():
     """Create test client for API testing."""
     from main import app
+
     return TestClient(app)

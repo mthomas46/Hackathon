@@ -1,9 +1,5 @@
 """Infrastructure layer for Analysis Service."""
 
-from .repositories import DocumentRepository, AnalysisRepository, FindingRepository
+from .repositories import AnalysisRepository, DocumentRepository, FindingRepository
 
-__all__ = [
-    'DocumentRepository',
-    'AnalysisRepository',
-    'FindingRepository'
-]
+__all__ = ["DocumentRepository", "AnalysisRepository", "FindingRepository"]

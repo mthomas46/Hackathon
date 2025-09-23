@@ -1,7 +1,7 @@
 """Policy enforcement for secure analyzer service."""
 
 import os
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 
 class PolicyEnforcer:
@@ -18,20 +18,14 @@ class PolicyEnforcer:
         return self._all_providers.copy()
 
     def filter_providers(
-        self,
-        providers: Optional[List[Dict[str, Any]]],
-        sensitive: bool,
-        override_policy: bool = False
+        self, providers: Optional[List[Dict[str, Any]]], sensitive: bool, override_policy: bool = False
     ) -> List[Dict[str, Any]]:
         """Filter providers based on security policy."""
 
         if sensitive and not override_policy:
             # Filter to secure providers only
             secure_names = set(self._secure_only_models)
-            filtered = [
-                p for p in (providers or [])
-                if str(p.get("name", "")).lower() in secure_names
-            ]
+            filtered = [p for p in (providers or []) if str(p.get("name", "")).lower() in secure_names]
 
             # If no secure providers specified, default to bedrock then ollama
             if not filtered:

@@ -3,17 +3,19 @@
 Handles bedrock proxy service visualization, including AI invocation
 monitoring, template usage tracking, and response analytics.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..bedrock_proxy_monitor import bedrock_proxy_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class BedrockProxyUIHandlers:
@@ -34,7 +36,7 @@ class BedrockProxyUIHandlers:
                 "status": status_data.get("health", {}),
                 "invocation_stats": status_data.get("invocation_stats", {}),
                 "recent_invocations": invocation_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -534,4 +536,6 @@ class BedrockProxyUIHandlers:
 """
             return create_html_response(html, "Bedrock Proxy Dashboard")
         except Exception as e:
-            return handle_frontend_error("render bedrock proxy dashboard", e, **build_frontend_context("render_bedrock_proxy_dashboard"))
+            return handle_frontend_error(
+                "render bedrock proxy dashboard", e, **build_frontend_context("render_bedrock_proxy_dashboard")
+            )

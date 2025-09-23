@@ -3,10 +3,12 @@
 Provides visualization and monitoring capabilities for discovery agent
 service endpoint registration and OpenAPI parsing operations.
 """
-from typing import Dict, Any, List, Optional
+
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
+
 from .shared_utils import get_discovery_agent_url, get_frontend_clients
 
 
@@ -39,8 +41,10 @@ class DiscoveryAgentMonitor:
             status_data = {
                 "health": health_response,
                 "discovery_stats": self._calculate_discovery_stats(),
-                "recent_discoveries": self._discovery_history[-10:] if self._discovery_history else [],  # Last 10 discoveries
-                "last_updated": utc_now().isoformat()
+                "recent_discoveries": (
+                    self._discovery_history[-10:] if self._discovery_history else []
+                ),  # Last 10 discoveries
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -54,19 +58,22 @@ class DiscoveryAgentMonitor:
                 "health": {},
                 "discovery_stats": {},
                 "recent_discoveries": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
-    async def discover_endpoints(self, service_url: str, service_name: Optional[str] = None, dry_run: bool = False, spec_url: Optional[str] = None) -> Dict[str, Any]:
+    async def discover_endpoints(
+        self,
+        service_url: str,
+        service_name: Optional[str] = None,
+        dry_run: bool = False,
+        spec_url: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Trigger endpoint discovery for a service and cache the result."""
         try:
             clients = get_frontend_clients()
             discovery_url = get_discovery_agent_url()
 
-            payload = {
-                "service_url": service_url,
-                "dry_run": dry_run
-            }
+            payload = {"service_url": service_url, "dry_run": dry_run}
 
             if service_name:
                 payload["service_name"] = service_name
@@ -86,7 +93,7 @@ class DiscoveryAgentMonitor:
                     "spec_url": spec_url,
                     "endpoints_discovered": len(response.get("endpoints", [])),
                     "response": response,
-                    "status": "completed" if response.get("success") else "failed"
+                    "status": "completed" if response.get("success") else "failed",
                 }
 
                 self._discovery_history.insert(0, discovery_result)  # Add to front
@@ -99,21 +106,13 @@ class DiscoveryAgentMonitor:
                     "success": True,
                     "discovery_id": discovery_result["id"],
                     "endpoints_discovered": discovery_result["endpoints_discovered"],
-                    "response": response
+                    "response": response,
                 }
 
-            return {
-                "success": False,
-                "error": "Discovery failed",
-                "response": response
-            }
+            return {"success": False, "error": "Discovery failed", "response": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
     def _calculate_discovery_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached discoveries."""
@@ -124,7 +123,7 @@ class DiscoveryAgentMonitor:
                 "failed_discoveries": 0,
                 "total_endpoints_discovered": 0,
                 "unique_services": 0,
-                "dry_run_count": 0
+                "dry_run_count": 0,
             }
 
         total = len(self._discovery_history)
@@ -147,7 +146,7 @@ class DiscoveryAgentMonitor:
             "total_endpoints_discovered": total_endpoints,
             "unique_services": len(services),
             "dry_run_count": dry_runs,
-            "services_discovered": list(services)
+            "services_discovered": list(services),
         }
 
     def get_discovery_history(self, limit: int = 20) -> List[Dict[str, Any]]:

@@ -5,18 +5,19 @@ Comprehensive unit tests for usage analytics, performance insights,
 error tracking, and usage patterns analysis.
 """
 
-import pytest
-import pytest_asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
 import numpy as np
 import pandas as pd
+import pytest
+import pytest_asyncio
 
-from ...conftest import *
-from ....modules.analytics.usage_analytics import UsageAnalytics
-from ....modules.analytics.performance_insights import PerformanceInsights
 from ....modules.analytics.error_tracking import ErrorTracking
+from ....modules.analytics.performance_insights import PerformanceInsights
+from ....modules.analytics.usage_analytics import UsageAnalytics
 from ....modules.analytics.usage_patterns import UsagePatterns
+from ...conftest import *
 
 
 class TestUsageAnalytics:
@@ -30,15 +31,17 @@ class TestUsageAnalytics:
     @pytest.mark.asyncio
     async def test_record_api_request(self, usage_analytics):
         """Test API request recording."""
-        await usage_analytics.record_api_request({
-            "timestamp": datetime.now(),
-            "service": "test-service",
-            "endpoint": "/api/test",
-            "method": "GET",
-            "response_time": 150,
-            "status_code": 200,
-            "user_id": "user123"
-        })
+        await usage_analytics.record_api_request(
+            {
+                "timestamp": datetime.now(),
+                "service": "test-service",
+                "endpoint": "/api/test",
+                "method": "GET",
+                "response_time": 150,
+                "status_code": 200,
+                "user_id": "user123",
+            }
+        )
 
         # Check that data was recorded (internal storage)
         assert len(usage_analytics.usage_data) == 1
@@ -135,7 +138,7 @@ class TestPerformanceInsights:
         """Test resource utilization analysis."""
         # Mock resource metrics
         resource_data = [
-            {"timestamp": datetime.now() - timedelta(hours=i), "cpu_percent": 50 + i*5, "memory_percent": 60 + i*3}
+            {"timestamp": datetime.now() - timedelta(hours=i), "cpu_percent": 50 + i * 5, "memory_percent": 60 + i * 3}
             for i in range(5)
         ]
 
@@ -316,7 +319,7 @@ class TestAnalyticsIntegration:
             "usage_analytics": UsageAnalytics(mock_discovery_client, mock_health_monitor),
             "performance_insights": PerformanceInsights(mock_discovery_client, mock_health_monitor),
             "error_tracking": ErrorTracking(mock_discovery_client, mock_health_monitor),
-            "usage_patterns": UsagePatterns(mock_discovery_client, mock_health_monitor)
+            "usage_patterns": UsagePatterns(mock_discovery_client, mock_health_monitor),
         }
 
     @pytest.mark.asyncio

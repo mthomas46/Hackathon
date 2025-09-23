@@ -1,7 +1,7 @@
 """Trace Span Value Object"""
 
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 
@@ -17,7 +17,7 @@ class TraceSpan:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         tags: Optional[Dict[str, Any]] = None,
-        logs: Optional[List[Dict[str, Any]]] = None
+        logs: Optional[List[Dict[str, Any]]] = None,
     ):
         self._span_id = span_id or str(uuid4())
         self._parent_span_id = parent_span_id
@@ -92,11 +92,7 @@ class TraceSpan:
 
     def log(self, event: str, timestamp: Optional[datetime] = None, fields: Optional[Dict[str, Any]] = None):
         """Add a log entry to the span."""
-        log_entry = {
-            "event": event,
-            "timestamp": (timestamp or datetime.utcnow()).isoformat(),
-            "fields": fields or {}
-        }
+        log_entry = {"event": event, "timestamp": (timestamp or datetime.utcnow()).isoformat(), "fields": fields or {}}
         self._logs.append(log_entry)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -107,7 +103,7 @@ class TraceSpan:
             "operation_name": self._operation_name,
             "start_time": self._start_time.isoformat(),
             "tags": self._tags,
-            "logs": self._logs
+            "logs": self._logs,
         }
 
         if self._parent_span_id:
@@ -120,4 +116,6 @@ class TraceSpan:
         return result
 
     def __repr__(self) -> str:
-        return f"TraceSpan(span_id='{self._span_id}', service='{self._service_name}', operation='{self._operation_name}')"
+        return (
+            f"TraceSpan(span_id='{self._span_id}', service='{self._service_name}', operation='{self._operation_name}')"
+        )

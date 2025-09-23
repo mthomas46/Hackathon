@@ -1,14 +1,17 @@
 """Service Registry Domain Layer"""
 
 from .entities import *
-from .value_objects import *
 from .services import *
+from .value_objects import *
 
 __all__ = [
     # Entities
-    'Service',
+    "Service",
     # Value Objects
-    'ServiceId', 'ServiceEndpoint', 'ServiceCapability',
+    "ServiceId",
+    "ServiceEndpoint",
+    "ServiceCapability",
     # Services
-    'ServiceDiscoveryService', 'ServiceRegistrationService'
+    "ServiceDiscoveryService",
+    "ServiceRegistrationService",
 ]

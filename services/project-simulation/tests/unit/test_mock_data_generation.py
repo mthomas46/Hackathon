@@ -6,14 +6,15 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-import pytest
-from unittest.mock import Mock, patch
-from typing import List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List
+from unittest.mock import Mock, patch
+
+import pytest
+from simulation.domain.entities.simulation import SimulationStatus, SimulationType
 
 # Import the modules we'll be testing (these may not exist yet - that's why tests will fail)
 from simulation.infrastructure.mock_data.mock_data_generator import MockDataGenerator
-from simulation.domain.entities.simulation import SimulationType, SimulationStatus
 
 
 class TestMockDataGenerator:
@@ -104,11 +105,11 @@ class TestMockDataGenerator:
         tech_names = " ".join(technologies).lower()
         # Check that at least some technology inference happened
         inferred_found = (
-            "node" in tech_names or
-            "react" in tech_names or
-            "postgres" in tech_names or
-            "vue" in tech_names or
-            "angular" in tech_names
+            "node" in tech_names
+            or "react" in tech_names
+            or "postgres" in tech_names
+            or "vue" in tech_names
+            or "angular" in tech_names
         )
         assert inferred_found, f"No expected technologies found in: {technologies}"
 
@@ -141,17 +142,8 @@ class TestMockDataGenerator:
         """Test generation of comprehensive mock data for simulation."""
         # Arrange
         query = "Create an e-commerce platform with user authentication and payment processing"
-        context = {
-            "project_type": "web_application",
-            "complexity": "high",
-            "budget": 200000
-        }
-        config = {
-            "type": "web_application",
-            "complexity": "high",
-            "duration_weeks": 12,
-            "team_size": 5
-        }
+        context = {"project_type": "web_application", "complexity": "high", "budget": 200000}
+        config = {"type": "web_application", "complexity": "high", "duration_weeks": 12, "team_size": 5}
 
         # Act
         mock_data = self.generator.generate_comprehensive_mock_data(query, context, config)
@@ -225,8 +217,9 @@ class TestMockDataGenerator:
             expected_lower = [tech.lower() for tech in expected_techs]
 
             # At least one expected technology should be present
-            assert any(expected in " ".join(tech_names) for expected in expected_lower), \
-                f"Expected technologies {expected_techs} not found in {technologies}"
+            assert any(
+                expected in " ".join(tech_names) for expected in expected_lower
+            ), f"Expected technologies {expected_techs} not found in {technologies}"
 
 
 class TestMockDataIntegration:

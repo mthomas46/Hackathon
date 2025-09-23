@@ -9,6 +9,7 @@ from services.shared.utilities import get_service_client
 # Shared service client for all frontend modules - lazy initialization
 _service_client = None
 
+
 def get_frontend_client():
     """Get the shared service client for frontend modules.
 
@@ -20,8 +21,10 @@ def get_frontend_client():
         _service_client = get_service_client()
     return _service_client
 
+
 # Module-level client instance for direct access (optional optimization)
 frontend_client = None
+
 
 def initialize_frontend_client():
     """Initialize the module-level frontend client."""
@@ -30,9 +33,6 @@ def initialize_frontend_client():
         frontend_client = get_service_client()
     return frontend_client
 
+
 # Export key module functions for easier importing
-__all__ = [
-    'get_frontend_client',
-    'initialize_frontend_client',
-    'frontend_client'
-]
+__all__ = ["get_frontend_client", "initialize_frontend_client", "frontend_client"]

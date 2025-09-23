@@ -92,14 +92,14 @@ import inspect
 import threading
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Dict, Any, Type, TypeVar, Optional, Union, Callable, Generic, Protocol, List
-from enum import Enum
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, Type, TypeVar, Union
 from weakref import WeakValueDictionary
 
-T = TypeVar('T')
-TService = TypeVar('TService')
-TImplementation = TypeVar('TImplementation')
+T = TypeVar("T")
+TService = TypeVar("TService")
+TImplementation = TypeVar("TImplementation")
 
 
 class ServiceLifetime(Enum):
@@ -116,9 +116,10 @@ class ServiceLifetime(Enum):
         SCOPED: Single instance per scope/context, disposed when scope ends.
                Useful for request-scoped services and per-operation state.
     """
-    SINGLETON = "singleton"      # Single instance for entire application
-    TRANSIENT = "transient"      # New instance each time requested
-    SCOPED = "scoped"            # Single instance per scope/context
+
+    SINGLETON = "singleton"  # Single instance for entire application
+    TRANSIENT = "transient"  # New instance each time requested
+    SCOPED = "scoped"  # Single instance per scope/context
 
 
 class ServiceDescriptor(Generic[T]):
@@ -144,12 +145,14 @@ class ServiceDescriptor(Generic[T]):
         instance: Pre-created service instance for singletons
     """
 
-    def __init__(self,
-                 service_type: Type[T],
-                 implementation_type: Optional[Type[T]] = None,
-                 factory: Optional[Callable[..., T]] = None,
-                 lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT,
-                 instance: Optional[T] = None) -> None:
+    def __init__(
+        self,
+        service_type: Type[T],
+        implementation_type: Optional[Type[T]] = None,
+        factory: Optional[Callable[..., T]] = None,
+        lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT,
+        instance: Optional[T] = None,
+    ) -> None:
         """Initialize service descriptor.
 
         Args:
@@ -166,7 +169,7 @@ class ServiceDescriptor(Generic[T]):
         self.instance: Optional[T] = instance
         self._lock = threading.RLock()
 
-    def create_instance(self, container: 'DependencyContainer', *args: Any, **kwargs: Any) -> T:
+    def create_instance(self, container: "DependencyContainer", *args: Any, **kwargs: Any) -> T:
         """Create a new instance of the service.
 
         This method handles the complete service instantiation process including:
@@ -206,7 +209,7 @@ class ServiceDescriptor(Generic[T]):
 
             return instance
 
-    def _create_with_injection(self, container: 'DependencyContainer', *args: Any, **kwargs: Any) -> T:
+    def _create_with_injection(self, container: "DependencyContainer", *args: Any, **kwargs: Any) -> T:
         """Create instance with automatic dependency injection.
 
         This method performs automatic dependency injection by:
@@ -233,7 +236,7 @@ class ServiceDescriptor(Generic[T]):
 
             # Process each constructor parameter
             for param_name, param in signature.parameters.items():
-                if param_name == 'self':
+                if param_name == "self":
                     continue
 
                 if param_name in kwargs:
@@ -397,7 +400,7 @@ class DependencyContainer(IServiceProvider):
         _lock: Thread synchronization lock
     """
 
-    def __init__(self, parent: Optional['DependencyContainer'] = None) -> None:
+    def __init__(self, parent: Optional["DependencyContainer"] = None) -> None:
         """Initialize dependency injection container.
 
         Args:
@@ -408,10 +411,12 @@ class DependencyContainer(IServiceProvider):
         self._parent = parent
         self._services: Dict[Type[Any], ServiceDescriptor[Any]] = {}
         self._scoped_services: WeakValueDictionary[Type[Any], Any] = WeakValueDictionary()
-        self._current_scope: ContextVar[Optional['ServiceScope']] = ContextVar('current_scope', default=None)
+        self._current_scope: ContextVar[Optional["ServiceScope"]] = ContextVar("current_scope", default=None)
         self._lock = threading.RLock()
 
-    def register_singleton(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None, instance: Optional[T] = None) -> 'DependencyContainer':
+    def register_singleton(
+        self, service_type: Type[T], implementation_type: Optional[Type[T]] = None, instance: Optional[T] = None
+    ) -> "DependencyContainer":
         """Register a singleton service.
 
         Singleton services share a single instance across the entire application.
@@ -430,7 +435,9 @@ class DependencyContainer(IServiceProvider):
         """
         return self._register(service_type, implementation_type, ServiceLifetime.SINGLETON, instance=instance)
 
-    def register_transient(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyContainer':
+    def register_transient(
+        self, service_type: Type[T], implementation_type: Optional[Type[T]] = None
+    ) -> "DependencyContainer":
         """Register a transient service.
 
         Transient services create a new instance each time they are requested.
@@ -448,7 +455,9 @@ class DependencyContainer(IServiceProvider):
         """
         return self._register(service_type, implementation_type, ServiceLifetime.TRANSIENT)
 
-    def register_scoped(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyContainer':
+    def register_scoped(
+        self, service_type: Type[T], implementation_type: Optional[Type[T]] = None
+    ) -> "DependencyContainer":
         """Register a scoped service.
 
         Scoped services create one instance per service scope. Within a scope,
@@ -466,7 +475,9 @@ class DependencyContainer(IServiceProvider):
         """
         return self._register(service_type, implementation_type, ServiceLifetime.SCOPED)
 
-    def register_factory(self, service_type: Type[T], factory: Callable[..., T], lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT) -> 'DependencyContainer':
+    def register_factory(
+        self, service_type: Type[T], factory: Callable[..., T], lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT
+    ) -> "DependencyContainer":
         """Register a service with a custom factory function.
 
         Factory functions provide full control over service instantiation,
@@ -491,7 +502,7 @@ class DependencyContainer(IServiceProvider):
         self._services[service_type] = descriptor
         return self
 
-    def register_instance(self, service_type: Type[T], instance: T) -> 'DependencyContainer':
+    def register_instance(self, service_type: Type[T], instance: T) -> "DependencyContainer":
         """Register a pre-created instance as singleton.
 
         This is useful for services that need special initialization or
@@ -512,17 +523,20 @@ class DependencyContainer(IServiceProvider):
         self._services[service_type] = descriptor
         return self
 
-    def _register(self, service_type: Type[T], implementation_type: Optional[Type[T]], lifetime: ServiceLifetime, instance: Optional[T] = None) -> 'DependencyContainer':
+    def _register(
+        self,
+        service_type: Type[T],
+        implementation_type: Optional[Type[T]],
+        lifetime: ServiceLifetime,
+        instance: Optional[T] = None,
+    ) -> "DependencyContainer":
         """Internal registration method."""
         with self._lock:
             if implementation_type is None:
                 implementation_type = service_type
 
             descriptor = ServiceDescriptor(
-                service_type=service_type,
-                implementation_type=implementation_type,
-                lifetime=lifetime,
-                instance=instance
+                service_type=service_type, implementation_type=implementation_type, lifetime=lifetime, instance=instance
             )
 
             self._services[service_type] = descriptor
@@ -619,7 +633,7 @@ class DependencyContainer(IServiceProvider):
 
         return services
 
-    def create_scope(self) -> 'ServiceScope':
+    def create_scope(self) -> "ServiceScope":
         """Create a new service scope.
 
         Service scopes provide isolated service instances within a specific
@@ -657,7 +671,7 @@ class DependencyContainer(IServiceProvider):
         """
         with self._lock:
             for descriptor in self._services.values():
-                if hasattr(descriptor.instance, 'dispose'):
+                if hasattr(descriptor.instance, "dispose"):
                     try:
                         descriptor.instance.dispose()
                     except Exception:
@@ -775,7 +789,7 @@ class ServiceScope(IServiceScope):
 
         with self._lock:
             for instance in self._scoped_instances.values():
-                if hasattr(instance, 'dispose'):
+                if hasattr(instance, "dispose"):
                     try:
                         instance.dispose()
                     except Exception:

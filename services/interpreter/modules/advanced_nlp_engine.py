@@ -10,25 +10,26 @@ Implements advanced natural language processing capabilities with:
 """
 
 import asyncio
-import json
-import uuid
-import time
-import re
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
-from collections import defaultdict, deque
 import hashlib
+import json
+import re
 import threading
+import time
+import uuid
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 from services.shared.intelligent_caching import get_service_cache
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class ConversationState(Enum):
     """Conversation states for advanced dialogue management."""
+
     INITIAL = "initial"
     QUESTIONING = "questioning"
     CLARIFYING = "clarifying"
@@ -39,6 +40,7 @@ class ConversationState(Enum):
 
 class MemoryType(Enum):
     """Types of conversation memory."""
+
     SHORT_TERM = "short_term"  # Current session
     MEDIUM_TERM = "medium_term"  # Last 24 hours
     LONG_TERM = "long_term"  # Historical patterns
@@ -47,6 +49,7 @@ class MemoryType(Enum):
 
 class IntentConfidence(Enum):
     """Intent recognition confidence levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -56,6 +59,7 @@ class IntentConfidence(Enum):
 @dataclass
 class ConversationContext:
     """Advanced conversation context with memory and state."""
+
     conversation_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     user_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -85,7 +89,7 @@ class ConversationContext:
             "type": message_type,
             "content": message,
             "timestamp": datetime.now(),
-            "turn_number": self.turn_count
+            "turn_number": self.turn_count,
         }
 
         self.conversation_history.append(message_entry)
@@ -115,7 +119,7 @@ class ConversationContext:
             "value": entity_value,
             "confidence": confidence,
             "last_updated": datetime.now(),
-            "mention_count": self.active_entities.get(entity_type, {}).get("mention_count", 0) + 1
+            "mention_count": self.active_entities.get(entity_type, {}).get("mention_count", 0) + 1,
         }
 
     def get_entity(self, entity_type: str) -> Optional[Dict[str, Any]]:
@@ -144,13 +148,14 @@ class ConversationContext:
             "current_topic": self.current_topic,
             "active_entities_count": len(self.active_entities),
             "state": self.current_state.value,
-            "last_activity": self.last_updated.isoformat()
+            "last_activity": self.last_updated.isoformat(),
         }
 
 
 @dataclass
 class IntentResult:
     """Result of intent recognition with confidence and context."""
+
     intent: str
     confidence: IntentConfidence
     confidence_score: float
@@ -172,13 +177,14 @@ class IntentResult:
             "alternative_intents": self.alternative_intents,
             "processing_time_ms": self.processing_time_ms,
             "requires_clarification": self.requires_clarification,
-            "clarification_question": self.clarification_question
+            "clarification_question": self.clarification_question,
         }
 
 
 @dataclass
 class MultiModalInput:
     """Multi-modal input processing result."""
+
     text_content: Optional[str] = None
     audio_transcript: Optional[str] = None
     image_description: Optional[str] = None
@@ -234,8 +240,9 @@ class ConversationMemoryManager:
         self.memory_patterns: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
         self.cache = get_service_cache(ServiceNames.INTERPRETER)
 
-    async def create_conversation(self, user_id: Optional[str] = None,
-                                session_id: Optional[str] = None) -> ConversationContext:
+    async def create_conversation(
+        self, user_id: Optional[str] = None, session_id: Optional[str] = None
+    ) -> ConversationContext:
         """Create a new conversation context."""
         context = ConversationContext(user_id=user_id, session_id=session_id)
 
@@ -250,13 +257,19 @@ class ConversationMemoryManager:
         self.active_conversations[context.conversation_id] = context
 
         # Cache conversation
-        await self.cache.set(f"conversation_{context.conversation_id}", {
-            "conversation_id": context.conversation_id,
-            "user_id": context.user_id,
-            "created_at": context.created_at.isoformat()
-        }, ttl_seconds=3600)
+        await self.cache.set(
+            f"conversation_{context.conversation_id}",
+            {
+                "conversation_id": context.conversation_id,
+                "user_id": context.user_id,
+                "created_at": context.created_at.isoformat(),
+            },
+            ttl_seconds=3600,
+        )
 
-        fire_and_forget("info", f"Created conversation {context.conversation_id} for user {user_id}", ServiceNames.INTERPRETER)
+        fire_and_forget(
+            "info", f"Created conversation {context.conversation_id} for user {user_id}", ServiceNames.INTERPRETER
+        )
         return context
 
     async def get_conversation(self, conversation_id: str) -> Optional[ConversationContext]:
@@ -287,11 +300,15 @@ class ConversationMemoryManager:
         context.last_updated = datetime.now()
 
         # Update cache
-        await self.cache.set(f"conversation_{conversation_id}", {
-            "conversation_id": context.conversation_id,
-            "user_id": context.user_id,
-            "last_updated": context.last_updated.isoformat()
-        }, ttl_seconds=3600)
+        await self.cache.set(
+            f"conversation_{conversation_id}",
+            {
+                "conversation_id": context.conversation_id,
+                "user_id": context.user_id,
+                "last_updated": context.last_updated.isoformat(),
+            },
+            ttl_seconds=3600,
+        )
 
         return True
 
@@ -329,7 +346,7 @@ class ConversationMemoryManager:
             "response_style": "concise",
             "technical_level": "intermediate",
             "preferred_modalities": ["text"],
-            "notification_preferences": {"email": True, "push": False}
+            "notification_preferences": {"email": True, "push": False},
         }
 
     async def _load_long_term_memory(self, user_id: str) -> List[Dict[str, Any]]:
@@ -368,7 +385,7 @@ class ConversationMemoryManager:
                         "user_input_pattern": self._extract_pattern(user_msg["content"]),
                         "successful_response": assistant_msg["content"],
                         "topic": context.current_topic,
-                        "timestamp": assistant_msg["timestamp"]
+                        "timestamp": assistant_msg["timestamp"],
                     }
                     successful_patterns.append(pattern)
 
@@ -387,9 +404,9 @@ class ConversationMemoryManager:
 
         # Simple pattern extraction - in production would use NLP
         # Remove specific details and keep structure
-        pattern = re.sub(r'\b\d+\b', 'NUMBER', text)
-        pattern = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', 'EMAIL', pattern)
-        pattern = re.sub(r'\b\d{1,2}/\d{1,2}/\d{4}\b', 'DATE', pattern)
+        pattern = re.sub(r"\b\d+\b", "NUMBER", text)
+        pattern = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "EMAIL", pattern)
+        pattern = re.sub(r"\b\d{1,2}/\d{1,2}/\d{4}\b", "DATE", pattern)
 
         return pattern.lower()
 
@@ -397,8 +414,9 @@ class ConversationMemoryManager:
         """Persist conversation to long-term storage."""
         # In production, this would save to database
         # For now, just update cache
-        await self.cache.set(f"archived_conversation_{context.conversation_id}",
-                           context.get_conversation_summary(), ttl_seconds=604800)  # 7 days
+        await self.cache.set(
+            f"archived_conversation_{context.conversation_id}", context.get_conversation_summary(), ttl_seconds=604800
+        )  # 7 days
 
     def get_memory_patterns(self, user_id: str) -> List[Dict[str, Any]]:
         """Get memory patterns for a user."""
@@ -423,28 +441,28 @@ class AdvancedIntentRecognizer:
             "document_analysis": [
                 {"pattern": r"analyze|examine|review|check", "weight": 0.8},
                 {"pattern": r"document|file|content|text", "weight": 0.6},
-                {"pattern": r"consistency|quality|issues|problems", "weight": 0.7}
+                {"pattern": r"consistency|quality|issues|problems", "weight": 0.7},
             ],
             "search_query": [
                 {"pattern": r"find|search|lookup|locate", "weight": 0.9},
-                {"pattern": r"information|data|details|about", "weight": 0.5}
+                {"pattern": r"information|data|details|about", "weight": 0.5},
             ],
             "workflow_execution": [
                 {"pattern": r"run|execute|perform|do", "weight": 0.8},
-                {"pattern": r"workflow|process|task|job", "weight": 0.7}
+                {"pattern": r"workflow|process|task|job", "weight": 0.7},
             ],
             "data_ingestion": [
                 {"pattern": r"import|load|ingest|upload", "weight": 0.8},
-                {"pattern": r"data|files|documents|content", "weight": 0.6}
+                {"pattern": r"data|files|documents|content", "weight": 0.6},
             ],
             "summarization": [
                 {"pattern": r"summarize|summary|abstract|overview", "weight": 0.9},
-                {"pattern": r"short|brief|concise|key.*points", "weight": 0.6}
+                {"pattern": r"short|brief|concise|key.*points", "weight": 0.6},
             ],
             "clarification_request": [
                 {"pattern": r"what|how|when|where|why|who", "weight": 0.4},
-                {"pattern": r"mean|clarify|explain|help", "weight": 0.5}
-            ]
+                {"pattern": r"mean|clarify|explain|help", "weight": 0.5},
+            ],
         }
 
     def _load_entity_extractors(self) -> Dict[str, Callable]:
@@ -455,10 +473,12 @@ class AdvancedIntentRecognizer:
             "date_range": self._extract_date_range,
             "person_name": self._extract_person_name,
             "organization": self._extract_organization,
-            "location": self._extract_location
+            "location": self._extract_location,
         }
 
-    async def recognize_intent(self, input_text: str, conversation_context: Optional[ConversationContext] = None) -> IntentResult:
+    async def recognize_intent(
+        self, input_text: str, conversation_context: Optional[ConversationContext] = None
+    ) -> IntentResult:
         """Recognize intent from input text with context awareness."""
         start_time = time.time()
 
@@ -492,7 +512,7 @@ class AdvancedIntentRecognizer:
             "intent_scores": intent_scores,
             "conversation_state": conversation_context.current_state.value if conversation_context else "unknown",
             "topic": conversation_context.current_topic if conversation_context else None,
-            "entity_count": len(entities)
+            "entity_count": len(entities),
         }
 
         # Calculate alternative intents
@@ -509,7 +529,7 @@ class AdvancedIntentRecognizer:
             alternative_intents=alternative_intents,
             processing_time_ms=processing_time,
             requires_clarification=requires_clarification,
-            clarification_question=clarification_question
+            clarification_question=clarification_question,
         )
 
     def _preprocess_text(self, text: str) -> str:
@@ -518,10 +538,10 @@ class AdvancedIntentRecognizer:
         text = text.lower()
 
         # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r"\s+", " ", text).strip()
 
         # Remove punctuation (keep some for context)
-        text = re.sub(r'[^\w\s\?\.\!\,\:\;\'\"]', '', text)
+        text = re.sub(r"[^\w\s\?\.\!\,\:\;\'\"]", "", text)
 
         return text
 
@@ -549,8 +569,9 @@ class AdvancedIntentRecognizer:
 
         return scores
 
-    async def _apply_context_awareness(self, scores: Dict[str, float],
-                                     context: ConversationContext) -> Dict[str, float]:
+    async def _apply_context_awareness(
+        self, scores: Dict[str, float], context: ConversationContext
+    ) -> Dict[str, float]:
         """Apply context awareness to intent scores."""
         # Boost scores based on conversation state
         if context.current_state == ConversationState.QUESTIONING:
@@ -609,8 +630,9 @@ class AdvancedIntentRecognizer:
         else:
             return IntentConfidence.LOW
 
-    def _check_clarification_needed(self, scores: Dict[str, float], primary_score: float,
-                                  entities: Dict[str, Any]) -> tuple[bool, Optional[str]]:
+    def _check_clarification_needed(
+        self, scores: Dict[str, float], primary_score: float, entities: Dict[str, Any]
+    ) -> tuple[bool, Optional[str]]:
         """Check if clarification is needed."""
         # Low confidence
         if primary_score < 0.5:
@@ -620,7 +642,10 @@ class AdvancedIntentRecognizer:
         high_confidence_intents = [intent for intent, score in scores.items() if score >= 0.6]
         if len(high_confidence_intents) > 1:
             intent_names = [intent.replace("_", " ") for intent in high_confidence_intents[:3]]
-            return True, f"I detected multiple possible intents: {', '.join(intent_names)}. Could you clarify which one you meant?"
+            return (
+                True,
+                f"I detected multiple possible intents: {', '.join(intent_names)}. Could you clarify which one you meant?",
+            )
 
         # Missing critical entities
         if not entities and any(keyword in scores for keyword in ["document_analysis", "search_query"]):
@@ -634,11 +659,13 @@ class AdvancedIntentRecognizer:
 
         for intent, score in scores.items():
             if intent != primary_intent and score > 0.3:
-                alternatives.append({
-                    "intent": intent,
-                    "confidence_score": score,
-                    "confidence": self._calculate_confidence_level(score).value
-                })
+                alternatives.append(
+                    {
+                        "intent": intent,
+                        "confidence_score": score,
+                        "confidence": self._calculate_confidence_level(score).value,
+                    }
+                )
 
         # Sort by confidence score
         alternatives.sort(key=lambda x: x["confidence_score"], reverse=True)
@@ -657,14 +684,14 @@ class AdvancedIntentRecognizer:
     def _extract_file_path(self, text: str) -> Optional[str]:
         """Extract file path from text."""
         # Simple path pattern matching
-        path_pattern = r'[\w\-\.\/]+\.[\w]+'
+        path_pattern = r"[\w\-\.\/]+\.[\w]+"
         match = re.search(path_pattern, text)
         return match.group(0) if match else None
 
     def _extract_date_range(self, text: str) -> Optional[Dict[str, str]]:
         """Extract date range from text."""
         # Simple date pattern matching
-        date_pattern = r'\b\d{1,2}/\d{1,2}/\d{4}\b'
+        date_pattern = r"\b\d{1,2}/\d{1,2}/\d{4}\b"
         dates = re.findall(date_pattern, text)
 
         if len(dates) >= 2:
@@ -694,7 +721,7 @@ class AdvancedIntentRecognizer:
 
         for i, word in enumerate(words):
             if word.lower() in org_keywords and i > 0:
-                return " ".join(words[max(0, i-2):i+1])
+                return " ".join(words[max(0, i - 2) : i + 1])
 
         return None
 
@@ -727,7 +754,7 @@ class ContextAnalyzer:
             "analysis": ["analyze", "review", "check", "quality", "consistency", "issues"],
             "search": ["find", "search", "lookup", "query", "information", "data"],
             "workflow": ["run", "execute", "process", "task", "job", "workflow"],
-            "data_management": ["import", "export", "upload", "download", "sync", "backup"]
+            "data_management": ["import", "export", "upload", "download", "sync", "backup"],
         }
 
     def analyze_context(self, text: str, conversation_context: Optional[ConversationContext] = None) -> Dict[str, Any]:
@@ -737,7 +764,7 @@ class ContextAnalyzer:
             "sentiment": "neutral",
             "complexity": "simple",
             "urgency": "normal",
-            "domain_expertise": "general"
+            "domain_expertise": "general",
         }
 
         # Detect topics
@@ -753,7 +780,9 @@ class ContextAnalyzer:
         context_analysis["urgency"] = self._analyze_urgency(text)
 
         # Determine domain expertise needed
-        context_analysis["domain_expertise"] = self._determine_domain_expertise(text, context_analysis["detected_topics"])
+        context_analysis["domain_expertise"] = self._determine_domain_expertise(
+            text, context_analysis["detected_topics"]
+        )
 
         # Incorporate conversation context
         if conversation_context:
@@ -791,7 +820,7 @@ class ContextAnalyzer:
     def _analyze_complexity(self, text: str) -> str:
         """Analyze complexity of text."""
         word_count = len(text.split())
-        sentence_count = len([s for s in text.split('.') if s.strip()])
+        sentence_count = len([s for s in text.split(".") if s.strip()])
 
         if word_count > 50 or sentence_count > 3:
             return "complex"
@@ -882,10 +911,7 @@ class MultiModalProcessor:
 
     async def _default_processor(self, data: Any) -> Dict[str, Any]:
         """Default processing for unsupported modalities."""
-        return {
-            "content": str(data),
-            "confidence": 0.5
-        }
+        return {"content": str(data), "confidence": 0.5}
 
     def register_processor(self, modality: str, processor: Callable):
         """Register a processor for a specific modality."""
@@ -936,7 +962,7 @@ async def test_advanced_nlp():
         "Can you analyze this document for consistency issues?",
         "Find all documentation about API endpoints",
         "Run the workflow for processing customer data",
-        "What do you mean by that?"
+        "What do you mean by that?",
     ]
 
     for query in test_queries:
@@ -957,17 +983,13 @@ async def test_advanced_nlp():
             print(f"   Clarification needed: {intent_result.clarification_question}")
 
         # Add response to conversation
-        conversation.add_message({
-            "intent": intent_result.intent,
-            "confidence": intent_result.confidence_score
-        }, "assistant")
+        conversation.add_message(
+            {"intent": intent_result.intent, "confidence": intent_result.confidence_score}, "assistant"
+        )
 
     # Test multi-modal processing
     print("\n🎭 Testing Multi-Modal Processing:")
-    multi_modal_input = {
-        "text": "Please analyze this image",
-        "image": "diagram.png"
-    }
+    multi_modal_input = {"text": "Please analyze this image", "image": "diagram.png"}
 
     processed = await multi_modal_processor.process_input(multi_modal_input)
     print(f"   Combined content: {processed.get_combined_content()}")

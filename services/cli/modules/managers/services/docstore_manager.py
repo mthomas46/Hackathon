@@ -4,20 +4,15 @@ Provides power-user operations for document store management including
 documents, analyses, search, and quality operations.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from ...base.base_manager import BaseManager
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...shared_utils import add_menu_rows, create_menu_table, get_cli_clients, log_cli_metrics, print_panel
 
 
 class DocStoreManager(BaseManager):
@@ -32,11 +27,7 @@ class DocStoreManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for docstore operations."""
-        return [
-            ("1", "Document Management"),
-            ("2", "Search Operations"),
-            ("3", "Storage Configuration")
-        ]
+        return [("1", "Document Management"), ("2", "Search Operations"), ("3", "Storage Configuration")]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -47,15 +38,18 @@ class DocStoreManager(BaseManager):
         """Main document store management menu."""
         while True:
             menu = create_menu_table("Document Store Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Document Operations (View, Add, Update, Delete)"),
-                ("2", "Analysis Management (Run, View, Link)"),
-                ("3", "Search & Discovery"),
-                ("4", "Quality Metrics & Style Examples"),
-                ("5", "Bulk Operations"),
-                ("6", "Document Store Info & Config"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Document Operations (View, Add, Update, Delete)"),
+                    ("2", "Analysis Management (Run, View, Link)"),
+                    ("3", "Search & Discovery"),
+                    ("4", "Quality Metrics & Style Examples"),
+                    ("5", "Bulk Operations"),
+                    ("6", "Document Store Info & Config"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -81,15 +75,18 @@ class DocStoreManager(BaseManager):
         """Document operations submenu."""
         while True:
             menu = create_menu_table("Document Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List Documents"),
-                ("2", "View Document Details"),
-                ("3", "Add New Document"),
-                ("4", "Update Document"),
-                ("5", "Delete Document"),
-                ("6", "Document Statistics"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List Documents"),
+                    ("2", "View Document Details"),
+                    ("3", "Add New Document"),
+                    ("4", "Update Document"),
+                    ("5", "Delete Document"),
+                    ("6", "Document Statistics"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -132,13 +129,17 @@ class DocStoreManager(BaseManager):
                 table.add_column("Created", style="blue")
 
                 for doc in response["documents"]:
-                    quality_color = "green" if doc.get("quality_score", 0) > 7 else "yellow" if doc.get("quality_score", 0) > 4 else "red"
+                    quality_color = (
+                        "green"
+                        if doc.get("quality_score", 0) > 7
+                        else "yellow" if doc.get("quality_score", 0) > 4 else "red"
+                    )
                     table.add_row(
                         doc.get("id", "N/A")[:8],
                         doc.get("title", "Untitled")[:40],
                         doc.get("type", "unknown"),
                         f"[{quality_color}]{doc.get('quality_score', 0):.1f}[/{quality_color}]",
-                        doc.get("created_at", "unknown")[:19]
+                        doc.get("created_at", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -176,11 +177,12 @@ Metadata:
 """
                 if doc.get("metadata"):
                     import json
+
                     content += f"```json\n{json.dumps(doc['metadata'], indent=2)}\n```"
 
-                if len(doc.get('content', '')) < 500:
+                if len(doc.get("content", "")) < 500:
                     content += f"\nContent:\n{doc['content'][:500]}"
-                    if len(doc['content']) > 500:
+                    if len(doc["content"]) > 500:
                         content += "..."
                 else:
                     content += f"\nContent Preview:\n{doc['content'][:200]}..."
@@ -196,20 +198,20 @@ Metadata:
         """Add new document."""
         try:
             title = Prompt.ask("[bold cyan]Document title[/bold cyan]")
-            doc_type = Prompt.ask("[bold cyan]Document type[/bold cyan]", choices=["article", "documentation", "code", "other"])
+            doc_type = Prompt.ask(
+                "[bold cyan]Document type[/bold cyan]", choices=["article", "documentation", "code", "other"]
+            )
             content = Prompt.ask("[bold cyan]Content[/bold cyan]")
 
             metadata_input = Prompt.ask("[bold cyan]Metadata (JSON)[/bold cyan]", default="{}")
             import json
+
             metadata = json.loads(metadata_input)
 
             with self.console.status("[bold green]Adding document...") as status:
-                response = await self.clients.post_json("doc_store/documents", {
-                    "title": title,
-                    "type": doc_type,
-                    "content": content,
-                    "metadata": metadata
-                })
+                response = await self.clients.post_json(
+                    "doc_store/documents", {"title": title, "type": doc_type, "content": content, "metadata": metadata}
+                )
 
             if response.get("document_id"):
                 self.console.print(f"[green]✅ Document added successfully: {response['document_id']}[/green]")
@@ -223,12 +225,15 @@ Metadata:
         """Update document."""
         try:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
-            field = Prompt.ask("[bold cyan]Field to update[/bold cyan]", choices=["title", "content", "metadata", "type"])
+            field = Prompt.ask(
+                "[bold cyan]Field to update[/bold cyan]", choices=["title", "content", "metadata", "type"]
+            )
             new_value = Prompt.ask(f"[bold cyan]New {field} value[/bold cyan]")
 
             update_data = {field: new_value}
             if field == "metadata":
                 import json
+
                 update_data[field] = json.loads(new_value)
 
             with self.console.status(f"[bold green]Updating document {doc_id}...") as status:
@@ -302,14 +307,17 @@ Storage Used: {stats.get('storage_mb', 0):.2f} MB
         """Analysis management submenu."""
         while True:
             menu = create_menu_table("Analysis Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List Analyses"),
-                ("2", "View Analysis Details"),
-                ("3", "Run New Analysis"),
-                ("4", "Link Analysis to Document"),
-                ("5", "Delete Analysis"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List Analyses"),
+                    ("2", "View Analysis Details"),
+                    ("3", "Run New Analysis"),
+                    ("4", "Link Analysis to Document"),
+                    ("5", "Delete Analysis"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -353,7 +361,7 @@ Storage Used: {stats.get('storage_mb', 0):.2f} MB
                         analysis.get("type", "unknown"),
                         analysis.get("document_id", "N/A")[:8],
                         f"{analysis.get('score', 0):.2f}",
-                        analysis.get("created_at", "unknown")[:19]
+                        analysis.get("created_at", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -388,6 +396,7 @@ Results:
 """
                 if analysis.get("results"):
                     import json
+
                     content += f"```json\n{json.dumps(analysis['results'], indent=2)}\n```"
                 else:
                     content += "No detailed results available."
@@ -403,13 +412,14 @@ Results:
         """Run new analysis."""
         try:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]", choices=["quality", "consistency", "sentiment", "summary"])
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]", choices=["quality", "consistency", "sentiment", "summary"]
+            )
 
             with self.console.status(f"[bold green]Running {analysis_type} analysis on document {doc_id}...") as status:
-                response = await self.clients.post_json("doc_store/analyses", {
-                    "document_id": doc_id,
-                    "type": analysis_type
-                })
+                response = await self.clients.post_json(
+                    "doc_store/analyses", {"document_id": doc_id, "type": analysis_type}
+                )
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Analysis started: {response['analysis_id']}[/green]")
@@ -426,9 +436,9 @@ Results:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
 
             with self.console.status(f"[bold green]Linking analysis {analysis_id} to document {doc_id}...") as status:
-                response = await self.clients.post_json(f"doc_store/analyses/{analysis_id}/link", {
-                    "document_id": doc_id
-                })
+                response = await self.clients.post_json(
+                    f"doc_store/analyses/{analysis_id}/link", {"document_id": doc_id}
+                )
 
             if response.get("linked"):
                 self.console.print(f"[green]✅ Analysis linked successfully[/green]")
@@ -462,14 +472,17 @@ Results:
         """Search and discovery submenu."""
         while True:
             menu = create_menu_table("Search & Discovery", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Search Documents"),
-                ("2", "Advanced Search"),
-                ("3", "Search by Quality Score"),
-                ("4", "Find Similar Documents"),
-                ("5", "Recent Documents"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Search Documents"),
+                    ("2", "Advanced Search"),
+                    ("3", "Search by Quality Score"),
+                    ("4", "Find Similar Documents"),
+                    ("5", "Recent Documents"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -516,6 +529,7 @@ Results:
             filters = {}
             filters_input = Prompt.ask("[bold cyan]Search filters (JSON)[/bold cyan]", default="{}")
             import json
+
             filters = json.loads(filters_input)
 
             query = Prompt.ask("[bold cyan]Search query[/bold cyan]", default="")
@@ -543,13 +557,19 @@ Results:
             min_score = float(Prompt.ask("[bold cyan]Minimum quality score[/bold cyan]", default="0"))
             max_score = float(Prompt.ask("[bold cyan]Maximum quality score[/bold cyan]", default="10"))
 
-            with self.console.status(f"[bold green]Searching documents with quality {min_score}-{max_score}...") as status:
-                response = await self.clients.get_json(f"doc_store/search?quality_min={min_score}&quality_max={max_score}")
+            with self.console.status(
+                f"[bold green]Searching documents with quality {min_score}-{max_score}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"doc_store/search?quality_min={min_score}&quality_max={max_score}"
+                )
 
             if response.get("results"):
                 self.display_search_results(response["results"], f"Documents with Quality {min_score}-{max_score}")
             else:
-                self.console.print(f"[yellow]No documents found with quality score between {min_score} and {max_score}.[/yellow]")
+                self.console.print(
+                    f"[yellow]No documents found with quality score between {min_score} and {max_score}.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error searching by quality: {e}[/red]")
@@ -571,12 +591,16 @@ Results:
                 table.add_column("Type", style="yellow")
 
                 for doc in response["similar_documents"]:
-                    similarity_color = "green" if doc.get("similarity", 0) > 0.8 else "yellow" if doc.get("similarity", 0) > 0.5 else "red"
+                    similarity_color = (
+                        "green"
+                        if doc.get("similarity", 0) > 0.8
+                        else "yellow" if doc.get("similarity", 0) > 0.5 else "red"
+                    )
                     table.add_row(
                         doc.get("id", "N/A")[:8],
                         doc.get("title", "Untitled")[:40],
                         f"[{similarity_color}]{doc.get('similarity', 0):.2f}[/{similarity_color}]",
-                        doc.get("type", "unknown")
+                        doc.get("type", "unknown"),
                     )
 
                 self.console.print(table)
@@ -592,7 +616,9 @@ Results:
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
             with self.console.status("[bold green]Fetching recent documents...") as status:
-                response = await self.clients.get_json(f"doc_store/documents/_list?limit={limit}&sort=created_at&order=desc")
+                response = await self.clients.get_json(
+                    f"doc_store/documents/_list?limit={limit}&sort=created_at&order=desc"
+                )
 
             if response.get("documents"):
                 self.display_search_results(response["documents"], "Recent Documents")
@@ -613,7 +639,11 @@ Results:
         table.add_column("Relevance", style="magenta")
 
         for result in results[:20]:  # Show first 20
-            quality_color = "green" if result.get("quality_score", 0) > 7 else "yellow" if result.get("quality_score", 0) > 4 else "red"
+            quality_color = (
+                "green"
+                if result.get("quality_score", 0) > 7
+                else "yellow" if result.get("quality_score", 0) > 4 else "red"
+            )
             relevance = result.get("relevance_score", result.get("similarity", 0))
             relevance_color = "green" if relevance > 0.8 else "yellow" if relevance > 0.5 else "red"
 
@@ -623,7 +653,7 @@ Results:
                 result.get("type", "unknown"),
                 f"[{quality_color}]{result.get('quality_score', 0):.1f}[/{quality_color}]",
                 result.get("created_at", "unknown")[:19],
-                f"[{relevance_color}]{relevance:.2f}[/{relevance_color}]" if relevance > 0 else "N/A"
+                f"[{relevance_color}]{relevance:.2f}[/{relevance_color}]" if relevance > 0 else "N/A",
             )
 
         self.console.print(table)
@@ -632,13 +662,16 @@ Results:
         """Quality and style submenu."""
         while True:
             menu = create_menu_table("Quality & Style", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Quality Metrics"),
-                ("2", "Style Examples"),
-                ("3", "Quality Improvement Tips"),
-                ("4", "Bulk Quality Recalculation"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Quality Metrics"),
+                    ("2", "Style Examples"),
+                    ("3", "Quality Improvement Tips"),
+                    ("4", "Bulk Quality Recalculation"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -699,7 +732,9 @@ Top Issues:
     async def view_style_examples(self):
         """View style examples."""
         try:
-            style_type = Prompt.ask("[bold cyan]Style type[/bold cyan]", choices=["good", "bad", "improved"], default="good")
+            style_type = Prompt.ask(
+                "[bold cyan]Style type[/bold cyan]", choices=["good", "bad", "improved"], default="good"
+            )
 
             with self.console.status(f"[bold green]Fetching {style_type} style examples...") as status:
                 response = await self.clients.get_json(f"doc_store/style/examples?type={style_type}")
@@ -744,15 +779,17 @@ Top Issues:
     async def bulk_quality_recalc(self):
         """Bulk quality recalculation."""
         try:
-            confirm = Confirm.ask("[bold yellow]This will recalculate quality scores for all documents. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                "[bold yellow]This will recalculate quality scores for all documents. Continue?[/bold yellow]"
+            )
 
             if confirm:
-                scope = Prompt.ask("[bold cyan]Scope[/bold cyan]", choices=["all", "low_quality", "recent"], default="all")
+                scope = Prompt.ask(
+                    "[bold cyan]Scope[/bold cyan]", choices=["all", "low_quality", "recent"], default="all"
+                )
 
                 with self.console.status(f"[bold green]Recalculating quality for {scope} documents...") as status:
-                    response = await self.clients.post_json("doc_store/quality/recalculate", {
-                        "scope": scope
-                    })
+                    response = await self.clients.post_json("doc_store/quality/recalculate", {"scope": scope})
 
                 if response.get("job_id"):
                     self.console.print(f"[green]✅ Quality recalculation job started: {response['job_id']}[/green]")
@@ -769,14 +806,17 @@ Top Issues:
         """Bulk operations submenu."""
         while True:
             menu = create_menu_table("Bulk Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Bulk Delete Documents"),
-                ("2", "Bulk Update Metadata"),
-                ("3", "Bulk Reanalyze Documents"),
-                ("4", "Export Documents"),
-                ("5", "Import Documents"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Bulk Delete Documents"),
+                    ("2", "Bulk Update Metadata"),
+                    ("3", "Bulk Reanalyze Documents"),
+                    ("4", "Export Documents"),
+                    ("5", "Import Documents"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -799,17 +839,20 @@ Top Issues:
     async def bulk_delete(self):
         """Bulk delete documents."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Deletion criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 3}}')
+            criteria_input = Prompt.ask(
+                "[bold cyan]Deletion criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 3}}'
+            )
             import json
+
             criteria = json.loads(criteria_input)
 
-            confirm = Confirm.ask(f"[bold red]This will delete documents matching: {criteria_input}. Continue?[/bold red]")
+            confirm = Confirm.ask(
+                f"[bold red]This will delete documents matching: {criteria_input}. Continue?[/bold red]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Deleting documents...") as status:
-                    response = await self.clients.post_json("doc_store/bulk/delete", {
-                        "criteria": criteria
-                    })
+                    response = await self.clients.post_json("doc_store/bulk/delete", {"criteria": criteria})
 
                 if response.get("deleted_count"):
                     self.console.print(f"[green]✅ Deleted {response['deleted_count']} documents[/green]")
@@ -828,17 +871,19 @@ Top Issues:
             updates_input = Prompt.ask("[bold cyan]Updates (JSON)[/bold cyan]")
 
             import json
+
             criteria = json.loads(criteria_input)
             updates = json.loads(updates_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will update metadata for documents matching: {criteria_input}. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will update metadata for documents matching: {criteria_input}. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Updating metadata...") as status:
-                    response = await self.clients.post_json("doc_store/bulk/update", {
-                        "criteria": criteria,
-                        "updates": updates
-                    })
+                    response = await self.clients.post_json(
+                        "doc_store/bulk/update", {"criteria": criteria, "updates": updates}
+                    )
 
                 if response.get("updated_count"):
                     self.console.print(f"[green]✅ Updated {response['updated_count']} documents[/green]")
@@ -853,20 +898,26 @@ Top Issues:
     async def bulk_reanalyze(self):
         """Bulk reanalyze documents."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Selection criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 5}}')
-            analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]", choices=["quality", "consistency", "all"])
+            criteria_input = Prompt.ask(
+                "[bold cyan]Selection criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 5}}'
+            )
+            analysis_type = Prompt.ask(
+                "[bold cyan]Analysis type[/bold cyan]", choices=["quality", "consistency", "all"]
+            )
 
             import json
+
             criteria = json.loads(criteria_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will reanalyze documents matching: {criteria_input}. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will reanalyze documents matching: {criteria_input}. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status(f"[bold green]Reanalyzing documents ({analysis_type})...") as status:
-                    response = await self.clients.post_json("doc_store/bulk/reanalyze", {
-                        "criteria": criteria,
-                        "analysis_type": analysis_type
-                    })
+                    response = await self.clients.post_json(
+                        "doc_store/bulk/reanalyze", {"criteria": criteria, "analysis_type": analysis_type}
+                    )
 
                 if response.get("job_id"):
                     self.console.print(f"[green]✅ Bulk reanalysis job started: {response['job_id']}[/green]")
@@ -883,18 +934,19 @@ Top Issues:
         """Bulk export documents."""
         try:
             criteria_input = Prompt.ask("[bold cyan]Export criteria (JSON)[/bold cyan]", default="{}")
-            format_type = Prompt.ask("[bold cyan]Export format[/bold cyan]", choices=["json", "csv", "xml"], default="json")
+            format_type = Prompt.ask(
+                "[bold cyan]Export format[/bold cyan]", choices=["json", "csv", "xml"], default="json"
+            )
             filename = Prompt.ask("[bold cyan]Output filename[/bold cyan]")
 
             import json
+
             criteria = json.loads(criteria_input)
 
             with self.console.status(f"[bold green]Exporting documents to {filename}...") as status:
-                response = await self.clients.post_json("doc_store/bulk/export", {
-                    "criteria": criteria,
-                    "format": format_type,
-                    "filename": filename
-                })
+                response = await self.clients.post_json(
+                    "doc_store/bulk/export", {"criteria": criteria, "format": format_type, "filename": filename}
+                )
 
             if response.get("export_id"):
                 self.console.print(f"[green]✅ Export started: {response['export_id']}[/green]")
@@ -909,16 +961,17 @@ Top Issues:
         """Bulk import documents."""
         try:
             filename = Prompt.ask("[bold cyan]Import file path[/bold cyan]")
-            format_type = Prompt.ask("[bold cyan]Import format[/bold cyan]", choices=["json", "csv", "xml"], default="json")
+            format_type = Prompt.ask(
+                "[bold cyan]Import format[/bold cyan]", choices=["json", "csv", "xml"], default="json"
+            )
 
             confirm = Confirm.ask(f"[bold yellow]This will import documents from {filename}. Continue?[/bold yellow]")
 
             if confirm:
                 with self.console.status(f"[bold green]Importing documents from {filename}...") as status:
-                    response = await self.clients.post_json("doc_store/bulk/import", {
-                        "filename": filename,
-                        "format": format_type
-                    })
+                    response = await self.clients.post_json(
+                        "doc_store/bulk/import", {"filename": filename, "format": format_type}
+                    )
 
                 if response.get("import_id"):
                     self.console.print(f"[green]✅ Import started: {response['import_id']}[/green]")
@@ -935,13 +988,16 @@ Top Issues:
         """Info and configuration submenu."""
         while True:
             menu = create_menu_table("Info & Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Document Store Info"),
-                ("2", "View Configuration"),
-                ("3", "Storage Statistics"),
-                ("4", "Performance Metrics"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Document Store Info"),
+                    ("2", "View Configuration"),
+                    ("3", "Storage Statistics"),
+                    ("4", "Performance Metrics"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -1005,9 +1061,11 @@ Limits:
 
             if response.get("config"):
                 import json
+
                 config_str = json.dumps(response["config"], indent=2)
-                print_panel(self.console, f"[bold]Document Store Configuration[/bold]\n\n{config_str}",
-                          border_style="cyan")
+                print_panel(
+                    self.console, f"[bold]Document Store Configuration[/bold]\n\n{config_str}", border_style="cyan"
+                )
             else:
                 self.console.print("[yellow]No configuration available.[/yellow]")
 

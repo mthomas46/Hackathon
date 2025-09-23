@@ -4,11 +4,10 @@ import asyncio
 import json
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from .application_events import ApplicationEvent
-
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +70,7 @@ class InMemoryEventPublisher(EventPublisher):
     def get_published_events(self, event_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get published events, optionally filtered by type."""
         if event_type:
-            return [e for e in self.published_events if e['event_type'] == event_type]
+            return [e for e in self.published_events if e["event_type"] == event_type]
         return self.published_events.copy()
 
     def clear_events(self) -> None:
@@ -212,17 +211,17 @@ class EventPublisherFactory:
     @staticmethod
     def create_from_config(config: Dict[str, Any]) -> EventPublisher:
         """Create publisher from configuration."""
-        publisher_type = config.get('type', 'in_memory')
+        publisher_type = config.get("type", "in_memory")
         publishers = []
 
-        if publisher_type == 'in_memory' or not config.get('redis') or not config.get('kafka'):
+        if publisher_type == "in_memory" or not config.get("redis") or not config.get("kafka"):
             publishers.append(EventPublisherFactory.create_in_memory())
 
-        if config.get('redis'):
-            publishers.append(EventPublisherFactory.create_redis(config['redis']))
+        if config.get("redis"):
+            publishers.append(EventPublisherFactory.create_redis(config["redis"]))
 
-        if config.get('kafka'):
-            publishers.append(EventPublisherFactory.create_kafka(config['kafka']))
+        if config.get("kafka"):
+            publishers.append(EventPublisherFactory.create_kafka(config["kafka"]))
 
         if len(publishers) == 1:
             return publishers[0]

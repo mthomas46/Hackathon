@@ -1,11 +1,12 @@
 """Display utilities for CLI formatting."""
 
-from typing import Dict, Any, List, Optional, Tuple
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+from typing import Any, Dict, List, Optional, Tuple
+
 from rich.columns import Columns
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
 
 
 class DisplayManager:
@@ -25,8 +26,14 @@ class DisplayManager:
 
         self.console.print(table)
 
-    def show_table(self, title: str, columns: List[str], rows: List[List[str]],
-                   styles: Optional[List[str]] = None, max_rows: Optional[int] = None):
+    def show_table(
+        self,
+        title: str,
+        columns: List[str],
+        rows: List[List[str]],
+        styles: Optional[List[str]] = None,
+        max_rows: Optional[int] = None,
+    ):
         """Display a table with data."""
         table = Table(title=title)
 
@@ -48,8 +55,7 @@ class DisplayManager:
 
         self.console.print(table)
 
-    def show_panel(self, content: str, title: Optional[str] = None,
-                   border_style: str = "blue", expand: bool = False):
+    def show_panel(self, content: str, title: Optional[str] = None, border_style: str = "blue", expand: bool = False):
         """Show content in a styled panel."""
         panel = Panel(content, title=title, border_style=border_style, expand=expand)
         self.console.print(panel)
@@ -109,7 +115,7 @@ class DisplayManager:
 
         for i, item in enumerate(items, 1):
             if isinstance(item, dict):
-                name = item.get('name', item.get('id', str(item)))
+                name = item.get("name", item.get("id", str(item)))
                 content_lines.append(f"  {i}. {name}")
             else:
                 content_lines.append(f"  {i}. {item}")
@@ -138,14 +144,14 @@ class DisplayManager:
 
     def show_service_status(self, service_name: str, status_data: Dict[str, Any]):
         """Show formatted service status."""
-        status = status_data.get('status', 'unknown')
+        status = status_data.get("status", "unknown")
 
-        if status == 'healthy':
+        if status == "healthy":
             status_display = "[green]✓ Healthy[/green]"
             details = "OK"
-        elif status == 'unhealthy':
+        elif status == "unhealthy":
             status_display = "[red]✗ Unhealthy[/red]"
-            details = status_data.get('error', 'Unknown error')
+            details = status_data.get("error", "Unknown error")
         else:
             status_display = "[yellow]? Unknown[/yellow]"
             details = f"Status: {status}"

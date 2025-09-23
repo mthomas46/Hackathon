@@ -1,8 +1,8 @@
 """Event Streaming Service Domain Service"""
 
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.event_status import EventStatus
 
@@ -16,7 +16,7 @@ class EventEntry:
         event_type: str,
         event_data: Dict[str, Any],
         correlation_id: Optional[str] = None,
-        timestamp: Optional[datetime] = None
+        timestamp: Optional[datetime] = None,
     ):
         self.event_id = event_id
         self.event_type = event_type
@@ -39,18 +39,16 @@ class EventStreamingService:
         event_type: str,
         event_data: Dict[str, Any],
         correlation_id: Optional[str] = None,
-        event_id: Optional[str] = None
+        event_id: Optional[str] = None,
     ) -> str:
         """Publish an event to the stream."""
         if event_id is None:
             import uuid
+
             event_id = str(uuid.uuid4())
 
         event = EventEntry(
-            event_id=event_id,
-            event_type=event_type,
-            event_data=event_data,
-            correlation_id=correlation_id
+            event_id=event_id, event_type=event_type, event_data=event_data, correlation_id=correlation_id
         )
 
         self._events.append(event)
@@ -59,11 +57,7 @@ class EventStreamingService:
         return event_id
 
     def get_event_history(
-        self,
-        correlation_id: Optional[str] = None,
-        event_type: Optional[str] = None,
-        limit: int = 100,
-        offset: int = 0
+        self, correlation_id: Optional[str] = None, event_type: Optional[str] = None, limit: int = 100, offset: int = 0
     ) -> Dict[str, Any]:
         """Get event history with optional filtering."""
         filtered_events = self._events.copy()
@@ -92,21 +86,18 @@ class EventStreamingService:
                     "event_data": e.event_data,
                     "correlation_id": e.correlation_id,
                     "timestamp": e.timestamp.isoformat(),
-                    "status": e.status.value
+                    "status": e.status.value,
                 }
                 for e in paginated_events
             ],
             "total": total_count,
             "filtered": total_count,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
         }
 
     def replay_events(
-        self,
-        event_types: Optional[List[str]] = None,
-        correlation_id: Optional[str] = None,
-        limit: int = 100
+        self, event_types: Optional[List[str]] = None, correlation_id: Optional[str] = None, limit: int = 100
     ) -> Dict[str, Any]:
         """Replay events based on filters."""
         filtered_events = self._events.copy()
@@ -132,14 +123,14 @@ class EventStreamingService:
             "events_processed": len(replayed_ids),
             "event_types": event_types,
             "correlation_id": correlation_id,
-            "limit": limit
+            "limit": limit,
         }
 
     def clear_events(
         self,
         event_type: Optional[str] = None,
         correlation_id: Optional[str] = None,
-        before_timestamp: Optional[datetime] = None
+        before_timestamp: Optional[datetime] = None,
     ) -> Dict[str, Any]:
         """Clear events based on filters."""
         if before_timestamp is None:
@@ -181,7 +172,7 @@ class EventStreamingService:
             "cleared_count": removed_count,
             "event_type": event_type,
             "correlation_id": correlation_id,
-            "before_timestamp": before_timestamp.isoformat()
+            "before_timestamp": before_timestamp.isoformat(),
         }
 
     def get_event_stats(self) -> Dict[str, Any]:
@@ -192,7 +183,7 @@ class EventStreamingService:
                 "events_by_type": {},
                 "oldest_event": None,
                 "newest_event": None,
-                "avg_events_per_minute": 0
+                "avg_events_per_minute": 0,
             }
 
         # Calculate statistics
@@ -219,7 +210,7 @@ class EventStreamingService:
             "events_by_type": events_by_type,
             "oldest_event": oldest_event.isoformat(),
             "newest_event": newest_event.isoformat(),
-            "avg_events_per_minute": round(avg_events_per_minute, 2)
+            "avg_events_per_minute": round(avg_events_per_minute, 2),
         }
 
     def cleanup_old_events(self, max_age_hours: int = 24) -> int:

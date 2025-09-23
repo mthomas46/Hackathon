@@ -7,17 +7,24 @@ Provides endpoints for:
 - Event streaming
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
-from .dtos import (
-    DLQRetryRequest, EventReplayRequest, EventClearRequest,
-    DLQStatsResponse, SagaStatsResponse, SagaDetailResponse,
-    EventHistoryResponse, TracingStatsResponse, TraceDetailResponse,
-    PeerInfoResponse
-)
+from fastapi import APIRouter, Depends, HTTPException
+
 from ....main import container
+from .dtos import (
+    DLQRetryRequest,
+    DLQStatsResponse,
+    EventClearRequest,
+    EventHistoryResponse,
+    EventReplayRequest,
+    PeerInfoResponse,
+    SagaDetailResponse,
+    SagaStatsResponse,
+    TraceDetailResponse,
+    TracingStatsResponse,
+)
 
 router = APIRouter()
 
@@ -38,6 +45,7 @@ async def get_saga(saga_id: str):
     """Get details of a specific saga."""
     try:
         from ....application.infrastructure.queries import GetSagaQuery
+
         query = GetSagaQuery(saga_id=saga_id)
         result = await container.get_saga_use_case.execute(query)
         if not result:
@@ -54,6 +62,7 @@ async def list_sagas(limit: int = 50, offset: int = 0):
     """List sagas with pagination."""
     try:
         from ....application.infrastructure.queries import ListSagasQuery
+
         query = ListSagasQuery(limit=limit, offset=offset)
         result = await container.list_sagas_use_case.execute(query)
         return result
@@ -67,10 +76,8 @@ async def start_trace(service_name: str, operation_name: str):
     """Start a new distributed trace."""
     try:
         from ....application.infrastructure.commands import StartTraceCommand
-        command = StartTraceCommand(
-            service_name=service_name,
-            operation_name=operation_name
-        )
+
+        command = StartTraceCommand(service_name=service_name, operation_name=operation_name)
         result = await container.start_trace_use_case.execute(command)
         return {"trace_id": result["trace_id"], "status": "started"}
     except Exception as e:
@@ -82,6 +89,7 @@ async def get_trace(trace_id: str):
     """Get details of a specific trace."""
     try:
         from ....application.infrastructure.queries import GetTraceQuery
+
         query = GetTraceQuery(trace_id=trace_id)
         result = await container.get_trace_use_case.execute(query)
         if not result:
@@ -98,6 +106,7 @@ async def list_traces(limit: int = 50, offset: int = 0):
     """List traces with pagination."""
     try:
         from ....application.infrastructure.queries import ListTracesQuery
+
         query = ListTracesQuery(limit=limit, offset=offset)
         result = await container.list_traces_use_case.execute(query)
         return result
@@ -121,6 +130,7 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
     """List events in the Dead Letter Queue."""
     try:
         from ....application.infrastructure.queries import ListDLQEventsQuery
+
         query = ListDLQEventsQuery(limit=limit, offset=offset)
         result = await container.list_dlq_events_use_case.execute(query)
         return result
@@ -133,10 +143,8 @@ async def retry_dlq_events(request: DLQRetryRequest):
     """Retry events from the Dead Letter Queue."""
     try:
         from ....application.infrastructure.commands import RetryEventCommand
-        command = RetryEventCommand(
-            event_ids=request.event_ids,
-            max_retries=request.max_retries
-        )
+
+        command = RetryEventCommand(event_ids=request.event_ids, max_retries=request.max_retries)
         result = await container.retry_event_use_case.execute(command)
         return result
     except Exception as e:
@@ -159,10 +167,8 @@ async def publish_event(event_type: str, payload: dict):
     """Publish an event to the event stream."""
     try:
         from ....application.infrastructure.commands import PublishEventCommand
-        command = PublishEventCommand(
-            event_type=event_type,
-            payload=payload
-        )
+
+        command = PublishEventCommand(event_type=event_type, payload=payload)
         result = await container.publish_event_use_case.execute(command)
         return result
     except Exception as e:

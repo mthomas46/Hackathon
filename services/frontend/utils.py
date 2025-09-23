@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 from typing import Any, Dict, List
-from services.shared.html import render_table, render_list  # type: ignore
+
 from services.shared.core.config.config import get_config_value
 from services.shared.core.constants_new import EnvVars
+from services.shared.html import render_list, render_table  # type: ignore
 
 
 def render_index() -> str:
@@ -49,14 +51,14 @@ def render_topics_html(topics: Dict[str, List[tuple[str, str]]]) -> str:
 
 def render_consolidation_list(items: List[Dict[str, Any]]) -> str:
     formatted = [
-        f"{i.get('id')} - confidence {i.get('confidence'):.2f} - flags: {','.join(i.get('flags', []))}"
-        for i in items
+        f"{i.get('id')} - confidence {i.get('confidence'):.2f} - flags: {','.join(i.get('flags', []))}" for i in items
     ]
     return render_list(formatted, title="Confluence Consolidation Candidates")
 
 
 def render_search_results(query: str, items: List[Dict[str, Any]]) -> str:
     import html
+
     # Sanitize the query parameter to prevent XSS attacks
     safe_query = html.escape(query)
     return render_list([str(i.get("id")) for i in items], title=f"Search results for '{safe_query}'")
@@ -108,5 +110,3 @@ def render_clusters(clusters: List[Dict[str, Any]]) -> str:
         members = ", ".join([str(it.get("id")) for it in c.get("items", [])])
         formatted.append(f"{cid} - confidence {conf:.2f} - members: {members}")
     return render_list(formatted, title="Duplicate Clusters")
-
-

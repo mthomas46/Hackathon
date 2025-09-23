@@ -3,17 +3,19 @@
 Handles terminal pass-through interface for CLI service operations,
 providing a web-based terminal for full CLI functionality.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..cli_monitor import cli_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class CLIUIHandlers:
@@ -31,7 +33,7 @@ class CLIUIHandlers:
             # Build context for template
             context = {
                 "commands": commands_info.get("commands", []),
-                "interactive_menus": commands_info.get("interactive_menus", [])
+                "interactive_menus": commands_info.get("interactive_menus", []),
             }
 
             html = """
