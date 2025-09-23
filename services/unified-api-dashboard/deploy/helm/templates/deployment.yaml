@@ -1,0 +1,207 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "unified-api-dashboard.fullname" . }}
+  labels:
+    {{- include "unified-api-dashboard.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "unified-api-dashboard.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.metricsPort }}"
+        prometheus.io/path: "{{ .Values.config.monitoring.metricsPath }}"
+      labels:
+        {{- include "unified-api-dashboard.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "unified-api-dashboard.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "unified-api-dashboard.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.service.port }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.config.service.port }}
+              protocol: TCP
+          env:
+            # Application Configuration
+            - name: SERVICE_NAME
+              value: {{ .Values.config.service.name | quote }}
+            - name: SERVICE_PORT
+              value: {{ .Values.config.service.port | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.config.environment | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+            - name: METRICS_ENABLED
+              value: {{ .Values.config.metricsEnabled | quote }}
+
+            # Database Configuration
+            - name: REDIS_HOST
+              value: {{ .Values.config.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.config.redis.port | quote }}
+            - name: REDIS_DB
+              value: {{ .Values.config.redis.db | quote }}
+            - name: REDIS_SSL
+              value: {{ .Values.config.redis.ssl | quote }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "unified-api-dashboard.secretName" . }}
+                  key: redis-password
+
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "unified-api-dashboard.secretName" . }}
+                  key: database-url
+
+            # External Services
+            - name: DISCOVERY_AGENT_URL
+              value: {{ .Values.config.discoveryAgent.url | quote }}
+
+            # Security Configuration
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "unified-api-dashboard.secretName" . }}
+                  key: jwt-secret
+            - name: AUDIT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "unified-api-dashboard.secretName" . }}
+                  key: audit-secret
+
+            # Performance Settings
+            - name: GUNICORN_WORKERS
+              value: "4"
+            - name: GUNICORN_MAX_REQUESTS
+              value: "1000"
+            - name: GUNICORN_MAX_REQUESTS_JITTER
+              value: "50"
+
+            # Cache Settings
+            - name: CACHE_ENABLED
+              value: {{ .Values.config.cache.enabled | quote }}
+            - name: CACHE_TTL
+              value: {{ .Values.config.cache.ttl | quote }}
+            - name: CACHE_MAX_SIZE
+              value: {{ .Values.config.cache.maxSize | quote }}
+
+            # Rate Limiting
+            - name: RATE_LIMIT_REQUESTS_PER_MINUTE
+              value: {{ .Values.config.rateLimiting.requestsPerMinute | quote }}
+            - name: RATE_LIMIT_BURST_LIMIT
+              value: {{ .Values.config.rateLimiting.burstLimit | quote }}
+
+            # Feature Flags
+            - name: ANALYTICS_ENABLED
+              value: {{ .Values.config.features.analytics | quote }}
+            - name: SECURITY_MONITORING_ENABLED
+              value: {{ .Values.config.features.securityMonitoring | quote }}
+            - name: AUDIT_LOGGING_ENABLED
+              value: {{ .Values.config.features.auditLogging | quote }}
+            - name: TOPOLOGY_ANALYSIS_ENABLED
+              value: {{ .Values.config.features.topologyAnalysis | quote }}
+            - name: DEVELOPER_TOOLS_ENABLED
+              value: {{ .Values.config.features.developerTools | quote }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yml
+              subPath: config.yml
+              readOnly: true
+            {{- if .Values.persistence.logs.enabled }}
+            - name: logs
+              mountPath: /app/logs
+            {{- end }}
+            {{- if .Values.persistence.cache.enabled }}
+            - name: cache
+              mountPath: /app/cache
+            {{- end }}
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.config.monitoring.healthCheckPath }}
+              port: {{ .Values.config.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.config.monitoring.healthCheckPath }}
+              port: {{ .Values.config.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: {{ .Values.config.monitoring.healthCheckPath }}
+              port: {{ .Values.config.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "unified-api-dashboard.configName" . }}
+        {{- if .Values.persistence.logs.enabled }}
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ include "unified-api-dashboard.logsPvcName" . }}
+        {{- end }}
+        {{- if .Values.persistence.cache.enabled }}
+        - name: cache
+          persistentVolumeClaim:
+            claimName: {{ include "unified-api-dashboard.cachePvcName" . }}
+        {{- end }}
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

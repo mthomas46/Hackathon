@@ -20,6 +20,10 @@ echo 'Resolving port 5087 conflict...'
 echo 'Resolving port 5080 conflict...'
 # Add your resolution commands here
 
+# Resolving conflict on port 5085
+echo 'Resolving port 5085 conflict...'
+# Add your resolution commands here
+
 # Resolving conflict on port 3000
 echo 'Resolving port 3000 conflict...'
 # Add your resolution commands here
@@ -72,12 +76,20 @@ echo 'Resolving port 5110 conflict...'
 echo 'Resolving port 5120 conflict...'
 # Add your resolution commands here
 
-# Resolving conflict on port 5025
-echo 'Resolving port 5025 conflict...'
+# Resolving conflict on port 5075
+echo 'Resolving port 5075 conflict...'
 # Add your resolution commands here
 
-# Resolving conflict on port 5100
-echo 'Resolving port 5100 conflict...'
+# Resolving conflict on port 8501
+echo 'Resolving port 8501 conflict...'
+# Add your resolution commands here
+
+# Resolving conflict on port 8000
+echo 'Resolving port 8000 conflict...'
+# Add your resolution commands here
+
+# Resolving conflict on port 5025
+echo 'Resolving port 5025 conflict...'
 # Add your resolution commands here
 
 # Resolving conflict on port 5040

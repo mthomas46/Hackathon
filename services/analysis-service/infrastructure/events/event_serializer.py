@@ -5,6 +5,8 @@ import pickle
 import base64
 from typing import Any, Dict, Union
 from abc import ABC, abstractmethod
+from datetime import datetime
+import uuid
 
 from .event_bus import DomainEvent, EventEnvelope
 
@@ -102,7 +104,9 @@ class PickleEventSerializer(EventSerializer):
         """Deserialize base64-encoded pickle string to event envelope."""
         try:
             decoded = base64.b64decode(data)
-            envelope = pickle.loads(decoded)
+
+            # Use restricted unpickling to prevent code execution
+            envelope = self._safe_pickle_loads(decoded)
 
             if not isinstance(envelope, EventEnvelope):
                 raise ValueError("Deserialized object is not an EventEnvelope")
@@ -111,6 +115,43 @@ class PickleEventSerializer(EventSerializer):
 
         except (pickle.UnpicklingError, base64.binascii.Error, ValueError) as e:
             raise ValueError(f"Invalid pickle event data: {e}") from e
+
+    def _safe_pickle_loads(self, data: bytes) -> Any:
+        """Safely unpickle data by restricting allowed types and operations.
+
+        This prevents arbitrary code execution during unpickling.
+        """
+        # Define allowed classes/modules for unpickling
+        # Only allow our known event classes and basic Python types
+        safe_classes = {
+            'services.analysis_service.infrastructure.events.event_bus': {
+                'EventEnvelope', 'DomainEvent', 'EventType', 'EventPriority'
+            },
+            '__main__': set(),  # Empty for main module
+            'builtins': {'str', 'int', 'float', 'bool', 'list', 'dict', 'tuple', 'NoneType'},
+            'datetime': {'datetime'},
+            'uuid': {'UUID'},
+        }
+
+        class SafeUnpickler(pickle.Unpickler):
+            def find_class(self, module: str, name: str):
+                # Only allow specific safe classes
+                if module in safe_classes and name in safe_classes[module]:
+                    return super().find_class(module, name)
+                elif module == 'builtins' and name in safe_classes.get('builtins', set()):
+                    return super().find_class(module, name)
+                elif module == 'datetime' and name in safe_classes.get('datetime', set()):
+                    return super().find_class(module, name)
+                elif module == 'uuid' and name in safe_classes.get('uuid', set()):
+                    return super().find_class(module, name)
+                else:
+                    raise pickle.UnpicklingError(f"Attempted to unpickle unsafe class: {module}.{name}")
+
+        # Use StringIO to create a file-like object from bytes
+        import io
+        file_like = io.BytesIO(data)
+        unpickler = SafeUnpickler(file_like)
+        return unpickler.load()
 
     def get_content_type(self) -> str:
         """Get content type."""

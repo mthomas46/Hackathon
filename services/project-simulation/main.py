@@ -176,14 +176,25 @@ except ImportError:
             return []
 
 try:
+    print("🔍 Trying to import shared health endpoints...")
     from services.shared.monitoring.health import register_health_endpoints
-except ImportError:
+    print("✅ Successfully imported shared health endpoints")
+except ImportError as e:
+    print(f"❌ Failed to import shared health endpoints: {e}")
     # Fallback health registration for testing
     def register_health_endpoints(app, service_name=None):
         """Fallback health endpoint registration."""
+        print("🔧 Using fallback health endpoint registration")
         @app.get("/health")
         async def health():
-            return {"status": "healthy", "service": service_name or SERVICE_NAME}
+            from datetime import datetime
+            return {
+                "status": "healthy",
+                "service": service_name or SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "timestamp": datetime.utcnow().isoformat(),
+                "environment": os.getenv("ENVIRONMENT", "development")
+            }
 
         @app.get("/health/detailed")
         async def health_detailed():
@@ -538,32 +549,20 @@ async def shutdown_event():
 
 
 # Health endpoints using shared response models
-@app.get("/health", response_model=HealthResponse)
-async def health(request: Request):
-    """Basic health check using shared response models."""
-    try:
-        health_data = await health_endpoints["health"]()
-
-        # Use shared success response
-        return create_success_response(
-            message="Service is healthy",
-            data={
-                "status": health_data.get("status", "healthy"),
-                "service": SERVICE_NAME,
-                "version": SERVICE_VERSION,
-                "uptime_seconds": health_data.get("uptime_seconds"),
-                "environment": os.getenv("ENVIRONMENT", "development")
-            },
-            request_id=getattr(request.state, "correlation_id", None)
-        )
-    except Exception as e:
-        logger.error("Health check failed", error=str(e))
-        return create_error_response(
-            message="Health check failed",
-            error_code="health_check_failed",
-            details={"error": str(e)},
-            request_id=getattr(request.state, "correlation_id", None)
-        )
+@app.get("/health-custom")
+async def health():
+    """Basic health check with API contract compliance."""
+    print("🚨 CUSTOM HEALTH ENDPOINT called")  # Debug logging
+    from datetime import datetime
+    result = {
+        "status": "healthy",
+        "service": SERVICE_NAME,
+        "version": SERVICE_VERSION,
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": os.getenv("ENVIRONMENT", "development")
+    }
+    print(f"📤 Returning custom health status: {result}")  # Debug logging
+    return result
 
 
 @app.get("/health/detailed", response_model=SuccessResponse)

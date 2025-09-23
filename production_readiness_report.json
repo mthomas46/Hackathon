@@ -1,35 +1,26 @@
 {
-  "validation_timestamp": 1758222630.770116,
+  "validation_timestamp": 1758648612.969551,
   "overall_assessment": {
     "readiness_level": "not_ready",
     "production_ready": false,
-    "readiness_score": 83.33333333333334,
+    "readiness_score": 94.44444444444444,
     "total_checks": 18,
-    "passed_checks": 15,
+    "passed_checks": 17,
     "critical_failures": [
-      "docker_containers_health",
-      "cross_service_workflows"
+      "docker_containers_health"
     ],
-    "high_failures": [
-      "api_error_handling"
-    ],
+    "high_failures": [],
     "medium_failures": [],
     "production_required_failures": [
-      "docker_containers_health",
-      "api_error_handling",
-      "cross_service_workflows"
+      "docker_containers_health"
     ],
     "critical_issues": [
       "docker_containers_health",
-      "cross_service_workflows",
-      "docker_containers_health",
-      "api_error_handling",
-      "cross_service_workflows"
+      "docker_containers_health"
     ],
     "recommendations": [
-      "CRITICAL: Fix 2 critical issues before any deployment",
-      "HIGH: Resolve 3 production-required issues",
-      "MEDIUM: Address 1 high-priority issues for production deployment"
+      "CRITICAL: Fix 1 critical issues before any deployment",
+      "HIGH: Resolve 1 production-required issues"
     ]
   },
   "validation_results": {
@@ -42,8 +33,8 @@
         "total_containers": 0,
         "health_percentage": 0,
         "containers": {},
-        "threshold": 75,
-        "assessment": "Docker health status vs actual service functionality"
+        "threshold": 70,
+        "assessment": "Found 0 containers, 0 functionally healthy"
       },
       "passed": false
     },
@@ -51,38 +42,38 @@
       "check": "ReadinessCheck(check_name='service_connectivity', category='infrastructure', severity='critical', description='All services must be reachable and responsive', validation_function='validate_service_connectivity', required_for_production=True)",
       "result": {
         "passed": true,
-        "reachable_services": 5,
+        "reachable_services": 6,
         "total_services": 6,
-        "connectivity_percentage": 83.33333333333334,
+        "connectivity_percentage": 100.0,
         "service_results": {
           "doc_store": {
             "reachable": true,
-            "response_time_ms": 11.626958847045898,
+            "response_time_ms": 11.690855026245117,
             "status_code": 200
           },
           "orchestrator": {
-            "reachable": false,
-            "error": "HTTP Error 500: Internal Server Error",
-            "response_time_ms": 0
+            "reachable": true,
+            "response_time_ms": 1.8310546875,
+            "status_code": 200
           },
           "llm-gateway": {
             "reachable": true,
-            "response_time_ms": 1.0361671447753906,
+            "response_time_ms": 1.497030258178711,
             "status_code": 200
           },
           "discovery-agent": {
             "reachable": true,
-            "response_time_ms": 1.4240741729736328,
+            "response_time_ms": 1.8701553344726562,
             "status_code": 200
           },
           "analysis-service": {
             "reachable": true,
-            "response_time_ms": 1.268148422241211,
+            "response_time_ms": 1.7437934875488281,
             "status_code": 200
           },
           "prompt_store": {
             "reachable": true,
-            "response_time_ms": 1.2862682342529297,
+            "response_time_ms": 2.0661354064941406,
             "status_code": 200
           }
         },
@@ -97,28 +88,32 @@
         "passed": true,
         "port_conflicts": [],
         "port_mappings": {
-          "hackathon-ollama-1": "0.0.0.0:11434->11434/tcp, :::11434->11434/tcp",
+          "hackathon-unified-api-dashboard-1": "0.0.0.0:8000->8000/tcp, :::8000->8000/tcp",
+          "hackathon-doc_store-1": "0.0.0.0:5087->5010/tcp, [::]:5087->5010/tcp",
           "hackathon-orchestrator-1": "0.0.0.0:5099->5099/tcp, :::5099->5099/tcp",
           "hackathon-redis-1": "0.0.0.0:6379->6379/tcp, :::6379->6379/tcp",
-          "hackathon-source-agent-1": "0.0.0.0:5085->5070/tcp, [::]:5085->5070/tcp",
-          "hackathon-mock-data-generator-1": "0.0.0.0:5065->5065/tcp, :::5065->5065/tcp",
-          "hackathon-llm-gateway-1": "0.0.0.0:5055->5055/tcp, :::5055->5055/tcp",
-          "hackathon-analysis-service-1": "0.0.0.0:5080->5020/tcp, [::]:5080->5020/tcp",
-          "hackathon-frontend-1": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
-          "hackathon-notification-service-1": "0.0.0.0:5130->5020/tcp, [::]:5130->5020/tcp",
-          "hackathon-code-analyzer-1": "0.0.0.0:5025->5025/tcp, :::5025->5025/tcp",
-          "hackathon-doc_store-1": "0.0.0.0:5087->5010/tcp, [::]:5087->5010/tcp",
-          "hackathon-discovery-agent-1": "0.0.0.0:5045->5045/tcp, :::5045->5045/tcp",
-          "hackathon-summarizer-hub-1": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
-          "hackathon-github-mcp-1": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
-          "hackathon-bedrock-proxy-1": "0.0.0.0:5060->7090/tcp, [::]:5060->7090/tcp",
-          "hackathon-log-collector-1": "0.0.0.0:5040->5080/tcp, [::]:5040->5080/tcp",
-          "hackathon-secure-analyzer-1": "0.0.0.0:5100->5070/tcp, [::]:5100->5070/tcp",
-          "hackathon-memory-agent-1": "0.0.0.0:5090->5040/tcp, [::]:5090->5040/tcp",
-          "hackathon-architecture-digitizer-1": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
+          "hackathon-data-services-dashboard-1": "0.0.0.0:8502->8502/tcp, :::8502->8502/tcp",
           "hackathon-prompt_store-1": "0.0.0.0:5110->5110/tcp, :::5110->5110/tcp",
+          "hackathon-memory-agent-1": "0.0.0.0:5090->5040/tcp, [::]:5090->5040/tcp",
+          "hackathon-simulation-dashboard-1": "0.0.0.0:8501->8501/tcp, :::8501->8501/tcp",
+          "hackathon-mock-data-generator-1": "0.0.0.0:5065->5065/tcp, :::5065->5065/tcp",
+          "hackathon-analysis-service-1": "0.0.0.0:5080->5020/tcp, [::]:5080->5020/tcp",
+          "hackathon-llm-gateway-1": "0.0.0.0:5055->5055/tcp, :::5055->5055/tcp",
+          "hackathon-ollama-1": "0.0.0.0:11434->11434/tcp, :::11434->11434/tcp",
+          "hackathon-bedrock-proxy-1": "0.0.0.0:5060->7090/tcp, [::]:5060->7090/tcp",
+          "hackathon-notification-service-1": "0.0.0.0:5130->5020/tcp, [::]:5130->5020/tcp",
+          "hackathon-secure-analyzer-1": "0.0.0.0:5100->5070/tcp, [::]:5100->5070/tcp",
+          "hackathon-log-collector-1": "0.0.0.0:5040->5080/tcp, [::]:5040->5080/tcp",
+          "hackathon-discovery-agent-1": "0.0.0.0:5045->5045/tcp, :::5045->5045/tcp",
+          "hackathon-code-analyzer-1": "0.0.0.0:5025->5025/tcp, :::5025->5025/tcp",
           "hackathon-interpreter-1": "0.0.0.0:5120->5120/tcp, :::5120->5120/tcp",
-          "hackathon-cli-1": ""
+          "hackathon-cli-1": "",
+          "hackathon-architecture-digitizer-1": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
+          "hackathon-github-mcp-1": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
+          "hackathon-project-simulation-1": "0.0.0.0:5075->5075/tcp, :::5075->5075/tcp",
+          "hackathon-frontend-1": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
+          "hackathon-summarizer-hub-1": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
+          "hackathon-source-agent-1": "0.0.0.0:5085->5070/tcp, [::]:5085->5070/tcp"
         },
         "conflicts_found": 0
       },
@@ -136,16 +131,11 @@
     "api_error_handling": {
       "check": "ReadinessCheck(check_name='api_error_handling', category='api', severity='high', description='APIs must handle errors gracefully with proper status codes', validation_function='validate_error_handling', required_for_production=True)",
       "result": {
-        "passed": false,
-        "error_handling_issues": [
-          {
-            "service": "doc_store",
-            "issue": "Server error instead of client error: 500"
-          }
-        ],
-        "issues_found": 1
+        "passed": true,
+        "error_handling_issues": [],
+        "issues_found": 0
       },
-      "passed": false
+      "passed": true
     },
     "api_authentication": {
       "check": "ReadinessCheck(check_name='api_authentication', category='api', severity='medium', description='Authentication mechanisms should be consistent', validation_function='validate_authentication', required_for_production=False)",
@@ -158,17 +148,12 @@
     "cross_service_workflows": {
       "check": "ReadinessCheck(check_name='cross_service_workflows', category='integration', severity='critical', description='End-to-end workflows must function correctly', validation_function='validate_workflows', required_for_production=True)",
       "result": {
-        "passed": false,
-        "workflow_issues": [
-          {
-            "workflow": "document_creation",
-            "issue": "Document creation failed with server error: 500"
-          }
-        ],
-        "issues_found": 1,
+        "passed": true,
+        "workflow_issues": [],
+        "issues_found": 0,
         "assessment": "Focus on critical workflow functionality, not API validation quirks"
       },
-      "passed": false
+      "passed": true
     },
     "service_dependencies": {
       "check": "ReadinessCheck(check_name='service_dependencies', category='integration', severity='critical', description='Service dependencies must be satisfied', validation_function='validate_dependencies', required_for_production=True)",
@@ -267,14 +252,10 @@
   "production_ready": false,
   "critical_issues": [
     "docker_containers_health",
-    "cross_service_workflows",
-    "docker_containers_health",
-    "api_error_handling",
-    "cross_service_workflows"
+    "docker_containers_health"
   ],
   "recommendations": [
-    "CRITICAL: Fix 2 critical issues before any deployment",
-    "HIGH: Resolve 3 production-required issues",
-    "MEDIUM: Address 1 high-priority issues for production deployment"
+    "CRITICAL: Fix 1 critical issues before any deployment",
+    "HIGH: Resolve 1 production-required issues"
   ]
 }

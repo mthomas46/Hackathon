@@ -1,0 +1,130 @@
+# Production Dockerfile for Unified API Dashboard
+# Multi-stage build for optimal image size and security
+
+# =============================================================================
+# BUILDER STAGE - Compile and install dependencies
+# =============================================================================
+FROM python:3.11-slim as builder
+
+# Install system build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    pkg-config \
+    default-libmysqlclient-dev \
+    libpq-dev \
+    libssl-dev \
+    libffi-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# =============================================================================
+# SECURITY STAGE - Security scanning and validation
+# =============================================================================
+FROM builder as security
+
+# Install security scanning tools
+RUN pip install --no-cache-dir safety bandit
+
+# Copy source code for security scanning
+COPY . /app
+WORKDIR /app
+
+# Run security scans (these will be checked in CI/CD)
+RUN safety check --output json > security/safety-report.json || echo "Safety scan completed with warnings"
+RUN bandit -r . -f json -o security/bandit-report.json || echo "Bandit scan completed with warnings"
+
+# =============================================================================
+# PRODUCTION STAGE - Final runtime image
+# =============================================================================
+FROM python:3.11-slim
+
+# Install only runtime system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    jq \
+    netcat-openbsd \
+    procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create app user and directories
+RUN groupadd -r appuser && useradd -r -g appuser -s /bin/bash appuser && \
+    mkdir -p /app /app/logs /app/cache /app/uploads && \
+    chown -R appuser:appuser /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH="/opt/venv/bin:$PATH" \
+    # Application settings
+    SERVICE_NAME=unified-api-dashboard \
+    ENVIRONMENT=production \
+    # Security settings
+    PYTHONHASHSEED=random \
+    # Performance settings
+    GUNICORN_WORKERS=4 \
+    GUNICORN_WORKER_CLASS=uvicorn.workers.UvicornWorker \
+    GUNICORN_BIND=0.0.0.0:8000 \
+    GUNICORN_TIMEOUT=30 \
+    GUNICORN_KEEPALIVE=10 \
+    # Logging
+    LOG_LEVEL=INFO \
+    LOG_FORMAT=json
+
+# Copy virtual environment from builder
+COPY --from=builder --chown=appuser:appuser /opt/venv /opt/venv
+
+# Copy application code
+COPY --chown=appuser:appuser . /app/
+
+# Create log files with proper permissions
+RUN touch /app/logs/app.log /app/logs/error.log /app/logs/access.log && \
+    chown appuser:appuser /app/logs/*.log
+
+# Switch to non-root user
+USER appuser
+
+# Set working directory
+WORKDIR /app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Default command (can be overridden for different deployment modes)
+CMD ["gunicorn", "app:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--timeout", "30", \
+     "--keep-alive", "10", \
+     "--access-logfile", "/app/logs/access.log", \
+     "--error-logfile", "/app/logs/error.log", \
+     "--log-level", "info", \
+     "--capture-output"]
+
+# Labels for container metadata
+LABEL maintainer="API Team <api@unified-api.local>" \
+      version="1.0.0" \
+      description="Unified API Dashboard - Enterprise API Management Platform" \
+      org.opencontainers.image.source="https://github.com/unified-api/dashboard" \
+      org.opencontainers.image.licenses="MIT"

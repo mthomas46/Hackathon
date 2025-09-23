@@ -30,7 +30,7 @@ from .modules.dlq_manager import dlq_manager
 # Service configuration constants
 SERVICE_NAME = "notification-service"
 SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = int(os.environ.get('SERVICE_PORT', 5020))
+DEFAULT_PORT = 5020
 
 # Default limits and constraints
 DEFAULT_DLQ_LIMIT = 50
@@ -65,10 +65,12 @@ class OwnerUpdate(BaseModel):
 @app.get("/health")
 async def health():
     """Health check endpoint returning service status and basic information."""
+    from datetime import datetime
     return {
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
+        "timestamp": datetime.utcnow().isoformat(),
         "description": "Notification service is operational"
     }
 
@@ -181,7 +183,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         app,
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=DEFAULT_PORT,
         log_level="info"
     )

@@ -1,5 +1,5 @@
 {
-  "validation_timestamp": 1758217856.8261619,
+  "validation_timestamp": 1758657788.617964,
   "connectivity_score": 62.5,
   "overall_status": "DEGRADED",
   "dependency_validation": {
@@ -122,43 +122,46 @@
       "document_creation_workflow": {
         "test_name": "document_creation_workflow",
         "passed": false,
-        "error": "HTTP Error 500: Internal Server Error",
-        "execution_time": 0.0027887821197509766,
-        "url": "http://localhost:5087/api/v1/documents"
+        "status_code": 200,
+        "expected_status": 201,
+        "execution_time": 0.0015048980712890625,
+        "url": "http://localhost:5087/api/v1/documents",
+        "error": "Expected status 201, got 200",
+        "response_valid_json": true
       },
       "document_analysis_workflow": {
         "test_name": "document_analysis_workflow",
         "passed": false,
-        "error": "[Errno 54] Connection reset by peer",
-        "execution_time": 0.0009479522705078125,
+        "error": "HTTP Error 404: Not Found",
+        "execution_time": 0.0012829303741455078,
         "url": "http://localhost:5080/api/v1/analysis/analyze"
       },
       "llm_provider_check": {
         "test_name": "llm_provider_check",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0013020038604736328,
+        "execution_time": 0.0010082721710205078,
         "url": "http://localhost:5055/api/v1/providers"
       },
       "service_discovery_check": {
         "test_name": "service_discovery_check",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0015459060668945312,
+        "execution_time": 0.0012888908386230469,
         "url": "http://localhost:5045/api/v1/discovery/services"
       },
       "orchestrator_services_check": {
         "test_name": "orchestrator_services_check",
         "passed": false,
         "error": "HTTP Error 404: Not Found",
-        "execution_time": 0.0014910697937011719,
+        "execution_time": 0.001558065414428711,
         "url": "http://localhost:5099/api/v1/services"
       },
       "doc_store_to_analysis_integration": {
         "test_name": "doc_store_to_analysis_integration",
         "passed": false,
-        "error": "[Errno 54] Connection reset by peer",
-        "execution_time": 0.0007598400115966797,
+        "error": "HTTP Error 404: Not Found",
+        "execution_time": 0.0012478828430175781,
         "url": "http://localhost:5080/api/v1/analysis/capabilities"
       }
     },
@@ -175,30 +178,34 @@
   },
   "port_validation": {
     "port_validation": {
-      "frontend": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
-      "notification-service": "0.0.0.0:5130->5020/tcp, [::]:5130->5020/tcp",
-      "code-analyzer": "0.0.0.0:5025->5025/tcp, :::5025->5025/tcp",
-      "doc_store": "0.0.0.0:5087->5010/tcp, [::]:5087->5010/tcp",
-      "discovery-agent": "0.0.0.0:5045->5045/tcp, :::5045->5045/tcp",
-      "summarizer-hub": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
-      "analysis-service": "0.0.0.0:5080->5020/tcp, [::]:5080->5020/tcp",
-      "github-mcp": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
-      "bedrock-proxy": "0.0.0.0:5060->7090/tcp, [::]:5060->7090/tcp",
       "log-collector": "0.0.0.0:5040->5080/tcp, [::]:5040->5080/tcp",
-      "secure-analyzer": "0.0.0.0:5100->5070/tcp, [::]:5100->5070/tcp",
+      "notification-service": "0.0.0.0:5130->5020/tcp, [::]:5130->5020/tcp",
       "memory-agent": "0.0.0.0:5090->5040/tcp, [::]:5090->5040/tcp",
-      "mock-data-generator": "0.0.0.0:5065->5065/tcp, :::5065->5065/tcp",
+      "code-analyzer": "0.0.0.0:5025->5025/tcp, :::5025->5025/tcp",
+      "unified-api-dashboard": "0.0.0.0:8000->8000/tcp, :::8000->8000/tcp",
+      "doc_store": "0.0.0.0:5087->5010/tcp, [::]:5087->5010/tcp",
+      "orchestrator": "0.0.0.0:5099->5099/tcp, :::5099->5099/tcp",
       "redis": "0.0.0.0:6379->6379/tcp, :::6379->6379/tcp",
+      "data-services-dashboard": "0.0.0.0:8502->8502/tcp, :::8502->8502/tcp",
+      "prompt_store": "0.0.0.0:5110->5110/tcp, :::5110->5110/tcp",
+      "simulation-dashboard": "0.0.0.0:8501->8501/tcp, :::8501->8501/tcp",
+      "mock-data-generator": "0.0.0.0:5065->5065/tcp, :::5065->5065/tcp",
+      "analysis-service": "0.0.0.0:5080->5020/tcp, [::]:5080->5020/tcp",
       "llm-gateway": "0.0.0.0:5055->5055/tcp, :::5055->5055/tcp",
       "ollama": "0.0.0.0:11434->11434/tcp, :::11434->11434/tcp",
-      "architecture-digitizer": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
-      "prompt_store": "0.0.0.0:5110->5110/tcp, :::5110->5110/tcp",
+      "bedrock-proxy": "0.0.0.0:5060->7090/tcp, [::]:5060->7090/tcp",
+      "discovery-agent": "0.0.0.0:5045->5045/tcp, :::5045->5045/tcp",
       "interpreter": "0.0.0.0:5120->5120/tcp, :::5120->5120/tcp",
       "cli": "",
-      "orchestrator": "0.0.0.0:5099->5099/tcp, :::5099->5099/tcp"
+      "architecture-digitizer": "0.0.0.0:5105->5105/tcp, :::5105->5105/tcp",
+      "github-mcp": "0.0.0.0:5030->5072/tcp, [::]:5030->5072/tcp",
+      "project-simulation": "0.0.0.0:5075->5075/tcp, :::5075->5075/tcp",
+      "frontend": "0.0.0.0:3000->3000/tcp, :::3000->3000/tcp",
+      "summarizer-hub": "0.0.0.0:5160->5160/tcp, :::5160->5160/tcp",
+      "source-agent": "0.0.0.0:5085->5070/tcp, [::]:5085->5070/tcp"
     },
     "port_conflicts": [],
-    "total_containers": 21,
+    "total_containers": 25,
     "conflicts_found": 0
   },
   "critical_issues": [

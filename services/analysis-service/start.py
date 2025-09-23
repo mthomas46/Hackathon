@@ -35,7 +35,7 @@ try:
     if __name__ == "__main__":
         port = int(os.environ.get('SERVICE_PORT', 5020))
         print(f"Starting analysis service on port {port}")
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        uvicorn.run(app, host="127.0.0.1", port=port)
         
 except ImportError as e:
     print(f"Import error in analysis service: {e}")

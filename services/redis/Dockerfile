@@ -3,12 +3,12 @@
 # =============================================================================
 # In-memory data store and cache service for the ecosystem
 
-FROM redis:7-alpine
+FROM redis:7.4-alpine
 
 # Metadata
 LABEL maintainer="LLM Documentation Ecosystem Team"
 LABEL service="redis"
-LABEL version="7.0"
+LABEL version="7.4"
 LABEL description="Redis in-memory data store and cache"
 LABEL port="6379"
 LABEL dependencies=""

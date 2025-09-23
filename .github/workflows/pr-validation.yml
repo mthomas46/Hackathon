@@ -113,7 +113,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pydantic PyYAML redis requests
+        pip install pydantic PyYAML redis requests aiohttp bandit safety pytest httpx
 
     - name: Validate port configuration
       if: needs.dependency-changes.outputs.compose-changed == 'true'
@@ -135,6 +135,21 @@ jobs:
         echo "🌍 Validating environment variable changes..."
         python3 scripts/hardening/environment_validator.py
         echo "✅ Environment variables validated"
+
+    - name: Security Impact Analysis
+      if: needs.dependency-changes.outputs.dockerfile-changed == 'true' || needs.dependency-changes.outputs.compose-changed == 'true'
+      run: |
+        echo "🔒 Analyzing security impact of changes..."
+        bandit -q -r services --format json --output pr-bandit-scan.json || true
+        safety check --output json --save-json pr-safety-scan.json || true
+        echo "✅ Security impact analysis completed"
+
+    - name: Extract security issues for PR
+      if: needs.dependency-changes.outputs.dockerfile-changed == 'true' || needs.dependency-changes.outputs.compose-changed == 'true'
+      run: |
+        echo "🔍 Extracting security issues from PR changes..."
+        python3 scripts/hardening/cicd_security_integration.py --min-severity Medium --pr-comment --pr-comment-file pr_security_comment.md
+        echo "✅ Security issue extraction completed"
 
     - name: Run full validation (fallback)
       if: |

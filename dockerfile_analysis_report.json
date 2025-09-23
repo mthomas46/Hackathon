@@ -345,7 +345,7 @@
         "CMD": 2
       },
       "layer_count": 13,
-      "file_size_kb": 0.8896484375,
+      "file_size_kb": 0.8916015625,
       "has_multistage": false
     },
     "issues": [
@@ -420,6 +420,456 @@
         "category": "syntax",
         "message": "Inconsistent indentation on line 53",
         "suggestion": "Use consistent indentation throughout the Dockerfile"
+      }
+    ]
+  },
+  "project-simulation": {
+    "score": 0,
+    "issues_count": 61,
+    "metrics": {
+      "total_lines": 222,
+      "instruction_count": {
+        "FROM": 6,
+        "RUN": 17,
+        "COPY": 7,
+        "WORKDIR": 4,
+        "EXPOSE": 2,
+        "ENV": 6,
+        "LABEL": 1,
+        "USER": 3,
+        "CMD": 5
+      },
+      "layer_count": 51,
+      "file_size_kb": 6.712890625,
+      "has_multistage": true
+    },
+    "issues": [
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "optimization",
+        "message": "Found 17 RUN instructions - consider consolidating",
+        "suggestion": "Combine multiple RUN instructions to reduce layer count"
+      },
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "optimization",
+        "message": "Found 4 WORKDIR instructions",
+        "suggestion": "Minimize WORKDIR changes to reduce layer count"
+      },
+      {
+        "line": 15,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 15",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 16,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 16",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 17,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 17",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 18,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 18",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 19,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 19",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 20,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 20",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 21,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 21",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 22,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 22",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 35,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 35",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 44,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 44",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 45,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 45",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 46,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 46",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 64,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 64",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 65,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 65",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 66,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 66",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 67,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 67",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 68,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 68",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 75,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 75",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 92,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 92",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 96,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 96",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 100,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 100",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 110,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 110",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 111,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 111",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 112,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 112",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 113,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 113",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 117,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 117",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 118,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 118",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 119,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 119",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 120,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 120",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 121,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 121",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 122,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 122",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 123,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 123",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 135,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 135",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 136,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 136",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 137,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 137",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 138,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 138",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 139,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 139",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 140,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 140",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 141,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 141",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 163,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 163",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 164,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 164",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 165,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 165",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 169,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 169",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 181,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 181",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 182,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 182",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 186,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 186",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 187,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 187",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 188,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 188",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 189,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 189",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 190,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 190",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 191,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 191",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 192,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 192",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 193,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 193",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 194,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 194",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 195,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 195",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 211,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 211",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 212,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 212",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 213,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 213",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "consistency",
+        "message": "Missing LABEL service instruction",
+        "suggestion": "Add LABEL service for service identification"
       }
     ]
   },
@@ -903,6 +1353,197 @@
       }
     ]
   },
+  "simulation-dashboard": {
+    "score": 52,
+    "issues_count": 24,
+    "metrics": {
+      "total_lines": 78,
+      "instruction_count": {
+        "FROM": 2,
+        "RUN": 5,
+        "COPY": 3,
+        "WORKDIR": 1,
+        "EXPOSE": 1,
+        "ENV": 3,
+        "LABEL": 1,
+        "USER": 1,
+        "CMD": 2
+      },
+      "layer_count": 19,
+      "file_size_kb": 2.16015625,
+      "has_multistage": true
+    },
+    "issues": [
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "optimization",
+        "message": "Found 5 RUN instructions - consider consolidating",
+        "suggestion": "Combine multiple RUN instructions to reduce layer count"
+      },
+      {
+        "line": 9,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 9",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 10,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 10",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 11,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 11",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 15,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 15",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 16,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 16",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 17,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 17",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 26,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 26",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 33,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 33",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 34,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 34",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 35,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 35",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 36,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 36",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 40,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 40",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 41,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 41",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 42,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 42",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 46,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 46",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 47,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 47",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 63,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 63",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 73,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 73",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 74,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 74",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 75,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 75",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 76,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 76",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 77,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 77",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "consistency",
+        "message": "Missing LABEL service instruction",
+        "suggestion": "Add LABEL service for service identification"
+      }
+    ]
+  },
   "analysis-service": {
     "score": 82,
     "issues_count": 9,
@@ -1208,7 +1849,7 @@
         "CMD": 2
       },
       "layer_count": 20,
-      "file_size_kb": 2.0556640625,
+      "file_size_kb": 2.0576171875,
       "has_multistage": false
     },
     "issues": [
@@ -1302,16 +1943,17 @@
     "score": 84,
     "issues_count": 4,
     "metrics": {
-      "total_lines": 34,
+      "total_lines": 35,
       "instruction_count": {
         "FROM": 1,
         "RUN": 2,
         "EXPOSE": 1,
         "LABEL": 7,
-        "CMD": 2
+        "CMD": 2,
+        "ENTRYPOINT": 1
       },
-      "layer_count": 13,
-      "file_size_kb": 0.921875,
+      "layer_count": 14,
+      "file_size_kb": 0.970703125,
       "has_multistage": false
     },
     "issues": [
@@ -1435,6 +2077,126 @@
         "category": "syntax",
         "message": "Inconsistent indentation on line 60",
         "suggestion": "Use consistent indentation throughout the Dockerfile"
+      }
+    ]
+  },
+  "unified-api-dashboard": {
+    "score": 72,
+    "issues_count": 14,
+    "metrics": {
+      "total_lines": 47,
+      "instruction_count": {
+        "FROM": 1,
+        "RUN": 4,
+        "COPY": 2,
+        "WORKDIR": 1,
+        "EXPOSE": 1,
+        "ENV": 2,
+        "USER": 1,
+        "CMD": 2
+      },
+      "layer_count": 14,
+      "file_size_kb": 1.078125,
+      "has_multistage": false
+    },
+    "issues": [
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "optimization",
+        "message": "Found 4 RUN instructions - consider consolidating",
+        "suggestion": "Combine multiple RUN instructions to reduce layer count"
+      },
+      {
+        "line": 29,
+        "severity": "info",
+        "category": "optimization",
+        "message": "COPY . copies entire context including unnecessary files",
+        "suggestion": "Use .dockerignore and copy only necessary files"
+      },
+      {
+        "line": 6,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 6",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 7,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 7",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 8,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 8",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 9,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 9",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 10,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 10",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 14,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 14",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 15,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 15",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 16,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 16",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 33,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 33",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 40,
+        "severity": "info",
+        "category": "syntax",
+        "message": "Inconsistent indentation on line 40",
+        "suggestion": "Use consistent indentation throughout the Dockerfile"
+      },
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "consistency",
+        "message": "Missing LABEL maintainer instruction",
+        "suggestion": "Add LABEL maintainer for consistency"
+      },
+      {
+        "line": 0,
+        "severity": "info",
+        "category": "consistency",
+        "message": "Missing LABEL service instruction",
+        "suggestion": "Add LABEL service for service identification"
       }
     ]
   },

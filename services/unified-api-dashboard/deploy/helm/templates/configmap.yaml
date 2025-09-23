@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "unified-api-dashboard.configName" . }}
+  labels:
+    {{- include "unified-api-dashboard.labels" . | nindent 4 }}
+data:
+  config.yml: |
+    # Application Configuration
+    service:
+      name: {{ .Values.config.service.name }}
+      version: {{ .Values.config.service.version | quote }}
+      port: {{ .Values.config.service.port }}
+
+    environment: {{ .Values.config.environment }}
+    log_level: {{ .Values.config.logLevel }}
+    metrics_enabled: {{ .Values.config.metricsEnabled }}
+
+    # Database Configuration
+    redis:
+      host: {{ .Values.config.redis.host }}
+      port: {{ .Values.config.redis.port }}
+      db: {{ .Values.config.redis.db }}
+      ssl: {{ .Values.config.redis.ssl }}
+
+    postgres:
+      host: {{ .Values.config.postgres.host }}
+      port: {{ .Values.config.postgres.port }}
+      database: {{ .Values.config.postgres.database }}
+      ssl: {{ .Values.config.postgres.ssl }}
+
+    # External Services
+    discovery_agent:
+      url: {{ .Values.config.discoveryAgent.url }}
+
+    # Performance Settings
+    cache:
+      enabled: {{ .Values.config.cache.enabled }}
+      ttl: {{ .Values.config.cache.ttl }}
+      max_size: {{ .Values.config.cache.maxSize }}
+
+    rate_limiting:
+      requests_per_minute: {{ .Values.config.rateLimiting.requestsPerMinute }}
+      burst_limit: {{ .Values.config.rateLimiting.burstLimit }}
+
+    # Feature Flags
+    features:
+      analytics: {{ .Values.config.features.analytics }}
+      security_monitoring: {{ .Values.config.features.securityMonitoring }}
+      audit_logging: {{ .Values.config.features.auditLogging }}
+      topology_analysis: {{ .Values.config.features.topologyAnalysis }}
+      developer_tools: {{ .Values.config.features.developerTools }}
+
+    # Security Settings
+    cors:
+      origins: {{ .Values.config.cors.origins | toJson }}
+      credentials: {{ .Values.config.cors.credentials }}
+
+    # Monitoring
+    monitoring:
+      prometheus_enabled: {{ .Values.config.monitoring.prometheusEnabled }}
+      metrics_path: {{ .Values.config.monitoring.metricsPath }}
+      health_check_path: {{ .Values.config.monitoring.healthCheckPath }}

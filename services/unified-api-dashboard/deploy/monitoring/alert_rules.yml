@@ -1,0 +1,323 @@
+# Prometheus Alert Rules for Unified API Dashboard
+# Comprehensive alerting rules for system health and performance monitoring
+
+groups:
+  # API Dashboard Health Alerts
+  - name: api_dashboard_health
+    rules:
+      - alert: APIDashboardDown
+        expr: up{job="unified-api-dashboard"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: api-dashboard
+        annotations:
+          summary: "API Dashboard is down"
+          description: "API Dashboard has been down for more than 5 minutes."
+          runbook_url: "https://docs.api-dashboard.local/runbooks/api-dashboard-down"
+
+      - alert: APIDashboardHighErrorRate
+        expr: rate(http_requests_total{job="unified-api-dashboard", status=~"5.."}[5m]) / rate(http_requests_total{job="unified-api-dashboard"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: api-dashboard
+        annotations:
+          summary: "High error rate on API Dashboard"
+          description: "API Dashboard error rate is {{ $value | printf \"%.2f\" }}% (threshold: 10%)"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/high-error-rate"
+
+      - alert: APIDashboardHighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="unified-api-dashboard"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: api-dashboard
+        annotations:
+          summary: "High latency on API Dashboard"
+          description: "API Dashboard 95th percentile latency is {{ $value | printf \"%.2f\" }}s (threshold: 5s)"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/high-latency"
+
+      - alert: APIDashboardHighCPU
+        expr: rate(container_cpu_usage_seconds_total{pod=~".*api-dashboard.*"}[5m]) / rate(container_spec_cpu_period[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: api-dashboard
+        annotations:
+          summary: "High CPU usage on API Dashboard"
+          description: "API Dashboard CPU usage is {{ $value | printf \"%.1f\" }}% (threshold: 80%)"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/high-cpu"
+
+      - alert: APIDashboardHighMemory
+        expr: container_memory_usage_bytes{pod=~".*api-dashboard.*"} / container_spec_memory_limit_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: api-dashboard
+        annotations:
+          summary: "High memory usage on API Dashboard"
+          description: "API Dashboard memory usage is {{ $value | printf \"%.1f\" }}% (threshold: 80%)"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/high-memory"
+
+  # Discovery Agent Health Alerts
+  - name: discovery_agent_health
+    rules:
+      - alert: DiscoveryAgentDown
+        expr: up{job="discovery-agent"} == 0
+        for: 10m
+        labels:
+          severity: critical
+          service: discovery-agent
+        annotations:
+          summary: "Discovery Agent is down"
+          description: "Discovery Agent has been down for more than 10 minutes."
+          runbook_url: "https://docs.api-dashboard.local/runbooks/discovery-agent-down"
+
+      - alert: DiscoveryAgentHighErrorRate
+        expr: rate(http_requests_total{job="discovery-agent", status=~"5.."}[5m]) / rate(http_requests_total{job="discovery-agent"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: discovery-agent
+        annotations:
+          summary: "High error rate on Discovery Agent"
+          description: "Discovery Agent error rate is {{ $value | printf \"%.2f\" }}% (threshold: 5%)"
+
+  # Database Health Alerts
+  - name: database_health
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 5 minutes."
+          runbook_url: "https://docs.api-dashboard.local/runbooks/postgres-down"
+
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "High PostgreSQL connection count"
+          description: "PostgreSQL has {{ $value }} active connections (threshold: 80)"
+
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_statements_total_time[5m]) / rate(pg_stat_statements_calls[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Slow PostgreSQL queries detected"
+          description: "Average query time is {{ $value | printf \"%.0f\" }}ms (threshold: 1000ms)"
+
+  # Cache Health Alerts
+  - name: cache_health
+    rules:
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 5 minutes."
+          runbook_url: "https://docs.api-dashboard.local/runbooks/redis-down"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_total_system_memory_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value | printf \"%.1f\" }}% (threshold: 80%)"
+
+      - alert: RedisHighConnectionCount
+        expr: redis_connected_clients > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis connection count"
+          description: "Redis has {{ $value }} connected clients (threshold: 1000)"
+
+  # Kubernetes Health Alerts
+  - name: kubernetes_health
+    rules:
+      - alert: KubernetesNodeDown
+        expr: up{job="kubernetes-nodes"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: kubernetes
+        annotations:
+          summary: "Kubernetes node is down"
+          description: "Kubernetes node {{ $labels.instance }} has been down for more than 5 minutes."
+
+      - alert: KubernetesPodCrashLooping
+        expr: increase(kube_pod_container_status_restarts_total[10m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: kubernetes
+        annotations:
+          summary: "Pod crash looping"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 10 minutes."
+
+      - alert: KubernetesPersistentVolumeFull
+        expr: (kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: kubernetes
+        annotations:
+          summary: "Persistent volume almost full"
+          description: "Persistent volume {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is {{ $value | printf \"%.1f\" }}% full."
+
+  # Security Alerts
+  - name: security_alerts
+    rules:
+      - alert: SecurityEventDetected
+        expr: rate(security_events_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Security event detected"
+          description: "{{ $value }} security events detected in the last 5 minutes"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/security-event"
+
+      - alert: HighFailedLoginRate
+        expr: rate(auth_failed_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "{{ $value }} failed login attempts per minute (threshold: 10)"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/failed-logins"
+
+      - alert: ComplianceViolation
+        expr: compliance_violations_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: compliance
+        annotations:
+          summary: "Compliance violation detected"
+          description: "{{ $value }} compliance violations detected"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/compliance-violation"
+
+  # Performance Alerts
+  - name: performance_alerts
+    rules:
+      - alert: SlowAPIEndpoint
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="unified-api-dashboard"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: api-dashboard
+        annotations:
+          summary: "Slow API endpoint detected"
+          description: "API endpoint {{ $labels.endpoint }} has 95th percentile latency of {{ $value | printf \"%.2f\" }}s (threshold: 10s)"
+
+      - alert: HighDatabaseLoad
+        expr: rate(pg_stat_database_xact_commit[5m]) / rate(pg_stat_database_xact_rollback[5m]) < 10
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "High database transaction load"
+          description: "Database commit/rollback ratio is {{ $value | printf \"%.1f\" }} (threshold: 10)"
+
+      - alert: CacheMissRateHigh
+        expr: rate(cache_misses_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High cache miss rate"
+          description: "Cache miss rate is {{ $value | printf \"%.1f\" }}% (threshold: 30%)"
+
+  # Business Logic Alerts
+  - name: business_logic_alerts
+    rules:
+      - alert: LowServiceDiscovery
+        expr: count by (job) (up{job=~"discovery-agent|unified-api-dashboard"}) < 2
+        for: 5m
+        labels:
+          severity: warning
+          service: discovery
+        annotations:
+          summary: "Low service discovery count"
+          description: "Only {{ $value }} core services are up (expected: 2+)"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/service-discovery"
+
+      - alert: APIUsageDrop
+        expr: rate(http_requests_total{job="unified-api-dashboard"}[1h]) < rate(http_requests_total{job="unified-api-dashboard"}[24h]) * 0.5
+        for: 1h
+        labels:
+          severity: warning
+          service: api-dashboard
+        annotations:
+          summary: "API usage drop detected"
+          description: "API usage has dropped by more than 50% in the last hour"
+          runbook_url: "https://docs.api-dashboard.local/runbooks/usage-drop"
+
+      - alert: HighQueueBacklog
+        expr: message_queue_length > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: queue
+        annotations:
+          summary: "High queue backlog"
+          description: "Message queue has {{ $value }} pending messages (threshold: 1000)"
+
+  # Infrastructure Alerts
+  - name: infrastructure_alerts
+    rules:
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space on {{ $labels.instance }} is {{ $value | printf \"%.1f\" }}% full"
+
+      - alert: NetworkErrorsHigh
+        expr: rate(node_network_receive_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High network error rate"
+          description: "{{ $value }} network errors per second on {{ $labels.instance }}"
+
+      - alert: CertificateExpiry
+        expr: (certmanager_certificate_expiry_seconds < 86400 * 30) and (certmanager_certificate_expiry_seconds > 0)
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Certificate expiring soon"
+          description: "Certificate {{ $labels.name }} expires in {{ $value | printf \"%.0f\" }} days"

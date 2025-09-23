@@ -103,10 +103,12 @@ async def health(request: Request):
 
     try:
         # Get health data
+        from datetime import datetime
         health_data = {
             "status": "healthy",
             "service": SERVICE_NAME,
             "version": SERVICE_VERSION,
+            "timestamp": datetime.utcnow().isoformat(),
             "count": log_storage.get_count(),
             "description": "Log collection service is operational"
         }
@@ -323,10 +325,7 @@ if __name__ == "__main__":
     import atexit
 
     # Log service startup
-    logger.info("Starting Log Collector service", {
-        "port": DEFAULT_PORT,
-        "version": SERVICE_VERSION
-    })
+    logger.info("Starting Log Collector service", port=DEFAULT_PORT, version=SERVICE_VERSION)
 
     # Register cleanup function
     @atexit.register
@@ -337,7 +336,7 @@ if __name__ == "__main__":
     try:
         uvicorn.run(
             app,
-            host="0.0.0.0",
+            host="127.0.0.1",
             port=DEFAULT_PORT,
             log_level="info"
         )

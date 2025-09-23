@@ -1319,4 +1319,4 @@ async def get_sample_document_types():
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting Enhanced Interpreter Service with Document Persistence...")
-    uvicorn.run(app, host="0.0.0.0", port=5120)
+    uvicorn.run(app, host="127.0.0.1", port=5120)

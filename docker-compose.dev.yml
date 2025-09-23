@@ -86,6 +86,8 @@ services:
       dockerfile: services/orchestrator/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=orchestrator
+      - SERVICE_PORT=5099
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
@@ -111,6 +113,8 @@ services:
       - doc_store_data:/app/data
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=doc_store
+      - SERVICE_PORT=5087
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
@@ -134,9 +138,10 @@ services:
       dockerfile: services/analysis-service/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=analysis-service
+      - SERVICE_PORT=5080
       - REDIS_HOST=redis
       - ENVIRONMENT=development
-      - SERVICE_PORT=5020
       # DDD-specific environment variables
       - DDD_ARCHITECTURE=true
       - DDD_CONFIG_FILE=config/ddd_config.yaml
@@ -165,8 +170,10 @@ services:
     ports:
       - "5085:5070"
     environment:
-      SERVICE_PORT: '5070'
-      DOC_STORE_URL: http://doc_store:5010
+      - SERVICE_NAME=source-agent
+      - SERVICE_PORT=5085
+      - ENVIRONMENT=development
+      - DOC_STORE_URL=http://doc_store:5087
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
       interval: 30s
@@ -185,6 +192,8 @@ services:
       dockerfile: services/frontend/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=frontend
+      - SERVICE_PORT=3000
       - ENVIRONMENT=development
     ports:
       - "3000:3000"
@@ -226,6 +235,8 @@ services:
       dockerfile: services/summarizer-hub/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=summarizer-hub
+      - SERVICE_PORT=5160
       - OLLAMA_HOST=http://host.docker.internal:11434
       - ENVIRONMENT=development
     ports:
@@ -245,6 +256,8 @@ services:
       dockerfile: services/architecture-digitizer/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=architecture-digitizer
+      - SERVICE_PORT=5105
       - ENVIRONMENT=development
     ports:
       - "5105:5105"
@@ -285,6 +298,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=llm-gateway
+      - SERVICE_PORT=5055
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       # LLM Provider Configuration
@@ -333,6 +347,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - SERVICE_NAME=mock-data-generator
+      - SERVICE_PORT=5065
       - REDIS_HOST=redis
       - ENVIRONMENT=development
       - LLM_GATEWAY_URL=http://llm-gateway:5055
@@ -384,6 +399,8 @@ services:
       dockerfile: services/memory-agent/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=memory-agent
+      - SERVICE_PORT=5090
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
@@ -406,6 +423,8 @@ services:
       dockerfile: services/discovery-agent/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=discovery-agent
+      - SERVICE_PORT=5045
       - ENVIRONMENT=development
     ports:
       - "5045:5045"
@@ -432,8 +451,9 @@ services:
       dockerfile: services/notification-service/Dockerfile
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=notification-service
+      - SERVICE_PORT=5130
       - ENVIRONMENT=development
-      - SERVICE_PORT=5020
     ports:
       - "5130:5020"
     healthcheck:
@@ -463,6 +483,8 @@ services:
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=prompt_store
+      - SERVICE_PORT=5110
       - REDIS_HOST=redis
       - ENVIRONMENT=development
     ports:
@@ -489,6 +511,8 @@ services:
       - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
       - PYTHONPATH=/app
+      - SERVICE_NAME=interpreter
+      - SERVICE_PORT=5120
       - ENVIRONMENT=development
     ports:
       - "5120:5120"
@@ -642,6 +666,69 @@ services:
     restart: unless-stopped
 
   # ============================================================================
+  # UNIFIED API DASHBOARD
+  # ============================================================================
+
+  # Unified API Dashboard - Enterprise API Management Platform
+  unified-api-dashboard:
+    build:
+      context: .
+      dockerfile: services/unified-api-dashboard/Dockerfile
+    working_dir: /app/services/unified-api-dashboard
+    environment:
+      - PYTHONPATH=/app/services/unified-api-dashboard
+      - SERVICE_NAME=unified-api-dashboard
+      - SERVICE_PORT=8000
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - METRICS_ENABLED=true
+      # Database Configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # External Services Integration
+      - DISCOVERY_AGENT_URL=http://discovery-agent:5045
+      - DOC_STORE_URL=http://doc_store:5087
+      - ANALYSIS_SERVICE_URL=http://analysis-service:5080
+      - CODE_ANALYZER_URL=http://code-analyzer:5025
+      - SECURE_ANALYZER_URL=http://secure-analyzer:5100
+      - SUMMARIZER_HUB_URL=http://summarizer-hub:5160
+      - LLM_GATEWAY_URL=http://llm-gateway:5055
+      # Performance Settings
+      - CACHE_ENABLED=true
+      - CACHE_TTL=3600
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=1000
+      # Security Configuration
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-jwt-secret-key-change-in-production}
+      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-dev-audit-secret-key-change-in-production}
+      # CORS Settings for development
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8501,http://localhost:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - dashboard_logs:/app/services/unified-api-dashboard/logs
+      - dashboard_cache:/app/services/unified-api-dashboard/cache
+      - ./config.yml:/app/config.yml:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      discovery-agent:
+        condition: service_started
+      doc_store:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - core
+      - development
+      - production
+    restart: unless-stopped
+
+  # ============================================================================
   # ANALYSIS SERVICES
   # ============================================================================
 
@@ -651,9 +738,10 @@ services:
       context: .
       dockerfile: services/code-analyzer/Dockerfile
     environment:
-      SERVICE_PORT: '5025'
-      PYTHONPATH: '/app'
-      ENVIRONMENT: 'development'
+      - SERVICE_NAME=code-analyzer
+      - SERVICE_PORT=5025
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
     ports:
       - "5025:5025"
     depends_on:
@@ -674,8 +762,9 @@ services:
       dockerfile: services/secure-analyzer/Dockerfile
     environment:
       - PYTHONPATH=/app
-      - ENVIRONMENT=development
+      - SERVICE_NAME=secure-analyzer
       - SERVICE_PORT=5100
+      - ENVIRONMENT=development
     ports:
       - "5100:5070"
     healthcheck:
@@ -693,8 +782,9 @@ services:
       dockerfile: services/log-collector/Dockerfile
     environment:
       - PYTHONPATH=/app
-      - ENVIRONMENT=development
+      - SERVICE_NAME=log-collector
       - SERVICE_PORT=5040
+      - ENVIRONMENT=development
     ports:
       - "5040:5080"
     healthcheck:

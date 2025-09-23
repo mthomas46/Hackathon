@@ -204,7 +204,7 @@ class ApplicationConfig:
     service_name: str = "analysis-service"
     service_version: str = "1.0.0"
     service_port: int = 5020
-    service_host: str = "0.0.0.0"
+    service_host: str = "127.0.0.1"  # Bind to localhost for security
 
     # External service configuration
     external_services: Dict[str, Any] = field(default_factory=dict)

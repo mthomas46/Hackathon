@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -359,6 +359,57 @@ simulation-status: ## Check project simulation service status
 	else \
 		echo "❌ Database file not found"; \
 	fi
+
+# ============================================================================
+# UNIFIED API DASHBOARD MANAGEMENT
+# ============================================================================
+
+dashboard: ## Show unified API dashboard management commands
+	@echo "$(BLUE)🌐 Unified API Dashboard$(NC)"
+	@echo "=========================="
+	@echo ""
+	@echo "Available dashboard commands:"
+	@echo "  $(CYAN)make dashboard-start$(NC)    - Start unified API dashboard"
+	@echo "  $(CYAN)make dashboard-stop$(NC)     - Stop unified API dashboard"
+	@echo "  $(CYAN)make dashboard-logs$(NC)     - Show dashboard logs"
+	@echo "  $(CYAN)make dashboard-health$(NC)   - Check dashboard health"
+	@echo "  $(CYAN)make dashboard-test$(NC)     - Run dashboard tests"
+	@echo ""
+	@echo "Dashboard URL: http://localhost:8000"
+	@echo "API Documentation: http://localhost:8000/docs"
+
+dashboard-start: ## Start unified API dashboard
+	@echo "$(BLUE)🌐 Starting Unified API Dashboard...$(NC)"
+	docker-compose -f docker-compose.dev.yml up -d unified-api-dashboard
+	@echo "$(GREEN)✅ Dashboard starting...$(NC)"
+	@echo "$(YELLOW)📊 Dashboard will be available at: http://localhost:8000$(NC)"
+
+dashboard-stop: ## Stop unified API dashboard
+	@echo "$(BLUE)🛑 Stopping Unified API Dashboard...$(NC)"
+	docker-compose -f docker-compose.dev.yml stop unified-api-dashboard
+	@echo "$(GREEN)✅ Dashboard stopped$(NC)"
+
+dashboard-logs: ## Show unified API dashboard logs
+	@echo "$(BLUE)📋 Unified API Dashboard Logs$(NC)"
+	docker-compose -f docker-compose.dev.yml logs -f unified-api-dashboard
+
+dashboard-health: ## Check unified API dashboard health
+	@echo "$(BLUE)🏥 Unified API Dashboard Health$(NC)"
+	@echo "===================================="
+	@echo ""
+	@echo "$(YELLOW)Container Status:$(NC)"
+	@docker-compose -f docker-compose.dev.yml ps unified-api-dashboard --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "$(YELLOW)Health Check:$(NC)"
+	@curl -s http://localhost:8000/health | jq . 2>/dev/null || curl -s http://localhost:8000/health || echo "❌ Service not responding"
+	@echo ""
+	@echo "$(YELLOW)API Catalog:$(NC)"
+	@curl -s http://localhost:8000/api/discovery/services | jq '.data | length' 2>/dev/null | xargs echo "Services discovered:" || echo "Unable to check API catalog"
+
+dashboard-test: ## Run unified API dashboard tests
+	@echo "$(BLUE)🧪 Running Unified API Dashboard Tests...$(NC)"
+	cd services/unified-api-dashboard && python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)✅ Dashboard tests completed$(NC)"
 
 # Default target
 .DEFAULT_GOAL := help

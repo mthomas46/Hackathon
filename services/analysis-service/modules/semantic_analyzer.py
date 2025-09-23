@@ -28,7 +28,7 @@ class EmbeddingResult:
 
     def __post_init__(self):
         """Calculate text hash for caching."""
-        self.text_hash = hashlib.md5(self.text.encode()).hexdigest()
+        self.text_hash = hashlib.sha256(self.text.encode()).hexdigest()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -134,7 +134,7 @@ class EmbeddingCalculator:
             EmbeddingResult with the calculated embedding
         """
         # Check cache first
-        cache_key = f"embedding:{self._model_name}:{hashlib.md5(text.encode()).hexdigest()}"
+        cache_key = f"embedding:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()}"
         cached_result = await self._cache.get(cache_key)
 
         if cached_result:

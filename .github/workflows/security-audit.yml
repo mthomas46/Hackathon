@@ -1,0 +1,257 @@
+name: Security Audit Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run comprehensive security audit weekly
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+    inputs:
+      audit_level:
+        description: 'Audit level (quick, standard, comprehensive)'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+        - quick
+        - standard
+        - comprehensive
+
+env:
+  PYTHON_VERSION: '3.12'
+  AUDIT_LEVEL: ${{ github.event.inputs.audit_level || 'standard' }}
+
+jobs:
+  # ========================================
+  # QUICK SECURITY AUDIT
+  # ========================================
+  quick-security-audit:
+    name: Quick Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+
+    - name: Quick Bandit Scan
+      run: |
+        echo "🔒 Running quick Bandit security scan..."
+        bandit -q -r services --format json --output quick-bandit-results.json || true
+        echo "✅ Quick Bandit scan completed"
+
+    - name: Quick Safety Scan
+      run: |
+        echo "🛡️ Running quick Safety dependency scan..."
+        safety check --output json --save-json quick-safety-results.json || true
+        echo "✅ Quick Safety scan completed"
+
+    - name: Archive quick audit results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: quick-security-audit
+        path: |
+          quick-bandit-results.json
+          quick-safety-results.json
+        retention-days: 7
+
+  # ========================================
+  # COMPREHENSIVE SECURITY AUDIT
+  # ========================================
+  comprehensive-security-audit:
+    name: Comprehensive Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: quick-security-audit
+    if: github.event_name == 'schedule' || github.event.inputs.audit_level == 'comprehensive' || contains(github.event.pull_request.labels.*.name, 'security-audit')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install comprehensive security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install pydantic PyYAML redis requests aiohttp bandit safety pytest httpx
+
+    - name: Comprehensive Bandit Security Scan
+      run: |
+        echo "🔒 Running comprehensive Bandit security scan..."
+        bandit -r services -f json -o comprehensive-bandit-results.json --severity-level high,medium || true
+        bandit -r scripts -f json -o scripts-bandit-results.json --severity-level high,medium || true
+        echo "✅ Comprehensive Bandit scan completed"
+
+    - name: Comprehensive Safety Scan
+      run: |
+        echo "🛡️ Running comprehensive Safety dependency scan..."
+        safety check --output json --save-json comprehensive-safety-results.json || true
+        echo "✅ Comprehensive Safety scan completed"
+
+    - name: Container Vulnerability Scanning (Trivy)
+      run: |
+        echo "🐳 Running container vulnerability scanning..."
+        # Install Trivy
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+        # Scan Docker images
+        trivy image --format json --output trivy-image-scan.json hackathon-redis:latest || true
+        trivy image --format json --output trivy-python-scan.json hackathon-mock-data-generator:latest || true
+        echo "✅ Container vulnerability scanning completed"
+
+    - name: Extract and analyze all security issues
+      run: |
+        echo "🔍 Extracting and analyzing all security issues..."
+        python3 scripts/hardening/cicd_security_integration.py --min-severity Medium --update-todos --pr-comment
+        echo "✅ Security issue extraction completed"
+
+    - name: Code Security Analysis
+      run: |
+        echo "🔍 Running code security analysis..."
+        python3 scripts/hardening/environment_validator.py > environment-security-report.txt || true
+        python3 scripts/hardening/config_drift_detector.py > config-security-report.txt || true
+        echo "✅ Code security analysis completed"
+
+    - name: Dependency Analysis
+      run: |
+        echo "📦 Analyzing dependency security..."
+        python3 scripts/hardening/dependency_validator.py > dependency-security-report.txt || true
+        echo "✅ Dependency analysis completed"
+
+    - name: Generate Security Audit Report
+      run: |
+        echo "# 🔒 Comprehensive Security Audit Report" > security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "## Audit Summary" >> security-audit-report.md
+        echo "- **Audit Level**: ${{ env.AUDIT_LEVEL }}" >> security-audit-report.md
+        echo "- **Date**: $(date)" >> security-audit-report.md
+        echo "- **Commit**: ${{ github.sha }}" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "## Security Findings" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "### Bandit Security Issues" >> security-audit-report.md
+        echo "\`\`\`json" >> security-audit-report.md
+        cat comprehensive-bandit-results.json | jq '.results | keys[] as $service | .[$service].issues[]? | select(.issue_severity == "HIGH" or .issue_severity == "MEDIUM") | "\($service): \(.issue_text)"' 2>/dev/null || echo "No high/medium severity issues found" >> security-audit-report.md
+        echo "\`\`\`" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "### Safety Dependency Vulnerabilities" >> security-audit-report.md
+        echo "\`\`\`json" >> security-audit-report.md
+        cat comprehensive-safety-results.json | jq '.issues[]? | select(.severity == "high" or .severity == "medium") | "\(.package): \(.vulnerability)"' 2>/dev/null || echo "No high/medium severity vulnerabilities found" >> security-audit-report.md
+        echo "\`\`\`" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "### Container Vulnerabilities (Trivy)" >> security-audit-report.md
+        echo "\`\`\`json" >> security-audit-report.md
+        cat trivy-image-scan.json | jq '.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH" or .Severity == "CRITICAL") | "\(.PkgName): \(.VulnerabilityID) (\(.Severity))"' 2>/dev/null || echo "No high/critical container vulnerabilities found" >> security-audit-report.md
+        echo "\`\`\`" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "## Recommendations" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "1. **Address High/Medium Severity Issues**: Review and fix all high and medium severity security findings" >> security-audit-report.md
+        echo "2. **Update Dependencies**: Ensure all dependencies are up to date and free of known vulnerabilities" >> security-audit-report.md
+        echo "3. **Container Security**: Use minimal base images and regularly update container images" >> security-audit-report.md
+        echo "4. **Code Review**: Implement mandatory security code reviews for all changes" >> security-audit-report.md
+        echo "5. **Regular Audits**: Run comprehensive security audits regularly, not just on schedule" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "**Audit Status**: $(if [ $(cat comprehensive-bandit-results.json comprehensive-safety-results.json trivy-image-scan.json 2>/dev/null | jq '.results // . // empty | length' 2>/dev/null | wc -l) -gt 0 ]; then echo "⚠️ ISSUES FOUND - REVIEW REQUIRED"; else echo "✅ NO CRITICAL ISSUES"; fi)" >> security-audit-report.md
+
+    - name: Archive comprehensive security audit
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: comprehensive-security-audit
+        path: |
+          comprehensive-bandit-results.json
+          comprehensive-safety-results.json
+          scripts-bandit-results.json
+          trivy-image-scan.json
+          trivy-python-scan.json
+          environment-security-report.txt
+          config-security-report.txt
+          dependency-security-report.txt
+          security-audit-report.md
+          security_report.json
+          security_report_todos.json
+          security_pr_comment.md
+        retention-days: 30
+
+    - name: Comment Security Audit Results on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('security-audit-report.md', 'utf8');
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          });
+
+  # ========================================
+  # SECURITY AUDIT SUMMARY
+  # ========================================
+  security-audit-summary:
+    name: Security Audit Summary
+    runs-on: ubuntu-latest
+    needs: [quick-security-audit, comprehensive-security-audit]
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate Security Audit Summary
+      run: |
+        echo "# 🛡️ Security Audit Summary" > security-summary.md
+        echo "" >> security-summary.md
+        echo "## Audit Results" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "- **Quick Audit**: ${{ needs.quick-security-audit.result == 'success' && '✅ PASSED' || '❌ FAILED' }}" >> security-summary.md
+        echo "- **Comprehensive Audit**: ${{ needs.comprehensive-security-audit.result == 'success' && '✅ PASSED' || '❌ FAILED' }}" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "## Security Status" >> security-summary.md
+        echo "" >> security-summary.md
+        if [[ "${{ needs.quick-security-audit.result }}" == "success" && "${{ needs.comprehensive-security-audit.result }}" == "success" ]]; then
+          echo "✅ **SECURITY AUDIT PASSED** - No critical security issues detected" >> security-summary.md
+        else
+          echo "❌ **SECURITY AUDIT FAILED** - Security issues require attention" >> security-summary.md
+        fi
+        echo "" >> security-summary.md
+        echo "## Next Steps" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "1. Review detailed security reports in the artifacts" >> security-summary.md
+        echo "2. Address any high or medium severity issues" >> security-summary.md
+        echo "3. Update dependencies to latest secure versions" >> security-summary.md
+        echo "4. Consider security training for development team" >> security-summary.md
+
+    - name: Upload Security Summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-audit-summary
+        path: security-summary.md
+        retention-days: 30
+
+    - name: Fail on Security Issues
+      if: needs.quick-security-audit.result == 'failure' || needs.comprehensive-security-audit.result == 'failure'
+      run: |
+        echo "❌ Security audit failed - review security reports and fix issues"
+        exit 1

@@ -4,7 +4,7 @@
 # Production-ready containerization for the Mock Data Generator service
 # Provides LLM-integrated realistic mock data generation for testing
 
-FROM python:3.12-slim
+FROM python:3.12.7-slim
 
 # Set metadata
 LABEL maintainer="LLM Ecosystem Team"

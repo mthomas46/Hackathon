@@ -137,10 +137,12 @@ async def memory_health():
     """Memory agent health check with comprehensive memory statistics."""
     try:
         stats = get_memory_stats()
+        from datetime import datetime
         return {
             "status": "healthy",
             "service": SERVICE_NAME,
             "version": SERVICE_VERSION,
+            "timestamp": datetime.utcnow().isoformat(),
             "environment": os.environ.get("ENVIRONMENT", "development"),
             "memory_count": stats.get("total_items", 0),
             "memory_capacity": stats.get("max_items", 0),
@@ -213,7 +215,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         app,
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=DEFAULT_PORT,
         log_level="info"
     )
