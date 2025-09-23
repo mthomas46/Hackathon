@@ -3,14 +3,15 @@
 Provides sophisticated retry mechanisms for different types of operations with
 adaptive backoff, jitter, and circuit breaker integration.
 """
+
 import asyncio
+import logging
 import random
 import time
-import logging
-from typing import Callable, Awaitable, TypeVar, Optional, Dict, Any, List
-from enum import Enum
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -18,6 +19,7 @@ T = TypeVar("T")
 
 class RetryStrategy(Enum):
     """Retry strategies for different failure patterns."""
+
     FIXED = "fixed"  # Fixed delay between retries
     LINEAR = "linear"  # Linearly increasing delay
     EXPONENTIAL = "exponential"  # Exponential backoff
@@ -27,6 +29,7 @@ class RetryStrategy(Enum):
 
 class BackoffStrategy(Enum):
     """Backoff strategies for jitter."""
+
     NONE = "none"  # No jitter
     FIXED = "fixed"  # Fixed percentage jitter
     RANDOM = "random"  # Random jitter within bounds
@@ -36,6 +39,7 @@ class BackoffStrategy(Enum):
 @dataclass
 class RetryPolicy:
     """Configuration for retry behavior."""
+
     max_attempts: int = 3
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL
     base_delay_ms: int = 100
@@ -52,6 +56,7 @@ class RetryPolicy:
 @dataclass
 class RetryMetrics:
     """Metrics for retry operations."""
+
     total_attempts: int = 0
     successful_attempts: int = 0
     failed_attempts: int = 0
@@ -83,7 +88,7 @@ class RetryService:
                 base_delay_ms=50,
                 max_delay_ms=2000,
                 jitter_strategy=BackoffStrategy.RANDOM,
-                jitter_factor=0.2
+                jitter_factor=0.2,
             ),
             "database": RetryPolicy(
                 max_attempts=5,
@@ -91,7 +96,7 @@ class RetryService:
                 base_delay_ms=200,
                 max_delay_ms=10000,
                 jitter_strategy=BackoffStrategy.DECORRELATED,
-                retryable_exceptions=[ConnectionError, TimeoutError]
+                retryable_exceptions=[ConnectionError, TimeoutError],
             ),
             "external_api": RetryPolicy(
                 max_attempts=4,
@@ -100,21 +105,18 @@ class RetryService:
                 max_delay_ms=5000,
                 jitter_strategy=BackoffStrategy.RANDOM,
                 jitter_factor=0.15,
-                timeout_per_attempt=10.0
+                timeout_per_attempt=10.0,
             ),
             "file_operations": RetryPolicy(
-                max_attempts=2,
-                strategy=RetryStrategy.FIXED,
-                base_delay_ms=500,
-                jitter_strategy=BackoffStrategy.NONE
+                max_attempts=2, strategy=RetryStrategy.FIXED, base_delay_ms=500, jitter_strategy=BackoffStrategy.NONE
             ),
             "critical_operation": RetryPolicy(
                 max_attempts=8,
                 strategy=RetryStrategy.FIBONACCI,
                 base_delay_ms=100,
                 max_delay_ms=30000,
-                jitter_strategy=BackoffStrategy.DECORRELATED
-            )
+                jitter_strategy=BackoffStrategy.DECORRELATED,
+            ),
         }
 
     async def execute_with_retry(
@@ -122,7 +124,7 @@ class RetryService:
         operation: Callable[[], Awaitable[T]],
         policy_name: str = "default",
         operation_name: str = "unknown",
-        custom_policy: Optional[RetryPolicy] = None
+        custom_policy: Optional[RetryPolicy] = None,
     ) -> T:
         """Execute operation with retry logic."""
         policy = custom_policy or self._policies.get(policy_name)
@@ -201,10 +203,7 @@ class RetryService:
             return False  # If retryable list exists but doesn't match, don't retry
 
         # Default behavior: retry on common network/transient errors
-        default_retryable = (
-            ConnectionError, TimeoutError, OSError,
-            asyncio.TimeoutError
-        )
+        default_retryable = (ConnectionError, TimeoutError, OSError, asyncio.TimeoutError)
 
         return any(issubclass(exception_type, retryable) for retryable in default_retryable)
 
@@ -217,14 +216,14 @@ class RetryService:
         elif policy.strategy == RetryStrategy.LINEAR:
             delay = base_delay * (attempt + 1)
         elif policy.strategy == RetryStrategy.EXPONENTIAL:
-            delay = base_delay * (policy.backoff_multiplier ** attempt)
+            delay = base_delay * (policy.backoff_multiplier**attempt)
         elif policy.strategy == RetryStrategy.FIBONACCI:
             # Fibonacci: 1, 1, 2, 3, 5, 8, 13, ...
             if attempt == 0:
                 delay = base_delay
             else:
                 # Approximate Fibonacci growth
-                delay = base_delay * (1.618 ** attempt)
+                delay = base_delay * (1.618**attempt)
         else:
             delay = base_delay
 
@@ -293,9 +292,7 @@ def get_retry_service() -> RetryService:
 
 
 async def retry_with_policy(
-    operation: Callable[[], Awaitable[T]],
-    policy_name: str = "external_api",
-    operation_name: str = "unknown"
+    operation: Callable[[], Awaitable[T]], policy_name: str = "external_api", operation_name: str = "unknown"
 ) -> T:
     """Convenience function to retry with a named policy."""
     service = get_retry_service()
@@ -303,9 +300,7 @@ async def retry_with_policy(
 
 
 async def retry_with_custom_policy(
-    operation: Callable[[], Awaitable[T]],
-    policy: RetryPolicy,
-    operation_name: str = "unknown"
+    operation: Callable[[], Awaitable[T]], policy: RetryPolicy, operation_name: str = "unknown"
 ) -> T:
     """Convenience function to retry with a custom policy."""
     service = get_retry_service()

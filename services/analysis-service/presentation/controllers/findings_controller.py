@@ -1,6 +1,7 @@
 """Findings Controller - Handles findings management endpoints."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException
 
 from ...modules.analysis_handlers import analysis_handlers

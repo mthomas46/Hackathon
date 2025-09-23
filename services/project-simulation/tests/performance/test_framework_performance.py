@@ -4,17 +4,18 @@ This module contains performance benchmarking tests for the testing framework it
 measuring execution speed, memory usage, and scalability of the test suite.
 """
 
-import pytest
-import time
-import psutil
 import os
+import statistics
 import subprocess
 import sys
-import threading
-from pathlib import Path
-import statistics
-from typing import Dict, Any, List
 import tempfile
+import threading
+import time
+from pathlib import Path
+from typing import Any, Dict, List
+
+import psutil
+import pytest
 
 
 class TestTestSuitePerformance:
@@ -22,6 +23,7 @@ class TestTestSuitePerformance:
 
     def test_single_test_execution_time(self):
         """Benchmark single test execution time."""
+
         def simple_test():
             assert True
             return "test_result"
@@ -130,8 +132,8 @@ class TestTestFrameworkOverhead:
         """Test overhead of importing pytest."""
         start_time = time.time()
 
-        import pytest
         import _pytest
+        import pytest
 
         import_time = time.time() - start_time
 
@@ -162,10 +164,7 @@ class TestTestFrameworkOverhead:
         # Simulate fixture setup
         fixtures = {}
         for i in range(20):
-            fixtures[f"fixture_{i}"] = {
-                "data": [j for j in range(100)],
-                "config": {"setting": f"value_{i}"}
-            }
+            fixtures[f"fixture_{i}"] = {"data": [j for j in range(100)], "config": {"setting": f"value_{i}"}}
 
         setup_time = time.time() - start_time
 
@@ -179,7 +178,7 @@ class TestMockPerformance:
 
     def test_mock_creation_performance(self):
         """Test performance of creating mocks."""
-        from unittest.mock import Mock, MagicMock
+        from unittest.mock import MagicMock, Mock
 
         start_time = time.time()
 
@@ -234,10 +233,7 @@ class TestTestDataGenerationPerformance:
                 "id": i,
                 "name": f"item_{i}",
                 "data": [j * i for j in range(10)],
-                "metadata": {
-                    "created": time.time(),
-                    "tags": [f"tag_{k}" for k in range(5)]
-                }
+                "metadata": {"created": time.time(), "tags": [f"tag_{k}" for k in range(5)]},
             }
             test_data.append(item)
 
@@ -254,7 +250,7 @@ class TestTestDataGenerationPerformance:
         start_time = time.time()
 
         # Generate large dataset
-        large_data = [i ** 2 for i in range(dataset_size)]
+        large_data = [i**2 for i in range(dataset_size)]
 
         processing_time = time.time() - start_time
 
@@ -385,7 +381,7 @@ class TestTestInfrastructurePerformance:
                 "id": i,
                 "name": f"test_record_{i}",
                 "created": time.time(),
-                "data": {"field1": f"value1_{i}", "field2": f"value2_{i}"}
+                "data": {"field1": f"value1_{i}", "field2": f"value2_{i}"},
             }
             test_records.append(record)
 
@@ -407,7 +403,7 @@ class TestTestInfrastructurePerformance:
                 "status": 200,
                 "data": f"network_response_{i}",
                 "headers": {"content-type": "application/json"},
-                "delay": 0.001  # Simulate network delay
+                "delay": 0.001,  # Simulate network delay
             }
             time.sleep(response["delay"])
             network_responses.append(response)
@@ -427,10 +423,10 @@ class TestTestInfrastructurePerformance:
             file_operations = []
             for i in range(100):
                 file_path = Path(temp_dir) / f"test_file_{i}.txt"
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     f.write(f"Test content {i}\n" * 10)
 
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     content = f.read()
 
                 file_operations.append(len(content))
@@ -448,10 +444,10 @@ class TestTestInfrastructurePerformance:
 def performance_baseline():
     """Establish performance baseline for the test session."""
     return {
-        'session_start': time.time(),
-        'initial_memory': psutil.Process().memory_info().rss / 1024 / 1024,  # MB
-        'cpu_count': psutil.cpu_count(),
-        'python_version': sys.version
+        "session_start": time.time(),
+        "initial_memory": psutil.Process().memory_info().rss / 1024 / 1024,  # MB
+        "cpu_count": psutil.cpu_count(),
+        "python_version": sys.version,
     }
 
 
@@ -459,13 +455,13 @@ def performance_baseline():
 def benchmark_results():
     """Collect benchmark results for analysis."""
     results = {
-        'test_name': None,
-        'start_time': None,
-        'end_time': None,
-        'duration': None,
-        'memory_start': None,
-        'memory_end': None,
-        'memory_delta': None
+        "test_name": None,
+        "start_time": None,
+        "end_time": None,
+        "duration": None,
+        "memory_start": None,
+        "memory_end": None,
+        "memory_delta": None,
     }
     return results
 
@@ -478,7 +474,7 @@ def test_full_test_suite_performance_simulation():
     initial_memory = psutil.Process().memory_info().rss / 1024 / 1024
 
     # Simulate comprehensive test suite
-    test_categories = ['unit', 'integration', 'functional', 'performance']
+    test_categories = ["unit", "integration", "functional", "performance"]
     test_results = {}
 
     for category in test_categories:
@@ -499,10 +495,10 @@ def test_full_test_suite_performance_simulation():
 
         category_time = time.time() - category_start
         test_results[category] = {
-            'tests_passed': tests_passed,
-            'tests_failed': tests_failed,
-            'execution_time': category_time,
-            'avg_test_time': category_time / (tests_passed + tests_failed)
+            "tests_passed": tests_passed,
+            "tests_failed": tests_failed,
+            "execution_time": category_time,
+            "avg_test_time": category_time / (tests_passed + tests_failed),
         }
 
     total_time = time.time() - start_time
@@ -514,8 +510,8 @@ def test_full_test_suite_performance_simulation():
     assert memory_delta < 500, f"Memory usage too high: {memory_delta}MB"
 
     # All tests should pass
-    total_passed = sum(cat['tests_passed'] for cat in test_results.values())
-    total_failed = sum(cat['tests_failed'] for cat in test_results.values())
+    total_passed = sum(cat["tests_passed"] for cat in test_results.values())
+    total_failed = sum(cat["tests_failed"] for cat in test_results.values())
 
     assert total_failed == 0, f"Some tests failed: {total_failed}"
     assert total_passed == 400, f"Incorrect number of tests passed: {total_passed}"

@@ -1,9 +1,8 @@
 """Content detection and analysis for secure analyzer service."""
 
-import re
 import os
-from typing import List, Dict, Any, Optional
-
+import re
+from typing import Any, Dict, List, Optional
 
 # Default security patterns
 DEFAULT_PATTERNS = [
@@ -16,10 +15,10 @@ DEFAULT_PATTERNS = [
     r"\bclient.name\b|\bclient.id\b|\buser.name\b|\buser.id\b",  # Client/User patterns
     r"\bpassword\b|\bpwd\b|\bpass\b|\bauth\b|\bcredential\b",  # Password/Auth patterns
     r".*\bpassword\b.*=.*",  # Variable assignments with password (word boundary)
-    r".*\bsecret\b.*=.*",    # Variable assignments with secret (word boundary)
-    r".*\bkey\b.*=.*",       # Variable assignments with key (word boundary)
-    r".*\btoken\b.*=.*",     # Variable assignments with token
-    r".*\bssn\b.*=.*",       # Variable assignments with ssn
+    r".*\bsecret\b.*=.*",  # Variable assignments with secret (word boundary)
+    r".*\bkey\b.*=.*",  # Variable assignments with key (word boundary)
+    r".*\btoken\b.*=.*",  # Variable assignments with token
+    r".*\bssn\b.*=.*",  # Variable assignments with ssn
 ]
 
 
@@ -29,11 +28,7 @@ class ContentDetector:
     def __init__(self):
         self._patterns = [re.compile(p, re.IGNORECASE) for p in DEFAULT_PATTERNS]
 
-    def detect_sensitive_content(
-        self,
-        content: str,
-        additional_keywords: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+    def detect_sensitive_content(self, content: str, additional_keywords: Optional[List[str]] = None) -> Dict[str, Any]:
         """Detect sensitive content and return analysis results."""
 
         # Load additional keywords
@@ -52,11 +47,7 @@ class ContentDetector:
         # Determine sensitivity
         sensitive = self._determine_sensitivity(content, matches)
 
-        return {
-            "sensitive": sensitive,
-            "matches": matches[:100],  # Limit matches
-            "topics": topics
-        }
+        return {"sensitive": sensitive, "matches": matches[:100], "topics": topics}  # Limit matches
 
     def _compile_patterns(self, keywords: List[str]) -> List[re.Pattern[str]]:
         """Compile regex patterns from keywords."""
@@ -97,22 +88,31 @@ class ContentDetector:
             "auth": ["api", "authentication", "login", "access"],
             "client": ["client", "user", "customer"],
             "credentials": ["password", "key", "token", "secret"],
-            "proprietary": ["proprietary", "confidential", "internal", "private"]
+            "proprietary": ["proprietary", "confidential", "internal", "private"],
         }
 
         for topic, keywords in topic_keywords.items():
             for keyword in keywords:
                 # Check for keyword matches with flexible matching
-                if (keyword in content_lower or
-                    re.search(r'\b' + re.escape(keyword) + r'\b', content_lower) or
-                    re.search(r'\b' + re.escape(keyword) + r's?\b', content_lower) or  # Handle plurals
-                    any(keyword in word for word in content_lower.split())):  # Handle compound words
+                if (
+                    keyword in content_lower
+                    or re.search(r"\b" + re.escape(keyword) + r"\b", content_lower)
+                    or re.search(r"\b" + re.escape(keyword) + r"s?\b", content_lower)  # Handle plurals
+                    or any(keyword in word for word in content_lower.split())
+                ):  # Handle compound words
 
                     if topic not in topics:
                         topics.append(topic)
 
                     # Also add specific keywords as topics if they're security terms
-                    if keyword not in topics and keyword in ["credit card", "ssn", "password", "secret", "token", "key"]:
+                    if keyword not in topics and keyword in [
+                        "credit card",
+                        "ssn",
+                        "password",
+                        "secret",
+                        "token",
+                        "key",
+                    ]:
                         topics.append(keyword)
                     break
 
@@ -125,8 +125,16 @@ class ContentDetector:
 
         # Check for technical/educational context that might make content acceptable
         technical_context_indicators = [
-            "algorithm", "hashing", "encryption", "tutorial", "documentation",
-            "example", "learn", "guide", "how to", "best practice"
+            "algorithm",
+            "hashing",
+            "encryption",
+            "tutorial",
+            "documentation",
+            "example",
+            "learn",
+            "guide",
+            "how to",
+            "best practice",
         ]
 
         content_lower = (content or "").lower()

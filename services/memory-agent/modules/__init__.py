@@ -9,6 +9,7 @@ from services.shared.utilities import get_service_client
 # Shared service client for all memory agent modules - lazy initialization
 _service_client = None
 
+
 def get_memory_agent_client():
     """Get the shared service client for memory agent modules.
 
@@ -20,8 +21,10 @@ def get_memory_agent_client():
         _service_client = get_service_client()
     return _service_client
 
+
 # Module-level client instance for direct access (optional optimization)
 memory_agent_client = None
+
 
 def initialize_memory_agent_client():
     """Initialize the module-level memory agent client."""
@@ -30,9 +33,6 @@ def initialize_memory_agent_client():
         memory_agent_client = get_service_client()
     return memory_agent_client
 
+
 # Export key module functions for easier importing
-__all__ = [
-    'get_memory_agent_client',
-    'initialize_memory_agent_client',
-    'memory_agent_client'
-]
+__all__ = ["get_memory_agent_client", "initialize_memory_agent_client", "memory_agent_client"]

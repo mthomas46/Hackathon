@@ -1,9 +1,9 @@
 """Domain Result Class"""
 
-from typing import Generic, TypeVar, Optional, List
 from dataclasses import dataclass
+from typing import Generic, List, Optional, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
@@ -16,17 +16,17 @@ class DomainResult(Generic[T]):
     message: Optional[str] = None
 
     @classmethod
-    def success_result(cls, data: T, message: Optional[str] = None) -> 'DomainResult[T]':
+    def success_result(cls, data: T, message: Optional[str] = None) -> "DomainResult[T]":
         """Create a successful result."""
         return cls(success=True, data=data, message=message)
 
     @classmethod
-    def failure_result(cls, errors: List[str], message: Optional[str] = None) -> 'DomainResult[T]':
+    def failure_result(cls, errors: List[str], message: Optional[str] = None) -> "DomainResult[T]":
         """Create a failure result."""
         return cls(success=False, errors=errors, message=message)
 
     @classmethod
-    def single_error(cls, error: str, message: Optional[str] = None) -> 'DomainResult[T]':
+    def single_error(cls, error: str, message: Optional[str] = None) -> "DomainResult[T]":
         """Create a failure result with a single error."""
         return cls(success=False, errors=[error], message=message)
 

@@ -5,15 +5,16 @@ including distribution algorithms, failover scenarios, health checks,
 and performance under load.
 """
 
-import pytest
 import asyncio
-import time
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, Any, List, Optional, Callable
-import statistics
 import random
-from pathlib import Path
+import statistics
 import sys
+import time
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -41,7 +42,7 @@ class TestLoadDistributionAlgorithms:
         endpoints = {
             "endpoint_1": {"weight": 3, "calls": 0},
             "endpoint_2": {"weight": 2, "calls": 0},
-            "endpoint_3": {"weight": 1, "calls": 0}
+            "endpoint_3": {"weight": 1, "calls": 0},
         }
 
         total_weight = sum(ep["weight"] for ep in endpoints.values())
@@ -68,7 +69,7 @@ class TestLoadDistributionAlgorithms:
         endpoints = {
             "endpoint_1": {"active_connections": 0, "calls": 0},
             "endpoint_2": {"active_connections": 0, "calls": 0},
-            "endpoint_3": {"active_connections": 0, "calls": 0}
+            "endpoint_3": {"active_connections": 0, "calls": 0},
         }
 
         def get_least_loaded_endpoint():
@@ -127,7 +128,7 @@ class TestLoadBalancerHealthChecks:
             "healthy_1": {"healthy": True, "response_time": 0.1},
             "healthy_2": {"healthy": True, "response_time": 0.15},
             "unhealthy_1": {"healthy": False, "response_time": None},
-            "unhealthy_2": {"healthy": False, "response_time": None}
+            "unhealthy_2": {"healthy": False, "response_time": None},
         }
 
         def is_endpoint_available(endpoint_name):
@@ -168,6 +169,7 @@ class TestLoadBalancerHealthChecks:
 
     def test_health_status_transitions(self):
         """Test endpoint health status transitions."""
+
         class EndpointHealth:
             def __init__(self, name):
                 self.name = name
@@ -370,8 +372,9 @@ class TestLoadBalancerPerformance:
 
     def test_memory_usage_under_load(self):
         """Test memory usage patterns under load."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
 
@@ -381,11 +384,7 @@ class TestLoadBalancerPerformance:
         # Simulate load
         requests = []
         for i in range(10000):
-            request = {
-                "id": i,
-                "endpoint": f"endpoint_{i % 10}",
-                "data": [j for j in range(100)]  # Some data
-            }
+            request = {"id": i, "endpoint": f"endpoint_{i % 10}", "data": [j for j in range(100)]}  # Some data
             requests.append(request)
 
         # Memory after load
@@ -411,7 +410,7 @@ class TestLoadBalancerConfiguration:
             config = {
                 "algorithm": algorithm,
                 "endpoints": ["ep1", "ep2", "ep3"],
-                "weights": {"ep1": 2, "ep2": 1, "ep3": 1} if algorithm == "weighted" else None
+                "weights": {"ep1": 2, "ep2": 1, "ep3": 1} if algorithm == "weighted" else None,
             }
 
             # Validate configuration
@@ -427,13 +426,13 @@ class TestLoadBalancerConfiguration:
         valid_configs = [
             {"url": "http://service1:8080", "weight": 1, "health_check": "/health"},
             {"url": "http://service2:8080", "weight": 2, "health_check": "/status"},
-            {"url": "http://service3:8080", "weight": 1, "health_check": "/ping"}
+            {"url": "http://service3:8080", "weight": 1, "health_check": "/ping"},
         ]
 
         invalid_configs = [
             {"url": "", "weight": 1},  # Empty URL
             {"url": "http://service:8080", "weight": -1},  # Negative weight
-            {"url": "not-a-url", "weight": 1}  # Invalid URL format
+            {"url": "not-a-url", "weight": 1},  # Invalid URL format
         ]
 
         # Valid configs should pass
@@ -457,15 +456,15 @@ class TestLoadBalancerConfiguration:
                 "interval": 30,
                 "timeout": 5,
                 "healthy_threshold": 2,
-                "unhealthy_threshold": 3
+                "unhealthy_threshold": 3,
             },
             "endpoint_2": {
                 "url": "/status",
                 "interval": 60,
                 "timeout": 10,
                 "healthy_threshold": 3,
-                "unhealthy_threshold": 2
-            }
+                "unhealthy_threshold": 2,
+            },
         }
 
         for endpoint, config in health_configs.items():
@@ -490,7 +489,7 @@ class TestLoadBalancerMonitoring:
             "total_requests": 0,
             "endpoint_requests": {ep: 0 for ep in endpoints},
             "endpoint_response_times": {ep: [] for ep in endpoints},
-            "endpoint_errors": {ep: 0 for ep in endpoints}
+            "endpoint_errors": {ep: 0 for ep in endpoints},
         }
 
         # Simulate requests and collect metrics
@@ -522,12 +521,7 @@ class TestLoadBalancerMonitoring:
 
     def test_performance_monitoring(self):
         """Test performance monitoring capabilities."""
-        performance_metrics = {
-            "throughput": [],
-            "latency": [],
-            "error_rate": [],
-            "timestamps": []
-        }
+        performance_metrics = {"throughput": [], "latency": [], "error_rate": [], "timestamps": []}
 
         # Simulate performance over time
         start_time = time.time()
@@ -600,7 +594,7 @@ def load_balancer_config():
         "algorithm": "round_robin",
         "endpoints": ["ep1", "ep2", "ep3"],
         "health_check_interval": 30,
-        "health_check_timeout": 5
+        "health_check_timeout": 5,
     }
 
 
@@ -608,11 +602,6 @@ def load_balancer_config():
 def performance_monitor():
     """Create performance monitor for testing."""
     return {
-        "metrics": {
-            "requests_total": 0,
-            "requests_per_second": 0,
-            "average_response_time": 0,
-            "error_rate": 0
-        },
-        "start_time": time.time()
+        "metrics": {"requests_total": 0, "requests_per_second": 0, "average_response_time": 0, "error_rate": 0},
+        "start_time": time.time(),
     }

@@ -1,13 +1,13 @@
 """Application Caching Service - Multi-level caching with TTL support."""
 
 import asyncio
-import json
 import hashlib
-from typing import Any, Dict, Optional, List, Union
-from datetime import datetime, timedelta
-from abc import ABC, abstractmethod
+import json
 import threading
+from abc import ABC, abstractmethod
 from collections import OrderedDict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
 
 from .application_service import ApplicationService, ServiceContext
 
@@ -38,20 +38,20 @@ class CacheEntry:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'value': self.value,
-            'created_at': self.created_at.isoformat(),
-            'ttl_seconds': self.ttl_seconds,
-            'access_count': self.access_count,
-            'last_accessed': self.last_accessed.isoformat()
+            "value": self.value,
+            "created_at": self.created_at.isoformat(),
+            "ttl_seconds": self.ttl_seconds,
+            "access_count": self.access_count,
+            "last_accessed": self.last_accessed.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CacheEntry':
+    def from_dict(cls, data: Dict[str, Any]) -> "CacheEntry":
         """Create from dictionary."""
-        entry = cls(data['value'], data['ttl_seconds'])
-        entry.created_at = datetime.fromisoformat(data['created_at'])
-        entry.access_count = data.get('access_count', 0)
-        entry.last_accessed = datetime.fromisoformat(data['last_accessed'])
+        entry = cls(data["value"], data["ttl_seconds"])
+        entry.created_at = datetime.fromisoformat(data["created_at"])
+        entry.access_count = data.get("access_count", 0)
+        entry.last_accessed = datetime.fromisoformat(data["last_accessed"])
         return entry
 
 
@@ -182,7 +182,8 @@ class InMemoryCacheBackend(CacheBackend):
 
             if pattern:
                 import re
-                regex = re.compile(pattern.replace('*', '.*'))
+
+                regex = re.compile(pattern.replace("*", ".*"))
                 return [k for k in all_keys if regex.match(k)]
 
             return all_keys
@@ -328,7 +329,7 @@ class RedisCacheBackend(CacheBackend):
                     break
 
             # Remove prefix from keys
-            return [key[len(self.prefix):] for key in all_keys]
+            return [key[len(self.prefix) :] for key in all_keys]
 
         except Exception:
             return []
@@ -410,10 +411,7 @@ class CachingService(ApplicationService):
     """Application caching service with multi-level caching."""
 
     def __init__(
-        self,
-        cache_backends: Optional[List[CacheBackend]] = None,
-        default_ttl: int = 300,
-        cleanup_interval: int = 60
+        self, cache_backends: Optional[List[CacheBackend]] = None, default_ttl: int = 300, cleanup_interval: int = 60
     ):
         """Initialize caching service."""
         super().__init__("caching_service")
@@ -468,11 +466,7 @@ class CachingService(ApplicationService):
             return await self.cache.get(key)
 
     async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl_seconds: Optional[int] = None,
-        context: Optional[ServiceContext] = None
+        self, key: str, value: Any, ttl_seconds: Optional[int] = None, context: Optional[ServiceContext] = None
     ) -> None:
         """Set value in cache."""
         async with self.operation_context("cache_set", context):
@@ -494,7 +488,7 @@ class CachingService(ApplicationService):
         operation_func: callable,
         ttl_seconds: Optional[int] = None,
         force_refresh: bool = False,
-        context: Optional[ServiceContext] = None
+        context: Optional[ServiceContext] = None,
     ) -> Any:
         """Execute operation with caching."""
         # Try to get from cache first
@@ -520,26 +514,20 @@ class CachingService(ApplicationService):
 
     async def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
-        stats = {
-            'backends': len(self.cache.backends),
-            'default_ttl': self.cache.default_ttl
-        }
+        stats = {"backends": len(self.cache.backends), "default_ttl": self.cache.default_ttl}
 
         for i, backend in enumerate(self.cache.backends):
             try:
-                backend_stats = {
-                    'type': backend.__class__.__name__,
-                    'size': await backend.size()
-                }
+                backend_stats = {"type": backend.__class__.__name__, "size": await backend.size()}
 
-                if hasattr(backend, 'max_size'):
-                    backend_stats['max_size'] = backend.max_size
-                    backend_stats['utilization'] = backend_stats['size'] / backend.max_size
+                if hasattr(backend, "max_size"):
+                    backend_stats["max_size"] = backend.max_size
+                    backend_stats["utilization"] = backend_stats["size"] / backend.max_size
 
-                stats[f'backend_{i}'] = backend_stats
+                stats[f"backend_{i}"] = backend_stats
 
             except Exception as e:
-                stats[f'backend_{i}'] = {'error': str(e)}
+                stats[f"backend_{i}"] = {"error": str(e)}
 
         return stats
 
@@ -550,7 +538,7 @@ class CachingService(ApplicationService):
         # Add cache-specific health info
         try:
             cache_stats = await self.get_cache_stats()
-            health['cache'] = cache_stats
+            health["cache"] = cache_stats
 
             # Test cache operations
             test_key = f"health_check_{int(asyncio.get_event_loop().time())}"
@@ -558,10 +546,10 @@ class CachingService(ApplicationService):
             test_value = await self.cache.get(test_key)
             await self.cache.delete(test_key)
 
-            health['cache']['test_result'] = test_value == "test_value"
+            health["cache"]["test_result"] = test_value == "test_value"
 
         except Exception as e:
-            health['cache'] = {'error': str(e)}
+            health["cache"] = {"error": str(e)}
 
         return health
 

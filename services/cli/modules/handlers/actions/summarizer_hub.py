@@ -1,8 +1,10 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import json
+from typing import Any, Callable, Dict, List, Tuple
+
+from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
+
 from ...utils.display_helpers import print_kv, print_list
 
 
@@ -18,11 +20,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         max_length = Prompt.ask("Max length", default="500")
 
         url = f"{clients.summarizer_hub_url()}/summarize"
-        rx = await clients.post_json(url, {
-            "content": text,
-            "format": format_type,
-            "max_length": int(max_length)
-        })
+        rx = await clients.post_json(url, {"content": text, "format": format_type, "max_length": int(max_length)})
         print_kv(console, "Summary Result", rx)
 
     async def summarize_ensemble():
@@ -33,11 +31,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         providers = [{"name": provider, **({"model": model} if model else {})}]
 
         url = f"{clients.summarizer_hub_url()}/summarize/ensemble"
-        rx = await clients.post_json(url, {
-            "text": text,
-            "providers": providers,
-            "use_hub_config": True
-        })
+        rx = await clients.post_json(url, {"text": text, "providers": providers, "use_hub_config": True})
         print_kv(console, "Ensemble Summary", rx)
 
     # ============================================================================
@@ -56,10 +50,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         if candidate_categories_input.strip():
             candidate_categories = [cat.strip() for cat in candidate_categories_input.split(",") if cat.strip()]
 
-        payload = {
-            "document": document,
-            "use_zero_shot": use_zero_shot.lower() == "yes"
-        }
+        payload = {"document": document, "use_zero_shot": use_zero_shot.lower() == "yes"}
         if candidate_categories:
             payload["candidate_categories"] = candidate_categories
 
@@ -84,10 +75,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         if candidate_categories_input.strip():
             candidate_categories = [cat.strip() for cat in candidate_categories_input.split(",") if cat.strip()]
 
-        payload = {
-            "documents": documents,
-            "use_zero_shot": True
-        }
+        payload = {"documents": documents, "use_zero_shot": True}
         if candidate_categories:
             payload["candidate_categories"] = candidate_categories
 
@@ -116,11 +104,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         if criteria_input.strip():
             criteria = [crit.strip() for crit in criteria_input.split(",") if crit.strip()]
 
-        payload = {
-            "document_id": doc_id,
-            "content": content,
-            "review_type": review_type
-        }
+        payload = {"document_id": doc_id, "content": content, "review_type": review_type}
         if criteria:
             payload["criteria"] = criteria
 
@@ -139,7 +123,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "document_id": doc_id,
             "version1_content": version1_content,
             "version2_content": version2_content,
-            "comparison_type": comparison_type
+            "comparison_type": comparison_type,
         }
 
         url = f"{clients.summarizer_hub_url()}/review/compare"
@@ -166,7 +150,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         """Test AI provider connectivity."""
         url = f"{clients.summarizer_hub_url()}/summarize/ensemble"
         try:
-            rx = await clients.post_json(url, {"text": "ping", "providers": [{"name": "ollama"}], "use_hub_config": True})
+            rx = await clients.post_json(
+                url, {"text": "ping", "providers": [{"name": "ollama"}], "use_hub_config": True}
+            )
             ok = rx and "success" in rx and rx["success"]
         except Exception as e:
             console.print(f"[red]Provider test failed: {e}[/red]")
@@ -187,17 +173,14 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         iterations = int(iterations)
 
         import time
+
         start_time = time.time()
 
         for i in range(iterations):
             console.print(f"Benchmarking iteration {i+1}/{iterations}...")
             try:
                 url = f"{clients.summarizer_hub_url()}/summarize"
-                await clients.post_json(url, {
-                    "content": test_text,
-                    "format": "text",
-                    "max_length": 100
-                })
+                await clients.post_json(url, {"content": test_text, "format": "text", "max_length": 100})
             except Exception as e:
                 console.print(f"[red]Iteration {i+1} failed: {e}[/red]")
 
@@ -205,12 +188,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         total_time = end_time - start_time
         avg_time = total_time / iterations
 
-        print_kv(console, "Benchmark Results", {
-            "total_iterations": iterations,
-            "total_time": f"{total_time:.2f}s",
-            "average_time": f"{avg_time:.2f}s",
-            "iterations_per_second": f"{iterations/total_time:.2f}"
-        })
+        print_kv(
+            console,
+            "Benchmark Results",
+            {
+                "total_iterations": iterations,
+                "total_time": f"{total_time:.2f}s",
+                "average_time": f"{avg_time:.2f}s",
+                "iterations_per_second": f"{iterations/total_time:.2f}",
+            },
+        )
 
     # ============================================================================
     # ORGANIZE ACTIONS BY CATEGORY
@@ -221,21 +208,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("📝 Summarize document", summarize),
         ("🤖 Summarize with ensemble", summarize_ensemble),
         ("⚡ Benchmark summarization", benchmark_summarization),
-
         # Categorization
         ("🏷️  Categorize document", categorize_document),
         ("📦 Batch categorize documents", categorize_batch),
         ("📋 List available categories", list_categories),
-
         # Peer Review
         ("👥 Perform peer review", peer_review),
         ("⚖️  Compare document versions", compare_versions),
         ("📋 List review types", list_review_types),
         ("🎯 List review criteria", list_review_criteria),
-
         # Testing & Diagnostics
         ("🩺 Service health check", test_summarizer_health),
         ("🔧 Test AI providers", test_providers),
     ]
-
-

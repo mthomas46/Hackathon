@@ -4,16 +4,16 @@ This module provides simulation-specific utilities that leverage and extend
 the shared utilities from services/shared/utilities/ for consistency and reusability.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Union, Callable, TypeVar, Generic
-from datetime import datetime, timedelta
-import json
-import hashlib
-import uuid
-import re
-from functools import wraps, lru_cache
 import asyncio
+import hashlib
+import json
+import re
+import sys
+import uuid
+from datetime import datetime, timedelta
+from functools import lru_cache, wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -22,13 +22,13 @@ from simulation.infrastructure.logging import get_simulation_logger
 
 # Import shared utilities (with fallbacks)
 try:
-    from shared.utilities.validation import DataValidator, ValidationRule, ValidationResult
-    from shared.utilities.formatting import DataFormatter, FormatTemplate
-    from shared.utilities.caching import CacheManager, CacheConfig
     from shared.utilities.async_utils import AsyncTaskManager, TaskConfig
-    from shared.utilities.error_handling import ErrorHandler, ErrorContext
-    from shared.utilities.retry import RetryManager, RetryConfig
-    from shared.utilities.metrics import PerformanceTracker, MetricConfig
+    from shared.utilities.caching import CacheConfig, CacheManager
+    from shared.utilities.error_handling import ErrorContext, ErrorHandler
+    from shared.utilities.formatting import DataFormatter, FormatTemplate
+    from shared.utilities.metrics import MetricConfig, PerformanceTracker
+    from shared.utilities.retry import RetryConfig, RetryManager
+    from shared.utilities.validation import DataValidator, ValidationResult, ValidationRule
 except ImportError:
     # Fallback implementations for shared utilities
     from dataclasses import dataclass
@@ -132,7 +132,7 @@ class SimulationDataValidator(DataValidator):
             "project_config": self._validate_project_config,
             "team_config": self._validate_team_config,
             "timeline_config": self._validate_timeline_config,
-            "simulation_parameters": self._validate_simulation_parameters
+            "simulation_parameters": self._validate_simulation_parameters,
         }
 
     def validate_simulation_data(self, data_type: str, data: Dict[str, Any]) -> ValidationResult:
@@ -156,7 +156,13 @@ class SimulationDataValidator(DataValidator):
         if "name" in config and len(config["name"]) < 3:
             errors.append("Project name must be at least 3 characters")
 
-        if "type" in config and config["type"] not in ["web_application", "api_service", "mobile_application", "data_science", "devops_tool"]:
+        if "type" in config and config["type"] not in [
+            "web_application",
+            "api_service",
+            "mobile_application",
+            "data_science",
+            "devops_tool",
+        ]:
             errors.append("Invalid project type")
 
         if "complexity" in config and config["complexity"] not in ["simple", "medium", "complex"]:
@@ -191,7 +197,15 @@ class SimulationDataValidator(DataValidator):
                 errors.append(f"Team member {i} missing name")
             if "role" not in member:
                 errors.append(f"Team member {i} missing role")
-            elif member["role"] not in ["developer", "qa_engineer", "devops_engineer", "architect", "product_owner", "scrum_master", "ux_designer"]:
+            elif member["role"] not in [
+                "developer",
+                "qa_engineer",
+                "devops_engineer",
+                "architect",
+                "product_owner",
+                "scrum_master",
+                "ux_designer",
+            ]:
                 errors.append(f"Team member {i} has invalid role: {member['role']}")
 
         return ValidationResult(len(errors) == 0, errors, warnings)
@@ -252,12 +266,14 @@ class SimulationDataFormatter(DataFormatter):
 
     def _setup_simulation_templates(self):
         """Set up simulation-specific formatting templates."""
-        self.templates.update({
-            "simulation_summary": self._format_simulation_summary,
-            "project_report": self._format_project_report,
-            "team_analysis": self._format_team_analysis,
-            "timeline_progress": self._format_timeline_progress
-        })
+        self.templates.update(
+            {
+                "simulation_summary": self._format_simulation_summary,
+                "project_report": self._format_project_report,
+                "team_analysis": self._format_team_analysis,
+                "timeline_progress": self._format_timeline_progress,
+            }
+        )
 
     def format_simulation_summary(self, simulation_data: Dict[str, Any]) -> str:
         """Format simulation summary."""
@@ -284,7 +300,7 @@ class SimulationDataFormatter(DataFormatter):
             f"  Total Events: {data.get('total_events', 0)}",
             f"  Quality Score: {data.get('quality_score', 0):.2f}",
             f"  Performance Score: {data.get('performance_score', 0):.2f}",
-            "=" * 60
+            "=" * 60,
         ]
         return "\n".join(lines)
 
@@ -302,7 +318,7 @@ class SimulationDataFormatter(DataFormatter):
             "Generated Documents:",
         ]
 
-        documents = data.get('documents', [])
+        documents = data.get("documents", [])
         for doc in documents[:10]:  # Limit to first 10
             lines.append(f"  • {doc.get('title', 'Untitled')} ({doc.get('type', 'unknown')})")
 
@@ -320,15 +336,17 @@ class SimulationDataFormatter(DataFormatter):
             "=" * 60,
         ]
 
-        members = data.get('members', [])
+        members = data.get("members", [])
         for member in members:
-            lines.extend([
-                f"Member: {member.get('name', 'Unknown')}",
-                f"  Role: {member.get('role', 'Unknown')}",
-                f"  Experience: {member.get('experience_years', 0)} years",
-                f"  Productivity: {member.get('productivity_factor', 1.0):.2f}",
-                ""
-            ])
+            lines.extend(
+                [
+                    f"Member: {member.get('name', 'Unknown')}",
+                    f"  Role: {member.get('role', 'Unknown')}",
+                    f"  Experience: {member.get('experience_years', 0)} years",
+                    f"  Productivity: {member.get('productivity_factor', 1.0):.2f}",
+                    "",
+                ]
+            )
 
         lines.append("=" * 60)
         return "\n".join(lines)
@@ -341,17 +359,19 @@ class SimulationDataFormatter(DataFormatter):
             "=" * 60,
         ]
 
-        phases = data.get('phases', [])
+        phases = data.get("phases", [])
         for phase in phases:
-            progress = phase.get('progress_percentage', 0)
-            status = phase.get('status', 'unknown')
-            lines.extend([
-                f"Phase: {phase.get('name', 'Unknown')}",
-                f"  Progress: {progress:.1f}%",
-                f"  Status: {status}",
-                f"  Duration: {phase.get('duration_days', 0)} days",
-                ""
-            ])
+            progress = phase.get("progress_percentage", 0)
+            status = phase.get("status", "unknown")
+            lines.extend(
+                [
+                    f"Phase: {phase.get('name', 'Unknown')}",
+                    f"  Progress: {progress:.1f}%",
+                    f"  Status: {status}",
+                    f"  Duration: {phase.get('duration_days', 0)} days",
+                    "",
+                ]
+            )
 
         lines.append("=" * 60)
         return "\n".join(lines)
@@ -411,11 +431,7 @@ class SimulationAsyncTaskManager(AsyncTaskManager):
         """Run a simulation task with tracking."""
         task_id = f"{task_name}_{datetime.now().strftime('%H%M%S')}_{hash(coro) % 1000}"
 
-        self.active_tasks[task_id] = {
-            "name": task_name,
-            "start_time": datetime.now(),
-            "status": "running"
-        }
+        self.active_tasks[task_id] = {"name": task_name, "start_time": datetime.now(), "status": "running"}
 
         try:
             self.logger.info("Starting simulation task", task_id=task_id, task_name=task_name)
@@ -481,7 +497,7 @@ class SimulationErrorHandler(ErrorHandler):
             "service_unavailable": self._handle_service_unavailable,
             "timeout_error": self._handle_timeout_error,
             "resource_exhausted": self._handle_resource_exhausted,
-            "configuration_error": self._handle_configuration_error
+            "configuration_error": self._handle_configuration_error,
         }
 
     def handle_simulation_error(self, error: Exception, context: Dict[str, Any] = None):
@@ -518,7 +534,7 @@ class SimulationErrorHandler(ErrorHandler):
             "Validation error in simulation",
             error=str(error),
             context=context,
-            recommendation="Check input data format and required fields"
+            recommendation="Check input data format and required fields",
         )
 
     def _handle_service_unavailable(self, error: Exception, context: Dict[str, Any]):
@@ -527,7 +543,7 @@ class SimulationErrorHandler(ErrorHandler):
             "Ecosystem service unavailable",
             error=str(error),
             context=context,
-            recommendation="Check service health and network connectivity"
+            recommendation="Check service health and network connectivity",
         )
 
     def _handle_timeout_error(self, error: Exception, context: Dict[str, Any]):
@@ -536,7 +552,7 @@ class SimulationErrorHandler(ErrorHandler):
             "Operation timeout in simulation",
             error=str(error),
             context=context,
-            recommendation="Consider increasing timeout or optimizing operation"
+            recommendation="Consider increasing timeout or optimizing operation",
         )
 
     def _handle_resource_exhausted(self, error: Exception, context: Dict[str, Any]):
@@ -545,7 +561,7 @@ class SimulationErrorHandler(ErrorHandler):
             "Resource exhaustion in simulation",
             error=str(error),
             context=context,
-            recommendation="Scale resources or reduce concurrent operations"
+            recommendation="Scale resources or reduce concurrent operations",
         )
 
     def _handle_configuration_error(self, error: Exception, context: Dict[str, Any]):
@@ -554,7 +570,7 @@ class SimulationErrorHandler(ErrorHandler):
             "Configuration error in simulation",
             error=str(error),
             context=context,
-            recommendation="Validate configuration files and environment variables"
+            recommendation="Validate configuration files and environment variables",
         )
 
 
@@ -578,7 +594,7 @@ class SimulationRetryManager(RetryManager):
                     "Attempting simulation operation",
                     operation=operation_name,
                     attempt=attempt,
-                    max_attempts=self.config.max_attempts
+                    max_attempts=self.config.max_attempts,
                 )
 
                 result = await self.execute_with_retry(func, *args, **kwargs)
@@ -588,13 +604,11 @@ class SimulationRetryManager(RetryManager):
                 last_error = e
 
                 if attempt < self.config.max_attempts:
-                    delay = min(
-                        self.config.backoff_factor ** attempt,
-                        self.config.max_delay
-                    )
+                    delay = min(self.config.backoff_factor**attempt, self.config.max_delay)
 
                     # Add jitter to prevent thundering herd
                     import random
+
                     jitter = random.uniform(0.1, 1.0) * delay * 0.1
                     total_delay = delay + jitter
 
@@ -603,7 +617,7 @@ class SimulationRetryManager(RetryManager):
                         operation=operation_name,
                         attempt=attempt,
                         error=str(e),
-                        delay_seconds=round(total_delay, 2)
+                        delay_seconds=round(total_delay, 2),
                     )
 
                     await asyncio.sleep(total_delay)
@@ -612,7 +626,7 @@ class SimulationRetryManager(RetryManager):
                         "Simulation operation failed after all retries",
                         operation=operation_name,
                         total_attempts=attempt,
-                        final_error=str(e)
+                        final_error=str(e),
                     )
                     raise last_error
 
@@ -636,7 +650,7 @@ class SimulationPerformanceTracker(PerformanceTracker):
             "operation": operation,
             "duration": duration,
             "timestamp": datetime.now(),
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         self.performance_history.append(performance_record)
@@ -648,10 +662,7 @@ class SimulationPerformanceTracker(PerformanceTracker):
         # Log performance insights
         if duration > 10.0:  # Log slow operations
             self.logger.warning(
-                "Slow simulation operation detected",
-                operation=operation,
-                duration=duration,
-                metadata=metadata
+                "Slow simulation operation detected", operation=operation, duration=duration, metadata=metadata
             )
 
     def get_performance_summary(self, operation_filter: str = None) -> Dict[str, Any]:
@@ -673,7 +684,7 @@ class SimulationPerformanceTracker(PerformanceTracker):
             "min_duration": min(durations),
             "max_duration": max(durations),
             "slow_operations": slow_operations,
-            "slow_operation_percentage": (slow_operations / len(records)) * 100
+            "slow_operation_percentage": (slow_operations / len(records)) * 100,
         }
 
 
@@ -745,20 +756,19 @@ def get_simulation_performance_tracker() -> SimulationPerformanceTracker:
 
 __all__ = [
     # Core Classes
-    'SimulationDataValidator',
-    'SimulationDataFormatter',
-    'SimulationCacheManager',
-    'SimulationAsyncTaskManager',
-    'SimulationErrorHandler',
-    'SimulationRetryManager',
-    'SimulationPerformanceTracker',
-
+    "SimulationDataValidator",
+    "SimulationDataFormatter",
+    "SimulationCacheManager",
+    "SimulationAsyncTaskManager",
+    "SimulationErrorHandler",
+    "SimulationRetryManager",
+    "SimulationPerformanceTracker",
     # Global Instances
-    'get_simulation_validator',
-    'get_simulation_formatter',
-    'get_simulation_cache',
-    'get_simulation_task_manager',
-    'get_simulation_error_handler',
-    'get_simulation_retry_manager',
-    'get_simulation_performance_tracker'
+    "get_simulation_validator",
+    "get_simulation_formatter",
+    "get_simulation_cache",
+    "get_simulation_task_manager",
+    "get_simulation_error_handler",
+    "get_simulation_retry_manager",
+    "get_simulation_performance_tracker",
 ]

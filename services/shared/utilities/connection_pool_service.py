@@ -7,19 +7,20 @@ Provides enterprise-grade connection pooling with:
 - Resource limits and connection lifecycle management
 - Metrics and monitoring for connection usage
 """
+
 import asyncio
-import time
-import threading
-from typing import Dict, Any, List, Optional, Callable, Awaitable, TypeVar, Union
-from dataclasses import dataclass, field
-from enum import Enum
 import logging
 import sqlite3
-import httpx
-import aioredis
-import psycopg2
+import threading
+import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, Union
 
+import httpx
+import psycopg2
+import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -27,6 +28,7 @@ T = TypeVar("T")
 
 class ConnectionType(Enum):
     """Types of connections supported by the pool."""
+
     SQLITE = "sqlite"
     POSTGRESQL = "postgresql"
     REDIS = "redis"
@@ -36,6 +38,7 @@ class ConnectionType(Enum):
 
 class PoolState(Enum):
     """Connection pool states."""
+
     INITIALIZING = "initializing"
     HEALTHY = "healthy"
     DEGRADED = "degraded"
@@ -46,6 +49,7 @@ class PoolState(Enum):
 @dataclass
 class ConnectionConfig:
     """Configuration for a connection pool."""
+
     pool_type: ConnectionType
     host: str = "localhost"
     port: Optional[int] = None
@@ -66,6 +70,7 @@ class ConnectionConfig:
 @dataclass
 class ConnectionWrapper:
     """Wrapper for individual connections with metadata."""
+
     connection: Any
     pool_name: str
     created_at: float = field(default_factory=time.time)
@@ -81,13 +86,12 @@ class ConnectionWrapper:
     def is_expired(self, max_idle_time: float, max_lifetime: float) -> bool:
         """Check if connection has expired."""
         current_time = time.time()
-        return (current_time - self.last_used > max_idle_time or
-                current_time - self.created_at > max_lifetime)
+        return current_time - self.last_used > max_idle_time or current_time - self.created_at > max_lifetime
 
     async def close(self) -> None:
         """Close the connection."""
         try:
-            if hasattr(self.connection, 'close'):
+            if hasattr(self.connection, "close"):
                 if asyncio.iscoroutinefunction(self.connection.close):
                     await self.connection.close()
                 else:
@@ -99,6 +103,7 @@ class ConnectionWrapper:
 @dataclass
 class PoolMetrics:
     """Metrics for connection pool monitoring."""
+
     total_connections_created: int = 0
     active_connections: int = 0
     idle_connections: int = 0
@@ -192,7 +197,7 @@ class ConnectionPool:
                 conn = sqlite3.connect(
                     self.config.database or ":memory:",
                     timeout=self.config.connection_timeout,
-                    **self.config.extra_params
+                    **self.config.extra_params,
                 )
                 # Enable WAL mode for better concurrency
                 conn.execute("PRAGMA journal_mode=WAL")
@@ -206,37 +211,34 @@ class ConnectionPool:
                     user=self.config.username,
                     password=self.config.password,
                     connect_timeout=int(self.config.connection_timeout),
-                    sslmode='require' if self.config.ssl_enabled else 'disable',
-                    **self.config.extra_params
+                    sslmode="require" if self.config.ssl_enabled else "disable",
+                    **self.config.extra_params,
                 )
 
             elif self.config.pool_type == ConnectionType.REDIS:
-                conn = await aioredis.from_url(
+                conn = redis.from_url(
                     f"redis://{self.config.host}:{self.config.port or 6379}",
                     max_connections=1,  # Each wrapper gets its own connection
                     retry_on_timeout=True,
                     socket_timeout=self.config.connection_timeout,
-                    **self.config.extra_params
+                    **self.config.extra_params,
                 )
 
             elif self.config.pool_type == ConnectionType.HTTP:
                 conn = httpx.AsyncClient(
                     limits=httpx.Limits(
                         max_keepalive_connections=self.config.max_connections,
-                        max_connections=self.config.max_connections
+                        max_connections=self.config.max_connections,
                     ),
                     timeout=httpx.Timeout(self.config.connection_timeout),
-                    **self.config.extra_params
+                    **self.config.extra_params,
                 )
 
             else:
                 raise ValueError(f"Unsupported connection type: {self.config.pool_type}")
 
             self.metrics.total_connections_created += 1
-            wrapper = ConnectionWrapper(
-                connection=conn,
-                pool_name=self.name
-            )
+            wrapper = ConnectionWrapper(connection=conn, pool_name=self.name)
 
             logger.debug(f"Created new connection in pool {self.name}")
             return wrapper
@@ -404,10 +406,10 @@ class HTTPConnectionPool:
                     self._client = httpx.AsyncClient(
                         limits=httpx.Limits(
                             max_keepalive_connections=self.config.max_connections,
-                            max_connections=self.config.max_connections
+                            max_connections=self.config.max_connections,
                         ),
                         timeout=httpx.Timeout(self.config.connection_timeout),
-                        **self.config.extra_params
+                        **self.config.extra_params,
                     )
         return self._client
 
@@ -498,7 +500,7 @@ class ConnectionPoolService:
                 "total_destroyed": pool.metrics.connections_destroyed,
                 "connection_errors": pool.metrics.connection_errors,
                 "connection_timeouts": pool.metrics.connection_timeouts,
-                "avg_wait_time": pool.metrics.avg_connection_wait_time
+                "avg_wait_time": pool.metrics.avg_connection_wait_time,
             }
 
         return metrics
@@ -533,24 +535,17 @@ def get_connection_pool_service() -> ConnectionPoolService:
 
 
 # Convenience functions
-def create_database_pool(name: str, database_url: str, pool_type: ConnectionType = ConnectionType.SQLITE,
-                        max_connections: int = 10) -> ConnectionPool:
+def create_database_pool(
+    name: str, database_url: str, pool_type: ConnectionType = ConnectionType.SQLITE, max_connections: int = 10
+) -> ConnectionPool:
     """Convenience function to create a database connection pool."""
     # Parse database URL (simplified)
     if pool_type == ConnectionType.SQLITE:
-        config = ConnectionConfig(
-            pool_type=pool_type,
-            database=database_url,
-            max_connections=max_connections
-        )
+        config = ConnectionConfig(pool_type=pool_type, database=database_url, max_connections=max_connections)
     else:
         # For other databases, you'd parse the URL properly
         config = ConnectionConfig(
-            pool_type=pool_type,
-            host="localhost",
-            port=5432,
-            database=database_url,
-            max_connections=max_connections
+            pool_type=pool_type, host="localhost", port=5432, database=database_url, max_connections=max_connections
         )
 
     service = get_connection_pool_service()
@@ -562,7 +557,7 @@ def create_http_pool(name: str, base_url: str = "", max_connections: int = 20) -
     config = ConnectionConfig(
         pool_type=ConnectionType.HTTP,
         max_connections=max_connections,
-        extra_params={"base_url": base_url} if base_url else {}
+        extra_params={"base_url": base_url} if base_url else {},
     )
 
     service = get_connection_pool_service()

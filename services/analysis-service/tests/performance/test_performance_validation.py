@@ -1,21 +1,20 @@
 """Performance Tests - Validate system performance and scalability."""
 
-import pytest
 import asyncio
-import time
-import statistics
-from unittest.mock import Mock, AsyncMock, patch
-from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, Any, List, Tuple
-import psutil
 import os
+import statistics
+import time
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List, Tuple
+from unittest.mock import AsyncMock, Mock, patch
+
+import psutil
+import pytest
 
 from ...main import app
-from ...presentation.models.analysis import (
-    SemanticSimilarityRequest, SemanticSimilarityResponse
-)
+from ...presentation.models.analysis import SemanticSimilarityRequest, SemanticSimilarityResponse
 from ..fixtures.test_data import TestDataFactory
-from ..fixtures.test_utilities import PerformanceMonitor, AsyncMockHelper
+from ..fixtures.test_utilities import AsyncMockHelper, PerformanceMonitor
 
 
 class TestPerformanceValidation:
@@ -34,12 +33,7 @@ class TestPerformanceValidation:
     @pytest.fixture
     def concurrent_users_config(self):
         """Configuration for concurrent user testing."""
-        return {
-            'user_count': 20,
-            'requests_per_user': 5,
-            'max_concurrent': 10,
-            'timeout_seconds': 30
-        }
+        return {"user_count": 20, "requests_per_user": 5, "max_concurrent": 10, "timeout_seconds": 30}
 
     def test_single_semantic_similarity_performance(self):
         """Test performance of single semantic similarity analysis."""
@@ -47,21 +41,23 @@ class TestPerformanceValidation:
 
         # Create test request
         request = SemanticSimilarityRequest(
-            targets=['doc-1', 'doc-2', 'doc-3'],
+            targets=["doc-1", "doc-2", "doc-3"],
             threshold=0.8,
-            embedding_model='sentence-transformers/all-MiniLM-L6-v2',
-            options={'batch_size': 32}
+            embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+            options={"batch_size": 32},
         )
 
         # Mock the handler
-        with patch('services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_semantic_similarity_analysis') as mock_handler:
+        with patch(
+            "services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_semantic_similarity_analysis"
+        ) as mock_handler:
             mock_response = SemanticSimilarityResponse(
-                analysis_id='perf-test-001',
-                analysis_type='semantic_similarity',
+                analysis_id="perf-test-001",
+                analysis_type="semantic_similarity",
                 targets=request.targets,
-                status='completed',
+                status="completed",
                 execution_time_seconds=1.2,
-                similarity_matrix=[[1.0, 0.85, 0.65], [0.85, 1.0, 0.72], [0.65, 0.72, 1.0]]
+                similarity_matrix=[[1.0, 0.85, 0.65], [0.85, 1.0, 0.72], [0.65, 0.72, 1.0]],
             )
             mock_handler.return_value = mock_response
 
@@ -81,18 +77,17 @@ class TestPerformanceValidation:
 
         async def make_concurrent_request(request_id: int):
             """Make a single concurrent request."""
-            request = SemanticSimilarityRequest(
-                targets=[f'doc-{request_id}-1', f'doc-{request_id}-2'],
-                threshold=0.8
-            )
+            request = SemanticSimilarityRequest(targets=[f"doc-{request_id}-1", f"doc-{request_id}-2"], threshold=0.8)
 
-            with patch('services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_semantic_similarity_analysis') as mock_handler:
+            with patch(
+                "services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_semantic_similarity_analysis"
+            ) as mock_handler:
                 mock_response = SemanticSimilarityResponse(
-                    analysis_id=f'concurrent-{request_id}',
-                    analysis_type='semantic_similarity',
+                    analysis_id=f"concurrent-{request_id}",
+                    analysis_type="semantic_similarity",
                     targets=request.targets,
-                    status='completed',
-                    execution_time_seconds=1.0
+                    status="completed",
+                    execution_time_seconds=1.0,
                 )
                 mock_handler.return_value = mock_response
 
@@ -263,9 +258,9 @@ class TestPerformanceValidation:
 
         # Simulate different load scenarios
         load_scenarios = [
-            {'concurrent_requests': 1, 'expected_max_time': 0.5},
-            {'concurrent_requests': 5, 'expected_max_time': 1.0},
-            {'concurrent_requests': 10, 'expected_max_time': 2.0}
+            {"concurrent_requests": 1, "expected_max_time": 0.5},
+            {"concurrent_requests": 5, "expected_max_time": 1.0},
+            {"concurrent_requests": 10, "expected_max_time": 2.0},
         ]
 
         for scenario in load_scenarios:
@@ -273,7 +268,7 @@ class TestPerformanceValidation:
 
             async def run_scenario():
                 tasks = []
-                for i in range(scenario['concurrent_requests']):
+                for i in range(scenario["concurrent_requests"]):
                     task = asyncio.create_task(self._simulate_api_request(i))
                     tasks.append(task)
 
@@ -293,15 +288,17 @@ class TestPerformanceValidation:
 
             # Validate scenario performance
             max_time = max(times) if times else 0
-            assert max_time < scenario['expected_max_time'], \
-                f"Scenario {scenario['concurrent_requests']} req failed: max {max_time:.2f}s > {scenario['expected_max_time']}s"
+            assert (
+                max_time < scenario["expected_max_time"]
+            ), f"Scenario {scenario['concurrent_requests']} req failed: max {max_time:.2f}s > {scenario['expected_max_time']}s"
 
             # Check for outliers (responses taking > 2x median)
             if len(times) > 1:
                 median_time = statistics.median(times)
                 outliers = [t for t in times if t > median_time * 2]
-                assert len(outliers) / len(times) < 0.1, \
-                    f"Too many outliers in scenario {scenario['concurrent_requests']}: {len(outliers)}/{len(times)}"
+                assert (
+                    len(outliers) / len(times) < 0.1
+                ), f"Too many outliers in scenario {scenario['concurrent_requests']}: {len(outliers)}/{len(times)}"
 
         # Overall validation
         if response_times:
@@ -357,37 +354,39 @@ class TestPerformanceValidation:
             cpu_percent = psutil.cpu_percent(interval=0.1)
 
             scaling_results[load_level] = {
-                'total_time': total_time,
-                'avg_time_per_operation': total_time / load_level if load_level > 0 else 0,
-                'memory_usage_mb': memory_usage,
-                'cpu_percent': cpu_percent,
-                'operations_completed': len(results)
+                "total_time": total_time,
+                "avg_time_per_operation": total_time / load_level if load_level > 0 else 0,
+                "memory_usage_mb": memory_usage,
+                "cpu_percent": cpu_percent,
+                "operations_completed": len(results),
             }
 
         # Validate scaling behavior
         for load_level, results in scaling_results.items():
             # Each operation should complete within reasonable time
-            assert results['avg_time_per_operation'] < 1.0, \
-                f"Load {load_level}: avg operation time too slow: {results['avg_time_per_operation']:.2f}s"
+            assert (
+                results["avg_time_per_operation"] < 1.0
+            ), f"Load {load_level}: avg operation time too slow: {results['avg_time_per_operation']:.2f}s"
 
             # Memory usage should be reasonable
-            assert results['memory_usage_mb'] < 500, \
-                f"Load {load_level}: memory usage too high: {results['memory_usage_mb']:.1f}MB"
+            assert (
+                results["memory_usage_mb"] < 500
+            ), f"Load {load_level}: memory usage too high: {results['memory_usage_mb']:.1f}MB"
 
             # All operations should complete
-            assert results['operations_completed'] == load_level, \
-                f"Load {load_level}: only {results['operations_completed']}/{load_level} operations completed"
+            assert (
+                results["operations_completed"] == load_level
+            ), f"Load {load_level}: only {results['operations_completed']}/{load_level} operations completed"
 
         # Check scaling efficiency (should not degrade linearly)
         if len(scaling_results) >= 2:
             low_load = scaling_results[load_levels[0]]
             high_load = scaling_results[load_levels[-1]]
 
-            efficiency_ratio = high_load['avg_time_per_operation'] / low_load['avg_time_per_operation']
+            efficiency_ratio = high_load["avg_time_per_operation"] / low_load["avg_time_per_operation"]
 
             # Efficiency ratio should be less than 2 (allowing for some overhead)
-            assert efficiency_ratio < 2.0, \
-                f"Poor scaling efficiency: {efficiency_ratio:.2f}x slower at high load"
+            assert efficiency_ratio < 2.0, f"Poor scaling efficiency: {efficiency_ratio:.2f}x slower at high load"
 
     async def _simulate_load_operation(self, operation_id: int) -> str:
         """Simulate load operation with variable complexity."""
@@ -430,26 +429,28 @@ class TestPerformanceValidation:
             total_time = monitor.stop()
 
             error_results[target_error_rate] = {
-                'successful': successful,
-                'failed': failed,
-                'actual_error_rate': actual_error_rate,
-                'total_time': total_time,
-                'avg_time_per_operation': total_time / 100 if successful + failed > 0 else 0
+                "successful": successful,
+                "failed": failed,
+                "actual_error_rate": actual_error_rate,
+                "total_time": total_time,
+                "avg_time_per_operation": total_time / 100 if successful + failed > 0 else 0,
             }
 
             # Validate error rate is within acceptable range
             error_tolerance = 0.02  # 2% tolerance
-            assert abs(actual_error_rate - target_error_rate) < error_tolerance, \
-                f"Error rate mismatch for target {target_error_rate}: actual {actual_error_rate}"
+            assert (
+                abs(actual_error_rate - target_error_rate) < error_tolerance
+            ), f"Error rate mismatch for target {target_error_rate}: actual {actual_error_rate}"
 
         # Check that error handling doesn't significantly impact performance
-        no_error_time = error_results[0.0]['avg_time_per_operation']
+        no_error_time = error_results[0.0]["avg_time_per_operation"]
         for error_rate, results in error_results.items():
             if error_rate > 0:
-                slowdown_ratio = results['avg_time_per_operation'] / no_error_time
+                slowdown_ratio = results["avg_time_per_operation"] / no_error_time
                 # Error handling should not slow down operations by more than 50%
-                assert slowdown_ratio < 1.5, \
-                    f"Error handling too slow at {error_rate} error rate: {slowdown_ratio:.2f}x slower"
+                assert (
+                    slowdown_ratio < 1.5
+                ), f"Error handling too slow at {error_rate} error rate: {slowdown_ratio:.2f}x slower"
 
     async def _simulate_operation_with_error(self, operation_id: int, should_error: bool) -> str:
         """Simulate operation that may raise an error."""
@@ -503,17 +504,16 @@ class TestPerformanceValidation:
             throughput_variation = throughput_stddev / avg_throughput if avg_throughput > 0 else 0
 
             # Throughput variation should be less than 20%
-            assert throughput_variation < 0.2, \
-                f"Throughput too unstable: {throughput_variation:.2f} variation"
+            assert throughput_variation < 0.2, f"Throughput too unstable: {throughput_variation:.2f} variation"
 
             # Average throughput should be reasonable
-            assert avg_throughput > 5, \
-                f"Throughput too low: {avg_throughput:.1f} ops/5sec"
+            assert avg_throughput > 5, f"Throughput too low: {avg_throughput:.1f} ops/5sec"
 
         # Validate total operations completed
         expected_min_operations = 100  # At least 100 operations in 30 seconds
-        assert total_operations >= expected_min_operations, \
-            f"Too few operations completed: {total_operations} < {expected_min_operations}"
+        assert (
+            total_operations >= expected_min_operations
+        ), f"Too few operations completed: {total_operations} < {expected_min_operations}"
 
     async def _simulate_quick_operation(self, operation_id: int) -> str:
         """Simulate quick operation for throughput testing."""
@@ -561,6 +561,7 @@ class TestPerformanceValidation:
 
         # Force garbage collection check
         import gc
+
         gc.collect()
 
         post_gc_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
@@ -575,9 +576,9 @@ class TestPerformanceValidation:
 
         # Test different CPU-intensive scenarios
         scenarios = [
-            {'name': 'light_cpu', 'intensity': 10, 'expected_max_cpu': 30},
-            {'name': 'medium_cpu', 'intensity': 50, 'expected_max_cpu': 60},
-            {'name': 'heavy_cpu', 'intensity': 100, 'expected_max_cpu': 90}
+            {"name": "light_cpu", "intensity": 10, "expected_max_cpu": 30},
+            {"name": "medium_cpu", "intensity": 50, "expected_max_cpu": 60},
+            {"name": "heavy_cpu", "intensity": 100, "expected_max_cpu": 90},
         ]
 
         cpu_results = {}
@@ -593,16 +594,13 @@ class TestPerformanceValidation:
                     """CPU-intensive work."""
                     result = 0
                     for i in range(intensity * 1000):
-                        result += i ** 2
+                        result += i**2
                     return result
 
                 # Run CPU work in thread pool to avoid blocking event loop
                 with ThreadPoolExecutor(max_workers=4) as executor:
                     loop = asyncio.get_event_loop()
-                    cpu_tasks = [
-                        loop.run_in_executor(executor, cpu_work, scenario['intensity'])
-                        for _ in range(4)
-                    ]
+                    cpu_tasks = [loop.run_in_executor(executor, cpu_work, scenario["intensity"]) for _ in range(4)]
                     results = await asyncio.gather(*cpu_tasks)
 
                 return results
@@ -615,24 +613,24 @@ class TestPerformanceValidation:
 
             monitor.stop()
 
-            cpu_results[scenario['name']] = {
-                'cpu_percent': cpu_percent,
-                'expected_max': scenario['expected_max_cpu'],
-                'results_computed': len(results),
-                'status': 'pass' if cpu_percent <= scenario['expected_max_cpu'] else 'fail'
+            cpu_results[scenario["name"]] = {
+                "cpu_percent": cpu_percent,
+                "expected_max": scenario["expected_max_cpu"],
+                "results_computed": len(results),
+                "status": "pass" if cpu_percent <= scenario["expected_max_cpu"] else "fail",
             }
 
             # Validate CPU usage
-            assert cpu_percent <= scenario['expected_max_cpu'], \
-                f"CPU usage too high for {scenario['name']}: {cpu_percent}% > {scenario['expected_max_cpu']}%"
+            assert (
+                cpu_percent <= scenario["expected_max_cpu"]
+            ), f"CPU usage too high for {scenario['name']}: {cpu_percent}% > {scenario['expected_max_cpu']}%"
 
         # Verify CPU utilization scales appropriately
-        light_cpu = cpu_results['light_cpu']['cpu_percent']
-        heavy_cpu = cpu_results['heavy_cpu']['cpu_percent']
+        light_cpu = cpu_results["light_cpu"]["cpu_percent"]
+        heavy_cpu = cpu_results["heavy_cpu"]["cpu_percent"]
 
         # Heavy CPU should use more CPU than light (allowing for system variance)
-        assert heavy_cpu > light_cpu * 0.8, \
-            f"CPU scaling not working: heavy {heavy_cpu}% vs light {light_cpu}%"
+        assert heavy_cpu > light_cpu * 0.8, f"CPU scaling not working: heavy {heavy_cpu}% vs light {light_cpu}%"
 
     def test_network_simulation_performance(self):
         """Test performance with simulated network conditions."""
@@ -640,9 +638,9 @@ class TestPerformanceValidation:
 
         # Simulate different network conditions
         network_conditions = [
-            {'name': 'fast_network', 'latency': 0.01, 'jitter': 0.005, 'packet_loss': 0.0},
-            {'name': 'slow_network', 'latency': 0.1, 'jitter': 0.02, 'packet_loss': 0.02},
-            {'name': 'unstable_network', 'latency': 0.05, 'jitter': 0.1, 'packet_loss': 0.1}
+            {"name": "fast_network", "latency": 0.01, "jitter": 0.005, "packet_loss": 0.0},
+            {"name": "slow_network", "latency": 0.1, "jitter": 0.02, "packet_loss": 0.02},
+            {"name": "unstable_network", "latency": 0.05, "jitter": 0.1, "packet_loss": 0.1},
         ]
 
         network_results = {}
@@ -658,7 +656,7 @@ class TestPerformanceValidation:
                 for i in range(50):
                     try:
                         await self._simulate_network_request(
-                            i, condition['latency'], condition['jitter'], condition['packet_loss']
+                            i, condition["latency"], condition["jitter"], condition["packet_loss"]
                         )
                         successful_operations += 1
                     except Exception:
@@ -671,25 +669,25 @@ class TestPerformanceValidation:
 
             success_rate = successful / (successful + failed) if (successful + failed) > 0 else 0
 
-            network_results[condition['name']] = {
-                'successful': successful,
-                'failed': failed,
-                'success_rate': success_rate,
-                'total_time': total_time,
-                'avg_time_per_operation': total_time / (successful + failed) if (successful + failed) > 0 else 0
+            network_results[condition["name"]] = {
+                "successful": successful,
+                "failed": failed,
+                "success_rate": success_rate,
+                "total_time": total_time,
+                "avg_time_per_operation": total_time / (successful + failed) if (successful + failed) > 0 else 0,
             }
 
             # Validate performance under network conditions
-            expected_success_rate = 1.0 - condition['packet_loss'] - 0.05  # Allow some tolerance
-            assert success_rate >= expected_success_rate, \
-                f"Success rate too low for {condition['name']}: {success_rate:.2f} < {expected_success_rate:.2f}"
+            expected_success_rate = 1.0 - condition["packet_loss"] - 0.05  # Allow some tolerance
+            assert (
+                success_rate >= expected_success_rate
+            ), f"Success rate too low for {condition['name']}: {success_rate:.2f} < {expected_success_rate:.2f}"
 
         # Fast network should be fastest
-        fast_time = network_results['fast_network']['avg_time_per_operation']
-        slow_time = network_results['slow_network']['avg_time_per_operation']
+        fast_time = network_results["fast_network"]["avg_time_per_operation"]
+        slow_time = network_results["slow_network"]["avg_time_per_operation"]
 
-        assert fast_time < slow_time * 0.5, \
-            f"Fast network not faster: {fast_time:.3f}s vs {slow_time:.3f}s"
+        assert fast_time < slow_time * 0.5, f"Fast network not faster: {fast_time:.3f}s vs {slow_time:.3f}s"
 
     async def _simulate_network_request(self, request_id: int, latency: float, jitter: float, packet_loss: float):
         """Simulate network request with specified conditions."""

@@ -3,10 +3,10 @@
 This module contains unit tests for Jira ticket creation and management functionality.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from main import JiraClient, SimpleSummarizer
 
 
@@ -16,11 +16,7 @@ class TestJiraClient:
     @pytest.fixture
     def jira_client(self):
         """Create JiraClient instance for testing."""
-        return JiraClient(
-            base_url="https://test.atlassian.net",
-            username="test@example.com",
-            api_token="test_token"
-        )
+        return JiraClient(base_url="https://test.atlassian.net", username="test@example.com", api_token="test_token")
 
     @pytest.fixture
     def sample_suggested_tickets(self) -> List[Dict[str, Any]]:
@@ -33,7 +29,7 @@ class TestJiraClient:
                 "description": "**Consolidation needed**\n\nMultiple similar documents found",
                 "labels": ["documentation", "consolidation"],
                 "components": ["Technical Writing"],
-                "epic_link": "Documentation Quality Initiative"
+                "epic_link": "Documentation Quality Initiative",
             },
             {
                 "priority": "Medium",
@@ -41,8 +37,8 @@ class TestJiraClient:
                 "summary": "✨ Improve Documentation Quality",
                 "description": "**Quality improvements needed**\n\nDocumentation clarity issues detected",
                 "labels": ["documentation", "quality"],
-                "components": ["Quality Assurance"]
-            }
+                "components": ["Quality Assurance"],
+            },
         ]
 
     def test_jira_client_initialization(self):
@@ -52,9 +48,7 @@ class TestJiraClient:
         assert not client.is_configured()
 
         configured_client = JiraClient(
-            base_url="https://test.atlassian.net",
-            username="test@example.com",
-            api_token="test_token"
+            base_url="https://test.atlassian.net", username="test@example.com", api_token="test_token"
         )
         assert configured_client.is_configured()
 
@@ -70,7 +64,7 @@ class TestJiraClient:
     @pytest.mark.asyncio
     async def test_create_issue_success(self, jira_client):
         """Test successful Jira issue creation."""
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -80,7 +74,7 @@ class TestJiraClient:
             mock_response.json.return_value = {
                 "key": "DOC-123",
                 "id": "12345",
-                "self": "https://test.atlassian.net/rest/api/2/issue/12345"
+                "self": "https://test.atlassian.net/rest/api/2/issue/12345",
             }
             mock_client.post.return_value = mock_response
 
@@ -89,7 +83,7 @@ class TestJiraClient:
                 summary="Test Issue",
                 description="Test description",
                 issue_type="Task",
-                priority="High"
+                priority="High",
             )
 
             assert result["success"] is True
@@ -99,7 +93,7 @@ class TestJiraClient:
     @pytest.mark.asyncio
     async def test_create_issue_failure(self, jira_client):
         """Test Jira issue creation failure."""
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -110,9 +104,7 @@ class TestJiraClient:
             mock_client.post.return_value = mock_response
 
             result = await jira_client.create_issue(
-                project_key="DOC",
-                summary="Test Issue",
-                description="Test description"
+                project_key="DOC", summary="Test Issue", description="Test description"
             )
 
             assert result["success"] is False
@@ -121,16 +113,14 @@ class TestJiraClient:
     @pytest.mark.asyncio
     async def test_create_jira_tickets_from_suggestions_success(self, jira_client, sample_suggested_tickets):
         """Test creating multiple Jira tickets from suggestions."""
-        with patch.object(jira_client, 'create_issue', new_callable=AsyncMock) as mock_create_issue:
+        with patch.object(jira_client, "create_issue", new_callable=AsyncMock) as mock_create_issue:
             # Mock successful ticket creation
             mock_create_issue.side_effect = [
                 {"success": True, "issue_key": "DOC-123"},
-                {"success": True, "issue_key": "DOC-124"}
+                {"success": True, "issue_key": "DOC-124"},
             ]
 
-            result = await jira_client.create_jira_tickets_from_suggestions(
-                sample_suggested_tickets, "DOC"
-            )
+            result = await jira_client.create_jira_tickets_from_suggestions(sample_suggested_tickets, "DOC")
 
             assert result["success"] is True
             assert result["tickets_created"] == 2
@@ -141,16 +131,14 @@ class TestJiraClient:
     @pytest.mark.asyncio
     async def test_create_jira_tickets_from_suggestions_partial_failure(self, jira_client, sample_suggested_tickets):
         """Test creating Jira tickets with partial failures."""
-        with patch.object(jira_client, 'create_issue', new_callable=AsyncMock) as mock_create_issue:
+        with patch.object(jira_client, "create_issue", new_callable=AsyncMock) as mock_create_issue:
             # Mock mixed results
             mock_create_issue.side_effect = [
                 {"success": True, "issue_key": "DOC-123"},
-                {"success": False, "error": "Permission denied"}
+                {"success": False, "error": "Permission denied"},
             ]
 
-            result = await jira_client.create_jira_tickets_from_suggestions(
-                sample_suggested_tickets, "DOC"
-            )
+            result = await jira_client.create_jira_tickets_from_suggestions(sample_suggested_tickets, "DOC")
 
             assert result["success"] is True  # At least one succeeded
             assert result["tickets_created"] == 1
@@ -162,9 +150,7 @@ class TestJiraClient:
         """Test creating tickets when Jira client is not configured."""
         unconfigured_client = JiraClient()  # No credentials
 
-        result = await unconfigured_client.create_jira_tickets_from_suggestions(
-            [{"summary": "Test"}], "DOC"
-        )
+        result = await unconfigured_client.create_jira_tickets_from_suggestions([{"summary": "Test"}], "DOC")
 
         assert result["success"] is False
         assert "not configured" in result["error"]
@@ -175,23 +161,13 @@ class TestJiraClient:
     async def test_create_jira_tickets_for_recommendations(self, jira_client):
         """Test creating tickets directly from recommendations."""
         recommendations = [
-            {
-                "type": "consolidation",
-                "priority": "high",
-                "description": "Multiple similar documents found"
-            }
+            {"type": "consolidation", "priority": "high", "description": "Multiple similar documents found"}
         ]
 
-        with patch.object(jira_client, 'create_jira_tickets_from_suggestions', new_callable=AsyncMock) as mock_create:
-            mock_create.return_value = {
-                "success": True,
-                "tickets_created": 1,
-                "tickets_failed": 0
-            }
+        with patch.object(jira_client, "create_jira_tickets_from_suggestions", new_callable=AsyncMock) as mock_create:
+            mock_create.return_value = {"success": True, "tickets_created": 1, "tickets_failed": 0}
 
-            result = await jira_client.create_jira_tickets_for_recommendations(
-                recommendations, None, "DOC"
-            )
+            result = await jira_client.create_jira_tickets_for_recommendations(recommendations, None, "DOC")
 
             assert mock_create.called
             assert result["success"] is True
@@ -213,22 +189,16 @@ class TestJiraIntegrationWithSummarizer:
             {
                 "id": "doc1",
                 "title": "API Documentation",
-                "content": "This document covers API endpoints and usage patterns"
+                "content": "This document covers API endpoints and usage patterns",
             },
-            {
-                "id": "doc2",
-                "title": "Setup Guide",
-                "content": "Installation and setup instructions"
-            }
+            {"id": "doc2", "title": "Setup Guide", "content": "Installation and setup instructions"},
         ]
 
     @pytest.mark.asyncio
     async def test_generate_recommendations_with_jira_creation_disabled(self, summarizer, sample_documents):
         """Test recommendations generation without Jira ticket creation."""
         result = await summarizer.generate_recommendations(
-            documents=sample_documents,
-            include_jira_suggestions=False,
-            create_jira_tickets=False
+            documents=sample_documents, include_jira_suggestions=False, create_jira_tickets=False
         )
 
         assert "jira_ticket_creation" in result
@@ -239,9 +209,7 @@ class TestJiraIntegrationWithSummarizer:
     async def test_generate_recommendations_with_jira_suggestions_only(self, summarizer, sample_documents):
         """Test recommendations generation with Jira suggestions but no creation."""
         result = await summarizer.generate_recommendations(
-            documents=sample_documents,
-            include_jira_suggestions=True,
-            create_jira_tickets=False
+            documents=sample_documents, include_jira_suggestions=True, create_jira_tickets=False
         )
 
         assert "suggested_jira_tickets" in result
@@ -251,19 +219,19 @@ class TestJiraIntegrationWithSummarizer:
     @pytest.mark.asyncio
     async def test_generate_recommendations_with_jira_creation_enabled(self, summarizer, sample_documents):
         """Test recommendations generation with Jira ticket creation enabled."""
-        with patch('main.jira_client', new_callable=AsyncMock) as mock_jira_client:
+        with patch("main.jira_client", new_callable=AsyncMock) as mock_jira_client:
             mock_jira_client.create_jira_tickets_from_suggestions.return_value = {
                 "success": True,
                 "tickets_created": 1,
                 "tickets_failed": 0,
-                "results": [{"status": "created"}]
+                "results": [{"status": "created"}],
             }
 
             result = await summarizer.generate_recommendations(
                 documents=sample_documents,
                 include_jira_suggestions=True,
                 create_jira_tickets=True,
-                jira_project_key="DOC"
+                jira_project_key="DOC",
             )
 
             assert mock_jira_client.create_jira_tickets_from_suggestions.called
@@ -274,18 +242,16 @@ class TestJiraIntegrationWithSummarizer:
     @pytest.mark.asyncio
     async def test_generate_recommendations_with_jira_creation_failure(self, summarizer, sample_documents):
         """Test recommendations generation when Jira ticket creation fails."""
-        with patch('main.jira_client', new_callable=AsyncMock) as mock_jira_client:
+        with patch("main.jira_client", new_callable=AsyncMock) as mock_jira_client:
             mock_jira_client.create_jira_tickets_from_suggestions.return_value = {
                 "success": False,
                 "error": "Jira API error",
                 "tickets_created": 0,
-                "tickets_failed": 1
+                "tickets_failed": 1,
             }
 
             result = await summarizer.generate_recommendations(
-                documents=sample_documents,
-                include_jira_suggestions=True,
-                create_jira_tickets=True
+                documents=sample_documents, include_jira_suggestions=True, create_jira_tickets=True
             )
 
             assert "jira_ticket_creation" in result
@@ -314,20 +280,15 @@ class TestJiraTicketGeneration:
                 "type": "consolidation",
                 "priority": "high",
                 "description": "Multiple similar documents found",
-                "confidence_score": 0.9
+                "confidence_score": 0.9,
             },
             {
                 "type": "quality",
                 "priority": "medium",
                 "description": "Documentation quality issues detected",
-                "confidence_score": 0.7
+                "confidence_score": 0.7,
             },
-            {
-                "type": "outdated",
-                "priority": "high",
-                "description": "Outdated content found",
-                "confidence_score": 0.8
-            }
+            {"type": "outdated", "priority": "high", "description": "Outdated content found", "confidence_score": 0.8},
         ]
 
         suggestions = summarizer._generate_jira_ticket_suggestions(recommendations, [])
@@ -353,14 +314,14 @@ class TestJiraTicketGeneration:
                 "type": "consolidation",
                 "priority": "high",
                 "description": "Multiple consolidation opportunities found",
-                "confidence_score": 0.9
+                "confidence_score": 0.9,
             },
             {
                 "type": "consolidation",
                 "priority": "medium",
                 "description": "Additional consolidation needed",
-                "confidence_score": 0.8
-            }
+                "confidence_score": 0.8,
+            },
         ]
 
         suggestions = summarizer._generate_jira_ticket_suggestions(recommendations, [])
@@ -376,14 +337,14 @@ class TestJiraTicketGeneration:
                 "type": "quality",
                 "priority": "medium",
                 "description": "Quality improvements needed",
-                "confidence_score": 0.7
+                "confidence_score": 0.7,
             },
             {
                 "type": "quality",
                 "priority": "high",
                 "description": "Critical quality issues found",
-                "confidence_score": 0.9
-            }
+                "confidence_score": 0.9,
+            },
         ]
 
         suggestions = summarizer._generate_jira_ticket_suggestions(recommendations, [])
@@ -397,7 +358,7 @@ class TestJiraTicketGeneration:
         recommendations = [
             {"type": "quality", "priority": "low", "description": "Minor issue"},
             {"type": "consolidation", "priority": "high", "description": "Major issue"},
-            {"type": "outdated", "priority": "medium", "description": "Medium issue"}
+            {"type": "outdated", "priority": "medium", "description": "Medium issue"},
         ]
 
         suggestions = summarizer._generate_jira_ticket_suggestions(recommendations, [])

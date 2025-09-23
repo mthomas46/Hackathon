@@ -1,18 +1,19 @@
 """Base manager class providing common functionality for all CLI managers."""
 
-from typing import Dict, Any, List, Optional, Tuple
-from abc import ABC, abstractmethod
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-import time
 import asyncio
+import time
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..utils.cache_utils import CacheManager
-from ..utils.api_utils import APIClient
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+
 from ..formatters.display_utils import DisplayManager
-from .mixins import MenuMixin, OperationMixin, TableMixin, ValidationMixin, HealthCheckMixin
+from ..utils.api_utils import APIClient
+from ..utils.cache_utils import CacheManager
+from .mixins import HealthCheckMixin, MenuMixin, OperationMixin, TableMixin, ValidationMixin
 
 
 class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, HealthCheckMixin, ABC):
@@ -85,7 +86,6 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
 
         return True
 
-
     async def confirm_action(self, message: str, default: bool = False) -> bool:
         """Get user confirmation for an action."""
         return Confirm.ask(f"[yellow]{message}[/yellow]", default=default)
@@ -108,7 +108,7 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
 
         while True:
             choice = Prompt.ask("Enter number (or 'c' to cancel)").strip()
-            if choice.lower() == 'c':
+            if choice.lower() == "c":
                 return None
             try:
                 index = int(choice) - 1
@@ -131,6 +131,7 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
     def log_operation(self, operation: str, **context):
         """Log an operation for analytics."""
         from ..utils.metrics_utils import log_cli_operation
+
         log_cli_operation(operation, **context)
 
     async def cache_get(self, key: str) -> Optional[Any]:
@@ -144,38 +145,39 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
     def create_status_table(self, title: str) -> Table:
         """Create a standard status table."""
         from ..shared_utils import create_enhanced_table
+
         return create_enhanced_table(title, ["Service", "Status", "Details"])
 
     def create_workflow_table(self, title: str = "Active Workflows") -> Table:
         """Create a standard workflow table."""
         from ..shared_utils import create_enhanced_table
+
         return create_enhanced_table(title, ["ID", "Status", "Type", "Progress", "Started"])
 
     def create_service_table(self, title: str = "Services") -> Table:
         """Create a standard service table."""
         from ..shared_utils import create_enhanced_table
+
         return create_enhanced_table(title, ["Name", "URL", "Status", "Last Seen"])
 
     def create_findings_table(self, title: str = "Analysis Findings") -> Table:
         """Create a standard findings table."""
         from ..shared_utils import create_enhanced_table
+
         return create_enhanced_table(title, ["ID", "Type", "Severity", "Title", "Target"])
 
     def add_workflow_row(self, table: Table, workflow: Dict[str, Any]) -> None:
         """Add a workflow row to a workflow table."""
-        status_color = {
-            "running": "yellow",
-            "completed": "green",
-            "failed": "red",
-            "pending": "blue"
-        }.get(workflow.get("status", "unknown"), "white")
+        status_color = {"running": "yellow", "completed": "green", "failed": "red", "pending": "blue"}.get(
+            workflow.get("status", "unknown"), "white"
+        )
 
         table.add_row(
             workflow.get("id", "N/A")[:8],
             f"[{status_color}]{workflow.get('status', 'unknown')}[/{status_color}]",
             workflow.get("type", "unknown"),
             f"{workflow.get('progress', 0)}%",
-            workflow.get("started_at", "unknown")
+            workflow.get("started_at", "unknown"),
         )
 
     def add_service_row(self, table: Table, service: Dict[str, Any]) -> None:
@@ -185,30 +187,26 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
             service.get("name", "N/A"),
             service.get("url", "N/A"),
             f"[{status_color}]{service.get('status', 'unknown')}[/{status_color}]",
-            service.get("last_seen", "unknown")
+            service.get("last_seen", "unknown"),
         )
 
     def add_finding_row(self, table: Table, finding: Dict[str, Any]) -> None:
         """Add a finding row to a findings table."""
-        severity_color = {
-            "critical": "red",
-            "high": "red",
-            "medium": "yellow",
-            "low": "green",
-            "info": "blue"
-        }.get(finding.get("severity", "unknown"), "white")
+        severity_color = {"critical": "red", "high": "red", "medium": "yellow", "low": "green", "info": "blue"}.get(
+            finding.get("severity", "unknown"), "white"
+        )
 
         table.add_row(
             finding.get("id", "N/A")[:8],
             finding.get("type", "unknown"),
             f"[{severity_color}]{finding.get('severity', 'unknown')}[/{severity_color}]",
             finding.get("title", "No title")[:50],
-            finding.get("target", "unknown")[:30]
+            finding.get("target", "unknown")[:30],
         )
 
-    async def monitor_operation(self, operation_id: str, operation_type: str,
-                               status_func, success_check, progress_func=None,
-                               interval: int = 2) -> bool:
+    async def monitor_operation(
+        self, operation_id: str, operation_type: str, status_func, success_check, progress_func=None, interval: int = 2
+    ) -> bool:
         """Generic monitoring utility for async operations.
 
         Args:
@@ -237,10 +235,14 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                     if status == "success" or status == "completed":
                         self.display.show_success(f"{operation_type.title()} {operation_id} completed successfully!")
                     else:
-                        self.display.show_error(f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}")
+                        self.display.show_error(
+                            f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}"
+                        )
                     return status == "success" or status == "completed"
                 elif status_data.get("failed"):
-                    self.display.show_error(f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}")
+                    self.display.show_error(
+                        f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}"
+                    )
                     return False
                 else:
                     # Still running, show progress if available
@@ -267,8 +269,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                 self.display.show_error(f"Error {description}: {e}")
                 return None
 
-    async def api_post_with_status(self, endpoint: str, data: Dict[str, Any],
-                                  description: str, success_msg: str = None) -> Optional[Dict[str, Any]]:
+    async def api_post_with_status(
+        self, endpoint: str, data: Dict[str, Any], description: str, success_msg: str = None
+    ) -> Optional[Dict[str, Any]]:
         """Make POST request with status message and error handling."""
         with self.console.status(f"[bold green]{description}...[/bold green]") as status:
             try:
@@ -280,9 +283,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                 self.display.show_error(f"Error {description}: {e}")
                 return None
 
-    async def api_operation_with_confirm(self, endpoint: str, data: Dict[str, Any],
-                                        description: str, confirm_msg: str,
-                                        success_msg: str) -> bool:
+    async def api_operation_with_confirm(
+        self, endpoint: str, data: Dict[str, Any], description: str, confirm_msg: str, success_msg: str
+    ) -> bool:
         """Perform API operation with user confirmation."""
         if not await self.confirm_action(confirm_msg):
             self.display.show_info(f"{description} cancelled.")
@@ -291,8 +294,13 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         result = await self.api_post_with_status(endpoint, data, description, success_msg)
         return result is not None
 
-    async def run_menu_loop(self, title: str, menu_items: Optional[List[tuple[str, str]]] = None,
-                           back_option: str = "b", use_interactive: bool = False) -> None:
+    async def run_menu_loop(
+        self,
+        title: str,
+        menu_items: Optional[List[tuple[str, str]]] = None,
+        back_option: str = "b",
+        use_interactive: bool = False,
+    ) -> None:
         """Standard menu loop implementation - ELIMINATES CODE DUPLICATION.
 
         Args:
@@ -308,10 +316,10 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         if use_interactive:
             try:
                 from ..interactive_overlay import get_interactive_overlay
+
                 overlay = get_interactive_overlay(self.console)
                 await overlay.enhanced_menu_loop(
-                    self, title, items, back_option,
-                    enable_shortcuts=True, enable_search=True
+                    self, title, items, back_option, enable_shortcuts=True, enable_search=True
                 )
                 return
             except ImportError:

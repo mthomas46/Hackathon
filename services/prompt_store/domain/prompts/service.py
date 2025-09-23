@@ -4,18 +4,19 @@ Handles business logic for prompts following domain-driven design.
 """
 
 import asyncio
-from typing import List, Optional, Dict, Any, Tuple
-from services.prompt_store.core.service import BaseService
+from typing import Any, Dict, List, Optional, Tuple
+
 from services.prompt_store.core.entities import Prompt
+from services.prompt_store.core.service import BaseService
 from services.prompt_store.domain.prompts.repository import PromptRepository
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.prompt_store.infrastructure.utils import (
-    generate_prompt_hash,
-    validate_template_variables,
     calculate_prompt_complexity,
-    sanitize_prompt_content,
     detect_prompt_drift,
-    generate_prompt_suggestions
+    generate_prompt_hash,
+    generate_prompt_suggestions,
+    sanitize_prompt_content,
+    validate_template_variables,
 )
 from services.shared.utilities import generate_id, utc_now
 
@@ -72,7 +73,7 @@ class PromptService(BaseService[Prompt]):
             tags=data.get("tags", []),
             is_template=data.get("is_template", False),
             created_by=data.get("created_by", "api_user"),
-            performance_score=complexity  # Initial score based on complexity
+            performance_score=complexity,  # Initial score based on complexity
         )
         prompt.id = entity_id or generate_id()
 
@@ -120,6 +121,7 @@ class PromptService(BaseService[Prompt]):
 
         # Fill template
         from services.prompt_store.infrastructure.utils import format_prompt_template
+
         filled_content = format_prompt_template(prompt.content, variables)
 
         # Increment usage count
@@ -127,8 +129,9 @@ class PromptService(BaseService[Prompt]):
 
         return filled_content
 
-    def search_prompts(self, query: str, category: Optional[str] = None,
-                      tags: Optional[List[str]] = None, limit: int = 50) -> List[Prompt]:
+    def search_prompts(
+        self, query: str, category: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 50
+    ) -> List[Prompt]:
         """Search prompts with enhanced filtering."""
         return self.repository.search_prompts(query, category, tags, limit)
 
@@ -140,8 +143,9 @@ class PromptService(BaseService[Prompt]):
         """Get prompts by tags."""
         return self.repository.get_by_tags(tags, limit)
 
-    def fork_prompt(self, prompt_id: str, new_name: str, created_by: str,
-                   changes: Optional[Dict[str, Any]] = None) -> Prompt:
+    def fork_prompt(
+        self, prompt_id: str, new_name: str, created_by: str, changes: Optional[Dict[str, Any]] = None
+    ) -> Prompt:
         """Fork a prompt to create a new version."""
         original = self.get_entity(prompt_id)
         if not original:
@@ -157,7 +161,7 @@ class PromptService(BaseService[Prompt]):
             "tags": original.tags.copy(),
             "is_template": original.is_template,
             "created_by": created_by,
-            "parent_id": prompt_id
+            "parent_id": prompt_id,
         }
 
         # Apply changes if provided
@@ -166,8 +170,14 @@ class PromptService(BaseService[Prompt]):
 
         return self.create_entity(fork_data)
 
-    def update_prompt_content(self, prompt_id: str, content: str, variables: Optional[List[str]] = None,
-                             change_summary: str = "", updated_by: str = "api_user") -> Prompt:
+    def update_prompt_content(
+        self,
+        prompt_id: str,
+        content: str,
+        variables: Optional[List[str]] = None,
+        change_summary: str = "",
+        updated_by: str = "api_user",
+    ) -> Prompt:
         """Update prompt content with versioning."""
         prompt = self.get_entity(prompt_id)
         if not prompt:
@@ -203,8 +213,9 @@ class PromptService(BaseService[Prompt]):
         if not current_prompt:
             raise ValueError(f"Prompt {prompt_id} not found")
 
-        historical_versions = [{"content": v.content, "version": v.version, "created_at": v.created_at.isoformat()}
-                              for v in versions]
+        historical_versions = [
+            {"content": v.content, "version": v.version, "created_at": v.created_at.isoformat()} for v in versions
+        ]
 
         return detect_prompt_drift(current_prompt.content, historical_versions)
 
@@ -219,8 +230,9 @@ class PromptService(BaseService[Prompt]):
 
         return generate_prompt_suggestions(prompt.category, [p.to_dict() for p in similar_prompts])
 
-    def bulk_update_tags(self, prompt_ids: List[str], tags_to_add: Optional[List[str]] = None,
-                        tags_to_remove: Optional[List[str]] = None) -> int:
+    def bulk_update_tags(
+        self, prompt_ids: List[str], tags_to_add: Optional[List[str]] = None, tags_to_remove: Optional[List[str]] = None
+    ) -> int:
         """Bulk update tags on multiple prompts."""
         updated_count = 0
 
@@ -258,7 +270,7 @@ class PromptService(BaseService[Prompt]):
             content=prompt.content,
             variables=prompt.variables,
             change_summary=change_summary,
-            created_by=created_by
+            created_by=created_by,
         )
         version_repo.save(version)
 
@@ -288,6 +300,7 @@ class PromptService(BaseService[Prompt]):
         try:
             # Import here to avoid circular imports
             from services.doc_store.domain.documents.service import DocumentService
+
             doc_service = DocumentService()
             documents = doc_service.get_documents_by_prompt_id(prompt_id)
             return [doc.to_dict() for doc in documents]
@@ -306,12 +319,18 @@ class PromptService(BaseService[Prompt]):
             "prompt_id": prompt_id,
             "total_documents": len(documents),
             "documents": documents,
-            "refinement_sessions": len([d for d in documents if d.get("metadata", {}).get("refinement_type") == "llm_assisted"]),
-            "llm_services_used": list(set([
-                d.get("metadata", {}).get("llm_service")
-                for d in documents
-                if d.get("metadata", {}).get("llm_service")
-            ]))
+            "refinement_sessions": len(
+                [d for d in documents if d.get("metadata", {}).get("refinement_type") == "llm_assisted"]
+            ),
+            "llm_services_used": list(
+                set(
+                    [
+                        d.get("metadata", {}).get("llm_service")
+                        for d in documents
+                        if d.get("metadata", {}).get("llm_service")
+                    ]
+                )
+            ),
         }
 
         return summary

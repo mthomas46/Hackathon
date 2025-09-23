@@ -1,14 +1,15 @@
 """Test configuration and fixtures for the Simulation Dashboard."""
 
-import pytest
 import asyncio
-from unittest.mock import Mock, MagicMock, AsyncMock
-from typing import Dict, Any, Generator
-import sys
 import os
+import sys
+from typing import Any, Dict, Generator
+from unittest.mock import AsyncMock, MagicMock, Mock
+
+import pytest
 
 # Add the service directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from infrastructure.config.config import DashboardSettings, SimulationServiceConfig
 
@@ -21,11 +22,7 @@ def mock_config():
     config.debug = True
     config.service_name = "simulation-dashboard-test"
     config.simulation_service = SimulationServiceConfig(
-        host="localhost",
-        port=5075,
-        base_url="http://localhost:5075",
-        timeout=5.0,
-        retry_attempts=1
+        host="localhost", port=5075, base_url="http://localhost:5075", timeout=5.0, retry_attempts=1
     )
     return config
 
@@ -34,25 +31,20 @@ def mock_config():
 def mock_simulation_client():
     """Create a mock simulation service client."""
     client = MagicMock()
-    client.get_health = AsyncMock(return_value={
-        "status": "healthy",
-        "version": "1.0.0",
-        "uptime": "1h 30m"
-    })
-    client.list_simulations = AsyncMock(return_value=[
-        {
-            "id": "sim_001",
-            "name": "Test Simulation",
-            "status": "completed",
-            "created_at": "2024-01-15T10:00:00Z"
+    client.get_health = AsyncMock(return_value={"status": "healthy", "version": "1.0.0", "uptime": "1h 30m"})
+    client.list_simulations = AsyncMock(
+        return_value=[
+            {"id": "sim_001", "name": "Test Simulation", "status": "completed", "created_at": "2024-01-15T10:00:00Z"}
+        ]
+    )
+    client.create_simulation = AsyncMock(
+        return_value={
+            "id": "sim_002",
+            "name": "New Test Simulation",
+            "status": "created",
+            "created_at": "2024-01-16T10:00:00Z",
         }
-    ])
-    client.create_simulation = AsyncMock(return_value={
-        "id": "sim_002",
-        "name": "New Test Simulation",
-        "status": "created",
-        "created_at": "2024-01-16T10:00:00Z"
-    })
+    )
     return client
 
 
@@ -82,11 +74,7 @@ def sample_simulation_data():
         "progress": 65.5,
         "created_at": "2024-01-15T10:00:00Z",
         "updated_at": "2024-01-16T08:30:00Z",
-        "config": {
-            "methodology": "agile",
-            "budget": 150000,
-            "risk_level": "medium"
-        }
+        "config": {"methodology": "agile", "budget": 150000, "risk_level": "medium"},
     }
 
 
@@ -100,10 +88,7 @@ def sample_event_data():
             "timestamp": "2024-01-16T10:00:00Z",
             "simulation_id": "sim_001",
             "correlation_id": "corr_001",
-            "data": {
-                "description": "Simulation execution began",
-                "sequence_number": 1
-            }
+            "data": {"description": "Simulation execution began", "sequence_number": 1},
         },
         {
             "event_id": "evt_002",
@@ -114,9 +99,9 @@ def sample_event_data():
             "data": {
                 "description": "Requirements document generated",
                 "document_type": "requirements",
-                "word_count": 2450
-            }
-        }
+                "word_count": 2450,
+            },
+        },
     ]
 
 
@@ -133,7 +118,7 @@ def sample_report_data():
         "documents_generated": 12,
         "workflows_executed": 8,
         "consistency_score": 0.78,
-        "success_rate": 0.95
+        "success_rate": 0.95,
     }
 
 
@@ -148,6 +133,7 @@ def event_loop():
 @pytest.fixture
 def mock_streamlit_session_state():
     """Mock Streamlit session state for testing."""
+
     class MockSessionState:
         def __init__(self):
             self.data = {}
@@ -170,6 +156,7 @@ def mock_streamlit_session_state():
 @pytest.fixture
 def mock_streamlit_context():
     """Mock Streamlit context for testing."""
+
     class MockStreamlitContext:
         def __init__(self):
             self.session_state = {}
@@ -221,6 +208,7 @@ def mock_streamlit_context():
 
         def date_input(self, label, value=None, key=None, **kwargs):
             from datetime import date
+
             return value or date.today()
 
         def plotly_chart(self, figure, use_container_width=False, **kwargs):
@@ -242,8 +230,10 @@ def mock_streamlit_context():
             class SpinnerContext:
                 def __enter__(self):
                     return self
+
                 def __exit__(self, exc_type, exc_val, exc_tb):
                     pass
+
             return SpinnerContext()
 
         def balloons(self):
@@ -309,6 +299,7 @@ def mock_streamlit_context():
 
         def date_input(self, label, value=None, key=None, **kwargs):
             from datetime import date
+
             return value or date.today()
 
         def plotly_chart(self, figure, use_container_width=False, **kwargs):
@@ -330,8 +321,10 @@ def mock_streamlit_context():
             class SpinnerContext:
                 def __enter__(self):
                     return self
+
                 def __exit__(self, exc_type, exc_val, exc_tb):
                     pass
+
             return SpinnerContext()
 
         def balloons(self):
@@ -343,21 +336,9 @@ def mock_streamlit_context():
 # Custom pytest markers
 def pytest_configure(config):
     """Configure pytest with custom markers."""
-    config.addinivalue_line(
-        "markers", "unit: mark test as a unit test"
-    )
-    config.addinivalue_line(
-        "markers", "integration: mark test as an integration test"
-    )
-    config.addinivalue_line(
-        "markers", "functional: mark test as a functional test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
-    config.addinivalue_line(
-        "markers", "websocket: mark test as websocket related"
-    )
-    config.addinivalue_line(
-        "markers", "ui: mark test as UI related"
-    )
+    config.addinivalue_line("markers", "unit: mark test as a unit test")
+    config.addinivalue_line("markers", "integration: mark test as an integration test")
+    config.addinivalue_line("markers", "functional: mark test as a functional test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
+    config.addinivalue_line("markers", "websocket: mark test as websocket related")
+    config.addinivalue_line("markers", "ui: mark test as UI related")

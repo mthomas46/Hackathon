@@ -3,11 +3,12 @@
 Provides in-memory caching for summarizer hub job history, prompts, and models
 to enable visualization and monitoring of summarizer processes.
 """
-from typing import Dict, Any, List, Optional
+
 import asyncio
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import json
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
 
@@ -69,7 +70,7 @@ class SummarizerCache:
                 "usage_count": 0,
                 "providers": set(),
                 "models": set(),
-                "last_used": utc_now()
+                "last_used": utc_now(),
             }
 
         self.active_prompts[prompt_hash]["usage_count"] += 1
@@ -87,7 +88,7 @@ class SummarizerCache:
                 "usage_count": 0,
                 "total_execution_time": 0.0,
                 "average_execution_time": 0.0,
-                "last_used": utc_now()
+                "last_used": utc_now(),
             }
 
         stats = self.model_usage[key]
@@ -98,10 +99,7 @@ class SummarizerCache:
 
     def update_provider_config(self, provider: str, config: Dict[str, Any]) -> None:
         """Update provider configuration cache."""
-        self.provider_configs[provider] = {
-            **config,
-            "last_updated": utc_now()
-        }
+        self.provider_configs[provider] = {**config, "last_updated": utc_now()}
 
     def get_recent_jobs(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Get recent jobs as dictionaries."""
@@ -116,7 +114,7 @@ class SummarizerCache:
                 "execution_time": job.execution_time,
                 "status": job.status,
                 "results": job.results,
-                "consistency_analysis": job.consistency_analysis
+                "consistency_analysis": job.consistency_analysis,
             }
             for job in self.job_history[:limit]
         ]
@@ -129,7 +127,7 @@ class SummarizerCache:
                 "usage_count": data["usage_count"],
                 "providers": list(data["providers"]),
                 "models": list(data["models"]),
-                "last_used": data["last_used"].isoformat()
+                "last_used": data["last_used"].isoformat(),
             }
             for data in self.active_prompts.values()
         ]
@@ -145,11 +143,15 @@ class SummarizerCache:
                 "total_jobs": 0,
                 "average_execution_time": 0.0,
                 "total_providers_used": 0,
-                "most_used_provider": None
+                "most_used_provider": None,
             }
 
         total_execution_time = sum(job.execution_time for job in self.job_history if job.execution_time)
-        avg_execution_time = total_execution_time / len([j for j in self.job_history if j.execution_time]) if total_execution_time > 0 else 0
+        avg_execution_time = (
+            total_execution_time / len([j for j in self.job_history if j.execution_time])
+            if total_execution_time > 0
+            else 0
+        )
 
         provider_counts = {}
         for job in self.job_history:
@@ -162,7 +164,7 @@ class SummarizerCache:
             "total_jobs": len(self.job_history),
             "average_execution_time": round(avg_execution_time, 2),
             "total_providers_used": len(provider_counts),
-            "most_used_provider": most_used_provider[0] if most_used_provider else None
+            "most_used_provider": most_used_provider[0] if most_used_provider else None,
         }
 
     def to_dict(self) -> Dict[str, Any]:
@@ -173,7 +175,7 @@ class SummarizerCache:
             "model_usage": self.get_models_summary(),
             "provider_configs": self.provider_configs,
             "performance_metrics": self.get_performance_summary(),
-            "last_updated": self.last_updated.isoformat()
+            "last_updated": self.last_updated.isoformat(),
         }
 
 
@@ -189,7 +191,7 @@ def record_summarizer_job(
     prompt: Optional[str] = None,
     execution_time: Optional[float] = None,
     results: Optional[Dict[str, Any]] = None,
-    consistency_analysis: Optional[Dict[str, Any]] = None
+    consistency_analysis: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Record a new summarizer job in the cache."""
     job = SummarizerJob(
@@ -201,7 +203,7 @@ def record_summarizer_job(
         prompt=prompt,
         execution_time=execution_time,
         results=results,
-        consistency_analysis=consistency_analysis
+        consistency_analysis=consistency_analysis,
     )
     summarizer_cache.add_job(job)
 

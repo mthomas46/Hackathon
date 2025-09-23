@@ -8,24 +8,26 @@ Provides enterprise-grade service mesh capabilities including:
 - Traffic management and canary deployments
 - Fault injection and chaos engineering integration
 """
+
 import asyncio
-import time
-import random
 import hashlib
+import json
+import logging
+import random
 import threading
-from typing import Dict, Any, List, Optional, Callable, Awaitable, Set
+import time
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
-import json
-import httpx
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Set
 
+import httpx
 
 logger = logging.getLogger(__name__)
 
 
 class LoadBalancingAlgorithm(Enum):
     """Load balancing algorithms."""
+
     ROUND_ROBIN = "round_robin"
     LEAST_CONNECTIONS = "least_connections"
     RANDOM = "random"
@@ -36,6 +38,7 @@ class LoadBalancingAlgorithm(Enum):
 
 class ServiceState(Enum):
     """Service instance states."""
+
     HEALTHY = "healthy"
     UNHEALTHY = "unhealthy"
     DRAINING = "draining"  # Gracefully removing from load balancing
@@ -45,6 +48,7 @@ class ServiceState(Enum):
 @dataclass
 class ServiceInstance:
     """Represents a single service instance."""
+
     service_name: str
     instance_id: str
     host: str
@@ -96,6 +100,7 @@ class ServiceInstance:
 @dataclass
 class ServiceEndpoint:
     """Service endpoint configuration."""
+
     path: str
     methods: Set[str] = field(default_factory=lambda: {"GET"})
     timeout_seconds: float = 30.0
@@ -108,6 +113,7 @@ class ServiceEndpoint:
 @dataclass
 class RoutingRule:
     """Advanced routing rule."""
+
     name: str
     service_name: str
     priority: int = 100
@@ -130,6 +136,7 @@ class RoutingRule:
 @dataclass
 class TrafficSplit:
     """Traffic splitting configuration for canary deployments."""
+
     service_name: str
     versions: Dict[str, float]  # version -> percentage
     sticky_sessions: bool = False
@@ -154,8 +161,7 @@ class ServiceRegistry:
 
             # Remove existing instance with same ID if it exists
             self._services[instance.service_name] = [
-                inst for inst in self._services[instance.service_name]
-                if inst.instance_id != instance.instance_id
+                inst for inst in self._services[instance.service_name] if inst.instance_id != instance.instance_id
             ]
 
             self._services[instance.service_name].append(instance)
@@ -167,8 +173,7 @@ class ServiceRegistry:
             if service_name in self._services:
                 original_count = len(self._services[service_name])
                 self._services[service_name] = [
-                    inst for inst in self._services[service_name]
-                    if inst.instance_id != instance_id
+                    inst for inst in self._services[service_name] if inst.instance_id != instance_id
                 ]
                 removed = len(self._services[service_name]) < original_count
                 if removed:
@@ -229,14 +234,14 @@ class ServiceRegistry:
                     "total_instances": total_count,
                     "healthy_instances": healthy_count,
                     "unhealthy_instances": total_count - healthy_count,
-                    "endpoints": list(self._endpoints.get(service_name, {}).keys())
+                    "endpoints": list(self._endpoints.get(service_name, {}).keys()),
                 }
 
             return {
                 "services": summary,
                 "total_services": len(self._services),
                 "routing_rules": len(self._routing_rules),
-                "traffic_splits": len(self._traffic_splits)
+                "traffic_splits": len(self._traffic_splits),
             }
 
 
@@ -249,8 +254,9 @@ class LoadBalancer:
         self._response_times: Dict[str, List[float]] = {}
         self._lock = threading.Lock()
 
-    def select_instance(self, service_name: str, instances: List[ServiceInstance],
-                       request_context: Optional[Dict[str, Any]] = None) -> Optional[ServiceInstance]:
+    def select_instance(
+        self, service_name: str, instances: List[ServiceInstance], request_context: Optional[Dict[str, Any]] = None
+    ) -> Optional[ServiceInstance]:
         """Select an instance using the configured algorithm."""
         if not instances:
             return None
@@ -305,7 +311,9 @@ class LoadBalancer:
 
         return instances[0]  # Fallback
 
-    def _ip_hash_select(self, instances: List[ServiceInstance], request_context: Optional[Dict[str, Any]]) -> ServiceInstance:
+    def _ip_hash_select(
+        self, instances: List[ServiceInstance], request_context: Optional[Dict[str, Any]]
+    ) -> ServiceInstance:
         """IP hash-based selection for session stickiness."""
         client_ip = request_context.get("client_ip", "127.0.0.1") if request_context else "127.0.0.1"
         hash_value = int(hashlib.md5(client_ip.encode()).hexdigest(), 16)
@@ -332,6 +340,7 @@ class LoadBalancer:
 @dataclass
 class ServiceMeshMetrics:
     """Metrics for service mesh operations."""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -361,25 +370,27 @@ class ServiceMeshService:
     async def initialize(self) -> None:
         """Initialize the service mesh."""
         self._http_client = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0),
-            limits=httpx.Limits(max_keepalive_connections=100, max_connections=1000)
+            timeout=httpx.Timeout(30.0), limits=httpx.Limits(max_keepalive_connections=100, max_connections=1000)
         )
 
         # Try to get integration services
         try:
             from .circuit_breaker_service import get_circuit_breaker_service
+
             self._circuit_breaker_service = get_circuit_breaker_service()
         except ImportError:
             logger.warning("Circuit breaker service not available")
 
         try:
             from .retry_service import get_retry_service
+
             self._retry_service = get_retry_service()
         except ImportError:
             logger.warning("Retry service not available")
 
         try:
             from .health_check_service import get_health_check_service
+
             self._health_check_service = get_health_check_service()
         except ImportError:
             logger.warning("Health check service not available")
@@ -409,7 +420,7 @@ class ServiceMeshService:
         path: str,
         method: str = "GET",
         request_context: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Route a request through the service mesh."""
         start_time = time.time()
@@ -446,8 +457,9 @@ class ServiceMeshService:
                 self.metrics.total_requests += 1
                 self.metrics.successful_requests += 1
                 self.metrics.total_response_time_ms += response_time
-                self.metrics.requests_per_service[final_service] = \
+                self.metrics.requests_per_service[final_service] = (
                     self.metrics.requests_per_service.get(final_service, 0) + 1
+                )
 
                 return result
 
@@ -458,8 +470,7 @@ class ServiceMeshService:
             response_time = (time.time() - start_time) * 1000
             self.metrics.total_requests += 1
             self.metrics.failed_requests += 1
-            self.metrics.errors_per_service[service_name] = \
-                self.metrics.errors_per_service.get(service_name, 0) + 1
+            self.metrics.errors_per_service[service_name] = self.metrics.errors_per_service.get(service_name, 0) + 1
 
             logger.error(f"Service mesh request failed for {service_name}: {e}")
             raise
@@ -472,8 +483,9 @@ class ServiceMeshService:
                     return rule.actions["redirect_service"]
         return service_name
 
-    def _apply_traffic_splitting(self, service_name: str, selected_instance: ServiceInstance,
-                               request_context: Optional[Dict[str, Any]]) -> ServiceInstance:
+    def _apply_traffic_splitting(
+        self, service_name: str, selected_instance: ServiceInstance, request_context: Optional[Dict[str, Any]]
+    ) -> ServiceInstance:
         """Apply traffic splitting for canary deployments."""
         traffic_split = self.registry._traffic_splits.get(service_name)
         if not traffic_split:
@@ -513,7 +525,7 @@ class ServiceMeshService:
                     path,
                     lambda: self._execute_http_request(url, method, **kwargs),
                     operation_name=f"{method}_{path}",
-                    timeout_seconds=30.0
+                    timeout_seconds=30.0,
                 )
             except RuntimeError as e:
                 if "circuit_open" in str(e):
@@ -537,24 +549,13 @@ class ServiceMeshService:
             return {"status": response.status_code, "content": response.text}
 
     def register_service_instance(
-        self,
-        service_name: str,
-        host: str,
-        port: int,
-        instance_id: Optional[str] = None,
-        **kwargs
+        self, service_name: str, host: str, port: int, instance_id: Optional[str] = None, **kwargs
     ) -> str:
         """Register a service instance."""
         if instance_id is None:
             instance_id = f"{service_name}_{host}_{port}_{int(time.time())}"
 
-        instance = ServiceInstance(
-            service_name=service_name,
-            instance_id=instance_id,
-            host=host,
-            port=port,
-            **kwargs
-        )
+        instance = ServiceInstance(service_name=service_name, instance_id=instance_id, host=host, port=port, **kwargs)
 
         self.registry.register_instance(instance)
 
@@ -562,11 +563,8 @@ class ServiceMeshService:
         if self._health_check_service:
             try:
                 from .health_check_service import HTTPHealthCheck
-                health_check = HTTPHealthCheck(
-                    f"mesh_{instance_id}",
-                    f"http://{host}:{port}/health",
-                    timeout=5.0
-                )
+
+                health_check = HTTPHealthCheck(f"mesh_{instance_id}", f"http://{host}:{port}/health", timeout=5.0)
                 self._health_check_service.add_health_check(service_name, health_check)
             except Exception as e:
                 logger.debug(f"Could not register health check: {e}")
@@ -656,16 +654,14 @@ class ServiceMeshService:
                 "circuit_breaker_trips": self.metrics.circuit_breaker_trips,
                 "retry_attempts": self.metrics.retry_attempts,
                 "requests_per_service": dict(self.metrics.requests_per_service),
-                "errors_per_service": dict(self.metrics.errors_per_service)
+                "errors_per_service": dict(self.metrics.errors_per_service),
             },
-            "load_balancer": {
-                "algorithm": self.load_balancer.algorithm.value
-            },
+            "load_balancer": {"algorithm": self.load_balancer.algorithm.value},
             "integrations": {
                 "circuit_breaker": self._circuit_breaker_service is not None,
                 "retry_service": self._retry_service is not None,
-                "health_check": self._health_check_service is not None
-            }
+                "health_check": self._health_check_service is not None,
+            },
         }
 
     async def shutdown(self) -> None:

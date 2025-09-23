@@ -10,13 +10,14 @@ Features:
 """
 
 import asyncio
-import psutil
+import logging
 import time
-from typing import Dict, List, Any, Optional, Callable
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import deque
-import logging
+from typing import Any, Callable, Dict, List, Optional
+
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PerformanceMetrics:
     """Real-time performance metrics."""
+
     timestamp: datetime = field(default_factory=datetime.now)
 
     # System metrics
@@ -55,6 +57,7 @@ class PerformanceMetrics:
 @dataclass
 class BottleneckAnalysis:
     """Analysis of performance bottlenecks."""
+
     bottleneck_type: str
     severity: str  # "low", "medium", "high", "critical"
     description: str
@@ -94,7 +97,7 @@ class PerformanceMonitor:
             "memory_percent": 85.0,
             "error_rate": 5.0,  # 5%
             "response_time": 2000.0,  # 2 seconds
-            "cache_hit_ratio": 70.0   # 70%
+            "cache_hit_ratio": 70.0,  # 70%
         }
 
         # Callbacks for external integration
@@ -161,7 +164,7 @@ class PerformanceMonitor:
             self.current_metrics.memory_available_bytes = memory.available
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             self.current_metrics.disk_usage_percent = disk.percent
 
             # Network I/O
@@ -203,48 +206,58 @@ class PerformanceMonitor:
 
         # CPU usage alert
         if self.current_metrics.cpu_percent > self.alert_thresholds["cpu_percent"]:
-            alerts.append({
-                "type": "high_cpu_usage",
-                "severity": "warning",
-                "message": ".1f",
-                "threshold": self.alert_thresholds["cpu_percent"]
-            })
+            alerts.append(
+                {
+                    "type": "high_cpu_usage",
+                    "severity": "warning",
+                    "message": ".1f",
+                    "threshold": self.alert_thresholds["cpu_percent"],
+                }
+            )
 
         # Memory usage alert
         if self.current_metrics.memory_percent > self.alert_thresholds["memory_percent"]:
-            alerts.append({
-                "type": "high_memory_usage",
-                "severity": "warning",
-                "message": ".1f",
-                "threshold": self.alert_thresholds["memory_percent"]
-            })
+            alerts.append(
+                {
+                    "type": "high_memory_usage",
+                    "severity": "warning",
+                    "message": ".1f",
+                    "threshold": self.alert_thresholds["memory_percent"],
+                }
+            )
 
         # Error rate alert
         if self.current_metrics.error_rate > self.alert_thresholds["error_rate"]:
-            alerts.append({
-                "type": "high_error_rate",
-                "severity": "critical",
-                "message": ".2f",
-                "threshold": self.alert_thresholds["error_rate"]
-            })
+            alerts.append(
+                {
+                    "type": "high_error_rate",
+                    "severity": "critical",
+                    "message": ".2f",
+                    "threshold": self.alert_thresholds["error_rate"],
+                }
+            )
 
         # Response time alert
         if self.current_metrics.average_response_time > self.alert_thresholds["response_time"]:
-            alerts.append({
-                "type": "high_response_time",
-                "severity": "warning",
-                "message": ".0f",
-                "threshold": self.alert_thresholds["response_time"]
-            })
+            alerts.append(
+                {
+                    "type": "high_response_time",
+                    "severity": "warning",
+                    "message": ".0f",
+                    "threshold": self.alert_thresholds["response_time"],
+                }
+            )
 
         # Cache hit ratio alert
         if self.current_metrics.cache_hit_ratio < self.alert_thresholds["cache_hit_ratio"]:
-            alerts.append({
-                "type": "low_cache_hit_ratio",
-                "severity": "warning",
-                "message": ".1f",
-                "threshold": self.alert_thresholds["cache_hit_ratio"]
-            })
+            alerts.append(
+                {
+                    "type": "low_cache_hit_ratio",
+                    "severity": "warning",
+                    "message": ".1f",
+                    "threshold": self.alert_thresholds["cache_hit_ratio"],
+                }
+            )
 
         # Trigger alert callbacks
         for alert in alerts:
@@ -301,12 +314,15 @@ class PerformanceMonitor:
         second_half = recent_metrics[midpoint:]
 
         if first_half and second_half:
-            cpu_trend = ((sum(m.cpu_percent for m in second_half) / len(second_half)) -
-                        (sum(m.cpu_percent for m in first_half) / len(first_half)))
-            memory_trend = ((sum(m.memory_percent for m in second_half) / len(second_half)) -
-                          (sum(m.memory_percent for m in first_half) / len(first_half)))
-            response_time_trend = ((sum(m.average_response_time for m in second_half) / len(second_half)) -
-                                  (sum(m.average_response_time for m in first_half) / len(first_half)))
+            cpu_trend = (sum(m.cpu_percent for m in second_half) / len(second_half)) - (
+                sum(m.cpu_percent for m in first_half) / len(first_half)
+            )
+            memory_trend = (sum(m.memory_percent for m in second_half) / len(second_half)) - (
+                sum(m.memory_percent for m in first_half) / len(first_half)
+            )
+            response_time_trend = (sum(m.average_response_time for m in second_half) / len(second_half)) - (
+                sum(m.average_response_time for m in first_half) / len(first_half)
+            )
         else:
             cpu_trend = memory_trend = response_time_trend = 0
 
@@ -318,16 +334,16 @@ class PerformanceMonitor:
                 "memory_percent": avg_memory,
                 "response_time_ms": avg_response_time,
                 "error_rate_percent": avg_error_rate,
-                "throughput_rps": avg_throughput
+                "throughput_rps": avg_throughput,
             },
             "trends": {
                 "cpu_trend": cpu_trend,
                 "memory_trend": memory_trend,
-                "response_time_trend": response_time_trend
+                "response_time_trend": response_time_trend,
             },
             "current_metrics": self.current_metrics.__dict__,
             "alert_thresholds": self.alert_thresholds,
-            "collection_interval_seconds": self.collection_interval
+            "collection_interval_seconds": self.collection_interval,
         }
 
 
@@ -355,84 +371,94 @@ class BottleneckDetector:
 
         # CPU bottleneck detection
         if current_metrics.cpu_percent > 90:
-            bottlenecks.append(BottleneckAnalysis(
-                bottleneck_type="cpu_saturation",
-                severity="critical",
-                description=".1f",
-                impact_score=95.0,
-                recommendations=[
-                    "Scale horizontally by adding more instances",
-                    "Optimize CPU-intensive operations",
-                    "Consider using async processing for I/O operations",
-                    "Review and optimize database queries"
-                ],
-                affected_components=["application", "database"]
-            ))
+            bottlenecks.append(
+                BottleneckAnalysis(
+                    bottleneck_type="cpu_saturation",
+                    severity="critical",
+                    description=".1f",
+                    impact_score=95.0,
+                    recommendations=[
+                        "Scale horizontally by adding more instances",
+                        "Optimize CPU-intensive operations",
+                        "Consider using async processing for I/O operations",
+                        "Review and optimize database queries",
+                    ],
+                    affected_components=["application", "database"],
+                )
+            )
 
         # Memory bottleneck detection
         if current_metrics.memory_percent > 95:
-            bottlenecks.append(BottleneckAnalysis(
-                bottleneck_type="memory_exhaustion",
-                severity="critical",
-                description=".1f",
-                impact_score=98.0,
-                recommendations=[
-                    "Increase instance memory allocation",
-                    "Implement memory-efficient data structures",
-                    "Add memory monitoring and alerts",
-                    "Consider using external caching (Redis)",
-                    "Review memory leaks in application code"
-                ],
-                affected_components=["application", "cache"]
-            ))
+            bottlenecks.append(
+                BottleneckAnalysis(
+                    bottleneck_type="memory_exhaustion",
+                    severity="critical",
+                    description=".1f",
+                    impact_score=98.0,
+                    recommendations=[
+                        "Increase instance memory allocation",
+                        "Implement memory-efficient data structures",
+                        "Add memory monitoring and alerts",
+                        "Consider using external caching (Redis)",
+                        "Review memory leaks in application code",
+                    ],
+                    affected_components=["application", "cache"],
+                )
+            )
 
         # Database bottleneck detection
         if current_metrics.db_connections_active > 100:
-            bottlenecks.append(BottleneckAnalysis(
-                bottleneck_type="database_connection_exhaustion",
-                severity="high",
-                description="Database connection pool exhausted",
-                impact_score=85.0,
-                recommendations=[
-                    "Increase database connection pool size",
-                    "Optimize database queries and add indexes",
-                    "Implement query result caching",
-                    "Consider read replicas for read-heavy workloads"
-                ],
-                affected_components=["database", "application"]
-            ))
+            bottlenecks.append(
+                BottleneckAnalysis(
+                    bottleneck_type="database_connection_exhaustion",
+                    severity="high",
+                    description="Database connection pool exhausted",
+                    impact_score=85.0,
+                    recommendations=[
+                        "Increase database connection pool size",
+                        "Optimize database queries and add indexes",
+                        "Implement query result caching",
+                        "Consider read replicas for read-heavy workloads",
+                    ],
+                    affected_components=["database", "application"],
+                )
+            )
 
         # Cache bottleneck detection
         if current_metrics.cache_hit_ratio < 50:
-            bottlenecks.append(BottleneckAnalysis(
-                bottleneck_type="cache_inefficiency",
-                severity="medium",
-                description=".1f",
-                impact_score=70.0,
-                recommendations=[
-                    "Increase cache memory allocation",
-                    "Optimize cache key generation",
-                    "Implement cache warming strategies",
-                    "Review cache TTL settings"
-                ],
-                affected_components=["cache", "application"]
-            ))
+            bottlenecks.append(
+                BottleneckAnalysis(
+                    bottleneck_type="cache_inefficiency",
+                    severity="medium",
+                    description=".1f",
+                    impact_score=70.0,
+                    recommendations=[
+                        "Increase cache memory allocation",
+                        "Optimize cache key generation",
+                        "Implement cache warming strategies",
+                        "Review cache TTL settings",
+                    ],
+                    affected_components=["cache", "application"],
+                )
+            )
 
         # Network bottleneck detection
         if current_metrics.average_response_time > 5000:  # 5 seconds
-            bottlenecks.append(BottleneckAnalysis(
-                bottleneck_type="network_latency",
-                severity="high",
-                description=".0f",
-                impact_score=80.0,
-                recommendations=[
-                    "Optimize network configuration",
-                    "Implement response compression",
-                    "Use CDN for static assets",
-                    "Consider geographic distribution"
-                ],
-                affected_components=["network", "cdn"]
-            ))
+            bottlenecks.append(
+                BottleneckAnalysis(
+                    bottleneck_type="network_latency",
+                    severity="high",
+                    description=".0f",
+                    impact_score=80.0,
+                    recommendations=[
+                        "Optimize network configuration",
+                        "Implement response compression",
+                        "Use CDN for static assets",
+                        "Consider geographic distribution",
+                    ],
+                    affected_components=["network", "cdn"],
+                )
+            )
 
         # Store analysis results
         self.bottlenecks = bottlenecks
@@ -448,14 +474,16 @@ class BottleneckDetector:
         bottlenecks = await self.analyze_bottlenecks()
 
         for bottleneck in bottlenecks:
-            recommendations.append({
-                "bottleneck_type": bottleneck.bottleneck_type,
-                "severity": bottleneck.severity,
-                "impact_score": bottleneck.impact_score,
-                "recommendations": bottleneck.recommendations,
-                "estimated_effort": self._estimate_effort(bottleneck.bottleneck_type),
-                "expected_improvement": self._estimate_improvement(bottleneck.bottleneck_type)
-            })
+            recommendations.append(
+                {
+                    "bottleneck_type": bottleneck.bottleneck_type,
+                    "severity": bottleneck.severity,
+                    "impact_score": bottleneck.impact_score,
+                    "recommendations": bottleneck.recommendations,
+                    "estimated_effort": self._estimate_effort(bottleneck.bottleneck_type),
+                    "expected_improvement": self._estimate_improvement(bottleneck.bottleneck_type),
+                }
+            )
 
         # Add general recommendations
         recommendations.extend(self._get_general_recommendations())
@@ -477,23 +505,27 @@ class BottleneckDetector:
             if trends.get("cpu_trend", 0) > 5:  # CPU usage increasing by 5% per hour
                 hours_to_bottleneck = (100 - report["averages"]["cpu_percent"]) / trends["cpu_trend"]
                 if hours_to_bottleneck < hours_ahead:
-                    predictions.append({
-                        "bottleneck_type": "cpu_saturation",
-                        "predicted_in_hours": hours_to_bottleneck,
-                        "confidence": 0.8,
-                        "preventive_actions": ["Scale instances preemptively", "Optimize CPU usage"]
-                    })
+                    predictions.append(
+                        {
+                            "bottleneck_type": "cpu_saturation",
+                            "predicted_in_hours": hours_to_bottleneck,
+                            "confidence": 0.8,
+                            "preventive_actions": ["Scale instances preemptively", "Optimize CPU usage"],
+                        }
+                    )
 
             # Predict memory bottleneck
             if trends.get("memory_trend", 0) > 3:
                 hours_to_bottleneck = (100 - report["averages"]["memory_percent"]) / trends["memory_trend"]
                 if hours_to_bottleneck < hours_ahead:
-                    predictions.append({
-                        "bottleneck_type": "memory_exhaustion",
-                        "predicted_in_hours": hours_to_bottleneck,
-                        "confidence": 0.9,
-                        "preventive_actions": ["Increase memory allocation", "Implement memory optimization"]
-                    })
+                    predictions.append(
+                        {
+                            "bottleneck_type": "memory_exhaustion",
+                            "predicted_in_hours": hours_to_bottleneck,
+                            "confidence": 0.9,
+                            "preventive_actions": ["Increase memory allocation", "Implement memory optimization"],
+                        }
+                    )
 
         return predictions
 
@@ -504,7 +536,7 @@ class BottleneckDetector:
             "memory_exhaustion": "high",
             "database_connection_exhaustion": "medium",
             "cache_inefficiency": "low",
-            "network_latency": "medium"
+            "network_latency": "medium",
         }
         return effort_map.get(bottleneck_type, "medium")
 
@@ -515,7 +547,7 @@ class BottleneckDetector:
             "memory_exhaustion": "significant",
             "database_connection_exhaustion": "high",
             "cache_inefficiency": "moderate",
-            "network_latency": "high"
+            "network_latency": "high",
         }
         return improvement_map.get(bottleneck_type, "moderate")
 
@@ -531,10 +563,10 @@ class BottleneckDetector:
                     "Add database query optimization",
                     "Implement multi-level caching",
                     "Use CDN for static assets",
-                    "Enable lazy loading for large datasets"
+                    "Enable lazy loading for large datasets",
                 ],
                 "estimated_effort": "medium",
-                "expected_improvement": "moderate"
+                "expected_improvement": "moderate",
             }
         ]
 
@@ -552,14 +584,14 @@ class BottleneckDetector:
                     "severity": b.severity,
                     "description": b.description,
                     "impact_score": b.impact_score,
-                    "detected_at": b.detected_at.isoformat()
+                    "detected_at": b.detected_at.isoformat(),
                 }
                 for b in current_bottlenecks
             ],
             "optimization_recommendations": recommendations,
             "future_predictions": predictions,
             "analysis_history_count": len(self.analysis_history),
-            "most_common_bottleneck": self._get_most_common_bottleneck()
+            "most_common_bottleneck": self._get_most_common_bottleneck(),
         }
 
     def _get_most_common_bottleneck(self) -> Optional[str]:

@@ -6,15 +6,16 @@ Integrates with LLM Gateway for intelligent content generation.
 
 import asyncio
 import json
-import uuid
-import time
 import os
+import time
+import uuid
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Union
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
 import httpx
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
 # Service configuration
 SERVICE_NAME = "mock-data-generator"
@@ -27,8 +28,10 @@ LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
 DOC_STORE_URL = os.getenv("DOC_STORE_URL", "http://doc_store:5010")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
+
 class MockDataType(str, Enum):
     """Types of mock data that can be generated."""
+
     CONFLUENCE_PAGE = "confluence_page"
     GITHUB_REPO = "github_repo"
     GITHUB_PR = "github_pr"
@@ -58,16 +61,20 @@ class MockDataType(str, Enum):
     CHANGE_LOG = "change_log"
     TEAM_RETROSPECTIVE = "team_retrospective"
 
+
 class GenerationRequest(BaseModel):
     """Request model for mock data generation."""
+
     data_type: MockDataType
     count: int = Field(default=1, ge=1, le=100)
     context: Optional[str] = None
     parameters: Optional[Dict[str, Any]] = {}
     store_in_doc_store: bool = False
 
+
 class MockDataResponse(BaseModel):
     """Response model for generated mock data."""
+
     success: bool
     data_type: str
     count: int
@@ -75,8 +82,10 @@ class MockDataResponse(BaseModel):
     generation_time: float
     stored_documents: Optional[List[str]] = None
 
+
 class BulkCollectionRequest(BaseModel):
     """Request model for bulk data collection generation."""
+
     collection_name: str
     description: Optional[str] = None
     data_types: List[MockDataType]
@@ -87,8 +96,10 @@ class BulkCollectionRequest(BaseModel):
     tags: List[str] = Field(default_factory=list)
     metadata: Optional[Dict[str, Any]] = None
 
+
 class BulkCollectionResponse(BaseModel):
     """Response model for bulk collection generation."""
+
     success: bool
     collection_name: str
     collection_id: str
@@ -99,67 +110,98 @@ class BulkCollectionResponse(BaseModel):
     metadata: Dict[str, Any]
     created_at: str
 
+
 class EcosystemScenarioRequest(BaseModel):
     """Request model for ecosystem scenario generation."""
+
     scenario_type: str = Field(..., description="Type of scenario (e.g., 'code_review', 'documentation', 'analysis')")
     complexity: str = Field(default="medium", description="Complexity level (simple, medium, complex)")
     scale: str = Field(default="small", description="Scale of data (small, medium, large)")
     include_relationships: bool = Field(default=True, description="Include data relationships")
     store_in_doc_store: bool = True
 
+
 class EcosystemScenarioResponse(BaseModel):
     """Response model for ecosystem scenario generation."""
+
 
 # NEW: Simulation-specific request/response models
 class SimulationProjectDocsRequest(BaseModel):
     """Request model for generating project-specific documents."""
+
     project_name: str = Field(..., description="Name of the project")
-    project_type: str = Field(default="web_application", description="Type of project (web_application, api_service, mobile_application)")
+    project_type: str = Field(
+        default="web_application", description="Type of project (web_application, api_service, mobile_application)"
+    )
     team_size: int = Field(default=5, ge=1, le=20, description="Number of team members")
     complexity: str = Field(default="medium", description="Project complexity (simple, medium, complex)")
     duration_weeks: int = Field(default=8, ge=1, le=52, description="Project duration in weeks")
     team_members: Optional[List[Dict[str, Any]]] = Field(None, description="Team member profiles")
-    document_types: List[str] = Field(default_factory=lambda: ["project_requirements", "architecture_diagram", "user_story"], description="Types of documents to generate")
+    document_types: List[str] = Field(
+        default_factory=lambda: ["project_requirements", "architecture_diagram", "user_story"],
+        description="Types of documents to generate",
+    )
     store_in_doc_store: bool = Field(default=True, description="Store generated documents in doc_store")
+
 
 class SimulationTimelineEventsRequest(BaseModel):
     """Request model for generating timeline-based content."""
+
     project_name: str = Field(..., description="Name of the project")
     timeline_phases: List[Dict[str, Any]] = Field(..., description="Project timeline phases")
     current_phase: Optional[str] = Field(None, description="Current active phase")
     include_past_events: bool = Field(default=True, description="Include past phase events")
     include_future_events: bool = Field(default=False, description="Include future phase events")
-    event_types: List[str] = Field(default_factory=lambda: ["document_creation", "team_activity", "milestone"], description="Types of events to generate")
+    event_types: List[str] = Field(
+        default_factory=lambda: ["document_creation", "team_activity", "milestone"],
+        description="Types of events to generate",
+    )
     store_in_doc_store: bool = Field(default=True, description="Store generated content in doc_store")
+
 
 class SimulationTeamActivitiesRequest(BaseModel):
     """Request model for generating team activity data."""
+
     project_name: str = Field(..., description="Name of the project")
     team_members: List[Dict[str, Any]] = Field(..., description="Team member profiles")
-    activity_types: List[str] = Field(default_factory=lambda: ["code_commit", "document_update", "meeting_notes", "design_decision"], description="Types of activities to generate")
+    activity_types: List[str] = Field(
+        default_factory=lambda: ["code_commit", "document_update", "meeting_notes", "design_decision"],
+        description="Types of activities to generate",
+    )
     time_range_days: int = Field(default=30, ge=1, le=365, description="Time range for activities in days")
     activity_count: int = Field(default=50, ge=1, le=500, description="Number of activities to generate")
     store_in_doc_store: bool = Field(default=True, description="Store generated activities in doc_store")
 
+
 class SimulationPhaseDocumentsRequest(BaseModel):
     """Request model for generating phase-specific documents."""
+
     project_name: str = Field(..., description="Name of the project")
     phase_name: str = Field(..., description="Name of the project phase")
     phase_details: Dict[str, Any] = Field(..., description="Details about the phase")
-    document_types: List[str] = Field(default_factory=lambda: ["technical_design", "test_scenarios", "deployment_guide"], description="Types of documents to generate for this phase")
+    document_types: List[str] = Field(
+        default_factory=lambda: ["technical_design", "test_scenarios", "deployment_guide"],
+        description="Types of documents to generate for this phase",
+    )
     team_members: Optional[List[Dict[str, Any]]] = Field(None, description="Team members involved in this phase")
     store_in_doc_store: bool = Field(default=True, description="Store generated documents in doc_store")
 
+
 class SimulationEcosystemScenarioRequest(BaseModel):
     """Request model for generating complete ecosystem scenarios."""
+
     scenario_name: str = Field(..., description="Name of the scenario")
     project_config: Dict[str, Any] = Field(..., description="Complete project configuration")
     include_full_ecosystem: bool = Field(default=True, description="Include all ecosystem services")
-    generate_relationships: bool = Field(default=True, description="Generate document relationships and cross-references")
+    generate_relationships: bool = Field(
+        default=True, description="Generate document relationships and cross-references"
+    )
     store_in_doc_store: bool = Field(default=True, description="Store all generated content in doc_store")
+
 
 class SimulationResponse(BaseModel):
     """Response model for simulation-specific endpoints."""
+
     success: bool
     simulation_type: str
     project_name: str
@@ -170,48 +212,50 @@ class SimulationResponse(BaseModel):
     generation_time: float
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+
 # Initialize FastAPI app
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Enhanced mock data generator for LLM ecosystem testing. Creates representative data collections, bulk datasets, and complete ecosystem scenarios for comprehensive testing and development.",
-    version=SERVICE_VERSION
+    version=SERVICE_VERSION,
 )
+
 
 class MockDataGenerator:
     """Core mock data generation logic."""
-    
+
     def __init__(self):
         self.templates = {
             MockDataType.CONFLUENCE_PAGE: {
                 "title": "System Architecture Documentation",
                 "content": "This document outlines the architecture of our microservices system...",
                 "space": "Engineering",
-                "labels": ["architecture", "microservices", "documentation"]
+                "labels": ["architecture", "microservices", "documentation"],
             },
             MockDataType.GITHUB_REPO: {
                 "name": "awesome-project",
                 "description": "A comprehensive solution for modern web applications",
                 "language": "Python",
                 "stars": 145,
-                "forks": 23
+                "forks": 23,
             },
             MockDataType.GITHUB_PR: {
                 "title": "Add new feature for user authentication",
                 "description": "Implements OAuth 2.0 authentication flow with JWT tokens",
                 "status": "open",
-                "files_changed": 8
+                "files_changed": 8,
             },
             MockDataType.JIRA_ISSUE: {
                 "summary": "Implement user dashboard functionality",
                 "description": "Create a comprehensive user dashboard with analytics",
                 "issue_type": "Story",
-                "priority": "High"
+                "priority": "High",
             },
             MockDataType.API_DOCS: {
                 "endpoint": "/api/v1/users",
                 "method": "GET",
                 "description": "Retrieve user information",
-                "parameters": ["user_id", "include_profile"]
+                "parameters": ["user_id", "include_profile"],
             },
             # New ecosystem-specific templates
             MockDataType.LLM_PROMPT: {
@@ -219,35 +263,35 @@ class MockDataGenerator:
                 "content": "Analyze the following code for potential bugs, security issues, and best practices. Provide detailed feedback with specific recommendations.",
                 "category": "development",
                 "tags": ["code", "analysis", "security"],
-                "model_preference": "gpt-4"
+                "model_preference": "gpt-4",
             },
             MockDataType.ANALYSIS_REPORT: {
                 "title": "Code Quality Analysis Report",
                 "summary": "Comprehensive analysis of codebase quality metrics and recommendations",
                 "issues_found": 15,
                 "recommendations": ["Improve error handling", "Add input validation", "Update dependencies"],
-                "severity_breakdown": {"high": 3, "medium": 7, "low": 5}
+                "severity_breakdown": {"high": 3, "medium": 7, "low": 5},
             },
             MockDataType.SOURCE_CODE: {
                 "filename": "api_handler.py",
                 "language": "python",
                 "content": "def handle_request(request):\n    try:\n        data = validate_input(request)\n        result = process_data(data)\n        return format_response(result)\n    except Exception as e:\n        logger.error(f'Error processing request: {e}')\n        return error_response(e)",
                 "complexity_score": 3.2,
-                "lines_of_code": 45
+                "lines_of_code": 45,
             },
             MockDataType.DOCUMENT_COLLECTION: {
                 "name": "API Documentation Suite",
                 "documents": ["overview.md", "authentication.md", "endpoints.md", "examples.md"],
                 "total_pages": 25,
                 "last_updated": "2024-01-15",
-                "version": "2.1.0"
+                "version": "2.1.0",
             },
             MockDataType.USER_PROFILE: {
                 "username": "developer@example.com",
                 "role": "Senior Developer",
                 "permissions": ["read", "write", "admin"],
                 "preferences": {"theme": "dark", "notifications": True},
-                "last_login": "2024-01-20T10:30:00Z"
+                "last_login": "2024-01-20T10:30:00Z",
             },
             MockDataType.NOTIFICATION: {
                 "title": "System Maintenance Scheduled",
@@ -255,7 +299,7 @@ class MockDataGenerator:
                 "priority": "medium",
                 "type": "maintenance",
                 "target_users": ["all"],
-                "scheduled_time": "2024-01-21T02:00:00Z"
+                "scheduled_time": "2024-01-21T02:00:00Z",
             },
             MockDataType.CONFIGURATION: {
                 "service_name": "api-gateway",
@@ -265,9 +309,9 @@ class MockDataGenerator:
                     "rate_limit": 1000,
                     "timeout": 30,
                     "retries": 3,
-                    "features": ["authentication", "logging", "monitoring"]
+                    "features": ["authentication", "logging", "monitoring"],
                 },
-                "last_modified": "2024-01-15T14:20:00Z"
+                "last_modified": "2024-01-15T14:20:00Z",
             },
             MockDataType.LOG_ENTRY: {
                 "timestamp": "2024-01-20T10:15:30Z",
@@ -276,27 +320,22 @@ class MockDataGenerator:
                 "message": "User authentication successful",
                 "user_id": "user_12345",
                 "request_id": "req_abcdef",
-                "duration_ms": 150
-            }
+                "duration_ms": 150,
+            },
         }
-    
+
     async def generate_with_llm(self, data_type: MockDataType, context: str = None) -> Dict[str, Any]:
         """Generate content using LLM Gateway."""
         try:
             template = self.templates.get(data_type, {})
             prompt = f"Generate realistic {data_type.value} data. Context: {context or 'General purpose'}. Base template: {template}"
-            
+
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{LLM_GATEWAY_URL}/query",
-                    json={
-                        "prompt": prompt,
-                        "provider": "ollama",
-                        "model": "llama2",
-                        "max_tokens": 500
-                    }
+                    json={"prompt": prompt, "provider": "ollama", "model": "llama2", "max_tokens": 500},
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     # Extract generated content and merge with template
@@ -309,11 +348,11 @@ class MockDataGenerator:
                 else:
                     # Fallback to template with variations
                     return self.generate_fallback(data_type, context)
-                    
+
         except Exception as e:
             print(f"LLM generation failed: {e}")
             return self.generate_fallback(data_type, context)
-    
+
     def generate_fallback(self, data_type: MockDataType, context: str = None) -> Dict[str, Any]:
         """Fallback generation without LLM."""
         template = self.templates.get(data_type, {}).copy()
@@ -398,16 +437,13 @@ class MockDataGenerator:
                     "description": request.description,
                     "context": request.context,
                     "tags": request.tags,
-                    "created_by": "bulk_generator"
+                    "created_by": "bulk_generator",
                 },
-                created_at=datetime.now().isoformat()
+                created_at=datetime.now().isoformat(),
             )
 
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to generate bulk collection: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to generate bulk collection: {str(e)}")
 
     async def generate_ecosystem_scenario(self, request: EcosystemScenarioRequest) -> EcosystemScenarioResponse:
         """Generate a complete ecosystem scenario with related data."""
@@ -425,8 +461,8 @@ class MockDataGenerator:
                         "llm_prompt": 10,
                         "analysis_report": 5,
                         "github_pr": 3,
-                        "log_entry": 20
-                    }
+                        "log_entry": 20,
+                    },
                 },
                 "documentation": {
                     "description": "Documentation generation and management scenario",
@@ -435,8 +471,8 @@ class MockDataGenerator:
                         "api_docs": 8,
                         "document_collection": 3,
                         "user_profile": 5,
-                        "configuration": 2
-                    }
+                        "configuration": 2,
+                    },
                 },
                 "analysis": {
                     "description": "Data analysis and reporting scenario",
@@ -445,9 +481,9 @@ class MockDataGenerator:
                         "source_code": 30,
                         "log_entry": 15,
                         "configuration": 3,
-                        "notification": 5
-                    }
-                }
+                        "notification": 5,
+                    },
+                },
             }
 
             scenario_config = scenarios.get(request.scenario_type, scenarios["documentation"])
@@ -479,8 +515,8 @@ class MockDataGenerator:
                             "scenario_type": request.scenario_type,
                             "complexity": request.complexity,
                             "scale": request.scale,
-                            "include_relationships": request.include_relationships
-                        }
+                            "include_relationships": request.include_relationships,
+                        },
                     )
 
                     # Generate collection
@@ -504,16 +540,13 @@ class MockDataGenerator:
                     "description": scenario_config["description"],
                     "scale_multiplier": scale_multiplier,
                     "complexity_multiplier": complexity_multiplier,
-                    "relationships_included": request.include_relationships
+                    "relationships_included": request.include_relationships,
                 },
-                created_at=datetime.now().isoformat()
+                created_at=datetime.now().isoformat(),
             )
 
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to generate ecosystem scenario: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to generate ecosystem scenario: {str(e)}")
 
     def get_available_scenarios(self) -> Dict[str, Any]:
         """Get available ecosystem scenarios."""
@@ -523,26 +556,26 @@ class MockDataGenerator:
                     "description": "Complete code review workflow with source code, analysis, and PRs",
                     "typical_data_types": ["source_code", "llm_prompt", "analysis_report", "github_pr"],
                     "complexity_levels": ["simple", "medium", "complex"],
-                    "scale_options": ["small", "medium", "large"]
+                    "scale_options": ["small", "medium", "large"],
                 },
                 "documentation": {
                     "description": "Documentation generation and management workflow",
                     "typical_data_types": ["confluence_page", "api_docs", "document_collection"],
                     "complexity_levels": ["simple", "medium", "complex"],
-                    "scale_options": ["small", "medium", "large"]
+                    "scale_options": ["small", "medium", "large"],
                 },
                 "analysis": {
                     "description": "Data analysis and reporting workflow",
                     "typical_data_types": ["analysis_report", "source_code", "log_entry"],
                     "complexity_levels": ["simple", "medium", "complex"],
-                    "scale_options": ["small", "medium", "large"]
-                }
+                    "scale_options": ["small", "medium", "large"],
+                },
             },
             "customization_options": {
                 "complexity": ["simple", "medium", "complex"],
                 "scale": ["small", "medium", "large"],
-                "relationships": [True, False]
-            }
+                "relationships": [True, False],
+            },
         }
 
     # NEW: Simulation-specific generation methods
@@ -565,82 +598,89 @@ class MockDataGenerator:
                     "Deliver high-quality software solution",
                     "Meet business requirements and user needs",
                     "Ensure scalability and maintainability",
-                    "Implement security best practices"
+                    "Implement security best practices",
                 ],
                 "scope": {
                     "in_scope": ["Core functionality", "User interface", "API development", "Testing"],
-                    "out_of_scope": ["Legacy system migration", "Third-party integrations", "Mobile applications"]
-                }
+                    "out_of_scope": ["Legacy system migration", "Third-party integrations", "Mobile applications"],
+                },
             },
             "functional_requirements": [
                 {
                     "id": "FR-001",
                     "description": "User authentication and authorization system",
                     "priority": "High",
-                    "acceptance_criteria": ["Users can login/logout", "Role-based access control", "Session management"]
+                    "acceptance_criteria": [
+                        "Users can login/logout",
+                        "Role-based access control",
+                        "Session management",
+                    ],
                 },
                 {
                     "id": "FR-002",
                     "description": "Data management and CRUD operations",
                     "priority": "High",
-                    "acceptance_criteria": ["Create, read, update, delete data", "Data validation", "Error handling"]
+                    "acceptance_criteria": ["Create, read, update, delete data", "Data validation", "Error handling"],
                 },
                 {
                     "id": "FR-003",
                     "description": "User interface and user experience",
                     "priority": "Medium",
-                    "acceptance_criteria": ["Responsive design", "Intuitive navigation", "Accessibility compliance"]
-                }
+                    "acceptance_criteria": ["Responsive design", "Intuitive navigation", "Accessibility compliance"],
+                },
             ],
             "non_functional_requirements": {
                 "performance": {
                     "response_time": "< 2 seconds for 95% of requests",
                     "throughput": f"{int(100 * complexity_multiplier)} requests per second",
-                    "availability": "99.9% uptime"
+                    "availability": "99.9% uptime",
                 },
                 "security": {
                     "authentication": "OAuth 2.0 / JWT",
                     "data_encryption": "AES-256 encryption at rest and in transit",
-                    "audit_logging": "Comprehensive security event logging"
+                    "audit_logging": "Comprehensive security event logging",
                 },
                 "scalability": {
                     "concurrent_users": f"{int(1000 * complexity_multiplier)} concurrent users",
                     "data_growth": "Support for 10x data growth over 2 years",
-                    "elastic_scaling": "Auto-scaling based on demand"
-                }
+                    "elastic_scaling": "Auto-scaling based on demand",
+                },
             },
             "constraints": {
                 "technical": ["Must use Python/FastAPI backend", "PostgreSQL database", "Docker containerization"],
-                "business": [f"Project timeline: {request.duration_weeks} weeks", f"Team size: {request.team_size} members"],
-                "regulatory": ["GDPR compliance", "Data privacy requirements"]
+                "business": [
+                    f"Project timeline: {request.duration_weeks} weeks",
+                    f"Team size: {request.team_size} members",
+                ],
+                "regulatory": ["GDPR compliance", "Data privacy requirements"],
             },
             "assumptions": [
                 "Development team has required technical skills",
                 "Infrastructure resources are available",
                 "Stakeholder availability for requirements validation",
-                "Third-party services will be available and stable"
+                "Third-party services will be available and stable",
             ],
             "risks": [
                 {
                     "description": "Technical complexity might impact timeline",
                     "probability": "Medium",
                     "impact": "High",
-                    "mitigation": "Regular technical reviews and prototyping"
+                    "mitigation": "Regular technical reviews and prototyping",
                 },
                 {
                     "description": "Requirements changes during development",
                     "probability": "High",
                     "impact": "Medium",
-                    "mitigation": "Agile development with change management process"
-                }
+                    "mitigation": "Agile development with change management process",
+                },
             ],
             "acceptance_criteria": [
                 "All functional requirements implemented and tested",
                 "Performance requirements met",
                 "Security requirements validated",
                 "Documentation completed and reviewed",
-                "User acceptance testing passed"
-            ]
+                "User acceptance testing passed",
+            ],
         }
 
         return requirements
@@ -660,91 +700,91 @@ class MockDataGenerator:
                     "Microservices architecture for scalability",
                     "API-first design approach",
                     "Event-driven communication",
-                    "Container-based deployment"
-                ]
+                    "Container-based deployment",
+                ],
             },
             "components": {
                 "frontend": {
                     "technology": "React/TypeScript",
                     "responsibility": "User interface and user experience",
-                    "scaling": "Horizontal scaling with load balancer"
+                    "scaling": "Horizontal scaling with load balancer",
                 },
                 "api_gateway": {
                     "technology": "FastAPI/Python",
                     "responsibility": "Request routing, authentication, rate limiting",
-                    "scaling": "Multiple instances with load balancer"
+                    "scaling": "Multiple instances with load balancer",
                 },
                 "user_service": {
                     "technology": "FastAPI/Python + PostgreSQL",
                     "responsibility": "User management, authentication, profiles",
-                    "scaling": "Database read replicas, service instances"
+                    "scaling": "Database read replicas, service instances",
                 },
                 "business_service": {
                     "technology": "FastAPI/Python + PostgreSQL",
                     "responsibility": "Core business logic and workflows",
-                    "scaling": "Database sharding, service instances"
+                    "scaling": "Database sharding, service instances",
                 },
                 "notification_service": {
                     "technology": "FastAPI/Python + Redis",
                     "responsibility": "Email, SMS, push notifications",
-                    "scaling": "Message queue-based processing"
-                }
+                    "scaling": "Message queue-based processing",
+                },
             },
             "data_flow": [
                 {
                     "step": 1,
                     "description": "User request comes through load balancer",
-                    "components": ["Load Balancer", "API Gateway"]
+                    "components": ["Load Balancer", "API Gateway"],
                 },
                 {
                     "step": 2,
                     "description": "API Gateway authenticates and routes request",
-                    "components": ["API Gateway", "Target Service"]
+                    "components": ["API Gateway", "Target Service"],
                 },
                 {
                     "step": 3,
                     "description": "Service processes request and accesses database",
-                    "components": ["Target Service", "PostgreSQL Database"]
+                    "components": ["Target Service", "PostgreSQL Database"],
                 },
                 {
                     "step": 4,
                     "description": "Response returned through API Gateway",
-                    "components": ["Target Service", "API Gateway", "Frontend"]
-                }
+                    "components": ["Target Service", "API Gateway", "Frontend"],
+                },
             ],
             "infrastructure": {
                 "deployment": "Docker containers orchestrated with Kubernetes",
                 "monitoring": "Prometheus + Grafana for metrics and alerting",
                 "logging": "Centralized logging with ELK stack",
                 "ci_cd": "GitHub Actions for automated testing and deployment",
-                "security": "OAuth 2.0, JWT tokens, encrypted communications"
+                "security": "OAuth 2.0, JWT tokens, encrypted communications",
             },
             "scalability_considerations": {
                 "horizontal_scaling": "All services designed for horizontal scaling",
                 "database_scaling": "Read replicas, connection pooling, query optimization",
                 "caching_strategy": "Redis for session and application caching",
-                "cdn_integration": "Static asset delivery and API response caching"
+                "cdn_integration": "Static asset delivery and API response caching",
             },
             "security_architecture": {
                 "authentication": "OAuth 2.0 with JWT tokens",
                 "authorization": "Role-based access control (RBAC)",
                 "data_protection": "AES-256 encryption at rest and in transit",
                 "network_security": "VPC isolation, security groups, WAF",
-                "monitoring": "Security event logging and alerting"
+                "monitoring": "Security event logging and alerting",
             },
             "performance_requirements": {
                 "response_time": "< 500ms for API calls, < 2s for page loads",
                 "throughput": "1000+ requests per second",
                 "availability": "99.9% uptime SLA",
-                "concurrent_users": "10,000+ simultaneous users"
+                "concurrent_users": "10,000+ simultaneous users",
             },
             "disaster_recovery": {
                 "backup_strategy": "Daily database backups with point-in-time recovery",
                 "failover": "Multi-region deployment with automatic failover",
                 "data_retention": "7-year audit trail, configurable data retention",
                 "recovery_time_objective": "4 hours for critical systems",
-                "recovery_point_objective": "1 hour data loss tolerance"
-            }
+                "recovery_point_objective": "1 hour data loss tolerance",
+            },
         }
 
         return architecture
@@ -762,8 +802,8 @@ class MockDataGenerator:
                     "Email verification is required",
                     "User can login with valid credentials",
                     "Password reset functionality works",
-                    "Session management is secure"
-                ]
+                    "Session management is secure",
+                ],
             },
             {
                 "title": "Dashboard Overview",
@@ -775,8 +815,8 @@ class MockDataGenerator:
                     "Key metrics are prominently displayed",
                     "Quick actions are easily accessible",
                     "Dashboard is responsive on mobile devices",
-                    "Data refreshes automatically"
-                ]
+                    "Data refreshes automatically",
+                ],
             },
             {
                 "title": "Data Management",
@@ -788,9 +828,9 @@ class MockDataGenerator:
                     "Data validation prevents invalid entries",
                     "User can edit existing data",
                     "Bulk operations are supported",
-                    "Data export functionality works"
-                ]
-            }
+                    "Data export functionality works",
+                ],
+            },
         ]
 
         template = story_templates[story_index % len(story_templates)]
@@ -815,19 +855,21 @@ class MockDataGenerator:
                 {
                     "author": "Product Owner",
                     "date": datetime.now().isoformat(),
-                    "comment": "This is a critical user journey that needs to be implemented first."
+                    "comment": "This is a critical user journey that needs to be implemented first.",
                 },
                 {
                     "author": "UX Designer",
                     "date": (datetime.now()).isoformat(),
-                    "comment": "Wireframes attached. Please review the user flow."
-                }
-            ]
+                    "comment": "Wireframes attached. Please review the user flow.",
+                },
+            ],
         }
 
         return user_story
 
-    async def generate_phase_events(self, request: SimulationTimelineEventsRequest, phase: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_phase_events(
+        self, request: SimulationTimelineEventsRequest, phase: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate timeline events for a specific phase."""
         events = []
 
@@ -841,7 +883,7 @@ class MockDataGenerator:
                     "phase": phase["name"],
                     "timestamp": (datetime.now()).isoformat(),
                     "category": "documentation",
-                    "importance": "medium"
+                    "importance": "medium",
                 }
                 events.append(event)
 
@@ -858,7 +900,7 @@ class MockDataGenerator:
                     "timestamp": (datetime.now()).isoformat(),
                     "category": "team",
                     "activity_type": activity_type,
-                    "importance": "low"
+                    "importance": "low",
                 }
                 events.append(event)
 
@@ -872,35 +914,41 @@ class MockDataGenerator:
                     "phase": phase["name"],
                     "timestamp": (datetime.now()).isoformat(),
                     "category": "milestone",
-                    "importance": "high"
+                    "importance": "high",
                 }
                 events.append(event)
 
         return events
 
-    async def generate_team_activity(self, request: SimulationTeamActivitiesRequest, activity_index: int) -> Dict[str, Any]:
+    async def generate_team_activity(
+        self, request: SimulationTeamActivitiesRequest, activity_index: int
+    ) -> Dict[str, Any]:
         """Generate a team activity record."""
         activity_types = {
             "code_commit": {
                 "title": "Code Changes Committed",
                 "description": "Team member committed code changes to repository",
-                "details": ["Fixed bug in authentication logic", "Added input validation", "Updated documentation"]
+                "details": ["Fixed bug in authentication logic", "Added input validation", "Updated documentation"],
             },
             "document_update": {
                 "title": "Documentation Updated",
                 "description": "Technical documentation was reviewed and updated",
-                "details": ["Updated API documentation", "Added code examples", "Fixed typos and formatting"]
+                "details": ["Updated API documentation", "Added code examples", "Fixed typos and formatting"],
             },
             "meeting_notes": {
                 "title": "Team Meeting Held",
                 "description": "Sprint planning meeting with development team",
-                "details": ["Discussed sprint goals", "Assigned user stories", "Identified blockers"]
+                "details": ["Discussed sprint goals", "Assigned user stories", "Identified blockers"],
             },
             "design_decision": {
                 "title": "Architecture Decision Made",
                 "description": "Team decided on technology stack and architecture approach",
-                "details": ["Selected PostgreSQL for database", "Chose FastAPI for backend", "Decided on microservices approach"]
-            }
+                "details": [
+                    "Selected PostgreSQL for database",
+                    "Chose FastAPI for backend",
+                    "Decided on microservices approach",
+                ],
+            },
         }
 
         activity_keys = list(activity_types.keys())
@@ -908,7 +956,11 @@ class MockDataGenerator:
         activity_template = activity_types[activity_key]
 
         # Select random team member
-        team_member = request.team_members[activity_index % len(request.team_members)] if request.team_members else {"name": "Team Member", "role": "Developer"}
+        team_member = (
+            request.team_members[activity_index % len(request.team_members)]
+            if request.team_members
+            else {"name": "Team Member", "role": "Developer"}
+        )
 
         activity = {
             "title": activity_template["title"],
@@ -925,8 +977,8 @@ class MockDataGenerator:
             "metadata": {
                 "activity_index": activity_index,
                 "team_size": len(request.team_members),
-                "project_phase": "development"
-            }
+                "project_phase": "development",
+            },
         }
 
         return activity
@@ -946,64 +998,64 @@ class MockDataGenerator:
                 "assumptions": [
                     "Development team has required technical skills",
                     "Infrastructure components are available",
-                    "Third-party services are accessible"
-                ]
+                    "Third-party services are accessible",
+                ],
             },
             "architecture_decisions": [
                 {
                     "decision": "Database Schema Design",
                     "rationale": "Normalized schema for data integrity and performance",
                     "alternatives_considered": ["Denormalized schema", "Document database"],
-                    "consequences": "Better data consistency, slightly more complex queries"
+                    "consequences": "Better data consistency, slightly more complex queries",
                 },
                 {
                     "decision": "API Design Patterns",
                     "rationale": "RESTful APIs with proper HTTP methods and status codes",
                     "alternatives_considered": ["GraphQL", "RPC"],
-                    "consequences": "Standardized interfaces, easier integration"
+                    "consequences": "Standardized interfaces, easier integration",
                 },
                 {
                     "decision": "Authentication Mechanism",
                     "rationale": "JWT tokens with refresh token rotation",
                     "alternatives_considered": ["Session-based auth", "API keys"],
-                    "consequences": "Stateless authentication, better scalability"
-                }
+                    "consequences": "Stateless authentication, better scalability",
+                },
             ],
             "component_design": {
                 "api_layer": {
                     "technology": "FastAPI with Pydantic models",
                     "responsibilities": ["Request validation", "Response formatting", "Error handling"],
-                    "design_patterns": ["Dependency injection", "Middleware pipeline"]
+                    "design_patterns": ["Dependency injection", "Middleware pipeline"],
                 },
                 "business_logic": {
                     "technology": "Python service classes",
                     "responsibilities": ["Business rules", "Data processing", "Workflow orchestration"],
-                    "design_patterns": ["Strategy pattern", "Factory pattern"]
+                    "design_patterns": ["Strategy pattern", "Factory pattern"],
                 },
                 "data_layer": {
                     "technology": "SQLAlchemy ORM with PostgreSQL",
                     "responsibilities": ["Data persistence", "Query optimization", "Transaction management"],
-                    "design_patterns": ["Repository pattern", "Unit of Work"]
-                }
+                    "design_patterns": ["Repository pattern", "Unit of Work"],
+                },
             },
             "data_model": {
                 "entities": [
                     {
                         "name": "User",
                         "attributes": ["id", "email", "name", "role", "created_at", "updated_at"],
-                        "relationships": ["has_many: sessions", "has_many: activities"]
+                        "relationships": ["has_many: sessions", "has_many: activities"],
                     },
                     {
                         "name": "Project",
                         "attributes": ["id", "name", "description", "status", "created_at"],
-                        "relationships": ["belongs_to: owner", "has_many: tasks"]
-                    }
+                        "relationships": ["belongs_to: owner", "has_many: tasks"],
+                    },
                 ],
                 "constraints": [
                     "Email addresses must be unique",
                     "Project names must be unique per user",
-                    "Soft delete for audit trail preservation"
-                ]
+                    "Soft delete for audit trail preservation",
+                ],
             },
             "api_endpoints": [
                 {
@@ -1011,7 +1063,7 @@ class MockDataGenerator:
                     "method": "GET",
                     "description": "List user projects",
                     "response_format": "ProjectList",
-                    "authentication": "Required"
+                    "authentication": "Required",
                 },
                 {
                     "path": "/api/v1/projects",
@@ -1019,34 +1071,34 @@ class MockDataGenerator:
                     "description": "Create new project",
                     "request_format": "ProjectCreate",
                     "response_format": "Project",
-                    "authentication": "Required"
-                }
+                    "authentication": "Required",
+                },
             ],
             "security_considerations": {
                 "authentication": "JWT-based authentication with role-based access",
                 "authorization": "Permission-based access control",
                 "input_validation": "Comprehensive input sanitization and validation",
                 "rate_limiting": "API rate limiting to prevent abuse",
-                "logging": "Security event logging for audit trail"
+                "logging": "Security event logging for audit trail",
             },
             "performance_considerations": {
                 "caching_strategy": "Redis caching for frequently accessed data",
                 "database_optimization": "Proper indexing and query optimization",
                 "async_processing": "Background job processing for heavy operations",
-                "monitoring": "Performance metrics and alerting"
+                "monitoring": "Performance metrics and alerting",
             },
             "testing_strategy": {
                 "unit_tests": "Individual component testing with mocks",
                 "integration_tests": "API endpoint testing with test database",
                 "performance_tests": "Load testing and bottleneck identification",
-                "security_tests": "Vulnerability scanning and penetration testing"
+                "security_tests": "Vulnerability scanning and penetration testing",
             },
             "deployment_plan": {
                 "environment_setup": "Docker containers with environment-specific configuration",
                 "database_migration": "Automated schema migrations with rollback capability",
                 "rollback_strategy": "Blue-green deployment with instant rollback",
-                "monitoring_setup": "Application and infrastructure monitoring"
-            }
+                "monitoring_setup": "Application and infrastructure monitoring",
+            },
         }
 
         return design_doc
@@ -1063,7 +1115,7 @@ class MockDataGenerator:
             "overview": {
                 "purpose": f"Comprehensive test scenarios for {request.phase_name} phase validation",
                 "scope": "Functional, integration, and performance testing",
-                "testing_levels": ["Unit", "Integration", "System", "Acceptance"]
+                "testing_levels": ["Unit", "Integration", "System", "Acceptance"],
             },
             "test_categories": {
                 "functional_tests": [
@@ -1077,11 +1129,11 @@ class MockDataGenerator:
                             "Click register button",
                             "Verify email confirmation sent",
                             "Confirm email address",
-                            "Verify account activation"
+                            "Verify account activation",
                         ],
                         "expected_result": "User account created and activated",
                         "test_data": "valid_email@example.com, password123",
-                        "priority": "High"
+                        "priority": "High",
                     },
                     {
                         "scenario_id": "FT-002",
@@ -1094,12 +1146,12 @@ class MockDataGenerator:
                             "Verify data appears in list",
                             "Edit existing data entry",
                             "Delete data entry",
-                            "Verify data removed from list"
+                            "Verify data removed from list",
                         ],
                         "expected_result": "All CRUD operations work correctly",
                         "test_data": "Sample data entries with various field types",
-                        "priority": "High"
-                    }
+                        "priority": "High",
+                    },
                 ],
                 "integration_tests": [
                     {
@@ -1112,11 +1164,11 @@ class MockDataGenerator:
                             "Verify backend service processes request",
                             "Check database for new record",
                             "Verify API response format",
-                            "Test error handling for invalid requests"
+                            "Test error handling for invalid requests",
                         ],
                         "expected_result": "Seamless API-service integration",
                         "test_data": "Valid and invalid API payloads",
-                        "priority": "High"
+                        "priority": "High",
                     }
                 ],
                 "performance_tests": [
@@ -1130,11 +1182,11 @@ class MockDataGenerator:
                             "Execute test for 5 minutes",
                             "Monitor response times and error rates",
                             "Check resource utilization (CPU, memory)",
-                            "Analyze performance bottlenecks"
+                            "Analyze performance bottlenecks",
                         ],
                         "expected_result": "System handles load within performance requirements",
                         "test_data": "100 concurrent user simulation",
-                        "priority": "Medium"
+                        "priority": "Medium",
                     }
                 ],
                 "security_tests": [
@@ -1148,51 +1200,51 @@ class MockDataGenerator:
                             "Try to access protected resources without authentication",
                             "Test session timeout handling",
                             "Attempt SQL injection in login form",
-                            "Test cross-site scripting (XSS) vulnerabilities"
+                            "Test cross-site scripting (XSS) vulnerabilities",
                         ],
                         "expected_result": "All authentication bypass attempts fail",
                         "test_data": "Various attack payloads and invalid credentials",
-                        "priority": "High"
+                        "priority": "High",
                     }
-                ]
+                ],
             },
             "test_environment": {
                 "development": {
                     "purpose": "Unit and integration testing",
                     "data_setup": "Minimal test data set",
-                    "automation_level": "Fully automated"
+                    "automation_level": "Fully automated",
                 },
                 "staging": {
                     "purpose": "System and acceptance testing",
                     "data_setup": "Production-like data set",
-                    "automation_level": "Semi-automated"
+                    "automation_level": "Semi-automated",
                 },
                 "production": {
                     "purpose": "Smoke and regression testing",
                     "data_setup": "Anonymized production data",
-                    "automation_level": "Automated smoke tests"
-                }
+                    "automation_level": "Automated smoke tests",
+                },
             },
             "test_data_management": {
                 "data_generation": "Automated test data generation scripts",
                 "data_cleanup": "Automated cleanup after test execution",
                 "data_privacy": "PII masking and anonymization",
-                "data_versioning": "Version control for test data sets"
+                "data_versioning": "Version control for test data sets",
             },
             "automation_framework": {
                 "unit_testing": "pytest with coverage reporting",
                 "api_testing": "HTTP client with response validation",
                 "ui_testing": "Selenium with page object model",
                 "performance_testing": "Locust for load testing",
-                "ci_cd_integration": "Automated test execution in pipeline"
+                "ci_cd_integration": "Automated test execution in pipeline",
             },
             "success_criteria": [
                 "All high-priority test scenarios pass",
                 "Test automation coverage > 80%",
                 "Performance requirements met",
                 "Zero critical security vulnerabilities",
-                "Test execution time < 30 minutes"
-            ]
+                "Test execution time < 30 minutes",
+            ],
         }
 
         return test_scenarios
@@ -1209,28 +1261,28 @@ class MockDataGenerator:
             "overview": {
                 "purpose": f"Complete deployment instructions for {request.phase_name} phase",
                 "scope": "Development, staging, and production environments",
-                "target_audience": ["Developers", "DevOps engineers", "System administrators"]
+                "target_audience": ["Developers", "DevOps engineers", "System administrators"],
             },
             "prerequisites": {
                 "system_requirements": {
                     "operating_system": "Ubuntu 20.04 LTS or CentOS 8+",
                     "memory": "4GB RAM minimum, 8GB recommended",
                     "disk_space": "20GB free space",
-                    "network": "Stable internet connection"
+                    "network": "Stable internet connection",
                 },
                 "software_dependencies": [
                     "Docker 20.10+",
                     "Docker Compose 2.0+",
                     "Git 2.25+",
                     "Python 3.9+",
-                    "PostgreSQL 13+"
+                    "PostgreSQL 13+",
                 ],
                 "access_requirements": [
                     "SSH access to deployment server",
                     "Database admin privileges",
                     "Docker registry access",
-                    "Cloud platform credentials (AWS/GCP/Azure)"
-                ]
+                    "Cloud platform credentials (AWS/GCP/Azure)",
+                ],
             },
             "environment_setup": {
                 "development": {
@@ -1238,43 +1290,43 @@ class MockDataGenerator:
                         "git clone <repository-url>",
                         "cd <project-directory>",
                         "cp .env.example .env",
-                        "docker-compose -f docker-compose.dev.yml up -d"
+                        "docker-compose -f docker-compose.dev.yml up -d",
                     ],
                     "verification_steps": [
                         "Check container status: docker ps",
                         "Verify API health: curl http://localhost:8000/health",
-                        "Check logs: docker-compose logs -f"
-                    ]
+                        "Check logs: docker-compose logs -f",
+                    ],
                 },
                 "staging": {
                     "deployment_method": "Blue-green deployment",
                     "rollback_strategy": "Instant rollback to previous version",
-                    "monitoring_setup": "Prometheus + Grafana dashboards"
+                    "monitoring_setup": "Prometheus + Grafana dashboards",
                 },
                 "production": {
                     "deployment_method": "Rolling deployment with zero downtime",
                     "scaling_strategy": "Horizontal pod autoscaling",
-                    "backup_strategy": "Automated daily backups with retention"
-                }
+                    "backup_strategy": "Automated daily backups with retention",
+                },
             },
             "configuration_management": {
                 "environment_variables": {
                     "DATABASE_URL": "postgresql://user:password@localhost:5432/dbname",
                     "SECRET_KEY": "your-secret-key-here",
                     "DEBUG": "false",
-                    "ALLOWED_HOSTS": "yourdomain.com,api.yourdomain.com"
+                    "ALLOWED_HOSTS": "yourdomain.com,api.yourdomain.com",
                 },
                 "configuration_files": [
                     ".env - Environment variables",
                     "config.yaml - Application configuration",
                     "docker-compose.yml - Container orchestration",
-                    "nginx.conf - Web server configuration"
+                    "nginx.conf - Web server configuration",
                 ],
                 "secrets_management": {
                     "method": "Docker secrets or external vault (HashiCorp Vault)",
                     "rotation_policy": "Automatic rotation every 30 days",
-                    "access_control": "Role-based access to secrets"
-                }
+                    "access_control": "Role-based access to secrets",
+                },
             },
             "database_setup": {
                 "schema_migration": {
@@ -1282,58 +1334,58 @@ class MockDataGenerator:
                     "commands": [
                         "alembic upgrade head",
                         "alembic revision --autogenerate -m 'Initial schema'",
-                        "alembic downgrade -1 (for rollback)"
-                    ]
+                        "alembic downgrade -1 (for rollback)",
+                    ],
                 },
                 "initial_data": {
                     "seed_data": "Automated data seeding scripts",
                     "admin_user": "Default admin user creation",
-                    "lookup_tables": "Reference data population"
+                    "lookup_tables": "Reference data population",
                 },
                 "backup_recovery": {
                     "backup_schedule": "Daily at 2 AM",
                     "retention_policy": "30 days for daily, 1 year for monthly",
-                    "recovery_procedure": "Point-in-time recovery available"
-                }
+                    "recovery_procedure": "Point-in-time recovery available",
+                },
             },
             "deployment_procedures": {
                 "pre_deployment": [
                     "Run automated tests: pytest",
                     "Build Docker images: docker build -t myapp:latest .",
                     "Run security scan: docker scan myapp:latest",
-                    "Update documentation and change logs"
+                    "Update documentation and change logs",
                 ],
                 "deployment_execution": [
                     "Create deployment branch: git checkout -b deployment/v1.2.3",
                     "Update version numbers in configuration",
                     "Push deployment branch to trigger CI/CD",
                     "Monitor deployment progress in dashboard",
-                    "Verify deployment success with health checks"
+                    "Verify deployment success with health checks",
                 ],
                 "post_deployment": [
                     "Run smoke tests against deployed environment",
                     "Update monitoring dashboards",
                     "Notify stakeholders of successful deployment",
                     "Schedule post-deployment review meeting",
-                    "Archive deployment artifacts"
-                ]
+                    "Archive deployment artifacts",
+                ],
             },
             "monitoring_setup": {
                 "application_monitoring": {
                     "health_endpoints": "/health, /metrics, /status",
                     "log_aggregation": "ELK stack (Elasticsearch, Logstash, Kibana)",
-                    "performance_monitoring": "Response times, error rates, throughput"
+                    "performance_monitoring": "Response times, error rates, throughput",
                 },
                 "infrastructure_monitoring": {
                     "system_metrics": "CPU, memory, disk, network utilization",
                     "container_monitoring": "Docker container health and resource usage",
-                    "database_monitoring": "Connection pools, query performance, backup status"
+                    "database_monitoring": "Connection pools, query performance, backup status",
                 },
                 "alerting": {
                     "critical_alerts": "Service down, database unavailable, security breach",
                     "warning_alerts": "High CPU usage, slow response times, disk space low",
-                    "notification_channels": "Email, Slack, SMS for critical alerts"
-                }
+                    "notification_channels": "Email, Slack, SMS for critical alerts",
+                },
             },
             "troubleshooting": {
                 "common_issues": [
@@ -1341,49 +1393,49 @@ class MockDataGenerator:
                         "issue": "Container fails to start",
                         "symptoms": "docker ps shows container in 'Exited' state",
                         "diagnosis": "Check logs: docker logs <container-id>",
-                        "solution": "Fix configuration errors, check resource limits"
+                        "solution": "Fix configuration errors, check resource limits",
                     },
                     {
                         "issue": "Database connection fails",
                         "symptoms": "Application logs show connection timeout errors",
                         "diagnosis": "Verify DATABASE_URL, check network connectivity",
-                        "solution": "Update connection string, check firewall rules"
+                        "solution": "Update connection string, check firewall rules",
                     },
                     {
                         "issue": "High memory usage",
                         "symptoms": "Container restarts due to OOM killer",
                         "diagnosis": "Monitor memory usage with docker stats",
-                        "solution": "Increase memory limits, optimize application code"
-                    }
+                        "solution": "Increase memory limits, optimize application code",
+                    },
                 ],
                 "debug_mode": {
                     "enable_debug": "Set DEBUG=true in environment variables",
                     "debug_logging": "Set LOG_LEVEL=DEBUG for verbose logging",
-                    "remote_debugging": "Attach debugger to running container"
+                    "remote_debugging": "Attach debugger to running container",
                 },
                 "support_contacts": {
                     "development_team": "dev-team@company.com",
                     "devops_team": "devops@company.com",
-                    "infrastructure_team": "infra@company.com"
-                }
+                    "infrastructure_team": "infra@company.com",
+                },
             },
             "rollback_procedures": {
                 "immediate_rollback": {
                     "trigger_conditions": "Critical functionality broken, security vulnerability",
                     "procedure": "Deploy previous version immediately",
-                    "notification": "Alert all stakeholders of rollback"
+                    "notification": "Alert all stakeholders of rollback",
                 },
                 "graceful_rollback": {
                     "trigger_conditions": "Performance degradation, minor bugs",
                     "procedure": "Gradual traffic shift to previous version",
-                    "monitoring": "Monitor error rates and performance during rollback"
+                    "monitoring": "Monitor error rates and performance during rollback",
                 },
                 "data_rollback": {
                     "database_changes": "Use migration rollback scripts",
                     "file_changes": "Git revert for configuration changes",
-                    "cache_invalidation": "Clear application and CDN caches"
-                }
-            }
+                    "cache_invalidation": "Clear application and CDN caches",
+                },
+            },
         }
 
         return deployment_guide
@@ -1403,13 +1455,13 @@ class MockDataGenerator:
                 "project_name": request.scenario_name,
                 "objectives": project_config.get("objectives", []),
                 "stakeholders": project_config.get("stakeholders", []),
-                "success_criteria": project_config.get("success_criteria", [])
+                "success_criteria": project_config.get("success_criteria", []),
             },
             "metadata": {
                 "scenario_id": request.scenario_name,
                 "document_type": "requirements",
-                "complexity": project_config.get("complexity", "medium")
-            }
+                "complexity": project_config.get("complexity", "medium"),
+            },
         }
         scenario_documents.append(requirements_doc)
 
@@ -1421,13 +1473,13 @@ class MockDataGenerator:
                 "architecture_type": "Microservices",
                 "components": project_config.get("components", []),
                 "data_flow": project_config.get("data_flow", []),
-                "technologies": project_config.get("technologies", [])
+                "technologies": project_config.get("technologies", []),
             },
             "metadata": {
                 "scenario_id": request.scenario_name,
                 "document_type": "architecture",
-                "complexity": project_config.get("complexity", "medium")
-            }
+                "complexity": project_config.get("complexity", "medium"),
+            },
         }
         scenario_documents.append(architecture_doc)
 
@@ -1444,14 +1496,14 @@ class MockDataGenerator:
                     "acceptance_criteria": [
                         f"Feature {i+1} is implemented",
                         f"Feature {i+1} meets requirements",
-                        f"Feature {i+1} is tested"
-                    ]
+                        f"Feature {i+1} is tested",
+                    ],
                 },
                 "metadata": {
                     "scenario_id": request.scenario_name,
                     "document_type": "user_story",
-                    "story_number": i + 1
-                }
+                    "story_number": i + 1,
+                },
             }
             scenario_documents.append(user_story_doc)
 
@@ -1463,13 +1515,13 @@ class MockDataGenerator:
                 "architecture_decisions": project_config.get("decisions", []),
                 "component_design": project_config.get("components", []),
                 "data_model": project_config.get("data_model", {}),
-                "api_endpoints": project_config.get("api_endpoints", [])
+                "api_endpoints": project_config.get("api_endpoints", []),
             },
             "metadata": {
                 "scenario_id": request.scenario_name,
                 "document_type": "technical_design",
-                "complexity": project_config.get("complexity", "medium")
-            }
+                "complexity": project_config.get("complexity", "medium"),
+            },
         }
         scenario_documents.append(design_doc)
 
@@ -1481,16 +1533,16 @@ class MockDataGenerator:
                 "test_categories": {
                     "functional_tests": project_config.get("functional_tests", []),
                     "integration_tests": project_config.get("integration_tests", []),
-                    "performance_tests": project_config.get("performance_tests", [])
+                    "performance_tests": project_config.get("performance_tests", []),
                 },
                 "test_environment": project_config.get("test_environment", {}),
-                "automation_framework": project_config.get("automation_framework", {})
+                "automation_framework": project_config.get("automation_framework", {}),
             },
             "metadata": {
                 "scenario_id": request.scenario_name,
                 "document_type": "test_scenarios",
-                "complexity": project_config.get("complexity", "medium")
-            }
+                "complexity": project_config.get("complexity", "medium"),
+            },
         }
         scenario_documents.append(test_doc)
 
@@ -1502,13 +1554,13 @@ class MockDataGenerator:
                 "environment_setup": project_config.get("environments", {}),
                 "configuration_management": project_config.get("configuration", {}),
                 "deployment_procedures": project_config.get("deployment", []),
-                "monitoring_setup": project_config.get("monitoring", {})
+                "monitoring_setup": project_config.get("monitoring", {}),
             },
             "metadata": {
                 "scenario_id": request.scenario_name,
                 "document_type": "deployment_guide",
-                "complexity": project_config.get("complexity", "medium")
-            }
+                "complexity": project_config.get("complexity", "medium"),
+            },
         }
         scenario_documents.append(deployment_doc)
 
@@ -1519,7 +1571,9 @@ class MockDataGenerator:
 
         return scenario_documents
 
-    def _generate_document_relationships(self, document: Dict[str, Any], all_documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _generate_document_relationships(
+        self, document: Dict[str, Any], all_documents: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Generate cross-document relationships and references."""
         relationships = []
 
@@ -1529,35 +1583,51 @@ class MockDataGenerator:
         # Define relationship patterns based on document type
         relationship_patterns = {
             "project_requirements": [
-                {"type": "references", "target_type": "architecture_diagram", "description": "Defines system requirements"},
+                {
+                    "type": "references",
+                    "target_type": "architecture_diagram",
+                    "description": "Defines system requirements",
+                },
                 {"type": "references", "target_type": "user_story", "description": "Basis for user stories"},
-                {"type": "validated_by", "target_type": "test_scenarios", "description": "Requirements validation"}
+                {"type": "validated_by", "target_type": "test_scenarios", "description": "Requirements validation"},
             ],
             "architecture_diagram": [
                 {"type": "implements", "target_type": "technical_design", "description": "Technical implementation"},
-                {"type": "references", "target_type": "project_requirements", "description": "Architecture requirements"},
-                {"type": "deployed_via", "target_type": "deployment_guide", "description": "Deployment architecture"}
+                {
+                    "type": "references",
+                    "target_type": "project_requirements",
+                    "description": "Architecture requirements",
+                },
+                {"type": "deployed_via", "target_type": "deployment_guide", "description": "Deployment architecture"},
             ],
             "user_story": [
                 {"type": "derived_from", "target_type": "project_requirements", "description": "Requirements basis"},
-                {"type": "implemented_in", "target_type": "technical_design", "description": "Technical implementation"},
-                {"type": "validated_by", "target_type": "test_scenarios", "description": "Acceptance testing"}
+                {
+                    "type": "implemented_in",
+                    "target_type": "technical_design",
+                    "description": "Technical implementation",
+                },
+                {"type": "validated_by", "target_type": "test_scenarios", "description": "Acceptance testing"},
             ],
             "technical_design": [
-                {"type": "implements", "target_type": "architecture_diagram", "description": "Architecture implementation"},
+                {
+                    "type": "implements",
+                    "target_type": "architecture_diagram",
+                    "description": "Architecture implementation",
+                },
                 {"type": "references", "target_type": "user_story", "description": "Feature implementation"},
-                {"type": "deployed_via", "target_type": "deployment_guide", "description": "Deployment configuration"}
+                {"type": "deployed_via", "target_type": "deployment_guide", "description": "Deployment configuration"},
             ],
             "test_scenarios": [
                 {"type": "validates", "target_type": "project_requirements", "description": "Requirements validation"},
                 {"type": "tests", "target_type": "technical_design", "description": "Implementation testing"},
-                {"type": "references", "target_type": "user_story", "description": "Acceptance criteria testing"}
+                {"type": "references", "target_type": "user_story", "description": "Acceptance criteria testing"},
             ],
             "deployment_guide": [
                 {"type": "deploys", "target_type": "architecture_diagram", "description": "Architecture deployment"},
                 {"type": "configures", "target_type": "technical_design", "description": "Technical configuration"},
-                {"type": "references", "target_type": "test_scenarios", "description": "Deployment testing"}
-            ]
+                {"type": "references", "target_type": "test_scenarios", "description": "Deployment testing"},
+            ],
         }
 
         # Generate relationships based on patterns
@@ -1571,7 +1641,7 @@ class MockDataGenerator:
                             "target_document": target_doc["title"],
                             "target_type": target_doc["type"],
                             "description": pattern["description"],
-                            "strength": "strong"
+                            "strength": "strong",
                         }
                         relationships.append(relationship)
 
@@ -1586,24 +1656,22 @@ class MockDataGenerator:
                     json={
                         "title": f"Mock {data_type}: {data.get('title', data.get('name', data.get('summary', 'Generated Data')))}",
                         "content": json.dumps(data, indent=2),
-                        "metadata": {
-                            "data_type": data_type,
-                            "generated": True,
-                            "service": SERVICE_NAME
-                        }
-                    }
+                        "metadata": {"data_type": data_type, "generated": True, "service": SERVICE_NAME},
+                    },
                 )
-                
+
                 if response.status_code in [200, 201]:
                     result = response.json()
                     return result.get("document_id")
-                    
+
         except Exception as e:
             print(f"Doc store storage failed: {e}")
         return None
 
+
 # Initialize generator
 generator = MockDataGenerator()
+
 
 @app.get("/health")
 async def health():
@@ -1615,8 +1683,9 @@ async def health():
         "timestamp": time.time(),
         "environment": ENVIRONMENT,
         "llm_gateway_url": LLM_GATEWAY_URL,
-        "doc_store_url": DOC_STORE_URL
+        "doc_store_url": DOC_STORE_URL,
     }
+
 
 @app.get("/")
 async def root():
@@ -1639,7 +1708,7 @@ async def root():
             "scenarios_available": "/scenarios/available",
             "scenarios_quick_start": "/scenarios/quick-start/{scenario_type}",
             "data_overview": "/data/ecosystem-overview",
-            "data_export": "/data/export/{collection_id}"
+            "data_export": "/data/export/{collection_id}",
         },
         "supported_types": list(MockDataType),
         "features": {
@@ -1659,96 +1728,88 @@ async def root():
             "timeline_based_content": True,
             "team_activity_simulation": True,
             "phase_specific_documents": True,
-            "ecosystem_scenario_generation": True
-        }
+            "ecosystem_scenario_generation": True,
+        },
     }
+
 
 @app.get("/data-types")
 async def get_data_types():
     """Get available mock data types."""
     return {
         "data_types": [
-            {
-                "type": data_type.value,
-                "description": f"Generate mock {data_type.value.replace('_', ' ')} data"
-            }
+            {"type": data_type.value, "description": f"Generate mock {data_type.value.replace('_', ' ')} data"}
             for data_type in MockDataType
         ]
     }
+
 
 @app.post("/generate", response_model=MockDataResponse)
 async def generate_mock_data(request: GenerationRequest):
     """Generate mock data based on the request."""
     start_time = time.time()
-    
+
     try:
         generated_data = []
         stored_documents = []
-        
+
         for i in range(request.count):
             # Generate data with optional LLM enhancement
-            data = await generator.generate_with_llm(
-                request.data_type, 
-                request.context
-            )
-            
+            data = await generator.generate_with_llm(request.data_type, request.context)
+
             # Add request parameters
             if request.parameters:
                 data.update(request.parameters)
-            
+
             generated_data.append(data)
-            
+
             # Store in doc store if requested
             if request.store_in_doc_store:
                 doc_id = await generator.store_in_doc_store(data, request.data_type.value)
                 if doc_id:
                     stored_documents.append(doc_id)
-        
+
         generation_time = time.time() - start_time
-        
+
         return MockDataResponse(
             success=True,
             data_type=request.data_type.value,
             count=len(generated_data),
             generated_data=generated_data,
             generation_time=generation_time,
-            stored_documents=stored_documents if stored_documents else None
+            stored_documents=stored_documents if stored_documents else None,
         )
-        
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate mock data: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate mock data: {str(e)}")
+
 
 @app.post("/generate/batch")
 async def generate_batch_data(requests: List[GenerationRequest]):
     """Generate multiple types of mock data in batch."""
     start_time = time.time()
-    
+
     try:
         results = []
-        
+
         for request in requests:
             result = await generate_mock_data(request)
             results.append(result)
-        
+
         total_time = time.time() - start_time
         total_count = sum(result.count for result in results)
-        
+
         return {
             "success": True,
             "batch_results": results,
             "total_items": total_count,
             "total_time": total_time,
-            "average_time_per_item": total_time / total_count if total_count > 0 else 0
+            "average_time_per_item": total_time / total_count if total_count > 0 else 0,
         }
-        
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate batch data: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate batch data: {str(e)}")
+
 
 @app.get("/test/llm-connection")
 async def test_llm_connection():
@@ -1757,20 +1818,12 @@ async def test_llm_connection():
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(f"{LLM_GATEWAY_URL}/health")
             if response.status_code == 200:
-                return {
-                    "llm_gateway_status": "connected",
-                    "response": response.json()
-                }
+                return {"llm_gateway_status": "connected", "response": response.json()}
             else:
-                return {
-                    "llm_gateway_status": "error",
-                    "status_code": response.status_code
-                }
+                return {"llm_gateway_status": "error", "status_code": response.status_code}
     except Exception as e:
-        return {
-            "llm_gateway_status": "unreachable",
-            "error": str(e)
-        }
+        return {"llm_gateway_status": "unreachable", "error": str(e)}
+
 
 @app.get("/test/doc-store-connection")
 async def test_doc_store_connection():
@@ -1779,27 +1832,21 @@ async def test_doc_store_connection():
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(f"{DOC_STORE_URL}/health")
             if response.status_code == 200:
-                return {
-                    "doc_store_status": "connected",
-                    "response": response.json()
-                }
+                return {"doc_store_status": "connected", "response": response.json()}
             else:
-                return {
-                    "doc_store_status": "error",
-                    "status_code": response.status_code
-                }
+                return {"doc_store_status": "error", "status_code": response.status_code}
     except Exception as e:
-        return {
-            "doc_store_status": "unreachable",
-            "error": str(e)
-        }
+        return {"doc_store_status": "unreachable", "error": str(e)}
+
 
 # New enhanced endpoints for bulk collections and ecosystem scenarios
+
 
 @app.post("/collections/generate", response_model=BulkCollectionResponse)
 async def generate_bulk_collection(request: BulkCollectionRequest):
     """Generate a bulk collection of mock data."""
     return await generator.generate_bulk_collection(request)
+
 
 @app.get("/collections/templates")
 async def get_collection_templates():
@@ -1814,9 +1861,9 @@ async def get_collection_templates():
                     "llm_prompt": 10,
                     "analysis_report": 5,
                     "github_pr": 3,
-                    "log_entry": 20
+                    "log_entry": 20,
                 },
-                "tags": ["code_review", "development", "testing"]
+                "tags": ["code_review", "development", "testing"],
             },
             "documentation_suite": {
                 "description": "Comprehensive documentation collection",
@@ -1825,9 +1872,9 @@ async def get_collection_templates():
                     "confluence_page": 15,
                     "api_docs": 8,
                     "document_collection": 3,
-                    "user_profile": 5
+                    "user_profile": 5,
                 },
-                "tags": ["documentation", "api", "user_management"]
+                "tags": ["documentation", "api", "user_management"],
             },
             "analysis_workbench": {
                 "description": "Data analysis and reporting environment",
@@ -1837,13 +1884,21 @@ async def get_collection_templates():
                     "source_code": 30,
                     "log_entry": 15,
                     "configuration": 3,
-                    "notification": 5
+                    "notification": 5,
                 },
-                "tags": ["analysis", "reporting", "monitoring"]
+                "tags": ["analysis", "reporting", "monitoring"],
             },
             "ecosystem_integration": {
                 "description": "Full ecosystem integration test data",
-                "data_types": ["llm_prompt", "analysis_report", "source_code", "user_profile", "configuration", "notification", "log_entry"],
+                "data_types": [
+                    "llm_prompt",
+                    "analysis_report",
+                    "source_code",
+                    "user_profile",
+                    "configuration",
+                    "notification",
+                    "log_entry",
+                ],
                 "suggested_distribution": {
                     "llm_prompt": 20,
                     "analysis_report": 15,
@@ -1851,44 +1906,44 @@ async def get_collection_templates():
                     "user_profile": 10,
                     "configuration": 5,
                     "notification": 8,
-                    "log_entry": 25
+                    "log_entry": 25,
                 },
-                "tags": ["integration", "full_stack", "comprehensive"]
-            }
+                "tags": ["integration", "full_stack", "comprehensive"],
+            },
         },
         "customization_options": {
             "total_items_range": [10, 10000],
             "supported_tags": ["testing", "development", "documentation", "analysis", "integration", "production"],
-            "storage_options": ["doc_store_only", "memory_only", "both"]
-        }
+            "storage_options": ["doc_store_only", "memory_only", "both"],
+        },
     }
+
 
 @app.post("/scenarios/generate", response_model=EcosystemScenarioResponse)
 async def generate_ecosystem_scenario(request: EcosystemScenarioRequest):
     """Generate a complete ecosystem scenario."""
     return await generator.generate_ecosystem_scenario(request)
 
+
 @app.get("/scenarios/available")
 async def get_available_scenarios():
     """Get available ecosystem scenarios."""
     return generator.get_available_scenarios()
 
+
 @app.post("/scenarios/quick-start/{scenario_type}")
-async def quick_start_scenario(
-    scenario_type: str,
-    complexity: str = "medium",
-    scale: str = "small"
-):
+async def quick_start_scenario(scenario_type: str, complexity: str = "medium", scale: str = "small"):
     """Quick start a predefined scenario with default settings."""
     request = EcosystemScenarioRequest(
         scenario_type=scenario_type,
         complexity=complexity,
         scale=scale,
         include_relationships=True,
-        store_in_doc_store=True
+        store_in_doc_store=True,
     )
 
     return await generator.generate_ecosystem_scenario(request)
+
 
 @app.get("/collections/list")
 async def list_collections(limit: int = 50, offset: int = 0):
@@ -1902,7 +1957,7 @@ async def list_collections(limit: int = 50, offset: int = 0):
                 "created_at": "2024-01-20T10:00:00Z",
                 "total_items": 25,
                 "data_types": ["source_code", "llm_prompt"],
-                "status": "completed"
+                "status": "completed",
             },
             {
                 "id": "coll_002",
@@ -1910,13 +1965,14 @@ async def list_collections(limit: int = 50, offset: int = 0):
                 "created_at": "2024-01-19T15:30:00Z",
                 "total_items": 50,
                 "data_types": ["confluence_page", "api_docs"],
-                "status": "completed"
-            }
+                "status": "completed",
+            },
         ],
         "total": 2,
         "limit": limit,
-        "offset": offset
+        "offset": offset,
     }
+
 
 @app.get("/collections/{collection_id}")
 async def get_collection_details(collection_id: str):
@@ -1928,26 +1984,18 @@ async def get_collection_details(collection_id: str):
         "description": "Mock collection details",
         "created_at": "2024-01-20T10:00:00Z",
         "total_items": 25,
-        "items_by_type": {
-            "source_code": 15,
-            "llm_prompt": 10
-        },
+        "items_by_type": {"source_code": 15, "llm_prompt": 10},
         "stored_documents": [f"doc_{i}" for i in range(25)],
-        "metadata": {
-            "tags": ["testing", "development"],
-            "context": "Mock data generation"
-        }
+        "metadata": {"tags": ["testing", "development"], "context": "Mock data generation"},
     }
+
 
 @app.delete("/collections/{collection_id}")
 async def delete_collection(collection_id: str):
     """Delete a collection and its associated documents."""
     # Mock response - in real implementation, this would delete from database and doc store
-    return {
-        "success": True,
-        "message": f"Collection {collection_id} deleted successfully",
-        "deleted_documents": 25
-    }
+    return {"success": True, "message": f"Collection {collection_id} deleted successfully", "deleted_documents": 25}
+
 
 @app.get("/data/ecosystem-overview")
 async def get_ecosystem_data_overview():
@@ -1965,28 +2013,25 @@ async def get_ecosystem_data_overview():
             "user_profile": 10,
             "configuration": 8,
             "notification": 12,
-            "log_entry": 35
+            "log_entry": 35,
         },
         "recent_activity": [
             {
                 "type": "collection_created",
                 "name": "code_review_workflow",
                 "timestamp": "2024-01-20T10:30:00Z",
-                "items_count": 25
+                "items_count": 25,
             },
             {
                 "type": "scenario_generated",
                 "name": "documentation",
                 "timestamp": "2024-01-20T09:15:00Z",
-                "items_count": 50
-            }
+                "items_count": 50,
+            },
         ],
-        "storage_usage": {
-            "doc_store_documents": 200,
-            "memory_cache": 50,
-            "total_size_mb": 45.2
-        }
+        "storage_usage": {"doc_store_documents": 200, "memory_cache": 50, "total_size_mb": 45.2},
     }
+
 
 @app.post("/data/export/{collection_id}")
 async def export_collection_data(collection_id: str, format: str = "json"):
@@ -1994,10 +2039,7 @@ async def export_collection_data(collection_id: str, format: str = "json"):
     supported_formats = ["json", "csv", "xml", "yaml"]
 
     if format not in supported_formats:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported format: {format}. Supported: {supported_formats}"
-        )
+        raise HTTPException(status_code=400, detail=f"Unsupported format: {format}. Supported: {supported_formats}")
 
     # Mock export response
     return {
@@ -2007,10 +2049,12 @@ async def export_collection_data(collection_id: str, format: str = "json"):
         "export_url": f"/exports/{collection_id}.{format}",
         "file_size_mb": 12.5,
         "item_count": 25,
-        "exported_at": datetime.now().isoformat()
+        "exported_at": datetime.now().isoformat(),
     }
 
+
 # NEW: Simulation-specific endpoints
+
 
 @app.post("/simulation/project-docs", response_model=SimulationResponse)
 async def generate_project_documents(request: SimulationProjectDocsRequest):
@@ -2064,8 +2108,8 @@ async def generate_project_documents(request: SimulationProjectDocsRequest):
                 "project_type": request.project_type,
                 "team_size": request.team_size,
                 "complexity": request.complexity,
-                "duration_weeks": request.duration_weeks
-            }
+                "duration_weeks": request.duration_weeks,
+            },
         )
 
     except Exception as e:
@@ -2077,8 +2121,9 @@ async def generate_project_documents(request: SimulationProjectDocsRequest):
             document_types=request.document_types,
             documents_created=[],
             generation_time=time.time() - start_time,
-            metadata={"error": str(e)}
+            metadata={"error": str(e)},
         )
+
 
 @app.post("/simulation/timeline-events", response_model=SimulationResponse)
 async def generate_timeline_events(request: SimulationTimelineEventsRequest):
@@ -2117,8 +2162,8 @@ async def generate_timeline_events(request: SimulationTimelineEventsRequest):
                 "phase_count": len(request.timeline_phases),
                 "include_past": request.include_past_events,
                 "include_future": request.include_future_events,
-                "current_phase": request.current_phase
-            }
+                "current_phase": request.current_phase,
+            },
         )
 
     except Exception as e:
@@ -2130,8 +2175,9 @@ async def generate_timeline_events(request: SimulationTimelineEventsRequest):
             document_types=["timeline_event"],
             documents_created=[],
             generation_time=time.time() - start_time,
-            metadata={"error": str(e)}
+            metadata={"error": str(e)},
         )
+
 
 @app.post("/simulation/team-activities", response_model=SimulationResponse)
 async def generate_team_activities(request: SimulationTeamActivitiesRequest):
@@ -2167,8 +2213,8 @@ async def generate_team_activities(request: SimulationTeamActivitiesRequest):
                 "team_size": len(request.team_members),
                 "activity_types": request.activity_types,
                 "time_range_days": request.time_range_days,
-                "activities_generated": request.activity_count
-            }
+                "activities_generated": request.activity_count,
+            },
         )
 
     except Exception as e:
@@ -2180,8 +2226,9 @@ async def generate_team_activities(request: SimulationTeamActivitiesRequest):
             document_types=["team_activity"],
             documents_created=[],
             generation_time=time.time() - start_time,
-            metadata={"error": str(e)}
+            metadata={"error": str(e)},
         )
+
 
 @app.post("/simulation/phase-documents", response_model=SimulationResponse)
 async def generate_phase_documents(request: SimulationPhaseDocumentsRequest):
@@ -2222,8 +2269,8 @@ async def generate_phase_documents(request: SimulationPhaseDocumentsRequest):
             generation_time=generation_time,
             metadata={
                 "phase_name": request.phase_name,
-                "team_members_involved": len(request.team_members) if request.team_members else 0
-            }
+                "team_members_involved": len(request.team_members) if request.team_members else 0,
+            },
         )
 
     except Exception as e:
@@ -2235,8 +2282,9 @@ async def generate_phase_documents(request: SimulationPhaseDocumentsRequest):
             document_types=request.document_types,
             documents_created=[],
             generation_time=time.time() - start_time,
-            metadata={"error": str(e)}
+            metadata={"error": str(e)},
         )
+
 
 @app.post("/simulation/ecosystem-scenario", response_model=SimulationResponse)
 async def generate_ecosystem_scenario(request: SimulationEcosystemScenarioRequest):
@@ -2271,8 +2319,8 @@ async def generate_ecosystem_scenario(request: SimulationEcosystemScenarioReques
             metadata={
                 "include_full_ecosystem": request.include_full_ecosystem,
                 "generate_relationships": request.generate_relationships,
-                "scenario_documents": len(scenario_docs)
-            }
+                "scenario_documents": len(scenario_docs),
+            },
         )
 
     except Exception as e:
@@ -2284,12 +2332,14 @@ async def generate_ecosystem_scenario(request: SimulationEcosystemScenarioReques
             document_types=["ecosystem_scenario"],
             documents_created=[],
             generation_time=time.time() - start_time,
-            metadata={"error": str(e)}
+            metadata={"error": str(e)},
         )
+
 
 if __name__ == "__main__":
     """Run the Enhanced Mock Data Generator service directly."""
     import uvicorn
+
     print(f"🚀 Starting {SERVICE_TITLE} Service (v{SERVICE_VERSION})...")
     print(f"🔗 LLM Gateway: {LLM_GATEWAY_URL}")
     print(f"📄 Doc Store: {DOC_STORE_URL}")
@@ -2301,7 +2351,9 @@ if __name__ == "__main__":
     print("  🔗 Data Relationships - Interconnected data with realistic dependencies")
     print("  📤 Export Formats - JSON, CSV, XML, YAML export capabilities")
     print("  📊 Data Overview - Comprehensive ecosystem data analytics")
-    print(f"  🎯 New Data Types: {len([t for t in MockDataType if t.value not in ['confluence_page', 'github_repo', 'github_pr', 'jira_issue', 'jira_epic', 'api_docs', 'code_sample', 'workflow_data']])} additional types")
+    print(
+        f"  🎯 New Data Types: {len([t for t in MockDataType if t.value not in ['confluence_page', 'github_repo', 'github_pr', 'jira_issue', 'jira_epic', 'api_docs', 'code_sample', 'workflow_data']])} additional types"
+    )
     print("")
     print("🌐 Service Endpoints:")
     print(f"  📡 Health: http://localhost:{DEFAULT_PORT}/health")
@@ -2311,9 +2363,4 @@ if __name__ == "__main__":
     print("")
     print(f"📖 API Documentation: http://localhost:{DEFAULT_PORT}/docs")
     print("")
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

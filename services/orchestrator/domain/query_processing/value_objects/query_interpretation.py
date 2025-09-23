@@ -1,10 +1,10 @@
 """Query Interpretation Value Object"""
 
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .query_intent import QueryIntent
 from .query_confidence import QueryConfidence
+from .query_intent import QueryIntent
 from .query_type import QueryType
 
 
@@ -24,7 +24,7 @@ class QueryInterpretation:
         clarification_questions: Optional[List[str]] = None,
         alternative_interpretations: Optional[List[Dict[str, Any]]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        interpretation_timestamp: Optional[datetime] = None
+        interpretation_timestamp: Optional[datetime] = None,
     ):
         self._query_id = query_id
         self._intent = intent
@@ -112,19 +112,12 @@ class QueryInterpretation:
     @property
     def can_execute(self) -> bool:
         """Check if interpretation can be executed."""
-        return (
-            self._intent.requires_execution and
-            self._confidence.can_auto_execute and
-            len(self._parameters) > 0
-        )
+        return self._intent.requires_execution and self._confidence.can_auto_execute and len(self._parameters) > 0
 
     @property
     def needs_clarification(self) -> bool:
         """Check if interpretation needs clarification."""
-        return (
-            self._confidence.requires_clarification or
-            len(self._clarification_questions) > 0
-        )
+        return self._confidence.requires_clarification or len(self._clarification_questions) > 0
 
     @property
     def has_alternatives(self) -> bool:
@@ -168,7 +161,7 @@ class QueryInterpretation:
             "interpretation_timestamp": self._interpretation_timestamp.isoformat(),
             "can_execute": self.can_execute,
             "needs_clarification": self.needs_clarification,
-            "has_alternatives": self.has_alternatives
+            "has_alternatives": self.has_alternatives,
         }
 
     def __repr__(self) -> str:

@@ -2,29 +2,32 @@
 
 Handles the complex logic for different UI pages and endpoints.
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
+
 from fastapi.responses import HTMLResponse
 
-from .shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context,
-    validate_frontend_request,
-    sanitize_input
-)
 from services.frontend.utils import (
-    render_index,
-    render_owner_coverage_table,
-    render_topics_html,
+    render_clusters,
     render_consolidation_list,
-    render_search_results,
+    render_counts,
     render_docs_quality,
     render_findings,
-    render_counts,
+    render_index,
+    render_owner_coverage_table,
     render_report_page,
-    render_clusters,
+    render_search_results,
+    render_topics_html,
+)
+
+from .shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+    sanitize_input,
+    validate_frontend_request,
 )
 
 
@@ -92,20 +95,26 @@ class UIHandlers:
             html = render_consolidation_list(items)
             return create_html_response(html, "Confluence Consolidation Report")
         except Exception as e:
-            return handle_frontend_error("fetch confluence consolidation", e, **build_frontend_context("confluence_consolidation"))
+            return handle_frontend_error(
+                "fetch confluence consolidation", e, **build_frontend_context("confluence_consolidation")
+            )
 
     @staticmethod
-    def handle_jira_staleness(min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False) -> HTMLResponse:
+    def handle_jira_staleness(
+        min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False
+    ) -> HTMLResponse:
         """Render Jira staleness report page with filtering options."""
         try:
-            validate_frontend_request({"min_confidence": min_confidence, "min_duplicate_confidence": min_duplicate_confidence, "limit": limit})
+            validate_frontend_request(
+                {"min_confidence": min_confidence, "min_duplicate_confidence": min_duplicate_confidence, "limit": limit}
+            )
 
             endpoint = "/reports/jira/staleness"
             params = {
                 "min_confidence": min_confidence,
                 "min_duplicate_confidence": min_duplicate_confidence,
                 "limit": limit,
-                "summarize": "true" if summarize else "false"
+                "summarize": "true" if summarize else "false",
             }
 
             clients = get_frontend_clients()
@@ -443,7 +452,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Workflow & Job Status Monitor")
         except Exception as e:
-            return handle_frontend_error("render workflows status page", e, **build_frontend_context("render_workflows_status"))
+            return handle_frontend_error(
+                "render workflows status page", e, **build_frontend_context("render_workflows_status")
+            )
 
     @staticmethod
     def handle_summarizer_status() -> HTMLResponse:
@@ -804,7 +815,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Summarizer Hub Status Monitor")
         except Exception as e:
-            return handle_frontend_error("render summarizer status page", e, **build_frontend_context("render_summarizer_status"))
+            return handle_frontend_error(
+                "render summarizer status page", e, **build_frontend_context("render_summarizer_status")
+            )
 
     @staticmethod
     def handle_logs_dashboard() -> HTMLResponse:
@@ -2176,7 +2189,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Doc Store Data Browser")
         except Exception as e:
-            return handle_frontend_error("render doc_store browser", e, **build_frontend_context("render_doc_store_browser"))
+            return handle_frontend_error(
+                "render doc_store browser", e, **build_frontend_context("render_doc_store_browser")
+            )
 
     @staticmethod
     def handle_prompt_store_browser() -> HTMLResponse:
@@ -2787,7 +2802,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Prompt Store Data Browser")
         except Exception as e:
-            return handle_frontend_error("render prompt-store browser", e, **build_frontend_context("render_prompt_store_browser"))
+            return handle_frontend_error(
+                "render prompt-store browser", e, **build_frontend_context("render_prompt_store_browser")
+            )
 
     @staticmethod
     def handle_orchestrator_monitor() -> HTMLResponse:
@@ -3483,7 +3500,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Orchestrator Monitor")
         except Exception as e:
-            return handle_frontend_error("render orchestrator monitor", e, **build_frontend_context("render_orchestrator_monitor"))
+            return handle_frontend_error(
+                "render orchestrator monitor", e, **build_frontend_context("render_orchestrator_monitor")
+            )
 
     @staticmethod
     def handle_analysis_dashboard() -> HTMLResponse:
@@ -4463,7 +4482,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Analysis Dashboard")
         except Exception as e:
-            return handle_frontend_error("render analysis dashboard", e, **build_frontend_context("render_analysis_dashboard"))
+            return handle_frontend_error(
+                "render analysis dashboard", e, **build_frontend_context("render_analysis_dashboard")
+            )
 
     @staticmethod
     def handle_services_overview() -> HTMLResponse:
@@ -4969,7 +4990,9 @@ class UIHandlers:
             """
             return create_html_response(html, "Services Overview")
         except Exception as e:
-            return handle_frontend_error("render services overview", e, **build_frontend_context("render_services_overview"))
+            return handle_frontend_error(
+                "render services overview", e, **build_frontend_context("render_services_overview")
+            )
 
 
 # Create singleton instance

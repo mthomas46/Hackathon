@@ -16,31 +16,34 @@ Responsibilities:
 
 Dependencies: shared middlewares, httpx for HTTP requests, GitHub API credentials.
 """
-from typing import Dict, Any, List, Optional, Set
+
+from typing import Any, Dict, List, Optional, Set
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
-from services.shared.utilities import attach_self_register, setup_common_middleware  # type: ignore
 from services.shared.core.constants_new import ServiceNames  # type: ignore
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+from services.shared.utilities import attach_self_register, setup_common_middleware  # type: ignore
+from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
 
 try:
     from .modules.config import config
-    from .modules.tool_registry import tool_registry, ToolDescription
+    from .modules.event_system import event_system
     from .modules.mock_implementations import mock_implementations
     from .modules.real_implementations import real_implementations
-    from .modules.event_system import event_system
+    from .modules.tool_registry import ToolDescription, tool_registry
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.config import config
-    from modules.tool_registry import tool_registry, ToolDescription
+    from modules.event_system import event_system
     from modules.mock_implementations import mock_implementations
     from modules.real_implementations import real_implementations
-    from modules.event_system import event_system
+    from modules.tool_registry import ToolDescription, tool_registry
 
 # Service configuration constants
 SERVICE_NAME = "github-mcp"
@@ -55,7 +58,7 @@ DEFAULT_TOOLSETS_FALLBACK = {"repos"}
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
-    description="Local GitHub Model Context Protocol server with mock and real implementations"
+    description="Local GitHub Model Context Protocol server with mock and real implementations",
 )
 setup_common_middleware(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB") else SERVICE_NAME)
 attach_self_register(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB") else SERVICE_NAME)
@@ -105,7 +108,7 @@ async def health():
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
-        "description": "GitHub MCP service is operational"
+        "description": "GitHub MCP service is operational",
     }
 
 
@@ -148,8 +151,6 @@ async def list_tools(toolsets: Optional[str] = None):
     return tool_registry.filter_tools_by_toolsets(effective_toolsets)
 
 
-
-
 @app.post("/tools/{tool}/invoke", response_model=InvokeResponse)
 async def invoke(tool: str, payload: InvokeRequest):
     """Invoke a specific GitHub MCP tool with the provided arguments.
@@ -173,15 +174,11 @@ async def invoke(tool: str, payload: InvokeRequest):
         try:
             service_clients = ServiceClients(timeout=DEFAULT_UPSTREAM_TIMEOUT_SECONDS)
             upstream_response = await service_clients.post_json(
-                f"{upstream_base_url}/tools/{tool}/invoke",
-                payload.model_dump()
+                f"{upstream_base_url}/tools/{tool}/invoke", payload.model_dump()
             )
             return InvokeResponse(tool=tool, success=True, result=upstream_response)
         except Exception as upstream_error:
-            raise HTTPException(
-                status_code=502,
-                detail=f"Upstream GitHub MCP server error: {upstream_error}"
-            )
+            raise HTTPException(status_code=502, detail=f"Upstream GitHub MCP server error: {upstream_error}")
 
     # Execute tool using local implementations
     try:
@@ -206,9 +203,5 @@ async def invoke(tool: str, payload: InvokeRequest):
 if __name__ == "__main__":
     """Run the GitHub MCP service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

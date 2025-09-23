@@ -6,9 +6,9 @@ retrieving documents and prompts that were used during the original simulation.
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, AsyncGenerator
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ...application.services.simulation_application_service import SimulationApplicationService
 from ...domain.entities.simulation import Simulation, SimulationId
@@ -18,6 +18,7 @@ from ...infrastructure.logging import SimulationLogger
 @dataclass
 class PlaybackEvent:
     """Represents an event in the simulation playback."""
+
     timestamp: datetime
     event_type: str
     simulation_id: str
@@ -28,6 +29,7 @@ class PlaybackEvent:
 @dataclass
 class PlaybackSession:
     """Represents a simulation playback session."""
+
     session_id: str
     simulation_id: str
     start_time: datetime
@@ -45,8 +47,7 @@ class SimulationPlaybackEngine:
         self.logger = logger
         self.active_sessions: Dict[str, PlaybackSession] = {}
 
-    async def start_playback(self, simulation_id: str, run_id: str,
-                           playback_speed: float = 1.0) -> str:
+    async def start_playback(self, simulation_id: str, run_id: str, playback_speed: float = 1.0) -> str:
         """Start a new playback session for a simulation run."""
         session_id = f"playback_{simulation_id}_{run_id}_{int(datetime.now().timestamp())}"
 
@@ -61,7 +62,7 @@ class SimulationPlaybackEngine:
             simulation_id=simulation_id,
             start_time=datetime.now(),
             status="initializing",
-            playback_speed=playback_speed
+            playback_speed=playback_speed,
         )
 
         self.active_sessions[session_id] = session
@@ -83,56 +84,64 @@ class SimulationPlaybackEngine:
 
         # Start event
         if "start_time" in run_data:
-            events.append(PlaybackEvent(
-                timestamp=datetime.fromisoformat(run_data["start_time"]),
-                event_type="simulation_started",
-                simulation_id=simulation_id,
-                data={"run_id": run_id},
-                sequence_number=sequence
-            ))
+            events.append(
+                PlaybackEvent(
+                    timestamp=datetime.fromisoformat(run_data["start_time"]),
+                    event_type="simulation_started",
+                    simulation_id=simulation_id,
+                    data={"run_id": run_id},
+                    sequence_number=sequence,
+                )
+            )
             sequence += 1
 
         # Document generation events
         documents = await self.application_service.get_simulation_documents(simulation_id)
         for doc in documents:
-            events.append(PlaybackEvent(
-                timestamp=datetime.fromisoformat(doc["created_at"]),
-                event_type="document_generated",
-                simulation_id=simulation_id,
-                data={
-                    "document_id": doc["document_id"],
-                    "document_type": doc["document_type"],
-                    "doc_store_reference": doc["doc_store_reference"]
-                },
-                sequence_number=sequence
-            ))
+            events.append(
+                PlaybackEvent(
+                    timestamp=datetime.fromisoformat(doc["created_at"]),
+                    event_type="document_generated",
+                    simulation_id=simulation_id,
+                    data={
+                        "document_id": doc["document_id"],
+                        "document_type": doc["document_type"],
+                        "doc_store_reference": doc["doc_store_reference"],
+                    },
+                    sequence_number=sequence,
+                )
+            )
             sequence += 1
 
         # Prompt usage events
         prompts = await self.application_service.get_simulation_prompts(simulation_id)
         for prompt in prompts:
-            events.append(PlaybackEvent(
-                timestamp=datetime.fromisoformat(prompt["created_at"]),
-                event_type="prompt_used",
-                simulation_id=simulation_id,
-                data={
-                    "prompt_id": prompt["prompt_id"],
-                    "prompt_type": prompt["prompt_type"],
-                    "prompt_store_reference": prompt["prompt_store_reference"]
-                },
-                sequence_number=sequence
-            ))
+            events.append(
+                PlaybackEvent(
+                    timestamp=datetime.fromisoformat(prompt["created_at"]),
+                    event_type="prompt_used",
+                    simulation_id=simulation_id,
+                    data={
+                        "prompt_id": prompt["prompt_id"],
+                        "prompt_type": prompt["prompt_type"],
+                        "prompt_store_reference": prompt["prompt_store_reference"],
+                    },
+                    sequence_number=sequence,
+                )
+            )
             sequence += 1
 
         # Completion event
         if "end_time" in run_data:
-            events.append(PlaybackEvent(
-                timestamp=datetime.fromisoformat(run_data.get("end_time", run_data["start_time"])),
-                event_type="simulation_completed",
-                simulation_id=simulation_id,
-                data={"run_id": run_id, "final_status": run_data.get("status", "completed")},
-                sequence_number=sequence
-            ))
+            events.append(
+                PlaybackEvent(
+                    timestamp=datetime.fromisoformat(run_data.get("end_time", run_data["start_time"])),
+                    event_type="simulation_completed",
+                    simulation_id=simulation_id,
+                    data={"run_id": run_id, "final_status": run_data.get("status", "completed")},
+                    sequence_number=sequence,
+                )
+            )
 
         # Sort events by timestamp
         events.sort(key=lambda e: e.timestamp)
@@ -207,7 +216,7 @@ class SimulationPlaybackEngine:
                 "run_id": "run_001",
                 "start_time": datetime.now().isoformat(),
                 "status": "completed",
-                "duration_seconds": 120.5
+                "duration_seconds": 120.5,
             }
         ]
 
@@ -250,15 +259,15 @@ class SimulationReconstructor:
                     "max_execution_time_minutes": simulation.configuration.max_execution_time_minutes,
                     "generate_realistic_delays": simulation.configuration.generate_realistic_delays,
                     "capture_metrics": simulation.configuration.capture_metrics,
-                    "enable_ecosystem_integration": simulation.configuration.enable_ecosystem_integration
-                }
+                    "enable_ecosystem_integration": simulation.configuration.enable_ecosystem_integration,
+                },
             },
             "run_data": run_data or {},
             "documents": documents,
             "prompts": prompts,
             "reconstructed_at": datetime.now().isoformat(),
             "total_documents": len(documents),
-            "total_prompts": len(prompts)
+            "total_prompts": len(prompts),
         }
 
         return reconstructed_state
@@ -280,8 +289,8 @@ class SimulationReconstructor:
             "metadata": {
                 "type": doc_info["document_type"],
                 "created_at": doc_info["created_at"],
-                "doc_store_reference": doc_info["doc_store_reference"]
-            }
+                "doc_store_reference": doc_info["doc_store_reference"],
+            },
         }
 
     async def get_prompt_content(self, simulation_id: str, prompt_id: str) -> Optional[Dict[str, Any]]:
@@ -301,19 +310,21 @@ class SimulationReconstructor:
             "metadata": {
                 "type": prompt_info["prompt_type"],
                 "created_at": prompt_info["created_at"],
-                "prompt_store_reference": prompt_info["prompt_store_reference"]
-            }
+                "prompt_store_reference": prompt_info["prompt_store_reference"],
+            },
         }
 
 
 # Factory functions
-def create_simulation_playback_engine(application_service: SimulationApplicationService,
-                                    logger: SimulationLogger) -> SimulationPlaybackEngine:
+def create_simulation_playback_engine(
+    application_service: SimulationApplicationService, logger: SimulationLogger
+) -> SimulationPlaybackEngine:
     """Create a simulation playback engine."""
     return SimulationPlaybackEngine(application_service, logger)
 
 
-def create_simulation_reconstructor(application_service: SimulationApplicationService,
-                                  logger: SimulationLogger) -> SimulationReconstructor:
+def create_simulation_reconstructor(
+    application_service: SimulationApplicationService, logger: SimulationLogger
+) -> SimulationReconstructor:
     """Create a simulation reconstructor."""
     return SimulationReconstructor(application_service, logger)

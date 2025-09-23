@@ -4,13 +4,15 @@ Provides power-user operations for source agent including
 document fetching, normalization, and code analysis.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from services.shared.core.constants_new import ServiceNames
+
 from ...base.base_manager import BaseManager
 
 
@@ -35,7 +37,7 @@ class SourceAgentManager(BaseManager):
             ("2", "Data Normalization"),
             ("3", "Code Analysis & Processing"),
             ("4", "Source Management"),
-            ("5", "Integration Status")
+            ("5", "Integration Status"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -58,14 +60,17 @@ class SourceAgentManager(BaseManager):
         """Document fetching submenu."""
         while True:
             menu = create_menu_table("Document Fetching", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Fetch from GitHub"),
-                ("2", "Fetch from Jira"),
-                ("3", "Fetch from Confluence"),
-                ("4", "Bulk Fetch from Multiple Sources"),
-                ("5", "View Fetch History"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Fetch from GitHub"),
+                    ("2", "Fetch from Jira"),
+                    ("3", "Fetch from Confluence"),
+                    ("4", "Bulk Fetch from Multiple Sources"),
+                    ("5", "View Fetch History"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -94,12 +99,7 @@ class SourceAgentManager(BaseManager):
             include_docs = Confirm.ask("[bold cyan]Include documentation files?[/bold cyan]", default=True)
             include_code = Confirm.ask("[bold cyan]Include code files?[/bold cyan]", default=False)
 
-            fetch_config = {
-                "url": repo_url,
-                "branch": branch,
-                "include_patterns": [],
-                "exclude_patterns": []
-            }
+            fetch_config = {"url": repo_url, "branch": branch, "include_patterns": [], "exclude_patterns": []}
 
             if include_docs:
                 fetch_config["include_patterns"].extend(["*.md", "*.rst", "*.txt", "docs/**"])
@@ -132,7 +132,7 @@ class SourceAgentManager(BaseManager):
                 "project_key": project_key,
                 "filter": issue_filter,
                 "include_comments": include_comments,
-                "include_attachments": include_attachments
+                "include_attachments": include_attachments,
             }
 
             with self.console.status(f"[bold green]Fetching from Jira: {project_key}...") as status:
@@ -155,11 +155,7 @@ class SourceAgentManager(BaseManager):
             parent_page = Prompt.ask("[bold cyan]Parent page ID (optional)[/bold cyan]", default="")
             include_children = Confirm.ask("[bold cyan]Include child pages?[/bold cyan]", default=True)
 
-            fetch_config = {
-                "url": confluence_url,
-                "space_key": space_key,
-                "include_children": include_children
-            }
+            fetch_config = {"url": confluence_url, "space_key": space_key, "include_children": include_children}
 
             if parent_page:
                 fetch_config["parent_page_id"] = parent_page
@@ -181,15 +177,14 @@ class SourceAgentManager(BaseManager):
         try:
             sources_input = Prompt.ask("[bold cyan]Sources configuration (JSON)[/bold cyan]")
             import json
+
             sources = json.loads(sources_input)
 
             confirm = Confirm.ask(f"[bold yellow]This will fetch from {len(sources)} sources. Continue?[/bold yellow]")
 
             if confirm:
                 with self.console.status("[bold green]Starting bulk fetch...") as status:
-                    response = await self.clients.post_json("source-agent/docs/bulk-fetch", {
-                        "sources": sources
-                    })
+                    response = await self.clients.post_json("source-agent/docs/bulk-fetch", {"sources": sources})
 
                 if response.get("bulk_fetch_id"):
                     self.console.print(f"[green]✅ Bulk fetch started: {response['bulk_fetch_id']}[/green]")
@@ -220,12 +215,9 @@ class SourceAgentManager(BaseManager):
                 table.add_column("Started", style="blue")
 
                 for fetch in response["fetches"]:
-                    status_color = {
-                        "completed": "green",
-                        "running": "yellow",
-                        "failed": "red",
-                        "pending": "blue"
-                    }.get(fetch.get("status", "unknown"), "white")
+                    status_color = {"completed": "green", "running": "yellow", "failed": "red", "pending": "blue"}.get(
+                        fetch.get("status", "unknown"), "white"
+                    )
 
                     table.add_row(
                         fetch.get("id", "N/A")[:8],
@@ -233,7 +225,7 @@ class SourceAgentManager(BaseManager):
                         fetch.get("source_type", "unknown"),
                         f"[{status_color}]{fetch.get('status', 'unknown')}[/{status_color}]",
                         str(fetch.get("items_fetched", 0)),
-                        fetch.get("started_at", "unknown")[:19]
+                        fetch.get("started_at", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -247,14 +239,17 @@ class SourceAgentManager(BaseManager):
         """Data normalization submenu."""
         while True:
             menu = create_menu_table("Data Normalization", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Normalize Fetched Data"),
-                ("2", "View Normalization Rules"),
-                ("3", "Custom Normalization"),
-                ("4", "Normalization History"),
-                ("5", "Validate Normalized Data"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Normalize Fetched Data"),
+                    ("2", "View Normalization Rules"),
+                    ("3", "Custom Normalization"),
+                    ("4", "Normalization History"),
+                    ("5", "Validate Normalized Data"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -281,14 +276,16 @@ class SourceAgentManager(BaseManager):
         """Normalize fetched data."""
         try:
             fetch_id = Prompt.ask("[bold cyan]Fetch ID to normalize[/bold cyan]")
-            normalization_type = Prompt.ask("[bold cyan]Normalization type[/bold cyan]",
-                                          choices=["standard", "custom", "minimal"], default="standard")
+            normalization_type = Prompt.ask(
+                "[bold cyan]Normalization type[/bold cyan]",
+                choices=["standard", "custom", "minimal"],
+                default="standard",
+            )
 
             with self.console.status(f"[bold green]Normalizing data from fetch {fetch_id}...") as status:
-                response = await self.clients.post_json("source-agent/normalize", {
-                    "fetch_id": fetch_id,
-                    "normalization_type": normalization_type
-                })
+                response = await self.clients.post_json(
+                    "source-agent/normalize", {"fetch_id": fetch_id, "normalization_type": normalization_type}
+                )
 
             if response.get("normalization_id"):
                 self.console.print(f"[green]✅ Data normalization started: {response['normalization_id']}[/green]")
@@ -316,7 +313,9 @@ class SourceAgentManager(BaseManager):
                     if rule_set.get("rules"):
                         content += "  Rules:\n"
                         for rule in rule_set["rules"][:5]:  # Show first 5 rules
-                            content += f"    • {rule.get('name', 'Unknown')}: {rule.get('description', 'No description')}\n"
+                            content += (
+                                f"    • {rule.get('name', 'Unknown')}: {rule.get('description', 'No description')}\n"
+                            )
                         if len(rule_set["rules"]) > 5:
                             content += f"    ... and {len(rule_set['rules']) - 5} more rules\n"
 
@@ -335,13 +334,13 @@ class SourceAgentManager(BaseManager):
             fetch_id = Prompt.ask("[bold cyan]Fetch ID[/bold cyan]")
             rules_input = Prompt.ask("[bold cyan]Custom rules (JSON)[/bold cyan]")
             import json
+
             custom_rules = json.loads(rules_input)
 
             with self.console.status(f"[bold green]Applying custom normalization to fetch {fetch_id}...") as status:
-                response = await self.clients.post_json("source-agent/normalize/custom", {
-                    "fetch_id": fetch_id,
-                    "custom_rules": custom_rules
-                })
+                response = await self.clients.post_json(
+                    "source-agent/normalize/custom", {"fetch_id": fetch_id, "custom_rules": custom_rules}
+                )
 
             if response.get("normalization_id"):
                 self.console.print(f"[green]✅ Custom normalization started: {response['normalization_id']}[/green]")
@@ -369,12 +368,9 @@ class SourceAgentManager(BaseManager):
                 table.add_column("Completed", style="blue")
 
                 for norm in response["normalizations"]:
-                    status_color = {
-                        "completed": "green",
-                        "running": "yellow",
-                        "failed": "red",
-                        "pending": "blue"
-                    }.get(norm.get("status", "unknown"), "white")
+                    status_color = {"completed": "green", "running": "yellow", "failed": "red", "pending": "blue"}.get(
+                        norm.get("status", "unknown"), "white"
+                    )
 
                     table.add_row(
                         norm.get("id", "N/A")[:8],
@@ -382,7 +378,7 @@ class SourceAgentManager(BaseManager):
                         norm.get("normalization_type", "unknown"),
                         f"[{status_color}]{norm.get('status', 'unknown')}[/{status_color}]",
                         str(norm.get("items_processed", 0)),
-                        norm.get("completed_at", "unknown")[:19] if norm.get("completed_at") else "running"
+                        norm.get("completed_at", "unknown")[:19] if norm.get("completed_at") else "running",
                     )
 
                 self.console.print(table)
@@ -398,9 +394,9 @@ class SourceAgentManager(BaseManager):
             normalization_id = Prompt.ask("[bold cyan]Normalization ID[/bold cyan]")
 
             with self.console.status(f"[bold green]Validating normalized data {normalization_id}...") as status:
-                response = await self.clients.post_json("source-agent/normalize/validate", {
-                    "normalization_id": normalization_id
-                })
+                response = await self.clients.post_json(
+                    "source-agent/normalize/validate", {"normalization_id": normalization_id}
+                )
 
             if response.get("validation"):
                 validation = response["validation"]
@@ -427,7 +423,7 @@ Issues Found:
                 else:
                     content += "  No issues found ✅\n"
 
-                print_panel(self.console, content, border_style="green" if validation.get('passed') else "red")
+                print_panel(self.console, content, border_style="green" if validation.get("passed") else "red")
             else:
                 self.console.print("[red]❌ Failed to validate normalized data[/red]")
 
@@ -438,14 +434,17 @@ Issues Found:
         """Code analysis submenu."""
         while True:
             menu = create_menu_table("Code Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Analyze Repository Code"),
-                ("2", "Language-Specific Analysis"),
-                ("3", "Security Analysis"),
-                ("4", "Performance Analysis"),
-                ("5", "Analysis History"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Analyze Repository Code"),
+                    ("2", "Language-Specific Analysis"),
+                    ("3", "Security Analysis"),
+                    ("4", "Performance Analysis"),
+                    ("5", "Analysis History"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -470,16 +469,16 @@ Issues Found:
         """Analyze repository code."""
         try:
             repo_url = Prompt.ask("[bold cyan]Repository URL[/bold cyan]")
-            analysis_types = Prompt.ask("[bold cyan]Analysis types (comma-separated)[/bold cyan]",
-                                      default="structure,complexity,patterns")
+            analysis_types = Prompt.ask(
+                "[bold cyan]Analysis types (comma-separated)[/bold cyan]", default="structure,complexity,patterns"
+            )
 
             analysis_list = [t.strip() for t in analysis_types.split(",")]
 
             with self.console.status(f"[bold green]Analyzing code from {repo_url}...") as status:
-                response = await self.clients.post_json("source-agent/code/analyze", {
-                    "repository_url": repo_url,
-                    "analysis_types": analysis_list
-                })
+                response = await self.clients.post_json(
+                    "source-agent/code/analyze", {"repository_url": repo_url, "analysis_types": analysis_list}
+                )
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Code analysis started: {response['analysis_id']}[/green]")
@@ -493,16 +492,20 @@ Issues Found:
     async def language_specific_analysis(self):
         """Language-specific analysis."""
         try:
-            language = Prompt.ask("[bold cyan]Programming language[/bold cyan]",
-                                choices=["python", "javascript", "java", "go", "rust", "cpp"])
-            analysis_scope = Prompt.ask("[bold cyan]Analysis scope[/bold cyan]",
-                                      choices=["files", "functions", "classes", "modules"], default="files")
+            language = Prompt.ask(
+                "[bold cyan]Programming language[/bold cyan]",
+                choices=["python", "javascript", "java", "go", "rust", "cpp"],
+            )
+            analysis_scope = Prompt.ask(
+                "[bold cyan]Analysis scope[/bold cyan]",
+                choices=["files", "functions", "classes", "modules"],
+                default="files",
+            )
 
             with self.console.status(f"[bold green]Running {language} {analysis_scope} analysis...") as status:
-                response = await self.clients.post_json("source-agent/code/analyze/language", {
-                    "language": language,
-                    "scope": analysis_scope
-                })
+                response = await self.clients.post_json(
+                    "source-agent/code/analyze/language", {"language": language, "scope": analysis_scope}
+                )
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ {language.title()} analysis started: {response['analysis_id']}[/green]")
@@ -515,13 +518,14 @@ Issues Found:
     async def security_analysis(self):
         """Security analysis."""
         try:
-            target = Prompt.ask("[bold cyan]Analysis target[/bold cyan]",
-                              choices=["repository", "files", "dependencies"], default="repository")
+            target = Prompt.ask(
+                "[bold cyan]Analysis target[/bold cyan]",
+                choices=["repository", "files", "dependencies"],
+                default="repository",
+            )
 
             with self.console.status(f"[bold green]Running security analysis on {target}...") as status:
-                response = await self.clients.post_json("source-agent/code/security-scan", {
-                    "target": target
-                })
+                response = await self.clients.post_json("source-agent/code/security-scan", {"target": target})
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Security analysis started: {response['analysis_id']}[/green]")
@@ -535,13 +539,12 @@ Issues Found:
     async def performance_analysis(self):
         """Performance analysis."""
         try:
-            analysis_target = Prompt.ask("[bold cyan]Analysis target[/bold cyan]",
-                                       choices=["code", "queries", "operations"], default="code")
+            analysis_target = Prompt.ask(
+                "[bold cyan]Analysis target[/bold cyan]", choices=["code", "queries", "operations"], default="code"
+            )
 
             with self.console.status(f"[bold green]Running performance analysis on {analysis_target}...") as status:
-                response = await self.clients.post_json("source-agent/code/performance", {
-                    "target": analysis_target
-                })
+                response = await self.clients.post_json("source-agent/code/performance", {"target": analysis_target})
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Performance analysis started: {response['analysis_id']}[/green]")
@@ -569,12 +572,9 @@ Issues Found:
                 table.add_column("Completed", style="blue")
 
                 for analysis in response["analyses"]:
-                    status_color = {
-                        "completed": "green",
-                        "running": "yellow",
-                        "failed": "red",
-                        "pending": "blue"
-                    }.get(analysis.get("status", "unknown"), "white")
+                    status_color = {"completed": "green", "running": "yellow", "failed": "red", "pending": "blue"}.get(
+                        analysis.get("status", "unknown"), "white"
+                    )
 
                     table.add_row(
                         analysis.get("id", "N/A")[:8],
@@ -582,7 +582,7 @@ Issues Found:
                         analysis.get("target", "unknown")[:30],
                         f"[{status_color}]{analysis.get('status', 'unknown')}[/{status_color}]",
                         str(analysis.get("findings_count", 0)),
-                        analysis.get("completed_at", "unknown")[:19] if analysis.get("completed_at") else "running"
+                        analysis.get("completed_at", "unknown")[:19] if analysis.get("completed_at") else "running",
                     )
 
                 self.console.print(table)
@@ -596,14 +596,17 @@ Issues Found:
         """Source management submenu."""
         while True:
             menu = create_menu_table("Source Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List Configured Sources"),
-                ("2", "Add New Source"),
-                ("3", "Update Source Configuration"),
-                ("4", "Remove Source"),
-                ("5", "Test Source Connection"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List Configured Sources"),
+                    ("2", "Add New Source"),
+                    ("3", "Update Source Configuration"),
+                    ("4", "Remove Source"),
+                    ("5", "Test Source Connection"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -639,19 +642,16 @@ Issues Found:
                 table.add_column("Last Sync", style="blue")
 
                 for source in response["sources"]:
-                    status_color = {
-                        "active": "green",
-                        "inactive": "red",
-                        "error": "red",
-                        "syncing": "yellow"
-                    }.get(source.get("status", "unknown"), "white")
+                    status_color = {"active": "green", "inactive": "red", "error": "red", "syncing": "yellow"}.get(
+                        source.get("status", "unknown"), "white"
+                    )
 
                     table.add_row(
                         source.get("id", "N/A")[:8],
                         source.get("type", "unknown"),
                         source.get("url", source.get("name", "unknown"))[:40],
                         f"[{status_color}]{source.get('status', 'unknown')}[/{status_color}]",
-                        source.get("last_sync", "never")[:19]
+                        source.get("last_sync", "never")[:19],
                     )
 
                 self.console.print(table)
@@ -664,14 +664,12 @@ Issues Found:
     async def add_source(self):
         """Add new source."""
         try:
-            source_type = Prompt.ask("[bold cyan]Source type[/bold cyan]",
-                                   choices=["github", "jira", "confluence", "filesystem", "database"])
+            source_type = Prompt.ask(
+                "[bold cyan]Source type[/bold cyan]", choices=["github", "jira", "confluence", "filesystem", "database"]
+            )
             source_url = Prompt.ask("[bold cyan]Source URL or identifier[/bold cyan]")
 
-            config = {
-                "type": source_type,
-                "url": source_url
-            }
+            config = {"type": source_type, "url": source_url}
 
             # Type-specific configuration
             if source_type == "github":
@@ -703,9 +701,7 @@ Issues Found:
             new_value = Prompt.ask(f"[bold cyan]New {field} value[/bold cyan]")
 
             with self.console.status(f"[bold green]Updating source {source_id}...") as status:
-                response = await self.clients.put_json(f"source-agent/sources/{source_id}", {
-                    field: new_value
-                })
+                response = await self.clients.put_json(f"source-agent/sources/{source_id}", {field: new_value})
 
             if response.get("updated"):
                 self.console.print(f"[green]✅ Source {source_id} updated successfully[/green]")
@@ -760,7 +756,7 @@ Details:
                     for key, value in test_result["details"].items():
                         content += f"  {key}: {value}\n"
 
-                print_panel(self.console, content, border_style="green" if test_result.get('connected') else "red")
+                print_panel(self.console, content, border_style="green" if test_result.get("connected") else "red")
             else:
                 self.console.print("[red]❌ Connection test failed[/red]")
 
@@ -771,13 +767,16 @@ Details:
         """Integration status submenu."""
         while True:
             menu = create_menu_table("Integration Status", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Source Agent Health"),
-                ("2", "Integration Metrics"),
-                ("3", "Active Connections"),
-                ("4", "Error Logs"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Source Agent Health"),
+                    ("2", "Integration Metrics"),
+                    ("3", "Active Connections"),
+                    ("4", "Error Logs"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -827,7 +826,7 @@ Metrics:
 
 Last Health Check: {health.get('last_check', 'unknown')}
 """
-                print_panel(self.console, content, border_style="green" if health.get('healthy') else "red")
+                print_panel(self.console, content, border_style="green" if health.get("healthy") else "red")
             else:
                 self.console.print("[red]Unable to retrieve source agent health.[/red]")
 
@@ -888,7 +887,7 @@ Time Period: Last 24 hours
                         "connected": "green",
                         "connecting": "yellow",
                         "disconnected": "red",
-                        "error": "red"
+                        "error": "red",
                     }.get(conn.get("status", "unknown"), "white")
 
                     table.add_row(
@@ -896,7 +895,7 @@ Time Period: Last 24 hours
                         conn.get("source_type", "unknown"),
                         f"[{status_color}]{conn.get('status', 'unknown')}[/{status_color}]",
                         conn.get("connected_at", "unknown")[:19],
-                        conn.get("last_activity", "unknown")[:19]
+                        conn.get("last_activity", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -926,7 +925,7 @@ Time Period: Last 24 hours
                         error.get("timestamp", "unknown")[:19],
                         error.get("source", "unknown")[:20],
                         error.get("error_type", "unknown"),
-                        error.get("message", "No message")[:50]
+                        error.get("message", "No message")[:50],
                     )
 
                 self.console.print(table)

@@ -11,17 +11,21 @@ Responsibilities:
 
 Dependencies: shared middlewares for request tracking and metrics.
 """
+
+from typing import Any, Dict, Optional
+
 from fastapi import FastAPI
 from pydantic import BaseModel, field_validator
-from typing import Optional, Dict, Any
 
 from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+
 try:
     from .modules.processor import process_invoke_request
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.processor import process_invoke_request
 
@@ -33,7 +37,7 @@ DEFAULT_PORT = 7090
 app = FastAPI(
     title="Bedrock Proxy Stub",
     version=SERVICE_VERSION,
-    description="Local AI proxy service for structured response generation"
+    description="Local AI proxy service for structured response generation",
 )
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
@@ -46,7 +50,7 @@ async def health():
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
-        "description": "Bedrock proxy stub service is operational"
+        "description": "Bedrock proxy stub service is operational",
     }
 
 
@@ -56,6 +60,7 @@ class InvokeRequest(BaseModel):
     Supports template-based response formatting for consistent AI outputs.
     All fields are optional to allow flexible usage patterns.
     """
+
     model: Optional[str] = None
     """AI model identifier (e.g., 'claude-3-sonnet', 'gpt-4')."""
 
@@ -80,56 +85,56 @@ class InvokeRequest(BaseModel):
     title: Optional[str] = None
     """Custom title for the generated response."""
 
-    @field_validator('prompt')
+    @field_validator("prompt")
     @classmethod
     def validate_prompt(cls, v):
         """Validate that prompt is a string if provided."""
         if v is not None and not isinstance(v, str):
-            raise ValueError('Prompt must be a string value')
+            raise ValueError("Prompt must be a string value")
         return v
 
-    @field_validator('template')
+    @field_validator("template")
     @classmethod
     def validate_template(cls, v):
         """Validate template is one of the supported types."""
         if v is not None:
-            valid_templates = ['summary', 'risks', 'decisions', 'pr_confidence', 'life_of_ticket']
+            valid_templates = ["summary", "risks", "decisions", "pr_confidence", "life_of_ticket"]
             if v.lower() not in valid_templates and v.strip():
                 raise ValueError(f'Invalid template "{v}". Supported templates: {", ".join(valid_templates)}')
         return v
 
-    @field_validator('format')
+    @field_validator("format")
     @classmethod
     def validate_format(cls, v):
         """Validate output format is supported."""
         if v is not None:
-            valid_formats = ['md', 'txt', 'json']
+            valid_formats = ["md", "txt", "json"]
             if v.lower() not in valid_formats:
                 raise ValueError(f'Invalid format "{v}". Supported formats: {", ".join(valid_formats)}')
         return v
 
-    @field_validator('model')
+    @field_validator("model")
     @classmethod
     def validate_model(cls, v):
         """Validate model name length."""
         if v is not None and len(v) > 100:
-            raise ValueError('Model name exceeds maximum length of 100 characters')
+            raise ValueError("Model name exceeds maximum length of 100 characters")
         return v
 
-    @field_validator('region')
+    @field_validator("region")
     @classmethod
     def validate_region(cls, v):
         """Validate region name length."""
         if v is not None and len(v) > 50:
-            raise ValueError('Region name exceeds maximum length of 50 characters')
+            raise ValueError("Region name exceeds maximum length of 50 characters")
         return v
 
-    @field_validator('title')
+    @field_validator("title")
     @classmethod
     def validate_title(cls, v):
         """Validate title length."""
         if v is not None and len(v) > 200:
-            raise ValueError('Title exceeds maximum length of 200 characters')
+            raise ValueError("Title exceeds maximum length of 200 characters")
         return v
 
 
@@ -148,18 +153,12 @@ async def invoke(req: InvokeRequest):
         title=req.title,
         model=req.model,
         region=req.region,
-        **(req.params or {})  # Unpack additional parameters
+        **(req.params or {}),  # Unpack additional parameters
     )
 
 
 if __name__ == "__main__":
     """Run the Bedrock Proxy service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
-
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

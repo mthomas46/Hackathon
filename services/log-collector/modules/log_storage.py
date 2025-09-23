@@ -3,8 +3,9 @@
 Provides in-memory storage for log entries with automatic cleanup
 and bounded history to prevent memory exhaustion.
 """
-from typing import List, Dict, Any, Optional
+
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 
 class LogStorage:
@@ -68,10 +69,7 @@ class LogStorage:
         return len(self._logs)
 
     def get_logs(
-        self,
-        service: Optional[str] = None,
-        level: Optional[str] = None,
-        limit: int = 100
+        self, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Retrieve filtered logs with optional pagination.
 
@@ -87,9 +85,10 @@ class LogStorage:
             List of matching log entries, most recent first
         """
         filtered = [
-            log for log in self._logs
-            if (service is None or log.get("service") == service) and
-               (level is None or log.get("level", "").lower() == level.lower())
+            log
+            for log in self._logs
+            if (service is None or log.get("service") == service)
+            and (level is None or log.get("level", "").lower() == level.lower())
         ]
         return filtered[-limit:] if limit > 0 else filtered
 

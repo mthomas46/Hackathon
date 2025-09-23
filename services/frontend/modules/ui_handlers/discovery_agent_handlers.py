@@ -3,17 +3,19 @@
 Handles discovery agent service visualization, including endpoint
 registration monitoring, OpenAPI parsing, and service discovery operations.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..discovery_agent_monitor import discovery_agent_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class DiscoveryAgentUIHandlers:
@@ -34,7 +36,7 @@ class DiscoveryAgentUIHandlers:
                 "health": status_data.get("health", {}),
                 "discovery_stats": status_data.get("discovery_stats", {}),
                 "recent_discoveries": discovery_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -570,4 +572,6 @@ class DiscoveryAgentUIHandlers:
 """
             return create_html_response(html, "Discovery Agent Dashboard")
         except Exception as e:
-            return handle_frontend_error("render discovery agent dashboard", e, **build_frontend_context("render_discovery_agent_dashboard"))
+            return handle_frontend_error(
+                "render discovery agent dashboard", e, **build_frontend_context("render_discovery_agent_dashboard")
+            )

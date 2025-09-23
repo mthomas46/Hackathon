@@ -1,17 +1,18 @@
 """Workflow Execution Entity"""
 
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ..value_objects.workflow_id import WorkflowId
-from ..value_objects.execution_id import ExecutionId
 from ..value_objects.action_result import ActionResult
+from ..value_objects.execution_id import ExecutionId
+from ..value_objects.workflow_id import WorkflowId
 
 
 class WorkflowExecutionStatus(Enum):
     """Workflow execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -107,7 +108,11 @@ class WorkflowExecution:
     @property
     def is_completed(self) -> bool:
         """Check if the execution is completed."""
-        return self.status in [WorkflowExecutionStatus.COMPLETED, WorkflowExecutionStatus.FAILED, WorkflowExecutionStatus.CANCELLED]
+        return self.status in [
+            WorkflowExecutionStatus.COMPLETED,
+            WorkflowExecutionStatus.FAILED,
+            WorkflowExecutionStatus.CANCELLED,
+        ]
 
     @property
     def is_successful(self) -> bool:
@@ -127,5 +132,5 @@ class WorkflowExecution:
             "error_message": self.error_message,
             "correlation_id": self.correlation_id,
             "trace_id": self.trace_id,
-            "duration_ms": self.duration_ms
+            "duration_ms": self.duration_ms,
         }

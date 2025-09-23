@@ -1,10 +1,10 @@
 """Environment Variables Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional, Tuple
-import os
 import json
+import os
 import re
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from ...base.base_manager import BaseManager
 from ...formatters.display_utils import DisplayManager
@@ -19,7 +19,7 @@ class EnvironmentManager(BaseManager):
             ("1", "View Current Environment"),
             ("2", "Check Required Variables"),
             ("3", "Validate Environment Setup"),
-            ("4", "Environment Diagnostics")
+            ("4", "Environment Diagnostics"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -47,11 +47,7 @@ class EnvironmentManager(BaseManager):
             for var_name, (value, source) in masked_vars.items():
                 table_data.append([var_name, value, source])
 
-            self.display.show_table(
-                "Environment Variables",
-                ["Variable", "Value", "Source"],
-                table_data
-            )
+            self.display.show_table("Environment Variables", ["Variable", "Value", "Source"], table_data)
 
         except Exception as e:
             self.display.show_error(f"Error viewing environment: {e}")
@@ -68,8 +64,10 @@ class EnvironmentManager(BaseManager):
                 return
 
             # Validate variable name
-            if not re.match(r'^[A-Z][A-Z0-9_]*$', var_name):
-                self.display.show_error("Invalid variable name. Must start with letter and contain only uppercase letters, numbers, and underscores.")
+            if not re.match(r"^[A-Z][A-Z0-9_]*$", var_name):
+                self.display.show_error(
+                    "Invalid variable name. Must start with letter and contain only uppercase letters, numbers, and underscores."
+                )
                 return
 
             # Set in current environment
@@ -116,11 +114,7 @@ class EnvironmentManager(BaseManager):
                 status_icon = "✅" if status == "valid" else "❌" if status == "invalid" else "⚠️"
                 table_data.append([var_name, f"{status_icon} {status}", message])
 
-            self.display.show_table(
-                "Environment Variable Validation",
-                ["Variable", "Status", "Message"],
-                table_data
-            )
+            self.display.show_table("Environment Variable Validation", ["Variable", "Status", "Message"], table_data)
 
         except Exception as e:
             self.display.show_error(f"Error validating environment: {e}")
@@ -137,15 +131,11 @@ class EnvironmentManager(BaseManager):
             # Display templates
             table_data = []
             for template_name, template_data in templates.items():
-                description = template_data.get('description', 'No description')
-                variables = len(template_data.get('variables', {}))
+                description = template_data.get("description", "No description")
+                variables = len(template_data.get("variables", {}))
                 table_data.append([template_name, description, str(variables)])
 
-            self.display.show_table(
-                "Environment Templates",
-                ["Template", "Description", "Variables"],
-                table_data
-            )
+            self.display.show_table("Environment Templates", ["Template", "Description", "Variables"], table_data)
 
             # Allow template application
             template_choice = await self.get_user_input("Enter template name to apply (or press Enter to skip)")
@@ -164,7 +154,7 @@ class EnvironmentManager(BaseManager):
 
             env_vars = await self._get_relevant_env_vars()
 
-            with open(export_path, 'w') as f:
+            with open(export_path, "w") as f:
                 json.dump(env_vars, f, indent=2)
 
             self.display.show_success(f"Environment variables exported to {export_path}")
@@ -175,17 +165,17 @@ class EnvironmentManager(BaseManager):
     async def _get_relevant_env_vars(self) -> Dict[str, Tuple[str, str]]:
         """Get relevant environment variables with their sources."""
         relevant_patterns = [
-            r'^[A-Z_]+_URL$',      # Service URLs
-            r'^[A-Z_]+_HOST$',     # Host settings
-            r'^[A-Z_]+_PORT$',     # Port settings
-            r'^ENVIRONMENT$',      # Environment setting
-            r'^DEBUG$',            # Debug settings
-            r'^LOG_',              # Logging settings
-            r'^REDIS_',            # Redis settings
-            r'^DB_',               # Database settings
-            r'^AWS_',              # AWS settings
-            r'^OPENAI_',           # OpenAI settings
-            r'^ANTHROPIC_',        # Anthropic settings
+            r"^[A-Z_]+_URL$",  # Service URLs
+            r"^[A-Z_]+_HOST$",  # Host settings
+            r"^[A-Z_]+_PORT$",  # Port settings
+            r"^ENVIRONMENT$",  # Environment setting
+            r"^DEBUG$",  # Debug settings
+            r"^LOG_",  # Logging settings
+            r"^REDIS_",  # Redis settings
+            r"^DB_",  # Database settings
+            r"^AWS_",  # AWS settings
+            r"^OPENAI_",  # OpenAI settings
+            r"^ANTHROPIC_",  # Anthropic settings
         ]
 
         env_vars = {}
@@ -199,12 +189,12 @@ class EnvironmentManager(BaseManager):
         env_files = await self._find_env_files()
         for env_file in env_files:
             try:
-                with open(env_file, 'r') as f:
+                with open(env_file, "r") as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#'):
-                            if '=' in line:
-                                key, value = line.split('=', 1)
+                        if line and not line.startswith("#"):
+                            if "=" in line:
+                                key, value = line.split("=", 1)
                                 key = key.strip()
                                 if key not in env_vars:  # Don't override environment variables
                                     env_vars[key] = (value.strip(), f"file: {env_file}")
@@ -215,13 +205,7 @@ class EnvironmentManager(BaseManager):
 
     async def _mask_sensitive_values(self, env_vars: Dict[str, Tuple[str, str]]) -> Dict[str, Tuple[str, str]]:
         """Mask sensitive values in environment variables."""
-        sensitive_patterns = [
-            r'PASSWORD',
-            r'SECRET',
-            r'KEY',
-            r'TOKEN',
-            r'CREDENTIALS'
-        ]
+        sensitive_patterns = [r"PASSWORD", r"SECRET", r"KEY", r"TOKEN", r"CREDENTIALS"]
 
         masked_vars = {}
         for var_name, (value, source) in env_vars.items():
@@ -265,11 +249,11 @@ class EnvironmentManager(BaseManager):
             # Basic validation rules
             if not value:
                 validation_results[var_name] = ("warning", "Empty value")
-            elif var_name.endswith('_URL') and not value.startswith(('http://', 'https://')):
+            elif var_name.endswith("_URL") and not value.startswith(("http://", "https://")):
                 validation_results[var_name] = ("warning", "URL should start with http:// or https://")
-            elif var_name.endswith('_PORT') and not value.isdigit():
+            elif var_name.endswith("_PORT") and not value.isdigit():
                 validation_results[var_name] = ("invalid", "Port must be a number")
-            elif var_name.endswith('_HOST') and not value:
+            elif var_name.endswith("_HOST") and not value:
                 validation_results[var_name] = ("warning", "Host should not be empty")
             else:
                 validation_results[var_name] = ("valid", "OK")
@@ -281,33 +265,21 @@ class EnvironmentManager(BaseManager):
         return {
             "development": {
                 "description": "Development environment settings",
-                "variables": {
-                    "ENVIRONMENT": "development",
-                    "DEBUG": "true",
-                    "LOG_LEVEL": "DEBUG"
-                }
+                "variables": {"ENVIRONMENT": "development", "DEBUG": "true", "LOG_LEVEL": "DEBUG"},
             },
             "production": {
                 "description": "Production environment settings",
-                "variables": {
-                    "ENVIRONMENT": "production",
-                    "DEBUG": "false",
-                    "LOG_LEVEL": "INFO"
-                }
+                "variables": {"ENVIRONMENT": "production", "DEBUG": "false", "LOG_LEVEL": "INFO"},
             },
             "testing": {
                 "description": "Testing environment settings",
-                "variables": {
-                    "ENVIRONMENT": "testing",
-                    "DEBUG": "true",
-                    "LOG_LEVEL": "DEBUG"
-                }
-            }
+                "variables": {"ENVIRONMENT": "testing", "DEBUG": "true", "LOG_LEVEL": "DEBUG"},
+            },
         }
 
     async def _apply_environment_template(self, template: Dict[str, Any]):
         """Apply an environment template."""
-        variables = template.get('variables', {})
+        variables = template.get("variables", {})
 
         if not variables:
             self.display.show_warning("No variables in template")
@@ -328,7 +300,7 @@ class EnvironmentManager(BaseManager):
         # Read existing content
         existing_lines = []
         if env_file.exists():
-            with open(env_file, 'r') as f:
+            with open(env_file, "r") as f:
                 existing_lines = f.readlines()
 
         # Check if variable already exists
@@ -343,7 +315,7 @@ class EnvironmentManager(BaseManager):
             existing_lines.append(f"{var_name}={var_value}\n")
 
         # Write back
-        with open(env_file, 'w') as f:
+        with open(env_file, "w") as f:
             f.writelines(existing_lines)
 
     async def _remove_from_env_file(self, var_name: str):
@@ -354,12 +326,12 @@ class EnvironmentManager(BaseManager):
             return
 
         # Read existing content
-        with open(env_file, 'r') as f:
+        with open(env_file, "r") as f:
             lines = f.readlines()
 
         # Remove the variable
         filtered_lines = [line for line in lines if not line.strip().startswith(f"{var_name}=")]
 
         # Write back
-        with open(env_file, 'w') as f:
+        with open(env_file, "w") as f:
             f.writelines(filtered_lines)

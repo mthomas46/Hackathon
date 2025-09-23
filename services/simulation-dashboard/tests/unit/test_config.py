@@ -1,12 +1,16 @@
 """Unit tests for dashboard configuration."""
 
-import pytest
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
+import pytest
 from infrastructure.config.config import (
-    get_config, DashboardSettings, SimulationServiceConfig,
-    WebSocketConfig, LoggingConfig, PerformanceConfig
+    DashboardSettings,
+    LoggingConfig,
+    PerformanceConfig,
+    SimulationServiceConfig,
+    WebSocketConfig,
+    get_config,
 )
 
 
@@ -28,11 +32,7 @@ class TestSimulationServiceConfig:
 
     def test_custom_base_url(self):
         """Test custom base URL override."""
-        config = SimulationServiceConfig(
-            host="test-host",
-            port=8080,
-            base_url="https://custom-url.com"
-        )
+        config = SimulationServiceConfig(host="test-host", port=8080, base_url="https://custom-url.com")
         assert config.base_url == "https://custom-url.com"
 
 
@@ -76,13 +76,16 @@ class TestPerformanceConfig:
 class TestDashboardSettings:
     """Test cases for DashboardSettings."""
 
-    @patch.dict(os.environ, {
-        'DASHBOARD_ENVIRONMENT': 'production',
-        'DASHBOARD_DEBUG': 'false',
-        'DASHBOARD_PORT': '9000',
-        'DASHBOARD_SIMULATION_SERVICE_HOST': 'sim-host',
-        'DASHBOARD_SIMULATION_SERVICE_PORT': '8080'
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "DASHBOARD_ENVIRONMENT": "production",
+            "DASHBOARD_DEBUG": "false",
+            "DASHBOARD_PORT": "9000",
+            "DASHBOARD_SIMULATION_SERVICE_HOST": "sim-host",
+            "DASHBOARD_SIMULATION_SERVICE_PORT": "8080",
+        },
+    )
     def test_environment_variable_loading(self):
         """Test loading configuration from environment variables."""
         config = DashboardSettings()
@@ -137,7 +140,7 @@ class TestDashboardSettings:
 class TestGlobalConfig:
     """Test cases for global configuration management."""
 
-    @patch('infrastructure.config.config.DashboardSettings')
+    @patch("infrastructure.config.config.DashboardSettings")
     def test_get_config_singleton(self, mock_config_class):
         """Test that get_config returns a singleton instance."""
         mock_instance = MagicMock()
@@ -151,8 +154,8 @@ class TestGlobalConfig:
         assert config1 is config2
         assert mock_config_class.call_count == 1
 
-    @patch('infrastructure.config.config._config', None)
-    @patch('infrastructure.config.config.DashboardSettings')
+    @patch("infrastructure.config.config._config", None)
+    @patch("infrastructure.config.config.DashboardSettings")
     def test_config_reload(self, mock_config_class):
         """Test configuration reloading."""
         from infrastructure.config.config import reload_config
@@ -195,7 +198,7 @@ class TestConfigurationValidation:
 class TestConfigurationFileLoading:
     """Test cases for configuration file loading."""
 
-    @patch('infrastructure.config.config.BaseSettings.Config.env_file', '.env.test')
+    @patch("infrastructure.config.config.BaseSettings.Config.env_file", ".env.test")
     def test_env_file_configuration(self):
         """Test loading configuration from .env file."""
         # This would require creating a test .env file

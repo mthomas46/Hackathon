@@ -4,14 +4,15 @@ This module contains comprehensive tests for CLI commands, script functionality,
 and command-line interface validation in the Project Simulation Service.
 """
 
-import pytest
+import json
+import os
 import subprocess
 import sys
-import os
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 import tempfile
-import json
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 
 class TestCLIScriptExecution:
@@ -35,7 +36,7 @@ class TestCLIScriptExecution:
         assert script_path.exists()
         assert script_path.is_file()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_tests_script_can_be_called(self, mock_subprocess):
         """Test that run_tests.py script can be executed."""
         mock_subprocess.return_value = Mock(returncode=0, stdout="Tests completed", stderr="")
@@ -45,19 +46,15 @@ class TestCLIScriptExecution:
 
         # Verify script exists and has expected content
         assert script_path.exists()
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
-            assert 'def main():' in content
+            assert "def main():" in content
             assert 'if __name__ == "__main__":' in content
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_cli_script_help_output(self, mock_subprocess):
         """Test that CLI scripts provide help output."""
-        mock_subprocess.return_value = Mock(
-            returncode=0,
-            stdout="--help output here",
-            stderr=""
-        )
+        mock_subprocess.return_value = Mock(returncode=0, stdout="--help output here", stderr="")
 
         # Scripts should provide help when called with --help
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
@@ -71,35 +68,35 @@ class TestRunTestsCLI:
         """Test argument parsing in run_tests.py script."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have argument parser setup
-        assert 'argparse' in content or 'ArgumentParser' in content
+        assert "argparse" in content or "ArgumentParser" in content
         # Should have main function
-        assert 'def main():' in content
+        assert "def main():" in content
 
     def test_run_tests_script_imports(self):
         """Test that run_tests.py has necessary imports."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should import pytest or subprocess
-        assert 'import' in content
-        assert 'pytest' in content or 'subprocess' in content
+        assert "import" in content
+        assert "pytest" in content or "subprocess" in content
 
     def test_run_tests_script_error_handling(self):
         """Test error handling in run_tests.py script."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have try-except blocks
-        assert 'try:' in content
-        assert 'except' in content
+        assert "try:" in content
+        assert "except" in content
 
 
 class TestManageEventsCLI:
@@ -109,23 +106,23 @@ class TestManageEventsCLI:
         """Test basic structure of manage_events.py script."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have command-line interface
-        assert 'def main():' in content
+        assert "def main():" in content
         # Should handle different commands
-        assert 'list' in content or 'replay' in content or 'cleanup' in content
+        assert "list" in content or "replay" in content or "cleanup" in content
 
     def test_manage_events_command_parsing(self):
         """Test command parsing in manage_events.py."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should handle command arguments
-        assert 'sys.argv' in content or 'argparse' in content
+        assert "sys.argv" in content or "argparse" in content
 
 
 class TestMonitorSimulationCLI:
@@ -135,13 +132,13 @@ class TestMonitorSimulationCLI:
         """Test basic functionality of monitor_simulation.py."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have monitoring functionality
-        assert 'monitor' in content.lower() or 'simulation' in content.lower()
+        assert "monitor" in content.lower() or "simulation" in content.lower()
         # Should handle simulation IDs
-        assert 'simulation_id' in content or 'id' in content
+        assert "simulation_id" in content or "id" in content
 
 
 class TestDevSetupCLI:
@@ -157,20 +154,20 @@ class TestDevSetupCLI:
         script_path = Path(__file__).parent.parent.parent / "scripts" / "dev-setup.sh"
 
         # Check if file has execute permissions (on Unix-like systems)
-        if os.name != 'nt':  # Not Windows
+        if os.name != "nt":  # Not Windows
             assert os.access(script_path, os.X_OK), "Script should be executable"
 
     def test_dev_setup_script_content(self):
         """Test content of dev-setup.sh script."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "dev-setup.sh"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have shell script content
-        assert '#!/bin/bash' in content or '#!/bin/sh' in content
+        assert "#!/bin/bash" in content or "#!/bin/sh" in content
         # Should have setup commands
-        assert 'echo' in content or 'docker' in content or 'pip' in content
+        assert "echo" in content or "docker" in content or "pip" in content
 
 
 class TestDockerIntegrationCLI:
@@ -185,13 +182,13 @@ class TestDockerIntegrationCLI:
         """Test content of test-docker-integration.sh script."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "test-docker-integration.sh"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have Docker-related commands
-        assert 'docker' in content
+        assert "docker" in content
         # Should test integration
-        assert 'test' in content.lower()
+        assert "test" in content.lower()
 
 
 class TestCLIErrorHandling:
@@ -202,22 +199,22 @@ class TestCLIErrorHandling:
         # Scripts should provide helpful error messages for missing args
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have argument validation
-        assert 'if not' in content or 'required' in content or 'argparse' in content
+        assert "if not" in content or "required" in content or "argparse" in content
 
     def test_script_invalid_arguments_handling(self):
         """Test how scripts handle invalid arguments."""
         # Scripts should validate input arguments
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have input validation
-        assert 'try:' in content or 'if' in content
+        assert "try:" in content or "if" in content
 
     def test_script_file_not_found_handling(self):
         """Test how scripts handle missing files or directories."""
@@ -233,22 +230,22 @@ class TestCLIOutputFormatting:
         # Scripts should have good user experience
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have user-friendly output
-        assert 'print' in content
+        assert "print" in content
 
     def test_scripts_provide_progress_indicators(self):
         """Test that scripts provide progress indicators for long operations."""
         # Long-running scripts should show progress
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have progress indication
-        progress_indicators = ['print', 'Running', 'Completed', 'Starting']
+        progress_indicators = ["print", "Running", "Completed", "Starting"]
         has_progress = any(indicator in content for indicator in progress_indicators)
         assert has_progress
 
@@ -257,7 +254,7 @@ class TestCLIOutputFormatting:
         # Scripts should handle colored output appropriately
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # May have color codes or formatting
@@ -272,24 +269,24 @@ class TestCLIIntegration:
         """Test that CLI scripts import necessary modules correctly."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have proper imports
-        assert 'import' in content
+        assert "import" in content
         # Should handle import errors gracefully
-        assert 'try:' in content
+        assert "try:" in content
 
     def test_cli_scripts_integrate_with_main_application(self):
         """Test that CLI scripts integrate properly with main application."""
         # CLI scripts should be able to import from main application
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should import from main application or handle gracefully
-        assert 'from' in content or 'import' in content
+        assert "from" in content or "import" in content
 
 
 # Fixtures
@@ -301,7 +298,8 @@ def temp_script_dir(tmp_path):
 
     # Create a simple test script
     test_script = script_dir / "test_script.py"
-    test_script.write_text("""
+    test_script.write_text(
+        """
 #!/usr/bin/env python3
 import sys
 import argparse
@@ -316,7 +314,8 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-""")
+"""
+    )
 
     return script_dir
 
@@ -324,10 +323,6 @@ if __name__ == "__main__":
 @pytest.fixture
 def mock_subprocess():
     """Mock subprocess for testing CLI execution."""
-    with patch('subprocess.run') as mock_run:
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="Command executed successfully",
-            stderr=""
-        )
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = Mock(returncode=0, stdout="Command executed successfully", stderr="")
         yield mock_run

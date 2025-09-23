@@ -14,24 +14,27 @@ Responsibilities:
 
 Dependencies: shared middlewares, Redis for event pub/sub, shared models and utilities.
 """
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List, Optional, Any, Dict
+
 import asyncio
 import os
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.models.models import MemoryItem
+from services.shared.core.responses.responses import create_success_response
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response
-from services.shared.utilities.error_handling import ServiceException
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import utc_now, setup_common_middleware, attach_self_register
-from services.shared.core.models.models import MemoryItem
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import attach_self_register, setup_common_middleware, utc_now
+from services.shared.utilities.error_handling import ServiceException
 
 try:
     import redis.asyncio as aioredis  # type: ignore
@@ -42,26 +45,27 @@ except Exception:
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
 try:
+    from .modules.memory_ops import cleanup_expired_items, get_memory_stats, list_memory_items, put_memory_item
     from .modules.shared_utils import (
+        build_memory_agent_context,
+        cleanup_expired_memory_items,
+        create_memory_agent_success_response,
+        create_memory_item,
+        deserialize_memory_value,
+        extract_endpoint_from_text,
         get_memory_max_items,
+        get_memory_stats_summary,
         get_memory_ttl_seconds,
         get_redis_url,
         handle_memory_agent_error,
-        create_memory_agent_success_response,
-        build_memory_agent_context,
-        create_memory_item,
         serialize_memory_value,
-        deserialize_memory_value,
-        cleanup_expired_memory_items,
-        get_memory_stats_summary,
         validate_memory_item,
-        extract_endpoint_from_text
     )
-    from .modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.shared_utils import (
         get_memory_max_items,
@@ -76,17 +80,19 @@ except ImportError:
         cleanup_expired_memory_items,
         get_memory_stats_summary,
         validate_memory_item,
-        extract_endpoint_from_text
+        extract_endpoint_from_text,
     )
     from modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
+
 from .modules.event_processor import event_processor
+
+# Import global memory state from dedicated module to avoid circular dependencies
+from .modules.memory_state import _memory
 
 # ============================================================================
 # GLOBAL STATE MANAGEMENT - Centralized memory state
 # ============================================================================
 
-# Import global memory state from dedicated module to avoid circular dependencies
-from .modules.memory_state import _memory
 
 # Service configuration constants
 SERVICE_NAME = "memory-agent"
@@ -122,7 +128,7 @@ app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Memory agent service for storing operational context and event summaries",
-    lifespan=_lifespan
+    lifespan=_lifespan,
 )
 
 # Use common middleware setup and error handlers to reduce duplication across services
@@ -131,6 +137,7 @@ setup_common_middleware(app, ServiceNames.MEMORY_AGENT)
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.MEMORY_AGENT)
 
+
 # Custom memory-specific health endpoint
 @app.get("/health")
 async def memory_health():
@@ -138,6 +145,7 @@ async def memory_health():
     try:
         stats = get_memory_stats()
         from datetime import datetime
+
         return {
             "status": "healthy",
             "service": SERVICE_NAME,
@@ -148,7 +156,7 @@ async def memory_health():
             "memory_capacity": stats.get("max_items", 0),
             "memory_usage_percent": stats.get("usage_percent", 0),
             "ttl_seconds": stats.get("ttl_seconds", 0),
-            "description": "Memory agent operational with active memory management"
+            "description": "Memory agent operational with active memory management",
         }
     except Exception as e:
         return {
@@ -156,7 +164,7 @@ async def memory_health():
             "service": SERVICE_NAME,
             "version": SERVICE_VERSION,
             "error": str(e),
-            "description": "Memory agent experiencing issues"
+            "description": "Memory agent experiencing issues",
         }
 
 
@@ -185,7 +193,7 @@ async def put_memory(req: PutMemoryRequest):
         return create_memory_agent_success_response("stored", result, **context)
 
     except Exception as e:
-        context = {"item_type": getattr(req.item, 'type', None)}
+        context = {"item_type": getattr(req.item, "type", None)}
         return handle_memory_agent_error("store memory item", e, **context)
 
 
@@ -205,19 +213,11 @@ async def list_memory(type: Optional[str] = None, key: Optional[str] = None, lim
         return handle_memory_agent_error("list memory items", e, **context)
 
 
-
-
 ## Lifespan handles startup
 
 
 if __name__ == "__main__":
     """Run the Memory Agent service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
-
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

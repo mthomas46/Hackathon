@@ -1,11 +1,12 @@
 """Tests for domain value objects."""
 
-import pytest
-from typing import Dict, Any
+from typing import Any, Dict
 
-from ...domain.value_objects.confidence import Confidence
+import pytest
+
 from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.location import FileLocation, CodeLocation
+from ...domain.value_objects.confidence import Confidence
+from ...domain.value_objects.location import CodeLocation, FileLocation
 from ...domain.value_objects.metrics import AnalysisMetrics, QualityMetrics
 
 
@@ -55,7 +56,7 @@ class TestConfidenceValueObject:
         """Test confidence string representation."""
         confidence = Confidence(0.75)
         str_repr = str(confidence)
-        assert '0.75' in str_repr
+        assert "0.75" in str_repr
 
     def test_confidence_comparison(self, confidence_high, confidence_medium, confidence_low):
         """Test confidence comparison operations."""
@@ -84,15 +85,15 @@ class TestAnalysisTypeValueObject:
 
     def test_analysis_type_enum_values(self):
         """Test analysis type enum values."""
-        assert AnalysisType.SEMANTIC_SIMILARITY.value == 'semantic_similarity'
-        assert AnalysisType.CODE_QUALITY.value == 'code_quality'
-        assert AnalysisType.SECURITY_SCAN.value == 'security_scan'
-        assert AnalysisType.CROSS_REPOSITORY.value == 'cross_repository'
+        assert AnalysisType.SEMANTIC_SIMILARITY.value == "semantic_similarity"
+        assert AnalysisType.CODE_QUALITY.value == "code_quality"
+        assert AnalysisType.SECURITY_SCAN.value == "security_scan"
+        assert AnalysisType.CROSS_REPOSITORY.value == "cross_repository"
 
     def test_analysis_type_string_representation(self):
         """Test analysis type string representation."""
         analysis_type = AnalysisType.SEMANTIC_SIMILARITY
-        assert str(analysis_type) == 'AnalysisType.SEMANTIC_SIMILARITY'
+        assert str(analysis_type) == "AnalysisType.SEMANTIC_SIMILARITY"
 
     def test_analysis_type_iteration(self):
         """Test iterating over analysis types."""
@@ -106,18 +107,18 @@ class TestLocationValueObjects:
 
     def test_file_location_creation(self, file_location: FileLocation):
         """Test creating file location."""
-        assert file_location.file_path == '/src/main.py'
+        assert file_location.file_path == "/src/main.py"
         assert file_location.line_number == 42
 
     def test_file_location_string_representation(self, file_location: FileLocation):
         """Test file location string representation."""
         str_repr = str(file_location)
-        assert '/src/main.py' in str_repr
-        assert '42' in str_repr
+        assert "/src/main.py" in str_repr
+        assert "42" in str_repr
 
     def test_code_location_creation(self, code_location: CodeLocation):
         """Test creating code location."""
-        assert code_location.file_path == '/src/utils.py'
+        assert code_location.file_path == "/src/utils.py"
         assert code_location.start_line == 10
         assert code_location.end_line == 15
         assert code_location.start_column == 5
@@ -126,27 +127,21 @@ class TestLocationValueObjects:
     def test_code_location_validation(self):
         """Test code location validation."""
         # Valid location
-        location = CodeLocation(
-            file_path='/src/file.py',
-            start_line=10,
-            end_line=15,
-            start_column=5,
-            end_column=20
-        )
+        location = CodeLocation(file_path="/src/file.py", start_line=10, end_line=15, start_column=5, end_column=20)
         assert location.start_line < location.end_line
         assert location.start_column < location.end_column
 
     def test_code_location_string_representation(self, code_location: CodeLocation):
         """Test code location string representation."""
         str_repr = str(code_location)
-        assert '/src/utils.py' in str_repr
-        assert '10:15' in str_repr
+        assert "/src/utils.py" in str_repr
+        assert "10:15" in str_repr
 
     def test_location_equality(self):
         """Test location equality."""
-        loc1 = FileLocation('/src/main.py', 42)
-        loc2 = FileLocation('/src/main.py', 42)
-        loc3 = FileLocation('/src/main.py', 43)
+        loc1 = FileLocation("/src/main.py", 42)
+        loc2 = FileLocation("/src/main.py", 42)
+        loc3 = FileLocation("/src/main.py", 43)
 
         assert loc1 == loc2
         assert loc1 != loc3
@@ -164,26 +159,20 @@ class TestAnalysisMetricsValueObject:
     def test_analysis_metrics_validation(self):
         """Test analysis metrics validation."""
         # Valid metrics
-        metrics = AnalysisMetrics(
-            processing_time_seconds=5.0,
-            memory_usage_mb=100.0,
-            confidence_score=0.9
-        )
+        metrics = AnalysisMetrics(processing_time_seconds=5.0, memory_usage_mb=100.0, confidence_score=0.9)
         assert metrics.processing_time_seconds == 5.0
 
         # Test negative values (should be allowed for metrics)
         metrics = AnalysisMetrics(
-            processing_time_seconds=-1.0,  # Might indicate error
-            memory_usage_mb=0.0,
-            confidence_score=0.5
+            processing_time_seconds=-1.0, memory_usage_mb=0.0, confidence_score=0.5  # Might indicate error
         )
         assert metrics.processing_time_seconds == -1.0
 
     def test_analysis_metrics_string_representation(self, analysis_metrics: AnalysisMetrics):
         """Test analysis metrics string representation."""
         str_repr = str(analysis_metrics)
-        assert '3.5' in str_repr
-        assert '75.0' in str_repr
+        assert "3.5" in str_repr
+        assert "75.0" in str_repr
 
     def test_analysis_metrics_equality(self):
         """Test analysis metrics equality."""
@@ -209,18 +198,12 @@ class TestQualityMetricsValueObject:
         """Test quality metrics validation."""
         # Test boundary values
         metrics = QualityMetrics(
-            readability_score=0.0,
-            complexity_score=0.0,
-            maintainability_index=0.0,
-            duplication_percentage=0.0
+            readability_score=0.0, complexity_score=0.0, maintainability_index=0.0, duplication_percentage=0.0
         )
         assert metrics.readability_score == 0.0
 
         metrics = QualityMetrics(
-            readability_score=100.0,
-            complexity_score=100.0,
-            maintainability_index=100.0,
-            duplication_percentage=100.0
+            readability_score=100.0, complexity_score=100.0, maintainability_index=100.0, duplication_percentage=100.0
         )
         assert metrics.readability_score == 100.0
 
@@ -243,8 +226,8 @@ class TestQualityMetricsValueObject:
     def test_quality_metrics_string_representation(self, quality_metrics: QualityMetrics):
         """Test quality metrics string representation."""
         str_repr = str(quality_metrics)
-        assert '85.0' in str_repr
-        assert '25.0' in str_repr
+        assert "85.0" in str_repr
+        assert "25.0" in str_repr
 
     def test_quality_metrics_equality(self):
         """Test quality metrics equality."""
@@ -273,13 +256,13 @@ class TestValueObjectImmutability:
         """Test that locations are immutable."""
         # File path should not be changeable
         with pytest.raises(AttributeError):
-            file_location.file_path = '/new/path.py'
+            file_location.file_path = "/new/path.py"
 
         # Line number should not be changeable
         with pytest.raises(AttributeError):
             file_location.line_number = 100
 
-        assert file_location.file_path == '/src/main.py'
+        assert file_location.file_path == "/src/main.py"
         assert file_location.line_number == 42
 
     def test_metrics_immutability(self, analysis_metrics: AnalysisMetrics):
@@ -309,8 +292,8 @@ class TestValueObjectHashAndEquality:
 
     def test_location_hash_consistency(self):
         """Test that equal locations have equal hashes."""
-        loc1 = FileLocation('/src/main.py', 42)
-        loc2 = FileLocation('/src/main.py', 42)
+        loc1 = FileLocation("/src/main.py", 42)
+        loc2 = FileLocation("/src/main.py", 42)
 
         assert loc1 == loc2
         assert hash(loc1) == hash(loc2)
@@ -347,16 +330,16 @@ class TestValueObjectEdgeCases:
     def test_location_edge_cases(self):
         """Test location edge cases."""
         # Line 1 (first line)
-        loc = FileLocation('/file.py', 1)
+        loc = FileLocation("/file.py", 1)
         assert loc.line_number == 1
 
         # Very large line number
-        loc = FileLocation('/file.py', 1000000)
+        loc = FileLocation("/file.py", 1000000)
         assert loc.line_number == 1000000
 
         # Empty file path (should this be allowed?)
-        loc = FileLocation('', 1)
-        assert loc.file_path == ''
+        loc = FileLocation("", 1)
+        assert loc.file_path == ""
 
     def test_metrics_edge_cases(self):
         """Test metrics edge cases."""

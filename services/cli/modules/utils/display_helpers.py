@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+
 from rich.table import Table
 
 
@@ -32,7 +33,9 @@ def print_list(console, title: str, items: List[Dict[str, Any]]) -> None:
 
 
 async def save_data(console, data: Dict[str, Any], fmt: str, path: str, content_key: Optional[str] = None) -> None:
-    import json, os
+    import json
+    import os
+
     fmt = (fmt or "json").lower()
     try:
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
@@ -53,5 +56,3 @@ async def save_data(console, data: Dict[str, Any], fmt: str, path: str, content_
         print_kv(console, "Saved", {"saved": True, "path": path, "format": fmt})
     except Exception as e:
         print_kv(console, "Saved", {"saved": False, "path": path, "error": str(e)})
-
-

@@ -12,13 +12,14 @@ Features:
 
 import asyncio
 import gzip
-import brotli
 import json
+import logging
 import time
-from typing import Dict, List, Any, Optional, Callable, AsyncGenerator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
+
+import brotli
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CompressionConfig:
     """Configuration for response compression."""
+
     enabled: bool = True
     min_size_bytes: int = 1024
     compression_level: int = 6
@@ -39,6 +41,7 @@ class CompressionConfig:
 @dataclass
 class ContentNegotiationResult:
     """Result of content negotiation."""
+
     content_type: str
     encoding: Optional[str] = None
     language: Optional[str] = None
@@ -48,6 +51,7 @@ class ContentNegotiationResult:
 @dataclass
 class OptimizedResponse:
     """Optimized response data."""
+
     content: Any
     content_type: str
     headers: Dict[str, str]
@@ -72,12 +76,13 @@ class CompressionHandler:
         self.config = config or CompressionConfig()
         self.compression_stats: Dict[str, Dict] = {}
 
-    async def compress_response(self, content: Any, content_type: str,
-                              client_accept_encoding: str = "") -> OptimizedResponse:
+    async def compress_response(
+        self, content: Any, content_type: str, client_accept_encoding: str = ""
+    ) -> OptimizedResponse:
         """Compress response based on content and client capabilities."""
 
         start_time = time.time()
-        original_size = len(str(content).encode('utf-8'))
+        original_size = len(str(content).encode("utf-8"))
 
         # Skip compression for small responses or if disabled
         if not self.config.enabled or original_size < self.config.min_size_bytes:
@@ -86,7 +91,7 @@ class CompressionHandler:
                 content_type=content_type,
                 headers={},
                 original_size=original_size,
-                processing_time=time.time() - start_time
+                processing_time=time.time() - start_time,
             )
 
         # Determine best compression algorithm
@@ -98,7 +103,7 @@ class CompressionHandler:
                 content_type=content_type,
                 headers={},
                 original_size=original_size,
-                processing_time=time.time() - start_time
+                processing_time=time.time() - start_time,
             )
 
         # Compress content
@@ -110,10 +115,7 @@ class CompressionHandler:
         # Update statistics
         await self._update_stats(algorithm, original_size, compressed_size, compression_ratio)
 
-        headers = {
-            "Content-Encoding": algorithm,
-            "Vary": "Accept-Encoding"
-        }
+        headers = {"Content-Encoding": algorithm, "Vary": "Accept-Encoding"}
 
         # Add cache headers for compressible content
         if compression_ratio < 0.8:  # Good compression ratio
@@ -126,7 +128,7 @@ class CompressionHandler:
             compression_applied=True,
             original_size=original_size,
             compressed_size=compressed_size,
-            processing_time=time.time() - start_time
+            processing_time=time.time() - start_time,
         )
 
     def _select_compression_algorithm(self, accept_encoding: str, content_type: str) -> Optional[str]:
@@ -135,8 +137,8 @@ class CompressionHandler:
         # Parse client accept-encoding header
         accepted_encodings = set()
         if accept_encoding:
-            for encoding in accept_encoding.split(','):
-                encoding = encoding.strip().split(';')[0].lower()
+            for encoding in accept_encoding.split(","):
+                encoding = encoding.strip().split(";")[0].lower()
                 accepted_encodings.add(encoding)
 
         # Prioritize algorithms based on compression ratio and client support
@@ -155,11 +157,11 @@ class CompressionHandler:
 
         # Serialize content if needed
         if isinstance(content, (dict, list)):
-            content_str = json.dumps(content, separators=(',', ':'))
+            content_str = json.dumps(content, separators=(",", ":"))
         else:
             content_str = str(content)
 
-        content_bytes = content_str.encode('utf-8')
+        content_bytes = content_str.encode("utf-8")
 
         # Compress based on algorithm
         if algorithm == "gzip":
@@ -168,14 +170,14 @@ class CompressionHandler:
             compressed = brotli.compress(content_bytes, quality=self.config.compression_level)
         elif algorithm == "deflate":
             import zlib
+
             compressed = zlib.compress(content_bytes, level=self.config.compression_level)
         else:
             compressed = content_bytes
 
         return compressed, len(compressed)
 
-    async def _update_stats(self, algorithm: str, original_size: int,
-                          compressed_size: int, ratio: float):
+    async def _update_stats(self, algorithm: str, original_size: int, compressed_size: int, ratio: float):
         """Update compression statistics."""
         if algorithm not in self.compression_stats:
             self.compression_stats[algorithm] = {
@@ -183,7 +185,7 @@ class CompressionHandler:
                 "total_original_bytes": 0,
                 "total_compressed_bytes": 0,
                 "average_ratio": 0.0,
-                "compression_savings_percent": 0.0
+                "compression_savings_percent": 0.0,
             }
 
         stats = self.compression_stats[algorithm]
@@ -201,9 +203,12 @@ class CompressionHandler:
         return {
             "algorithms": self.compression_stats,
             "config": self.config.__dict__,
-            "total_compression_savings": sum(
-                stats["compression_savings_percent"] for stats in self.compression_stats.values()
-            ) / len(self.compression_stats) if self.compression_stats else 0
+            "total_compression_savings": (
+                sum(stats["compression_savings_percent"] for stats in self.compression_stats.values())
+                / len(self.compression_stats)
+                if self.compression_stats
+                else 0
+            ),
         }
 
 
@@ -225,15 +230,15 @@ class ContentNegotiator:
             "text/html": ["html"],
             "text/plain": ["txt"],
             "application/yaml": ["yaml", "yml"],
-            "application/msgpack": ["msgpack"]
+            "application/msgpack": ["msgpack"],
         }
 
         self.supported_languages = ["en", "es", "fr", "de", "zh", "ja"]
         self.supported_charsets = ["utf-8", "iso-8859-1"]
 
-    async def negotiate(self, accept_header: str = "",
-                       accept_language: str = "",
-                       accept_charset: str = "") -> ContentNegotiationResult:
+    async def negotiate(
+        self, accept_header: str = "", accept_language: str = "", accept_charset: str = ""
+    ) -> ContentNegotiationResult:
         """Perform content negotiation based on Accept headers."""
 
         # Content-Type negotiation
@@ -245,11 +250,7 @@ class ContentNegotiator:
         # Charset negotiation
         charset = self._negotiate_charset(accept_charset)
 
-        return ContentNegotiationResult(
-            content_type=content_type,
-            language=language,
-            charset=charset
-        )
+        return ContentNegotiationResult(content_type=content_type, language=language, charset=charset)
 
     def _negotiate_content_type(self, accept_header: str) -> str:
         """Negotiate content type based on Accept header."""
@@ -258,12 +259,12 @@ class ContentNegotiator:
 
         # Parse accept header with quality values
         accept_types = []
-        for item in accept_header.split(','):
-            parts = item.strip().split(';')
+        for item in accept_header.split(","):
+            parts = item.strip().split(";")
             media_type = parts[0].strip()
             quality = 1.0
 
-            if len(parts) > 1 and parts[1].startswith('q='):
+            if len(parts) > 1 and parts[1].startswith("q="):
                 try:
                     quality = float(parts[1][2:])
                 except ValueError:
@@ -282,7 +283,7 @@ class ContentNegotiator:
                 return "application/json"
             if media_type.endswith("/*"):
                 # Check for type/*
-                main_type = media_type.split('/')[0]
+                main_type = media_type.split("/")[0]
                 for supported_type in self.supported_content_types:
                     if supported_type.startswith(f"{main_type}/"):
                         return supported_type
@@ -295,12 +296,12 @@ class ContentNegotiator:
             return None
 
         languages = []
-        for item in accept_language.split(','):
-            parts = item.strip().split(';')
-            lang = parts[0].strip().split('-')[0]  # Get primary language tag
+        for item in accept_language.split(","):
+            parts = item.strip().split(";")
+            lang = parts[0].strip().split("-")[0]  # Get primary language tag
             quality = 1.0
 
-            if len(parts) > 1 and parts[1].startswith('q='):
+            if len(parts) > 1 and parts[1].startswith("q="):
                 try:
                     quality = float(parts[1][2:])
                 except ValueError:
@@ -323,12 +324,12 @@ class ContentNegotiator:
             return "utf-8"
 
         charsets = []
-        for item in accept_charset.split(','):
-            parts = item.strip().split(';')
+        for item in accept_charset.split(","):
+            parts = item.strip().split(";")
             charset = parts[0].strip().lower()
             quality = 1.0
 
-            if len(parts) > 1 and parts[1].startswith('q='):
+            if len(parts) > 1 and parts[1].startswith("q="):
                 try:
                     quality = float(parts[1][2:])
                 except ValueError:
@@ -366,8 +367,9 @@ class ResponseOptimizer:
         self.response_cache: Dict[str, OptimizedResponse] = {}
         self.cache_ttl = 300  # 5 minutes
 
-    async def optimize_response(self, content: Any, request_headers: Dict[str, str],
-                              content_type: str = "application/json") -> OptimizedResponse:
+    async def optimize_response(
+        self, content: Any, request_headers: Dict[str, str], content_type: str = "application/json"
+    ) -> OptimizedResponse:
         """Optimize response based on content and request headers."""
 
         start_time = time.time()
@@ -376,7 +378,7 @@ class ResponseOptimizer:
         negotiation_result = await self.content_negotiator.negotiate(
             accept_header=request_headers.get("accept", ""),
             accept_language=request_headers.get("accept-language", ""),
-            accept_charset=request_headers.get("accept-charset", "")
+            accept_charset=request_headers.get("accept-charset", ""),
         )
 
         # Use negotiated content type
@@ -391,7 +393,7 @@ class ResponseOptimizer:
         compressed_response = await self.compression_handler.compress_response(
             content=content,
             content_type=final_content_type,
-            client_accept_encoding=request_headers.get("accept-encoding", "")
+            client_accept_encoding=request_headers.get("accept-encoding", ""),
         )
 
         # Add negotiated headers
@@ -414,11 +416,12 @@ class ResponseOptimizer:
             compression_applied=compressed_response.compression_applied,
             original_size=compressed_response.original_size,
             compressed_size=compressed_response.compressed_size,
-            processing_time=total_time
+            processing_time=total_time,
         )
 
-    async def stream_response(self, data_generator: AsyncGenerator,
-                            request_headers: Dict[str, str]) -> AsyncGenerator[bytes, None]:
+    async def stream_response(
+        self, data_generator: AsyncGenerator, request_headers: Dict[str, str]
+    ) -> AsyncGenerator[bytes, None]:
         """Stream optimized response chunks."""
 
         # Get compression settings
@@ -473,7 +476,7 @@ class ResponseOptimizer:
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-            "Referrer-Policy": "strict-origin-when-cross-origin"
+            "Referrer-Policy": "strict-origin-when-cross-origin",
         }
 
     async def get_performance_report(self) -> Dict[str, Any]:
@@ -486,7 +489,7 @@ class ResponseOptimizer:
             "cache_ttl_seconds": self.cache_ttl,
             "supported_content_types": list(self.content_negotiator.supported_content_types.keys()),
             "supported_languages": self.content_negotiator.supported_languages,
-            "supported_charsets": self.content_negotiator.supported_charsets
+            "supported_charsets": self.content_negotiator.supported_charsets,
         }
 
 
@@ -505,9 +508,9 @@ class ProgressiveResponseHandler:
         self.optimizer = optimizer
         self.active_streams: Dict[str, asyncio.Queue] = {}
 
-    async def create_progressive_response(self, request_id: str,
-                                        data_generator: AsyncGenerator,
-                                        request_headers: Dict[str, str]) -> AsyncGenerator[bytes, None]:
+    async def create_progressive_response(
+        self, request_id: str, data_generator: AsyncGenerator, request_headers: Dict[str, str]
+    ) -> AsyncGenerator[bytes, None]:
         """Create a progressive response stream."""
 
         # Create queue for this stream
@@ -519,11 +522,11 @@ class ProgressiveResponseHandler:
             headers = {
                 "Content-Type": "text/plain; charset=utf-8",
                 "Cache-Control": "no-cache",
-                "Connection": "keep-alive"
+                "Connection": "keep-alive",
             }
 
             # Send headers as first chunk
-            header_chunk = json.dumps({"type": "headers", "data": headers}).encode('utf-8')
+            header_chunk = json.dumps({"type": "headers", "data": headers}).encode("utf-8")
             yield header_chunk
             yield b"\n"
 
@@ -533,9 +536,7 @@ class ProgressiveResponseHandler:
             async for data_chunk in data_generator:
                 # Optimize chunk
                 optimized = await self.optimizer.optimize_response(
-                    content=data_chunk,
-                    request_headers=request_headers,
-                    content_type="application/json"
+                    content=data_chunk, request_headers=request_headers, content_type="application/json"
                 )
 
                 # Create progressive chunk
@@ -545,15 +546,15 @@ class ProgressiveResponseHandler:
                     "data": optimized.content,
                     "size": optimized.original_size,
                     "compressed": optimized.compression_applied,
-                    "processing_time": optimized.processing_time
+                    "processing_time": optimized.processing_time,
                 }
 
                 # Serialize chunk
                 if isinstance(optimized.content, bytes):
                     chunk_json = json.dumps(chunk_data)
-                    chunk_bytes = chunk_json.encode('utf-8')
+                    chunk_bytes = chunk_json.encode("utf-8")
                 else:
-                    chunk_bytes = json.dumps(chunk_data).encode('utf-8')
+                    chunk_bytes = json.dumps(chunk_data).encode("utf-8")
 
                 yield chunk_bytes
                 yield b"\n"
@@ -570,10 +571,10 @@ class ProgressiveResponseHandler:
                 "type": "complete",
                 "total_chunks": chunk_index,
                 "total_size": total_size,
-                "request_id": request_id
+                "request_id": request_id,
             }
 
-            yield json.dumps(completion_data).encode('utf-8')
+            yield json.dumps(completion_data).encode("utf-8")
             yield b"\n"
 
         finally:

@@ -10,25 +10,26 @@ Implements advanced data ingestion capabilities with:
 """
 
 import asyncio
-import json
-import uuid
-import time
 import hashlib
+import json
 import re
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
-from collections import defaultdict, deque
 import threading
+import time
+import uuid
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 from services.shared.intelligent_caching import get_service_cache
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class IngestionPriority(Enum):
     """Data ingestion priority levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -37,6 +38,7 @@ class IngestionPriority(Enum):
 
 class DataSource(Enum):
     """Supported data sources."""
+
     GITHUB = "github"
     JIRA = "jira"
     CONFLUENCE = "confluence"
@@ -47,6 +49,7 @@ class DataSource(Enum):
 
 class ConflictResolutionStrategy(Enum):
     """Conflict resolution strategies."""
+
     LATEST_WINS = "latest_wins"
     MANUAL_MERGE = "manual_merge"
     SOURCE_AUTHORITY = "source_authority"
@@ -57,6 +60,7 @@ class ConflictResolutionStrategy(Enum):
 @dataclass
 class DataIngestionJob:
     """Data ingestion job configuration."""
+
     job_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     source_type: DataSource = DataSource.GITHUB
     source_config: Dict[str, Any] = field(default_factory=dict)
@@ -113,6 +117,7 @@ class DataIngestionJob:
 @dataclass
 class DataQualityMetrics:
     """Data quality assessment metrics."""
+
     completeness_score: float = 0.0
     accuracy_score: float = 0.0
     consistency_score: float = 0.0
@@ -138,7 +143,7 @@ class DataQualityMetrics:
             self.consistency_score,
             self.timeliness_score,
             self.validity_score,
-            self.uniqueness_score
+            self.uniqueness_score,
         ]
 
         # Weighted average with more emphasis on critical quality aspects
@@ -182,6 +187,7 @@ class DataQualityMetrics:
 @dataclass
 class PredictiveIngestionModel:
     """Predictive model for data ingestion optimization."""
+
     model_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     data_source: DataSource = DataSource.GITHUB
     prediction_type: str = "usage_pattern"
@@ -209,7 +215,7 @@ class PredictiveIngestionModel:
             "priority": self._predict_priority(current_data),
             "frequency": self._predict_frequency(current_data),
             "volume": self._predict_volume(current_data),
-            "confidence": self.confidence_score
+            "confidence": self.confidence_score,
         }
 
         self.last_prediction = datetime.now()
@@ -258,19 +264,19 @@ class ConflictResolutionEngine:
         self.resolution_rules: Dict[str, Dict[str, Any]] = {}
         self.conflict_history: List[Dict[str, Any]] = []
 
-    def add_resolution_rule(self, rule_name: str, conditions: Dict[str, Any],
-                           strategy: ConflictResolutionStrategy):
+    def add_resolution_rule(self, rule_name: str, conditions: Dict[str, Any], strategy: ConflictResolutionStrategy):
         """Add a conflict resolution rule."""
         self.resolution_rules[rule_name] = {
             "conditions": conditions,
             "strategy": strategy,
             "created_at": datetime.now(),
             "usage_count": 0,
-            "success_rate": 0.0
+            "success_rate": 0.0,
         }
 
-    async def resolve_conflict(self, conflicting_records: List[Dict[str, Any]],
-                              context: Dict[str, Any]) -> Dict[str, Any]:
+    async def resolve_conflict(
+        self, conflicting_records: List[Dict[str, Any]], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Resolve conflicts between multiple data records."""
         start_time = time.time()
 
@@ -281,9 +287,7 @@ class ConflictResolutionEngine:
         strategy = self._select_resolution_strategy(conflict_analysis, context)
 
         # Apply resolution
-        resolved_record = await self._apply_resolution_strategy(
-            conflicting_records, strategy, context
-        )
+        resolved_record = await self._apply_resolution_strategy(conflicting_records, strategy, context)
 
         # Record resolution
         resolution_record = {
@@ -292,7 +296,7 @@ class ConflictResolutionEngine:
             "strategy_used": strategy.value,
             "resolution_time": time.time() - start_time,
             "resolved_at": datetime.now(),
-            "conflict_analysis": conflict_analysis
+            "conflict_analysis": conflict_analysis,
         }
 
         self.conflict_history.append(resolution_record)
@@ -308,7 +312,7 @@ class ConflictResolutionEngine:
             "resolved_record": resolved_record,
             "strategy_used": strategy.value,
             "confidence": self._calculate_resolution_confidence(conflicting_records, resolved_record),
-            "analysis": conflict_analysis
+            "analysis": conflict_analysis,
         }
 
     def _analyze_conflict(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -319,7 +323,7 @@ class ConflictResolutionEngine:
             "record_count": len(records),
             "sources_involved": set(),
             "temporal_span": 0,
-            "data_types": set()
+            "data_types": set(),
         }
 
         if not records:
@@ -333,11 +337,9 @@ class ConflictResolutionEngine:
         for field in all_fields:
             values = [record.get(field) for record in records if field in record]
             if len(set(str(v) for v in values)) > 1:
-                analysis["differing_fields"].append({
-                    "field": field,
-                    "values": values,
-                    "unique_values": len(set(str(v) for v in values))
-                })
+                analysis["differing_fields"].append(
+                    {"field": field, "values": values, "unique_values": len(set(str(v) for v in values))}
+                )
 
         # Analyze sources
         for record in records:
@@ -361,8 +363,9 @@ class ConflictResolutionEngine:
 
         return analysis
 
-    def _select_resolution_strategy(self, analysis: Dict[str, Any],
-                                   context: Dict[str, Any]) -> ConflictResolutionStrategy:
+    def _select_resolution_strategy(
+        self, analysis: Dict[str, Any], context: Dict[str, Any]
+    ) -> ConflictResolutionStrategy:
         """Select appropriate resolution strategy."""
         # Check for explicit rules first
         rule_name = self._find_matching_rule(analysis)
@@ -385,9 +388,9 @@ class ConflictResolutionEngine:
         else:
             return ConflictResolutionStrategy.LATEST_WINS
 
-    async def _apply_resolution_strategy(self, records: List[Dict[str, Any]],
-                                       strategy: ConflictResolutionStrategy,
-                                       context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _apply_resolution_strategy(
+        self, records: List[Dict[str, Any]], strategy: ConflictResolutionStrategy, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Apply the selected resolution strategy."""
         if strategy == ConflictResolutionStrategy.LATEST_WINS:
             return self._resolve_latest_wins(records)
@@ -403,13 +406,10 @@ class ConflictResolutionEngine:
     def _resolve_latest_wins(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Resolve by selecting the most recently updated record."""
         # Sort by update timestamp
-        sorted_records = sorted(records,
-                              key=lambda r: r.get("updated_at", datetime.min),
-                              reverse=True)
+        sorted_records = sorted(records, key=lambda r: r.get("updated_at", datetime.min), reverse=True)
         return sorted_records[0]
 
-    def _resolve_source_authority(self, records: List[Dict[str, Any]],
-                                context: Dict[str, Any]) -> Dict[str, Any]:
+    def _resolve_source_authority(self, records: List[Dict[str, Any]], context: Dict[str, Any]) -> Dict[str, Any]:
         """Resolve by preferring records from authoritative sources."""
         preferred_source = context.get("preferred_source")
 
@@ -468,8 +468,9 @@ class ConflictResolutionEngine:
 
         return None
 
-    def _calculate_resolution_confidence(self, original_records: List[Dict[str, Any]],
-                                       resolved_record: Dict[str, Any]) -> float:
+    def _calculate_resolution_confidence(
+        self, original_records: List[Dict[str, Any]], resolved_record: Dict[str, Any]
+    ) -> float:
         """Calculate confidence in the resolution."""
         # Simple confidence calculation
         if len(original_records) == 1:
@@ -479,7 +480,9 @@ class ConflictResolutionEngine:
         completeness = sum(1 for v in resolved_record.values() if v is not None) / len(resolved_record)
 
         # Check if all sources are represented
-        sources_represented = len(set(r.get("source") for r in original_records if r.get("source") in resolved_record.get("source", "")))
+        sources_represented = len(
+            set(r.get("source") for r in original_records if r.get("source") in resolved_record.get("source", ""))
+        )
 
         return (completeness + sources_represented / len(original_records)) / 2
 
@@ -492,14 +495,13 @@ class ChangeDetectionEngine:
         self.change_patterns: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
         self.detection_rules: Dict[str, Dict[str, Any]] = {}
 
-    def add_detection_rule(self, rule_name: str, source_type: DataSource,
-                          conditions: Dict[str, Any]):
+    def add_detection_rule(self, rule_name: str, source_type: DataSource, conditions: Dict[str, Any]):
         """Add a change detection rule."""
         self.detection_rules[rule_name] = {
             "source_type": source_type,
             "conditions": conditions,
             "created_at": datetime.now(),
-            "trigger_count": 0
+            "trigger_count": 0,
         }
 
     async def detect_changes(self, source_id: str, current_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -530,7 +532,7 @@ class ChangeDetectionEngine:
             "changes_detected": changes_detected,
             "change_confidence": change_confidence,
             "requires_ingestion": change_confidence > 0.5,
-            "change_summary": self._summarize_changes(changes_detected)
+            "change_summary": self._summarize_changes(changes_detected),
         }
 
     def _calculate_checksum(self, data: Dict[str, Any]) -> str:
@@ -539,30 +541,29 @@ class ChangeDetectionEngine:
         normalized = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(normalized.encode()).hexdigest()
 
-    def _analyze_changes(self, source_id: str, previous_checksum: Optional[str],
-                        current_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _analyze_changes(
+        self, source_id: str, previous_checksum: Optional[str], current_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Analyze what changes occurred."""
         changes = []
 
         # If no previous checksum, consider it a new source
         if not previous_checksum:
-            changes.append({
-                "change_type": "new_source",
-                "description": "New data source detected",
-                "severity": "high"
-            })
+            changes.append({"change_type": "new_source", "description": "New data source detected", "severity": "high"})
             return changes
 
         # For more detailed change analysis, we would need to compare
         # the actual previous data with current data
         # This is a simplified version
 
-        changes.append({
-            "change_type": "content_modified",
-            "description": "Data content has been modified",
-            "severity": "medium",
-            "estimated_size": len(str(current_data))
-        })
+        changes.append(
+            {
+                "change_type": "content_modified",
+                "description": "Data content has been modified",
+                "severity": "medium",
+                "estimated_size": len(str(current_data)),
+            }
+        )
 
         return changes
 
@@ -592,14 +593,13 @@ class ChangeDetectionEngine:
                 "change_type": change["change_type"],
                 "severity": change["severity"],
                 "timestamp": datetime.now(),
-                "frequency": 1
+                "frequency": 1,
             }
 
             # Update existing patterns or add new one
             existing_pattern = None
             for p in self.change_patterns[source_id]:
-                if (p["change_type"] == change["change_type"] and
-                    p["severity"] == change["severity"]):
+                if p["change_type"] == change["change_type"] and p["severity"] == change["severity"]:
                     existing_pattern = p
                     break
 
@@ -623,7 +623,7 @@ class ChangeDetectionEngine:
             "total_changes": len(changes),
             "change_types": change_types,
             "severity_breakdown": dict(severity_breakdown),
-            "high_severity_changes": severity_breakdown["high"]
+            "high_severity_changes": severity_breakdown["high"],
         }
 
 
@@ -638,34 +638,33 @@ class IntelligentIngestionEngine:
         self.quality_assessor = None  # Would be initialized separately
         self.cache = get_service_cache(ServiceNames.SOURCE_AGENT)
 
-    async def create_ingestion_job(self, source_type: DataSource,
-                                 source_config: Dict[str, Any],
-                                 target_config: Dict[str, Any]) -> str:
+    async def create_ingestion_job(
+        self, source_type: DataSource, source_config: Dict[str, Any], target_config: Dict[str, Any]
+    ) -> str:
         """Create a new data ingestion job."""
-        job = DataIngestionJob(
-            source_type=source_type,
-            source_config=source_config,
-            target_config=target_config
-        )
+        job = DataIngestionJob(source_type=source_type, source_config=source_config, target_config=target_config)
 
         self.ingestion_jobs[job.job_id] = job
 
         # Create predictive model for this job
-        model = PredictiveIngestionModel(
-            data_source=source_type,
-            prediction_type="usage_pattern"
-        )
+        model = PredictiveIngestionModel(data_source=source_type, prediction_type="usage_pattern")
         self.predictive_models[job.job_id] = model
 
         # Cache job
-        await self.cache.set(f"ingestion_job_{job.job_id}", {
-            "job_id": job.job_id,
-            "source_type": source_type.value,
-            "status": job.status,
-            "created_at": job.created_at.isoformat()
-        }, ttl_seconds=3600)
+        await self.cache.set(
+            f"ingestion_job_{job.job_id}",
+            {
+                "job_id": job.job_id,
+                "source_type": source_type.value,
+                "status": job.status,
+                "created_at": job.created_at.isoformat(),
+            },
+            ttl_seconds=3600,
+        )
 
-        fire_and_forget("info", f"Created ingestion job {job.job_id} for {source_type.value}", ServiceNames.SOURCE_AGENT)
+        fire_and_forget(
+            "info", f"Created ingestion job {job.job_id} for {source_type.value}", ServiceNames.SOURCE_AGENT
+        )
         return job.job_id
 
     async def execute_ingestion_job(self, job_id: str) -> Dict[str, Any]:
@@ -684,18 +683,11 @@ class IntelligentIngestionEngine:
                 job.priority = predictions.get("priority", job.priority)
 
             # Detect changes
-            changes = await self.change_detector.detect_changes(
-                f"{job.source_type.value}_{job_id}",
-                job.source_config
-            )
+            changes = await self.change_detector.detect_changes(f"{job.source_type.value}_{job_id}", job.source_config)
 
             if not changes["requires_ingestion"]:
                 job.complete_job()
-                return {
-                    "status": "completed",
-                    "message": "No changes detected, skipping ingestion",
-                    "changes": changes
-                }
+                return {"status": "completed", "message": "No changes detected, skipping ingestion", "changes": changes}
 
             # Execute ingestion
             start_time = time.time()
@@ -708,7 +700,7 @@ class IntelligentIngestionEngine:
                 processed=result.get("processed", 0),
                 ingested=result.get("ingested", 0),
                 failed=result.get("failed", 0),
-                processing_time=processing_time
+                processing_time=processing_time,
             )
 
             # Quality assessment
@@ -723,16 +715,12 @@ class IntelligentIngestionEngine:
                 "job_id": job_id,
                 "result": result,
                 "changes": changes,
-                "processing_time": processing_time
+                "processing_time": processing_time,
             }
 
         except Exception as e:
             job.fail_job(str(e))
-            return {
-                "status": "failed",
-                "job_id": job_id,
-                "error": str(e)
-            }
+            return {"status": "failed", "job_id": job_id, "error": str(e)}
 
     async def _execute_data_ingestion(self, job: DataIngestionJob) -> Dict[str, Any]:
         """Execute the actual data ingestion."""
@@ -750,7 +738,7 @@ class IntelligentIngestionEngine:
                 "processed": 0,
                 "ingested": 0,
                 "failed": 0,
-                "message": f"Unsupported source type: {job.source_type.value}"
+                "message": f"Unsupported source type: {job.source_type.value}",
             }
 
     async def _ingest_github_data(self, job: DataIngestionJob) -> Dict[str, Any]:
@@ -764,8 +752,8 @@ class IntelligentIngestionEngine:
             "failed": 2,
             "data": [
                 {"type": "readme", "content": "Sample README", "source": "github"},
-                {"type": "code", "content": "Sample code", "source": "github"}
-            ]
+                {"type": "code", "content": "Sample code", "source": "github"},
+            ],
         }
 
     async def _ingest_jira_data(self, job: DataIngestionJob) -> Dict[str, Any]:
@@ -777,9 +765,7 @@ class IntelligentIngestionEngine:
             "processed": 15,
             "ingested": 14,
             "failed": 1,
-            "data": [
-                {"type": "issue", "content": "Sample issue", "source": "jira"}
-            ]
+            "data": [{"type": "issue", "content": "Sample issue", "source": "jira"}],
         }
 
     async def _ingest_confluence_data(self, job: DataIngestionJob) -> Dict[str, Any]:
@@ -791,9 +777,7 @@ class IntelligentIngestionEngine:
             "processed": 20,
             "ingested": 18,
             "failed": 2,
-            "data": [
-                {"type": "page", "content": "Sample page", "source": "confluence"}
-            ]
+            "data": [{"type": "page", "content": "Sample page", "source": "confluence"}],
         }
 
     def get_ingestion_statistics(self) -> Dict[str, Any]:
@@ -813,7 +797,11 @@ class IntelligentIngestionEngine:
             "total_items_processed": total_processed,
             "total_items_ingested": total_ingested,
             "ingestion_efficiency": total_ingested / total_processed if total_processed > 0 else 0,
-            "average_processing_time": sum(j.average_processing_time for j in self.ingestion_jobs.values()) / total_jobs if total_jobs > 0 else 0
+            "average_processing_time": (
+                sum(j.average_processing_time for j in self.ingestion_jobs.values()) / total_jobs
+                if total_jobs > 0
+                else 0
+            ),
         }
 
 
@@ -827,28 +815,22 @@ async def initialize_intelligent_ingestion():
 
     # Set up conflict resolution rules
     intelligent_ingestion.conflict_resolver.add_resolution_rule(
-        "temporal_conflicts",
-        {"conflict_type": "temporal", "min_records": 2},
-        ConflictResolutionStrategy.LATEST_WINS
+        "temporal_conflicts", {"conflict_type": "temporal", "min_records": 2}, ConflictResolutionStrategy.LATEST_WINS
     )
 
     intelligent_ingestion.conflict_resolver.add_resolution_rule(
         "multi_source_conflicts",
         {"conflict_type": "multi_source", "sources": ["github", "jira"]},
-        ConflictResolutionStrategy.SOURCE_AUTHORITY
+        ConflictResolutionStrategy.SOURCE_AUTHORITY,
     )
 
     # Set up change detection rules
     intelligent_ingestion.change_detector.add_detection_rule(
-        "github_changes",
-        DataSource.GITHUB,
-        {"min_file_size": 100, "content_types": ["markdown", "code"]}
+        "github_changes", DataSource.GITHUB, {"min_file_size": 100, "content_types": ["markdown", "code"]}
     )
 
     intelligent_ingestion.change_detector.add_detection_rule(
-        "jira_changes",
-        DataSource.JIRA,
-        {"issue_types": ["bug", "feature"], "priority_levels": ["high", "critical"]}
+        "jira_changes", DataSource.JIRA, {"issue_types": ["bug", "feature"], "priority_levels": ["high", "critical"]}
     )
 
     print("✅ Intelligent Data Ingestion Engine initialized")
@@ -871,23 +853,17 @@ async def test_intelligent_ingestion():
     print("📋 Creating ingestion jobs...")
 
     github_job = await intelligent_ingestion.create_ingestion_job(
-        DataSource.GITHUB,
-        {"repository": "myorg/myrepo", "branch": "main"},
-        {"target": "doc_store"}
+        DataSource.GITHUB, {"repository": "myorg/myrepo", "branch": "main"}, {"target": "doc_store"}
     )
     print(f"   ✅ GitHub job: {github_job}")
 
     jira_job = await intelligent_ingestion.create_ingestion_job(
-        DataSource.JIRA,
-        {"project": "PROJ", "issue_types": ["bug", "feature"]},
-        {"target": "doc_store"}
+        DataSource.JIRA, {"project": "PROJ", "issue_types": ["bug", "feature"]}, {"target": "doc_store"}
     )
     print(f"   ✅ Jira job: {jira_job}")
 
     confluence_job = await intelligent_ingestion.create_ingestion_job(
-        DataSource.CONFLUENCE,
-        {"space": "DOCS", "page_types": ["guide", "reference"]},
-        {"target": "doc_store"}
+        DataSource.CONFLUENCE, {"space": "DOCS", "page_types": ["guide", "reference"]}, {"target": "doc_store"}
     )
     print(f"   ✅ Confluence job: {confluence_job}")
 

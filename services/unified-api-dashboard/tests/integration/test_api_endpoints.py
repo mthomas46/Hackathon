@@ -5,12 +5,13 @@ Comprehensive integration tests for all FastAPI endpoints in the Unified API Das
 Tests authentication, authorization, analytics, developer tools, security, and topology endpoints.
 """
 
+import json
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from unittest.mock import Mock, AsyncMock, patch
-import json
-from datetime import datetime, timedelta
 
 from ...conftest import *
 
@@ -28,10 +29,7 @@ class TestAuthenticationEndpoints:
         mock_user.permissions = set()
         mock_user_manager.authenticate_user = AsyncMock(return_value=mock_user)
 
-        login_data = {
-            "username": "testuser",
-            "password": "password123"
-        }
+        login_data = {"username": "testuser", "password": "password123"}
 
         response = await async_client.post("/api/auth/login", json=login_data)
 
@@ -47,10 +45,7 @@ class TestAuthenticationEndpoints:
         """Test login failure with invalid credentials."""
         mock_user_manager.authenticate_user = AsyncMock(return_value=None)
 
-        login_data = {
-            "username": "testuser",
-            "password": "wrongpassword"
-        }
+        login_data = {"username": "testuser", "password": "wrongpassword"}
 
         response = await async_client.post("/api/auth/login", json=login_data)
 
@@ -63,7 +58,7 @@ class TestAuthenticationEndpoints:
     async def test_logout(self, async_client):
         """Test user logout."""
         # First login to get a token
-        with patch('services.unified-api-dashboard.modules.security.auth.UserManager.authenticate_user') as mock_auth:
+        with patch("services.unified-api-dashboard.modules.security.auth.UserManager.authenticate_user") as mock_auth:
             mock_user = Mock()
             mock_user.user_id = "test_user"
             mock_user.username = "testuser"
@@ -71,10 +66,9 @@ class TestAuthenticationEndpoints:
             mock_user.permissions = set()
             mock_auth.return_value = mock_user
 
-            login_response = await async_client.post("/api/auth/login", json={
-                "username": "testuser",
-                "password": "password123"
-            })
+            login_response = await async_client.post(
+                "/api/auth/login", json={"username": "testuser", "password": "password123"}
+            )
             token = login_response.json()["data"]["token"]
 
         # Now logout
@@ -154,11 +148,7 @@ class TestDeveloperToolsEndpoints:
     @pytest.mark.asyncio
     async def test_generate_client(self, async_client, sample_openapi_spec):
         """Test client code generation."""
-        request_data = {
-            "service_name": "test-service",
-            "language": "python",
-            "openapi_spec": sample_openapi_spec
-        }
+        request_data = {"service_name": "test-service", "language": "python", "openapi_spec": sample_openapi_spec}
 
         response = await async_client.post("/api/tools/generate-client", json=request_data)
 
@@ -168,10 +158,7 @@ class TestDeveloperToolsEndpoints:
     @pytest.mark.asyncio
     async def test_validate_spec(self, async_client, sample_openapi_spec):
         """Test OpenAPI specification validation."""
-        request_data = {
-            "service_name": "test-service",
-            "openapi_spec": sample_openapi_spec
-        }
+        request_data = {"service_name": "test-service", "openapi_spec": sample_openapi_spec}
 
         response = await async_client.post("/api/tools/validate-spec", json=request_data)
 
@@ -184,10 +171,7 @@ class TestDeveloperToolsEndpoints:
         request_data = {
             "service_name": "test-service",
             "test_type": "functional",
-            "config": {
-                "concurrent_users": 5,
-                "duration_seconds": 10
-            }
+            "config": {"concurrent_users": 5, "duration_seconds": 10},
         }
 
         response = await async_client.post("/api/tools/run-integration-test", json=request_data)
@@ -336,9 +320,7 @@ class TestErrorHandling:
     async def test_invalid_json_payload(self, async_client):
         """Test handling of invalid JSON payloads."""
         response = await async_client.post(
-            "/api/auth/login",
-            content="invalid json",
-            headers={"Content-Type": "application/json"}
+            "/api/auth/login", content="invalid json", headers={"Content-Type": "application/json"}
         )
 
         # Should handle gracefully
@@ -393,7 +375,7 @@ class TestCORSHeaders:
         headers = {
             "Origin": "http://localhost:3000",
             "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "Content-Type,Authorization"
+            "Access-Control-Request-Headers": "Content-Type,Authorization",
         }
 
         response = await async_client.options("/api/auth/login", headers=headers)
@@ -413,7 +395,7 @@ class TestContentTypeValidation:
         response = await async_client.post(
             "/api/auth/login",
             content='{"username": "test", "password": "test"}',
-            headers={"Content-Type": "text/plain"}
+            headers={"Content-Type": "text/plain"},
         )
 
         # Should reject non-JSON content

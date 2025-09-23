@@ -2,13 +2,12 @@
 
 import asyncio
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from .event_publisher import EventPublisher, InMemoryEventPublisher
-from .event_subscriber import EventSubscriber, EventHandler
 from .application_events import ApplicationEvent
-
+from .event_publisher import EventPublisher, InMemoryEventPublisher
+from .event_subscriber import EventHandler, EventSubscriber
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +15,7 @@ logger = logging.getLogger(__name__)
 class EventBus:
     """Central event bus for application-wide event communication."""
 
-    def __init__(
-        self,
-        publisher: Optional[EventPublisher] = None,
-        subscriber: Optional[EventSubscriber] = None
-    ):
+    def __init__(self, publisher: Optional[EventPublisher] = None, subscriber: Optional[EventSubscriber] = None):
         """Initialize event bus."""
         self.publisher = publisher or InMemoryEventPublisher()
         self.subscriber = subscriber or EventSubscriber()
@@ -93,13 +88,12 @@ class EventBus:
     def get_stats(self) -> Dict[str, Any]:
         """Get event bus statistics."""
         return {
-            'running': self._running,
-            'publisher_type': self.publisher.__class__.__name__,
-            'subscriber_handler_count': sum(
-                self.subscriber.get_handler_count(event_type)
-                for event_type in self.subscriber.handlers.keys()
+            "running": self._running,
+            "publisher_type": self.publisher.__class__.__name__,
+            "subscriber_handler_count": sum(
+                self.subscriber.get_handler_count(event_type) for event_type in self.subscriber.handlers.keys()
             ),
-            'event_types_handled': len(self.subscriber.handlers)
+            "event_types_handled": len(self.subscriber.handlers),
         }
 
 
@@ -134,7 +128,7 @@ class CQRSIntegration:
             result = await handler(command)
 
             # Publish events if command was successful
-            if hasattr(result, 'events') and result.events:
+            if hasattr(result, "events") and result.events:
                 for event in result.events:
                     await self.event_bus.publish(event)
 
@@ -162,15 +156,12 @@ class CQRSIntegration:
 
         return AnalysisFailedEvent(
             event_id=str(uuid4()),
-            correlation_id=getattr(command, 'correlation_id', None),
-            document_id=getattr(command, 'document_id', ''),
-            analysis_type=getattr(command, 'analysis_type', ''),
+            correlation_id=getattr(command, "correlation_id", None),
+            document_id=getattr(command, "document_id", ""),
+            analysis_type=getattr(command, "analysis_type", ""),
             error_message=str(error),
             error_code=error.__class__.__name__,
-            metadata={
-                'command_type': command.__class__.__name__,
-                'command_data': str(command)
-            }
+            metadata={"command_type": command.__class__.__name__, "command_data": str(command)},
         )
 
 
@@ -240,16 +231,14 @@ class EventBusFactory:
         from .event_subscriber import EventHandlerFactory
 
         # Create publisher
-        publisher_config = config.get('publisher', {'type': 'in_memory'})
+        publisher_config = config.get("publisher", {"type": "in_memory"})
         publisher = EventPublisherFactory.create_from_config(publisher_config)
 
         # Create subscriber
-        subscriber = EventSubscriber(
-            max_workers=config.get('subscriber', {}).get('max_workers', 5)
-        )
+        subscriber = EventSubscriber(max_workers=config.get("subscriber", {}).get("max_workers", 5))
 
         # Create handlers
-        handler_config = config.get('handlers', {})
+        handler_config = config.get("handlers", {})
         handlers = EventHandlerFactory.create_handlers_from_config(handler_config)
 
         event_bus = EventBus(publisher, subscriber)
@@ -265,7 +254,7 @@ class EventBusFactory:
         await event_bus.start()
 
         # Subscribe pending handlers
-        if hasattr(event_bus, '_pending_handlers'):
+        if hasattr(event_bus, "_pending_handlers"):
             for handler in event_bus._pending_handlers:
                 await event_bus.subscribe(handler)
             del event_bus._pending_handlers

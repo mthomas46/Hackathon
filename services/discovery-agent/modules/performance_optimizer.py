@@ -5,10 +5,10 @@ mapping capabilities to enhance discovery efficiency and tool orchestration.
 """
 
 import asyncio
-import time
-from typing import Dict, Any, List, Optional, Tuple
-from collections import defaultdict
 import statistics
+import time
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class PerformanceOptimizer:
@@ -27,7 +27,7 @@ class PerformanceOptimizer:
             "bottleneck_identification": [],
             "resource_optimization": [],
             "caching_strategies": [],
-            "dependency_optimization": []
+            "dependency_optimization": [],
         }
 
         performance_data = discovery_results.get("performance_metrics", [])
@@ -47,24 +47,28 @@ class PerformanceOptimizer:
             # Identify slow services (bottlenecks)
             slow_services = [p for p in performance_data if p.get("response_time", 0) > avg_time * 1.5]
             if slow_services:
-                optimization_recommendations["bottleneck_identification"].extend([
-                    {
-                        "type": "slow_service",
-                        "services": [s["service"] for s in slow_services],
-                        "avg_slow_time": statistics.mean([s["response_time"] for s in slow_services]),
-                        "recommendation": "Consider parallel processing or caching for slow services"
-                    }
-                ])
+                optimization_recommendations["bottleneck_identification"].extend(
+                    [
+                        {
+                            "type": "slow_service",
+                            "services": [s["service"] for s in slow_services],
+                            "avg_slow_time": statistics.mean([s["response_time"] for s in slow_services]),
+                            "recommendation": "Consider parallel processing or caching for slow services",
+                        }
+                    ]
+                )
 
             # Identify fast services for parallelization
             fast_services = [p for p in performance_data if p.get("response_time", 0) < avg_time * 0.5]
             if len(fast_services) > 1:
-                optimization_recommendations["parallelization_opportunities"].append({
-                    "type": "parallel_batch",
-                    "services": [s["service"] for s in fast_services],
-                    "estimated_speedup": f"{len(fast_services)}x faster with parallel processing",
-                    "recommendation": "Process these services in parallel batches"
-                })
+                optimization_recommendations["parallelization_opportunities"].append(
+                    {
+                        "type": "parallel_batch",
+                        "services": [s["service"] for s in fast_services],
+                        "estimated_speedup": f"{len(fast_services)}x faster with parallel processing",
+                        "recommendation": "Process these services in parallel batches",
+                    }
+                )
 
         # Analyze tool discovery patterns
         tools_per_service = [p.get("tools_found", 0) for p in performance_data]
@@ -73,29 +77,33 @@ class PerformanceOptimizer:
             high_tool_services = [p for p in performance_data if p.get("tools_found", 0) > avg_tools * 2]
 
             if high_tool_services:
-                optimization_recommendations["resource_optimization"].append({
-                    "type": "high_yield_services",
-                    "services": [s["service"] for s in high_tool_services],
-                    "recommendation": "Prioritize these services in discovery workflows for maximum tool yield"
-                })
+                optimization_recommendations["resource_optimization"].append(
+                    {
+                        "type": "high_yield_services",
+                        "services": [s["service"] for s in high_tool_services],
+                        "recommendation": "Prioritize these services in discovery workflows for maximum tool yield",
+                    }
+                )
 
         # Caching recommendations
         if len(performance_data) > 5:
-            optimization_recommendations["caching_strategies"].append({
-                "type": "discovery_results_cache",
-                "recommendation": "Cache discovery results for 15-30 minutes to reduce repeated API calls",
-                "estimated_benefit": "50-70% reduction in discovery time for repeated operations"
-            })
+            optimization_recommendations["caching_strategies"].append(
+                {
+                    "type": "discovery_results_cache",
+                    "recommendation": "Cache discovery results for 15-30 minutes to reduce repeated API calls",
+                    "estimated_benefit": "50-70% reduction in discovery time for repeated operations",
+                }
+            )
 
         return {
             "optimizations": optimization_recommendations,
             "performance_summary": {
                 "total_services": len(performance_data),
-                "avg_response_time": avg_time if 'avg_time' in locals() else 0,
+                "avg_response_time": avg_time if "avg_time" in locals() else 0,
                 "max_response_time": max(response_times) if response_times else 0,
                 "min_response_time": min(response_times) if response_times else 0,
-                "total_tools_found": sum(p.get("tools_found", 0) for p in performance_data)
-            }
+                "total_tools_found": sum(p.get("tools_found", 0) for p in performance_data),
+            },
         }
 
     async def analyze_tool_dependencies(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -106,7 +114,7 @@ class PerformanceOptimizer:
             "circular_dependencies": [],
             "independent_tools": [],
             "critical_path": [],
-            "optimization_opportunities": []
+            "optimization_opportunities": [],
         }
 
         print(f"🔗 Analyzing dependencies between {len(tools)} tools...")
@@ -121,7 +129,7 @@ class PerformanceOptimizer:
                 "category": category,
                 "capabilities": capabilities,
                 "depends_on": [],
-                "depended_by": []
+                "depended_by": [],
             }
 
         # Analyze relationships
@@ -132,11 +140,13 @@ class PerformanceOptimizer:
 
                 relationship = self._analyze_tool_dependency(tool1, tool2)
                 if relationship["depends"]:
-                    dependency_analysis["dependency_graph"][tool1["name"]]["depends_on"].append({
-                        "tool": tool2["name"],
-                        "relationship": relationship["type"],
-                        "strength": relationship["strength"]
-                    })
+                    dependency_analysis["dependency_graph"][tool1["name"]]["depends_on"].append(
+                        {
+                            "tool": tool2["name"],
+                            "relationship": relationship["type"],
+                            "strength": relationship["strength"],
+                        }
+                    )
 
         # Find independent tools (no dependencies)
         independent = []
@@ -148,12 +158,14 @@ class PerformanceOptimizer:
 
         # Identify optimization opportunities
         if len(independent) > 3:
-            dependency_analysis["optimization_opportunities"].append({
-                "type": "parallel_processing",
-                "description": f"{len(independent)} independent tools can be processed in parallel",
-                "tools": independent,
-                "estimated_benefit": f"{len(independent)}x speedup for independent operations"
-            })
+            dependency_analysis["optimization_opportunities"].append(
+                {
+                    "type": "parallel_processing",
+                    "description": f"{len(independent)} independent tools can be processed in parallel",
+                    "tools": independent,
+                    "estimated_benefit": f"{len(independent)}x speedup for independent operations",
+                }
+            )
 
         # Find tools with many dependencies (potential bottlenecks)
         dependency_counts = {}
@@ -162,11 +174,13 @@ class PerformanceOptimizer:
 
         high_dependency_tools = [tool for tool, count in dependency_counts.items() if count > 2]
         if high_dependency_tools:
-            dependency_analysis["optimization_opportunities"].append({
-                "type": "dependency_reduction",
-                "description": f"Tools with high dependencies: {', '.join(high_dependency_tools)}",
-                "recommendation": "Consider breaking down complex tools or optimizing dependency chains"
-            })
+            dependency_analysis["optimization_opportunities"].append(
+                {
+                    "type": "dependency_reduction",
+                    "description": f"Tools with high dependencies: {', '.join(high_dependency_tools)}",
+                    "recommendation": "Consider breaking down complex tools or optimizing dependency chains",
+                }
+            )
 
         return dependency_analysis
 
@@ -179,7 +193,7 @@ class PerformanceOptimizer:
             ("analysis", "storage", "result_persistence"),
             ("generation", "analysis", "content_validation"),
             ("search", "analysis", "result_processing"),
-            ("processing", "storage", "processed_data_storage")
+            ("processing", "storage", "processed_data_storage"),
         ]
 
         category1 = tool1.get("category", "").lower()
@@ -191,14 +205,14 @@ class PerformanceOptimizer:
                     "depends": True,
                     "type": dep_type,
                     "direction": f"{tool1['name']} -> {tool2['name']}",
-                    "strength": 0.8
+                    "strength": 0.8,
                 }
             elif input_cat in category2 and output_cat in category1:
                 return {
                     "depends": True,
                     "type": dep_type,
                     "direction": f"{tool2['name']} -> {tool1['name']}",
-                    "strength": 0.8
+                    "strength": 0.8,
                 }
 
         # Capability-based dependencies
@@ -210,7 +224,7 @@ class PerformanceOptimizer:
                 "depends": True,
                 "type": "capability_sharing",
                 "direction": f"{tool1['name']} ↔ {tool2['name']}",
-                "strength": 0.5
+                "strength": 0.5,
             }
 
         return {"depends": False, "type": "none", "strength": 0.0}
@@ -223,7 +237,7 @@ class PerformanceOptimizer:
             "optimized_workflow": workflow_spec.copy(),
             "optimizations_applied": [],
             "estimated_performance_gain": 0,
-            "parallelization_suggestions": []
+            "parallelization_suggestions": [],
         }
 
         steps = workflow_spec.get("steps", [])
@@ -256,7 +270,7 @@ class PerformanceOptimizer:
                 "applied_optimizations": optimization_result["optimizations_applied"],
                 "estimated_performance_gain": optimization_result["estimated_performance_gain"],
                 "parallel_groups": len(parallel_groups),
-                "optimized_at": "2025-01-17T21:30:00Z"
+                "optimized_at": "2025-01-17T21:30:00Z",
             }
             optimization_result["optimized_workflow"] = optimized_spec
 
@@ -279,18 +293,22 @@ class PerformanceOptimizer:
                 prev_name = prev_step.get("step_name", f"step_{j}")
 
                 # Look for sequential patterns
-                if any(word in prev_desc for word in ["generate", "create", "produce"]) and \
-                   any(word in step_desc for word in ["analyze", "process", "validate"]):
+                if any(word in prev_desc for word in ["generate", "create", "produce"]) and any(
+                    word in step_desc for word in ["analyze", "process", "validate"]
+                ):
                     depends_on.append(prev_name)
-                elif any(word in prev_desc for word in ["analyze", "process"]) and \
-                     any(word in step_desc for word in ["store", "save", "persist"]):
+                elif any(word in prev_desc for word in ["analyze", "process"]) and any(
+                    word in step_desc for word in ["store", "save", "persist"]
+                ):
                     depends_on.append(prev_name)
 
             dependencies[step_name] = depends_on
 
         return dependencies
 
-    def _identify_parallel_groups(self, steps: List[Dict[str, Any]], dependencies: Dict[str, List[str]]) -> List[List[str]]:
+    def _identify_parallel_groups(
+        self, steps: List[Dict[str, Any]], dependencies: Dict[str, List[str]]
+    ) -> List[List[str]]:
         """Identify groups of steps that can be executed in parallel"""
 
         parallel_groups = []
@@ -319,10 +337,7 @@ class PerformanceOptimizer:
     def _optimize_resource_allocation(self, steps: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Optimize resource allocation for workflow steps"""
 
-        optimization = {
-            "optimizations": [],
-            "gain": 0
-        }
+        optimization = {"optimizations": [], "gain": 0}
 
         # Analyze tool usage patterns
         tool_usage = defaultdict(int)
@@ -336,7 +351,9 @@ class PerformanceOptimizer:
         if frequently_used_tools:
             optimization["optimizations"].append("connection_pooling")
             optimization["gain"] += 0.2  # 20% performance gain
-            optimization["description"] = f"Optimize connection pooling for frequently used tools: {', '.join(frequently_used_tools)}"
+            optimization["description"] = (
+                f"Optimize connection pooling for frequently used tools: {', '.join(frequently_used_tools)}"
+            )
 
         # Check for memory-intensive operations
         memory_intensive_tools = []
@@ -362,7 +379,7 @@ class PerformanceOptimizer:
             "avg_response_time": 0,
             "performance_percentiles": {},
             "service_performance": {},
-            "baseline_metrics": {}
+            "baseline_metrics": {},
         }
 
         performance_data = discovery_results.get("performance_metrics", [])
@@ -374,8 +391,16 @@ class PerformanceOptimizer:
                 baseline["avg_response_time"] = statistics.mean(response_times)
                 baseline["performance_percentiles"] = {
                     "p50": statistics.median(response_times),
-                    "p95": statistics.quantiles(response_times, n=20)[18] if len(response_times) >= 20 else max(response_times),
-                    "p99": statistics.quantiles(response_times, n=100)[98] if len(response_times) >= 100 else max(response_times)
+                    "p95": (
+                        statistics.quantiles(response_times, n=20)[18]
+                        if len(response_times) >= 20
+                        else max(response_times)
+                    ),
+                    "p99": (
+                        statistics.quantiles(response_times, n=100)[98]
+                        if len(response_times) >= 100
+                        else max(response_times)
+                    ),
                 }
 
             # Service-specific baselines
@@ -384,13 +409,14 @@ class PerformanceOptimizer:
                 baseline["service_performance"][service] = {
                     "avg_response_time": metric.get("response_time", 0),
                     "tools_found": metric.get("tools_found", 0),
-                    "endpoints_found": metric.get("endpoints_found", 0)
+                    "endpoints_found": metric.get("endpoints_found", 0),
                 }
 
         baseline["baseline_metrics"] = {
             "tools_per_second": baseline["total_tools"] / max(baseline["avg_response_time"], 1),
-            "services_per_second": baseline["services_tested"] / max(baseline["avg_response_time"] * baseline["services_tested"], 1),
-            "health_rate": baseline["healthy_services"] / max(baseline["services_tested"], 1)
+            "services_per_second": baseline["services_tested"]
+            / max(baseline["avg_response_time"] * baseline["services_tested"], 1),
+            "health_rate": baseline["healthy_services"] / max(baseline["services_tested"], 1),
         }
 
         print("📊 Performance baseline established:")
@@ -400,7 +426,9 @@ class PerformanceOptimizer:
 
         return baseline
 
-    async def monitor_performance_trends(self, current_results: Dict[str, Any], baseline: Dict[str, Any]) -> Dict[str, Any]:
+    async def monitor_performance_trends(
+        self, current_results: Dict[str, Any], baseline: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Monitor performance trends against baseline"""
 
         trends = {
@@ -408,7 +436,7 @@ class PerformanceOptimizer:
             "baseline_timestamp": baseline.get("timestamp"),
             "performance_changes": {},
             "trend_analysis": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Compare current performance with baseline
@@ -420,7 +448,7 @@ class PerformanceOptimizer:
             trends["performance_changes"]["avg_response_time"] = {
                 "change_percent": time_change_pct,
                 "trend": "improving" if time_change_pct < 0 else "degrading",
-                "significance": "significant" if abs(time_change_pct) > 10 else "minor"
+                "significance": "significant" if abs(time_change_pct) > 10 else "minor",
             }
 
         # Analyze tool discovery efficiency
@@ -432,7 +460,7 @@ class PerformanceOptimizer:
             "change_percent": tools_change_pct,
             "trend": "improving" if tools_change_pct > 0 else "stable",
             "current_tools": current_tools,
-            "baseline_tools": baseline_tools
+            "baseline_tools": baseline_tools,
         }
 
         # Generate trend analysis

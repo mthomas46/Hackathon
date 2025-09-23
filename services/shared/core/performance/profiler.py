@@ -1,22 +1,23 @@
 """Performance Profiler - Advanced profiling and performance monitoring tools."""
 
-import time
 import asyncio
+import gc
+import os
+import sys
 import threading
-import psutil
+import time
 import tracemalloc
-from typing import Dict, Any, Optional, List, Callable, TypeVar, Union
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import gc
-import sys
-import os
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
-from ..logging.logger import get_logger
+import psutil
+
 from ..di.services import ILoggerService
+from ..logging.logger import get_logger
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
@@ -79,20 +80,22 @@ class PerformanceMetrics:
             "performance_flags": {
                 "is_slow": self.is_slow,
                 "memory_leak_detected": self.memory_leak_detected,
-                "high_cpu_usage": self.high_cpu_usage
-            }
+                "high_cpu_usage": self.high_cpu_usage,
+            },
         }
 
 
 class PerformanceProfiler:
     """Advanced performance profiler for synchronous operations."""
 
-    def __init__(self,
-                 logger: Optional[ILoggerService] = None,
-                 slow_threshold_ms: float = 1000.0,
-                 memory_threshold_mb: float = 50.0,
-                 enable_memory_tracking: bool = True,
-                 enable_cpu_tracking: bool = True) -> None:
+    def __init__(
+        self,
+        logger: Optional[ILoggerService] = None,
+        slow_threshold_ms: float = 1000.0,
+        memory_threshold_mb: float = 50.0,
+        enable_memory_tracking: bool = True,
+        enable_cpu_tracking: bool = True,
+    ) -> None:
         """Initialize performance profiler.
 
         Args:
@@ -133,9 +136,7 @@ class PerformanceProfiler:
             PerformanceMetrics object for tracking
         """
         metrics = PerformanceMetrics(
-            operation_name=operation_name,
-            start_time=datetime.now(timezone.utc),
-            custom_metrics=context
+            operation_name=operation_name, start_time=datetime.now(timezone.utc), custom_metrics=context
         )
 
         # Collect initial system metrics
@@ -227,14 +228,14 @@ class PerformanceProfiler:
                 duration_ms=metrics.duration_ms,
                 memory_delta_mb=metrics.memory_delta_mb,
                 cpu_percent=metrics.cpu_percent_end,
-                **log_data
+                **log_data,
             )
         else:
             self._logger.info(
                 f"Performance: {metrics.operation_name}",
                 operation=metrics.operation_name,
                 duration_ms=metrics.duration_ms,
-                **log_data
+                **log_data,
             )
 
     def _add_to_history(self, metrics: PerformanceMetrics) -> None:
@@ -284,14 +285,14 @@ class PerformanceProfiler:
                 "min": min(durations) if durations else 0,
                 "max": max(durations) if durations else 0,
                 "avg": sum(durations) / len(durations) if durations else 0,
-                "slow_operations": len([d for d in durations if d > self._slow_threshold_ms])
+                "slow_operations": len([d for d in durations if d > self._slow_threshold_ms]),
             },
             "memory_stats": {
                 "min_delta": min(memory_deltas) if memory_deltas else 0,
                 "max_delta": max(memory_deltas) if memory_deltas else 0,
                 "avg_delta": sum(memory_deltas) / len(memory_deltas) if memory_deltas else 0,
-                "memory_issues": len([d for d in memory_deltas if abs(d) > self._memory_threshold_mb])
-            }
+                "memory_issues": len([d for d in memory_deltas if abs(d) > self._memory_threshold_mb]),
+            },
         }
 
     def clear_history(self) -> None:

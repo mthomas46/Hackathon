@@ -1,8 +1,9 @@
 """Tests for Analysis domain entity."""
 
-import pytest
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
+
+import pytest
 
 from ...domain.entities.analysis import Analysis, AnalysisStatus
 from ...domain.value_objects.analysis_type import AnalysisType
@@ -17,29 +18,25 @@ class TestAnalysisEntity:
         """Test creating an analysis with valid data."""
         analysis = Analysis(**sample_analysis_data)
 
-        assert analysis.id == sample_analysis_data['id']
-        assert analysis.document_id == sample_analysis_data['document_id']
+        assert analysis.id == sample_analysis_data["id"]
+        assert analysis.document_id == sample_analysis_data["document_id"]
         assert analysis.analysis_type == AnalysisType.SEMANTIC_SIMILARITY
         assert analysis.status == AnalysisStatus.COMPLETED
         assert analysis.confidence == Confidence(0.85)
         assert isinstance(analysis.metrics, AnalysisMetrics)
-        assert analysis.results == sample_analysis_data['results']
-        assert analysis.metadata == sample_analysis_data['metadata']
+        assert analysis.results == sample_analysis_data["results"]
+        assert analysis.metadata == sample_analysis_data["metadata"]
         assert isinstance(analysis.created_at, datetime)
         assert isinstance(analysis.completed_at, datetime)
 
     def test_analysis_creation_with_defaults(self):
         """Test creating an analysis with minimal required data."""
-        minimal_data = {
-            'id': 'minimal-analysis',
-            'document_id': 'doc-001',
-            'analysis_type': AnalysisType.CODE_QUALITY
-        }
+        minimal_data = {"id": "minimal-analysis", "document_id": "doc-001", "analysis_type": AnalysisType.CODE_QUALITY}
 
         analysis = Analysis(**minimal_data)
 
-        assert analysis.id == 'minimal-analysis'
-        assert analysis.document_id == 'doc-001'
+        assert analysis.id == "minimal-analysis"
+        assert analysis.document_id == "doc-001"
         assert analysis.analysis_type == AnalysisType.CODE_QUALITY
         assert analysis.status == AnalysisStatus.PENDING
         assert analysis.confidence is None
@@ -49,10 +46,10 @@ class TestAnalysisEntity:
     def test_analysis_creation_validation(self):
         """Test analysis creation validation."""
         with pytest.raises(ValueError):
-            Analysis(id='', document_id='doc-001', analysis_type=AnalysisType.CODE_QUALITY)
+            Analysis(id="", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
 
         with pytest.raises(ValueError):
-            Analysis(id='test', document_id='', analysis_type=AnalysisType.CODE_QUALITY)
+            Analysis(id="test", document_id="", analysis_type=AnalysisType.CODE_QUALITY)
 
     def test_analysis_status_transitions(self, sample_analysis: Analysis):
         """Test analysis status transitions."""
@@ -67,20 +64,12 @@ class TestAnalysisEntity:
     def test_analysis_type_validation(self):
         """Test analysis type validation."""
         for analysis_type in AnalysisType:
-            analysis = Analysis(
-                id=f'test-{analysis_type.value}',
-                document_id='doc-001',
-                analysis_type=analysis_type
-            )
+            analysis = Analysis(id=f"test-{analysis_type.value}", document_id="doc-001", analysis_type=analysis_type)
             assert analysis.analysis_type == analysis_type
 
     def test_analysis_confidence_handling(self):
         """Test analysis confidence handling."""
-        analysis = Analysis(
-            id='confidence-test',
-            document_id='doc-001',
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
-        )
+        analysis = Analysis(id="confidence-test", document_id="doc-001", analysis_type=AnalysisType.SEMANTIC_SIMILARITY)
 
         assert analysis.confidence is None
 
@@ -93,10 +82,7 @@ class TestAnalysisEntity:
     def test_analysis_metrics_integration(self, analysis_metrics: AnalysisMetrics):
         """Test analysis metrics integration."""
         analysis = Analysis(
-            id='metrics-test',
-            document_id='doc-001',
-            analysis_type=AnalysisType.CODE_QUALITY,
-            metrics=analysis_metrics
+            id="metrics-test", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY, metrics=analysis_metrics
         )
 
         assert analysis.metrics == analysis_metrics
@@ -104,22 +90,12 @@ class TestAnalysisEntity:
 
     def test_analysis_equality(self):
         """Test analysis equality comparison."""
-        analysis1 = Analysis(
-            id='equal-analysis',
-            document_id='doc-001',
-            analysis_type=AnalysisType.CODE_QUALITY
-        )
+        analysis1 = Analysis(id="equal-analysis", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
 
-        analysis2 = Analysis(
-            id='equal-analysis',
-            document_id='doc-001',
-            analysis_type=AnalysisType.CODE_QUALITY
-        )
+        analysis2 = Analysis(id="equal-analysis", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
 
         analysis3 = Analysis(
-            id='different-analysis',
-            document_id='doc-001',
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            id="different-analysis", document_id="doc-001", analysis_type=AnalysisType.SEMANTIC_SIMILARITY
         )
 
         assert analysis1 == analysis2
@@ -130,5 +106,5 @@ class TestAnalysisEntity:
         analysis = analysis_factory.create_analysis(**sample_analysis_data)
 
         assert isinstance(analysis, Analysis)
-        assert analysis.id == sample_analysis_data['id']
+        assert analysis.id == sample_analysis_data["id"]
         assert analysis.analysis_type == AnalysisType.SEMANTIC_SIMILARITY

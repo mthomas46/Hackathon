@@ -3,9 +3,10 @@ Discovery Client - API Service Discovery and Registration
 """
 
 import asyncio
-import httpx
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class DiscoveryClient:
     """Client for service discovery operations."""
 
     def __init__(self, base_url: str = "http://localhost:5045"):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.client = httpx.AsyncClient(timeout=30.0)
 
     async def discover_services(self) -> List[Dict[str, Any]]:
@@ -41,10 +42,7 @@ class DiscoveryClient:
     async def register_service(self, service_info: Dict[str, Any]) -> bool:
         """Register a new service."""
         try:
-            response = await self.client.post(
-                f"{self.base_url}/register",
-                json=service_info
-            )
+            response = await self.client.post(f"{self.base_url}/register", json=service_info)
             response.raise_for_status()
             return True
         except Exception as e:

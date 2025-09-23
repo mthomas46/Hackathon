@@ -5,15 +5,16 @@ Simulation Service, validating complete simulation workflows, multi-service
 orchestration, and data consistency across the entire platform.
 """
 
-import pytest
 import asyncio
 import json
+import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-import sys
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -26,11 +27,7 @@ class TestCompleteSimulationWorkflow:
         """Test complete simulation lifecycle from creation to completion."""
         # Test complete simulation workflow
         simulation_config = {
-            "project": {
-                "name": "E2E Test Project",
-                "type": "web_application",
-                "complexity": "medium"
-            },
+            "project": {"name": "E2E Test Project", "type": "web_application", "complexity": "medium"},
             "team": {
                 "size": 5,
                 "members": [
@@ -38,8 +35,8 @@ class TestCompleteSimulationWorkflow:
                     {"name": "Bob", "role": "developer", "expertise": "intermediate"},
                     {"name": "Charlie", "role": "qa", "expertise": "senior"},
                     {"name": "Diana", "role": "designer", "expertise": "intermediate"},
-                    {"name": "Eve", "role": "product_manager", "expertise": "senior"}
-                ]
+                    {"name": "Eve", "role": "product_manager", "expertise": "senior"},
+                ],
             },
             "timeline": {
                 "duration_weeks": 8,
@@ -48,9 +45,9 @@ class TestCompleteSimulationWorkflow:
                     {"name": "Design", "duration_weeks": 2},
                     {"name": "Development", "duration_weeks": 3},
                     {"name": "Testing", "duration_weeks": 1},
-                    {"name": "Deployment", "duration_weeks": 1}
-                ]
-            }
+                    {"name": "Deployment", "duration_weeks": 1},
+                ],
+            },
         }
 
         # Execute complete simulation workflow
@@ -83,15 +80,11 @@ class TestCompleteSimulationWorkflow:
         """Test simulation with failure scenarios and recovery."""
         # Test simulation that encounters failures and recovers
         simulation_config = {
-            "project": {
-                "name": "Failure Recovery Test",
-                "type": "mobile_application",
-                "complexity": "high"
-            },
+            "project": {"name": "Failure Recovery Test", "type": "mobile_application", "complexity": "high"},
             "failure_scenarios": [
                 {"phase": "design", "failure_type": "service_unavailable", "recovery_time": 30},
-                {"phase": "development", "failure_type": "data_corruption", "recovery_time": 60}
-            ]
+                {"phase": "development", "failure_type": "data_corruption", "recovery_time": 60},
+            ],
         }
 
         # Execute simulation with failure scenarios
@@ -119,18 +112,9 @@ class TestCompleteSimulationWorkflow:
         """Test orchestration of multiple concurrent simulations."""
         # Test running multiple simulations concurrently
         simulation_configs = [
-            {
-                "project": {"name": "Concurrent Sim 1", "type": "web_application"},
-                "team": {"size": 3}
-            },
-            {
-                "project": {"name": "Concurrent Sim 2", "type": "api_service"},
-                "team": {"size": 4}
-            },
-            {
-                "project": {"name": "Concurrent Sim 3", "type": "mobile_application"},
-                "team": {"size": 5}
-            }
+            {"project": {"name": "Concurrent Sim 1", "type": "web_application"}, "team": {"size": 3}},
+            {"project": {"name": "Concurrent Sim 2", "type": "api_service"}, "team": {"size": 4}},
+            {"project": {"name": "Concurrent Sim 3", "type": "mobile_application"}, "team": {"size": 5}},
         ]
 
         # Execute concurrent simulations
@@ -167,14 +151,22 @@ class TestCompleteSimulationWorkflow:
         consistency_checks = consistency_result["consistency_checks"]
 
         # Project data consistency
-        assert consistency_checks["project_data"]["simulation_service"] == consistency_checks["project_data"]["doc_store"]
-        assert consistency_checks["project_data"]["simulation_service"] == consistency_checks["project_data"]["analysis_service"]
+        assert (
+            consistency_checks["project_data"]["simulation_service"] == consistency_checks["project_data"]["doc_store"]
+        )
+        assert (
+            consistency_checks["project_data"]["simulation_service"]
+            == consistency_checks["project_data"]["analysis_service"]
+        )
 
         # Team data consistency
         assert consistency_checks["team_data"]["simulation_service"] == consistency_checks["team_data"]["doc_store"]
 
         # Timeline data consistency
-        assert consistency_checks["timeline_data"]["simulation_service"] == consistency_checks["timeline_data"]["doc_store"]
+        assert (
+            consistency_checks["timeline_data"]["simulation_service"]
+            == consistency_checks["timeline_data"]["doc_store"]
+        )
 
         # Event data consistency
         event_consistency = consistency_checks["event_data"]
@@ -198,10 +190,10 @@ class TestCompleteSimulationWorkflow:
             "duration_seconds": 45.5,
             "artifacts": {
                 "documents": ["requirements.pdf", "architecture.docx", "api_spec.yaml"],
-                "events": ["simulation_started", "phase_completed", "document_generated", "simulation_completed"]
+                "events": ["simulation_started", "phase_completed", "document_generated", "simulation_completed"],
             },
             "team_data": {"members": config["team"]["members"]},
-            "timeline_data": {"phases": config["timeline"]["phases"]}
+            "timeline_data": {"phases": config["timeline"]["phases"]},
         }
 
     def _execute_simulation_with_failures(self, config):
@@ -214,15 +206,19 @@ class TestCompleteSimulationWorkflow:
             "events": [
                 {"event_type": "simulation_started", "timestamp": "2024-01-01T10:00:00Z"},
                 {"event_type": "phase_started", "phase": "design", "timestamp": "2024-01-01T10:05:00Z"},
-                {"event_type": "service_failure", "service": "mock_data_generator", "timestamp": "2024-01-01T10:15:00Z"},
+                {
+                    "event_type": "service_failure",
+                    "service": "mock_data_generator",
+                    "timestamp": "2024-01-01T10:15:00Z",
+                },
                 {"event_type": "failure_recovery", "timestamp": "2024-01-01T10:45:00Z"},
                 {"event_type": "phase_completed", "phase": "design", "timestamp": "2024-01-01T11:00:00Z"},
                 {"event_type": "phase_started", "phase": "development", "timestamp": "2024-01-01T11:05:00Z"},
                 {"event_type": "data_corruption_failure", "timestamp": "2024-01-01T11:30:00Z"},
                 {"event_type": "data_recovery", "timestamp": "2024-01-01T12:30:00Z"},
-                {"event_type": "simulation_completed", "timestamp": "2024-01-01T13:00:00Z"}
+                {"event_type": "simulation_completed", "timestamp": "2024-01-01T13:00:00Z"},
             ],
-            "final_phase": "deployment"
+            "final_phase": "deployment",
         }
 
     def _execute_concurrent_simulations(self, configs):
@@ -231,13 +227,9 @@ class TestCompleteSimulationWorkflow:
             "simulations": [
                 {"simulation_id": "sim-concurrent-1", "status": "completed", "success": True},
                 {"simulation_id": "sim-concurrent-2", "status": "completed", "success": True},
-                {"simulation_id": "sim-concurrent-3", "status": "completed", "success": True}
+                {"simulation_id": "sim-concurrent-3", "status": "completed", "success": True},
             ],
-            "resource_usage": {
-                "cpu_peak": 75.5,
-                "memory_peak": 68.2,
-                "duration_seconds": 120.5
-            }
+            "resource_usage": {"cpu_peak": 75.5, "memory_peak": 68.2, "duration_seconds": 120.5},
         }
 
     def _validate_data_consistency_across_services(self, simulation_id):
@@ -247,27 +239,27 @@ class TestCompleteSimulationWorkflow:
                 "project_data": {
                     "simulation_service": {"name": "Test Project", "type": "web_app", "complexity": "medium"},
                     "doc_store": {"name": "Test Project", "type": "web_app", "complexity": "medium"},
-                    "analysis_service": {"name": "Test Project", "type": "web_app", "complexity": "medium"}
+                    "analysis_service": {"name": "Test Project", "type": "web_app", "complexity": "medium"},
                 },
                 "team_data": {
                     "simulation_service": {"size": 5, "members": ["Alice", "Bob", "Charlie", "Diana", "Eve"]},
-                    "doc_store": {"size": 5, "members": ["Alice", "Bob", "Charlie", "Diana", "Eve"]}
+                    "doc_store": {"size": 5, "members": ["Alice", "Bob", "Charlie", "Diana", "Eve"]},
                 },
                 "timeline_data": {
                     "simulation_service": {"phases": 5, "duration_weeks": 8},
-                    "doc_store": {"phases": 5, "duration_weeks": 8}
+                    "doc_store": {"phases": 5, "duration_weeks": 8},
                 },
                 "event_data": {
                     "event_count_match": True,
                     "event_order_preserved": True,
-                    "event_timestamps_consistent": True
+                    "event_timestamps_consistent": True,
                 },
                 "document_metadata": {
                     "title_consistent": True,
                     "author_consistent": True,
                     "version_consistent": True,
-                    "creation_date_consistent": True
-                }
+                    "creation_date_consistent": True,
+                },
             }
         }
 
@@ -286,8 +278,8 @@ class TestMultiServiceOrchestration:
                 {"service": "mock_data_generator", "action": "generate_documents", "count": 5},
                 {"service": "analysis_service", "action": "analyze_documents", "parallel": True},
                 {"service": "doc_store", "action": "store_documents"},
-                {"service": "analysis_service", "action": "generate_report"}
-            ]
+                {"service": "analysis_service", "action": "generate_report"},
+            ],
         }
 
         # Execute cross-service workflow
@@ -323,7 +315,7 @@ class TestMultiServiceOrchestration:
             "analysis_service": ["mock_data_generator", "doc_store"],
             "doc_store": [],
             "notification_service": ["analysis_service"],
-            "reporting_service": ["analysis_service", "doc_store"]
+            "reporting_service": ["analysis_service", "doc_store"],
         }
 
         # Resolve service execution order
@@ -356,20 +348,20 @@ class TestMultiServiceOrchestration:
                 "pattern": "request_response",
                 "services": ["simulation_service", "mock_data_generator"],
                 "message_count": 10,
-                "expected_latency": "< 100ms"
+                "expected_latency": "< 100ms",
             },
             {
                 "pattern": "publish_subscribe",
                 "services": ["analysis_service", "notification_service"],
                 "message_count": 50,
-                "expected_latency": "< 50ms"
+                "expected_latency": "< 50ms",
             },
             {
                 "pattern": "fire_and_forget",
                 "services": ["reporting_service", "monitoring_service"],
                 "message_count": 25,
-                "expected_latency": "< 10ms"
-            }
+                "expected_latency": "< 10ms",
+            },
         ]
 
         for pattern_config in communication_patterns:
@@ -403,20 +395,20 @@ class TestMultiServiceOrchestration:
                 "service": "mock_data_generator",
                 "failure_type": "connection_timeout",
                 "recovery_strategy": "retry_with_backoff",
-                "expected_recovery_time": "< 30s"
+                "expected_recovery_time": "< 30s",
             },
             {
                 "service": "analysis_service",
                 "failure_type": "service_unavailable",
                 "recovery_strategy": "circuit_breaker",
-                "expected_recovery_time": "< 60s"
+                "expected_recovery_time": "< 60s",
             },
             {
                 "service": "doc_store",
                 "failure_type": "disk_full",
                 "recovery_strategy": "failover_to_backup",
-                "expected_recovery_time": "< 120s"
-            }
+                "expected_recovery_time": "< 120s",
+            },
         ]
 
         for scenario in failure_scenarios:
@@ -455,19 +447,15 @@ class TestMultiServiceOrchestration:
                 {"service": "mock_data_generator", "action": "generate_documents", "duration": 8.5},
                 {"service": "analysis_service", "action": "analyze_documents", "duration": 12.3},
                 {"service": "doc_store", "action": "store_documents", "duration": 3.2},
-                {"service": "analysis_service", "action": "generate_report", "duration": 5.4}
+                {"service": "analysis_service", "action": "generate_report", "duration": 5.4},
             ],
             "data_flow": {
                 "documents_generated": 5,
                 "documents_analyzed": 5,
                 "documents_stored": 5,
-                "reports_generated": 1
+                "reports_generated": 1,
             },
-            "performance": {
-                "total_duration": 25.5,
-                "parallel_processing": True,
-                "resource_utilization": 78.5
-            }
+            "performance": {"total_duration": 25.5, "parallel_processing": True, "resource_utilization": 78.5},
         }
 
     def _resolve_service_dependencies(self, dependencies):
@@ -491,27 +479,19 @@ class TestMultiServiceOrchestration:
 
     def _test_communication_pattern(self, pattern_config):
         """Mock communication pattern testing."""
-        base_latencies = {
-            "request_response": 75,
-            "publish_subscribe": 35,
-            "fire_and_forget": 5
-        }
+        base_latencies = {"request_response": 75, "publish_subscribe": 35, "fire_and_forget": 5}
 
         return {
             "pattern": pattern_config["pattern"],
             "messages_sent": pattern_config["message_count"],
             "messages_received": pattern_config["message_count"],
             "success_rate": 1.0,
-            "average_latency_ms": base_latencies[pattern_config["pattern"]]
+            "average_latency_ms": base_latencies[pattern_config["pattern"]],
         }
 
     def _execute_service_failure_scenario(self, scenario):
         """Mock service failure scenario execution."""
-        recovery_times = {
-            "connection_timeout": 25,
-            "service_unavailable": 45,
-            "disk_full": 90
-        }
+        recovery_times = {"connection_timeout": 25, "service_unavailable": 45, "disk_full": 90}
 
         return {
             "failure_detected": True,
@@ -519,7 +499,7 @@ class TestMultiServiceOrchestration:
             "service_recovered": True,
             "recovery_time_seconds": recovery_times[scenario["failure_type"]],
             "system_stability_maintained": True,
-            "data_integrity_preserved": True
+            "data_integrity_preserved": True,
         }
 
 
@@ -530,21 +510,17 @@ class TestDataConsistencyValidation:
         """Test data synchronization across multiple services."""
         # Test data consistency during concurrent operations
         test_data = {
-            "project": {
-                "id": "sync-test-project",
-                "name": "Synchronization Test",
-                "status": "active"
-            },
+            "project": {"id": "sync-test-project", "name": "Synchronization Test", "status": "active"},
             "documents": [
                 {"id": "doc-1", "title": "Requirements", "status": "completed"},
                 {"id": "doc-2", "title": "Architecture", "status": "in_progress"},
-                {"id": "doc-3", "title": "API Spec", "status": "draft"}
+                {"id": "doc-3", "title": "API Spec", "status": "draft"},
             ],
             "events": [
                 {"type": "project_created", "timestamp": "2024-01-01T10:00:00Z"},
                 {"type": "document_generated", "timestamp": "2024-01-01T10:30:00Z"},
-                {"type": "analysis_completed", "timestamp": "2024-01-01T11:00:00Z"}
-            ]
+                {"type": "analysis_completed", "timestamp": "2024-01-01T11:00:00Z"},
+            ],
         }
 
         # Execute concurrent operations across services
@@ -584,9 +560,9 @@ class TestDataConsistencyValidation:
                 "operations": [
                     {"service": "simulation_service", "action": "create_project"},
                     {"service": "mock_data_generator", "action": "generate_document"},
-                    {"service": "doc_store", "action": "store_document"}
+                    {"service": "doc_store", "action": "store_document"},
                 ],
-                "expected_result": "all_succeed"
+                "expected_result": "all_succeed",
             },
             {
                 "name": "analysis_transaction",
@@ -594,10 +570,10 @@ class TestDataConsistencyValidation:
                 "operations": [
                     {"service": "doc_store", "action": "retrieve_document"},
                     {"service": "analysis_service", "action": "analyze_document"},
-                    {"service": "reporting_service", "action": "generate_report"}
+                    {"service": "reporting_service", "action": "generate_report"},
                 ],
-                "expected_result": "all_succeed"
-            }
+                "expected_result": "all_succeed",
+            },
         ]
 
         for scenario in transaction_scenarios:
@@ -628,26 +604,14 @@ class TestDataConsistencyValidation:
             "project_id": "version-test-project",
             "version": 1,
             "status": "active",
-            "last_modified": "2024-01-01T10:00:00Z"
+            "last_modified": "2024-01-01T10:00:00Z",
         }
 
         # Simulate concurrent modifications
         modifications = [
-            {
-                "user": "alice",
-                "changes": {"status": "completed"},
-                "timestamp": "2024-01-01T10:05:00Z"
-            },
-            {
-                "user": "bob",
-                "changes": {"status": "on_hold"},
-                "timestamp": "2024-01-01T10:03:00Z"  # Earlier timestamp
-            },
-            {
-                "user": "charlie",
-                "changes": {"priority": "high"},
-                "timestamp": "2024-01-01T10:07:00Z"
-            }
+            {"user": "alice", "changes": {"status": "completed"}, "timestamp": "2024-01-01T10:05:00Z"},
+            {"user": "bob", "changes": {"status": "on_hold"}, "timestamp": "2024-01-01T10:03:00Z"},  # Earlier timestamp
+            {"user": "charlie", "changes": {"priority": "high"}, "timestamp": "2024-01-01T10:07:00Z"},
         ]
 
         # Execute versioning and conflict resolution
@@ -687,20 +651,20 @@ class TestDataConsistencyValidation:
                 "failure_type": "service_crash",
                 "service": "doc_store",
                 "data_operation": "document_storage",
-                "expected_integrity": "preserved"
+                "expected_integrity": "preserved",
             },
             {
                 "failure_type": "network_partition",
                 "service": "analysis_service",
                 "data_operation": "analysis_results",
-                "expected_integrity": "preserved"
+                "expected_integrity": "preserved",
             },
             {
                 "failure_type": "disk_failure",
                 "service": "simulation_service",
                 "data_operation": "simulation_state",
-                "expected_integrity": "recovered"
-            }
+                "expected_integrity": "recovered",
+            },
         ]
 
         for scenario in failure_scenarios:
@@ -731,27 +695,11 @@ class TestDataConsistencyValidation:
         """Mock cross-service data operations."""
         return {
             "consistency_checks": {
-                "project_data": {
-                    "all_services_agree": True,
-                    "no_conflicts": True,
-                    "sync_time_ms": 45
-                },
-                "document_data": {
-                    "metadata_consistent": True,
-                    "content_hash_match": True,
-                    "sync_time_ms": 67
-                },
-                "event_data": {
-                    "event_order_preserved": True,
-                    "timestamps_consistent": True,
-                    "sync_time_ms": 23
-                }
+                "project_data": {"all_services_agree": True, "no_conflicts": True, "sync_time_ms": 45},
+                "document_data": {"metadata_consistent": True, "content_hash_match": True, "sync_time_ms": 67},
+                "event_data": {"event_order_preserved": True, "timestamps_consistent": True, "sync_time_ms": 23},
             },
-            "transaction_integrity": {
-                "all_committed": True,
-                "no_orphaned_data": True,
-                "rollback_successful": True
-            }
+            "transaction_integrity": {"all_committed": True, "no_orphaned_data": True, "rollback_successful": True},
         }
 
     def _execute_transaction_scenario(self, scenario):
@@ -760,15 +708,8 @@ class TestDataConsistencyValidation:
             "transaction_completed": True,
             "all_operations_succeeded": True,
             "no_partial_commits": True,
-            "atomicity_check": {
-                "all_or_nothing": True,
-                "consistent_state": True
-            },
-            "isolation_check": {
-                "no_dirty_reads": True,
-                "no_lost_updates": True,
-                "serializable_execution": True
-            }
+            "atomicity_check": {"all_or_nothing": True, "consistent_state": True},
+            "isolation_check": {"no_dirty_reads": True, "no_lost_updates": True, "serializable_execution": True},
         }
 
     def _execute_data_versioning_scenario(self, initial_data, modifications):
@@ -778,7 +719,7 @@ class TestDataConsistencyValidation:
                 "version": 4,
                 "status": "completed",
                 "priority": "high",
-                "last_modified": "2024-01-01T10:07:00Z"
+                "last_modified": "2024-01-01T10:07:00Z",
             },
             "conflicts": [
                 {
@@ -786,15 +727,20 @@ class TestDataConsistencyValidation:
                     "conflicting_users": ["alice", "bob"],
                     "winner": "alice",
                     "resolution_method": "last_write_wins",
-                    "timestamp": "2024-01-01T10:05:00Z"
+                    "timestamp": "2024-01-01T10:05:00Z",
                 }
             ],
             "audit_trail": [
                 {"version": 1, "user": "system", "changes": initial_data, "timestamp": "2024-01-01T10:00:00Z"},
                 {"version": 2, "user": "bob", "changes": {"status": "on_hold"}, "timestamp": "2024-01-01T10:03:00Z"},
-                {"version": 3, "user": "alice", "changes": {"status": "completed"}, "timestamp": "2024-01-01T10:05:00Z"},
-                {"version": 4, "user": "charlie", "changes": {"priority": "high"}, "timestamp": "2024-01-01T10:07:00Z"}
-            ]
+                {
+                    "version": 3,
+                    "user": "alice",
+                    "changes": {"status": "completed"},
+                    "timestamp": "2024-01-01T10:05:00Z",
+                },
+                {"version": 4, "user": "charlie", "changes": {"priority": "high"}, "timestamp": "2024-01-01T10:07:00Z"},
+            ],
         }
 
     def _execute_data_integrity_under_failure(self, scenario):
@@ -805,19 +751,19 @@ class TestDataConsistencyValidation:
                 "no_data_loss": True,
                 "no_corruption": True,
                 "consistency_preserved": True,
-                "backup_integrity_verified": True
+                "backup_integrity_verified": True,
             },
             "recovery_mechanisms": {
                 "backup_available": True,
                 "recovery_successful": True,
                 "recovery_time_seconds": 45,
-                "data_restoration_complete": True
+                "data_restoration_complete": True,
             },
             "system_resilience": {
                 "service_degraded_gracefully": True,
                 "data_accessibility_maintained": True,
-                "user_experience_preserved": True
-            }
+                "user_experience_preserved": True,
+            },
         }
 
 
@@ -830,7 +776,7 @@ class TestEndToEndPerformanceValidation:
         load_scenarios = [
             {"name": "light_load", "concurrent_users": 10, "requests_per_second": 50},
             {"name": "medium_load", "concurrent_users": 50, "requests_per_second": 200},
-            {"name": "heavy_load", "concurrent_users": 100, "requests_per_second": 500}
+            {"name": "heavy_load", "concurrent_users": 100, "requests_per_second": 500},
         ]
 
         for scenario in load_scenarios:
@@ -874,27 +820,40 @@ class TestEndToEndPerformanceValidation:
             {
                 "name": "project_creation_journey",
                 "steps": [
-                    "login", "create_project", "configure_team", "set_timeline",
-                    "generate_documents", "run_simulation", "view_results"
+                    "login",
+                    "create_project",
+                    "configure_team",
+                    "set_timeline",
+                    "generate_documents",
+                    "run_simulation",
+                    "view_results",
                 ],
-                "expected_duration": "< 60s"
+                "expected_duration": "< 60s",
             },
             {
                 "name": "document_analysis_journey",
                 "steps": [
-                    "select_project", "upload_documents", "configure_analysis",
-                    "run_analysis", "generate_report", "export_results"
+                    "select_project",
+                    "upload_documents",
+                    "configure_analysis",
+                    "run_analysis",
+                    "generate_report",
+                    "export_results",
                 ],
-                "expected_duration": "< 90s"
+                "expected_duration": "< 90s",
             },
             {
                 "name": "team_collaboration_journey",
                 "steps": [
-                    "join_project", "view_team_members", "update_profile",
-                    "contribute_to_document", "review_changes", "approve_work"
+                    "join_project",
+                    "view_team_members",
+                    "update_profile",
+                    "contribute_to_document",
+                    "review_changes",
+                    "approve_work",
                 ],
-                "expected_duration": "< 45s"
-            }
+                "expected_duration": "< 45s",
+            },
         ]
 
         for journey in user_journeys:
@@ -931,7 +890,7 @@ class TestEndToEndPerformanceValidation:
         base_metrics = {
             "light_load": {"response_time": 150, "throughput": 55, "error_rate": 0.01, "cpu": 45, "memory": 60},
             "medium_load": {"response_time": 350, "throughput": 210, "error_rate": 0.02, "cpu": 70, "memory": 75},
-            "heavy_load": {"response_time": 750, "throughput": 520, "error_rate": 0.03, "cpu": 85, "memory": 80}
+            "heavy_load": {"response_time": 750, "throughput": 520, "error_rate": 0.03, "cpu": 85, "memory": 80},
         }
 
         metrics = base_metrics[scenario["name"]]
@@ -941,19 +900,32 @@ class TestEndToEndPerformanceValidation:
                 "requests_per_second": metrics["throughput"],
                 "error_rate": metrics["error_rate"],
                 "cpu_usage_percent": metrics["cpu"],
-                "memory_usage_percent": metrics["memory"]
+                "memory_usage_percent": metrics["memory"],
             }
         }
 
     def _execute_user_journey(self, journey):
         """Mock user journey execution."""
         step_durations = {
-            "login": 2.1, "create_project": 3.5, "configure_team": 4.2, "set_timeline": 2.8,
-            "generate_documents": 8.5, "run_simulation": 15.3, "view_results": 1.9,
-            "select_project": 1.5, "upload_documents": 5.2, "configure_analysis": 3.1,
-            "run_analysis": 12.4, "generate_report": 7.8, "export_results": 2.3,
-            "join_project": 1.8, "view_team_members": 2.2, "update_profile": 3.5,
-            "contribute_to_document": 6.7, "review_changes": 4.1, "approve_work": 2.9
+            "login": 2.1,
+            "create_project": 3.5,
+            "configure_team": 4.2,
+            "set_timeline": 2.8,
+            "generate_documents": 8.5,
+            "run_simulation": 15.3,
+            "view_results": 1.9,
+            "select_project": 1.5,
+            "upload_documents": 5.2,
+            "configure_analysis": 3.1,
+            "run_analysis": 12.4,
+            "generate_report": 7.8,
+            "export_results": 2.3,
+            "join_project": 1.8,
+            "view_team_members": 2.2,
+            "update_profile": 3.5,
+            "contribute_to_document": 6.7,
+            "review_changes": 4.1,
+            "approve_work": 2.9,
         }
 
         total_duration = sum(step_durations.get(step, 2.0) for step in journey["steps"])
@@ -963,12 +935,8 @@ class TestEndToEndPerformanceValidation:
             "all_steps_succeeded": True,
             "total_duration_seconds": total_duration,
             "step_metrics": {
-                step: {
-                    "duration_seconds": step_durations.get(step, 2.0),
-                    "success": True
-                }
-                for step in journey["steps"]
-            }
+                step: {"duration_seconds": step_durations.get(step, 2.0), "success": True} for step in journey["steps"]
+            },
         }
 
 
@@ -977,13 +945,9 @@ class TestEndToEndPerformanceValidation:
 def simulation_config():
     """Create a test simulation configuration."""
     return {
-        "project": {
-            "name": "Test Simulation",
-            "type": "web_application",
-            "complexity": "medium"
-        },
+        "project": {"name": "Test Simulation", "type": "web_application", "complexity": "medium"},
         "team": {"size": 5},
-        "timeline": {"duration_weeks": 8}
+        "timeline": {"duration_weeks": 8},
     }
 
 

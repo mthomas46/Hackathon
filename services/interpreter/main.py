@@ -4,20 +4,21 @@ This is a simplified working version that demonstrates the document persistence
 and provenance features without complex import dependencies.
 """
 
-import re
+import asyncio
 import json
+import re
 import uuid
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import aiohttp
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
-import aiohttp
-import asyncio
 
 # Try to import shared modules, fall back to stubs if not available
 try:
-    from services.shared.logging import fire_and_forget
     from services.shared.constants_new import ServiceNames
+    from services.shared.logging import fire_and_forget
 except ImportError:
     # Fallback functions if shared modules aren't available
     def fire_and_forget(event_type, message, service, metadata=None):
@@ -26,11 +27,13 @@ except ImportError:
     class ServiceNames:
         INTERPRETER = "interpreter"
 
+
 # Import sample documents repository
 print("🔍 DEBUG: Starting sample documents import...")
 try:
     print("🔍 DEBUG: Attempting to import sample_documents module...")
     from .modules.sample_documents import sample_documents
+
     print(f"🔍 DEBUG: Import successful! sample_documents = {sample_documents}")
     if sample_documents is not None:
         print(f"🔍 DEBUG: Sample documents repository has {len(sample_documents.get_all_documents())} documents")
@@ -53,10 +56,12 @@ app = FastAPI(title="Interpreter Service", version="1.0.0")
 # BASIC MODELS
 # ============================================================================
 
+
 class UserQuery(BaseModel):
     query: str
     user_id: Optional[str] = "anonymous"
     context: Optional[Dict[str, Any]] = {}
+
 
 class InterpretedIntent(BaseModel):
     intent: str
@@ -64,26 +69,28 @@ class InterpretedIntent(BaseModel):
     entities: Dict[str, Any]
     response_text: str
 
+
 # ============================================================================
 # BASIC OUTPUT GENERATOR
 # ============================================================================
 
+
 class SimpleOutputGenerator:
     """Simplified output generator with doc_store integration."""
-    
+
     def __init__(self):
         self.doc_store_url = "http://doc-store:5087"
         self.supported_formats = ["json", "markdown", "csv"]
 
-    async def generate_output(self, workflow_result: Dict[str, Any], 
-                            output_format: str = "json",
-                            filename_prefix: str = None) -> Dict[str, Any]:
+    async def generate_output(
+        self, workflow_result: Dict[str, Any], output_format: str = "json", filename_prefix: str = None
+    ) -> Dict[str, Any]:
         """Generate output and store in doc_store."""
         try:
             # Generate unique identifiers
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             file_id = str(uuid.uuid4())[:8]
-            
+
             if filename_prefix:
                 filename = f"{filename_prefix}_{timestamp}_{file_id}.{output_format}"
             else:
@@ -92,15 +99,15 @@ class SimpleOutputGenerator:
 
             # Generate content
             content = await self._generate_content(workflow_result, output_format)
-            
+
             # Create comprehensive provenance metadata
             provenance = self._create_workflow_provenance(workflow_result)
-            
+
             # Store in doc_store
             doc_store_result = await self._store_document_in_doc_store(
                 content, filename, output_format, workflow_result, provenance
             )
-            
+
             return {
                 "file_id": file_id,
                 "document_id": doc_store_result.get("document_id"),
@@ -120,8 +127,8 @@ class SimpleOutputGenerator:
                     "execution_time": workflow_result.get("execution_time"),
                     "status": workflow_result.get("status", "completed"),
                     "persistent": True,
-                    "document_type": f"workflow_output_{output_format}"
-                }
+                    "document_type": f"workflow_output_{output_format}",
+                },
             }
 
         except Exception as e:
@@ -131,23 +138,26 @@ class SimpleOutputGenerator:
     async def _generate_content(self, workflow_result: Dict[str, Any], output_format: str) -> str:
         """Generate content for the specified format."""
         if output_format == "json":
-            return json.dumps({
-                "metadata": {
-                    "generated_at": datetime.utcnow().isoformat(),
-                    "format": "json",
-                    "workflow_name": workflow_result.get("workflow_name"),
-                    "execution_id": workflow_result.get("execution_id"),
-                    "status": workflow_result.get("status")
+            return json.dumps(
+                {
+                    "metadata": {
+                        "generated_at": datetime.utcnow().isoformat(),
+                        "format": "json",
+                        "workflow_name": workflow_result.get("workflow_name"),
+                        "execution_id": workflow_result.get("execution_id"),
+                        "status": workflow_result.get("status"),
+                    },
+                    "execution_summary": {
+                        "services_used": workflow_result.get("services_used", []),
+                        "execution_time": workflow_result.get("execution_time"),
+                        "confidence": workflow_result.get("confidence"),
+                    },
+                    "results": workflow_result.get("results", {}),
+                    "raw_data": workflow_result,
                 },
-                "execution_summary": {
-                    "services_used": workflow_result.get("services_used", []),
-                    "execution_time": workflow_result.get("execution_time"),
-                    "confidence": workflow_result.get("confidence"),
-                },
-                "results": workflow_result.get("results", {}),
-                "raw_data": workflow_result
-            }, indent=2)
-        
+                indent=2,
+            )
+
         elif output_format == "markdown":
             md_content = []
             workflow_name = workflow_result.get("workflow_name", "Workflow Report")
@@ -164,12 +174,14 @@ class SimpleOutputGenerator:
             md_content.append(str(workflow_result.get("results", {})))
             md_content.append("")
             md_content.append("---")
-            md_content.append(f"*Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem*")
+            md_content.append(
+                f"*Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} by LLM Documentation Ecosystem*"
+            )
             return "\n".join(md_content)
-        
+
         elif output_format == "csv":
             return f"Workflow,{workflow_result.get('workflow_name', '')}\nExecution ID,{workflow_result.get('execution_id', '')}\nStatus,{workflow_result.get('status', '')}\nGenerated At,{datetime.utcnow().isoformat()}\n"
-        
+
         else:
             return str(workflow_result)
 
@@ -182,7 +194,7 @@ class SimpleOutputGenerator:
                 "started_at": workflow_result.get("started_at"),
                 "completed_at": datetime.utcnow().isoformat(),
                 "execution_time": workflow_result.get("execution_time"),
-                "status": workflow_result.get("status")
+                "status": workflow_result.get("status"),
             },
             "services_chain": workflow_result.get("services_used", []),
             "user_context": {
@@ -196,28 +208,28 @@ class SimpleOutputGenerator:
                     "service": "analysis_service",
                     "action": "analyze_content",
                     "prompt_template": "Analyze the following content for quality and insights",
-                    "prompt_variables": {"content_type": "document"}
+                    "prompt_variables": {"content_type": "document"},
                 }
             ],
             "data_lineage": {
                 "input_sources": ["user_query"],
                 "processing_steps": workflow_result.get("steps_executed", []),
                 "output_artifacts": ["document"],
-                "transformations": ["content_analysis", "format_conversion"]
+                "transformations": ["content_analysis", "format_conversion"],
             },
             "quality_metrics": {
                 "confidence": workflow_result.get("confidence", 0.8),
                 "completeness": 1.0,
-                "accuracy": 0.9
+                "accuracy": 0.9,
             },
             "created_by": "interpreter_service",
             "creation_timestamp": datetime.utcnow().isoformat(),
-            "version": "1.0.0"
+            "version": "1.0.0",
         }
 
-    async def _store_document_in_doc_store(self, content: str, filename: str, 
-                                         format_type: str, workflow_result: Dict[str, Any], 
-                                         provenance: Dict[str, Any]) -> Dict[str, Any]:
+    async def _store_document_in_doc_store(
+        self, content: str, filename: str, format_type: str, workflow_result: Dict[str, Any], provenance: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Store document in doc_store."""
         try:
             document_metadata = {
@@ -231,7 +243,7 @@ class SimpleOutputGenerator:
                     "workflow_generated",
                     f"format_{format_type}",
                     f"workflow_{workflow_result.get('workflow_name', 'unknown')}",
-                    f"user_{workflow_result.get('user_id', 'anonymous')}"
+                    f"user_{workflow_result.get('user_id', 'anonymous')}",
                 ],
                 "author": workflow_result.get("user_id", "system"),
                 "source": "interpreter_workflow_execution",
@@ -241,15 +253,12 @@ class SimpleOutputGenerator:
                     "execution_id": workflow_result.get("execution_id"),
                     "services_used": workflow_result.get("services_used", []),
                     "execution_time": workflow_result.get("execution_time"),
-                    "generated_at": datetime.utcnow().isoformat()
-                }
+                    "generated_at": datetime.utcnow().isoformat(),
+                },
             }
-            
-            store_request = {
-                "content": content,
-                "metadata": document_metadata
-            }
-            
+
+            store_request = {"content": content, "metadata": document_metadata}
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(f"{self.doc_store_url}/documents", json=store_request) as response:
                     if response.status == 200:
@@ -257,7 +266,7 @@ class SimpleOutputGenerator:
                         return {
                             "document_id": result.get("document_id", f"doc_{uuid.uuid4().hex[:8]}"),
                             "storage_url": f"{self.doc_store_url}/documents/{result.get('document_id')}",
-                            "stored_at": datetime.utcnow().isoformat()
+                            "stored_at": datetime.utcnow().isoformat(),
                         }
                     else:
                         # Fallback - create mock document ID
@@ -267,9 +276,9 @@ class SimpleOutputGenerator:
                             "document_id": doc_id,
                             "storage_url": f"{self.doc_store_url}/documents/{doc_id}",
                             "stored_at": datetime.utcnow().isoformat(),
-                            "mock": True
+                            "mock": True,
                         }
-                        
+
         except Exception as e:
             # Fallback - create mock document ID
             doc_id = f"doc_{uuid.uuid4().hex[:8]}"
@@ -279,7 +288,7 @@ class SimpleOutputGenerator:
                 "storage_url": f"{self.doc_store_url}/documents/{doc_id}",
                 "stored_at": datetime.utcnow().isoformat(),
                 "error": str(e),
-                "mock": True
+                "mock": True,
             }
 
     def _get_content_type(self, format_type: str) -> str:
@@ -295,6 +304,7 @@ class SimpleOutputGenerator:
         """Get list of supported output formats."""
         return self.supported_formats
 
+
 # Create global instances
 output_generator = SimpleOutputGenerator()
 
@@ -302,9 +312,10 @@ output_generator = SimpleOutputGenerator()
 # BASIC WORKFLOW INTEGRATION
 # ============================================================================
 
+
 class SimpleOrchestratorIntegration:
     """Simplified orchestrator integration."""
-    
+
     def __init__(self):
         self.execution_history = []
         self.workflow_templates = {
@@ -312,31 +323,32 @@ class SimpleOrchestratorIntegration:
                 "name": "Document Analysis Pipeline",
                 "description": "Analyze documents for quality, structure, and content",
                 "services": ["doc_store", "analysis_service"],
-                "output_types": ["json", "markdown", "csv"]
+                "output_types": ["json", "markdown", "csv"],
             },
             "security_audit": {
-                "name": "Security Audit Workflow", 
+                "name": "Security Audit Workflow",
                 "description": "Comprehensive security analysis and reporting",
                 "services": ["secure_analyzer", "analysis_service"],
-                "output_types": ["json", "markdown", "csv"]
+                "output_types": ["json", "markdown", "csv"],
             },
             "code_documentation": {
                 "name": "Code Documentation Generator",
                 "description": "Generate comprehensive documentation for codebases",
                 "services": ["github_mcp", "analysis_service", "doc_store"],
-                "output_types": ["markdown", "json"]
-            }
+                "output_types": ["markdown", "json"],
+            },
         }
 
-    async def execute_workflow(self, workflow_name: str, parameters: Dict[str, Any],
-                             user_id: str = None, output_format: str = "json") -> Dict[str, Any]:
+    async def execute_workflow(
+        self, workflow_name: str, parameters: Dict[str, Any], user_id: str = None, output_format: str = "json"
+    ) -> Dict[str, Any]:
         """Execute a workflow."""
         execution_id = f"exec_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{workflow_name}"
-        
+
         try:
             # Simulate workflow execution
             await asyncio.sleep(1)  # Simulate processing time
-            
+
             workflow_result = {
                 "execution_id": execution_id,
                 "workflow_name": workflow_name,
@@ -355,8 +367,8 @@ class SimpleOrchestratorIntegration:
                     "recommendations": [
                         "Document structure is well-organized",
                         "Content quality is high",
-                        "Suggest adding more examples"
-                    ]
+                        "Suggest adding more examples",
+                    ],
                 },
                 "steps_executed": [
                     {
@@ -365,23 +377,23 @@ class SimpleOrchestratorIntegration:
                         "action": "analyze_content",
                         "status": "completed",
                         "duration": 0.8,
-                        "result": {"quality_score": 0.87}
+                        "result": {"quality_score": 0.87},
                     }
-                ]
+                ],
             }
-            
+
             # Add to history
             self.execution_history.append(workflow_result)
-            
+
             return workflow_result
-            
+
         except Exception as e:
             return {
                 "execution_id": execution_id,
                 "workflow_name": workflow_name,
                 "status": "error",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
     def get_workflow_templates(self) -> Dict[str, Any]:
@@ -403,14 +415,16 @@ class SimpleOrchestratorIntegration:
             "total_executions": total,
             "successful_executions": successful,
             "success_rate": successful / total if total > 0 else 0.0,
-            "active_executions": 0
+            "active_executions": 0,
         }
+
 
 orchestrator_integration = SimpleOrchestratorIntegration()
 
 # ============================================================================
 # CORE ENDPOINTS
 # ============================================================================
+
 
 @app.get("/health")
 async def health():
@@ -420,8 +434,9 @@ async def health():
         "service": "interpreter",
         "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat(),
-        "features": ["document_persistence", "workflow_provenance", "doc_store_integration"]
+        "features": ["document_persistence", "workflow_provenance", "doc_store_integration"],
     }
+
 
 @app.post("/interpret")
 async def interpret_query(query_data: UserQuery):
@@ -430,8 +445,9 @@ async def interpret_query(query_data: UserQuery):
         "intent": "workflow_execution",
         "confidence": 0.8,
         "entities": {"workflow": "document_analysis"},
-        "response_text": f"I can help you execute a workflow for: {query_data.query}"
+        "response_text": f"I can help you execute a workflow for: {query_data.query}",
     }
+
 
 @app.get("/intents")
 async def list_supported_intents():
@@ -444,21 +460,21 @@ async def list_supported_intents():
                 "examples": [
                     "Analyze this document for quality",
                     "Check document structure and formatting",
-                    "Provide insights on document content"
+                    "Provide insights on document content",
                 ],
                 "confidence_threshold": 0.7,
-                "expected_entities": ["document_id", "analysis_type"]
+                "expected_entities": ["document_id", "analysis_type"],
             },
             {
-                "intent": "security_audit", 
+                "intent": "security_audit",
                 "description": "Perform security vulnerability analysis",
                 "examples": [
                     "Scan for security vulnerabilities",
                     "Analyze our system for security risks",
-                    "Generate a security audit report"
+                    "Generate a security audit report",
                 ],
                 "confidence_threshold": 0.8,
-                "expected_entities": ["code_base", "severity_threshold"]
+                "expected_entities": ["code_base", "severity_threshold"],
             },
             {
                 "intent": "code_documentation",
@@ -466,10 +482,10 @@ async def list_supported_intents():
                 "examples": [
                     "Create documentation for our API",
                     "Document the codebase",
-                    "Generate API endpoint documentation"
+                    "Generate API endpoint documentation",
                 ],
                 "confidence_threshold": 0.7,
-                "expected_entities": ["repo_url", "target_path"]
+                "expected_entities": ["repo_url", "target_path"],
             },
             {
                 "intent": "workflow_execution",
@@ -477,24 +493,21 @@ async def list_supported_intents():
                 "examples": [
                     "Run the data processing workflow",
                     "Execute quality assurance workflow",
-                    "Start the integration testing workflow"
+                    "Start the integration testing workflow",
                 ],
                 "confidence_threshold": 0.6,
-                "expected_entities": ["workflow_name", "parameters"]
-            }
+                "expected_entities": ["workflow_name", "parameters"],
+            },
         ],
         "total_intents": 4,
-        "confidence_scoring": {
-            "high": "≥ 0.8",
-            "medium": "0.6 - 0.79", 
-            "low": "< 0.6"
-        },
+        "confidence_scoring": {"high": "≥ 0.8", "medium": "0.6 - 0.79", "low": "< 0.6"},
         "service_info": {
             "service": "interpreter",
             "version": "1.0.0",
-            "features": ["document_persistence", "workflow_provenance", "doc_store_integration"]
-        }
+            "features": ["document_persistence", "workflow_provenance", "doc_store_integration"],
+        },
     }
+
 
 @app.get("/ecosystem/capabilities")
 async def get_ecosystem_capabilities():
@@ -506,29 +519,15 @@ async def get_ecosystem_capabilities():
             "workflow_generation": True,
             "document_persistence": True,
             "provenance_tracking": True,
-            "multi_format_output": True
+            "multi_format_output": True,
         },
-        "supported_workflows": [
-            "document_analysis",
-            "security_audit", 
-            "code_documentation"
-        ],
+        "supported_workflows": ["document_analysis", "security_audit", "code_documentation"],
         "output_formats": ["json", "markdown", "csv"],
         "integrated_services": {
-            "doc_store": {
-                "url": "http://doc-store:5087",
-                "capabilities": ["document_storage", "search", "metadata"]
-            },
-            "prompt_store": {
-                "url": "http://prompt-store:5110", 
-                "capabilities": ["prompt_management", "versioning"]
-            },
-            "analysis_service": {
-                "capabilities": ["content_analysis", "quality_scoring"]
-            },
-            "orchestrator": {
-                "capabilities": ["workflow_execution", "service_coordination"]
-            }
+            "doc_store": {"url": "http://doc-store:5087", "capabilities": ["document_storage", "search", "metadata"]},
+            "prompt_store": {"url": "http://prompt-store:5110", "capabilities": ["prompt_management", "versioning"]},
+            "analysis_service": {"capabilities": ["content_analysis", "quality_scoring"]},
+            "orchestrator": {"capabilities": ["workflow_execution", "service_coordination"]},
         },
         "ecosystem_features": {
             "cross_service_workflows": True,
@@ -536,15 +535,16 @@ async def get_ecosystem_capabilities():
             "comprehensive_provenance": True,
             "execution_tracing": True,
             "quality_metrics": True,
-            "audit_trail": True
+            "audit_trail": True,
         },
         "system_info": {
             "service": "interpreter",
             "version": "1.0.0",
             "uptime": "running",
-            "last_updated": datetime.utcnow().isoformat()
-        }
+            "last_updated": datetime.utcnow().isoformat(),
+        },
     }
+
 
 @app.get("/health/ecosystem")
 async def ecosystem_health():
@@ -554,39 +554,36 @@ async def ecosystem_health():
             "status": "healthy",
             "version": "1.0.0",
             "features_active": ["document_persistence", "workflow_provenance", "doc_store_integration"],
-            "uptime": "running"
+            "uptime": "running",
         },
         "connected_services": {
             "doc_store": {
                 "url": "http://doc-store:5087",
                 "status": "unknown",
-                "capabilities": ["document_storage", "search", "metadata"]
+                "capabilities": ["document_storage", "search", "metadata"],
             },
             "prompt_store": {
                 "url": "http://prompt-store:5110",
-                "status": "unknown", 
-                "capabilities": ["prompt_management", "versioning"]
+                "status": "unknown",
+                "capabilities": ["prompt_management", "versioning"],
             },
             "orchestrator": {
                 "url": "http://orchestrator:5099",
                 "status": "unknown",
-                "capabilities": ["workflow_execution", "service_coordination"]
+                "capabilities": ["workflow_execution", "service_coordination"],
             },
-            "analysis_service": {
-                "status": "unknown",
-                "capabilities": ["content_analysis", "quality_scoring"]
-            }
+            "analysis_service": {"status": "unknown", "capabilities": ["content_analysis", "quality_scoring"]},
         },
         "ecosystem_summary": {
             "total_services": 5,
             "healthy_services": 1,
             "unknown_services": 4,
-            "overall_status": "partial"
+            "overall_status": "partial",
         },
         "last_checked": datetime.utcnow().isoformat(),
-        "note": "Service health checks require individual service pings for accurate status"
+        "note": "Service health checks require individual service pings for accurate status",
     }
-    
+
     # Try to check a few key services
     try:
         async with aiohttp.ClientSession() as session:
@@ -599,7 +596,7 @@ async def ecosystem_health():
                         ecosystem_health_status["ecosystem_summary"]["unknown_services"] -= 1
             except:
                 ecosystem_health_status["connected_services"]["doc_store"]["status"] = "unreachable"
-            
+
             # Check orchestrator
             try:
                 async with session.get("http://orchestrator:5099/health", timeout=2) as response:
@@ -609,26 +606,28 @@ async def ecosystem_health():
                         ecosystem_health_status["ecosystem_summary"]["unknown_services"] -= 1
             except:
                 ecosystem_health_status["connected_services"]["orchestrator"]["status"] = "unreachable"
-                
+
     except Exception as e:
         ecosystem_health_status["health_check_error"] = str(e)
-    
+
     # Update overall status
     healthy_count = ecosystem_health_status["ecosystem_summary"]["healthy_services"]
     total_count = ecosystem_health_status["ecosystem_summary"]["total_services"]
-    
+
     if healthy_count == total_count:
         ecosystem_health_status["ecosystem_summary"]["overall_status"] = "healthy"
     elif healthy_count >= total_count / 2:
         ecosystem_health_status["ecosystem_summary"]["overall_status"] = "partial"
     else:
         ecosystem_health_status["ecosystem_summary"]["overall_status"] = "degraded"
-    
+
     return ecosystem_health_status
+
 
 # ============================================================================
 # LEGACY COMPATIBILITY ENDPOINTS
 # ============================================================================
+
 
 @app.post("/execute")
 async def execute_basic_workflow(request: dict):
@@ -638,10 +637,10 @@ async def execute_basic_workflow(request: dict):
         workflow_name = request.get("workflow", "default")
         parameters = request.get("parameters", {})
         user_id = request.get("user_id", "anonymous")
-        
+
         # Create execution ID
         execution_id = f"exec_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
-        
+
         # Mock basic workflow execution
         result = {
             "execution_id": execution_id,
@@ -654,27 +653,28 @@ async def execute_basic_workflow(request: dict):
             "results": {
                 "message": f"Basic workflow '{workflow_name}' executed successfully",
                 "output": f"Processed with parameters: {parameters}",
-                "confidence": 0.85
-            }
+                "confidence": 0.85,
+            },
         }
-        
+
         fire_and_forget(
             "basic_workflow_executed",
             f"Legacy /execute endpoint used for workflow: {workflow_name}",
             ServiceNames.INTERPRETER,
-            {"workflow": workflow_name, "execution_id": execution_id}
+            {"workflow": workflow_name, "execution_id": execution_id},
         )
-        
+
         return result
-        
+
     except Exception as e:
         fire_and_forget(
             "basic_workflow_error",
             f"Legacy /execute endpoint failed: {str(e)}",
             ServiceNames.INTERPRETER,
-            {"error": str(e)}
+            {"error": str(e)},
         )
         return {"error": str(e), "status": "failed"}
+
 
 @app.post("/execute-workflow")
 async def execute_workflow_legacy(request: dict):
@@ -684,10 +684,10 @@ async def execute_workflow_legacy(request: dict):
         workflow_id = request.get("workflow_id", request.get("workflow", "default"))
         inputs = request.get("inputs", request.get("parameters", {}))
         user_id = request.get("user_id", "anonymous")
-        
+
         # Create execution ID
         execution_id = f"legacy_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
-        
+
         # Mock workflow execution
         result = {
             "execution_id": execution_id,
@@ -701,47 +701,33 @@ async def execute_workflow_legacy(request: dict):
                 "result": f"Workflow '{workflow_id}' completed successfully",
                 "data": inputs,
                 "processing_time": "2.3s",
-                "confidence": 0.90
+                "confidence": 0.90,
             },
             "steps_executed": [
-                {
-                    "step": 1,
-                    "name": "input_validation",
-                    "status": "completed",
-                    "duration": "0.1s"
-                },
-                {
-                    "step": 2,
-                    "name": "workflow_execution",
-                    "status": "completed", 
-                    "duration": "2.0s"
-                },
-                {
-                    "step": 3,
-                    "name": "output_generation",
-                    "status": "completed",
-                    "duration": "0.2s"
-                }
-            ]
+                {"step": 1, "name": "input_validation", "status": "completed", "duration": "0.1s"},
+                {"step": 2, "name": "workflow_execution", "status": "completed", "duration": "2.0s"},
+                {"step": 3, "name": "output_generation", "status": "completed", "duration": "0.2s"},
+            ],
         }
-        
+
         fire_and_forget(
             "legacy_workflow_executed",
             f"Legacy /execute-workflow endpoint used: {workflow_id}",
             ServiceNames.INTERPRETER,
-            {"workflow_id": workflow_id, "execution_id": execution_id}
+            {"workflow_id": workflow_id, "execution_id": execution_id},
         )
-        
+
         return result
-        
+
     except Exception as e:
         fire_and_forget(
             "legacy_workflow_error",
             f"Legacy /execute-workflow endpoint failed: {str(e)}",
             ServiceNames.INTERPRETER,
-            {"error": str(e)}
+            {"error": str(e)},
         )
         return {"error": str(e), "status": "failed"}
+
 
 @app.get("/execution/{execution_id}/status")
 async def get_execution_status(execution_id: str):
@@ -761,37 +747,35 @@ async def get_execution_status(execution_id: str):
                 "completed_steps": 3,
                 "error": None,
                 "results_available": True,
-                "output_files": [
-                    f"{execution_id}_results.json",
-                    f"{execution_id}_summary.txt"
-                ]
-                }
+                "output_files": [f"{execution_id}_results.json", f"{execution_id}_summary.txt"],
+            }
         else:
             # Unknown execution ID
             status_info = {
                 "execution_id": execution_id,
                 "status": "not_found",
                 "error": "Execution ID not found or expired",
-                "progress": 0
+                "progress": 0,
             }
-        
+
         fire_and_forget(
             "execution_status_checked",
             f"Legacy status check for execution: {execution_id}",
             ServiceNames.INTERPRETER,
-            {"execution_id": execution_id, "status": status_info["status"]}
+            {"execution_id": execution_id, "status": status_info["status"]},
         )
-        
+
         return status_info
-        
+
     except Exception as e:
         fire_and_forget(
             "execution_status_error",
             f"Legacy status check failed: {str(e)}",
             ServiceNames.INTERPRETER,
-            {"error": str(e), "execution_id": execution_id}
+            {"error": str(e), "execution_id": execution_id},
         )
         return {"error": str(e), "execution_id": execution_id, "status": "error"}
+
 
 @app.get("/outputs/download/{file_id}")
 async def download_output_file(file_id: str):
@@ -803,59 +787,57 @@ async def download_output_file(file_id: str):
                 "file_id": file_id,
                 "generated_at": datetime.utcnow().isoformat(),
                 "content_type": "application/json",
-                "data": {
-                    "message": "This is a mock JSON output file",
-                    "file_id": file_id,
-                    "size": "1.2KB"
-                }
+                "data": {"message": "This is a mock JSON output file", "file_id": file_id, "size": "1.2KB"},
             }
-            
+
             fire_and_forget(
                 "legacy_file_downloaded",
                 f"Legacy file download: {file_id}",
                 ServiceNames.INTERPRETER,
-                {"file_id": file_id, "type": "json"}
+                {"file_id": file_id, "type": "json"},
             )
-            
+
             return mock_content
-            
+
         elif file_id.endswith(".txt"):
             mock_content = {
                 "file_id": file_id,
                 "generated_at": datetime.utcnow().isoformat(),
                 "content_type": "text/plain",
-                "content": f"This is a mock text output file.\nFile ID: {file_id}\nGenerated: {datetime.utcnow().isoformat()}\n\nContent would be here..."
+                "content": f"This is a mock text output file.\nFile ID: {file_id}\nGenerated: {datetime.utcnow().isoformat()}\n\nContent would be here...",
             }
-            
+
             fire_and_forget(
                 "legacy_file_downloaded",
                 f"Legacy file download: {file_id}",
                 ServiceNames.INTERPRETER,
-                {"file_id": file_id, "type": "text"}
+                {"file_id": file_id, "type": "text"},
             )
-            
+
             return mock_content
-            
+
         else:
             return {
                 "error": "File not found or unsupported format",
                 "file_id": file_id,
                 "supported_formats": [".json", ".txt"],
-                "recommendation": "Use /documents/{document_id}/download for newer document downloads"
+                "recommendation": "Use /documents/{document_id}/download for newer document downloads",
             }
-        
+
     except Exception as e:
         fire_and_forget(
             "legacy_download_error",
             f"Legacy file download failed: {str(e)}",
             ServiceNames.INTERPRETER,
-            {"error": str(e), "file_id": file_id}
+            {"error": str(e), "file_id": file_id},
         )
         return {"error": str(e), "file_id": file_id}
+
 
 # ============================================================================
 # ENHANCED WORKFLOW ENDPOINTS
 # ============================================================================
+
 
 @app.post("/execute-query")
 async def execute_query_endpoint(request: dict):
@@ -883,9 +865,7 @@ async def execute_query_endpoint(request: dict):
 
         # Generate output if successful
         if workflow_result.get("status") == "completed":
-            output_info = await output_generator.generate_output(
-                workflow_result, output_format, filename_prefix
-            )
+            output_info = await output_generator.generate_output(workflow_result, output_format, filename_prefix)
 
             return {
                 "execution_id": workflow_result["execution_id"],
@@ -893,14 +873,14 @@ async def execute_query_endpoint(request: dict):
                 "workflow_executed": workflow_name,
                 "status": "completed",
                 "output": output_info,
-                "workflow_result": workflow_result
+                "workflow_result": workflow_result,
             }
         else:
             return {
                 "execution_id": workflow_result.get("execution_id"),
                 "query": query,
                 "status": "failed",
-                "error": workflow_result.get("error", "Workflow execution failed")
+                "error": workflow_result.get("error", "Workflow execution failed"),
             }
 
     except Exception as e:
@@ -908,8 +888,9 @@ async def execute_query_endpoint(request: dict):
             "query": request.get("query", ""),
             "status": "error",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
+
 
 @app.post("/workflows/execute-direct")
 async def execute_workflow_direct(request: dict):
@@ -931,31 +912,26 @@ async def execute_workflow_direct(request: dict):
 
         # Generate output if successful
         if workflow_result.get("status") == "completed":
-            output_info = await output_generator.generate_output(
-                workflow_result, output_format, filename_prefix
-            )
+            output_info = await output_generator.generate_output(workflow_result, output_format, filename_prefix)
 
             return {
                 "execution_id": workflow_result["execution_id"],
                 "workflow_name": workflow_name,
                 "status": "completed",
                 "output": output_info,
-                "workflow_result": workflow_result
+                "workflow_result": workflow_result,
             }
         else:
             return {
                 "execution_id": workflow_result.get("execution_id"),
                 "workflow_name": workflow_name,
                 "status": "failed",
-                "error": workflow_result.get("error", "Workflow execution failed")
+                "error": workflow_result.get("error", "Workflow execution failed"),
             }
 
     except Exception as e:
-        return {
-            "workflow_name": request.get("workflow_name"),
-            "status": "error",
-            "error": str(e)
-        }
+        return {"workflow_name": request.get("workflow_name"), "status": "error", "error": str(e)}
+
 
 @app.get("/outputs/formats")
 async def get_supported_formats():
@@ -965,21 +941,24 @@ async def get_supported_formats():
         "format_descriptions": {
             "json": "Structured JSON data with complete results",
             "csv": "Comma-separated values for data analysis",
-            "markdown": "Markdown formatted documentation"
-        }
+            "markdown": "Markdown formatted documentation",
+        },
     }
+
 
 @app.get("/workflows/templates")
 async def get_workflow_templates():
     """Get available workflow templates."""
     return {
         "templates": orchestrator_integration.get_workflow_templates(),
-        "total_templates": len(orchestrator_integration.get_workflow_templates())
+        "total_templates": len(orchestrator_integration.get_workflow_templates()),
     }
+
 
 # ============================================================================
 # DOCUMENT PROVENANCE AND TRACKING ENDPOINTS
 # ============================================================================
+
 
 @app.get("/documents/{document_id}/provenance")
 async def get_document_provenance(document_id: str):
@@ -994,7 +973,7 @@ async def get_document_provenance(document_id: str):
                     "execution_id": f"exec_demo_{document_id[:8]}",
                     "workflow_name": "document_analysis",
                     "status": "completed",
-                    "execution_time": "1.2s"
+                    "execution_time": "1.2s",
                 },
                 "services_chain": ["doc_store", "analysis_service"],
                 "prompts_used": [
@@ -1003,48 +982,37 @@ async def get_document_provenance(document_id: str):
                         "service": "analysis_service",
                         "action": "analyze_content",
                         "prompt_template": "Analyze the following content for quality and insights",
-                        "prompt_variables": {"content_type": "document"}
+                        "prompt_variables": {"content_type": "document"},
                     }
                 ],
-                "quality_metrics": {
-                    "confidence": 0.87,
-                    "completeness": 1.0,
-                    "accuracy": 0.9
-                }
+                "quality_metrics": {"confidence": 0.87, "completeness": 1.0, "accuracy": 0.9},
             },
             "document_info": {
                 "title": f"Workflow Output: Document {document_id[:8]}",
                 "format": "json",
                 "created_at": datetime.utcnow().isoformat(),
                 "author": "system",
-                "category": "workflow_output"
+                "category": "workflow_output",
             },
             "workflow_chain": {
                 "services_used": ["doc_store", "analysis_service"],
-                "prompts_used": [
-                    {
-                        "action": "analyze_content",
-                        "step_index": 1
-                    }
-                ],
-                "quality_metrics": {
-                    "confidence": 0.87,
-                    "completeness": 1.0
-                }
-            }
+                "prompts_used": [{"action": "analyze_content", "step_index": 1}],
+                "quality_metrics": {"confidence": 0.87, "completeness": 1.0},
+            },
         }
     except Exception as e:
         return {"error": str(e), "document_id": document_id}
+
 
 @app.get("/workflows/{execution_id}/trace")
 async def get_workflow_execution_trace(execution_id: str):
     """Get detailed execution trace for a workflow."""
     try:
         execution_status = await orchestrator_integration.get_execution_status(execution_id)
-        
+
         if execution_status.get("status") == "not_found":
             return {"error": "Execution not found", "execution_id": execution_id}
-        
+
         # Mock generated documents
         documents = [
             {
@@ -1054,22 +1022,20 @@ async def get_workflow_execution_trace(execution_id: str):
                 "filename": f"{execution_status.get('workflow_name')}_output.json",
                 "size_bytes": 1024,
                 "created_at": datetime.utcnow().isoformat(),
-                "download_url": f"/documents/download/doc_{execution_id[-8:]}"
+                "download_url": f"/documents/download/doc_{execution_id[-8:]}",
             }
         ]
-        
+
         return {
             "execution_id": execution_id,
             "execution_details": execution_status,
             "generated_documents": documents,
-            "trace_metadata": {
-                "total_documents": len(documents),
-                "trace_generated_at": datetime.utcnow().isoformat()
-            }
+            "trace_metadata": {"total_documents": len(documents), "trace_generated_at": datetime.utcnow().isoformat()},
         }
-        
+
     except Exception as e:
         return {"error": str(e), "execution_id": execution_id}
+
 
 @app.get("/documents/by-workflow/{workflow_name}")
 async def get_documents_by_workflow(workflow_name: str, limit: int = 50):
@@ -1079,62 +1045,61 @@ async def get_documents_by_workflow(workflow_name: str, limit: int = 50):
         documents = []
         for i in range(min(3, limit)):  # Return up to 3 mock documents
             doc_id = f"doc_{workflow_name}_{i}_{uuid.uuid4().hex[:8]}"
-            documents.append({
-                "document_id": doc_id,
-                "title": f"Workflow Output: {workflow_name} #{i+1}",
-                "format": "json",
-                "created_at": datetime.utcnow().isoformat(),
-                "execution_id": f"exec_{workflow_name}_{i}",
-                "author": "system",
-                "quality_score": 0.85 + (i * 0.05),
-                "size_bytes": 1024 + (i * 512),
-                "download_url": f"/documents/download/{doc_id}"
-            })
-        
+            documents.append(
+                {
+                    "document_id": doc_id,
+                    "title": f"Workflow Output: {workflow_name} #{i+1}",
+                    "format": "json",
+                    "created_at": datetime.utcnow().isoformat(),
+                    "execution_id": f"exec_{workflow_name}_{i}",
+                    "author": "system",
+                    "quality_score": 0.85 + (i * 0.05),
+                    "size_bytes": 1024 + (i * 512),
+                    "download_url": f"/documents/download/{doc_id}",
+                }
+            )
+
         return {
             "workflow_name": workflow_name,
             "documents": documents,
             "total_found": len(documents),
-            "query_limit": limit
+            "query_limit": limit,
         }
-                    
+
     except Exception as e:
-        return {
-            "error": str(e),
-            "workflow_name": workflow_name,
-            "documents": []
-        }
+        return {"error": str(e), "workflow_name": workflow_name, "documents": []}
+
 
 @app.get("/documents/{document_id}/download")
 async def download_document_from_doc_store(document_id: str):
     """Download a document from doc_store with proper headers."""
     try:
         # For demo, generate mock content
-        content = json.dumps({
-            "document_id": document_id,
-            "title": f"Demo Document {document_id[:8]}",
-            "content": "This is a demonstration document generated by the workflow system.",
-            "generated_at": datetime.utcnow().isoformat(),
-            "provenance": {
-                "workflow": "document_analysis",
-                "services_used": ["doc_store", "analysis_service"],
-                "quality_score": 0.87
-            }
-        }, indent=2)
-        
+        content = json.dumps(
+            {
+                "document_id": document_id,
+                "title": f"Demo Document {document_id[:8]}",
+                "content": "This is a demonstration document generated by the workflow system.",
+                "generated_at": datetime.utcnow().isoformat(),
+                "provenance": {
+                    "workflow": "document_analysis",
+                    "services_used": ["doc_store", "analysis_service"],
+                    "quality_score": 0.87,
+                },
+            },
+            indent=2,
+        )
+
         headers = {
             "Content-Disposition": f"attachment; filename=document_{document_id[:8]}.json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
-        return Response(
-            content=content,
-            headers=headers,
-            media_type="application/json"
-        )
+
+        return Response(content=content, headers=headers, media_type="application/json")
 
     except Exception as e:
         return {"error": str(e), "document_id": document_id}
+
 
 @app.get("/workflows/executions/recent")
 async def get_recent_workflow_executions(limit: int = 20):
@@ -1142,11 +1107,11 @@ async def get_recent_workflow_executions(limit: int = 20):
     try:
         execution_metrics = await orchestrator_integration.get_execution_metrics()
         recent_executions = orchestrator_integration.execution_history[-limit:]
-        
+
         executions_with_docs = []
         for execution in recent_executions:
             execution_id = execution.get("execution_id")
-            
+
             # Mock documents for each execution
             documents = [
                 {
@@ -1156,48 +1121,42 @@ async def get_recent_workflow_executions(limit: int = 20):
                     "filename": f"{execution.get('workflow_name')}_output.json",
                     "size_bytes": 1024,
                     "created_at": execution.get("started_at"),
-                    "download_url": f"/documents/download/doc_{execution_id[-8:]}"
+                    "download_url": f"/documents/download/doc_{execution_id[-8:]}",
                 }
             ]
-            
-            executions_with_docs.append({
-                "execution_id": execution_id,
-                "workflow_name": execution.get("workflow_name"),
-                "status": execution.get("status"),
-                "timestamp": execution.get("started_at"),
-                "user_id": execution.get("user_id"),
-                "execution_time": execution.get("execution_time"),
-                "documents_generated": len(documents),
-                "documents": documents
-            })
-        
+
+            executions_with_docs.append(
+                {
+                    "execution_id": execution_id,
+                    "workflow_name": execution.get("workflow_name"),
+                    "status": execution.get("status"),
+                    "timestamp": execution.get("started_at"),
+                    "user_id": execution.get("user_id"),
+                    "execution_time": execution.get("execution_time"),
+                    "documents_generated": len(documents),
+                    "documents": documents,
+                }
+            )
+
         return {
             "recent_executions": executions_with_docs,
             "total_executions": len(executions_with_docs),
             "execution_metrics": execution_metrics,
-            "query_limit": limit
+            "query_limit": limit,
         }
 
     except Exception as e:
-        return {
-            "error": str(e),
-            "recent_executions": []
-        }
+        return {"error": str(e), "recent_executions": []}
+
 
 @app.get("/documents/sample")
 async def get_sample_documents(
-    type_filter: Optional[str] = None,
-    category_filter: Optional[str] = None,
-    limit: int = 50
+    type_filter: Optional[str] = None, category_filter: Optional[str] = None, limit: int = 50
 ):
     """Get sample documents for testing and demonstration purposes."""
     try:
         if sample_documents is None:
-            return {
-                "error": "Sample documents module not available",
-                "documents": [],
-                "total_count": 0
-            }
+            return {"error": "Sample documents module not available", "documents": [], "total_count": 0}
 
         documents = []
 
@@ -1214,31 +1173,21 @@ async def get_sample_documents(
         return {
             "documents": documents,
             "total_count": len(documents),
-            "filters_applied": {
-                "type": type_filter,
-                "category": category_filter,
-                "limit": limit
-            },
+            "filters_applied": {"type": type_filter, "category": category_filter, "limit": limit},
             "available_types": ["confluence", "jira", "pull_request"],
-            "available_categories": ["architecture", "api", "security", "compliance", "feature", "bug"]
+            "available_categories": ["architecture", "api", "security", "compliance", "feature", "bug"],
         }
 
     except Exception as e:
-        return {
-            "error": str(e),
-            "documents": []
-        }
+        return {"error": str(e), "documents": []}
+
 
 @app.post("/documents/sample/context")
 async def get_sample_documents_for_query(query_data: Dict[str, Any]):
     """Get relevant sample documents based on query context."""
     try:
         if sample_documents is None:
-            return {
-                "error": "Sample documents module not available",
-                "relevant_documents": [],
-                "total_relevant": 0
-            }
+            return {"error": "Sample documents module not available", "relevant_documents": [], "total_relevant": 0}
 
         query = query_data.get("query", "")
         context = query_data.get("context", {})
@@ -1251,72 +1200,68 @@ async def get_sample_documents_for_query(query_data: Dict[str, Any]):
             "relevant_documents": relevant_documents,
             "total_relevant": len(relevant_documents),
             "document_types_found": list(set(doc.get("type", "") for doc in relevant_documents)),
-            "categories_found": list(set(doc.get("category", "") for doc in relevant_documents))
+            "categories_found": list(set(doc.get("category", "") for doc in relevant_documents)),
         }
 
     except Exception as e:
-        return {
-            "error": str(e),
-            "relevant_documents": []
-        }
+        return {"error": str(e), "relevant_documents": []}
+
 
 @app.get("/documents/sample/types")
 async def get_sample_document_types():
     """Get available document types and their characteristics."""
     if sample_documents is None:
-        return {
-            "error": "Sample documents module not available",
-            "document_types": {},
-            "special_collections": {}
-        }
+        return {"error": "Sample documents module not available", "document_types": {}, "special_collections": {}}
 
     return {
         "document_types": {
             "confluence": {
                 "description": "Wiki pages and technical documentation",
                 "characteristics": ["detailed_content", "structured", "technical"],
-                "count": len(sample_documents.get_documents_by_type("confluence"))
+                "count": len(sample_documents.get_documents_by_type("confluence")),
             },
             "jira": {
                 "description": "Issue tracking and project management",
                 "characteristics": ["conversational", "status_tracking", "requirements"],
-                "count": len(sample_documents.get_documents_by_type("jira"))
+                "count": len(sample_documents.get_documents_by_type("jira")),
             },
             "pull_request": {
                 "description": "Code review and merge request discussions",
                 "characteristics": ["code_changes", "review_comments", "technical_discussion"],
-                "count": len(sample_documents.get_documents_by_type("pull_request"))
-            }
+                "count": len(sample_documents.get_documents_by_type("pull_request")),
+            },
         },
         "special_collections": {
             "similar_documents": {
                 "description": "Highly similar documents for testing deduplication",
-                "count": len(sample_documents.get_similar_documents())
+                "count": len(sample_documents.get_similar_documents()),
             },
             "contradictory_documents": {
                 "description": "Documents with conflicting information",
-                "count": len(sample_documents.get_contradictory_documents())
+                "count": len(sample_documents.get_contradictory_documents()),
             },
             "gap_documents": {
                 "description": "Documents identifying development gaps",
-                "count": len(sample_documents.get_gap_documents())
+                "count": len(sample_documents.get_gap_documents()),
             },
             "sparse_documents": {
                 "description": "Documents with minimal content",
-                "count": len(sample_documents.get_sparse_documents())
+                "count": len(sample_documents.get_sparse_documents()),
             },
             "blank_documents": {
                 "description": "Documents with empty content",
-                "count": len(sample_documents.get_blank_documents())
+                "count": len(sample_documents.get_blank_documents()),
             },
             "documents_with_comments": {
                 "description": "Documents with conversation history",
-                "count": len(sample_documents.get_documents_with_comments())
-            }
-        }
+                "count": len(sample_documents.get_documents_with_comments()),
+            },
+        },
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     print("🚀 Starting Enhanced Interpreter Service with Document Persistence...")
     uvicorn.run(app, host="127.0.0.1", port=5120)

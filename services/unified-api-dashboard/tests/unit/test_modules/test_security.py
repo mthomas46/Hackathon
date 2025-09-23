@@ -5,20 +5,26 @@ Comprehensive unit tests for authentication, authorization, audit logging,
 compliance monitoring, access control, and security monitoring.
 """
 
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 import pytest_asyncio
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timedelta
 from freezegun import freeze_time
 
-from ...conftest import *
-from ....modules.security.auth import (
-    UserManager, AuthenticationManager, AuthorizationManager,
-    UserRole, Permission, User, AuthToken
-)
-from ....modules.security.audit import AuditLogger, ComplianceMonitor, AuditEventType
 from ....modules.security.access_control import AccessControlManager, PermissionManager
+from ....modules.security.audit import AuditEventType, AuditLogger, ComplianceMonitor
+from ....modules.security.auth import (
+    AuthenticationManager,
+    AuthorizationManager,
+    AuthToken,
+    Permission,
+    User,
+    UserManager,
+    UserRole,
+)
 from ....modules.security.security_monitor import SecurityMonitor, ThreatDetector
+from ...conftest import *
 
 
 class TestUserManager:
@@ -33,10 +39,7 @@ class TestUserManager:
     async def test_create_user(self, user_manager):
         """Test user creation."""
         user = await user_manager.create_user(
-            username="testuser",
-            email="test@example.com",
-            password="password123",
-            role=UserRole.DEVELOPER
+            username="testuser", email="test@example.com", password="password123", role=UserRole.DEVELOPER
         )
 
         assert user.username == "testuser"
@@ -114,7 +117,7 @@ class TestAuthenticationManager:
         mock_user.role = Mock(value="developer")
         mock_user.permissions = set()
 
-        with patch.object(auth_manager.user_manager, 'authenticate_user', return_value=mock_user):
+        with patch.object(auth_manager.user_manager, "authenticate_user", return_value=mock_user):
             token = await auth_manager.login("testuser", "password")
             assert token is not None
 
@@ -133,7 +136,7 @@ class TestAuthenticationManager:
             username="testuser",
             role=UserRole.DEVELOPER,
             permissions=set(),
-            expires_at=datetime.now() - timedelta(hours=1)  # Already expired
+            expires_at=datetime.now() - timedelta(hours=1),  # Already expired
         )
         auth_manager.tokens["expired_token"] = expired_token
 
@@ -150,7 +153,7 @@ class TestAuthenticationManager:
             username="testuser",
             role=UserRole.DEVELOPER,
             permissions=set(),
-            expires_at=datetime.now() + timedelta(hours=1)
+            expires_at=datetime.now() + timedelta(hours=1),
         )
         auth_manager.tokens["test_token"] = token
 
@@ -231,11 +234,7 @@ class TestAuditLogger:
     async def test_log_event(self, audit_logger):
         """Test audit event logging."""
         event_id = await audit_logger.log_event(
-            AuditEventType.AUTH_LOGIN,
-            "user123",
-            "testuser",
-            resource="/api/login",
-            action="login_success"
+            AuditEventType.AUTH_LOGIN, "user123", "testuser", resource="/api/login", action="login_success"
         )
 
         assert event_id is not None
@@ -365,11 +364,7 @@ class TestPermissionManager:
         """Test permission granting."""
         from ....modules.security.auth import Permission
 
-        grant_id = await permission_manager.grant_permission(
-            "granter123",
-            "grantee123",
-            {Permission.API_CATALOG_READ}
-        )
+        grant_id = await permission_manager.grant_permission("granter123", "grantee123", {Permission.API_CATALOG_READ})
 
         assert grant_id is not None
         assert len(permission_manager.grants) == 1
@@ -378,11 +373,7 @@ class TestPermissionManager:
     async def test_revoke_permission(self, permission_manager):
         """Test permission revocation."""
         # First grant a permission
-        grant_id = await permission_manager.grant_permission(
-            "granter123",
-            "grantee123",
-            {Permission.API_CATALOG_READ}
-        )
+        grant_id = await permission_manager.grant_permission("granter123", "grantee123", {Permission.API_CATALOG_READ})
 
         # Then revoke it
         result = await permission_manager.revoke_permission(grant_id)
@@ -408,11 +399,9 @@ class TestAccessControlManager:
         request = AccessRequest(
             user=Mock(user_id="user123", role=UserRole.DEVELOPER),
             resource=Resource(
-                resource_id="test_resource",
-                resource_type=ResourceType.API_ENDPOINT,
-                owner_id="owner123"
+                resource_id="test_resource", resource_type=ResourceType.API_ENDPOINT, owner_id="owner123"
             ),
-            action="read"
+            action="read",
         )
 
         decision, reason, policy = await access_control_manager.evaluate_access(request)

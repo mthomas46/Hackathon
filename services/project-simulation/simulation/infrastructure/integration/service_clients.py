@@ -5,27 +5,29 @@ providing a consistent, resilient service mesh communication layer following
 enterprise patterns with circuit breaker, retry, and monitoring capabilities.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Type, TypeVar, Union, Generic
-from datetime import datetime
 import asyncio
-import httpx
 import json
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+
+import httpx
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.integration.service_discovery import get_service_url
+from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 from simulation.infrastructure.utilities.simulation_utilities import get_simulation_retry_manager
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ServiceClientError(Exception):
     """Base exception for service client errors."""
+
     def __init__(self, service_name: str, operation: str, message: str, status_code: Optional[int] = None):
         self.service_name = service_name
         self.operation = operation
@@ -36,16 +38,19 @@ class ServiceClientError(Exception):
 
 class ServiceUnavailableError(ServiceClientError):
     """Exception raised when a service is unavailable."""
+
     pass
 
 
 class ServiceTimeoutError(ServiceClientError):
     """Exception raised when a service request times out."""
+
     pass
 
 
 class ServiceResponseError(ServiceClientError):
     """Exception raised when a service returns an error response."""
+
     pass
 
 
@@ -75,15 +80,12 @@ class BaseServiceClient:
                 headers={
                     "User-Agent": "Simulation-Service/1.0",
                     "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }
+                    "Content-Type": "application/json",
+                },
             )
         return self._client
 
-    async def _make_request(self,
-                           method: str,
-                           endpoint: str,
-                           **kwargs) -> Dict[str, Any]:
+    async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         """Make HTTP request with error handling and monitoring."""
         start_time = datetime.now()
         operation = f"{method}_{endpoint.replace('/', '_')}"
@@ -108,7 +110,9 @@ class BaseServiceClient:
         except httpx.ConnectError as e:
             self._handle_error(operation, ServiceUnavailableError(self.service_name, operation, str(e)))
         except httpx.HTTPStatusError as e:
-            self._handle_error(operation, ServiceResponseError(self.service_name, operation, str(e), e.response.status_code))
+            self._handle_error(
+                operation, ServiceResponseError(self.service_name, operation, str(e), e.response.status_code)
+            )
         except Exception as e:
             self._handle_error(operation, ServiceClientError(self.service_name, operation, str(e)))
 
@@ -119,7 +123,7 @@ class BaseServiceClient:
             service=self.service_name,
             operation=operation,
             error=str(error),
-            status_code=getattr(error, 'status_code', None)
+            status_code=getattr(error, "status_code", None),
         )
 
         # Record failed service call
@@ -129,14 +133,14 @@ class BaseServiceClient:
 
     async def _execute_with_retry(self, method: str, endpoint: str, client: httpx.AsyncClient, **kwargs):
         """Execute request with retry logic."""
+
         async def attempt():
             response = await client.request(method, endpoint, **kwargs)
             response.raise_for_status()
             return response
 
         return await self.retry_manager.execute_with_simulation_retry(
-            f"{self.service_name}_{method}_{endpoint}",
-            attempt
+            f"{self.service_name}_{method}_{endpoint}", attempt
         )
 
     async def close(self):
@@ -147,6 +151,7 @@ class BaseServiceClient:
 
 
 # Ecosystem Service Clients
+
 
 class MockDataGeneratorClient(BaseServiceClient):
     """Client for mock-data-generator service."""
@@ -187,11 +192,7 @@ class DocStoreClient(BaseServiceClient):
 
     async def store_document(self, title: str, content: str, metadata: Dict[str, Any]) -> str:
         """Store a document."""
-        payload = {
-            "title": title,
-            "content": content,
-            "metadata": metadata
-        }
+        payload = {"title": title, "content": content, "metadata": metadata}
         response = await self._make_request("POST", "/documents", json=payload)
         return response.get("document_id")
 
@@ -225,10 +226,7 @@ class AnalysisServiceClient(BaseServiceClient):
 
     async def analyze_document(self, document_id: str, content: str) -> Dict[str, Any]:
         """Analyze a single document."""
-        payload = {
-            "document_id": document_id,
-            "content": content
-        }
+        payload = {"document_id": document_id, "content": content}
         return await self._make_request("POST", "/analyze", json=payload)
 
     async def analyze_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -252,11 +250,7 @@ class LLMGatewayClient(BaseServiceClient):
 
     async def generate_content(self, prompt: str, model: str = "gpt-4", **kwargs) -> Dict[str, Any]:
         """Generate content using LLM."""
-        payload = {
-            "prompt": prompt,
-            "model": model,
-            **kwargs
-        }
+        payload = {"prompt": prompt, "model": model, **kwargs}
         return await self._make_request("POST", "/generate", json=payload)
 
     async def get_available_models(self) -> List[str]:
@@ -348,10 +342,7 @@ class SummarizerHubClient(BaseServiceClient):
 
     async def summarize_text(self, text: str, max_length: int = 200) -> Dict[str, Any]:
         """Summarize text content."""
-        payload = {
-            "text": text,
-            "max_length": max_length
-        }
+        payload = {"text": text, "max_length": max_length}
         return await self._make_request("POST", "/summarize", json=payload)
 
     async def summarize_documents(self, documents: List[str]) -> Dict[str, Any]:
@@ -360,10 +351,7 @@ class SummarizerHubClient(BaseServiceClient):
 
     async def extract_key_points(self, text: str, max_points: int = 10) -> List[str]:
         """Extract key points from text."""
-        payload = {
-            "text": text,
-            "max_points": max_points
-        }
+        payload = {"text": text, "max_points": max_points}
         response = await self._make_request("POST", "/key-points", json=payload)
         return response.get("key_points", [])
 
@@ -380,10 +368,7 @@ class InterpreterClient(BaseServiceClient):
 
     async def generate_insights(self, documents: List[Dict[str, Any]], context: Dict[str, Any]) -> Dict[str, Any]:
         """Generate insights from document analysis."""
-        payload = {
-            "documents": documents,
-            "context": context
-        }
+        payload = {"documents": documents, "context": context}
         return await self._make_request("POST", "/insights", json=payload)
 
     async def find_patterns(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -399,18 +384,12 @@ class SourceAgentClient(BaseServiceClient):
 
     async def analyze_codebase(self, repository_url: str, config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Analyze a codebase."""
-        payload = {
-            "repository_url": repository_url,
-            **(config or {})
-        }
+        payload = {"repository_url": repository_url, **(config or {})}
         return await self._make_request("POST", "/analyze", json=payload)
 
     async def generate_documentation(self, code_path: str, doc_type: str = "api") -> Dict[str, Any]:
         """Generate documentation from code."""
-        payload = {
-            "code_path": code_path,
-            "doc_type": doc_type
-        }
+        payload = {"code_path": code_path, "doc_type": doc_type}
         return await self._make_request("POST", "/documentation", json=payload)
 
 
@@ -422,27 +401,18 @@ class CodeAnalyzerClient(BaseServiceClient):
 
     async def analyze_code_quality(self, code: str, language: str) -> Dict[str, Any]:
         """Analyze code quality metrics."""
-        payload = {
-            "code": code,
-            "language": language
-        }
+        payload = {"code": code, "language": language}
         return await self._make_request("POST", "/quality", json=payload)
 
     async def detect_security_issues(self, code: str, language: str) -> List[Dict[str, Any]]:
         """Detect security vulnerabilities."""
-        payload = {
-            "code": code,
-            "language": language
-        }
+        payload = {"code": code, "language": language}
         response = await self._make_request("POST", "/security", json=payload)
         return response.get("issues", [])
 
     async def calculate_complexity(self, code: str, language: str) -> Dict[str, Any]:
         """Calculate code complexity metrics."""
-        payload = {
-            "code": code,
-            "language": language
-        }
+        payload = {"code": code, "language": language}
         return await self._make_request("POST", "/complexity", json=payload)
 
 
@@ -454,22 +424,17 @@ class SecureAnalyzerClient(BaseServiceClient):
 
     async def analyze_security(self, target: str, scan_type: str = "full") -> Dict[str, Any]:
         """Perform security analysis."""
-        payload = {
-            "target": target,
-            "scan_type": scan_type
-        }
+        payload = {"target": target, "scan_type": scan_type}
         return await self._make_request("POST", "/analyze", json=payload)
 
     async def check_compliance(self, target: str, standards: List[str]) -> Dict[str, Any]:
         """Check compliance against security standards."""
-        payload = {
-            "target": target,
-            "standards": standards
-        }
+        payload = {"target": target, "standards": standards}
         return await self._make_request("POST", "/compliance", json=payload)
 
 
 # Service Client Registry
+
 
 class EcosystemServiceClientRegistry:
     """Registry for all ecosystem service clients."""
@@ -563,28 +528,26 @@ def get_ecosystem_client_registry() -> EcosystemServiceClientRegistry:
 
 __all__ = [
     # Base Classes
-    'BaseServiceClient',
-    'ServiceClientError',
-    'ServiceUnavailableError',
-    'ServiceTimeoutError',
-    'ServiceResponseError',
-
+    "BaseServiceClient",
+    "ServiceClientError",
+    "ServiceUnavailableError",
+    "ServiceTimeoutError",
+    "ServiceResponseError",
     # Service Clients
-    'MockDataGeneratorClient',
-    'DocStoreClient',
-    'AnalysisServiceClient',
-    'LLMGatewayClient',
-    'OrchestratorClient',
-    'LogCollectorClient',
-    'NotificationServiceClient',
-    'SummarizerHubClient',
-    'InterpreterClient',
-    'SourceAgentClient',
-    'CodeAnalyzerClient',
-    'SecureAnalyzerClient',
-
+    "MockDataGeneratorClient",
+    "DocStoreClient",
+    "AnalysisServiceClient",
+    "LLMGatewayClient",
+    "OrchestratorClient",
+    "LogCollectorClient",
+    "NotificationServiceClient",
+    "SummarizerHubClient",
+    "InterpreterClient",
+    "SourceAgentClient",
+    "CodeAnalyzerClient",
+    "SecureAnalyzerClient",
     # Registry
-    'EcosystemServiceClientRegistry',
-    'get_ecosystem_client',
-    'get_ecosystem_client_registry'
+    "EcosystemServiceClientRegistry",
+    "get_ecosystem_client",
+    "get_ecosystem_client_registry",
 ]

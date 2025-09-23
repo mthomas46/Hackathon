@@ -1,7 +1,7 @@
 """Document Metadata Value Object"""
 
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 class DocumentMetadata:
@@ -20,7 +20,7 @@ class DocumentMetadata:
         author: Optional[str] = None,
         tags: Optional[List[str]] = None,
         custom_metadata: Optional[Dict[str, Any]] = None,
-        ingestion_timestamp: Optional[datetime] = None
+        ingestion_timestamp: Optional[datetime] = None,
     ):
         self._document_id = document_id.strip()
         self._source_url = source_url.strip()
@@ -163,7 +163,7 @@ class DocumentMetadata:
             "custom_metadata": self._custom_metadata,
             "ingestion_timestamp": self._ingestion_timestamp.isoformat(),
             "has_tags": self.has_tags,
-            "has_custom_metadata": self.has_custom_metadata
+            "has_custom_metadata": self.has_custom_metadata,
         }
 
         if self._title:

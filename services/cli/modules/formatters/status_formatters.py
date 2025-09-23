@@ -1,6 +1,7 @@
 """Status formatting utilities for CLI display."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -14,18 +15,18 @@ class StatusFormatter:
 
     def format_service_status(self, service_name: str, status_data: Dict[str, Any]) -> str:
         """Format service status information for display."""
-        status = status_data.get('status', 'unknown')
-        timestamp = status_data.get('timestamp', 0)
+        status = status_data.get("status", "unknown")
+        timestamp = status_data.get("timestamp", 0)
 
-        if status == 'healthy':
+        if status == "healthy":
             status_emoji = "✅"
             status_color = "green"
             details = "Service is responding normally"
-        elif status == 'unhealthy':
+        elif status == "unhealthy":
             status_emoji = "❌"
             status_color = "red"
-            details = status_data.get('error', 'Service is not responding')
-        elif status == 'degraded':
+            details = status_data.get("error", "Service is not responding")
+        elif status == "degraded":
             status_emoji = "⚠️"
             status_color = "yellow"
             details = "Service is experiencing issues"
@@ -39,10 +40,10 @@ class StatusFormatter:
     def format_operation_result(self, operation: str, result: Any) -> str:
         """Format operation result for display."""
         if isinstance(result, dict):
-            if result.get('success'):
+            if result.get("success"):
                 return f"[green]✅ {operation} completed successfully[/green]"
             else:
-                error_msg = result.get('message', 'Unknown error')
+                error_msg = result.get("message", "Unknown error")
                 return f"[red]❌ {operation} failed: {error_msg}[/red]"
         elif isinstance(result, bool):
             if result:
@@ -57,7 +58,7 @@ class StatusFormatter:
     def format_health_summary(self, health_data: Dict[str, Dict[str, Any]]) -> str:
         """Format a health summary for multiple services."""
         total = len(health_data)
-        healthy = sum(1 for data in health_data.values() if data.get('status') == 'healthy')
+        healthy = sum(1 for data in health_data.values() if data.get("status") == "healthy")
         unhealthy = total - healthy
 
         summary = f"Service Health Summary: {healthy}/{total} healthy"
@@ -91,12 +92,7 @@ class StatusFormatter:
 
     def create_status_panel(self, title: str, content: str, status: str = "info") -> Panel:
         """Create a status panel with appropriate styling."""
-        colors = {
-            "success": "green",
-            "error": "red",
-            "warning": "yellow",
-            "info": "blue"
-        }
+        colors = {"success": "green", "error": "red", "warning": "yellow", "info": "blue"}
 
         color = colors.get(status, "blue")
         return Panel(f"[{color}]{content}[/{color}]", title=f"[{color}]{title}[/{color}]", border_style=color)

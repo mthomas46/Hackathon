@@ -12,15 +12,17 @@ Features:
 
 import asyncio
 import json
-from typing import AsyncGenerator, Dict, List, Any, Optional, Callable, Union
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Union
+
 import aiofiles
 
 
 @dataclass
 class LazyLoadConfig:
     """Configuration for lazy loading."""
+
     chunk_size: int = 100
     prefetch_count: int = 2
     max_concurrent: int = 3
@@ -32,6 +34,7 @@ class LazyLoadConfig:
 @dataclass
 class ProgressiveLoadResult:
     """Result of progressive loading operation."""
+
     data: Any
     chunk_index: int
     total_chunks: int
@@ -57,7 +60,7 @@ class DataStreamer:
     async def stream_file(self, file_path: str) -> AsyncGenerator[bytes, None]:
         """Stream file contents efficiently."""
         try:
-            async with aiofiles.open(file_path, 'rb') as file:
+            async with aiofiles.open(file_path, "rb") as file:
                 while True:
                     chunk = await file.read(self.chunk_size)
                     if not chunk:
@@ -71,15 +74,15 @@ class DataStreamer:
         total_items = len(data)
 
         for i in range(0, total_items, chunk_size):
-            chunk = data[i:i + chunk_size]
+            chunk = data[i : i + chunk_size]
             chunk_data = {
                 "items": chunk,
                 "offset": i,
                 "limit": len(chunk),
                 "total": total_items,
-                "has_more": i + chunk_size < total_items
+                "has_more": i + chunk_size < total_items,
             }
-            yield json.dumps(chunk_data, separators=(',', ':'))
+            yield json.dumps(chunk_data, separators=(",", ":"))
 
     async def stream_database_results(self, query_func: Callable, params: Dict = None) -> AsyncGenerator[Dict, None]:
         """Stream database query results."""
@@ -134,10 +137,7 @@ class LazyLoader:
 
         try:
             # Load the data
-            data = await asyncio.wait_for(
-                loader_func(),
-                timeout=self.config.timeout_seconds
-            )
+            data = await asyncio.wait_for(loader_func(), timeout=self.config.timeout_seconds)
 
             # Cache the result
             self.loaded_items[key] = data
@@ -185,7 +185,7 @@ class LazyLoader:
             "loaded_items_count": len(self.loaded_items),
             "active_promises_count": len(self.loading_promises),
             "dependencies_count": len(self.dependencies),
-            "config": self.config.__dict__
+            "config": self.config.__dict__,
         }
 
     async def _prefetch_related(self, key: str, data: Any):
@@ -211,8 +211,9 @@ class ProgressiveLoader:
         self.config = config or LazyLoadConfig()
         self.streamer = DataStreamer()
 
-    async def load_progressive(self, data_source: Union[List, Callable],
-                              chunk_size: int = None) -> AsyncGenerator[ProgressiveLoadResult, None]:
+    async def load_progressive(
+        self, data_source: Union[List, Callable], chunk_size: int = None
+    ) -> AsyncGenerator[ProgressiveLoadResult, None]:
         """Load data progressively in chunks."""
 
         chunk_size = chunk_size or self.config.chunk_size
@@ -236,8 +237,8 @@ class ProgressiveLoader:
                         "start_index": start_idx,
                         "end_index": end_idx,
                         "chunk_size": len(chunk_data),
-                        "progress_percentage": (chunk_index + 1) / total_chunks * 100
-                    }
+                        "progress_percentage": (chunk_index + 1) / total_chunks * 100,
+                    },
                 )
 
                 yield result
@@ -254,10 +255,7 @@ class ProgressiveLoader:
                     chunk_index=chunk_index,
                     total_chunks=-1,  # Unknown for streaming
                     has_more=True,  # Assume more data available
-                    metadata={
-                        "chunk_size": len(chunk) if hasattr(chunk, '__len__') else 1,
-                        "streaming": True
-                    }
+                    metadata={"chunk_size": len(chunk) if hasattr(chunk, "__len__") else 1, "streaming": True},
                 )
 
                 yield result
@@ -266,8 +264,9 @@ class ProgressiveLoader:
                 # Allow other tasks to run
                 await asyncio.sleep(0)
 
-    async def load_with_quality_fallback(self, data_source: Callable,
-                                       qualities: List[str]) -> AsyncGenerator[ProgressiveLoadResult, None]:
+    async def load_with_quality_fallback(
+        self, data_source: Callable, qualities: List[str]
+    ) -> AsyncGenerator[ProgressiveLoadResult, None]:
         """Load data with quality fallback for bandwidth adaptation."""
 
         for quality in qualities:
@@ -284,8 +283,9 @@ class ProgressiveLoader:
                 # Try next quality level
                 continue
 
-    async def stream_to_client(self, data_generator: AsyncGenerator,
-                              response_writer: Callable) -> AsyncGenerator[str, None]:
+    async def stream_to_client(
+        self, data_generator: AsyncGenerator, response_writer: Callable
+    ) -> AsyncGenerator[str, None]:
         """Stream progressive data to client with Server-Sent Events."""
 
         chunk_index = 0
@@ -298,7 +298,7 @@ class ProgressiveLoader:
                 "total_chunks": chunk.total_chunks,
                 "has_more": chunk.has_more,
                 "metadata": chunk.metadata,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             event_string = f"data: {json.dumps(event_data)}\n\n"
@@ -358,7 +358,7 @@ class SmartLazyLoader:
         # In a real implementation, this would use ML models
 
         if key in self.prefetch_predictions:
-            predicted_keys = self.prefetch_predictions[key][:self.base_loader.config.prefetch_count]
+            predicted_keys = self.prefetch_predictions[key][: self.base_loader.config.prefetch_count]
 
             # Prefetch predicted items in background
             for predicted_key in predicted_keys:
@@ -382,5 +382,5 @@ class SmartLazyLoader:
             "access_patterns_count": len(self.access_patterns),
             "prefetch_predictions_count": len(self.prefetch_predictions),
             "base_loader_stats": await self.base_loader.get_stats(),
-            "performance_metrics": self.performance_metrics
+            "performance_metrics": self.performance_metrics,
         }

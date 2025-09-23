@@ -11,14 +11,15 @@ Features:
 """
 
 import asyncio
+import logging
 import time
-from typing import Dict, List, Any, Optional, Callable, AsyncGenerator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
+
 import psycopg2
 import redis.asyncio as redis
-from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class QueryMetrics:
     """Query performance metrics."""
+
     query_id: str
     sql: str
     execution_time: float
@@ -38,6 +40,7 @@ class QueryMetrics:
 @dataclass
 class ConnectionStats:
     """Database connection statistics."""
+
     active_connections: int = 0
     idle_connections: int = 0
     total_connections_created: int = 0
@@ -58,8 +61,9 @@ class ConnectionPool:
     - Graceful shutdown
     """
 
-    def __init__(self, dsn: str, min_size: int = 5, max_size: int = 20,
-                 max_idle_time: int = 300, health_check_interval: int = 60):
+    def __init__(
+        self, dsn: str, min_size: int = 5, max_size: int = 20, max_idle_time: int = 300, health_check_interval: int = 60
+    ):
         self.dsn = dsn
         self.min_size = min_size
         self.max_size = max_size
@@ -257,8 +261,7 @@ class AsyncQueryExecutor:
             if conn:
                 await self.connection_pool.return_connection(conn)
 
-    async def execute_query(self, sql: str, params: tuple = None,
-                          timeout: float = 30.0) -> List[Dict]:
+    async def execute_query(self, sql: str, params: tuple = None, timeout: float = 30.0) -> List[Dict]:
         """Execute a query with automatic retries and monitoring."""
         query_id = f"query_{int(time.time() * 1000000)}"
         start_time = time.time()
@@ -269,10 +272,7 @@ class AsyncQueryExecutor:
                     connection_time = time.time() - start_time
 
                     # Execute query with timeout
-                    result = await asyncio.wait_for(
-                        self._execute_query_impl(conn, sql, params),
-                        timeout=timeout
-                    )
+                    result = await asyncio.wait_for(self._execute_query_impl(conn, sql, params), timeout=timeout)
 
                     execution_time = time.time() - start_time
 
@@ -282,7 +282,7 @@ class AsyncQueryExecutor:
                         sql=sql,
                         execution_time=execution_time,
                         rows_affected=len(result) if result else 0,
-                        connection_time=connection_time
+                        connection_time=connection_time,
                     )
 
                     async with self._lock:
@@ -299,10 +299,7 @@ class AsyncQueryExecutor:
                 if attempt == self.max_retries - 1:
                     # Record failed metrics
                     metrics = QueryMetrics(
-                        query_id=query_id,
-                        sql=sql,
-                        execution_time=time.time() - start_time,
-                        error=str(e)
+                        query_id=query_id, sql=sql, execution_time=time.time() - start_time, error=str(e)
                     )
                     async with self._lock:
                         self.query_metrics.append(metrics)
@@ -322,8 +319,9 @@ class AsyncQueryExecutor:
         tasks = [execute_single(query_tuple) for query_tuple in queries]
         return await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def stream_results(self, sql: str, params: tuple = None,
-                           chunk_size: int = 1000) -> AsyncGenerator[List[Dict], None]:
+    async def stream_results(
+        self, sql: str, params: tuple = None, chunk_size: int = 1000
+    ) -> AsyncGenerator[List[Dict], None]:
         """Stream query results for large datasets."""
         async with self.get_connection() as conn:
             # This would implement cursor-based streaming
@@ -361,8 +359,14 @@ class AsyncQueryExecutor:
             successful_queries = [m for m in self.query_metrics if not m.error]
             failed_queries = [m for m in self.query_metrics if m.error]
 
-            avg_execution_time = sum(m.execution_time for m in successful_queries) / len(successful_queries) if successful_queries else 0
-            avg_connection_time = sum(m.connection_time for m in successful_queries) / len(successful_queries) if successful_queries else 0
+            avg_execution_time = (
+                sum(m.execution_time for m in successful_queries) / len(successful_queries) if successful_queries else 0
+            )
+            avg_connection_time = (
+                sum(m.connection_time for m in successful_queries) / len(successful_queries)
+                if successful_queries
+                else 0
+            )
 
             return {
                 "total_queries": total_queries,
@@ -371,7 +375,7 @@ class AsyncQueryExecutor:
                 "average_execution_time": avg_execution_time,
                 "average_connection_time": avg_connection_time,
                 "success_rate": len(successful_queries) / total_queries if total_queries > 0 else 0,
-                "recent_queries": self.query_metrics[-10:]  # Last 10 queries
+                "recent_queries": self.query_metrics[-10:],  # Last 10 queries
             }
 
 
@@ -398,7 +402,7 @@ class QueryOptimizer:
             "query_type": self._classify_query(sql),
             "complexity_score": self._calculate_complexity(sql),
             "execution_time": execution_time,
-            "optimization_suggestions": []
+            "optimization_suggestions": [],
         }
 
         # Check for common optimization opportunities
@@ -422,13 +426,15 @@ class QueryOptimizer:
 
         # Simple optimizations
         # Remove unnecessary spaces and formatting
-        optimized = ' '.join(optimized.split())
+        optimized = " ".join(optimized.split())
 
         # Add LIMIT if missing and it's a SELECT without aggregation
-        if (sql.upper().strip().startswith("SELECT") and
-            "LIMIT" not in sql.upper() and
-            "GROUP BY" not in sql.upper() and
-            "HAVING" not in sql.upper()):
+        if (
+            sql.upper().strip().startswith("SELECT")
+            and "LIMIT" not in sql.upper()
+            and "GROUP BY" not in sql.upper()
+            and "HAVING" not in sql.upper()
+        ):
             # This is a risky optimization, so we'll skip it in practice
             pass
 
@@ -456,7 +462,7 @@ class QueryOptimizer:
         patterns = {
             "slow_queries": [m for m in report.get("recent_queries", []) if m.execution_time > 1.0],
             "frequent_queries": {},  # Would group by SQL hash
-            "optimization_opportunities": []
+            "optimization_opportunities": [],
         }
 
         return patterns

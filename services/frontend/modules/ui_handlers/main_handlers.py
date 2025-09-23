@@ -2,29 +2,32 @@
 
 Handles general dashboard functionality and main page rendering.
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context,
-    validate_frontend_request,
-    sanitize_input
-)
 from services.frontend.utils import (
-    render_index,
-    render_owner_coverage_table,
-    render_topics_html,
+    render_clusters,
     render_consolidation_list,
-    render_search_results,
+    render_counts,
     render_docs_quality,
     render_findings,
-    render_counts,
+    render_index,
+    render_owner_coverage_table,
     render_report_page,
-    render_clusters,
+    render_search_results,
+    render_topics_html,
+)
+
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
+    handle_frontend_error,
+    sanitize_input,
+    validate_frontend_request,
 )
 
 
@@ -72,24 +75,26 @@ class MainUIHandlers:
             html = render_consolidation_list(data)
             return create_html_response(html, "Confluence Consolidation Report")
         except Exception as e:
-            return handle_frontend_error("render confluence consolidation", e, **build_frontend_context("render_confluence_consolidation"))
+            return handle_frontend_error(
+                "render confluence consolidation", e, **build_frontend_context("render_confluence_consolidation")
+            )
 
     @staticmethod
-    def handle_jira_staleness(min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False) -> HTMLResponse:
+    def handle_jira_staleness(
+        min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False
+    ) -> HTMLResponse:
         """Render Jira staleness report page."""
         try:
-            validate_frontend_request({
-                "min_confidence": min_confidence,
-                "min_duplicate_confidence": min_duplicate_confidence,
-                "limit": limit
-            })
+            validate_frontend_request(
+                {"min_confidence": min_confidence, "min_duplicate_confidence": min_duplicate_confidence, "limit": limit}
+            )
 
             clients = get_frontend_clients()
             params = {
                 "min_confidence": min_confidence,
                 "min_duplicate_confidence": min_duplicate_confidence,
                 "limit": limit,
-                "summarize": summarize
+                "summarize": summarize,
             }
 
             data = fetch_service_data("analysis-service", "/reports/jira/staleness", clients=clients, params=params)
@@ -359,7 +364,9 @@ class MainUIHandlers:
             html = render_clusters(data)
             return create_html_response(html, "Duplicate Clusters Report")
         except Exception as e:
-            return handle_frontend_error("render duplicate clusters", e, **build_frontend_context("render_duplicate_clusters"))
+            return handle_frontend_error(
+                "render duplicate clusters", e, **build_frontend_context("render_duplicate_clusters")
+            )
 
     @staticmethod
     def handle_search(q: str = "kubernetes") -> HTMLResponse:
@@ -404,7 +411,9 @@ class MainUIHandlers:
             html = render_counts(data, "severity")
             return create_html_response(html, "Findings by Severity")
         except Exception as e:
-            return handle_frontend_error("render findings by severity", e, **build_frontend_context("render_findings_by_severity"))
+            return handle_frontend_error(
+                "render findings by severity", e, **build_frontend_context("render_findings_by_severity")
+            )
 
     @staticmethod
     def handle_findings_by_type() -> HTMLResponse:
@@ -415,7 +424,9 @@ class MainUIHandlers:
             html = render_counts(data, "type")
             return create_html_response(html, "Findings by Type")
         except Exception as e:
-            return handle_frontend_error("render findings by type", e, **build_frontend_context("render_findings_by_type"))
+            return handle_frontend_error(
+                "render findings by type", e, **build_frontend_context("render_findings_by_type")
+            )
 
     @staticmethod
     def handle_report() -> HTMLResponse:

@@ -2,14 +2,13 @@
 
 import asyncio
 import sqlite3
-from typing import Any, Dict, Optional, List, Callable, TypeVar, Generic
-from contextlib import asynccontextmanager
 from abc import ABC, abstractmethod
+from contextlib import asynccontextmanager
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
 from .application_service import ApplicationService, ServiceContext
 
-
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class TransactionContext:
@@ -66,9 +65,7 @@ class TransactionManager(ABC):
 
     @abstractmethod
     async def execute_in_transaction(
-        self,
-        operation: Callable[[TransactionContext], Any],
-        isolation_level: str = "DEFERRED"
+        self, operation: Callable[[TransactionContext], Any], isolation_level: str = "DEFERRED"
     ) -> Any:
         """Execute operation within a transaction."""
         pass
@@ -89,9 +86,7 @@ class SQLiteTransactionManager(TransactionManager):
 
         if task_id not in self._connection_pool:
             conn = sqlite3.connect(
-                self.database_path,
-                isolation_level=None,  # We'll manage isolation manually
-                check_same_thread=False
+                self.database_path, isolation_level=None, check_same_thread=False  # We'll manage isolation manually
             )
             conn.execute("PRAGMA foreign_keys = ON")
             conn.execute("PRAGMA journal_mode = WAL")
@@ -182,9 +177,7 @@ class SQLiteTransactionManager(TransactionManager):
         context.savepoints[:] = context.savepoints[:idx]
 
     async def execute_in_transaction(
-        self,
-        operation: Callable[[TransactionContext], Any],
-        isolation_level: str = "DEFERRED"
+        self, operation: Callable[[TransactionContext], Any], isolation_level: str = "DEFERRED"
     ) -> Any:
         """Execute operation within a transaction."""
         context = await self.begin_transaction(isolation_level)
@@ -208,11 +201,7 @@ class TransactionService(ApplicationService):
         self.active_transactions: Dict[int, TransactionContext] = {}
 
     @asynccontextmanager
-    async def transaction(
-        self,
-        isolation_level: str = "DEFERRED",
-        context: Optional[ServiceContext] = None
-    ):
+    async def transaction(self, isolation_level: str = "DEFERRED", context: Optional[ServiceContext] = None):
         """Context manager for transactions."""
         async with self.operation_context("transaction", context):
             transaction_context = await self.transaction_manager.begin_transaction(isolation_level)
@@ -237,17 +226,13 @@ class TransactionService(ApplicationService):
         self,
         operation: Callable[[TransactionContext], Any],
         isolation_level: str = "DEFERRED",
-        context: Optional[ServiceContext] = None
+        context: Optional[ServiceContext] = None,
     ) -> Any:
         """Execute operation within a transaction."""
         async with self.operation_context("execute_in_transaction", context):
             return await self.transaction_manager.execute_in_transaction(operation, isolation_level)
 
-    async def create_savepoint(
-        self,
-        name: str,
-        context: Optional[ServiceContext] = None
-    ) -> None:
+    async def create_savepoint(self, name: str, context: Optional[ServiceContext] = None) -> None:
         """Create a transaction savepoint."""
         async with self.operation_context("create_savepoint", context):
             task_id = id(asyncio.current_task())
@@ -258,11 +243,7 @@ class TransactionService(ApplicationService):
 
             await self.transaction_manager.create_savepoint(transaction_context, name)
 
-    async def rollback_to_savepoint(
-        self,
-        name: str,
-        context: Optional[ServiceContext] = None
-    ) -> None:
+    async def rollback_to_savepoint(self, name: str, context: Optional[ServiceContext] = None) -> None:
         """Rollback to a transaction savepoint."""
         async with self.operation_context("rollback_to_savepoint", context):
             task_id = id(asyncio.current_task())
@@ -280,13 +261,13 @@ class TransactionService(ApplicationService):
 
         if transaction_context:
             return {
-                'active': transaction_context.is_active,
-                'isolation_level': transaction_context.isolation_level,
-                'savepoints': transaction_context.savepoints.copy(),
-                'metadata': transaction_context.metadata.copy()
+                "active": transaction_context.is_active,
+                "isolation_level": transaction_context.isolation_level,
+                "savepoints": transaction_context.savepoints.copy(),
+                "metadata": transaction_context.metadata.copy(),
             }
         else:
-            return {'active': False}
+            return {"active": False}
 
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check."""
@@ -295,18 +276,18 @@ class TransactionService(ApplicationService):
         # Add transaction-specific health info
         try:
             status = await self.get_transaction_status()
-            health['transaction_service'] = {
-                'active_transactions': len(self.active_transactions),
-                'current_transaction_active': status['active'],
-                'transaction_manager_type': type(self.transaction_manager).__name__
+            health["transaction_service"] = {
+                "active_transactions": len(self.active_transactions),
+                "current_transaction_active": status["active"],
+                "transaction_manager_type": type(self.transaction_manager).__name__,
             }
 
             # Test transaction functionality
             test_result = await self._test_transaction_functionality()
-            health['transaction_service']['test_result'] = test_result
+            health["transaction_service"]["test_result"] = test_result
 
         except Exception as e:
-            health['transaction_service'] = {'error': str(e)}
+            health["transaction_service"] = {"error": str(e)}
 
         return health
 

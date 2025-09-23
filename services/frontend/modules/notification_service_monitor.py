@@ -3,11 +3,13 @@
 Provides visualization and monitoring capabilities for notification service
 owner resolution, notification delivery, and dead letter queue management.
 """
-from typing import Dict, Any, List, Optional
+
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_notification_service_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_notification_service_url
 
 
 class NotificationServiceMonitor:
@@ -42,9 +44,13 @@ class NotificationServiceMonitor:
                 "health": health_response,
                 "dlq": dlq_response,
                 "notification_stats": self._calculate_notification_stats(),
-                "recent_notifications": self._notifications[-10:] if self._notifications else [],  # Last 10 notifications
-                "recent_owner_resolutions": self._owner_resolutions[-10:] if self._owner_resolutions else [],  # Last 10 resolutions
-                "last_updated": utc_now().isoformat()
+                "recent_notifications": (
+                    self._notifications[-10:] if self._notifications else []
+                ),  # Last 10 notifications
+                "recent_owner_resolutions": (
+                    self._owner_resolutions[-10:] if self._owner_resolutions else []
+                ),  # Last 10 resolutions
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -60,7 +66,7 @@ class NotificationServiceMonitor:
                 "notification_stats": {},
                 "recent_notifications": [],
                 "recent_owner_resolutions": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     async def resolve_owners(self, owners: List[str]) -> Dict[str, Any]:
@@ -80,7 +86,7 @@ class NotificationServiceMonitor:
                     "owners_requested": owners,
                     "resolved_targets": response["resolved"],
                     "resolution_count": len(response["resolved"]),
-                    "response": response
+                    "response": response,
                 }
 
                 self._owner_resolutions.insert(0, resolution_result)  # Add to front
@@ -93,23 +99,23 @@ class NotificationServiceMonitor:
                     "resolution_id": resolution_result["id"],
                     "resolved_targets": resolution_result["resolved_targets"],
                     "resolution_count": resolution_result["resolution_count"],
-                    "response": response
+                    "response": response,
                 }
 
-            return {
-                "success": False,
-                "error": "Owner resolution failed",
-                "response": response
-            }
+            return {"success": False, "error": "Owner resolution failed", "response": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
-    async def send_notification(self, channel: str, target: str, title: str, message: str, metadata: Optional[Dict[str, Any]] = None, labels: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def send_notification(
+        self,
+        channel: str,
+        target: str,
+        title: str,
+        message: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        labels: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """Send a notification through the service."""
         try:
             clients = get_frontend_clients()
@@ -121,7 +127,7 @@ class NotificationServiceMonitor:
                 "title": title,
                 "message": message,
                 "metadata": metadata or {},
-                "labels": labels or []
+                "labels": labels or [],
             }
 
             response = await clients.post_json(f"{notification_url}/notify", payload)
@@ -137,7 +143,7 @@ class NotificationServiceMonitor:
                 "metadata": metadata,
                 "labels": labels,
                 "success": response.get("success", False),
-                "response": response
+                "response": response,
             }
 
             self._notifications.insert(0, notification_result)  # Add to front
@@ -145,18 +151,10 @@ class NotificationServiceMonitor:
             if len(self._notifications) > 50:
                 self._notifications = self._notifications[:50]
 
-            return {
-                "success": True,
-                "notification_id": notification_result["id"],
-                "response": response
-            }
+            return {"success": True, "notification_id": notification_result["id"], "response": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
     async def get_dlq_entries(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get dead letter queue entries."""
@@ -178,7 +176,7 @@ class NotificationServiceMonitor:
                 "successful_notifications": 0,
                 "failed_notifications": 0,
                 "channels_used": [],
-                "total_owner_resolutions": 0
+                "total_owner_resolutions": 0,
             }
 
         total_notifications = len(self._notifications)
@@ -197,9 +195,11 @@ class NotificationServiceMonitor:
             "total_notifications": total_notifications,
             "successful_notifications": successful_notifications,
             "failed_notifications": failed_notifications,
-            "success_rate": round((successful_notifications / total_notifications) * 100, 1) if total_notifications > 0 else 0,
+            "success_rate": (
+                round((successful_notifications / total_notifications) * 100, 1) if total_notifications > 0 else 0
+            ),
             "channels_used": list(channels),
-            "total_owner_resolutions": total_resolutions
+            "total_owner_resolutions": total_resolutions,
         }
 
     def get_notification_history(self, limit: int = 20) -> List[Dict[str, Any]]:

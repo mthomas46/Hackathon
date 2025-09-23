@@ -10,18 +10,19 @@ Advanced access control system supporting:
 """
 
 import asyncio
-from datetime import datetime, time
-from typing import Dict, List, Any, Optional, Set, Tuple, Callable
-from dataclasses import dataclass, field
-from enum import Enum
 import ipaddress
 import re
+from dataclasses import dataclass, field
+from datetime import datetime, time
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from .auth import User, UserRole, Permission
+from .auth import Permission, User, UserRole
 
 
 class AccessDecision(Enum):
     """Access control decisions."""
+
     ALLOW = "allow"
     DENY = "deny"
     ABSTAIN = "abstain"
@@ -29,6 +30,7 @@ class AccessDecision(Enum):
 
 class ResourceType(Enum):
     """Types of resources that can be protected."""
+
     API_ENDPOINT = "api_endpoint"
     DATA_RESOURCE = "data_resource"
     USER_ACCOUNT = "user_account"
@@ -39,6 +41,7 @@ class ResourceType(Enum):
 @dataclass
 class Resource:
     """Resource definition for access control."""
+
     resource_id: str
     resource_type: ResourceType
     owner_id: str
@@ -50,13 +53,14 @@ class Resource:
 @dataclass
 class AccessPolicy:
     """Access control policy with conditions."""
+
     policy_id: str
     name: str
     description: str
     effect: AccessDecision
     principals: List[str]  # User IDs, roles, or wildcards
-    resources: List[str]   # Resource IDs or patterns
-    actions: List[str]     # Allowed actions
+    resources: List[str]  # Resource IDs or patterns
+    actions: List[str]  # Allowed actions
     conditions: Dict[str, Any] = field(default_factory=dict)
     priority: int = 0
     enabled: bool = True
@@ -66,6 +70,7 @@ class AccessPolicy:
 @dataclass
 class AccessRequest:
     """Access control request context."""
+
     user: User
     resource: Resource
     action: str
@@ -76,6 +81,7 @@ class AccessRequest:
 @dataclass
 class PermissionGrant:
     """Permission delegation record."""
+
     grant_id: str
     granter_id: str
     grantee_id: str
@@ -101,31 +107,38 @@ class PermissionManager:
     def _get_default_role_permissions(self) -> Dict[UserRole, Set[Permission]]:
         """Get default permissions for each role."""
         from .auth import Permission
+
         return {
             UserRole.ADMIN: set(Permission),
             UserRole.MANAGER: {
-                Permission.API_CATALOG_READ, Permission.API_CATALOG_WRITE,
-                Permission.API_TEST_EXECUTE, Permission.API_TEST_MANAGE,
-                Permission.ANALYTICS_READ, Permission.ANALYTICS_WRITE,
-                Permission.TOPOLOGY_READ, Permission.TOPOLOGY_WRITE,
-                Permission.DEVTOOLS_EXECUTE, Permission.AUDIT_READ,
-                Permission.ADMIN_USERS
+                Permission.API_CATALOG_READ,
+                Permission.API_CATALOG_WRITE,
+                Permission.API_TEST_EXECUTE,
+                Permission.API_TEST_MANAGE,
+                Permission.ANALYTICS_READ,
+                Permission.ANALYTICS_WRITE,
+                Permission.TOPOLOGY_READ,
+                Permission.TOPOLOGY_WRITE,
+                Permission.DEVTOOLS_EXECUTE,
+                Permission.AUDIT_READ,
+                Permission.ADMIN_USERS,
             },
             UserRole.DEVELOPER: {
-                Permission.API_CATALOG_READ, Permission.API_CATALOG_WRITE,
-                Permission.API_TEST_EXECUTE, Permission.ANALYTICS_READ,
-                Permission.TOPOLOGY_READ, Permission.DEVTOOLS_EXECUTE
+                Permission.API_CATALOG_READ,
+                Permission.API_CATALOG_WRITE,
+                Permission.API_TEST_EXECUTE,
+                Permission.ANALYTICS_READ,
+                Permission.TOPOLOGY_READ,
+                Permission.DEVTOOLS_EXECUTE,
             },
             UserRole.ANALYST: {
-                Permission.API_CATALOG_READ, Permission.ANALYTICS_READ,
-                Permission.TOPOLOGY_READ, Permission.AUDIT_READ
+                Permission.API_CATALOG_READ,
+                Permission.ANALYTICS_READ,
+                Permission.TOPOLOGY_READ,
+                Permission.AUDIT_READ,
             },
-            UserRole.AUDITOR: {
-                Permission.AUDIT_READ, Permission.API_CATALOG_READ
-            },
-            UserRole.GUEST: {
-                Permission.API_CATALOG_READ
-            }
+            UserRole.AUDITOR: {Permission.AUDIT_READ, Permission.API_CATALOG_READ},
+            UserRole.GUEST: {Permission.API_CATALOG_READ},
         }
 
     async def grant_permission(
@@ -135,7 +148,7 @@ class PermissionManager:
         permissions: Set[Permission],
         resource_pattern: str = "*",
         conditions: Dict[str, Any] = None,
-        expires_at: Optional[datetime] = None
+        expires_at: Optional[datetime] = None,
     ) -> str:
         """Grant permissions to a user with optional conditions."""
         grant_id = f"grant_{len(self.grants) + 1}"
@@ -147,7 +160,7 @@ class PermissionManager:
             permissions=permissions,
             resource_pattern=resource_pattern,
             conditions=conditions or {},
-            expires_at=expires_at
+            expires_at=expires_at,
         )
 
         self.grants[grant_id] = grant
@@ -160,11 +173,7 @@ class PermissionManager:
             return True
         return False
 
-    async def get_user_permissions(
-        self,
-        user_id: str,
-        resource: str = None
-    ) -> Set[Permission]:
+    async def get_user_permissions(self, user_id: str, resource: str = None) -> Set[Permission]:
         """Get effective permissions for a user, optionally for a specific resource."""
         permissions = set()
 
@@ -188,11 +197,7 @@ class PermissionManager:
 
         return permissions
 
-    async def check_delegation_allowed(
-        self,
-        granter_id: str,
-        permissions: Set[Permission]
-    ) -> bool:
+    async def check_delegation_allowed(self, granter_id: str, permissions: Set[Permission]) -> bool:
         """Check if a user can delegate specific permissions."""
         granter_permissions = await self.get_user_permissions(granter_id)
         return permissions.issubset(granter_permissions)
@@ -231,9 +236,8 @@ class AccessControlManager:
                 principals=["role:admin"],
                 resources=["*"],
                 actions=["*"],
-                priority=100
+                priority=100,
             ),
-
             "manager_service_access": AccessPolicy(
                 policy_id="manager_service_access",
                 name="Manager Service Access",
@@ -242,9 +246,8 @@ class AccessControlManager:
                 principals=["role:manager"],
                 resources=["api/*", "analytics/*", "topology/*"],
                 actions=["read", "write", "execute"],
-                priority=80
+                priority=80,
             ),
-
             "developer_development_access": AccessPolicy(
                 policy_id="developer_development_access",
                 name="Developer Development Access",
@@ -253,9 +256,8 @@ class AccessControlManager:
                 principals=["role:developer"],
                 resources=["api/*", "tools/*", "analytics/read/*"],
                 actions=["read", "execute"],
-                priority=60
+                priority=60,
             ),
-
             "analyst_read_only": AccessPolicy(
                 policy_id="analyst_read_only",
                 name="Analyst Read-Only Access",
@@ -264,9 +266,8 @@ class AccessControlManager:
                 principals=["role:analyst"],
                 resources=["analytics/*", "topology/read/*", "api/catalog/*"],
                 actions=["read"],
-                priority=40
+                priority=40,
             ),
-
             "business_hours_only": AccessPolicy(
                 policy_id="business_hours_only",
                 name="Business Hours Only",
@@ -280,12 +281,11 @@ class AccessControlManager:
                         "type": "business_hours",
                         "timezone": "UTC",
                         "business_hours": {"start": "09:00", "end": "17:00"},
-                        "business_days": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+                        "business_days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
                     }
                 },
-                priority=10
+                priority=10,
             ),
-
             "geographic_restriction": AccessPolicy(
                 policy_id="geographic_restriction",
                 name="Geographic Access Restriction",
@@ -297,26 +297,19 @@ class AccessControlManager:
                 conditions={
                     "ip_restriction": {
                         "type": "country_block",
-                        "blocked_countries": ["KP", "IR", "CU"]  # North Korea, Iran, Cuba
+                        "blocked_countries": ["KP", "IR", "CU"],  # North Korea, Iran, Cuba
                     }
                 },
-                priority=5
-            )
+                priority=5,
+            ),
         }
 
     async def register_resource(
-        self,
-        resource_id: str,
-        resource_type: ResourceType,
-        owner_id: str,
-        attributes: Dict[str, Any] = None
+        self, resource_id: str, resource_type: ResourceType, owner_id: str, attributes: Dict[str, Any] = None
     ) -> Resource:
         """Register a resource for access control."""
         resource = Resource(
-            resource_id=resource_id,
-            resource_type=resource_type,
-            owner_id=owner_id,
-            attributes=attributes or {}
+            resource_id=resource_id, resource_type=resource_type, owner_id=owner_id, attributes=attributes or {}
         )
 
         self.resources[resource_id] = resource
@@ -331,7 +324,7 @@ class AccessControlManager:
         resources: List[str],
         actions: List[str],
         conditions: Dict[str, Any] = None,
-        priority: int = 0
+        priority: int = 0,
     ) -> str:
         """Create a new access control policy."""
         policy_id = f"policy_{len(self.policies) + 1}"
@@ -345,15 +338,14 @@ class AccessControlManager:
             resources=resources,
             actions=actions,
             conditions=conditions or {},
-            priority=priority
+            priority=priority,
         )
 
         self.policies[policy_id] = policy
         return policy_id
 
     async def evaluate_access(
-        self,
-        access_request: AccessRequest
+        self, access_request: AccessRequest
     ) -> Tuple[AccessDecision, str, Optional[AccessPolicy]]:
         """
         Evaluate access request against policies.
@@ -361,11 +353,7 @@ class AccessControlManager:
         Returns (decision, reason, matched_policy)
         """
         # Sort policies by priority (highest first)
-        sorted_policies = sorted(
-            self.policies.values(),
-            key=lambda p: p.priority,
-            reverse=True
-        )
+        sorted_policies = sorted(self.policies.values(), key=lambda p: p.priority, reverse=True)
 
         for policy in sorted_policies:
             if not policy.enabled:
@@ -380,11 +368,7 @@ class AccessControlManager:
         # Default deny
         return AccessDecision.DENY, "No matching policy found", None
 
-    async def _matches_policy(
-        self,
-        policy: AccessPolicy,
-        request: AccessRequest
-    ) -> Tuple[bool, str]:
+    async def _matches_policy(self, policy: AccessPolicy, request: AccessRequest) -> Tuple[bool, str]:
         """Check if request matches a policy."""
         # Check principal
         if not self._matches_principal(policy.principals, request.user):
@@ -447,11 +431,7 @@ class AccessControlManager:
         regex_pattern = pattern.replace("*", ".*").replace("?", ".")
         return bool(re.match(f"^{regex_pattern}$", value))
 
-    async def _evaluate_conditions(
-        self,
-        conditions: Dict[str, Any],
-        request: AccessRequest
-    ) -> bool:
+    async def _evaluate_conditions(self, conditions: Dict[str, Any], request: AccessRequest) -> bool:
         """Evaluate policy conditions."""
         for condition_name, condition_config in conditions.items():
             condition_type = condition_config.get("type")
@@ -471,11 +451,7 @@ class AccessControlManager:
 
         return True
 
-    def _check_business_hours(
-        self,
-        config: Dict[str, Any],
-        timestamp: datetime
-    ) -> bool:
+    def _check_business_hours(self, config: Dict[str, Any], timestamp: datetime) -> bool:
         """Check if timestamp falls within business hours."""
         business_hours = config.get("business_hours", {})
         business_days = config.get("business_days", [])
@@ -508,11 +484,7 @@ class AccessControlManager:
 
         return True
 
-    def _check_time_window(
-        self,
-        config: Dict[str, Any],
-        timestamp: datetime
-    ) -> bool:
+    def _check_time_window(self, config: Dict[str, Any], timestamp: datetime) -> bool:
         """Check if timestamp falls within allowed time window."""
         start_time = config.get("start_time")
         end_time = config.get("end_time")
@@ -524,11 +496,7 @@ class AccessControlManager:
 
         return True
 
-    async def get_policies_for_user(
-        self,
-        user: User,
-        resource: Optional[Resource] = None
-    ) -> List[AccessPolicy]:
+    async def get_policies_for_user(self, user: User, resource: Optional[Resource] = None) -> List[AccessPolicy]:
         """Get all policies that apply to a user and optional resource."""
         applicable_policies = []
 

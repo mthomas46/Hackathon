@@ -1,19 +1,18 @@
 """Logger Service - Enterprise-grade structured logging with correlation IDs."""
 
-import logging
 import json
-import threading
+import logging
 import sys
-from typing import Dict, Any, Optional, Union
-from pathlib import Path
-from datetime import datetime, timezone
+import threading
 from contextvars import ContextVar
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Optional, Union
 
 from ..di.services import ILoggerService
 
-
 # Global correlation ID context variable
-_correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
+_correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
 _correlation_lock = threading.RLock()
 
 
@@ -30,12 +29,14 @@ class LoggerService(ILoggerService):
     - Contextual information enrichment
     """
 
-    def __init__(self,
-                 name: str = "analysis-service",
-                 level: str = "INFO",
-                 log_file: Optional[str] = None,
-                 enable_json: bool = True,
-                 enable_console: bool = True) -> None:
+    def __init__(
+        self,
+        name: str = "analysis-service",
+        level: str = "INFO",
+        log_file: Optional[str] = None,
+        enable_json: bool = True,
+        enable_console: bool = True,
+    ) -> None:
         """Initialize logger service.
 
         Args:
@@ -64,11 +65,10 @@ class LoggerService(ILoggerService):
             console_handler.setLevel(self.level)
             if enable_json:
                 from .structured_formatter import StructuredFormatter
+
                 console_handler.setFormatter(StructuredFormatter())
             else:
-                console_handler.setFormatter(logging.Formatter(
-                    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-                ))
+                console_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
             self._logger.addHandler(console_handler)
 
         # Add file handler if specified
@@ -80,11 +80,12 @@ class LoggerService(ILoggerService):
             file_handler.setLevel(self.level)
             if enable_json:
                 from .structured_formatter import StructuredFormatter
+
                 file_handler.setFormatter(StructuredFormatter())
             else:
-                file_handler.setFormatter(logging.Formatter(
-                    '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - %(message)s'
-                ))
+                file_handler.setFormatter(
+                    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - %(message)s")
+                )
             self._logger.addHandler(file_handler)
 
         # Prevent duplicate messages from parent loggers
@@ -97,18 +98,18 @@ class LoggerService(ILoggerService):
         # Add correlation ID if available
         correlation_id = _correlation_id.get()
         if correlation_id:
-            enriched['correlation_id'] = correlation_id
+            enriched["correlation_id"] = correlation_id
 
         # Add timestamp if not provided
-        if 'timestamp' not in enriched:
-            enriched['timestamp'] = datetime.now(timezone.utc).isoformat()
+        if "timestamp" not in enriched:
+            enriched["timestamp"] = datetime.now(timezone.utc).isoformat()
 
         # Add service information
-        enriched['service'] = self.name
+        enriched["service"] = self.name
 
         # Add thread information for debugging
-        enriched['thread_id'] = threading.get_ident()
-        enriched['thread_name'] = threading.current_thread().name
+        enriched["thread_id"] = threading.get_ident()
+        enriched["thread_name"] = threading.current_thread().name
 
         return enriched
 
@@ -124,7 +125,7 @@ class LoggerService(ILoggerService):
         """
         if self._logger.isEnabledFor(logging.DEBUG):
             enriched_data = self._enrich_log_data(**kwargs)
-            self._logger.debug(message, extra={'structured_data': enriched_data})
+            self._logger.debug(message, extra={"structured_data": enriched_data})
 
     def info(self, message: str, **kwargs) -> None:
         """Log info message with structured data.
@@ -138,7 +139,7 @@ class LoggerService(ILoggerService):
         """
         if self._logger.isEnabledFor(logging.INFO):
             enriched_data = self._enrich_log_data(**kwargs)
-            self._logger.info(message, extra={'structured_data': enriched_data})
+            self._logger.info(message, extra={"structured_data": enriched_data})
 
     def warning(self, message: str, **kwargs) -> None:
         """Log warning message with structured data.
@@ -152,7 +153,7 @@ class LoggerService(ILoggerService):
         """
         if self._logger.isEnabledFor(logging.WARNING):
             enriched_data = self._enrich_log_data(**kwargs)
-            self._logger.warning(message, extra={'structured_data': enriched_data})
+            self._logger.warning(message, extra={"structured_data": enriched_data})
 
     def error(self, message: str, **kwargs) -> None:
         """Log error message with structured data.
@@ -166,7 +167,7 @@ class LoggerService(ILoggerService):
         """
         if self._logger.isEnabledFor(logging.ERROR):
             enriched_data = self._enrich_log_data(**kwargs)
-            self._logger.error(message, extra={'structured_data': enriched_data})
+            self._logger.error(message, extra={"structured_data": enriched_data})
 
     def critical(self, message: str, **kwargs) -> None:
         """Log critical message with structured data.
@@ -180,7 +181,7 @@ class LoggerService(ILoggerService):
         """
         if self._logger.isEnabledFor(logging.CRITICAL):
             enriched_data = self._enrich_log_data(**kwargs)
-            self._logger.critical(message, extra={'structured_data': enriched_data})
+            self._logger.critical(message, extra={"structured_data": enriched_data})
 
     def log_performance(self, operation: str, duration: float, **kwargs) -> None:
         """Log performance metrics.
@@ -196,11 +197,10 @@ class LoggerService(ILoggerService):
             duration_seconds=duration,
             duration_ms=duration * 1000,
             performance_category="measurement",
-            **kwargs
+            **kwargs,
         )
 
-    def log_request(self, method: str, endpoint: str, status_code: int,
-                   duration: float, **kwargs) -> None:
+    def log_request(self, method: str, endpoint: str, status_code: int, duration: float, **kwargs) -> None:
         """Log HTTP request information.
 
         Args:
@@ -216,16 +216,16 @@ class LoggerService(ILoggerService):
             log_level,
             f"HTTP {method} {endpoint} -> {status_code}",
             extra={
-                'structured_data': self._enrich_log_data(
+                "structured_data": self._enrich_log_data(
                     method=method,
                     endpoint=endpoint,
                     status_code=status_code,
                     duration_seconds=duration,
                     duration_ms=duration * 1000,
                     request_category="http",
-                    **kwargs
+                    **kwargs,
                 )
-            }
+            },
         )
 
     def log_business_event(self, event_type: str, **kwargs) -> None:
@@ -235,14 +235,9 @@ class LoggerService(ILoggerService):
             event_type: Type of business event
             **kwargs: Event-specific data
         """
-        self.info(
-            f"Business Event: {event_type}",
-            event_type=event_type,
-            event_category="business",
-            **kwargs
-        )
+        self.info(f"Business Event: {event_type}", event_type=event_type, event_category="business", **kwargs)
 
-    def create_child_logger(self, child_name: str) -> 'LoggerService':
+    def create_child_logger(self, child_name: str) -> "LoggerService":
         """Create a child logger with the same configuration.
 
         Args:
@@ -255,7 +250,7 @@ class LoggerService(ILoggerService):
             name=f"{self.name}.{child_name}",
             level=logging.getLevelName(self.level),
             enable_json=self.enable_json,
-            enable_console=self.enable_console
+            enable_console=self.enable_console,
         )
 
 
@@ -304,6 +299,7 @@ def generate_correlation_id() -> str:
         New unique correlation ID
     """
     import uuid
+
     return str(uuid.uuid4())
 
 

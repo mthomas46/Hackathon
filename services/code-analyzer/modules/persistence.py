@@ -1,7 +1,7 @@
 """Persistence logic for code analyzer service."""
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 async def persist_analysis_result(result: Dict[str, Any]) -> None:
@@ -11,6 +11,7 @@ async def persist_analysis_result(result: Dict[str, Any]) -> None:
     if "aioredis" in globals() or _try_import_redis():
         try:
             import aioredis
+
             host = os.environ.get("REDIS_HOST")
             if host:
                 client = await aioredis.from_url(f"redis://{host}")
@@ -26,6 +27,7 @@ async def persist_analysis_result(result: Dict[str, Any]) -> None:
     if ds:
         try:
             from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+
             svc = ServiceClients(timeout=10)
             await svc.post_json(f"{ds}/documents/enveloped", result)
         except Exception:
@@ -36,6 +38,7 @@ def _try_import_redis():
     """Try to import aioredis."""
     try:
         import aioredis
+
         globals()["aioredis"] = aioredis
         return True
     except (ImportError, TypeError) as e:

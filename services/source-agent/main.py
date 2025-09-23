@@ -16,23 +16,23 @@ Responsibilities:
 
 Dependencies: shared utilities, httpx for HTTP requests, Atlassian SDK, GitHub API.
 """
-from typing import Optional, List
+
 import os
+from typing import List, Optional
+
 import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.responses.responses import create_error_response, create_success_response
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response, create_error_response
-from services.shared.utilities.error_handling import ValidationException, ServiceException
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import utc_now, generate_id, clean_string
-
-
-from services.shared.utilities.error_handling import safe_execute_async
+from services.shared.utilities import clean_string, generate_id, utc_now
+from services.shared.utilities.error_handling import ServiceException, ValidationException, safe_execute_async
 
 try:
     import redis.asyncio as aioredis
@@ -40,63 +40,65 @@ except Exception:
     aioredis = None
 
 from services.shared.core.models.models import Document
-from services.shared.utilities import stable_hash, cached_get
 from services.shared.envelopes import DocumentEnvelope
-from services.shared.owners import derive_github_owners
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+from services.shared.owners import derive_github_owners
+from services.shared.utilities import cached_get, stable_hash
 
 # Service configuration constants
 SERVICE_NAME = "source-agent"
 SERVICE_TITLE = "Source Agent"
 SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = int(os.environ.get('SERVICE_PORT', 5070))
+DEFAULT_PORT = int(os.environ.get("SERVICE_PORT", 5070))
 
 # Supported sources and their capabilities
 SUPPORTED_SOURCES = ["github", "jira", "confluence"]
 SOURCE_CAPABILITIES = {
     "github": ["readme_fetch", "pr_normalization", "code_analysis"],
     "jira": ["issue_normalization"],
-    "confluence": ["page_normalization"]
+    "confluence": ["page_normalization"],
 }
+from .modules.code_analyzer import code_analyzer
 from .modules.document_builders import (
+    build_confluence_doc,
+    build_jira_doc,
     build_readme_doc,
     extract_endpoints_from_patch,
-    build_jira_doc,
     storage_html_to_text,
-    build_confluence_doc
 )
+from .modules.fetch_handler import fetch_handler
+
+# ============================================================================
+# HANDLER MODULES - Extracted business logic
+# ============================================================================
+from .modules.models import ArchitectureProcessRequest, CodeAnalysisRequest, DocumentRequest, NormalizationRequest
+from .modules.normalize_handler import normalize_handler
 
 # ============================================================================
 # SHARED UTILITIES - Leveraging centralized functionality across modules
 # ============================================================================
 from .modules.shared_utils import (
-    sanitize_for_response,
-    handle_source_agent_error,
-    create_source_agent_success_response,
+    build_github_url,
     build_source_agent_context,
+    create_source_agent_success_response,
     extract_endpoints_from_code,
-    build_github_url
+    handle_source_agent_error,
+    sanitize_for_response,
 )
-
-# ============================================================================
-# HANDLER MODULES - Extracted business logic
-# ============================================================================
-from .modules.models import DocumentRequest, NormalizationRequest, CodeAnalysisRequest, ArchitectureProcessRequest
-from .modules.fetch_handler import fetch_handler
-from .modules.normalize_handler import normalize_handler
-from .modules.code_analyzer import code_analyzer
 
 # Create FastAPI app directly using shared utilities
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
-    description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence"
+    description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence",
 )
 
-# Use common middleware setup to reduce duplication across services
-from services.shared.utilities import setup_common_middleware, attach_self_register
-from services.shared.utilities.error_handling import install_error_handlers
 from services.shared.core.constants_new import ServiceNames
+
+# Use common middleware setup to reduce duplication across services
+from services.shared.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.error_handling import install_error_handlers
+
 setup_common_middleware(app, ServiceNames.SOURCE_AGENT)
 install_error_handlers(app)
 
@@ -104,9 +106,8 @@ install_error_handlers(app)
 attach_self_register(app, ServiceNames.SOURCE_AGENT)
 
 
-
-
 # API Endpoints
+
 
 @app.post("/docs/fetch")
 async def fetch_document(req: DocumentRequest):
@@ -151,11 +152,9 @@ async def process_architecture(req: ArchitectureProcessRequest):
         client = get_service_client()
 
         # Forward request to architecture-digitizer
-        result = await client.post_json("architecture-digitizer/normalize", {
-            "system": req.system,
-            "board_id": req.board_id,
-            "token": req.token
-        })
+        result = await client.post_json(
+            "architecture-digitizer/normalize", {"system": req.system, "board_id": req.board_id, "token": req.token}
+        )
 
         context = build_source_agent_context("architecture_process", system=req.system)
         return create_source_agent_success_response("processed", result, **context)
@@ -182,6 +181,7 @@ async def analyze_code(req: CodeAnalysisRequest):
 # Register standardized health endpoints
 register_health_endpoints(app, ServiceNames.SOURCE_AGENT, "1.0.0")
 
+
 @app.get("/sources")
 async def list_sources():
     """List supported sources and their capabilities.
@@ -190,10 +190,7 @@ async def list_sources():
     and their specific capabilities for fetching, normalization, and analysis.
     """
     try:
-        sources_data = {
-            "sources": SUPPORTED_SOURCES,
-            "capabilities": SOURCE_CAPABILITIES
-        }
+        sources_data = {"sources": SUPPORTED_SOURCES, "capabilities": SOURCE_CAPABILITIES}
 
         context = build_source_agent_context("list_sources")
         context = {k: v for k, v in context.items() if k != "operation"}
@@ -208,9 +205,5 @@ async def list_sources():
 if __name__ == "__main__":
     """Run the Source Agent service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

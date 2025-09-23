@@ -15,20 +15,22 @@ Responsibilities:
 
 Dependencies: shared middlewares/logging, ServiceClients, httpx for external calls.
 """
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, field_validator
-from typing import List, Optional, Dict, Any
+
+import asyncio
 import os
 import re
-import httpx
-import asyncio
-import time
 import signal
+import time
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
 
+import httpx
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, field_validator
+
+from services.shared.core.constants_new import EnvVars, ServiceNames  # type: ignore
 from services.shared.monitoring.logging import fire_and_forget  # type: ignore
 from services.shared.utilities import attach_self_register  # type: ignore
-from services.shared.core.constants_new import EnvVars, ServiceNames  # type: ignore
 
 try:
     from .modules.circuit_breaker import circuit_breaker, operation_timeout_context
@@ -37,8 +39,9 @@ try:
     from .modules.validation import validate_content, validate_keywords, validate_providers
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.circuit_breaker import circuit_breaker, operation_timeout_context
     from modules.content_detector import content_detector
@@ -63,10 +66,11 @@ DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60
 app = FastAPI(
     title="Secure Analyzer",
     version=SERVICE_VERSION,
-    description="AI content security analysis service with policy enforcement and circuit breaker protection"
+    description="AI content security analysis service with policy enforcement and circuit breaker protection",
 )
 # Use common middleware setup to reduce duplication across services
 from services.shared.utilities import setup_common_middleware
+
 setup_common_middleware(app, ServiceNames.SECURE_ANALYZER)
 attach_self_register(app, ServiceNames.SECURE_ANALYZER)
 
@@ -75,13 +79,14 @@ attach_self_register(app, ServiceNames.SECURE_ANALYZER)
 async def health():
     """Health check endpoint returning service status and basic information."""
     from datetime import datetime
+
     return {
         "status": "healthy",
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
         "timestamp": datetime.utcnow().isoformat(),
         "circuit_breaker_open": circuit_breaker.is_open(),
-        "description": "Secure analyzer service is operational"
+        "description": "Secure analyzer service is operational",
     }
 
 
@@ -101,26 +106,26 @@ class DetectRequest(BaseModel):
     keyword_document: Optional[str] = None
     """URL or reference to external keyword document (currently unimplemented)."""
 
-    @field_validator('content')
+    @field_validator("content")
     @classmethod
     def validate_content(cls, v):
         """Validate content field with size and emptiness checks."""
         if not v or not v.strip():
-            raise ValueError('Content cannot be empty or contain only whitespace')
+            raise ValueError("Content cannot be empty or contain only whitespace")
         if len(v) > MAX_CONTENT_SIZE_BYTES:
-            raise ValueError(f'Content exceeds maximum size of {MAX_CONTENT_SIZE_BYTES:,} bytes')
+            raise ValueError(f"Content exceeds maximum size of {MAX_CONTENT_SIZE_BYTES:,} bytes")
         return v
 
-    @field_validator('keywords')
+    @field_validator("keywords")
     @classmethod
     def validate_keywords(cls, v):
         """Validate keywords list with count and length checks."""
         if v is not None:
             if len(v) > MAX_KEYWORDS_COUNT:
-                raise ValueError(f'Too many keywords (maximum {MAX_KEYWORDS_COUNT})')
+                raise ValueError(f"Too many keywords (maximum {MAX_KEYWORDS_COUNT})")
             for keyword in v:
                 if len(keyword) > MAX_KEYWORD_LENGTH:
-                    raise ValueError(f'Keyword exceeds maximum length of {MAX_KEYWORD_LENGTH} characters')
+                    raise ValueError(f"Keyword exceeds maximum length of {MAX_KEYWORD_LENGTH} characters")
         return v
 
 
@@ -130,6 +135,7 @@ class DetectResponse(BaseModel):
     Contains the analysis results indicating whether content is sensitive
     and what specific patterns or topics were detected.
     """
+
     sensitive: bool
     """Whether the content contains sensitive information that may require special handling."""
 
@@ -159,11 +165,16 @@ async def detect(req: DetectRequest):
         raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
 
     async with operation_timeout_context("detect"):
-        fire_and_forget("info", "detect", ServiceNames.SECURE_ANALYZER, {
-            "has_keywords": bool(req.keywords),
-            "has_keyword_doc": bool(req.keyword_document),
-            "content_length": len(req.content)
-        })
+        fire_and_forget(
+            "info",
+            "detect",
+            ServiceNames.SECURE_ANALYZER,
+            {
+                "has_keywords": bool(req.keywords),
+                "has_keyword_doc": bool(req.keyword_document),
+                "content_length": len(req.content),
+            },
+        )
 
         # Load additional keywords from URL if provided
         extra_keywords = req.keywords or []
@@ -186,24 +197,24 @@ class SuggestRequest(BaseModel):
     keywords: Optional[List[str]] = None
     keyword_document: Optional[str] = None
 
-    @field_validator('content')
+    @field_validator("content")
     @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
-            raise ValueError('Content cannot be empty')
+            raise ValueError("Content cannot be empty")
         if len(v) > 1000000:  # 1MB limit
-            raise ValueError('Content too large (max 1MB)')
+            raise ValueError("Content too large (max 1MB)")
         return v
 
-    @field_validator('keywords')
+    @field_validator("keywords")
     @classmethod
     def validate_keywords(cls, v):
         if v is not None:
             if len(v) > 1000:
-                raise ValueError('Too many keywords (max 1000)')
+                raise ValueError("Too many keywords (max 1000)")
             for keyword in v:
                 if len(keyword) > 500:
-                    raise ValueError('Keyword too long (max 500 characters)')
+                    raise ValueError("Keyword too long (max 500 characters)")
         return v
 
 
@@ -226,7 +237,9 @@ async def suggest(req: SuggestRequest):
         fire_and_forget("info", "suggest", ServiceNames.SECURE_ANALYZER, {"has_kw": bool(req.keywords)})
 
         # Detect sensitive content
-        detection = await detect(DetectRequest(content=req.content, keywords=req.keywords, keyword_document=req.keyword_document))
+        detection = await detect(
+            DetectRequest(content=req.content, keywords=req.keywords, keyword_document=req.keyword_document)
+        )
         print(f"[SECURE_ANALYZER] Detection completed, sensitive: {detection.sensitive}")
 
         # Get allowed models based on policy
@@ -234,11 +247,7 @@ async def suggest(req: SuggestRequest):
         suggestion = policy_enforcer.get_policy_suggestion(detection.sensitive)
 
         print(f"[SECURE_ANALYZER] Suggest operation completed, returning {len(allowed_models)} allowed models")
-        return SuggestResponse(
-            sensitive=detection.sensitive,
-            allowed_models=allowed_models,
-            suggestion=suggestion
-        )
+        return SuggestResponse(sensitive=detection.sensitive, allowed_models=allowed_models, suggestion=suggestion)
 
 
 class SummarizeRequest(BaseModel):
@@ -249,39 +258,39 @@ class SummarizeRequest(BaseModel):
     keyword_document: Optional[str] = None
     prompt: Optional[str] = None
 
-    @field_validator('content')
+    @field_validator("content")
     @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
-            raise ValueError('Content cannot be empty')
+            raise ValueError("Content cannot be empty")
         if len(v) > 1000000:  # 1MB limit
-            raise ValueError('Content too large (max 1MB)')
+            raise ValueError("Content too large (max 1MB)")
         return v
 
-    @field_validator('keywords')
+    @field_validator("keywords")
     @classmethod
     def validate_keywords(cls, v):
         if v is not None:
             if len(v) > 1000:
-                raise ValueError('Too many keywords (max 1000)')
+                raise ValueError("Too many keywords (max 1000)")
             for keyword in v:
                 if len(keyword) > 500:
-                    raise ValueError('Keyword too long (max 500 characters)')
+                    raise ValueError("Keyword too long (max 500 characters)")
         return v
 
-    @field_validator('providers')
+    @field_validator("providers")
     @classmethod
     def validate_providers(cls, v):
         if v is not None:
             if len(v) > 1000:
-                raise ValueError('Too many providers (max 1000)')
+                raise ValueError("Too many providers (max 1000)")
             for provider in v:
                 if not isinstance(provider, dict):
-                    raise ValueError('Each provider must be a dictionary')
-                if 'name' not in provider:
-                    raise ValueError('Each provider must have a name field')
-                if len(provider.get('name', '')) > 100:
-                    raise ValueError('Provider name too long (max 100 characters)')
+                    raise ValueError("Each provider must be a dictionary")
+                if "name" not in provider:
+                    raise ValueError("Each provider must have a name field")
+                if len(provider.get("name", "")) > 100:
+                    raise ValueError("Provider name too long (max 100 characters)")
         return v
 
 
@@ -300,7 +309,9 @@ async def summarize(req: SummarizeRequest):
         print(f"[SECURE_ANALYZER] Summarizer hub URL: {hub}")
 
         # Detect sensitive content
-        det = await detect(DetectRequest(content=req.content, keywords=req.keywords, keyword_document=req.keyword_document))
+        det = await detect(
+            DetectRequest(content=req.content, keywords=req.keywords, keyword_document=req.keyword_document)
+        )
         print(f"[SECURE_ANALYZER] Detection completed, sensitive: {det.sensitive}")
 
         # Filter providers based on policy
@@ -309,6 +320,7 @@ async def summarize(req: SummarizeRequest):
     if not req.prompt:
         try:
             from services.shared.prompt_manager import get_prompt
+
             req.prompt = get_prompt("summarization.security_focused")
         except Exception:
             req.prompt = "Summarize focusing on risks, PII, secrets, and client information."
@@ -337,6 +349,7 @@ async def summarize(req: SummarizeRequest):
         "use_hub_config": True,
     }
     from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+
     svc = ServiceClients(timeout=60)
     try:
         return await svc.post_json(f"{hub}/summarize/ensemble", payload)
@@ -354,11 +367,5 @@ async def summarize(req: SummarizeRequest):
 if __name__ == "__main__":
     """Run the Secure Analyzer service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
-
+    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")

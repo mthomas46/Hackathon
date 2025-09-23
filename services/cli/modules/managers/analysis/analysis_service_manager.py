@@ -1,6 +1,7 @@
 """Analysis Service Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
 from rich.prompt import Prompt
 
@@ -25,7 +26,7 @@ class AnalysisServiceManager(BaseManager):
             ("3", "Report Generation (Summary, Trends, Quality)"),
             ("4", "Analysis Configuration (Detectors, Templates)"),
             ("5", "Integration Analysis (Cross-service)"),
-            ("b", "Back to Main Menu")
+            ("b", "Back to Main Menu"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -80,7 +81,9 @@ class AnalysisServiceManager(BaseManager):
                 if results:
                     # Display summary
                     total_findings = sum(len(r.get("findings", [])) for r in results)
-                    self.display.show_success(f"Analysis completed: {total_findings} findings across {len(results)} targets")
+                    self.display.show_success(
+                        f"Analysis completed: {total_findings} findings across {len(results)} targets"
+                    )
 
                     # Show findings by severity
                     severity_counts = {}
@@ -120,17 +123,17 @@ class AnalysisServiceManager(BaseManager):
                     # Show first few findings
                     findings_data = []
                     for finding in findings[:10]:  # Show first 10
-                        findings_data.append([
-                            finding.get("document_id", "")[:20],
-                            finding.get("type", ""),
-                            finding.get("severity", "").upper(),
-                            finding.get("description", "")[:50]
-                        ])
+                        findings_data.append(
+                            [
+                                finding.get("document_id", "")[:20],
+                                finding.get("type", ""),
+                                finding.get("severity", "").upper(),
+                                finding.get("description", "")[:50],
+                            ]
+                        )
 
                     self.display.show_table(
-                        "Analysis Findings",
-                        ["Document", "Type", "Severity", "Description"],
-                        findings_data
+                        "Analysis Findings", ["Document", "Type", "Severity", "Description"], findings_data
                     )
 
                     if len(findings) > 10:
@@ -173,10 +176,13 @@ class AnalysisServiceManager(BaseManager):
 
                 # Offer to save report
                 if await self.confirm_action("Save report to file?"):
-                    filename = await self.get_user_input("Report filename", default=f"analysis_report_{report_type}.json")
+                    filename = await self.get_user_input(
+                        "Report filename", default=f"analysis_report_{report_type}.json"
+                    )
                     if filename:
                         import json
-                        with open(filename, 'w') as f:
+
+                        with open(filename, "w") as f:
                             json.dump(report_data, f, indent=2, default=str)
                         self.display.show_success(f"Report saved to {filename}")
 

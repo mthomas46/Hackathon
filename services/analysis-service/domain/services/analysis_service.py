@@ -1,11 +1,11 @@
 """Analysis domain service."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ..entities import Document, Analysis, AnalysisId, AnalysisStatus
-from ..entities.value_objects import AnalysisType, AnalysisConfiguration
+from ..entities import Analysis, AnalysisId, AnalysisStatus, Document
+from ..entities.value_objects import AnalysisConfiguration, AnalysisType
 
 
 class AnalysisService:
@@ -15,8 +15,9 @@ class AnalysisService:
         """Initialize analysis service with available engines."""
         self.analysis_engines = analysis_engines
 
-    def create_analysis(self, document: Document, analysis_type: AnalysisType,
-                       configuration: AnalysisConfiguration) -> Analysis:
+    def create_analysis(
+        self, document: Document, analysis_type: AnalysisType, configuration: AnalysisConfiguration
+    ) -> Analysis:
         """Create a new analysis for a document."""
         analysis_id = AnalysisId(f"analysis_{datetime.now().timestamp()}_{document.id.value}")
 
@@ -24,7 +25,7 @@ class AnalysisService:
             id=analysis_id,
             document_id=document.id,
             analysis_type=analysis_type.value,
-            configuration=configuration.__dict__
+            configuration=configuration.__dict__,
         )
 
         return analysis
@@ -48,8 +49,9 @@ class AnalysisService:
         except Exception as e:
             raise RuntimeError(f"Analysis execution failed: {str(e)}")
 
-    def validate_analysis_configuration(self, analysis_type: AnalysisType,
-                                       configuration: AnalysisConfiguration) -> bool:
+    def validate_analysis_configuration(
+        self, analysis_type: AnalysisType, configuration: AnalysisConfiguration
+    ) -> bool:
         """Validate analysis configuration."""
         if analysis_type.value not in self.analysis_engines:
             return False
@@ -61,8 +63,7 @@ class AnalysisService:
         """Get list of supported analysis types."""
         return list(self.analysis_engines.keys())
 
-    def estimate_analysis_time(self, analysis_type: AnalysisType,
-                             document_size: int) -> float:
+    def estimate_analysis_time(self, analysis_type: AnalysisType, document_size: int) -> float:
         """Estimate execution time for an analysis."""
         if analysis_type.value not in self.analysis_engines:
             raise ValueError(f"Unsupported analysis type: {analysis_type.value}")
@@ -72,16 +73,16 @@ class AnalysisService:
 
     def _validate_analysis_result(self, result: Dict[str, Any]) -> None:
         """Validate analysis result structure."""
-        required_fields = ['status', 'timestamp', 'results']
+        required_fields = ["status", "timestamp", "results"]
 
         for field in required_fields:
             if field not in result:
                 raise ValueError(f"Analysis result missing required field: {field}")
 
-        if result['status'] not in ['success', 'partial', 'failed']:
+        if result["status"] not in ["success", "partial", "failed"]:
             raise ValueError("Invalid analysis result status")
 
-        if not isinstance(result['results'], dict):
+        if not isinstance(result["results"], dict):
             raise ValueError("Analysis results must be a dictionary")
 
 

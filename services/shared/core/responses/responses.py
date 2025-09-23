@@ -16,8 +16,10 @@ proper error handling, and excellent developer experience.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List, Generic, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+
 from pydantic import BaseModel, Field
+
 # Use BaseModel directly for generic responses (Pydantic v2+ compatible)
 GenericModel = BaseModel
 
@@ -26,22 +28,28 @@ GenericModel = BaseModel
 # COMMON RESPONSE MODELS
 # ============================================================================
 
+
 class BaseResponse(BaseModel):
     """Base response model with common fields."""
+
     success: bool = Field(..., description="Operation success status")
     message: Optional[str] = Field(None, description="Human-readable message")
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Response timestamp")
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Response timestamp"
+    )
     request_id: Optional[str] = Field(None, description="Request correlation ID")
 
 
 class SuccessResponse(BaseResponse):
     """Standard success response."""
+
     success: bool = True
     data: Optional[Any] = Field(None, description="Response data payload")
 
 
 class ErrorResponse(BaseResponse):
     """Standard error response."""
+
     success: bool = False
     error_code: Optional[str] = Field(None, description="Error code for programmatic handling")
     details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
@@ -49,6 +57,7 @@ class ErrorResponse(BaseResponse):
 
 class ValidationErrorResponse(ErrorResponse):
     """Validation error response with field-level details."""
+
     field_errors: Optional[Dict[str, List[str]]] = Field(None, description="Field-specific validation errors")
 
 
@@ -56,8 +65,10 @@ class ValidationErrorResponse(ErrorResponse):
 # PAGINATION MODELS
 # ============================================================================
 
+
 class PaginationInfo(BaseModel):
     """Pagination metadata."""
+
     page: int = Field(..., description="Current page number")
     page_size: int = Field(..., description="Items per page")
     total_items: int = Field(..., description="Total number of items")
@@ -66,10 +77,12 @@ class PaginationInfo(BaseModel):
     has_previous: bool = Field(..., description="Whether there are previous pages")
 
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class PaginatedResponse(BaseResponse):
     """Paginated response with generic data."""
+
     success: bool = True
     data: List[Any] = Field(..., description="List of items")
     pagination: PaginationInfo = Field(..., description="Pagination metadata")
@@ -77,6 +90,7 @@ class PaginatedResponse(BaseResponse):
 
 class ListResponse(BaseResponse):
     """List response with generic data."""
+
     success: bool = True
     data: List[Any] = Field(..., description="List of items")
     count: int = Field(..., description="Number of items returned")
@@ -86,8 +100,10 @@ class ListResponse(BaseResponse):
 # CRUD OPERATION RESPONSES
 # ============================================================================
 
+
 class CreateResponse(BaseResponse):
     """Response for create operations."""
+
     success: bool = True
     id: str = Field(..., description="ID of created resource")
     resource_url: Optional[str] = Field(None, description="URL to access created resource")
@@ -95,6 +111,7 @@ class CreateResponse(BaseResponse):
 
 class UpdateResponse(BaseResponse):
     """Response for update operations."""
+
     success: bool = True
     id: str = Field(..., description="ID of updated resource")
     updated_fields: Optional[List[str]] = Field(None, description="Fields that were updated")
@@ -103,6 +120,7 @@ class UpdateResponse(BaseResponse):
 
 class DeleteResponse(BaseResponse):
     """Response for delete operations."""
+
     success: bool = True
     id: str = Field(..., description="ID of deleted resource")
     soft_delete: bool = Field(True, description="Whether this was a soft delete")
@@ -110,6 +128,7 @@ class DeleteResponse(BaseResponse):
 
 class BulkOperationResponse(BaseResponse):
     """Response for bulk operations."""
+
     success: bool = True
     operation: str = Field(..., description="Operation performed")
     total_requested: int = Field(..., description="Total items requested for operation")
@@ -123,8 +142,10 @@ class BulkOperationResponse(BaseResponse):
 # SERVICE-SPECIFIC RESPONSES
 # ============================================================================
 
+
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str = Field(..., description="Health status")
     service: str = Field(..., description="Service name")
     version: Optional[str] = Field(None, description="Service version")
@@ -136,6 +157,7 @@ class HealthResponse(BaseModel):
 
 class SystemHealthResponse(BaseModel):
     """System-wide health response."""
+
     overall_healthy: bool
     services_checked: int
     services_healthy: int
@@ -147,6 +169,7 @@ class SystemHealthResponse(BaseModel):
 
 class PromptResponse(BaseModel):
     """Prompt operation response."""
+
     id: str
     name: str
     category: str
@@ -160,6 +183,7 @@ class PromptResponse(BaseModel):
 
 class WorkflowResponse(BaseModel):
     """Workflow execution response."""
+
     workflow_id: str
     status: str  # pending, running, completed, failed
     steps_completed: int
@@ -172,6 +196,7 @@ class WorkflowResponse(BaseModel):
 
 class AnalysisResponse(BaseModel):
     """Analysis operation response."""
+
     analysis_id: str
     status: str  # pending, running, completed, failed
     target_ids: List[str]
@@ -183,6 +208,7 @@ class AnalysisResponse(BaseModel):
 
 class SearchResponse(BaseModel):
     """Search operation response."""
+
     query: str
     total_results: int
     results: List[Dict[str, Any]]
@@ -194,41 +220,34 @@ class SearchResponse(BaseModel):
 # RESPONSE HELPER FUNCTIONS
 # ============================================================================
 
-def create_success_response(message: str = "Operation successful", data: Any = None,
-                           request_id: Optional[str] = None) -> SuccessResponse:
+
+def create_success_response(
+    message: str = "Operation successful", data: Any = None, request_id: Optional[str] = None
+) -> SuccessResponse:
     """Create a standard success response."""
-    return SuccessResponse(
-        message=message,
-        data=data,
-        request_id=request_id
-    )
+    return SuccessResponse(message=message, data=data, request_id=request_id)
 
 
-def create_error_response(message: str, error_code: Optional[str] = None,
-                         details: Optional[Dict[str, Any]] = None,
-                         request_id: Optional[str] = None) -> ErrorResponse:
+def create_error_response(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None,
+    request_id: Optional[str] = None,
+) -> ErrorResponse:
     """Create a standard error response."""
-    return ErrorResponse(
-        message=message,
-        error_code=error_code,
-        details=details,
-        request_id=request_id
-    )
+    return ErrorResponse(message=message, error_code=error_code, details=details, request_id=request_id)
 
 
-def create_validation_error_response(field_errors: Dict[str, List[str]],
-                                   message: str = "Validation failed",
-                                   request_id: Optional[str] = None) -> ValidationErrorResponse:
+def create_validation_error_response(
+    field_errors: Dict[str, List[str]], message: str = "Validation failed", request_id: Optional[str] = None
+) -> ValidationErrorResponse:
     """Create a validation error response."""
-    return ValidationErrorResponse(
-        message=message,
-        field_errors=field_errors,
-        request_id=request_id
-    )
+    return ValidationErrorResponse(message=message, field_errors=field_errors, request_id=request_id)
 
 
-def create_paginated_response(items: List[Any], page: int, page_size: int,
-                             total_items: int, request_id: Optional[str] = None) -> PaginatedResponse:
+def create_paginated_response(
+    items: List[Any], page: int, page_size: int, total_items: int, request_id: Optional[str] = None
+) -> PaginatedResponse:
     """Create a paginated response."""
     total_pages = (total_items + page_size - 1) // page_size  # Ceiling division
 
@@ -240,35 +259,27 @@ def create_paginated_response(items: List[Any], page: int, page_size: int,
             total_items=total_items,
             total_pages=total_pages,
             has_next=page < total_pages,
-            has_previous=page > 1
+            has_previous=page > 1,
         ),
-        request_id=request_id
+        request_id=request_id,
     )
 
 
-def create_list_response(items: List[Any], message: str = "Items retrieved",
-                        request_id: Optional[str] = None) -> ListResponse:
+def create_list_response(
+    items: List[Any], message: str = "Items retrieved", request_id: Optional[str] = None
+) -> ListResponse:
     """Create a list response."""
-    return ListResponse(
-        data=items,
-        count=len(items),
-        message=message,
-        request_id=request_id
-    )
+    return ListResponse(data=items, count=len(items), message=message, request_id=request_id)
 
 
-def create_crud_response(operation: str, resource_id: str, success: bool = True,
-                        message: Optional[str] = None, **kwargs) -> Union[CreateResponse, UpdateResponse, DeleteResponse]:
+def create_crud_response(
+    operation: str, resource_id: str, success: bool = True, message: Optional[str] = None, **kwargs
+) -> Union[CreateResponse, UpdateResponse, DeleteResponse]:
     """Create a CRUD operation response."""
     if not message:
         message = f"Resource {operation}d successfully"
 
-    base_kwargs = {
-        "message": message,
-        "success": success,
-        "id": resource_id,
-        **kwargs
-    }
+    base_kwargs = {"message": message, "success": success, "id": resource_id, **kwargs}
 
     if operation == "create":
         return CreateResponse(**base_kwargs)
@@ -296,7 +307,7 @@ HTTP_STATUS_CODES = {
     "conflict": 409,
     "unprocessable_entity": 422,
     "internal_server_error": 500,
-    "service_unavailable": 503
+    "service_unavailable": 503,
 }
 
 
@@ -313,7 +324,7 @@ def get_status_code(error_code: Optional[str] = None) -> int:
         "forbidden": 403,
         "conflict": 409,
         "internal_error": 500,
-        "service_unavailable": 503
+        "service_unavailable": 503,
     }
 
     return error_mappings.get(error_code.lower(), 400)
@@ -323,13 +334,10 @@ def get_status_code(error_code: Optional[str] = None) -> int:
 # RESPONSE FORMATTERS
 # ============================================================================
 
+
 def format_error_details(exc: Exception) -> Dict[str, Any]:
     """Format exception details for error responses."""
-    return {
-        "type": type(exc).__name__,
-        "message": str(exc),
-        "module": type(exc).__module__
-    }
+    return {"type": type(exc).__name__, "message": str(exc), "module": type(exc).__module__}
 
 
 def format_validation_errors(validation_errors: Dict[str, Any]) -> Dict[str, List[str]]:

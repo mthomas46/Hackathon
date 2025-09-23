@@ -10,15 +10,16 @@ Multi-level caching with Redis, memory, and tiered strategies:
 """
 
 import asyncio
-import json
 import hashlib
-import zlib
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union, Callable
-from dataclasses import dataclass, field
-import redis.asyncio as redis
+import json
 import pickle  # nosec: Required for complex object serialization with JSON fallback
+import zlib
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional, Union
+
+import redis.asyncio as redis
 
 from ...config import config
 
@@ -26,6 +27,7 @@ from ...config import config
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     key: str
     value: Any
     created_at: datetime = field(default_factory=datetime.now)
@@ -39,6 +41,7 @@ class CacheEntry:
 @dataclass
 class CacheStats:
     """Cache performance statistics."""
+
     hits: int = 0
     misses: int = 0
     evictions: int = 0
@@ -109,9 +112,7 @@ class MemoryCache(BaseCache):
         # Decompress if needed
         value = entry.value
         if entry.compressed:
-            value = await asyncio.get_event_loop().run_in_executor(
-                self.executor, zlib.decompress, value
-            )
+            value = await asyncio.get_event_loop().run_in_executor(self.executor, zlib.decompress, value)
             value = pickle.loads(value)  # nosec: Safe fallback after JSON attempt for complex objects
 
         return value
@@ -132,21 +133,16 @@ class MemoryCache(BaseCache):
                 if len(compressed_value) < len(serialized):
                     final_value = compressed_value
                     compressed = True
-                    self.stats.compression_ratio = (self.stats.compression_ratio + len(compressed_value) / len(serialized)) / 2
+                    self.stats.compression_ratio = (
+                        self.stats.compression_ratio + len(compressed_value) / len(serialized)
+                    ) / 2
 
-            entry = CacheEntry(
-                key=key,
-                value=final_value,
-                ttl=ttl,
-                compressed=compressed,
-                size_bytes=len(final_value)
-            )
+            entry = CacheEntry(key=key, value=final_value, ttl=ttl, compressed=compressed, size_bytes=len(final_value))
 
             # Evict if at capacity (simple LRU)
             if len(self.cache) >= self.max_size and key not in self.cache:
                 # Find least recently used
-                lru_key = min(self.cache.keys(),
-                            key=lambda k: (self.cache[k].accessed_at, self.cache[k].access_count))
+                lru_key = min(self.cache.keys(), key=lambda k: (self.cache[k].accessed_at, self.cache[k].access_count))
                 await self.delete(lru_key)
                 self.stats.evictions += 1
 
@@ -188,7 +184,9 @@ class MemoryCache(BaseCache):
 
     async def get_stats(self) -> CacheStats:
         """Get memory cache statistics."""
-        self.stats.hit_ratio = self.stats.hits / (self.stats.hits + self.stats.misses) if (self.stats.hits + self.stats.misses) > 0 else 0
+        self.stats.hit_ratio = (
+            self.stats.hits / (self.stats.hits + self.stats.misses) if (self.stats.hits + self.stats.misses) > 0 else 0
+        )
         return self.stats
 
     def _update_memory_usage(self):
@@ -199,8 +197,14 @@ class MemoryCache(BaseCache):
 class RedisCache(BaseCache):
     """Redis-based distributed cache."""
 
-    def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0,
-                 password: Optional[str] = None, max_connections: int = 10):
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 6379,
+        db: int = 0,
+        password: Optional[str] = None,
+        max_connections: int = 10,
+    ):
         self.redis_url = f"redis://:{password}@{host}:{port}/{db}" if password else f"redis://{host}:{port}/{db}"
         self.max_connections = max_connections
         self._pool = None
@@ -210,9 +214,7 @@ class RedisCache(BaseCache):
         """Get Redis connection."""
         if self._pool is None:
             self._pool = redis.ConnectionPool.from_url(
-                self.redis_url,
-                max_connections=self.max_connections,
-                decode_responses=False
+                self.redis_url, max_connections=self.max_connections, decode_responses=False
             )
         return redis.Redis(connection_pool=self._pool)
 
@@ -233,7 +235,7 @@ class RedisCache(BaseCache):
                 return deserialized
             except Exception:
                 # Try JSON fallback
-                json_str = value.decode('utf-8')
+                json_str = value.decode("utf-8")
                 deserialized = json.loads(json_str)
                 self.stats.hits += 1
                 return deserialized
@@ -249,7 +251,7 @@ class RedisCache(BaseCache):
 
             # Serialize
             if isinstance(value, (dict, list, str, int, float, bool)):
-                serialized = json.dumps(value).encode('utf-8')
+                serialized = json.dumps(value).encode("utf-8")
             else:
                 serialized = pickle.dumps(value)  # nosec: Used only for complex objects not serializable by JSON
 
@@ -295,8 +297,12 @@ class RedisCache(BaseCache):
             redis_client = await self._get_connection()
             info = await redis_client.info()
 
-            self.stats.memory_usage_bytes = info.get('used_memory', 0)
-            self.stats.hit_ratio = info.get('keyspace_hits', 0) / (info.get('keyspace_hits', 0) + info.get('keyspace_misses', 0)) if (info.get('keyspace_hits', 0) + info.get('keyspace_misses', 0)) > 0 else 0
+            self.stats.memory_usage_bytes = info.get("used_memory", 0)
+            self.stats.hit_ratio = (
+                info.get("keyspace_hits", 0) / (info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0))
+                if (info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0)) > 0
+                else 0
+            )
 
             return self.stats
         except Exception:
@@ -312,7 +318,9 @@ class TieredCache(BaseCache):
     L3: Database cache (persistent, slowest)
     """
 
-    def __init__(self, l1_cache: MemoryCache, l2_cache: Optional[RedisCache] = None, l3_callback: Optional[Callable] = None):
+    def __init__(
+        self, l1_cache: MemoryCache, l2_cache: Optional[RedisCache] = None, l3_callback: Optional[Callable] = None
+    ):
         self.l1_cache = l1_cache
         self.l2_cache = l2_cache
         self.l3_callback = l3_callback  # Callback for database/cache layer
@@ -402,9 +410,11 @@ class TieredCache(BaseCache):
 
     async def exists(self, key: str) -> bool:
         """Check if key exists in any cache tier."""
-        return (await self.l1_cache.exists(key) or
-                (self.l2_cache and await self.l2_cache.exists(key)) or
-                (self.l3_callback and await self._l3_exists(key)))
+        return (
+            await self.l1_cache.exists(key)
+            or (self.l2_cache and await self.l2_cache.exists(key))
+            or (self.l3_callback and await self._l3_exists(key))
+        )
 
     async def clear(self) -> bool:
         """Clear all cache tiers."""
@@ -422,10 +432,7 @@ class TieredCache(BaseCache):
 
     async def get_stats(self) -> Dict[str, CacheStats]:
         """Get statistics from all cache tiers."""
-        stats = {
-            "tiered": self.stats,
-            "l1": await self.l1_cache.get_stats()
-        }
+        stats = {"tiered": self.stats, "l1": await self.l1_cache.get_stats()}
 
         if self.l2_cache:
             stats["l2"] = await self.l2_cache.get_stats()
@@ -524,7 +531,7 @@ class CacheManager:
             "cache_stats": stats,
             "prefetch_rules_count": len(self.prefetch_rules),
             "invalidation_rules_count": len(self.invalidation_rules),
-            "cache_hit_ratio": getattr(stats, 'hit_ratio', 0),
-            "memory_usage_mb": getattr(stats, 'memory_usage_bytes', 0) / (1024 * 1024),
-            "compression_ratio": getattr(stats, 'compression_ratio', 1.0)
+            "cache_hit_ratio": getattr(stats, "hit_ratio", 0),
+            "memory_usage_mb": getattr(stats, "memory_usage_bytes", 0) / (1024 * 1024),
+            "compression_ratio": getattr(stats, "compression_ratio", 1.0),
         }

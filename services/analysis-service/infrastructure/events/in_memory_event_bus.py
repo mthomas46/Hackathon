@@ -1,13 +1,10 @@
 """In-Memory Event Bus - Lightweight event bus for testing and development."""
 
 import asyncio
-from typing import Any, Dict, List, Optional, Callable, Union
 from collections import defaultdict
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from .event_bus import (
-    EventBus, EventPublisher, EventSubscriber,
-    DomainEvent, EventEnvelope
-)
+from .event_bus import DomainEvent, EventBus, EventEnvelope, EventPublisher, EventSubscriber
 
 
 class InMemoryEventBus(EventBus):
@@ -69,7 +66,7 @@ class InMemoryEventBus(EventBus):
 
             if len(self._published_events) > self._max_stored_events:
                 # Keep only the most recent events
-                self._published_events = self._published_events[-self._max_stored_events:]
+                self._published_events = self._published_events[-self._max_stored_events :]
 
             # Deliver to subscribers
             for envelope in envelopes:
@@ -153,15 +150,15 @@ class InMemoryEventBus(EventBus):
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check."""
         return {
-            'status': 'healthy',
-            'in_memory': True,
-            'active_topics': len(self._handlers),
-            'total_subscribers': sum(len(handlers) for handlers in self._handlers.values()),
-            'stored_events': len(self._published_events),
-            'max_stored_events': self._max_stored_events,
-            'messages_published': self.messages_published,
-            'messages_received': self.messages_received,
-            'errors_count': self.errors_count
+            "status": "healthy",
+            "in_memory": True,
+            "active_topics": len(self._handlers),
+            "total_subscribers": sum(len(handlers) for handlers in self._handlers.values()),
+            "stored_events": len(self._published_events),
+            "max_stored_events": self._max_stored_events,
+            "messages_published": self.messages_published,
+            "messages_received": self.messages_received,
+            "errors_count": self.errors_count,
         }
 
     def _get_default_topic(self, event: DomainEvent) -> str:
@@ -169,22 +166,22 @@ class InMemoryEventBus(EventBus):
         from .event_bus import EventType
 
         topic_map = {
-            EventType.ANALYSIS_STARTED: 'analysis.events',
-            EventType.ANALYSIS_COMPLETED: 'analysis.events',
-            EventType.ANALYSIS_FAILED: 'analysis.events',
-            EventType.DOCUMENT_CREATED: 'document.events',
-            EventType.DOCUMENT_UPDATED: 'document.events',
-            EventType.DOCUMENT_DELETED: 'document.events',
-            EventType.FINDING_CREATED: 'finding.events',
-            EventType.FINDING_UPDATED: 'finding.events',
-            EventType.WORKFLOW_TRIGGERED: 'workflow.events',
-            EventType.NOTIFICATION_SENT: 'notification.events',
-            EventType.CACHE_INVALIDATED: 'cache.events',
-            EventType.METRICS_UPDATED: 'metrics.events',
-            EventType.SYSTEM_HEALTH_CHECK: 'system.events'
+            EventType.ANALYSIS_STARTED: "analysis.events",
+            EventType.ANALYSIS_COMPLETED: "analysis.events",
+            EventType.ANALYSIS_FAILED: "analysis.events",
+            EventType.DOCUMENT_CREATED: "document.events",
+            EventType.DOCUMENT_UPDATED: "document.events",
+            EventType.DOCUMENT_DELETED: "document.events",
+            EventType.FINDING_CREATED: "finding.events",
+            EventType.FINDING_UPDATED: "finding.events",
+            EventType.WORKFLOW_TRIGGERED: "workflow.events",
+            EventType.NOTIFICATION_SENT: "notification.events",
+            EventType.CACHE_INVALIDATED: "cache.events",
+            EventType.METRICS_UPDATED: "metrics.events",
+            EventType.SYSTEM_HEALTH_CHECK: "system.events",
         }
 
-        return topic_map.get(event.event_type, 'general.events')
+        return topic_map.get(event.event_type, "general.events")
 
 
 class InMemoryEventPublisher(EventPublisher):
@@ -208,7 +205,7 @@ class InMemoryEventSubscriber(EventSubscriber):
 class SharedInMemoryEventBus(InMemoryEventBus):
     """Shared in-memory event bus for cross-service communication in testing."""
 
-    _instance: Optional['SharedInMemoryEventBus'] = None
+    _instance: Optional["SharedInMemoryEventBus"] = None
     _lock = asyncio.Lock()
 
     def __init__(self):
@@ -226,14 +223,14 @@ class SharedInMemoryEventBus(InMemoryEventBus):
             self.errors_count = SharedInMemoryEventBus._instance.errors_count
 
     @classmethod
-    def get_instance(cls) -> 'SharedInMemoryEventBus':
+    def get_instance(cls) -> "SharedInMemoryEventBus":
         """Get shared instance."""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     @classmethod
-    async def create_shared_instance(cls) -> 'SharedInMemoryEventBus':
+    async def create_shared_instance(cls) -> "SharedInMemoryEventBus":
         """Create shared instance with async safety."""
         async with cls._lock:
             if cls._instance is None:
@@ -261,25 +258,29 @@ class TestEventBus(InMemoryEventBus):
     async def _deliver_event(self, envelope: EventEnvelope) -> None:
         """Deliver event with call tracking."""
         # Record delivery attempt
-        self._event_history.append({
-            'event_id': envelope.event.event_id,
-            'event_type': envelope.event.event_type.value,
-            'topic': envelope.topic,
-            'timestamp': envelope.event.timestamp.isoformat(),
-            'subscriber_count': len(self._handlers.get(envelope.topic, []))
-        })
+        self._event_history.append(
+            {
+                "event_id": envelope.event.event_id,
+                "event_type": envelope.event.event_type.value,
+                "topic": envelope.topic,
+                "timestamp": envelope.event.timestamp.isoformat(),
+                "subscriber_count": len(self._handlers.get(envelope.topic, [])),
+            }
+        )
 
         await super()._deliver_event(envelope)
 
     async def _safe_handle(self, handler: Callable, envelope: EventEnvelope) -> None:
         """Track handler calls."""
         # Record handler call
-        self._handler_call_history.append({
-            'event_id': envelope.event.event_id,
-            'topic': envelope.topic,
-            'handler': str(handler),
-            'timestamp': asyncio.get_event_loop().time()
-        })
+        self._handler_call_history.append(
+            {
+                "event_id": envelope.event.event_id,
+                "topic": envelope.topic,
+                "handler": str(handler),
+                "timestamp": asyncio.get_event_loop().time(),
+            }
+        )
 
         await super()._safe_handle(handler, envelope)
 
@@ -300,10 +301,7 @@ class TestEventBus(InMemoryEventBus):
 
     def get_events_by_type(self, event_type: str) -> List[EventEnvelope]:
         """Get events by type."""
-        return [
-            event for event in self._published_events
-            if event.event.event_type.value == event_type
-        ]
+        return [event for event in self._published_events if event.event.event_type.value == event_type]
 
     def get_events_by_topic(self, topic: str) -> List[EventEnvelope]:
         """Get events by topic."""
@@ -318,7 +316,7 @@ class TestEventBus(InMemoryEventBus):
 
     def assert_event_handled(self, event_id: str) -> bool:
         """Assert that an event was handled."""
-        return any(call['event_id'] == event_id for call in self._handler_call_history)
+        return any(call["event_id"] == event_id for call in self._handler_call_history)
 
     def clear_history(self) -> None:
         """Clear event and handler history."""

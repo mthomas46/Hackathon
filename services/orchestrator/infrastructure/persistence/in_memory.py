@@ -1,11 +1,11 @@
 """In-Memory Repository Implementations"""
 
-from typing import List, Optional, Dict
-from threading import Lock
 from datetime import datetime
+from threading import Lock
+from typing import Dict, List, Optional
 
-from .interfaces import WorkflowRepositoryInterface, WorkflowExecutionRepositoryInterface
-from ...domain.workflow_management import Workflow, WorkflowExecution, WorkflowId, ExecutionId
+from ...domain.workflow_management import ExecutionId, Workflow, WorkflowExecution, WorkflowId
+from .interfaces import WorkflowExecutionRepositoryInterface, WorkflowRepositoryInterface
 
 
 class InMemoryWorkflowRepository(WorkflowRepositoryInterface):
@@ -33,7 +33,7 @@ class InMemoryWorkflowRepository(WorkflowRepositoryInterface):
         status_filter: Optional[str] = None,
         created_by_filter: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[Workflow]:
         """List workflows with optional filters."""
         with self._lock:
@@ -97,7 +97,7 @@ class InMemoryWorkflowExecutionRepository(WorkflowExecutionRepositoryInterface):
         started_after: Optional[str] = None,
         started_before: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[WorkflowExecution]:
         """List workflow executions with optional filters."""
         with self._lock:
@@ -112,14 +112,14 @@ class InMemoryWorkflowExecutionRepository(WorkflowExecutionRepositoryInterface):
 
             if started_after:
                 try:
-                    after_dt = datetime.fromisoformat(started_after.replace('Z', '+00:00'))
+                    after_dt = datetime.fromisoformat(started_after.replace("Z", "+00:00"))
                     executions = [e for e in executions if e.started_at and e.started_at >= after_dt]
                 except ValueError:
                     pass  # Invalid date format, skip filter
 
             if started_before:
                 try:
-                    before_dt = datetime.fromisoformat(started_before.replace('Z', '+00:00'))
+                    before_dt = datetime.fromisoformat(started_before.replace("Z", "+00:00"))
                     executions = [e for e in executions if e.started_at and e.started_at <= before_dt]
                 except ValueError:
                     pass  # Invalid date format, skip filter

@@ -7,7 +7,7 @@ using a simple file-based registry that can be extended to database storage.
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class ToolRegistryStorage:
@@ -40,7 +40,7 @@ class ToolRegistryStorage:
                 existing_results = {k: existing_results[k] for k in sorted_keys[:10]}
 
             # Save to file
-            with open(self.discovery_results_file, 'w') as f:
+            with open(self.discovery_results_file, "w") as f:
                 json.dump(existing_results, f, indent=2)
 
             print(f"💾 Saved discovery results to {self.discovery_results_file}")
@@ -56,14 +56,10 @@ class ToolRegistryStorage:
             registry = await self.load_tools_registry()
 
             # Update with new tools
-            registry[service_name] = {
-                "last_updated": "2025-01-17T21:30:00Z",
-                "tool_count": len(tools),
-                "tools": tools
-            }
+            registry[service_name] = {"last_updated": "2025-01-17T21:30:00Z", "tool_count": len(tools), "tools": tools}
 
             # Save to file
-            with open(self.tools_file, 'w') as f:
+            with open(self.tools_file, "w") as f:
                 json.dump(registry, f, indent=2)
 
             print(f"💾 Saved {len(tools)} tools for {service_name}")
@@ -88,7 +84,7 @@ class ToolRegistryStorage:
                 reports = {k: reports[k] for k in sorted_keys[:20]}
 
             # Save to file
-            with open(self.security_reports_file, 'w') as f:
+            with open(self.security_reports_file, "w") as f:
                 json.dump(reports, f, indent=2)
 
             print(f"🔒 Saved security report for {service_name}")
@@ -100,7 +96,7 @@ class ToolRegistryStorage:
         """Load discovery results from persistent storage"""
         try:
             if self.discovery_results_file.exists():
-                with open(self.discovery_results_file, 'r') as f:
+                with open(self.discovery_results_file, "r") as f:
                     return json.load(f)
             return {}
         except Exception as e:
@@ -111,7 +107,7 @@ class ToolRegistryStorage:
         """Load tools registry from persistent storage"""
         try:
             if self.tools_file.exists():
-                with open(self.tools_file, 'r') as f:
+                with open(self.tools_file, "r") as f:
                     return json.load(f)
             return {}
         except Exception as e:
@@ -122,7 +118,7 @@ class ToolRegistryStorage:
         """Load security reports from persistent storage"""
         try:
             if self.security_reports_file.exists():
-                with open(self.security_reports_file, 'r') as f:
+                with open(self.security_reports_file, "r") as f:
                     return json.load(f)
             return {}
         except Exception as e:
@@ -186,7 +182,7 @@ class ToolRegistryStorage:
             "discovery_runs": len(discovery_results),
             "security_reports": len(security_reports),
             "categories": set(),
-            "service_breakdown": {}
+            "service_breakdown": {},
         }
 
         # Calculate category breakdown and service stats
@@ -196,7 +192,7 @@ class ToolRegistryStorage:
                 "tools_count": len(tools),
                 "categories": set(),
                 "methods": set(),
-                "langraph_ready": 0
+                "langraph_ready": 0,
             }
 
             for tool in tools:

@@ -4,15 +4,16 @@ This module tests the automatic tool discovery and registration system
 that integrates with LangGraph workflows in the LLM Documentation Ecosystem.
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from modules.discovery_handler import DiscoveryHandler, discovery_handler
+from modules.models import ToolDiscoveryRequest
 
 # Import the modules we need to test
 from modules.tool_discovery import ToolDiscoveryService, tool_discovery_service
-from modules.models import ToolDiscoveryRequest
-from modules.discovery_handler import DiscoveryHandler, discovery_handler
 
 
 class TestToolDiscoveryService:
@@ -29,43 +30,29 @@ class TestToolDiscoveryService:
                     "get": {
                         "summary": "List documents",
                         "operationId": "list_documents",
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     },
                     "post": {
                         "summary": "Create document",
                         "operationId": "create_document",
-                        "responses": {"201": {"description": "Created"}}
-                    }
+                        "responses": {"201": {"description": "Created"}},
+                    },
                 },
                 "/documents/{id}": {
                     "get": {
                         "summary": "Get document",
                         "operationId": "get_document",
-                        "parameters": [
-                            {
-                                "name": "id",
-                                "in": "path",
-                                "required": True,
-                                "schema": {"type": "string"}
-                            }
-                        ],
-                        "responses": {"200": {"description": "Success"}}
+                        "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "string"}}],
+                        "responses": {"200": {"description": "Success"}},
                     },
                     "put": {
                         "summary": "Update document",
                         "operationId": "update_document",
-                        "parameters": [
-                            {
-                                "name": "id",
-                                "in": "path",
-                                "required": True,
-                                "schema": {"type": "string"}
-                            }
-                        ],
-                        "responses": {"200": {"description": "Updated"}}
-                    }
-                }
-            }
+                        "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "string"}}],
+                        "responses": {"200": {"description": "Updated"}},
+                    },
+                },
+            },
         }
 
     @pytest.fixture
@@ -78,7 +65,7 @@ class TestToolDiscoveryService:
         """Test successful OpenAPI spec fetching."""
         mock_spec = {"openapi": "3.0.0", "info": {"title": "Test"}}
 
-        with patch.object(discovery_service, '_fetch_openapi_spec', return_value=mock_spec) as mock_fetch:
+        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_spec) as mock_fetch:
             result = await discovery_service._fetch_openapi_spec("http://test.com/openapi.json")
             assert result == mock_spec
             mock_fetch.assert_called_once_with("http://test.com/openapi.json")
@@ -86,10 +73,9 @@ class TestToolDiscoveryService:
     @pytest.mark.asyncio
     async def test_discover_tools_basic(self, discovery_service, mock_openapi_spec):
         """Test basic tool discovery from OpenAPI spec."""
-        with patch.object(discovery_service, '_fetch_openapi_spec', return_value=mock_openapi_spec):
+        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
             result = await discovery_service.discover_tools(
-                service_name="test_service",
-                service_url="http://test-service:8000"
+                service_name="test_service", service_url="http://test-service:8000"
             )
 
             assert result["service_name"] == "test_service"
@@ -109,10 +95,9 @@ class TestToolDiscoveryService:
     @pytest.mark.asyncio
     async def test_tool_categorization(self, discovery_service, mock_openapi_spec):
         """Test that tools are properly categorized."""
-        with patch.object(discovery_service, '_fetch_openapi_spec', return_value=mock_openapi_spec):
+        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
             result = await discovery_service.discover_tools(
-                service_name="test_service",
-                service_url="http://test-service:8000"
+                service_name="test_service", service_url="http://test-service:8000"
             )
 
             tools = result["tools"]
@@ -125,19 +110,31 @@ class TestToolDiscoveryService:
                 assert len(categories) > 0
 
                 # Check that categories are valid
-                valid_categories = ["create", "read", "update", "delete", "analysis",
-                                  "search", "notification", "storage", "processing",
-                                  "document", "prompt", "code", "workflow", "general"]
+                valid_categories = [
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "analysis",
+                    "search",
+                    "notification",
+                    "storage",
+                    "processing",
+                    "document",
+                    "prompt",
+                    "code",
+                    "workflow",
+                    "general",
+                ]
                 for category in categories:
                     assert category in valid_categories
 
     @pytest.mark.asyncio
     async def test_tool_naming_convention(self, discovery_service, mock_openapi_spec):
         """Test that tool names follow proper naming conventions."""
-        with patch.object(discovery_service, '_fetch_openapi_spec', return_value=mock_openapi_spec):
+        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
             result = await discovery_service.discover_tools(
-                service_name="test_service",
-                service_url="http://test-service:8000"
+                service_name="test_service", service_url="http://test-service:8000"
             )
 
             tools = result["tools"]
@@ -153,10 +150,9 @@ class TestToolDiscoveryService:
     @pytest.mark.asyncio
     async def test_parameter_extraction(self, discovery_service, mock_openapi_spec):
         """Test that parameters are properly extracted from OpenAPI spec."""
-        with patch.object(discovery_service, '_fetch_openapi_spec', return_value=mock_openapi_spec):
+        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
             result = await discovery_service.discover_tools(
-                service_name="test_service",
-                service_url="http://test-service:8000"
+                service_name="test_service", service_url="http://test-service:8000"
             )
 
             tools = result["tools"]
@@ -180,7 +176,7 @@ class TestDiscoveryHandler:
             service_name="test_service",
             service_url="http://test-service:8000",
             tool_categories=["read", "create"],
-            dry_run=False
+            dry_run=False,
         )
 
     @pytest.mark.asyncio
@@ -188,11 +184,11 @@ class TestDiscoveryHandler:
         """Test tool discovery in dry run mode."""
         mock_request.dry_run = True
 
-        with patch('modules.discovery_handler.tool_discovery_service') as mock_service:
+        with patch("modules.discovery_handler.tool_discovery_service") as mock_service:
             mock_service.discover_tools.return_value = {
                 "service_name": "test_service",
                 "tools_discovered": 3,
-                "tools": [{"name": "test_tool", "description": "Test tool"}]
+                "tools": [{"name": "test_tool", "description": "Test tool"}],
             }
 
             result = await discovery_handler.discover_tools(mock_request)
@@ -204,13 +200,14 @@ class TestDiscoveryHandler:
     @pytest.mark.asyncio
     async def test_discover_tools_with_registration(self, mock_request):
         """Test tool discovery with orchestrator registration."""
-        with patch('modules.discovery_handler.tool_discovery_service') as mock_service, \
-             patch('modules.discovery_handler.register_with_orchestrator') as mock_register:
+        with patch("modules.discovery_handler.tool_discovery_service") as mock_service, patch(
+            "modules.discovery_handler.register_with_orchestrator"
+        ) as mock_register:
 
             mock_service.discover_tools.return_value = {
                 "service_name": "test_service",
                 "tools_discovered": 3,
-                "tools": [{"name": "test_tool", "description": "Test tool"}]
+                "tools": [{"name": "test_tool", "description": "Test tool"}],
             }
             mock_register.return_value = {"status": "registered"}
 
@@ -223,13 +220,14 @@ class TestDiscoveryHandler:
     @pytest.mark.asyncio
     async def test_discover_tools_registration_failure(self, mock_request):
         """Test tool discovery when orchestrator registration fails."""
-        with patch('modules.discovery_handler.tool_discovery_service') as mock_service, \
-             patch('modules.discovery_handler.register_with_orchestrator', side_effect=Exception("Registration failed")):
+        with patch("modules.discovery_handler.tool_discovery_service") as mock_service, patch(
+            "modules.discovery_handler.register_with_orchestrator", side_effect=Exception("Registration failed")
+        ):
 
             mock_service.discover_tools.return_value = {
                 "service_name": "test_service",
                 "tools_discovered": 3,
-                "tools": [{"name": "test_tool", "description": "Test tool"}]
+                "tools": [{"name": "test_tool", "description": "Test tool"}],
             }
 
             result = await discovery_handler.discover_tools(mock_request)
@@ -250,7 +248,7 @@ class TestIntegrationScenarios:
         service_url = "http://llm-document-store:5140"
 
         # Mock the entire discovery process
-        with patch('modules.tool_discovery.tool_discovery_service') as mock_service:
+        with patch("modules.tool_discovery.tool_discovery_service") as mock_service:
             mock_service.discover_tools.return_value = {
                 "service_name": service_name,
                 "service_url": service_url,
@@ -263,7 +261,7 @@ class TestIntegrationScenarios:
                         "service_name": service_name,
                         "service_url": service_url,
                         "http_method": "GET",
-                        "path": "/documents"
+                        "path": "/documents",
                     },
                     {
                         "name": f"{service_name}_create_document",
@@ -272,9 +270,9 @@ class TestIntegrationScenarios:
                         "service_name": service_name,
                         "service_url": service_url,
                         "http_method": "POST",
-                        "path": "/documents"
-                    }
-                ]
+                        "path": "/documents",
+                    },
+                ],
             }
 
             # Test discovery
@@ -293,22 +291,20 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_category_filtering(self):
         """Test that tool discovery respects category filters."""
-        with patch('modules.tool_discovery.tool_discovery_service') as mock_service:
+        with patch("modules.tool_discovery.tool_discovery_service") as mock_service:
             # Mock discovery with mixed categories
             mock_service.discover_tools.return_value = {
                 "service_name": "test_service",
                 "tools": [
                     {"name": "tool1", "categories": ["read", "document"]},
                     {"name": "tool2", "categories": ["create", "storage"]},
-                    {"name": "tool3", "categories": ["analysis", "processing"]}
-                ]
+                    {"name": "tool3", "categories": ["analysis", "processing"]},
+                ],
             }
 
             # Test with category filter
             result = await mock_service.discover_tools(
-                "test_service",
-                "http://test.com",
-                tool_categories=["read", "create"]
+                "test_service", "http://test.com", tool_categories=["read", "create"]
             )
 
             # Should only return tools with matching categories
@@ -320,7 +316,7 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_error_handling(self):
         """Test error handling in tool discovery."""
-        with patch('modules.tool_discovery.tool_discovery_service') as mock_service:
+        with patch("modules.tool_discovery.tool_discovery_service") as mock_service:
             # Simulate OpenAPI fetch failure
             mock_service._fetch_openapi_spec.side_effect = Exception("Network error")
 

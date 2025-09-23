@@ -4,7 +4,8 @@ This module contains workflow-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
 from rich.prompt import Prompt
 
@@ -31,7 +32,7 @@ class WorkflowManager(BaseManager):
             ("3", "Monitor Workflow Status"),
             ("4", "Architecture Processing Workflows"),
             ("5", "Workflow Templates"),
-            ("6", "Workflow History")
+            ("6", "Workflow History"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -61,10 +62,7 @@ class WorkflowManager(BaseManager):
         doc_id = Prompt.ask("Document ID or URL")
 
         try:
-            payload = {
-                "targets": [doc_id],
-                "analysis_type": "consistency"
-            }
+            payload = {"targets": [doc_id], "analysis_type": "consistency"}
 
             with self.console.status("[bold green]Running document analysis...[/bold green]"):
                 url = f"{self.clients.analysis_service_url()}/analyze"
@@ -75,7 +73,9 @@ class WorkflowManager(BaseManager):
 
         except Exception as e:
             self.console.print(f"[red]❌ Error running document analysis: {e}[/red]")
-            self.console.print("[yellow]💡 Tip: Check if the document ID/URL is valid and the analysis service is running[/yellow]")
+            self.console.print(
+                "[yellow]💡 Tip: Check if the document ID/URL is valid and the analysis service is running[/yellow]"
+            )
 
     async def trigger_ingestion(self):
         """Trigger data ingestion workflow."""
@@ -83,10 +83,7 @@ class WorkflowManager(BaseManager):
         source_url = Prompt.ask("Source URL")
 
         try:
-            payload = {
-                "source_type": source_type,
-                "source_url": source_url
-            }
+            payload = {"source_type": source_type, "source_url": source_url}
 
             with self.console.status("[bold green]Triggering data ingestion...[/bold green]"):
                 url = f"{self.clients.source_agent_url()}/ingest"
@@ -97,7 +94,9 @@ class WorkflowManager(BaseManager):
 
         except Exception as e:
             self.console.print(f"[red]❌ Error triggering ingestion: {e}[/red]")
-            self.console.print("[yellow]💡 Tip: Verify the source URL format and ensure the source agent service is running[/yellow]")
+            self.console.print(
+                "[yellow]💡 Tip: Verify the source URL format and ensure the source agent service is running[/yellow]"
+            )
 
     async def run_consistency_check(self):
         """Run consistency check."""
@@ -118,10 +117,7 @@ class WorkflowManager(BaseManager):
         report_type = Prompt.ask("Report type", default="summary")
 
         try:
-            payload = {
-                "type": report_type,
-                "format": "json"
-            }
+            payload = {"type": report_type, "format": "json"}
 
             with self.console.status("[bold green]Generating report...[/bold green]"):
                 url = f"{self.clients.analysis_service_url()}/reports/generate"
@@ -173,6 +169,7 @@ class WorkflowManager(BaseManager):
 
         try:
             import json
+
             workflow = json.loads(workflow_json)
 
             # Validate workflow structure
@@ -225,11 +222,10 @@ class WorkflowManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error processing query: {e}[/red]")
 
-
     async def architecture_workflows(self):
         """Architecture processing workflow menu."""
-        from rich.table import Table
         from rich.prompt import Prompt
+        from rich.table import Table
 
         while True:
             # Create workflow options table
@@ -278,8 +274,7 @@ class WorkflowManager(BaseManager):
             with self.console.status("[bold green]Processing diagram...[/bold green]") as status:
                 # Step 1: Normalize diagram
                 normalize_result = await self.clients.post_json(
-                    "architecture-digitizer/normalize",
-                    {"system": system, "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize", {"system": system, "board_id": board_id, "token": token}
                 )
 
                 if not normalize_result.get("success"):
@@ -303,7 +298,9 @@ class WorkflowManager(BaseManager):
         system = Prompt.ask("System (miro/figjam/lucid/confluence)")
         board_id = Prompt.ask("Board/Document ID")
         token = Prompt.ask("API Token", password=True)
-        analysis_type = Prompt.ask("Analysis type (consistency/completeness/best_practices/combined)", default="combined")
+        analysis_type = Prompt.ask(
+            "Analysis type (consistency/completeness/best_practices/combined)", default="combined"
+        )
 
         if not Prompt.ask("Proceed with workflow? (y/n)", default="n").lower().startswith("y"):
             return
@@ -312,8 +309,7 @@ class WorkflowManager(BaseManager):
             with self.console.status("[bold green]Processing and analyzing diagram...[/bold green]") as status:
                 # Step 1: Normalize diagram
                 normalize_result = await self.clients.post_json(
-                    "architecture-digitizer/normalize",
-                    {"system": system, "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize", {"system": system, "board_id": board_id, "token": token}
                 )
 
                 if not normalize_result.get("success"):
@@ -326,11 +322,7 @@ class WorkflowManager(BaseManager):
 
                 analysis_result = await self.clients.post_json(
                     "analysis-service/architecture/analyze",
-                    {
-                        "components": components,
-                        "connections": connections,
-                        "analysis_type": analysis_type
-                    }
+                    {"components": components, "connections": connections, "analysis_type": analysis_type},
                 )
 
                 # Display results
@@ -339,6 +331,7 @@ class WorkflowManager(BaseManager):
                 issues = analysis_result.get("issues", [])
                 if issues:
                     from rich.table import Table
+
                     issue_table = Table(title="Analysis Issues")
                     issue_table.add_column("Severity", style="red")
                     issue_table.add_column("Type", style="cyan")
@@ -348,7 +341,7 @@ class WorkflowManager(BaseManager):
                         issue_table.add_row(
                             issue.get("severity", "unknown"),
                             issue.get("issue_type", "unknown"),
-                            issue.get("message", "")
+                            issue.get("message", ""),
                         )
 
                     self.console.print(issue_table)
@@ -378,8 +371,7 @@ class WorkflowManager(BaseManager):
             with self.console.status("[bold green]Running full architecture pipeline...[/bold green]") as status:
                 # Step 1: Normalize (which also stores in doc_store)
                 normalize_result = await self.clients.post_json(
-                    "architecture-digitizer/normalize",
-                    {"system": system, "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize", {"system": system, "board_id": board_id, "token": token}
                 )
 
                 if not normalize_result.get("success"):
@@ -392,11 +384,7 @@ class WorkflowManager(BaseManager):
 
                 analysis_result = await self.clients.post_json(
                     "analysis-service/architecture/analyze",
-                    {
-                        "components": components,
-                        "connections": connections,
-                        "analysis_type": "combined"
-                    }
+                    {"components": components, "connections": connections, "analysis_type": "combined"},
                 )
 
                 # Step 3: Generate report and store in doc_store
@@ -406,19 +394,22 @@ class WorkflowManager(BaseManager):
                     "board_id": board_id,
                     "normalization_result": normalize_result,
                     "analysis_result": analysis_result,
-                    "generated_at": "now"
+                    "generated_at": "now",
                 }
 
-                await self.clients.post_json("doc_store/store", {
-                    "type": "architecture_report",
-                    "content": str(report_data),
-                    "metadata": {
-                        "source_type": "architecture_pipeline",
-                        "type": "report",
-                        "system": system,
-                        "board_id": board_id
-                    }
-                })
+                await self.clients.post_json(
+                    "doc_store/store",
+                    {
+                        "type": "architecture_report",
+                        "content": str(report_data),
+                        "metadata": {
+                            "source_type": "architecture_pipeline",
+                            "type": "report",
+                            "system": system,
+                            "board_id": board_id,
+                        },
+                    },
+                )
 
                 self.console.print("[green]✅ Full architecture pipeline completed![/green]")
                 self.console.print("📊 Report generated and stored in document store")

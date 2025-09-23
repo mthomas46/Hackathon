@@ -11,11 +11,11 @@ Features:
 
 import asyncio
 import hashlib
+import logging
 import time
-from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass
 from datetime import datetime
-import logging
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CDNConfig:
     """CDN configuration settings."""
+
     provider: str = "cloudflare"  # cloudflare, cloudfront, fastly, akamai
     base_url: str = ""
     api_token: str = ""
@@ -35,6 +36,7 @@ class CDNConfig:
 @dataclass
 class AssetMetadata:
     """Metadata for static assets."""
+
     path: str
     content_hash: str
     size_bytes: int
@@ -61,13 +63,14 @@ class CDNManager:
         self.assets: Dict[str, AssetMetadata] = {}
         self.performance_metrics: Dict[str, Any] = {}
 
-    async def upload_asset(self, local_path: str, remote_path: str,
-                          content_type: str = "application/octet-stream") -> bool:
+    async def upload_asset(
+        self, local_path: str, remote_path: str, content_type: str = "application/octet-stream"
+    ) -> bool:
         """Upload asset to CDN."""
 
         try:
             # Read file content
-            with open(local_path, 'rb') as f:
+            with open(local_path, "rb") as f:
                 content = f.read()
 
             # Calculate metadata
@@ -81,7 +84,7 @@ class CDNManager:
                 content_type=content_type,
                 last_modified=datetime.now(),
                 cache_control=f"public, max-age={self.config.cache_ttl}, immutable",
-                etag=etag
+                etag=etag,
             )
 
             # Upload based on provider
@@ -104,7 +107,7 @@ class CDNManager:
         if not self.config.enabled:
             return f"/static/{path}"
 
-        base_url = self.config.base_url.rstrip('/')
+        base_url = self.config.base_url.rstrip("/")
 
         if with_version and path in self.assets:
             metadata = self.assets[path]
@@ -159,7 +162,7 @@ class CDNManager:
             "assets_count": len(self.assets),
             "total_size_bytes": sum(meta.size_bytes for meta in self.assets.values()),
             "performance_metrics": self.performance_metrics,
-            "cache_ttl_seconds": self.config.cache_ttl
+            "cache_ttl_seconds": self.config.cache_ttl,
         }
 
     async def _upload_to_provider(self, content: bytes, metadata: AssetMetadata) -> bool:
@@ -236,8 +239,9 @@ class AssetOptimizer:
         self.asset_bundles: Dict[str, List[str]] = {}
         self.optimization_stats: Dict[str, Any] = {}
 
-    async def create_asset_bundle(self, bundle_name: str, asset_paths: List[str],
-                                bundle_type: str = "javascript") -> str:
+    async def create_asset_bundle(
+        self, bundle_name: str, asset_paths: List[str], bundle_type: str = "javascript"
+    ) -> str:
         """Create optimized asset bundle."""
 
         start_time = time.time()
@@ -248,7 +252,7 @@ class AssetOptimizer:
 
         for path in asset_paths:
             try:
-                with open(path, 'rb') as f:
+                with open(path, "rb") as f:
                     content = f.read()
                     total_original_size += len(content)
 
@@ -267,16 +271,12 @@ class AssetOptimizer:
 
         # Save bundle locally (would be uploaded to CDN in production)
         bundle_path = f"/tmp/{bundle_filename}"
-        with open(bundle_path, 'wb') as f:
+        with open(bundle_path, "wb") as f:
             f.write(bundle_content)
 
         # Upload to CDN
         remote_path = f"bundles/{bundle_filename}"
-        success = await self.cdn_manager.upload_asset(
-            bundle_path,
-            remote_path,
-            f"application/{bundle_type}"
-        )
+        success = await self.cdn_manager.upload_asset(bundle_path, remote_path, f"application/{bundle_type}")
 
         if success:
             # Record bundle metadata
@@ -289,7 +289,7 @@ class AssetOptimizer:
                 "optimized_size": len(bundle_content),
                 "compression_ratio": compression_ratio,
                 "processing_time": processing_time,
-                "assets_count": len(asset_paths)
+                "assets_count": len(asset_paths),
             }
 
             cdn_url = await self.cdn_manager.get_asset_url(remote_path)
@@ -330,21 +330,21 @@ class AssetOptimizer:
             "average_compression_ratio": avg_compression,
             "space_saved_bytes": total_original - total_optimized,
             "space_saved_percent": (1 - avg_compression) * 100,
-            "bundle_details": self.optimization_stats
+            "bundle_details": self.optimization_stats,
         }
 
     def _get_content_type(self, path: str) -> str:
         """Determine content type from file path."""
 
-        if path.endswith('.js'):
+        if path.endswith(".js"):
             return "application/javascript"
-        elif path.endswith('.css'):
+        elif path.endswith(".css"):
             return "text/css"
-        elif path.endswith('.png'):
+        elif path.endswith(".png"):
             return "image/png"
-        elif path.endswith('.jpg') or path.endswith('.jpeg'):
+        elif path.endswith(".jpg") or path.endswith(".jpeg"):
             return "image/jpeg"
-        elif path.endswith('.svg'):
+        elif path.endswith(".svg"):
             return "image/svg+xml"
         else:
             return "application/octet-stream"

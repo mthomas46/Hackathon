@@ -2,15 +2,16 @@
 
 Provides connection pooling and secure database access.
 """
+
 import os
 import sqlite3
-from typing import Optional, Any
 from contextlib import contextmanager
+from typing import Any, Optional
 
 
 def _validate_db_path(db_path: str) -> str:
     """Validate database path to prevent directory traversal attacks."""
-    if any(char in db_path for char in ['..', '/', '\\', ':', '*', '?', '"', '<', '>', '|']):
+    if any(char in db_path for char in ["..", "/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
         return "services/doc_store/db.sqlite3"
     return db_path
 

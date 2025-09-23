@@ -1,4 +1,5 @@
 class APITester:
     pass
 
-__all__ = ['APITester']
+
+__all__ = ["APITester"]

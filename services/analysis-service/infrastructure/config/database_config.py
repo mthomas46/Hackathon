@@ -1,8 +1,8 @@
 """Database configuration management."""
 
 import os
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -29,26 +29,26 @@ class DatabaseConfig:
     migration_table: str = "schema_migrations"
 
     @classmethod
-    def from_env(cls) -> 'DatabaseConfig':
+    def from_env(cls) -> "DatabaseConfig":
         """Create configuration from environment variables."""
         return cls(
-            sqlite_path=os.getenv('ANALYSIS_DB_PATH', ':memory:'),
-            postgres_host=os.getenv('POSTGRES_HOST'),
-            postgres_port=int(os.getenv('POSTGRES_PORT', '5432')),
-            postgres_database=os.getenv('POSTGRES_DB'),
-            postgres_user=os.getenv('POSTGRES_USER'),
-            postgres_password=os.getenv('POSTGRES_PASSWORD'),
-            max_connections=int(os.getenv('DB_MAX_CONNECTIONS', '10')),
-            min_connections=int(os.getenv('DB_MIN_CONNECTIONS', '1')),
-            connection_timeout=int(os.getenv('DB_CONNECTION_TIMEOUT', '30')),
-            enable_migrations=os.getenv('DB_ENABLE_MIGRATIONS', 'true').lower() == 'true'
+            sqlite_path=os.getenv("ANALYSIS_DB_PATH", ":memory:"),
+            postgres_host=os.getenv("POSTGRES_HOST"),
+            postgres_port=int(os.getenv("POSTGRES_PORT", "5432")),
+            postgres_database=os.getenv("POSTGRES_DB"),
+            postgres_user=os.getenv("POSTGRES_USER"),
+            postgres_password=os.getenv("POSTGRES_PASSWORD"),
+            max_connections=int(os.getenv("DB_MAX_CONNECTIONS", "10")),
+            min_connections=int(os.getenv("DB_MIN_CONNECTIONS", "1")),
+            connection_timeout=int(os.getenv("DB_CONNECTION_TIMEOUT", "30")),
+            enable_migrations=os.getenv("DB_ENABLE_MIGRATIONS", "true").lower() == "true",
         )
 
-    def get_connection_string(self, db_type: str = 'sqlite') -> str:
+    def get_connection_string(self, db_type: str = "sqlite") -> str:
         """Get database connection string."""
-        if db_type == 'sqlite':
+        if db_type == "sqlite":
             return f"sqlite:///{self.sqlite_path}"
-        elif db_type == 'postgresql':
+        elif db_type == "postgresql":
             if not all([self.postgres_host, self.postgres_database, self.postgres_user]):
                 raise ValueError("PostgreSQL configuration incomplete")
             return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database}"
@@ -66,9 +66,9 @@ class DatabaseConfig:
     def get_pool_config(self) -> dict:
         """Get connection pool configuration."""
         return {
-            'max_connections': self.max_connections,
-            'min_connections': self.min_connections,
-            'connection_timeout': self.connection_timeout
+            "max_connections": self.max_connections,
+            "min_connections": self.min_connections,
+            "connection_timeout": self.connection_timeout,
         }
 
     def validate(self) -> list[str]:

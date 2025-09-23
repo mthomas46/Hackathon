@@ -5,61 +5,63 @@ Comprehensive test fixtures for the Unified API Dashboard testing infrastructure
 """
 
 import asyncio
-import pytest
-import pytest_asyncio
-from unittest.mock import Mock, AsyncMock, MagicMock
-from typing import Dict, Any, List, Optional
 import json
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock
+
+import pytest
+import pytest_asyncio
 
 from ..config import config
-from ..modules.discovery.client import DiscoveryClient
+from ..modules.analytics import ErrorTracking, PerformanceInsights, UsageAnalytics, UsagePatterns
 from ..modules.api.catalog import APICatalogManager
+from ..modules.developer_tools import APIValidator, ClientCodeGenerator, IntegrationTester
+from ..modules.discovery.client import DiscoveryClient
 from ..modules.monitoring.health import HealthMonitor
-from ..modules.testing.tester import APITester
-from ..modules.analytics import UsageAnalytics, PerformanceInsights, ErrorTracking, UsagePatterns
-from ..modules.developer_tools import ClientCodeGenerator, APIValidator, IntegrationTester
-from ..modules.topology import TopologyAnalyzer, TopologyVisualizer, DependencyGraphBuilder, TopologyMetrics
 from ..modules.security import (
-    AuthenticationManager, AuthorizationManager, UserManager,
-    AuditLogger, ComplianceMonitor,
-    AccessControlManager, PermissionManager,
-    SecurityMonitor, ThreatDetector
+    AccessControlManager,
+    AuditLogger,
+    AuthenticationManager,
+    AuthorizationManager,
+    ComplianceMonitor,
+    PermissionManager,
+    SecurityMonitor,
+    ThreatDetector,
+    UserManager,
 )
-
+from ..modules.testing.tester import APITester
+from ..modules.topology import DependencyGraphBuilder, TopologyAnalyzer, TopologyMetrics, TopologyVisualizer
 
 # ============================================================================
 # MOCK DATA AND FIXTURES
 # ============================================================================
 
+
 @pytest.fixture
 def mock_discovery_client():
     """Mock DiscoveryClient for testing."""
     client = Mock(spec=DiscoveryClient)
-    client.discover_services = AsyncMock(return_value=[
-        {
-            "service_name": "test-service",
-            "service_url": "http://test-service:8000",
-            "openapi_spec": {
-                "openapi": "3.0.0",
-                "info": {"title": "Test Service", "version": "1.0.0"},
-                "paths": {
-                    "/health": {
-                        "get": {
-                            "summary": "Health check",
-                            "responses": {"200": {"description": "OK"}}
-                        }
-                    }
-                }
-            },
-            "health_endpoint": "/health",
-            "last_discovered": datetime.now().isoformat()
-        }
-    ])
-    client.get_service_spec = AsyncMock(return_value={
-        "openapi": "3.0.0",
-        "info": {"title": "Test Service", "version": "1.0.0"}
-    })
+    client.discover_services = AsyncMock(
+        return_value=[
+            {
+                "service_name": "test-service",
+                "service_url": "http://test-service:8000",
+                "openapi_spec": {
+                    "openapi": "3.0.0",
+                    "info": {"title": "Test Service", "version": "1.0.0"},
+                    "paths": {
+                        "/health": {"get": {"summary": "Health check", "responses": {"200": {"description": "OK"}}}}
+                    },
+                },
+                "health_endpoint": "/health",
+                "last_discovered": datetime.now().isoformat(),
+            }
+        ]
+    )
+    client.get_service_spec = AsyncMock(
+        return_value={"openapi": "3.0.0", "info": {"title": "Test Service", "version": "1.0.0"}}
+    )
     return client
 
 
@@ -67,21 +69,17 @@ def mock_discovery_client():
 def mock_health_monitor():
     """Mock HealthMonitor for testing."""
     monitor = Mock(spec=HealthMonitor)
-    monitor.get_health_status = AsyncMock(return_value={
-        "overall_health": "healthy",
-        "services": {
-            "test-service": {
-                "status": "healthy",
-                "response_time": 150,
-                "last_check": datetime.now().isoformat()
-            }
+    monitor.get_health_status = AsyncMock(
+        return_value={
+            "overall_health": "healthy",
+            "services": {
+                "test-service": {"status": "healthy", "response_time": 150, "last_check": datetime.now().isoformat()}
+            },
         }
-    })
-    monitor.check_service_health = AsyncMock(return_value={
-        "status": "healthy",
-        "response_time": 120,
-        "timestamp": datetime.now().isoformat()
-    })
+    )
+    monitor.check_service_health = AsyncMock(
+        return_value={"status": "healthy", "response_time": 120, "timestamp": datetime.now().isoformat()}
+    )
     return monitor
 
 
@@ -89,19 +87,12 @@ def mock_health_monitor():
 def mock_api_catalog():
     """Mock APICatalogManager for testing."""
     catalog = Mock(spec=APICatalogManager)
-    catalog.get_catalog = AsyncMock(return_value={
-        "services": ["test-service"],
-        "total_endpoints": 5,
-        "last_updated": datetime.now().isoformat()
-    })
-    catalog.search_apis = AsyncMock(return_value=[
-        {
-            "service": "test-service",
-            "endpoint": "/api/test",
-            "method": "GET",
-            "summary": "Test endpoint"
-        }
-    ])
+    catalog.get_catalog = AsyncMock(
+        return_value={"services": ["test-service"], "total_endpoints": 5, "last_updated": datetime.now().isoformat()}
+    )
+    catalog.search_apis = AsyncMock(
+        return_value=[{"service": "test-service", "endpoint": "/api/test", "method": "GET", "summary": "Test endpoint"}]
+    )
     return catalog
 
 
@@ -109,16 +100,12 @@ def mock_api_catalog():
 def mock_user_manager():
     """Mock UserManager for testing."""
     manager = Mock(spec=UserManager)
-    manager.authenticate_user = AsyncMock(return_value=Mock(
-        user_id="test_user",
-        username="testuser",
-        role=Mock(value="developer")
-    ))
-    manager.get_user = AsyncMock(return_value=Mock(
-        user_id="test_user",
-        username="testuser",
-        role=Mock(value="developer")
-    ))
+    manager.authenticate_user = AsyncMock(
+        return_value=Mock(user_id="test_user", username="testuser", role=Mock(value="developer"))
+    )
+    manager.get_user = AsyncMock(
+        return_value=Mock(user_id="test_user", username="testuser", role=Mock(value="developer"))
+    )
     return manager
 
 
@@ -136,11 +123,7 @@ def sample_openapi_spec():
     """Sample OpenAPI specification for testing."""
     return {
         "openapi": "3.0.0",
-        "info": {
-            "title": "Test API",
-            "version": "1.0.0",
-            "description": "Test API for unit testing"
-        },
+        "info": {"title": "Test API", "version": "1.0.0", "description": "Test API for unit testing"},
         "servers": [{"url": "http://localhost:8000"}],
         "paths": {
             "/health": {
@@ -149,38 +132,21 @@ def sample_openapi_spec():
                     "responses": {
                         "200": {
                             "description": "Healthy",
-                            "content": {
-                                "application/json": {
-                                    "schema": {"type": "object"}
-                                }
-                            }
+                            "content": {"application/json": {"schema": {"type": "object"}}},
                         }
-                    }
+                    },
                 }
             },
             "/users": {
                 "get": {
                     "summary": "Get users",
-                    "parameters": [
-                        {
-                            "name": "limit",
-                            "in": "query",
-                            "schema": {"type": "integer", "default": 10}
-                        }
-                    ],
+                    "parameters": [{"name": "limit", "in": "query", "schema": {"type": "integer", "default": 10}}],
                     "responses": {
                         "200": {
                             "description": "Users list",
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "array",
-                                        "items": {"type": "object"}
-                                    }
-                                }
-                            }
+                            "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object"}}}},
                         }
-                    }
+                    },
                 },
                 "post": {
                     "summary": "Create user",
@@ -189,20 +155,15 @@ def sample_openapi_spec():
                             "application/json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {
-                                        "name": {"type": "string"},
-                                        "email": {"type": "string"}
-                                    }
+                                    "properties": {"name": {"type": "string"}, "email": {"type": "string"}},
                                 }
                             }
                         }
                     },
-                    "responses": {
-                        "201": {"description": "User created"}
-                    }
-                }
-            }
-        }
+                    "responses": {"201": {"description": "User created"}},
+                },
+            },
+        },
     }
 
 
@@ -215,7 +176,7 @@ def sample_api_request():
         "method": "GET",
         "headers": {"Authorization": "Bearer test-token"},
         "params": {"limit": 10},
-        "body": None
+        "body": None,
     }
 
 
@@ -230,7 +191,7 @@ def sample_usage_data():
             "method": "GET",
             "response_time": 150 + i * 10,
             "status_code": 200,
-            "user_id": f"user_{i}"
+            "user_id": f"user_{i}",
         }
         for i in range(10)
     ]
@@ -248,7 +209,7 @@ def sample_error_data():
             "error_type": "validation_error",
             "error_message": f"Validation error {i}",
             "status_code": 400,
-            "user_id": f"user_{i}"
+            "user_id": f"user_{i}",
         }
         for i in range(5)
     ]
@@ -263,14 +224,14 @@ def sample_service_topology():
             {"from": "api-gateway", "to": "user-service", "calls": 150},
             {"from": "api-gateway", "to": "auth-service", "calls": 200},
             {"from": "user-service", "to": "data-service", "calls": 100},
-            {"from": "auth-service", "to": "data-service", "calls": 50}
+            {"from": "auth-service", "to": "data-service", "calls": 50},
         ],
         "health_status": {
             "api-gateway": "healthy",
             "user-service": "healthy",
             "auth-service": "degraded",
-            "data-service": "healthy"
-        }
+            "data-service": "healthy",
+        },
     }
 
 
@@ -285,8 +246,8 @@ def sample_security_events():
             "source_ip": f"192.168.1.{i}",
             "user_id": f"user_{i}" if i % 3 == 0 else None,
             "description": f"Security event {i}",
-            "timestamp": datetime.now() - timedelta(minutes=i*5),
-            "confidence_score": 0.8
+            "timestamp": datetime.now() - timedelta(minutes=i * 5),
+            "confidence_score": 0.8,
         }
         for i in range(10)
     ]
@@ -295,6 +256,7 @@ def sample_security_events():
 # ============================================================================
 # ASYNC TEST UTILITIES
 # ============================================================================
+
 
 @pytest.fixture
 def event_loop():
@@ -320,6 +282,7 @@ async def async_client():
 # TEST CONFIGURATION
 # ============================================================================
 
+
 @pytest.fixture
 def test_config():
     """Test configuration override."""
@@ -335,6 +298,7 @@ def test_config():
 # ============================================================================
 # CLEANUP FIXTURES
 # ============================================================================
+
 
 @pytest.fixture(autouse=True)
 async def cleanup_after_test():

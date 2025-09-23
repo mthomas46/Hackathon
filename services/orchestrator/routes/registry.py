@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Request
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
-from services.shared.core.constants_new import ErrorCodes
+from fastapi import APIRouter, Request
+
 from services.shared.core.config.config import get_config_value
+from services.shared.core.constants_new import ErrorCodes
+from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.integrations.clients.clients import ServiceClients
 
 router = APIRouter()
@@ -19,7 +20,9 @@ def _get_registry(request: Request) -> Dict[str, Dict[str, Any]]:
 
 @router.post("/registry/sync-peers")
 async def registry_sync_peers(request: Request):
-    peers = [p.strip() for p in (get_config_value("ORCHESTRATOR_PEERS", "", section="orchestrator").split(",")) if p.strip()]
+    peers = [
+        p.strip() for p in (get_config_value("ORCHESTRATOR_PEERS", "", section="orchestrator").split(",")) if p.strip()
+    ]
     sent = 0
     try:
         svc_client = ServiceClients(timeout=5)

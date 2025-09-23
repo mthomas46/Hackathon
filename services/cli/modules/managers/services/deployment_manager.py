@@ -5,32 +5,25 @@ service scaling, rolling updates, canary deployments, traffic management,
 and container orchestration controls.
 """
 
-from typing import Dict, Any, List, Optional, Tuple
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
+import asyncio
 import json
 import os
-import yaml
-import subprocess
-from ...base.base_manager import BaseManager
-import asyncio
-import time
-from pathlib import Path
-from collections import defaultdict
 import re
+import subprocess
+import time
+from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
-    
-from ...shared_utils import (
-    
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+import yaml
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+from rich.text import Text
+
+from ...base.base_manager import BaseManager
+from ...shared_utils import add_menu_rows, create_menu_table, get_cli_clients, log_cli_metrics, print_panel
 
 
 class DeploymentManager(BaseManager):
@@ -43,11 +36,7 @@ class DeploymentManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for deployment operations."""
-        return [
-            ("1", "Deployment Management"),
-            ("2", "Scaling Operations"),
-            ("3", "Monitoring & Health")
-        ]
+        return [("1", "Deployment Management"), ("2", "Scaling Operations"), ("3", "Monitoring & Health")]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -58,16 +47,19 @@ class DeploymentManager(BaseManager):
         """Main deployment controls menu."""
         while True:
             menu = create_menu_table("Deployment Controls", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Service Scaling (Scale services up/down, view current replicas)"),
-                ("2", "Rolling Updates (Zero-downtime service updates)"),
-                ("3", "Canary Deployments (Gradual traffic shifting)"),
-                ("4", "Service Mesh Traffic Management (Traffic routing and policies)"),
-                ("5", "Container Orchestration (Docker Compose management)"),
-                ("6", "Deployment Monitoring (Track deployment status and health)"),
-                ("7", "Rollback Management (Revert to previous deployments)"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Service Scaling (Scale services up/down, view current replicas)"),
+                    ("2", "Rolling Updates (Zero-downtime service updates)"),
+                    ("3", "Canary Deployments (Gradual traffic shifting)"),
+                    ("4", "Service Mesh Traffic Management (Traffic routing and policies)"),
+                    ("5", "Container Orchestration (Docker Compose management)"),
+                    ("6", "Deployment Monitoring (Track deployment status and health)"),
+                    ("7", "Rollback Management (Revert to previous deployments)"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -95,15 +87,18 @@ class DeploymentManager(BaseManager):
         """Service scaling submenu."""
         while True:
             menu = create_menu_table("Service Scaling", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Current Scaling Status"),
-                ("2", "Scale Individual Service"),
-                ("3", "Scale Multiple Services"),
-                ("4", "Auto-scaling Policies"),
-                ("5", "Scaling History"),
-                ("6", "Resource Usage Monitoring"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Current Scaling Status"),
+                    ("2", "Scale Individual Service"),
+                    ("3", "Scale Multiple Services"),
+                    ("4", "Auto-scaling Policies"),
+                    ("5", "Scaling History"),
+                    ("6", "Resource Usage Monitoring"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -135,7 +130,7 @@ class DeploymentManager(BaseManager):
             for compose_file in compose_files:
                 try:
                     # Get service definitions from compose file
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file, "r") as f:
                         compose_data = yaml.safe_load(f)
 
                     services = compose_data.get("services", {})
@@ -146,7 +141,7 @@ class DeploymentManager(BaseManager):
                             "current_replicas": replicas,
                             "desired_replicas": replicas,
                             "status": "stable",
-                            "source_file": compose_file.name
+                            "source_file": compose_file.name,
                         }
 
                 except Exception as e:
@@ -155,16 +150,12 @@ class DeploymentManager(BaseManager):
             # Try to get runtime status using docker-compose ps
             try:
                 result = subprocess.run(
-                    ["docker-compose", "ps", "--format", "json"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    cwd="."
+                    ["docker-compose", "ps", "--format", "json"], capture_output=True, text=True, timeout=30, cwd="."
                 )
 
                 if result.returncode == 0:
                     # Parse the JSON output to get actual running status
-                    lines = result.stdout.strip().split('\n')
+                    lines = result.stdout.strip().split("\n")
                     for line in lines:
                         if line.strip():
                             try:
@@ -183,7 +174,9 @@ class DeploymentManager(BaseManager):
                                 pass
 
             except (subprocess.TimeoutExpired, FileNotFoundError):
-                self.console.print("[yellow]Could not get runtime status - docker-compose may not be available[/yellow]")
+                self.console.print(
+                    "[yellow]Could not get runtime status - docker-compose may not be available[/yellow]"
+                )
 
             # Display scaling status
             if scaling_status:
@@ -195,19 +188,16 @@ class DeploymentManager(BaseManager):
                 table.add_column("Source", style="magenta")
 
                 for service_name, status in sorted(scaling_status.items()):
-                    status_color = {
-                        "running": "green",
-                        "stable": "blue",
-                        "stopped": "red",
-                        "error": "red"
-                    }.get(status["status"], "yellow")
+                    status_color = {"running": "green", "stable": "blue", "stopped": "red", "error": "red"}.get(
+                        status["status"], "yellow"
+                    )
 
                     table.add_row(
                         service_name,
                         str(status["current_replicas"]),
                         str(status["desired_replicas"]),
                         f"[{status_color}]{status['status'].upper()}[/{status_color}]",
-                        status.get("source_file", "unknown")
+                        status.get("source_file", "unknown"),
                     )
 
                 self.console.print(table)
@@ -241,7 +231,7 @@ class DeploymentManager(BaseManager):
 
             for compose_file in compose_files:
                 try:
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file, "r") as f:
                         compose_data = yaml.safe_load(f)
                     services = compose_data.get("services", {})
                     available_services.update(services.keys())
@@ -264,7 +254,10 @@ class DeploymentManager(BaseManager):
 
             new_replicas = int(new_replicas)
 
-            confirm = Confirm.ask(f"[bold red]Scale {service_name} from {current_replicas} to {new_replicas} replicas?[/bold red]", default=False)
+            confirm = Confirm.ask(
+                f"[bold red]Scale {service_name} from {current_replicas} to {new_replicas} replicas?[/bold red]",
+                default=False,
+            )
 
             if confirm:
                 # Update the compose file
@@ -278,7 +271,7 @@ class DeploymentManager(BaseManager):
                         "action": "scale",
                         "old_replicas": current_replicas,
                         "new_replicas": new_replicas,
-                        "status": "pending"
+                        "status": "pending",
                     }
                     self.scaling_history.append(scaling_record)
 
@@ -288,7 +281,11 @@ class DeploymentManager(BaseManager):
                     scaling_record["status"] = "completed" if success else "failed"
                     scaling_record["applied_at"] = self._get_timestamp()
 
-                    self.console.print(f"[green]✅ Service {service_name} scaled to {new_replicas} replicas[/green]" if success else f"[red]❌ Failed to scale {service_name}[/red]")
+                    self.console.print(
+                        f"[green]✅ Service {service_name} scaled to {new_replicas} replicas[/green]"
+                        if success
+                        else f"[red]❌ Failed to scale {service_name}[/red]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to update compose file[/red]")
             else:
@@ -309,7 +306,9 @@ class DeploymentManager(BaseManager):
     async def auto_scaling_policies(self):
         """Configure auto-scaling policies."""
         try:
-            self.console.print("[yellow]Auto-scaling policies would configure automatic scaling based on metrics[/yellow]")
+            self.console.print(
+                "[yellow]Auto-scaling policies would configure automatic scaling based on metrics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -331,13 +330,15 @@ class DeploymentManager(BaseManager):
 
             for record in self.scaling_history[-20:]:  # Show last 20
                 old_new = f"{record['old_replicas']} → {record['new_replicas']}"
-                status_color = "green" if record["status"] == "completed" else "red" if record["status"] == "failed" else "yellow"
+                status_color = (
+                    "green" if record["status"] == "completed" else "red" if record["status"] == "failed" else "yellow"
+                )
                 table.add_row(
                     record["timestamp"],
                     record["service"],
                     record["action"],
                     old_new,
-                    f"[{status_color}]{record['status'].upper()}[/{status_color}]"
+                    f"[{status_color}]{record['status'].upper()}[/{status_color}]",
                 )
 
             self.console.print(table)
@@ -348,7 +349,9 @@ class DeploymentManager(BaseManager):
     async def resource_usage_monitoring(self):
         """Monitor resource usage for scaling decisions."""
         try:
-            self.console.print("[yellow]Resource usage monitoring would show CPU, memory, and other metrics for scaling decisions[/yellow]")
+            self.console.print(
+                "[yellow]Resource usage monitoring would show CPU, memory, and other metrics for scaling decisions[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -358,15 +361,18 @@ class DeploymentManager(BaseManager):
         """Rolling updates submenu."""
         while True:
             menu = create_menu_table("Rolling Updates", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Start Rolling Update"),
-                ("2", "Monitor Update Progress"),
-                ("3", "Pause/Resume Update"),
-                ("4", "Rollback Update"),
-                ("5", "Update Strategies"),
-                ("6", "Update History"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Start Rolling Update"),
+                    ("2", "Monitor Update Progress"),
+                    ("3", "Pause/Resume Update"),
+                    ("4", "Rollback Update"),
+                    ("5", "Update Strategies"),
+                    ("6", "Update History"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -393,9 +399,13 @@ class DeploymentManager(BaseManager):
         try:
             service_name = Prompt.ask("[bold cyan]Service to update[/bold cyan]")
             image_tag = Prompt.ask("[bold cyan]New image tag/version[/bold cyan]")
-            update_strategy = Prompt.ask("[bold cyan]Update strategy[/bold cyan]", choices=["rolling", "blue-green", "canary"], default="rolling")
+            update_strategy = Prompt.ask(
+                "[bold cyan]Update strategy[/bold cyan]", choices=["rolling", "blue-green", "canary"], default="rolling"
+            )
 
-            confirm = Confirm.ask(f"[bold red]Start {update_strategy} update of {service_name} to {image_tag}?[/bold red]", default=False)
+            confirm = Confirm.ask(
+                f"[bold red]Start {update_strategy} update of {service_name} to {image_tag}?[/bold red]", default=False
+            )
 
             if confirm:
                 # Record deployment
@@ -405,7 +415,7 @@ class DeploymentManager(BaseManager):
                     "action": "rolling_update",
                     "strategy": update_strategy,
                     "new_version": image_tag,
-                    "status": "in_progress"
+                    "status": "in_progress",
                 }
                 self.deployment_history.append(deployment_record)
 
@@ -423,7 +433,9 @@ class DeploymentManager(BaseManager):
                 deployment_record["status"] = "completed" if success else "failed"
                 deployment_record["completed_at"] = self._get_timestamp()
 
-                self.console.print(f"[green]✅ Rolling update completed[/green]" if success else "[red]❌ Rolling update failed[/red]")
+                self.console.print(
+                    f"[green]✅ Rolling update completed[/green]" if success else "[red]❌ Rolling update failed[/red]"
+                )
             else:
                 self.console.print("[yellow]Update cancelled[/yellow]")
 
@@ -464,18 +476,18 @@ class DeploymentManager(BaseManager):
                 "rolling": {
                     "description": "Gradually replace old containers with new ones",
                     "pros": ["Zero downtime", "Resource efficient"],
-                    "cons": ["Slower", "Complex rollback"]
+                    "cons": ["Slower", "Complex rollback"],
                 },
                 "blue-green": {
                     "description": "Deploy new version alongside old, then switch traffic",
                     "pros": ["Instant rollback", "Thorough testing"],
-                    "cons": ["Double resources", "Complex routing"]
+                    "cons": ["Double resources", "Complex routing"],
                 },
                 "canary": {
                     "description": "Deploy to subset of instances, gradually increase traffic",
                     "pros": ["Risk mitigation", "A/B testing"],
-                    "cons": ["Complex traffic management", "Longer deployment"]
-                }
+                    "cons": ["Complex traffic management", "Longer deployment"],
+                },
             }
 
             table = Table(title="Update Strategies")
@@ -510,14 +522,16 @@ class DeploymentManager(BaseManager):
             table.add_column("Status", style="red")
 
             for record in self.deployment_history[-20:]:
-                status_color = "green" if record["status"] == "completed" else "red" if record["status"] == "failed" else "yellow"
+                status_color = (
+                    "green" if record["status"] == "completed" else "red" if record["status"] == "failed" else "yellow"
+                )
                 table.add_row(
                     record["timestamp"],
                     record.get("service", "N/A"),
                     record.get("action", "N/A"),
                     record.get("strategy", "N/A"),
                     record.get("new_version", "N/A"),
-                    f"[{status_color}]{record['status'].upper()}[/{status_color}]"
+                    f"[{status_color}]{record['status'].upper()}[/{status_color}]",
                 )
 
             self.console.print(table)
@@ -529,15 +543,18 @@ class DeploymentManager(BaseManager):
         """Canary deployments submenu."""
         while True:
             menu = create_menu_table("Canary Deployments", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Start Canary Deployment"),
-                ("2", "Adjust Traffic Distribution"),
-                ("3", "Monitor Canary Metrics"),
-                ("4", "Promote/Abort Canary"),
-                ("5", "Canary History"),
-                ("6", "Canary Templates"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Start Canary Deployment"),
+                    ("2", "Adjust Traffic Distribution"),
+                    ("3", "Monitor Canary Metrics"),
+                    ("4", "Promote/Abort Canary"),
+                    ("5", "Canary History"),
+                    ("6", "Canary Templates"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -566,7 +583,10 @@ class DeploymentManager(BaseManager):
             new_image = Prompt.ask("[bold cyan]New image tag[/bold cyan]")
             canary_percentage = int(Prompt.ask("[bold cyan]Initial canary percentage[/bold cyan]", default="10"))
 
-            confirm = Confirm.ask(f"[bold red]Start canary deployment of {service_name} with {canary_percentage}% traffic?[/bold red]", default=False)
+            confirm = Confirm.ask(
+                f"[bold red]Start canary deployment of {service_name} with {canary_percentage}% traffic?[/bold red]",
+                default=False,
+            )
 
             if confirm:
                 canary_record = {
@@ -575,7 +595,7 @@ class DeploymentManager(BaseManager):
                     "action": "canary_start",
                     "new_image": new_image,
                     "canary_percentage": canary_percentage,
-                    "status": "in_progress"
+                    "status": "in_progress",
                 }
                 self.deployment_history.append(canary_record)
 
@@ -583,7 +603,11 @@ class DeploymentManager(BaseManager):
 
                 canary_record["status"] = "active" if success else "failed"
 
-                self.console.print(f"[green]✅ Canary deployment started for {service_name}[/green]" if success else f"[red]❌ Failed to start canary deployment[/red]")
+                self.console.print(
+                    f"[green]✅ Canary deployment started for {service_name}[/green]"
+                    if success
+                    else f"[red]❌ Failed to start canary deployment[/red]"
+                )
             else:
                 self.console.print("[yellow]Canary deployment cancelled[/yellow]")
 
@@ -639,15 +663,18 @@ class DeploymentManager(BaseManager):
         """Service mesh traffic management submenu."""
         while True:
             menu = create_menu_table("Traffic Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Traffic Routes"),
-                ("2", "Configure Traffic Policies"),
-                ("3", "Set up Load Balancing"),
-                ("4", "Configure Circuit Breakers"),
-                ("5", "Traffic Monitoring"),
-                ("6", "Service Mesh Status"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Traffic Routes"),
+                    ("2", "Configure Traffic Policies"),
+                    ("3", "Set up Load Balancing"),
+                    ("4", "Configure Circuit Breakers"),
+                    ("5", "Traffic Monitoring"),
+                    ("6", "Service Mesh Status"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -678,7 +705,7 @@ class DeploymentManager(BaseManager):
 
             for compose_file in compose_files:
                 try:
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file, "r") as f:
                         compose_data = yaml.safe_load(f)
 
                     services = compose_data.get("services", {})
@@ -749,7 +776,9 @@ class DeploymentManager(BaseManager):
     async def service_mesh_status(self):
         """View service mesh status."""
         try:
-            self.console.print("[yellow]Service mesh status would show mesh component health and configuration[/yellow]")
+            self.console.print(
+                "[yellow]Service mesh status would show mesh component health and configuration[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -759,15 +788,18 @@ class DeploymentManager(BaseManager):
         """Container orchestration submenu."""
         while True:
             menu = create_menu_table("Container Orchestration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Docker Compose Status"),
-                ("2", "Start/Stop Services"),
-                ("3", "Service Logs"),
-                ("4", "Container Resource Usage"),
-                ("5", "Network Configuration"),
-                ("6", "Volume Management"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Docker Compose Status"),
+                    ("2", "Start/Stop Services"),
+                    ("3", "Service Logs"),
+                    ("4", "Container Resource Usage"),
+                    ("5", "Network Configuration"),
+                    ("6", "Volume Management"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -792,17 +824,11 @@ class DeploymentManager(BaseManager):
     async def docker_compose_status(self):
         """View Docker Compose status."""
         try:
-            result = subprocess.run(
-                ["docker-compose", "ps"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                cwd="."
-            )
+            result = subprocess.run(["docker-compose", "ps"], capture_output=True, text=True, timeout=30, cwd=".")
 
             if result.returncode == 0:
                 # Parse and display the status output
-                lines = result.stdout.split('\n')
+                lines = result.stdout.split("\n")
                 if lines:
                     content = "[bold]Docker Compose Status:[/bold]\n\n"
                     content += result.stdout
@@ -831,13 +857,7 @@ class DeploymentManager(BaseManager):
                 else:
                     cmd = ["docker-compose", action, service_name]
 
-                result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    cwd="."
-                )
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd=".")
 
                 if result.returncode == 0:
                     self.console.print(f"[green]✅ Successfully {action}ed {service_name}[/green]")
@@ -864,13 +884,7 @@ class DeploymentManager(BaseManager):
             else:
                 cmd = ["docker-compose", "logs", "--tail", lines]
 
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                cwd="."
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=".")
 
             if result.returncode == 0:
                 content = f"[bold]Service Logs ({service_name or 'all'} - last {lines} lines):[/bold]\n\n"
@@ -889,10 +903,16 @@ class DeploymentManager(BaseManager):
         """Monitor container resource usage."""
         try:
             result = subprocess.run(
-                ["docker", "stats", "--no-stream", "--format", "table {{.Container}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"],
+                [
+                    "docker",
+                    "stats",
+                    "--no-stream",
+                    "--format",
+                    "table {{.Container}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}",
+                ],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -915,7 +935,7 @@ class DeploymentManager(BaseManager):
 
             for compose_file in compose_files:
                 try:
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file, "r") as f:
                         compose_data = yaml.safe_load(f)
 
                     networks = compose_data.get("networks", {})
@@ -944,12 +964,7 @@ class DeploymentManager(BaseManager):
     async def volume_management(self):
         """Manage Docker volumes."""
         try:
-            result = subprocess.run(
-                ["docker", "volume", "ls"],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(["docker", "volume", "ls"], capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
                 content = "[bold]Docker Volumes:[/bold]\n\n"
@@ -968,14 +983,17 @@ class DeploymentManager(BaseManager):
         """Deployment monitoring submenu."""
         while True:
             menu = create_menu_table("Deployment Monitoring", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Deployment Status Overview"),
-                ("2", "Service Health Monitoring"),
-                ("3", "Deployment Metrics"),
-                ("4", "Alert Management"),
-                ("5", "Performance Monitoring"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Deployment Status Overview"),
+                    ("2", "Service Health Monitoring"),
+                    ("3", "Deployment Metrics"),
+                    ("4", "Alert Management"),
+                    ("5", "Performance Monitoring"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -1044,14 +1062,17 @@ class DeploymentManager(BaseManager):
         """Rollback management submenu."""
         while True:
             menu = create_menu_table("Rollback Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Rollback History"),
-                ("2", "Initiate Rollback"),
-                ("3", "Rollback Strategies"),
-                ("4", "Rollback Validation"),
-                ("5", "Emergency Rollback"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Rollback History"),
+                    ("2", "Initiate Rollback"),
+                    ("3", "Rollback Strategies"),
+                    ("4", "Rollback Validation"),
+                    ("5", "Emergency Rollback"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -1090,7 +1111,7 @@ class DeploymentManager(BaseManager):
                         record.get("service", "N/A"),
                         record.get("from_version", "N/A"),
                         record.get("to_version", "N/A"),
-                        record.get("reason", "N/A")
+                        record.get("reason", "N/A"),
                     )
 
                 self.console.print(table)
@@ -1114,7 +1135,7 @@ class DeploymentManager(BaseManager):
                     "service": service_name,
                     "action": "rollback",
                     "reason": reason,
-                    "status": "in_progress"
+                    "status": "in_progress",
                 }
                 self.deployment_history.append(rollback_record)
 
@@ -1123,7 +1144,11 @@ class DeploymentManager(BaseManager):
                 rollback_record["status"] = "completed" if success else "failed"
                 rollback_record["completed_at"] = self._get_timestamp()
 
-                self.console.print(f"[green]✅ Rollback completed for {service_name}[/green]" if success else f"[red]❌ Rollback failed for {service_name}[/red]")
+                self.console.print(
+                    f"[green]✅ Rollback completed for {service_name}[/green]"
+                    if success
+                    else f"[red]❌ Rollback failed for {service_name}[/red]"
+                )
             else:
                 self.console.print("[yellow]Rollback cancelled[/yellow]")
 
@@ -1137,7 +1162,7 @@ class DeploymentManager(BaseManager):
                 "immediate": "Immediate rollback to previous version",
                 "gradual": "Gradual rollback with traffic shifting",
                 "blue-green": "Switch back to blue environment",
-                "backup": "Restore from backup image"
+                "backup": "Restore from backup image",
             }
 
             table = Table(title="Rollback Strategies")
@@ -1166,7 +1191,10 @@ class DeploymentManager(BaseManager):
         try:
             service_name = Prompt.ask("[bold cyan]Service for emergency rollback[/bold cyan]")
 
-            confirm = Confirm.ask(f"[bold red]🚨 EMERGENCY ROLLBACK for {service_name}? This will immediately stop the service and revert![/bold red]", default=False)
+            confirm = Confirm.ask(
+                f"[bold red]🚨 EMERGENCY ROLLBACK for {service_name}? This will immediately stop the service and revert![/bold red]",
+                default=False,
+            )
 
             if confirm:
                 emergency_record = {
@@ -1174,7 +1202,7 @@ class DeploymentManager(BaseManager):
                     "service": service_name,
                     "action": "emergency_rollback",
                     "reason": "Emergency rollback requested",
-                    "status": "in_progress"
+                    "status": "in_progress",
                 }
                 self.deployment_history.append(emergency_record)
 
@@ -1182,7 +1210,11 @@ class DeploymentManager(BaseManager):
 
                 emergency_record["status"] = "completed" if success else "failed"
 
-                self.console.print(f"[green]🚨 Emergency rollback completed for {service_name}[/green]" if success else f"[red]❌ Emergency rollback failed[/red]")
+                self.console.print(
+                    f"[green]🚨 Emergency rollback completed for {service_name}[/green]"
+                    if success
+                    else f"[red]❌ Emergency rollback failed[/red]"
+                )
             else:
                 self.console.print("[yellow]Emergency rollback cancelled[/yellow]")
 
@@ -1200,7 +1232,7 @@ class DeploymentManager(BaseManager):
             "docker-compose.prod.yml",
             "docker-compose.override.yml",
             "docker-compose.services.yml",
-            "docker-compose.infrastructure.yml"
+            "docker-compose.infrastructure.yml",
         ]
 
         compose_files = []
@@ -1218,7 +1250,7 @@ class DeploymentManager(BaseManager):
 
             for compose_file in compose_files:
                 try:
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file, "r") as f:
                         compose_data = yaml.safe_load(f)
 
                     services = compose_data.get("services", {})
@@ -1227,7 +1259,7 @@ class DeploymentManager(BaseManager):
                             services[service_name]["deploy"] = {}
                         services[service_name]["deploy"]["replicas"] = replicas
 
-                        with open(compose_file, 'w') as f:
+                        with open(compose_file, "w") as f:
                             yaml.dump(compose_data, f, default_flow_style=False)
 
                         return True
@@ -1245,13 +1277,7 @@ class DeploymentManager(BaseManager):
         try:
             cmd = ["docker-compose", "up", "-d", "--scale", f"{service_name}={replicas}", service_name]
 
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120,
-                cwd="."
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=".")
 
             return result.returncode == 0
 
@@ -1347,7 +1373,9 @@ class DeploymentManager(BaseManager):
     async def scale_service_from_cli(self, service_name: str, replicas: int):
         """Scale service for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Scaling {service_name} to {replicas} replicas...[/bold green]") as status:
+            with self.console.status(
+                f"[bold green]Scaling {service_name} to {replicas} replicas...[/bold green]"
+            ) as status:
                 updated = await self._update_service_replicas(service_name, replicas)
                 if updated:
                     success = await self._apply_scaling(service_name, replicas)
@@ -1371,7 +1399,9 @@ class DeploymentManager(BaseManager):
     async def start_deployment_from_cli(self, service_name: str, image_tag: str, strategy: str = "rolling"):
         """Start deployment for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Starting {strategy} deployment of {service_name}...[/bold green]") as status:
+            with self.console.status(
+                f"[bold green]Starting {strategy} deployment of {service_name}...[/bold green]"
+            ) as status:
                 success = await self._perform_rolling_update(service_name, image_tag, strategy)
                 if success:
                     self.console.print(f"[green]✅ {strategy.title()} deployment completed for {service_name}[/green]")

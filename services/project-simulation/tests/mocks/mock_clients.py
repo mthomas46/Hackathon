@@ -6,9 +6,9 @@ test behavior and reliable service isolation.
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional, Union
-from unittest.mock import AsyncMock
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+from unittest.mock import AsyncMock
 
 
 class MockEcosystemClient:
@@ -30,12 +30,7 @@ class MockEcosystemClient:
             raise Exception(f"Mock {self.service_name} client failure")
 
         # Record the call
-        self.calls.append({
-            "method": method,
-            "endpoint": endpoint,
-            "kwargs": kwargs,
-            "timestamp": datetime.now()
-        })
+        self.calls.append({"method": method, "endpoint": endpoint, "kwargs": kwargs, "timestamp": datetime.now()})
 
         # Return override if set, otherwise default response
         if self.response_override:
@@ -71,8 +66,9 @@ class MockAnalysisServiceClient(MockEcosystemClient):
 
     async def get_code_quality_metrics(self, project_id: str, time_period_days: int) -> Dict[str, Any]:
         """Mock code quality metrics retrieval."""
-        return await self._make_request("GET", f"/projects/{project_id}/metrics/quality",
-                                      time_period_days=time_period_days)
+        return await self._make_request(
+            "GET", f"/projects/{project_id}/metrics/quality", time_period_days=time_period_days
+        )
 
 
 class MockInterpreterClient(MockEcosystemClient):
@@ -175,7 +171,9 @@ class MockMockDataGeneratorClient(MockEcosystemClient):
 
     async def generate_timeline_events(self, timeline_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         """Mock timeline events generation."""
-        return await self._make_request("POST", "/simulation/timeline-events", timeline_config=timeline_config, **kwargs)
+        return await self._make_request(
+            "POST", "/simulation/timeline-events", timeline_config=timeline_config, **kwargs
+        )
 
     async def generate_team_activities(self, team_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         """Mock team activities generation."""
@@ -183,7 +181,9 @@ class MockMockDataGeneratorClient(MockEcosystemClient):
 
     async def generate_ecosystem_scenario(self, scenario_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         """Mock ecosystem scenario generation."""
-        return await self._make_request("POST", "/simulation/ecosystem-scenario", scenario_config=scenario_config, **kwargs)
+        return await self._make_request(
+            "POST", "/simulation/ecosystem-scenario", scenario_config=scenario_config, **kwargs
+        )
 
 
 class MockEcosystemClients:
@@ -204,7 +204,7 @@ class MockEcosystemClients:
             "doc_store": self.doc_store,
             "llm_gateway": self.llm_gateway,
             "notification_service": self.notification_service,
-            "mock_data_generator": self.mock_data_generator
+            "mock_data_generator": self.mock_data_generator,
         }
 
     def __getitem__(self, key: str) -> MockEcosystemClient:
@@ -316,40 +316,28 @@ MOCK_RESPONSES = {
         "status": "success",
         "overall_score": 0.85,
         "issues": [],
-        "recommendations": ["Good quality documentation"]
+        "recommendations": ["Good quality documentation"],
     },
-    "failed_analysis": {
-        "status": "error",
-        "error": "Analysis service unavailable"
-    },
-    "successful_generation": {
-        "content": "Mock generated content",
-        "metadata": {"quality_score": 0.9}
-    },
-    "successful_storage": {
-        "document_id": "mock_doc_001",
-        "status": "stored"
-    },
-    "successful_notification": {
-        "notification_id": "mock_notif_001",
-        "status": "sent"
-    }
+    "failed_analysis": {"status": "error", "error": "Analysis service unavailable"},
+    "successful_generation": {"content": "Mock generated content", "metadata": {"quality_score": 0.9}},
+    "successful_storage": {"document_id": "mock_doc_001", "status": "stored"},
+    "successful_notification": {"notification_id": "mock_notif_001", "status": "sent"},
 }
 
 
 __all__ = [
-    'MockEcosystemClient',
-    'MockAnalysisServiceClient',
-    'MockInterpreterClient',
-    'MockDocStoreClient',
-    'MockLLMGatewayClient',
-    'MockNotificationServiceClient',
-    'MockMockDataGeneratorClient',
-    'MockEcosystemClients',
-    'create_mock_ecosystem_clients',
-    'create_mock_analysis_client',
-    'create_mock_interpreter_client',
-    'create_mock_doc_store_client',
-    'create_mock_llm_gateway_client',
-    'MOCK_RESPONSES'
+    "MockEcosystemClient",
+    "MockAnalysisServiceClient",
+    "MockInterpreterClient",
+    "MockDocStoreClient",
+    "MockLLMGatewayClient",
+    "MockNotificationServiceClient",
+    "MockMockDataGeneratorClient",
+    "MockEcosystemClients",
+    "create_mock_ecosystem_clients",
+    "create_mock_analysis_client",
+    "create_mock_interpreter_client",
+    "create_mock_doc_store_client",
+    "create_mock_llm_gateway_client",
+    "MOCK_RESPONSES",
 ]

@@ -2,8 +2,9 @@
 
 Handles the complex logic for report generation endpoints.
 """
+
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 from services.shared.core.models.models import Finding
 
@@ -45,7 +46,7 @@ class ReportHandlers:
                             source_refs=[{"id": "readme:main", "type": "document"}],
                             evidence=["Content overlap below threshold"],
                             suggestion="Review and synchronize documentation to reduce drift",
-                            score=70
+                            score=70,
                         ),
                         Finding(
                             id="missing:endpoint:orders",
@@ -56,8 +57,8 @@ class ReportHandlers:
                             source_refs=[{"id": "api:orders", "type": "endpoint"}],
                             evidence=["Endpoint exists but not in docs"],
                             suggestion="Add endpoint documentation",
-                            score=85
-                        )
+                            score=85,
+                        ),
                     ]
 
                 report = generate_trends_report(findings, time_window)
@@ -67,9 +68,9 @@ class ReportHandlers:
                     "type": "trends",
                     "trend_data": [
                         {"date": "2024-01-01", "count": report.get("total_findings", 0)},
-                        {"date": "2024-01-02", "count": max(0, report.get("total_findings", 0) - 1)}
+                        {"date": "2024-01-02", "count": max(0, report.get("total_findings", 0) - 1)},
                     ],
-                    **report
+                    **report,
                 }
 
             elif req.kind == "life_of_ticket":
@@ -81,7 +82,7 @@ class ReportHandlers:
                     "current_stage": "Review",
                     "time_in_stage": "2 days",
                     "blockers": [],
-                    "recommendations": ["Consider code review completion"]
+                    "recommendations": ["Consider code review completion"],
                 }
 
             elif req.kind == "pr_confidence":
@@ -90,21 +91,17 @@ class ReportHandlers:
                 report = {
                     "pr_id": pr_id,
                     "confidence_score": 0.85,
-                    "factors": {
-                        "documentation_updated": True,
-                        "tests_added": True,
-                        "code_review_complete": False
-                    },
+                    "factors": {"documentation_updated": True, "tests_added": True, "code_review_complete": False},
                     "risks": ["Missing code review"],
-                    "recommendations": ["Complete code review before merge"]
+                    "recommendations": ["Complete code review before merge"],
                 }
 
             else:
                 from services.shared.utilities.error_handling import ValidationException
+
                 supported_types = ["summary", "trends", "life_of_ticket", "pr_confidence"]
                 raise ValidationException(
-                    f"Unsupported report type: {req.kind}",
-                    {"kind": [f"Must be one of: {', '.join(supported_types)}"]}
+                    f"Unsupported report type: {req.kind}", {"kind": [f"Must be one of: {', '.join(supported_types)}"]}
                 )
 
             return report
@@ -118,14 +115,15 @@ class ReportHandlers:
                     "summary": "Mock report for testing",
                     "total_findings": 5,
                     "severity_breakdown": {"high": 2, "medium": 2, "low": 1},
-                    "recommendations": ["Test recommendation"]
+                    "recommendations": ["Test recommendation"],
                 }
 
             from services.shared.utilities.error_handling import ServiceException
+
             raise ServiceException(
                 "Report generation failed",
                 error_code="REPORT_GENERATION_FAILED",
-                details={"error": str(e), "report_type": req.kind}
+                details={"error": str(e), "report_type": req.kind},
             )
 
 

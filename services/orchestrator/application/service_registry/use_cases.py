@@ -1,14 +1,12 @@
 """Use Cases for Service Registry"""
 
-from typing import Optional, List
+from typing import List, Optional
 
+from ...domain.service_registry import Service, ServiceDiscoveryService, ServiceId, ServiceRegistrationService
+from ...shared.application import UseCase
+from ...shared.domain import DomainResult
 from .commands import *
 from .queries import *
-from ...domain.service_registry import (
-    Service, ServiceId, ServiceDiscoveryService, ServiceRegistrationService
-)
-from ...shared.domain import DomainResult
-from ...shared.application import UseCase
 
 
 class RegisterServiceUseCase(UseCase):
@@ -29,7 +27,7 @@ class RegisterServiceUseCase(UseCase):
                 openapi_url=command.openapi_url,
                 capabilities=command.capabilities,
                 endpoints=command.endpoints,
-                metadata=command.metadata
+                metadata=command.metadata,
             )
             return DomainResult.success_result(service, "Service registered successfully")
         except Exception as e:
@@ -63,10 +61,7 @@ class UpdateServiceStatusUseCase(UseCase):
     async def execute(self, command: UpdateServiceStatusCommand) -> DomainResult[bool]:
         """Execute the update service status use case."""
         try:
-            success = self.registration_service.update_service_status(
-                command.service_id,
-                command.status
-            )
+            success = self.registration_service.update_service_status(command.service_id, command.status)
             if success:
                 return DomainResult.success_result(True, "Service status updated successfully")
             else:

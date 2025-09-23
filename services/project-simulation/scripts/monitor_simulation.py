@@ -9,14 +9,15 @@ Usage:
     python monitor_simulation.py --list [--host HOST] [--port PORT]
 """
 
-import sys
-import os
 import argparse
-import requests
 import json
+import os
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
+import requests
 
 # Add the project root to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -36,17 +37,21 @@ class SimulationMonitor:
         self.logger = get_simulation_logger()
 
         # Color codes
-        self.colors = {
-            'red': '\033[31m',
-            'green': '\033[32m',
-            'yellow': '\033[33m',
-            'blue': '\033[34m',
-            'magenta': '\033[35m',
-            'cyan': '\033[36m',
-            'white': '\033[37m',
-            'bold': '\033[1m',
-            'reset': '\033[0m'
-        } if use_color else {k: '' for k in ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bold', 'reset']}
+        self.colors = (
+            {
+                "red": "\033[31m",
+                "green": "\033[32m",
+                "yellow": "\033[33m",
+                "blue": "\033[34m",
+                "magenta": "\033[35m",
+                "cyan": "\033[36m",
+                "white": "\033[37m",
+                "bold": "\033[1m",
+                "reset": "\033[0m",
+            }
+            if use_color
+            else {k: "" for k in ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "bold", "reset"]}
+        )
 
     def colorize(self, text: str, color: str) -> str:
         """Colorize text if colors are enabled."""
@@ -148,17 +153,13 @@ class SimulationMonitor:
             "completed": "green",
             "failed": "red",
             "pending": "yellow",
-            "paused": "yellow"
+            "paused": "yellow",
         }
 
         status_color = status_colors.get(status, "white")
-        status_icon = {
-            "running": "🔄",
-            "completed": "✅",
-            "failed": "❌",
-            "pending": "⏳",
-            "paused": "⏸️"
-        }.get(status, "❓")
+        status_icon = {"running": "🔄", "completed": "✅", "failed": "❌", "pending": "⏳", "paused": "⏸️"}.get(
+            status, "❓"
+        )
 
         # Format elapsed time
         minutes, seconds = divmod(int(elapsed_time), 60)
@@ -170,10 +171,14 @@ class SimulationMonitor:
         bar = "█" * filled + "░" * (bar_width - filled)
 
         # Display status line
-        print(f"\r{status_icon} Status: {self.colorize(status.upper(), status_color)} | "
-              f"Progress: [{bar}] {progress:5.1f}% | "
-              f"Time: {time_str} | "
-              f"Phase: {data.get('current_phase', 'N/A')}", end="", flush=True)
+        print(
+            f"\r{status_icon} Status: {self.colorize(status.upper(), status_color)} | "
+            f"Progress: [{bar}] {progress:5.1f}% | "
+            f"Time: {time_str} | "
+            f"Phase: {data.get('current_phase', 'N/A')}",
+            end="",
+            flush=True,
+        )
 
         # Show completion message
         if status in ["completed", "failed"]:
@@ -195,13 +200,14 @@ class SimulationMonitor:
         """Stop monitoring a simulation."""
         print(f"\n📡 Stopping terminal UI monitoring...")
 
-        response = self.make_request("POST", f"/api/v1/simulations/{simulation_id}/ui/stop",
-                                   json={"success": True})
+        response = self.make_request("POST", f"/api/v1/simulations/{simulation_id}/ui/stop", json={"success": True})
 
         if response.get("success"):
             print(f"✅ {self.colorize('Terminal monitoring stopped successfully!', 'green')}")
         else:
-            print(f"⚠️  {self.colorize('Warning', 'yellow')}: Could not stop monitoring - {response.get('error', 'Unknown error')}")
+            print(
+                f"⚠️  {self.colorize('Warning', 'yellow')}: Could not stop monitoring - {response.get('error', 'Unknown error')}"
+            )
 
     def show_help(self) -> None:
         """Show help information."""
@@ -238,48 +244,23 @@ Examples:
   python monitor_simulation.py abc-123-def
   python monitor_simulation.py abc-123-def --host 192.168.1.100 --port 8080
   python monitor_simulation.py --list --no-color
-        """
+        """,
     )
 
-    parser.add_argument(
-        "simulation_id",
-        nargs="?",
-        help="Simulation ID to monitor"
-    )
+    parser.add_argument("simulation_id", nargs="?", help="Simulation ID to monitor")
 
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="API host (default: localhost)"
-    )
+    parser.add_argument("--host", default="localhost", help="API host (default: localhost)")
 
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=5075,
-        help="API port (default: 5075)"
-    )
+    parser.add_argument("--port", type=int, default=5075, help="API port (default: 5075)")
 
-    parser.add_argument(
-        "--no-color",
-        action="store_true",
-        help="Disable colored output"
-    )
+    parser.add_argument("--no-color", action="store_true", help="Disable colored output")
 
-    parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List available simulations"
-    )
+    parser.add_argument("--list", action="store_true", help="List available simulations")
 
     args = parser.parse_args()
 
     # Initialize monitor
-    monitor = SimulationMonitor(
-        host=args.host,
-        port=args.port,
-        use_color=not args.no_color
-    )
+    monitor = SimulationMonitor(host=args.host, port=args.port, use_color=not args.no_color)
 
     try:
         if args.list:

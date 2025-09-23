@@ -2,14 +2,15 @@
 
 import asyncio
 import threading
-from typing import Any, Dict, List, Optional, Callable
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 
 class HealthStatus(Enum):
     """Health status levels."""
+
     HEALTHY = "healthy"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -19,6 +20,7 @@ class HealthStatus(Enum):
 @dataclass
 class PoolHealthMetrics:
     """Health metrics for connection pools."""
+
     pool_name: str
     status: HealthStatus
     timestamp: datetime
@@ -40,6 +42,7 @@ class PoolHealthMetrics:
 @dataclass
 class PoolHealthCheck:
     """Health check configuration for connection pools."""
+
     pool_name: str
     enabled: bool = True
     check_interval: int = 30  # seconds
@@ -55,16 +58,20 @@ class PoolHealthCheck:
             return HealthStatus.UNKNOWN
 
         # Critical conditions
-        if (metrics.connection_utilization >= self.critical_threshold or
-            metrics.error_rate >= self.max_error_rate * 2 or
-            metrics.idle_connections < 1 or
-            (metrics.acquire_time_p95 and metrics.acquire_time_p95 > self.max_acquire_time * 2)):
+        if (
+            metrics.connection_utilization >= self.critical_threshold
+            or metrics.error_rate >= self.max_error_rate * 2
+            or metrics.idle_connections < 1
+            or (metrics.acquire_time_p95 and metrics.acquire_time_p95 > self.max_acquire_time * 2)
+        ):
             return HealthStatus.CRITICAL
 
         # Warning conditions
-        if (metrics.connection_utilization >= self.warning_threshold or
-            metrics.error_rate >= self.max_error_rate or
-            (metrics.acquire_time_p95 and metrics.acquire_time_p95 > self.max_acquire_time)):
+        if (
+            metrics.connection_utilization >= self.warning_threshold
+            or metrics.error_rate >= self.max_error_rate
+            or (metrics.acquire_time_p95 and metrics.acquire_time_p95 > self.max_acquire_time)
+        ):
             return HealthStatus.WARNING
 
         return HealthStatus.HEALTHY
@@ -88,11 +95,7 @@ class ConnectionPoolMonitor:
         self.warning_pools = 0
         self.critical_pools = 0
 
-    def register_pool(
-        self,
-        pool_name: str,
-        check_config: Optional[PoolHealthCheck] = None
-    ) -> None:
+    def register_pool(self, pool_name: str, check_config: Optional[PoolHealthCheck] = None) -> None:
         """Register a connection pool for monitoring."""
         if check_config is None:
             check_config = PoolHealthCheck(pool_name=pool_name)
@@ -139,8 +142,7 @@ class ConnectionPoolMonitor:
             try:
                 # Use the minimum check interval
                 min_interval = min(
-                    (check.check_interval for check in self.health_checks.values() if check.enabled),
-                    default=30
+                    (check.check_interval for check in self.health_checks.values() if check.enabled), default=30
                 )
 
                 await asyncio.sleep(min_interval)
@@ -157,11 +159,7 @@ class ConnectionPoolMonitor:
             except Exception as e:
                 print(f"Error in monitoring loop: {e}")
 
-    async def _check_pool_health(
-        self,
-        pool_name: str,
-        check_config: PoolHealthCheck
-    ) -> None:
+    async def _check_pool_health(self, pool_name: str, check_config: PoolHealthCheck) -> None:
         """Check health of a specific pool."""
         try:
             # Get pool metrics (this would need to be implemented per pool type)
@@ -199,7 +197,7 @@ class ConnectionPoolMonitor:
             connection_utilization=0.625,  # 62.5%
             acquire_time_p95=0.5,
             error_rate=0.02,
-            issues=[]
+            issues=[],
         )
 
     def _update_health_stats(self, status: HealthStatus) -> None:
@@ -218,29 +216,24 @@ class ConnectionPoolMonitor:
             elif metrics.status == HealthStatus.CRITICAL:
                 self.critical_pools += 1
 
-    async def _check_for_alerts(
-        self,
-        pool_name: str,
-        metrics: PoolHealthMetrics,
-        new_status: HealthStatus
-    ) -> None:
+    async def _check_for_alerts(self, pool_name: str, metrics: PoolHealthMetrics, new_status: HealthStatus) -> None:
         """Check for status changes and send alerts."""
         previous_metrics = self.last_metrics.get(pool_name)
 
         if previous_metrics and previous_metrics.status != new_status:
             # Status changed - send alert
             alert_data = {
-                'pool_name': pool_name,
-                'previous_status': previous_metrics.status.value,
-                'new_status': new_status.value,
-                'timestamp': datetime.utcnow().isoformat(),
-                'metrics': {
-                    'active_connections': metrics.active_connections,
-                    'idle_connections': metrics.idle_connections,
-                    'connection_utilization': metrics.connection_utilization,
-                    'error_rate': metrics.error_rate
+                "pool_name": pool_name,
+                "previous_status": previous_metrics.status.value,
+                "new_status": new_status.value,
+                "timestamp": datetime.utcnow().isoformat(),
+                "metrics": {
+                    "active_connections": metrics.active_connections,
+                    "idle_connections": metrics.idle_connections,
+                    "connection_utilization": metrics.connection_utilization,
+                    "error_rate": metrics.error_rate,
                 },
-                'issues': metrics.issues
+                "issues": metrics.issues,
             }
 
             # Send alerts to all callbacks
@@ -263,13 +256,13 @@ class ConnectionPoolMonitor:
     def get_monitoring_stats(self) -> Dict[str, Any]:
         """Get monitoring statistics."""
         return {
-            'total_checks': self.total_checks,
-            'alerts_sent': self.alerts_sent,
-            'healthy_pools': self.healthy_pools,
-            'warning_pools': self.warning_pools,
-            'critical_pools': self.critical_pools,
-            'total_monitored_pools': len(self.health_checks),
-            'enabled_checks': sum(1 for check in self.health_checks.values() if check.enabled)
+            "total_checks": self.total_checks,
+            "alerts_sent": self.alerts_sent,
+            "healthy_pools": self.healthy_pools,
+            "warning_pools": self.warning_pools,
+            "critical_pools": self.critical_pools,
+            "total_monitored_pools": len(self.health_checks),
+            "enabled_checks": sum(1 for check in self.health_checks.values() if check.enabled),
         }
 
     def reset_stats(self) -> None:
@@ -306,14 +299,10 @@ class AlertManager:
 
     async def handle_alert(self, alert_data: Dict[str, Any]) -> None:
         """Handle incoming alert."""
-        alert_type = alert_data.get('alert_type', 'pool_health')
+        alert_type = alert_data.get("alert_type", "pool_health")
 
         # Store in history
-        self.alert_history.append({
-            'timestamp': datetime.utcnow().isoformat(),
-            'type': alert_type,
-            'data': alert_data
-        })
+        self.alert_history.append({"timestamp": datetime.utcnow().isoformat(), "type": alert_type, "data": alert_data})
 
         # Maintain history size
         if len(self.alert_history) > self.max_history_size:
@@ -327,16 +316,12 @@ class AlertManager:
                 except Exception as e:
                     print(f"Error in alert handler: {e}")
 
-    def get_alert_history(
-        self,
-        alert_type: Optional[str] = None,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    def get_alert_history(self, alert_type: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
         """Get alert history."""
         history = self.alert_history
 
         if alert_type:
-            history = [alert for alert in history if alert['type'] == alert_type]
+            history = [alert for alert in history if alert["type"] == alert_type]
 
         return history[-limit:]
 
@@ -353,11 +338,7 @@ alert_manager = AlertManager()
 class PoolMonitorService:
     """Service for monitoring connection pools with alert integration."""
 
-    def __init__(
-        self,
-        pool_monitor: ConnectionPoolMonitor,
-        alert_manager: AlertManager
-    ):
+    def __init__(self, pool_monitor: ConnectionPoolMonitor, alert_manager: AlertManager):
         """Initialize pool monitor service."""
         self.pool_monitor = pool_monitor
         self.alert_manager = alert_manager
@@ -367,10 +348,7 @@ class PoolMonitorService:
         """Start the pool monitor service."""
         if not self._started:
             # Register alert handler
-            await self.alert_manager.register_handler(
-                'pool_health',
-                self._handle_pool_alert
-            )
+            await self.alert_manager.register_handler("pool_health", self._handle_pool_alert)
 
             await self.pool_monitor.start_monitoring()
             self._started = True
@@ -391,16 +369,11 @@ class PoolMonitorService:
         # For example, send email, Slack message, etc.
 
     def register_pool_for_monitoring(
-        self,
-        pool_name: str,
-        warning_threshold: float = 0.8,
-        critical_threshold: float = 0.95
+        self, pool_name: str, warning_threshold: float = 0.8, critical_threshold: float = 0.95
     ) -> None:
         """Register a pool for monitoring."""
         health_check = PoolHealthCheck(
-            pool_name=pool_name,
-            warning_threshold=warning_threshold,
-            critical_threshold=critical_threshold
+            pool_name=pool_name, warning_threshold=warning_threshold, critical_threshold=critical_threshold
         )
 
         self.pool_monitor.register_pool(pool_name, health_check)
@@ -408,18 +381,18 @@ class PoolMonitorService:
     async def get_service_status(self) -> Dict[str, Any]:
         """Get service status and metrics."""
         return {
-            'service_started': self._started,
-            'monitoring_stats': self.pool_monitor.get_monitoring_stats(),
-            'pool_health': {
+            "service_started": self._started,
+            "monitoring_stats": self.pool_monitor.get_monitoring_stats(),
+            "pool_health": {
                 name: {
-                    'status': metrics.status.value,
-                    'utilization': metrics.connection_utilization,
-                    'active': metrics.active_connections,
-                    'idle': metrics.idle_connections
+                    "status": metrics.status.value,
+                    "utilization": metrics.connection_utilization,
+                    "active": metrics.active_connections,
+                    "idle": metrics.idle_connections,
                 }
                 for name, metrics in self.pool_monitor.get_all_pool_health().items()
             },
-            'recent_alerts': self.alert_manager.get_alert_history(limit=10)
+            "recent_alerts": self.alert_manager.get_alert_history(limit=10),
         }
 
 

@@ -4,15 +4,16 @@ Provides power-user operations for memory agent including
 operational context storage, event summaries, and memory management.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
 import json
 import os
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+from rich.text import Text
 
 from ...base.base_manager import BaseManager
 
@@ -34,7 +35,7 @@ class MemoryAgentManager(BaseManager):
             ("2", "Memory Statistics & Monitoring"),
             ("3", "Memory Cleanup & Maintenance"),
             ("4", "Memory Analytics & Reporting"),
-            ("5", "Memory Configuration Management")
+            ("5", "Memory Configuration Management"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -57,14 +58,17 @@ class MemoryAgentManager(BaseManager):
         """Memory item management submenu."""
         while True:
             menu = create_menu_table("Memory Item Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Store Memory Item"),
-                ("2", "List Memory Items"),
-                ("3", "Search Memory by Key/Type"),
-                ("4", "View Memory Item Details"),
-                ("5", "Bulk Memory Operations"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Store Memory Item"),
+                    ("2", "List Memory Items"),
+                    ("3", "Search Memory by Key/Type"),
+                    ("4", "View Memory Item Details"),
+                    ("5", "Bulk Memory Operations"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -106,7 +110,7 @@ class MemoryAgentManager(BaseManager):
                 "type": memory_type,
                 "key": memory_key,
                 "summary": summary,
-                "data": data
+                "data": data,
             }
 
             # Confirm and store
@@ -177,7 +181,9 @@ class MemoryAgentManager(BaseManager):
                     if match:
                         filtered_items.append(item)
 
-                await self.display_memory_items(filtered_items, f"Search Results for '{search_term}' ({len(filtered_items)} found)")
+                await self.display_memory_items(
+                    filtered_items, f"Search Results for '{search_term}' ({len(filtered_items)} found)"
+                )
             else:
                 self.console.print("[yellow]No memory items found[/yellow]")
 
@@ -213,8 +219,12 @@ class MemoryAgentManager(BaseManager):
                     str(i),
                     item.get("type", "unknown"),
                     item.get("key", "N/A")[:30] + "..." if len(item.get("key", "")) > 30 else item.get("key", "N/A"),
-                    item.get("summary", "No summary")[:40] + "..." if len(item.get("summary", "")) > 40 else item.get("summary", "No summary"),
-                    created
+                    (
+                        item.get("summary", "No summary")[:40] + "..."
+                        if len(item.get("summary", "")) > 40
+                        else item.get("summary", "No summary")
+                    ),
+                    created,
                 )
 
             self.console.print(table)
@@ -260,13 +270,16 @@ class MemoryAgentManager(BaseManager):
         """Perform bulk memory operations."""
         while True:
             menu = create_menu_table("Bulk Memory Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Bulk Store from JSON File"),
-                ("2", "Bulk Store from CSV"),
-                ("3", "Export Memory Items"),
-                ("4", "Bulk Delete by Type"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Bulk Store from JSON File"),
+                    ("2", "Bulk Store from CSV"),
+                    ("3", "Export Memory Items"),
+                    ("4", "Bulk Delete by Type"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -293,7 +306,7 @@ class MemoryAgentManager(BaseManager):
                 self.console.print(f"[red]File not found: {file_path}[/red]")
                 return
 
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 data = json.load(f)
 
             # Handle both single item and array of items
@@ -343,15 +356,16 @@ class MemoryAgentManager(BaseManager):
                 return
 
             import csv
+
             items = []
 
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     item = {
                         "id": f"csv-{int(datetime.now(timezone.utc).timestamp() * 1000)}-{len(items)}",
                         "type": memory_type,
-                        "data": dict(row)
+                        "data": dict(row),
                     }
                     # Use first column as key if available
                     if row:
@@ -408,7 +422,7 @@ class MemoryAgentManager(BaseManager):
             items = response["data"]["items"]
 
             if export_format.lower() == "json":
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     json.dump(items, f, indent=2, default=str)
                 self.console.print(f"[green]✅ Exported {len(items)} items to {file_path} (JSON)[/green]")
 
@@ -426,7 +440,8 @@ class MemoryAgentManager(BaseManager):
                 fieldnames = list(fieldnames)
 
                 import csv
-                with open(file_path, 'w', newline='') as f:
+
+                with open(file_path, "w", newline="") as f:
                     writer = csv.DictWriter(f, fieldnames=fieldnames)
                     writer.writeheader()
 
@@ -490,9 +505,13 @@ class MemoryAgentManager(BaseManager):
             table.add_row(
                 item.get("type", "unknown"),
                 item.get("key", "N/A")[:30] + "..." if len(item.get("key", "")) > 30 else item.get("key", "N/A"),
-                item.get("summary", "No summary")[:40] + "..." if len(item.get("summary", "")) > 40 else item.get("summary", "No summary"),
+                (
+                    item.get("summary", "No summary")[:40] + "..."
+                    if len(item.get("summary", "")) > 40
+                    else item.get("summary", "No summary")
+                ),
                 created,
-                expires or "Never"
+                expires or "Never",
             )
 
         self.console.print(table)
@@ -504,14 +523,17 @@ class MemoryAgentManager(BaseManager):
         """Memory statistics and monitoring submenu."""
         while True:
             menu = create_menu_table("Memory Statistics & Monitoring", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Memory Health & Stats"),
-                ("2", "Memory Usage Analysis"),
-                ("3", "Memory Type Distribution"),
-                ("4", "Memory Expiration Monitoring"),
-                ("5", "Memory Performance Metrics"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Memory Health & Stats"),
+                    ("2", "Memory Usage Analysis"),
+                    ("3", "Memory Type Distribution"),
+                    ("4", "Memory Expiration Monitoring"),
+                    ("5", "Memory Performance Metrics"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -553,7 +575,9 @@ class MemoryAgentManager(BaseManager):
 [bold cyan]Description:[/bold cyan] {response.get('description', 'N/A')}
 """
 
-                print_panel(self.console, content, border_style="green" if response.get('status') == 'healthy' else "yellow")
+                print_panel(
+                    self.console, content, border_style="green" if response.get("status") == "healthy" else "yellow"
+                )
             else:
                 self.console.print("[red]Failed to retrieve memory health stats[/red]")
 
@@ -663,7 +687,7 @@ class MemoryAgentManager(BaseManager):
                     try:
                         # Parse datetime
                         if isinstance(expires_at, str):
-                            expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                            expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
                         else:
                             expires_dt = expires_at
 
@@ -704,7 +728,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_performance_metrics(self):
         """Show memory performance metrics."""
         try:
-            self.console.print("[yellow]Memory performance metrics would show response times, throughput, etc.[/yellow]")
+            self.console.print(
+                "[yellow]Memory performance metrics would show response times, throughput, etc.[/yellow]"
+            )
             self.console.print("[yellow]This requires additional memory agent API endpoints for metrics[/yellow]")
 
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
@@ -716,14 +742,17 @@ class MemoryAgentManager(BaseManager):
         """Memory cleanup and maintenance submenu."""
         while True:
             menu = create_menu_table("Memory Cleanup & Maintenance", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Cleanup Expired Items"),
-                ("2", "Compact Memory Storage"),
-                ("3", "Memory Fragmentation Analysis"),
-                ("4", "Memory Backup & Restore"),
-                ("5", "Memory Integrity Check"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Cleanup Expired Items"),
+                    ("2", "Compact Memory Storage"),
+                    ("3", "Memory Fragmentation Analysis"),
+                    ("4", "Memory Backup & Restore"),
+                    ("5", "Memory Integrity Check"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -766,7 +795,7 @@ class MemoryAgentManager(BaseManager):
                         if expires_at:
                             try:
                                 if isinstance(expires_at, str):
-                                    expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                                    expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
                                 else:
                                     expires_dt = expires_at
 
@@ -775,7 +804,9 @@ class MemoryAgentManager(BaseManager):
                             except:
                                 pass
 
-                    self.console.print(f"[green]Cleanup simulation: {expired_count} expired items would be removed[/green]")
+                    self.console.print(
+                        f"[green]Cleanup simulation: {expired_count} expired items would be removed[/green]"
+                    )
 
         except Exception as e:
             self.console.print(f"[red]Error in cleanup: {e}[/red]")
@@ -820,14 +851,17 @@ class MemoryAgentManager(BaseManager):
         """Memory analytics and reporting submenu."""
         while True:
             menu = create_menu_table("Memory Analytics & Reporting", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Memory Trends Analysis"),
-                ("2", "Memory Usage Forecasting"),
-                ("3", "Memory Pattern Recognition"),
-                ("4", "Memory Correlation Analysis"),
-                ("5", "Generate Memory Report"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Memory Trends Analysis"),
+                    ("2", "Memory Usage Forecasting"),
+                    ("3", "Memory Pattern Recognition"),
+                    ("4", "Memory Correlation Analysis"),
+                    ("5", "Generate Memory Report"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -896,14 +930,17 @@ class MemoryAgentManager(BaseManager):
         """Memory configuration management submenu."""
         while True:
             menu = create_menu_table("Memory Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Memory Configuration"),
-                ("2", "Configure TTL Settings"),
-                ("3", "Set Memory Capacity Limits"),
-                ("4", "Configure Redis Integration"),
-                ("5", "Memory Agent Settings"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Memory Configuration"),
+                    ("2", "Configure TTL Settings"),
+                    ("3", "Set Memory Capacity Limits"),
+                    ("4", "Configure Redis Integration"),
+                    ("5", "Memory Agent Settings"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")

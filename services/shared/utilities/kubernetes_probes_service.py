@@ -8,13 +8,13 @@ health check infrastructure:
 
 These probes leverage the existing health check service for comprehensive validation.
 """
-import asyncio
-import time
-import json
-from typing import Dict, Any, Optional, Callable
-from dataclasses import dataclass
-import logging
 
+import asyncio
+import json
+import logging
+import time
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProbeConfig:
     """Configuration for Kubernetes probes."""
+
     enabled: bool = True
     timeout_seconds: float = 5.0
     initial_delay_seconds: float = 0.0
@@ -40,6 +41,7 @@ class ProbeConfig:
 @dataclass
 class ProbeResult:
     """Result of a probe check."""
+
     healthy: bool
     status_code: int  # HTTP status code
     message: str
@@ -60,24 +62,17 @@ class KubernetesProbesService:
         self.startup_time = time.time()
 
         # Default probe configurations
-        self.liveness_config = ProbeConfig(
-            timeout_seconds=3.0,
-            period_seconds=30.0,
-            failure_threshold=3
-        )
+        self.liveness_config = ProbeConfig(timeout_seconds=3.0, period_seconds=30.0, failure_threshold=3)
 
         self.readiness_config = ProbeConfig(
             timeout_seconds=5.0,
             period_seconds=10.0,
             failure_threshold=3,
             readiness_check_dependencies=True,
-            readiness_check_resources=True
+            readiness_check_resources=True,
         )
 
-        self.startup_config = ProbeConfig(
-            timeout_seconds=10.0,
-            startup_timeout_seconds=60.0
-        )
+        self.startup_config = ProbeConfig(timeout_seconds=10.0, startup_timeout_seconds=60.0)
 
         # Probe state
         self._last_liveness_check = 0.0
@@ -102,18 +97,21 @@ class KubernetesProbesService:
         """Initialize integrations with existing services."""
         try:
             from .health_check_service import get_health_check_service
+
             self._health_check_service = get_health_check_service()
         except ImportError:
             logger.warning("Health check service not available for Kubernetes probes")
 
         try:
             from .circuit_breaker_service import get_circuit_breaker_service
+
             self._circuit_breaker_service = get_circuit_breaker_service()
         except ImportError:
             logger.warning("Circuit breaker service not available for Kubernetes probes")
 
         try:
             from .process_monitor_service import get_process_monitor_service
+
             self._process_monitor_service = get_process_monitor_service()
         except ImportError:
             logger.warning("Process monitor service not available for Kubernetes probes")
@@ -179,7 +177,7 @@ class KubernetesProbesService:
                     status_code=503,  # Service Unavailable
                     message="Liveness check failed",
                     details={"issues": issues},
-                    response_time=response_time
+                    response_time=response_time,
                 )
             else:
                 return ProbeResult(
@@ -187,7 +185,7 @@ class KubernetesProbesService:
                     status_code=200,  # OK
                     message="Application is alive",
                     details={"checks_passed": len(self._custom_liveness_checks) + 2},
-                    response_time=response_time
+                    response_time=response_time,
                 )
 
         except Exception as e:
@@ -198,7 +196,7 @@ class KubernetesProbesService:
                 status_code=500,  # Internal Server Error
                 message=f"Liveness probe error: {str(e)}",
                 details={"error": str(e)},
-                response_time=response_time
+                response_time=response_time,
             )
 
     async def readiness_probe(self) -> ProbeResult:
@@ -247,7 +245,7 @@ class KubernetesProbesService:
                     status_code=503,  # Service Unavailable
                     message="Application not ready to accept traffic",
                     details={"issues": issues},
-                    response_time=response_time
+                    response_time=response_time,
                 )
             else:
                 return ProbeResult(
@@ -255,7 +253,7 @@ class KubernetesProbesService:
                     status_code=200,  # OK
                     message="Application is ready to accept traffic",
                     details={"checks_passed": len(self._custom_readiness_checks) + 4},
-                    response_time=response_time
+                    response_time=response_time,
                 )
 
         except Exception as e:
@@ -266,7 +264,7 @@ class KubernetesProbesService:
                 status_code=500,  # Internal Server Error
                 message=f"Readiness probe error: {str(e)}",
                 details={"error": str(e)},
-                response_time=response_time
+                response_time=response_time,
             )
 
     async def startup_probe(self) -> ProbeResult:
@@ -286,7 +284,7 @@ class KubernetesProbesService:
                     status_code=500,  # Internal Server Error
                     message=f"Startup timeout exceeded ({elapsed_time:.1f}s > {self.startup_config.startup_timeout_seconds}s)",
                     details={"elapsed_time": elapsed_time, "timeout": self.startup_config.startup_timeout_seconds},
-                    response_time=time.time() - start_time
+                    response_time=time.time() - start_time,
                 )
 
             issues = []
@@ -311,7 +309,7 @@ class KubernetesProbesService:
                     status_code=503,  # Service Unavailable
                     message="Application startup not complete",
                     details={"issues": issues},
-                    response_time=response_time
+                    response_time=response_time,
                 )
             else:
                 # Mark startup as complete
@@ -325,7 +323,7 @@ class KubernetesProbesService:
                     status_code=200,  # OK
                     message="Application startup completed successfully",
                     details={"checks_passed": len(self._custom_startup_checks) + 1},
-                    response_time=response_time
+                    response_time=response_time,
                 )
 
         except Exception as e:
@@ -336,7 +334,7 @@ class KubernetesProbesService:
                 status_code=500,  # Internal Server Error
                 message=f"Startup probe error: {str(e)}",
                 details={"error": str(e)},
-                response_time=response_time
+                response_time=response_time,
             )
 
     async def _check_basic_health(self) -> bool:
@@ -408,7 +406,7 @@ class KubernetesProbesService:
             for resource_name, resource_data in summary.items():
                 if resource_name == "memory":
                     current = resource_data.get("current_value", 0)
-                    warning = resource_data.get("thresholds", {}).get("warning", float('inf'))
+                    warning = resource_data.get("thresholds", {}).get("warning", float("inf"))
                     if current >= warning * 0.9:  # 90% of warning threshold
                         return False
 
@@ -453,7 +451,7 @@ class KubernetesProbesService:
                 "enabled": self.liveness_config.enabled,
                 "timeout_seconds": self.liveness_config.timeout_seconds,
                 "period_seconds": self.liveness_config.period_seconds,
-                "failure_threshold": self.liveness_config.failure_threshold
+                "failure_threshold": self.liveness_config.failure_threshold,
             },
             "readiness_config": {
                 "enabled": self.readiness_config.enabled,
@@ -461,17 +459,17 @@ class KubernetesProbesService:
                 "period_seconds": self.readiness_config.period_seconds,
                 "failure_threshold": self.readiness_config.failure_threshold,
                 "check_dependencies": self.readiness_config.readiness_check_dependencies,
-                "check_resources": self.readiness_config.readiness_check_resources
+                "check_resources": self.readiness_config.readiness_check_resources,
             },
             "startup_config": {
                 "enabled": self.startup_config.enabled,
-                "timeout_seconds": self.startup_config.startup_timeout_seconds
+                "timeout_seconds": self.startup_config.startup_timeout_seconds,
             },
             "integrations": {
                 "health_check_service": self._health_check_service is not None,
                 "circuit_breaker_service": self._circuit_breaker_service is not None,
-                "process_monitor_service": self._process_monitor_service is not None
-            }
+                "process_monitor_service": self._process_monitor_service is not None,
+            },
         }
 
     def create_fastapi_routes(self):
@@ -479,13 +477,14 @@ class KubernetesProbesService:
 
         Returns a dictionary of route functions that can be added to a FastAPI app.
         """
+
         async def liveness():
             result = await self.liveness_probe()
             return {
                 "status": "alive" if result.healthy else "dead",
                 "message": result.message,
                 "details": result.details,
-                "response_time": f"{result.response_time:.3f}s"
+                "response_time": f"{result.response_time:.3f}s",
             }
 
         async def readiness():
@@ -494,7 +493,7 @@ class KubernetesProbesService:
                 "status": "ready" if result.healthy else "not_ready",
                 "message": result.message,
                 "details": result.details,
-                "response_time": f"{result.response_time:.3f}s"
+                "response_time": f"{result.response_time:.3f}s",
             }
 
         async def startup():
@@ -503,14 +502,10 @@ class KubernetesProbesService:
                 "status": "started" if result.healthy else "starting",
                 "message": result.message,
                 "details": result.details,
-                "response_time": f"{result.response_time:.3f}s"
+                "response_time": f"{result.response_time:.3f}s",
             }
 
-        return {
-            "/health/liveness": liveness,
-            "/health/readiness": readiness,
-            "/health/startup": startup
-        }
+        return {"/health/liveness": liveness, "/health/readiness": readiness, "/health/startup": startup}
 
 
 # Global instance function
@@ -525,24 +520,19 @@ def create_standard_probes(service_name: str) -> KubernetesProbesService:
     probes = KubernetesProbesService(service_name)
 
     # Configure standard timeouts and intervals
-    probes.configure_liveness_probe(ProbeConfig(
-        timeout_seconds=3.0,
-        period_seconds=30.0,
-        failure_threshold=3
-    ))
+    probes.configure_liveness_probe(ProbeConfig(timeout_seconds=3.0, period_seconds=30.0, failure_threshold=3))
 
-    probes.configure_readiness_probe(ProbeConfig(
-        timeout_seconds=5.0,
-        period_seconds=10.0,
-        failure_threshold=3,
-        readiness_check_dependencies=True,
-        readiness_check_resources=True
-    ))
+    probes.configure_readiness_probe(
+        ProbeConfig(
+            timeout_seconds=5.0,
+            period_seconds=10.0,
+            failure_threshold=3,
+            readiness_check_dependencies=True,
+            readiness_check_resources=True,
+        )
+    )
 
-    probes.configure_startup_probe(ProbeConfig(
-        timeout_seconds=10.0,
-        startup_timeout_seconds=60.0
-    ))
+    probes.configure_startup_probe(ProbeConfig(timeout_seconds=10.0, startup_timeout_seconds=60.0))
 
     return probes
 
@@ -552,24 +542,19 @@ def create_fast_startup_probes(service_name: str) -> KubernetesProbesService:
     probes = KubernetesProbesService(service_name)
 
     # Faster checks for applications that start quickly
-    probes.configure_liveness_probe(ProbeConfig(
-        timeout_seconds=1.0,
-        period_seconds=10.0,
-        failure_threshold=3
-    ))
+    probes.configure_liveness_probe(ProbeConfig(timeout_seconds=1.0, period_seconds=10.0, failure_threshold=3))
 
-    probes.configure_readiness_probe(ProbeConfig(
-        timeout_seconds=2.0,
-        period_seconds=5.0,
-        failure_threshold=2,
-        readiness_check_dependencies=False,  # Skip dependency checks for speed
-        readiness_check_resources=False
-    ))
+    probes.configure_readiness_probe(
+        ProbeConfig(
+            timeout_seconds=2.0,
+            period_seconds=5.0,
+            failure_threshold=2,
+            readiness_check_dependencies=False,  # Skip dependency checks for speed
+            readiness_check_resources=False,
+        )
+    )
 
-    probes.configure_startup_probe(ProbeConfig(
-        timeout_seconds=5.0,
-        startup_timeout_seconds=30.0
-    ))
+    probes.configure_startup_probe(ProbeConfig(timeout_seconds=5.0, startup_timeout_seconds=30.0))
 
     return probes
 
@@ -579,23 +564,26 @@ def create_resilient_probes(service_name: str) -> KubernetesProbesService:
     probes = KubernetesProbesService(service_name)
 
     # More lenient checks for applications that need time to stabilize
-    probes.configure_liveness_probe(ProbeConfig(
-        timeout_seconds=5.0,
-        period_seconds=60.0,  # Check less frequently
-        failure_threshold=5  # Allow more failures before restart
-    ))
+    probes.configure_liveness_probe(
+        ProbeConfig(
+            timeout_seconds=5.0,
+            period_seconds=60.0,  # Check less frequently
+            failure_threshold=5,  # Allow more failures before restart
+        )
+    )
 
-    probes.configure_readiness_probe(ProbeConfig(
-        timeout_seconds=10.0,
-        period_seconds=30.0,  # Check less frequently during stabilization
-        failure_threshold=5,
-        readiness_check_dependencies=True,
-        readiness_check_resources=True
-    ))
+    probes.configure_readiness_probe(
+        ProbeConfig(
+            timeout_seconds=10.0,
+            period_seconds=30.0,  # Check less frequently during stabilization
+            failure_threshold=5,
+            readiness_check_dependencies=True,
+            readiness_check_resources=True,
+        )
+    )
 
-    probes.configure_startup_probe(ProbeConfig(
-        timeout_seconds=15.0,
-        startup_timeout_seconds=300.0  # 5 minutes for slow startups
-    ))
+    probes.configure_startup_probe(
+        ProbeConfig(timeout_seconds=15.0, startup_timeout_seconds=300.0)  # 5 minutes for slow startups
+    )
 
     return probes

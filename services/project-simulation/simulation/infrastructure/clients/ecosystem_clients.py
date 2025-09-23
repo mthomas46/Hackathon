@@ -5,10 +5,11 @@ ecosystem services, following existing service communication patterns.
 """
 
 import sys
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-import httpx
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -18,6 +19,7 @@ except ImportError:
     # Create a mock ServiceClients for testing
     class MockServiceClients:
         pass
+
     ServiceClients = MockServiceClients
 
 from ...domain.value_objects import ECOSYSTEM_SERVICES, ServiceEndpoint, ServiceHealth
@@ -32,10 +34,7 @@ class EcosystemServiceClient:
         self.service_name = service_name
         self.endpoint = endpoint
         self.logger = get_simulation_logger()
-        self._client = httpx.AsyncClient(
-            timeout=endpoint.timeout_seconds,
-            base_url=endpoint.base_url
-        )
+        self._client = httpx.AsyncClient(timeout=endpoint.timeout_seconds, base_url=endpoint.base_url)
 
     async def health_check(self) -> ServiceHealth:
         """Check service health."""
@@ -58,17 +57,11 @@ class EcosystemServiceClient:
             return response.json()
         except httpx.HTTPStatusError as e:
             self.logger.error(
-                f"HTTP error from {self.service_name}",
-                status_code=e.response.status_code,
-                url=str(e.request.url)
+                f"HTTP error from {self.service_name}", status_code=e.response.status_code, url=str(e.request.url)
             )
             raise
         except Exception as e:
-            self.logger.error(
-                f"Request failed to {self.service_name}",
-                error=str(e),
-                path=path
-            )
+            self.logger.error(f"Request failed to {self.service_name}", error=str(e), path=path)
             raise
 
     async def post_json(self, path: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -79,17 +72,11 @@ class EcosystemServiceClient:
             return response.json()
         except httpx.HTTPStatusError as e:
             self.logger.error(
-                f"HTTP error from {self.service_name}",
-                status_code=e.response.status_code,
-                url=str(e.request.url)
+                f"HTTP error from {self.service_name}", status_code=e.response.status_code, url=str(e.request.url)
             )
             raise
         except Exception as e:
-            self.logger.error(
-                f"Request failed to {self.service_name}",
-                error=str(e),
-                path=path
-            )
+            self.logger.error(f"Request failed to {self.service_name}", error=str(e), path=path)
             raise
 
 
@@ -104,11 +91,7 @@ class DocStoreClient(EcosystemServiceClient):
     async def store_document(self, title: str, content: str, metadata: Dict[str, Any]) -> Optional[str]:
         """Store a document in doc_store."""
         try:
-            response = await self.post_json("/documents", {
-                "title": title,
-                "content": content,
-                "metadata": metadata
-            })
+            response = await self.post_json("/documents", {"title": title, "content": content, "metadata": metadata})
             return response.get("document_id")
         except Exception:
             return None
@@ -210,11 +193,7 @@ class LlmGatewayClient(EcosystemServiceClient):
 
     async def generate_content(self, prompt: str, model: str = "gpt-4") -> Dict[str, Any]:
         """Generate content using LLM."""
-        return await self.post_json("/generate", {
-            "prompt": prompt,
-            "model": model,
-            "max_tokens": 1000
-        })
+        return await self.post_json("/generate", {"prompt": prompt, "model": model, "max_tokens": 1000})
 
 
 class PromptStoreClient(EcosystemServiceClient):
@@ -228,11 +207,7 @@ class PromptStoreClient(EcosystemServiceClient):
     async def store_prompt(self, name: str, content: str, category: str) -> Optional[str]:
         """Store a prompt in prompt_store."""
         try:
-            response = await self.post_json("/prompts", {
-                "name": name,
-                "content": content,
-                "category": category
-            })
+            response = await self.post_json("/prompts", {"name": name, "content": content, "category": category})
             return response.get("prompt_id")
         except Exception:
             return None
@@ -255,10 +230,7 @@ class SummarizerHubClient(EcosystemServiceClient):
 
     async def summarize_text(self, text: str, max_length: int = 200) -> Dict[str, Any]:
         """Summarize text content."""
-        return await self.post_json("/summarize", {
-            "text": text,
-            "max_length": max_length
-        })
+        return await self.post_json("/summarize", {"text": text, "max_length": max_length})
 
 
 class InterpreterClient(EcosystemServiceClient):
@@ -271,16 +243,11 @@ class InterpreterClient(EcosystemServiceClient):
 
     async def analyze_relationships(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze relationships between documents."""
-        return await self.post_json("/analyze/relationships", {
-            "documents": documents
-        })
+        return await self.post_json("/analyze/relationships", {"documents": documents})
 
     async def extract_insights(self, content: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Extract insights from content with context."""
-        return await self.post_json("/extract/insights", {
-            "content": content,
-            "context": context
-        })
+        return await self.post_json("/extract/insights", {"content": content, "context": context})
 
 
 class NotificationServiceClient(EcosystemServiceClient):
@@ -291,14 +258,11 @@ class NotificationServiceClient(EcosystemServiceClient):
         service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "notification_service")
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def send_notification(self, recipient: str, message: str,
-                              notification_type: str = "info") -> Dict[str, Any]:
+    async def send_notification(self, recipient: str, message: str, notification_type: str = "info") -> Dict[str, Any]:
         """Send a notification."""
-        return await self.post_json("/notifications", {
-            "recipient": recipient,
-            "message": message,
-            "type": notification_type
-        })
+        return await self.post_json(
+            "/notifications", {"recipient": recipient, "message": message, "type": notification_type}
+        )
 
 
 class SourceAgentClient(EcosystemServiceClient):
@@ -324,10 +288,7 @@ class CodeAnalyzerClient(EcosystemServiceClient):
 
     async def analyze_code(self, code: str, language: str) -> Dict[str, Any]:
         """Analyze code for quality and issues."""
-        return await self.post_json("/analyze", {
-            "code": code,
-            "language": language
-        })
+        return await self.post_json("/analyze", {"code": code, "language": language})
 
 
 class EcosystemServiceRegistry:
@@ -399,30 +360,36 @@ def get_doc_store_client() -> DocStoreClient:
     client = get_ecosystem_client("doc_store")
     return client if isinstance(client, DocStoreClient) else None
 
+
 def get_mock_data_generator_client() -> MockDataGeneratorClient:
     """Get mock-data-generator client."""
     client = get_ecosystem_client("mock_data_generator")
     return client if isinstance(client, MockDataGeneratorClient) else None
+
 
 def get_orchestrator_client() -> OrchestratorClient:
     """Get orchestrator client."""
     client = get_ecosystem_client("orchestrator")
     return client if isinstance(client, OrchestratorClient) else None
 
+
 def get_analysis_service_client() -> AnalysisServiceClient:
     """Get analysis_service client."""
     client = get_ecosystem_client("analysis_service")
     return client if isinstance(client, AnalysisServiceClient) else None
+
 
 def get_llm_gateway_client() -> LlmGatewayClient:
     """Get llm_gateway client."""
     client = get_ecosystem_client("llm_gateway")
     return client if isinstance(client, LlmGatewayClient) else None
 
+
 def get_summarizer_hub_client() -> SummarizerHubClient:
     """Get summarizer_hub client."""
     client = get_ecosystem_client("summarizer_hub")
     return client if isinstance(client, SummarizerHubClient) else None
+
 
 def get_interpreter_client() -> InterpreterClient:
     """Get interpreter client."""
@@ -431,26 +398,26 @@ def get_interpreter_client() -> InterpreterClient:
 
 
 __all__ = [
-    'EcosystemServiceClient',
-    'DocStoreClient',
-    'MockDataGeneratorClient',
-    'OrchestratorClient',
-    'AnalysisServiceClient',
-    'LlmGatewayClient',
-    'PromptStoreClient',
-    'SummarizerHubClient',
-    'InterpreterClient',
-    'NotificationServiceClient',
-    'SourceAgentClient',
-    'CodeAnalyzerClient',
-    'EcosystemServiceRegistry',
-    'get_ecosystem_service_registry',
-    'get_ecosystem_client',
-    'get_doc_store_client',
-    'get_mock_data_generator_client',
-    'get_orchestrator_client',
-    'get_analysis_service_client',
-    'get_llm_gateway_client',
-    'get_summarizer_hub_client',
-    'get_interpreter_client'
+    "EcosystemServiceClient",
+    "DocStoreClient",
+    "MockDataGeneratorClient",
+    "OrchestratorClient",
+    "AnalysisServiceClient",
+    "LlmGatewayClient",
+    "PromptStoreClient",
+    "SummarizerHubClient",
+    "InterpreterClient",
+    "NotificationServiceClient",
+    "SourceAgentClient",
+    "CodeAnalyzerClient",
+    "EcosystemServiceRegistry",
+    "get_ecosystem_service_registry",
+    "get_ecosystem_client",
+    "get_doc_store_client",
+    "get_mock_data_generator_client",
+    "get_orchestrator_client",
+    "get_analysis_service_client",
+    "get_llm_gateway_client",
+    "get_summarizer_hub_client",
+    "get_interpreter_client",
 ]

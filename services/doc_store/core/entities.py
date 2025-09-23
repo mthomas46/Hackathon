@@ -2,10 +2,11 @@
 
 Defines core business objects and their relationships.
 """
-from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 class BaseEntity(ABC):
@@ -28,6 +29,7 @@ class BaseEntity(ABC):
 @dataclass
 class Document(BaseEntity):
     """Core document entity."""
+
     id: str
     content: str
     content_hash: str
@@ -52,6 +54,7 @@ class Document(BaseEntity):
 @dataclass
 class Analysis(BaseEntity):
     """Analysis result entity."""
+
     id: str
     document_id: str
     analyzer: str
@@ -79,6 +82,7 @@ class Analysis(BaseEntity):
 @dataclass
 class DocumentRelationship(BaseEntity):
     """Document relationship entity."""
+
     id: str
     source_document_id: str
     target_document_id: str
@@ -105,6 +109,7 @@ class DocumentRelationship(BaseEntity):
 @dataclass
 class GraphNode:
     """Graph node with document information."""
+
     document_id: str
     title: str = ""
     content_type: str = ""
@@ -125,6 +130,7 @@ class GraphNode:
 @dataclass
 class GraphEdge:
     """Graph edge with relationship information."""
+
     source_id: str
     target_id: str
     relationship_type: str
@@ -145,6 +151,7 @@ class GraphEdge:
 @dataclass
 class DocumentTag(BaseEntity):
     """Document tag entity."""
+
     id: str
     document_id: str
     tag: str
@@ -166,6 +173,7 @@ class DocumentTag(BaseEntity):
 @dataclass
 class LifecyclePolicy(BaseEntity):
     """Lifecycle policy entity."""
+
     id: str
     name: str
     description: str = ""
@@ -190,6 +198,7 @@ class LifecyclePolicy(BaseEntity):
             # Check age
             if "max_age_days" in conditions:
                 from datetime import datetime
+
                 created_at = datetime.fromisoformat(document["created_at"])
                 age_days = (datetime.utcnow() - created_at).days
                 if age_days < conditions["max_age_days"]:
@@ -225,6 +234,7 @@ class LifecyclePolicy(BaseEntity):
 @dataclass
 class BulkOperation(BaseEntity):
     """Bulk operation entity."""
+
     operation_id: str
     operation_type: str
     status: str = "pending"
@@ -249,7 +259,7 @@ class BulkOperation(BaseEntity):
                 "processed": self.processed_items,
                 "successful": self.successful_items,
                 "failed": self.failed_items,
-                "percentage": (self.processed_items / self.total_items * 100) if self.total_items > 0 else 0
+                "percentage": (self.processed_items / self.total_items * 100) if self.total_items > 0 else 0,
             },
             "created_at": self.created_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
@@ -259,6 +269,7 @@ class BulkOperation(BaseEntity):
 @dataclass
 class NotificationEvent(BaseEntity):
     """Notification event entity."""
+
     id: str
     event_type: str
     entity_type: str
@@ -285,6 +296,7 @@ class NotificationEvent(BaseEntity):
 @dataclass
 class Webhook(BaseEntity):
     """Webhook configuration entity."""
+
     id: str
     name: str
     url: str
@@ -317,6 +329,7 @@ class Webhook(BaseEntity):
 @dataclass
 class WebhookDelivery(BaseEntity):
     """Webhook delivery record entity."""
+
     id: str
     webhook_id: str
     event_id: str
@@ -349,6 +362,7 @@ class WebhookDelivery(BaseEntity):
 @dataclass
 class BulkDocumentItem:
     """Represents a document in a bulk operation."""
+
     id: Optional[str] = None
     content: str = ""
     metadata: Optional[Dict[str, Any]] = None
@@ -367,6 +381,7 @@ class BulkDocumentItem:
 @dataclass
 class SemanticEntity:
     """Semantic entity extracted from content."""
+
     entity_type: str
     entity_value: str
     confidence: float = 1.0
@@ -389,6 +404,7 @@ class SemanticEntity:
 @dataclass
 class TaxonomyNode:
     """Tag taxonomy node."""
+
     tag: str
     category: str
     description: str = ""
@@ -413,6 +429,7 @@ class TaxonomyNode:
 @dataclass
 class DocumentVersion(BaseEntity):
     """Document version entity."""
+
     id: str
     document_id: str
     version_number: int

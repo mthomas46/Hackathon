@@ -5,23 +5,24 @@ simulation process and coordinates between Project, Timeline, and Team aggregate
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
-from uuid import UUID, uuid4
 from enum import Enum
+from typing import Any, Dict, List, Optional
+from uuid import UUID, uuid4
 
+from ..events import DocumentGenerated, SimulationCompleted, SimulationFailed, SimulationStarted, WorkflowExecuted
+from ..value_objects import DocumentType, SimulationMetrics, SimulationStatus
 from .project import Project, ProjectId
-from .timeline import Timeline, TimelineId
 from .team import Team, TeamId
-from ..value_objects import SimulationStatus, SimulationMetrics, DocumentType
-from ..events import (SimulationStarted, SimulationCompleted, SimulationFailed,
-                     DocumentGenerated, WorkflowExecuted)
+from .timeline import Timeline, TimelineId
 
 
 @dataclass(frozen=True)
 class SimulationId:
     """Value object for Simulation ID."""
+
     value: UUID = field(default_factory=uuid4)
 
     @classmethod
@@ -35,6 +36,7 @@ class SimulationId:
 
 class SimulationType(Enum):
     """Types of simulation scenarios."""
+
     FULL_PROJECT = "full_project"
     PHASE_FOCUS = "phase_focus"
     TEAM_DYNAMICS = "team_dynamics"
@@ -46,6 +48,7 @@ class SimulationType(Enum):
 @dataclass
 class SimulationConfiguration:
     """Configuration for simulation execution."""
+
     simulation_type: SimulationType
     include_document_generation: bool = True
     include_workflow_execution: bool = True
@@ -76,6 +79,7 @@ class SimulationConfiguration:
 @dataclass
 class SimulationProgress:
     """Entity tracking simulation progress."""
+
     total_phases: int = 0
     completed_phases: int = 0
     current_phase: Optional[str] = None
@@ -125,6 +129,7 @@ class SimulationProgress:
 @dataclass
 class SimulationResult:
     """Entity representing simulation results."""
+
     success: bool
     execution_time_seconds: float
     metrics: SimulationMetrics
@@ -164,7 +169,7 @@ class SimulationResult:
             "total_errors": len(self.errors),
             "total_warnings": len(self.warnings),
             "total_insights": len(self.insights),
-            "metrics": self.metrics
+            "metrics": self.metrics,
         }
 
 
@@ -175,6 +180,7 @@ class Simulation:
     This is the root entity for the Simulation aggregate, orchestrating
     the entire simulation process and coordinating between all aggregates.
     """
+
     id: SimulationId
     project_id: str
     configuration: SimulationConfiguration
@@ -198,71 +204,70 @@ class Simulation:
         self.progress.start_time = self.started_at
 
         # Estimate completion time
-        self.progress.estimated_completion_time = (
-            self.started_at + self.configuration.get_max_execution_time()
-        )
+        self.progress.estimated_completion_time = self.started_at + self.configuration.get_max_execution_time()
 
-        self._add_domain_event(SimulationStarted(
-            simulation_id=str(self.id.value),
-            project_id=self.project_id,
-            scenario_type=self.configuration.simulation_type.value,
-            start_time=self.started_at
-        ))
+        self._add_domain_event(
+            SimulationStarted(
+                simulation_id=str(self.id.value),
+                project_id=self.project_id,
+                scenario_type=self.configuration.simulation_type.value,
+                start_time=self.started_at,
+            )
+        )
 
         self.status = SimulationStatus.RUNNING
 
-    def update_progress(self, phase_name: str, documents_count: int = 0,
-                       workflows_count: int = 0, completed: bool = False) -> None:
+    def update_progress(
+        self, phase_name: str, documents_count: int = 0, workflows_count: int = 0, completed: bool = False
+    ) -> None:
         """Update simulation progress."""
         self.progress.update_phase_progress(phase_name, completed)
         self.progress.increment_documents(documents_count)
         self.progress.increment_workflows(workflows_count)
 
-    def record_document_generation(self, document_type: DocumentType,
-                                 title: str, word_count: int) -> None:
+    def record_document_generation(self, document_type: DocumentType, title: str, word_count: int) -> None:
         """Record a document generation event."""
         self.progress.increment_documents()
 
-        self._add_domain_event(DocumentGenerated(
-            simulation_id=str(self.id.value),
-            document_id=f"doc_{datetime.now().timestamp()}",
-            document_type=document_type.value,
-            title=title,
-            word_count=word_count
-        ))
+        self._add_domain_event(
+            DocumentGenerated(
+                simulation_id=str(self.id.value),
+                document_id=f"doc_{datetime.now().timestamp()}",
+                document_type=document_type.value,
+                title=title,
+                word_count=word_count,
+            )
+        )
 
-    def record_workflow_execution(self, workflow_type: str,
-                                execution_time_seconds: float,
-                                success: bool) -> None:
+    def record_workflow_execution(self, workflow_type: str, execution_time_seconds: float, success: bool) -> None:
         """Record a workflow execution event."""
         self.progress.increment_workflows()
 
-        self._add_domain_event(WorkflowExecuted(
-            simulation_id=str(self.id.value),
-            workflow_id=f"workflow_{datetime.now().timestamp()}",
-            workflow_type=workflow_type,
-            execution_time_seconds=execution_time_seconds,
-            success=success
-        ))
+        self._add_domain_event(
+            WorkflowExecuted(
+                simulation_id=str(self.id.value),
+                workflow_id=f"workflow_{datetime.now().timestamp()}",
+                workflow_type=workflow_type,
+                execution_time_seconds=execution_time_seconds,
+                success=success,
+            )
+        )
 
-    def complete_simulation(self, success: bool, execution_time: float,
-                          metrics: SimulationMetrics) -> None:
+    def complete_simulation(self, success: bool, execution_time: float, metrics: SimulationMetrics) -> None:
         """Complete the simulation."""
         self.status = SimulationStatus.COMPLETED if success else SimulationStatus.FAILED
         self.completed_at = datetime.now()
-        self.result = SimulationResult(
-            success=success,
-            execution_time_seconds=execution_time,
-            metrics=metrics
-        )
+        self.result = SimulationResult(success=success, execution_time_seconds=execution_time, metrics=metrics)
 
-        self._add_domain_event(SimulationCompleted(
-            simulation_id=str(self.id.value),
-            project_id=self.project_id,
-            end_time=self.completed_at,
-            success=success,
-            metrics=metrics.__dict__ if metrics else {}
-        ))
+        self._add_domain_event(
+            SimulationCompleted(
+                simulation_id=str(self.id.value),
+                project_id=self.project_id,
+                end_time=self.completed_at,
+                success=success,
+                metrics=metrics.__dict__ if metrics else {},
+            )
+        )
 
     def fail_simulation(self, failure_reason: str) -> None:
         """Mark simulation as failed."""
@@ -272,12 +277,14 @@ class Simulation:
         if self.result:
             self.result.add_error(failure_reason)
 
-        self._add_domain_event(SimulationFailed(
-            simulation_id=str(self.id.value),
-            project_id=self.project_id,
-            failure_reason=failure_reason,
-            failure_time=self.completed_at
-        ))
+        self._add_domain_event(
+            SimulationFailed(
+                simulation_id=str(self.id.value),
+                project_id=self.project_id,
+                failure_reason=failure_reason,
+                failure_time=self.completed_at,
+            )
+        )
 
     def pause_simulation(self) -> None:
         """Pause the simulation."""
@@ -322,9 +329,7 @@ class Simulation:
 
     def should_continue(self) -> bool:
         """Check if simulation should continue running."""
-        return (self.is_running() and
-                self.is_within_time_limit() and
-                not self.is_completed())
+        return self.is_running() and self.is_within_time_limit() and not self.is_completed()
 
     def get_simulation_summary(self) -> Dict[str, Any]:
         """Get a summary of the simulation."""
@@ -337,7 +342,7 @@ class Simulation:
             "elapsed_time": self.get_elapsed_time(),
             "documents_generated": self.progress.documents_generated,
             "workflows_executed": self.progress.workflows_executed,
-            "result": self.result.get_summary() if self.result else None
+            "result": self.result.get_summary() if self.result else None,
         }
 
     def _add_domain_event(self, event: Any) -> None:
@@ -353,8 +358,10 @@ class Simulation:
         self._domain_events.clear()
 
     def __str__(self) -> str:
-        return (f"Simulation(id={self.id}, project_id={self.project_id}, "
-                f"status={self.status.value}, progress={self.get_progress_percentage():.1f}%)")
+        return (
+            f"Simulation(id={self.id}, project_id={self.project_id}, "
+            f"status={self.status.value}, progress={self.get_progress_percentage():.1f}%)"
+        )
 
     def __repr__(self) -> str:
         return self.__str__()

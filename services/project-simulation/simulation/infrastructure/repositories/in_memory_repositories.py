@@ -4,16 +4,14 @@ This module provides in-memory implementations of repositories for development
 and testing purposes, allowing the service to run without external dependencies.
 """
 
-from typing import Dict, List, Optional
 from datetime import datetime
+from typing import Dict, List, Optional
 
 from ...domain.entities.project import Project, ProjectId, TeamMember
-from ...domain.entities.timeline import Timeline, TimelineId
-from ...domain.entities.team import Team, TeamId
 from ...domain.entities.simulation import Simulation, SimulationId
-from ...domain.repositories import (
-    IProjectRepository, ITimelineRepository, ITeamRepository, ISimulationRepository
-)
+from ...domain.entities.team import Team, TeamId
+from ...domain.entities.timeline import Timeline, TimelineId
+from ...domain.repositories import IProjectRepository, ISimulationRepository, ITeamRepository, ITimelineRepository
 
 
 class InMemoryProjectRepository(IProjectRepository):
@@ -150,11 +148,7 @@ class InMemorySimulationRepository(ISimulationRepository):
 
     def find_recent(self, limit: int = 10) -> List[Simulation]:
         """Find recent simulations."""
-        sorted_simulations = sorted(
-            self._simulations.values(),
-            key=lambda s: s.created_at,
-            reverse=True
-        )
+        sorted_simulations = sorted(self._simulations.values(), key=lambda s: s.created_at, reverse=True)
         return sorted_simulations[:limit]
 
     def delete(self, simulation_id: str) -> bool:
@@ -172,7 +166,7 @@ def create_in_memory_repositories():
         "projects": InMemoryProjectRepository(),
         "timelines": InMemoryTimelineRepository(),
         "teams": InMemoryTeamRepository(),
-        "simulations": InMemorySimulationRepository()
+        "simulations": InMemorySimulationRepository(),
     }
 
 
@@ -225,13 +219,16 @@ def get_project_repository() -> IProjectRepository:
     """Get project repository."""
     return get_repository_registry().projects
 
+
 def get_timeline_repository() -> ITimelineRepository:
     """Get timeline repository."""
     return get_repository_registry().timelines
 
+
 def get_team_repository() -> ITeamRepository:
     """Get team repository."""
     return get_repository_registry().teams
+
 
 def get_simulation_repository() -> ISimulationRepository:
     """Get simulation repository."""
@@ -239,14 +236,14 @@ def get_simulation_repository() -> ISimulationRepository:
 
 
 __all__ = [
-    'InMemoryProjectRepository',
-    'InMemoryTimelineRepository',
-    'InMemoryTeamRepository',
-    'InMemorySimulationRepository',
-    'RepositoryRegistry',
-    'get_repository_registry',
-    'get_project_repository',
-    'get_timeline_repository',
-    'get_team_repository',
-    'get_simulation_repository'
+    "InMemoryProjectRepository",
+    "InMemoryTimelineRepository",
+    "InMemoryTeamRepository",
+    "InMemorySimulationRepository",
+    "RepositoryRegistry",
+    "get_repository_registry",
+    "get_project_repository",
+    "get_timeline_repository",
+    "get_team_repository",
+    "get_simulation_repository",
 ]

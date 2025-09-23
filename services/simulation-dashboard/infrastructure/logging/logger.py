@@ -6,11 +6,12 @@ following consistent patterns with the broader ecosystem.
 
 import logging
 import sys
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 try:
     import structlog
+
     STRUCTLOG_AVAILABLE = True
 except ImportError:
     STRUCTLOG_AVAILABLE = False
@@ -36,9 +37,7 @@ def setup_logging(config: LoggingConfig) -> None:
         )
     else:
         # Use standard logging
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     # Create console handler
     console_handler = logging.StreamHandler(sys.stdout)
@@ -60,7 +59,7 @@ def setup_logging(config: LoggingConfig) -> None:
                 structlog.processors.StackInfoRenderer(),
                 structlog.processors.format_exc_info,
                 structlog.processors.UnicodeDecoder(),
-                structlog.processors.JSONRenderer()
+                structlog.processors.JSONRenderer(),
             ],
             context_class=dict,
             logger_factory=structlog.stdlib.LoggerFactory(),
@@ -101,37 +100,25 @@ class DashboardLogger:
     def log_request(self, method: str, url: str, status_code: int, duration: float) -> None:
         """Log HTTP request details."""
         self.logger.info(
-            f"HTTP Request: {method} {url}",
-            method=method,
-            url=url,
-            status_code=status_code,
-            duration=duration
+            f"HTTP Request: {method} {url}", method=method, url=url, status_code=status_code, duration=duration
         )
 
     def log_websocket_message(self, message_type: str, simulation_id: Optional[str] = None) -> None:
         """Log WebSocket message."""
-        self.logger.debug(
-            f"WebSocket Message: {message_type}",
-            message_type=message_type,
-            simulation_id=simulation_id
-        )
+        self.logger.debug(f"WebSocket Message: {message_type}", message_type=message_type, simulation_id=simulation_id)
 
-    def log_simulation_event(self, event_type: str, simulation_id: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def log_simulation_event(
+        self, event_type: str, simulation_id: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
         """Log simulation-related events."""
         self.logger.info(
-            f"Simulation Event: {event_type}",
-            event_type=event_type,
-            simulation_id=simulation_id,
-            details=details or {}
+            f"Simulation Event: {event_type}", event_type=event_type, simulation_id=simulation_id, details=details or {}
         )
 
     def log_performance_metric(self, metric_name: str, value: float, unit: str = "") -> None:
         """Log performance metrics."""
         self.logger.info(
-            f"Performance: {metric_name} = {value} {unit}",
-            metric_name=metric_name,
-            value=value,
-            unit=unit
+            f"Performance: {metric_name} = {value} {unit}", metric_name=metric_name, value=value, unit=unit
         )
 
 

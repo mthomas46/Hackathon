@@ -3,10 +3,11 @@
 Handles database operations for A/B testing entities.
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from services.prompt_store.core.repository import BaseRepository
+from typing import Any, Dict, List, Optional, Tuple
+
 from services.prompt_store.core.entities import ABTest, ABTestResult
-from services.prompt_store.db.queries import execute_query, serialize_json, deserialize_json
+from services.prompt_store.core.repository import BaseRepository
+from services.prompt_store.db.queries import deserialize_json, execute_query, serialize_json
 from services.shared.utilities import validate_sql_identifier
 
 
@@ -18,23 +19,25 @@ class ABTestRepository(BaseRepository[ABTest]):
 
     def _row_to_entity(self, row: Dict[str, Any]) -> ABTest:
         """Convert database row to ABTest entity."""
-        return ABTest.from_dict({
-            "id": row["id"],
-            "name": row["name"],
-            "description": row["description"],
-            "prompt_a_id": row["prompt_a_id"],
-            "prompt_b_id": row["prompt_b_id"],
-            "test_metric": row["test_metric"],
-            "is_active": row["is_active"],
-            "traffic_split": row["traffic_split"],
-            "start_date": row["start_date"],
-            "end_date": row["end_date"],
-            "target_audience": deserialize_json(row["target_audience"]),
-            "created_by": row["created_by"],
-            "winner": row["winner"],
-            "created_at": row["created_at"],
-            "updated_at": row["updated_at"]
-        })
+        return ABTest.from_dict(
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "description": row["description"],
+                "prompt_a_id": row["prompt_a_id"],
+                "prompt_b_id": row["prompt_b_id"],
+                "test_metric": row["test_metric"],
+                "is_active": row["is_active"],
+                "traffic_split": row["traffic_split"],
+                "start_date": row["start_date"],
+                "end_date": row["end_date"],
+                "target_audience": deserialize_json(row["target_audience"]),
+                "created_by": row["created_by"],
+                "winner": row["winner"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+            }
+        )
 
     def _entity_to_row(self, entity: ABTest) -> Dict[str, Any]:
         """Convert ABTest entity to database row."""
@@ -53,7 +56,7 @@ class ABTestRepository(BaseRepository[ABTest]):
             "created_by": entity.created_by,
             "winner": entity.winner,
             "created_at": entity.created_at.isoformat(),
-            "updated_at": entity.updated_at.isoformat()
+            "updated_at": entity.updated_at.isoformat(),
         }
 
     def save(self, entity: ABTest) -> ABTest:
@@ -94,6 +97,7 @@ class ABTestRepository(BaseRepository[ABTest]):
     def get_all(self, limit: int = 50, offset: int = 0, **filters) -> Dict[str, Any]:
         """Get all A/B tests with pagination and filtering."""
         from services.prompt_store.db.queries import execute_paged_query
+
         return execute_paged_query(self.table_name, filters, limit=limit, offset=offset)
 
     def update(self, entity_id: str, updates: Dict[str, Any]) -> Optional[ABTest]:
@@ -193,8 +197,9 @@ class ABTestRepository(BaseRepository[ABTest]):
 
     def create_ab_test(self, test_data: Dict[str, Any]) -> ABTest:
         """Create a new A/B test."""
-        from services.prompt_store.core.entities import ABTest
         import uuid
+
+        from services.prompt_store.core.entities import ABTest
 
         # Create ABTest entity
         ab_test = ABTest(
@@ -208,7 +213,7 @@ class ABTestRepository(BaseRepository[ABTest]):
             target_audience=test_data.get("target_audience", {}),
             created_by=test_data["created_by"],
             status=test_data.get("status", "active"),
-            traffic_percentage=test_data.get("traffic_percentage", 50)
+            traffic_percentage=test_data.get("traffic_percentage", 50),
         )
 
         # Set ID if not provided
@@ -222,11 +227,13 @@ class ABTestRepository(BaseRepository[ABTest]):
         """Get A/B test by ID (alias for get_by_id)."""
         return self.get_by_id(test_id)
 
-    def record_test_result(self, test_id: str, prompt_id: str, metric_value: float,
-                          sample_size: int = 1, session_id: Optional[str] = None) -> ABTestResult:
+    def record_test_result(
+        self, test_id: str, prompt_id: str, metric_value: float, sample_size: int = 1, session_id: Optional[str] = None
+    ) -> ABTestResult:
         """Record a test result for an A/B test."""
-        from services.prompt_store.core.entities import ABTestResult
         import uuid
+
+        from services.prompt_store.core.entities import ABTestResult
 
         result = ABTestResult(
             test_id=test_id,
@@ -234,7 +241,7 @@ class ABTestRepository(BaseRepository[ABTest]):
             metric_value=metric_value,
             sample_size=sample_size,
             confidence_level=0.0,  # Will be calculated later
-            statistical_significance=False  # Will be calculated later
+            statistical_significance=False,  # Will be calculated later
         )
 
         # Set ID if not provided
@@ -262,7 +269,7 @@ class ABTestResultRepository:
             sample_size=row["sample_size"],
             confidence_level=row["confidence_level"],
             statistical_significance=row["statistical_significance"],
-            recorded_at=row["recorded_at"]
+            recorded_at=row["recorded_at"],
         )
 
     def save(self, entity: ABTestResult) -> ABTestResult:
@@ -275,7 +282,7 @@ class ABTestResultRepository:
             "sample_size": entity.sample_size,
             "confidence_level": entity.confidence_level,
             "statistical_significance": entity.statistical_significance,
-            "recorded_at": entity.recorded_at.isoformat()
+            "recorded_at": entity.recorded_at.isoformat(),
         }
 
         columns = list(row.keys())
@@ -326,7 +333,7 @@ class ABTestResultRepository:
                 "total_samples": row["total_samples"],
                 "result_count": row["result_count"],
                 "average_confidence": row["avg_confidence"],
-                "has_statistical_significance": bool(row["has_significance"])
+                "has_statistical_significance": bool(row["has_significance"]),
             }
 
         return results

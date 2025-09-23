@@ -2,8 +2,8 @@
 
 import asyncio
 import re
-from typing import Any, Dict, List, Optional, Callable, Pattern
 from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, List, Optional, Pattern
 
 from .event_bus import DomainEvent, EventEnvelope, EventType
 from .event_handlers import EventHandler, EventHandlerRegistry
@@ -48,9 +48,7 @@ class TopicBasedEventRouter(EventRouter):
         for pattern, handlers in self.routes.items():
             if self._matches_pattern(envelope.topic, pattern):
                 # Get handlers that can handle this event type
-                capable_handlers = self.handler_registry.get_handlers_for_event(
-                    envelope.event, envelope.topic
-                )
+                capable_handlers = self.handler_registry.get_handlers_for_event(envelope.event, envelope.topic)
 
                 # Filter to only those registered for this pattern
                 for handler in handlers:
@@ -91,7 +89,7 @@ class TopicBasedEventRouter(EventRouter):
         """Compile regex pattern from wildcard pattern."""
         # Convert wildcard pattern to regex
         regex_pattern = re.escape(pattern)
-        regex_pattern = regex_pattern.replace(r'\*', '.*')
+        regex_pattern = regex_pattern.replace(r"\*", ".*")
         regex_pattern = f"^{regex_pattern}$"
 
         try:
@@ -107,19 +105,16 @@ class TopicBasedEventRouter(EventRouter):
             return True
 
         # Handle wildcard patterns
-        if '*' in pattern:
+        if "*" in pattern:
             # Convert to regex for matching
-            regex_pattern = pattern.replace('*', '.*')
+            regex_pattern = pattern.replace("*", ".*")
             return bool(re.match(f"^{regex_pattern}$", topic, re.IGNORECASE))
 
         return False
 
     def get_routes(self) -> Dict[str, List[str]]:
         """Get all routing rules."""
-        return {
-            pattern: [h.__class__.__name__ for h in handlers]
-            for pattern, handlers in self.routes.items()
-        }
+        return {pattern: [h.__class__.__name__ for h in handlers] for pattern, handlers in self.routes.items()}
 
 
 class TypeBasedEventRouter(EventRouter):
@@ -236,11 +231,7 @@ class CompositeEventRouter(EventRouter):
 class ConditionalEventRouter(EventRouter):
     """Routes events based on conditions."""
 
-    def __init__(
-        self,
-        handler_registry: EventHandlerRegistry,
-        condition: Callable[[EventEnvelope], bool]
-    ):
+    def __init__(self, handler_registry: EventHandlerRegistry, condition: Callable[[EventEnvelope], bool]):
         """Initialize conditional router."""
         super().__init__(handler_registry)
         self.condition = condition
@@ -299,8 +290,7 @@ class EventRouterFactory:
 
     @staticmethod
     def create_conditional_router(
-        handler_registry: EventHandlerRegistry,
-        condition: Callable[[EventEnvelope], bool]
+        handler_registry: EventHandlerRegistry, condition: Callable[[EventEnvelope], bool]
     ) -> ConditionalEventRouter:
         """Create conditional router."""
         return ConditionalEventRouter(handler_registry, condition)
@@ -313,10 +303,10 @@ class EventDispatcher:
         """Initialize event dispatcher."""
         self.router = router
         self._processing_stats = {
-            'events_processed': 0,
-            'handlers_called': 0,
-            'processing_time': 0.0,
-            'errors_count': 0
+            "events_processed": 0,
+            "handlers_called": 0,
+            "processing_time": 0.0,
+            "errors_count": 0,
         }
 
     async def dispatch(self, envelope: EventEnvelope) -> Dict[str, Any]:
@@ -328,53 +318,37 @@ class EventDispatcher:
             handlers = await self.router.route_event(envelope)
 
             if not handlers:
-                return {
-                    'status': 'no_handlers',
-                    'handlers_called': 0,
-                    'processing_time': 0.0
-                }
+                return {"status": "no_handlers", "handlers_called": 0, "processing_time": 0.0}
 
             # Call all handlers
             handler_results = []
             for handler in handlers:
                 try:
                     await handler.handle(envelope.event, envelope)
-                    handler_results.append({
-                        'handler': handler.__class__.__name__,
-                        'status': 'success'
-                    })
+                    handler_results.append({"handler": handler.__class__.__name__, "status": "success"})
                 except Exception as e:
-                    handler_results.append({
-                        'handler': handler.__class__.__name__,
-                        'status': 'error',
-                        'error': str(e)
-                    })
-                    self._processing_stats['errors_count'] += 1
+                    handler_results.append({"handler": handler.__class__.__name__, "status": "error", "error": str(e)})
+                    self._processing_stats["errors_count"] += 1
 
             processing_time = asyncio.get_event_loop().time() - start_time
 
             # Update stats
-            self._processing_stats['events_processed'] += 1
-            self._processing_stats['handlers_called'] += len(handlers)
-            self._processing_stats['processing_time'] += processing_time
+            self._processing_stats["events_processed"] += 1
+            self._processing_stats["handlers_called"] += len(handlers)
+            self._processing_stats["processing_time"] += processing_time
 
             return {
-                'status': 'processed',
-                'handlers_called': len(handlers),
-                'processing_time': processing_time,
-                'handler_results': handler_results
+                "status": "processed",
+                "handlers_called": len(handlers),
+                "processing_time": processing_time,
+                "handler_results": handler_results,
             }
 
         except Exception as e:
             processing_time = asyncio.get_event_loop().time() - start_time
-            self._processing_stats['errors_count'] += 1
+            self._processing_stats["errors_count"] += 1
 
-            return {
-                'status': 'error',
-                'error': str(e),
-                'processing_time': processing_time,
-                'handlers_called': 0
-            }
+            return {"status": "error", "error": str(e), "processing_time": processing_time, "handlers_called": 0}
 
     def get_stats(self) -> Dict[str, Any]:
         """Get dispatcher statistics."""
@@ -383,10 +357,10 @@ class EventDispatcher:
     def reset_stats(self) -> None:
         """Reset dispatcher statistics."""
         self._processing_stats = {
-            'events_processed': 0,
-            'handlers_called': 0,
-            'processing_time': 0.0,
-            'errors_count': 0
+            "events_processed": 0,
+            "handlers_called": 0,
+            "processing_time": 0.0,
+            "errors_count": 0,
         }
 
 
@@ -402,8 +376,10 @@ class RoutingConditions:
     @staticmethod
     def topic_matches(pattern: str) -> Callable[[EventEnvelope], bool]:
         """Condition that matches topic pattern."""
+
         def condition(envelope: EventEnvelope) -> bool:
             return bool(re.match(pattern, envelope.topic, re.IGNORECASE))
+
         return condition
 
     @staticmethod

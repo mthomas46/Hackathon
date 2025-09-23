@@ -4,15 +4,16 @@ This module contains tests for validating OpenAPI specification compliance,
 schema validation, and API contract testing.
 """
 
-import pytest
 import json
-import yaml
-from pathlib import Path
 import sys
-from typing import Dict, Any, List, Optional
-import jsonschema
-import requests
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 from unittest.mock import Mock, patch
+
+import jsonschema
+import pytest
+import requests
+import yaml
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -29,7 +30,7 @@ class TestOpenAPISchemaValidation:
             "info": {
                 "title": "Project Simulation Service API",
                 "version": "1.0.0",
-                "description": "API for project simulation and analysis"
+                "description": "API for project simulation and analysis",
             },
             "paths": {
                 "/api/v1/simulations": {
@@ -45,14 +46,14 @@ class TestOpenAPISchemaValidation:
                                             "properties": {
                                                 "simulations": {
                                                     "type": "array",
-                                                    "items": {"$ref": "#/components/schemas/Simulation"}
+                                                    "items": {"$ref": "#/components/schemas/Simulation"},
                                                 }
-                                            }
+                                            },
                                         }
                                     }
-                                }
+                                },
                             }
-                        }
+                        },
                     }
                 }
             },
@@ -63,12 +64,12 @@ class TestOpenAPISchemaValidation:
                         "properties": {
                             "id": {"type": "string"},
                             "name": {"type": "string"},
-                            "status": {"type": "string"}
+                            "status": {"type": "string"},
                         },
-                        "required": ["id", "name"]
+                        "required": ["id", "name"],
                     }
                 }
-            }
+            },
         }
 
         # Basic structure validation
@@ -94,18 +95,9 @@ class TestOpenAPISchemaValidation:
                 "schemas": {
                     "Simulation": {
                         "type": "object",
-                        "properties": {
-                            "id": {"type": "string"},
-                            "team": {"$ref": "#/components/schemas/Team"}
-                        }
+                        "properties": {"id": {"type": "string"}, "team": {"$ref": "#/components/schemas/Team"}},
                     },
-                    "Team": {
-                        "type": "object",
-                        "properties": {
-                            "name": {"type": "string"},
-                            "size": {"type": "integer"}
-                        }
-                    }
+                    "Team": {"type": "object", "properties": {"name": {"type": "string"}, "size": {"type": "integer"}}},
                 }
             }
         }
@@ -146,14 +138,14 @@ class TestOpenAPISchemaValidation:
                                 "name": "status",
                                 "in": "query",
                                 "schema": {"type": "string", "enum": ["active", "completed", "failed"]},
-                                "description": "Filter by simulation status"
+                                "description": "Filter by simulation status",
                             },
                             {
                                 "name": "limit",
                                 "in": "query",
                                 "schema": {"type": "integer", "minimum": 1, "maximum": 100},
-                                "description": "Maximum number of results"
-                            }
+                                "description": "Maximum number of results",
+                            },
                         ]
                     }
                 }
@@ -196,9 +188,9 @@ class TestAPIContractValidation:
                                         "type": "object",
                                         "properties": {
                                             "name": {"type": "string", "minLength": 1},
-                                            "type": {"type": "string", "enum": ["web", "mobile", "api"]}
+                                            "type": {"type": "string", "enum": ["web", "mobile", "api"]},
                                         },
-                                        "required": ["name", "type"]
+                                        "required": ["name", "type"],
                                     }
                                 }
                             }
@@ -215,7 +207,7 @@ class TestAPIContractValidation:
         invalid_requests = [
             {"name": "", "type": "web"},  # Empty name
             {"name": "Test", "type": "invalid"},  # Invalid type
-            {"type": "web"}  # Missing required field
+            {"type": "web"},  # Missing required field
         ]
 
         # Validate against schema
@@ -262,16 +254,16 @@ class TestAPIContractValidation:
                                                         "properties": {
                                                             "id": {"type": "string"},
                                                             "name": {"type": "string"},
-                                                            "status": {"type": "string"}
+                                                            "status": {"type": "string"},
                                                         },
-                                                        "required": ["id", "name"]
-                                                    }
+                                                        "required": ["id", "name"],
+                                                    },
                                                 },
-                                                "total": {"type": "integer"}
-                                            }
+                                                "total": {"type": "integer"},
+                                            },
                                         }
                                     }
-                                }
+                                },
                             }
                         }
                     }
@@ -283,9 +275,9 @@ class TestAPIContractValidation:
         valid_response = {
             "simulations": [
                 {"id": "sim_1", "name": "Test Sim", "status": "active"},
-                {"id": "sim_2", "name": "Another Sim", "status": "completed"}
+                {"id": "sim_2", "name": "Another Sim", "status": "completed"},
             ],
-            "total": 2
+            "total": 2,
         }
 
         # Test invalid responses
@@ -295,7 +287,9 @@ class TestAPIContractValidation:
         ]
 
         # Validate responses
-        response_schema = spec["paths"]["/api/v1/simulations"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+        response_schema = spec["paths"]["/api/v1/simulations"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]
 
         # Valid response should pass
         try:
@@ -335,8 +329,8 @@ class TestOpenAPIExamplesValidation:
                                     "example": {
                                         "name": "E-commerce Platform",
                                         "type": "web_application",
-                                        "complexity": "high"
-                                    }
+                                        "complexity": "high",
+                                    },
                                 }
                             }
                         }
@@ -350,11 +344,11 @@ class TestOpenAPIExamplesValidation:
                         "properties": {
                             "name": {"type": "string"},
                             "type": {"type": "string"},
-                            "complexity": {"type": "string"}
-                        }
+                            "complexity": {"type": "string"},
+                        },
                     }
                 }
-            }
+            },
         }
 
         # Check for examples in request bodies
@@ -384,25 +378,16 @@ class TestOpenAPIExamplesValidation:
                                 "description": "Success",
                                 "content": {
                                     "application/json": {
-                                        "example": {
-                                            "id": "sim_123",
-                                            "name": "Test Simulation",
-                                            "status": "active"
-                                        }
+                                        "example": {"id": "sim_123", "name": "Test Simulation", "status": "active"}
                                     }
-                                }
+                                },
                             },
                             "404": {
                                 "description": "Not found",
                                 "content": {
-                                    "application/json": {
-                                        "example": {
-                                            "error": "Simulation not found",
-                                            "code": 404
-                                        }
-                                    }
-                                }
-                            }
+                                    "application/json": {"example": {"error": "Simulation not found", "code": 404}}
+                                },
+                            },
                         }
                     }
                 }
@@ -412,21 +397,25 @@ class TestOpenAPIExamplesValidation:
         responses = spec_with_examples["paths"]["/api/v1/simulations/{id}"]["get"]["responses"]
 
         # Should have examples for different response codes
-        example_count = sum(1 for resp in responses.values()
-                          if "content" in resp and
-                          "application/json" in resp["content"] and
-                          ("example" in resp["content"]["application/json"] or
-                           "examples" in resp["content"]["application/json"]))
+        example_count = sum(
+            1
+            for resp in responses.values()
+            if "content" in resp
+            and "application/json" in resp["content"]
+            and ("example" in resp["content"]["application/json"] or "examples" in resp["content"]["application/json"])
+        )
 
         assert example_count > 0, "No response examples found"
 
         # Should have examples for error responses
-        error_responses_with_examples = sum(1 for status, resp in responses.items()
-                                          if status.startswith(('4', '5')) and
-                                          "content" in resp and
-                                          "application/json" in resp["content"] and
-                                          ("example" in resp["content"]["application/json"] or
-                                           "examples" in resp["content"]["application/json"]))
+        error_responses_with_examples = sum(
+            1
+            for status, resp in responses.items()
+            if status.startswith(("4", "5"))
+            and "content" in resp
+            and "application/json" in resp["content"]
+            and ("example" in resp["content"]["application/json"] or "examples" in resp["content"]["application/json"])
+        )
 
         assert error_responses_with_examples > 0, "No error response examples found"
 
@@ -441,22 +430,11 @@ class TestOpenAPISecurityValidation:
         spec = {
             "components": {
                 "securitySchemes": {
-                    "bearerAuth": {
-                        "type": "http",
-                        "scheme": "bearer",
-                        "bearerFormat": "JWT"
-                    },
-                    "apiKey": {
-                        "type": "apiKey",
-                        "in": "header",
-                        "name": "X-API-Key"
-                    }
+                    "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
+                    "apiKey": {"type": "apiKey", "in": "header", "name": "X-API-Key"},
                 }
             },
-            "security": [
-                {"bearerAuth": []},
-                {"apiKey": []}
-            ]
+            "security": [{"bearerAuth": []}, {"apiKey": []}],
         }
 
         security_schemes = spec["components"]["securitySchemes"]
@@ -483,21 +461,15 @@ class TestOpenAPISecurityValidation:
         spec = {
             "paths": {
                 "/api/v1/simulations": {
-                    "get": {
-                        "security": [{"bearerAuth": []}],
-                        "responses": {"200": {"description": "Success"}}
-                    },
+                    "get": {"security": [{"bearerAuth": []}], "responses": {"200": {"description": "Success"}}},
                     "post": {
                         "security": [{"bearerAuth": ["write:simulations"]}],
-                        "responses": {"201": {"description": "Created"}}
-                    }
+                        "responses": {"201": {"description": "Created"}},
+                    },
                 },
                 "/api/v1/health": {
-                    "get": {
-                        "security": [],  # No authentication required
-                        "responses": {"200": {"description": "OK"}}
-                    }
-                }
+                    "get": {"security": [], "responses": {"200": {"description": "OK"}}}  # No authentication required
+                },
             }
         }
 
@@ -533,23 +505,17 @@ class TestOpenAPILinting:
                 "title": "Project Simulation Service API",
                 "version": "1.0.0",
                 "description": "API for project simulation and analysis",
-                "contact": {
-                    "name": "API Support",
-                    "email": "support@example.com"
-                },
-                "license": {
-                    "name": "MIT",
-                    "url": "https://opensource.org/licenses/MIT"
-                }
+                "contact": {"name": "API Support", "email": "support@example.com"},
+                "license": {"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
             },
             "servers": [
                 {"url": "https://api.example.com/v1", "description": "Production server"},
-                {"url": "https://staging.api.example.com/v1", "description": "Staging server"}
+                {"url": "https://staging.api.example.com/v1", "description": "Staging server"},
             ],
             "tags": [
                 {"name": "simulations", "description": "Simulation management"},
-                {"name": "health", "description": "Health check endpoints"}
-            ]
+                {"name": "health", "description": "Health check endpoints"},
+            ],
         }
 
         # Check for recommended fields
@@ -557,7 +523,7 @@ class TestOpenAPILinting:
             "info.contact": "info.contact" in spec["info"],
             "info.license": "info.license" in spec["info"],
             "servers": "servers" in spec,
-            "tags": "tags" in spec
+            "tags": "tags" in spec,
         }
 
         # Count how many best practices are followed
@@ -576,15 +542,11 @@ class TestOpenAPILinting:
             "paths": {
                 "/api/v1/simulations": {},
                 "/api/v1/simulations/{id}": {},
-                "/api/v1/health_check": {}  # Non-standard naming
+                "/api/v1/health_check": {},  # Non-standard naming
             },
             "components": {
-                "schemas": {
-                    "Simulation": {},
-                    "simulationCreate": {},  # Non-standard naming
-                    "HealthCheck": {}
-                }
-            }
+                "schemas": {"Simulation": {}, "simulationCreate": {}, "HealthCheck": {}}  # Non-standard naming
+            },
         }
 
         # Check path naming conventions
@@ -610,8 +572,7 @@ class TestOpenAPILinting:
             camel_case = [s for s in schemas if s[0].islower()]
 
             # Should not mix cases
-            assert not (len(pascal_case) > 0 and len(camel_case) > 0), \
-                "Mixed naming conventions in schemas"
+            assert not (len(pascal_case) > 0 and len(camel_case) > 0), "Mixed naming conventions in schemas"
 
         print("✅ OpenAPI naming conventions validated")
 
@@ -620,6 +581,7 @@ class TestOpenAPILinting:
 @pytest.fixture
 def openapi_spec_validator():
     """Create an OpenAPI specification validator."""
+
     def validate_spec(spec: Dict[str, Any]) -> List[str]:
         """Validate OpenAPI specification and return issues."""
         issues = []
@@ -654,27 +616,15 @@ def mock_openapi_spec():
     """Create a mock OpenAPI specification for testing."""
     return {
         "openapi": "3.0.1",
-        "info": {
-            "title": "Test API",
-            "version": "1.0.0",
-            "description": "Test API for validation"
-        },
-        "paths": {
-            "/test": {
-                "get": {
-                    "summary": "Test endpoint",
-                    "responses": {
-                        "200": {"description": "Success"}
-                    }
-                }
-            }
-        }
+        "info": {"title": "Test API", "version": "1.0.0", "description": "Test API for validation"},
+        "paths": {"/test": {"get": {"summary": "Test endpoint", "responses": {"200": {"description": "Success"}}}}},
     }
 
 
 @pytest.fixture
 def schema_validator():
     """Create a JSON schema validator for API responses."""
+
     def validate_response(response_data: Dict[str, Any], schema: Dict[str, Any]) -> bool:
         """Validate response data against schema."""
         try:

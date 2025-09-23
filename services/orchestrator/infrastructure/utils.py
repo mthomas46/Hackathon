@@ -5,7 +5,7 @@ These functions handle service communication, URL resolution, and request prepar
 """
 
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from services.shared.core.constants_new import EnvVars
 
@@ -36,7 +36,7 @@ def get_service_url(service_name: str, default_url: str) -> str:
 
 def prepare_correlation_headers(request) -> Dict[str, str]:
     """Standardized correlation header preparation."""
-    if hasattr(request, 'headers'):
+    if hasattr(request, "headers"):
         correlation_id = request.headers.get(EnvVars.CORRELATION_ID_HEADER, "")
         return {EnvVars.CORRELATION_ID_HEADER: correlation_id} if correlation_id else {}
     return {}
@@ -49,8 +49,4 @@ def build_service_request_context(operation: str, **kwargs) -> Dict[str, Any]:
     return context
 
 
-__all__ = [
-    'get_service_url',
-    'prepare_correlation_headers',
-    'build_service_request_context'
-]
+__all__ = ["get_service_url", "prepare_correlation_headers", "build_service_request_context"]

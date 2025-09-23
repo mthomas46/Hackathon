@@ -9,36 +9,34 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from modules.analytics import ErrorTracking, PerformanceInsights, UsageAnalytics, UsagePatterns
+from modules.catalog import APICatalogManager
+from modules.developer_tools import APIValidator, ClientCodeGenerator, IntegrationTester
 
 # Import stub classes from modules
 from modules.discovery import DiscoveryClient
-from modules.catalog import APICatalogManager
 from modules.health import HealthMonitor
-from modules.testing import APITester
-from modules.analytics import UsageAnalytics, PerformanceInsights, ErrorTracking, UsagePatterns
-from modules.developer_tools import ClientCodeGenerator, APIValidator, IntegrationTester
-from modules.topology import TopologyAnalyzer, TopologyVisualizer, DependencyGraphBuilder, TopologyMetrics
-from modules.security import AuthenticationManager, AuthorizationManager
 from modules.performance import CacheManager, PerformanceMonitor
+from modules.security import AuthenticationManager, AuthorizationManager
+from modules.testing import APITester
+from modules.topology import DependencyGraphBuilder, TopologyAnalyzer, TopologyMetrics, TopologyVisualizer
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(level)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Global service instances
 service_instances: Dict[str, Any] = {}
+
 
 # Lifespan management
 @asynccontextmanager
@@ -60,33 +58,16 @@ async def lifespan(app: FastAPI):
         cache_manager = CacheManager()
 
         # Core discovery and catalog
-        discovery_client = DiscoveryClient(
-            base_url=os.getenv("DISCOVERY_AGENT_URL", "http://localhost:5045")
-        )
-        catalog_manager = APICatalogManager(
-            discovery_client=discovery_client,
-            cache_manager=cache_manager
-        )
+        discovery_client = DiscoveryClient(base_url=os.getenv("DISCOVERY_AGENT_URL", "http://localhost:5045"))
+        catalog_manager = APICatalogManager(discovery_client=discovery_client, cache_manager=cache_manager)
         health_monitor = HealthMonitor(discovery_client=discovery_client)
         api_tester = APITester()
 
         # Analytics modules
-        usage_analytics = UsageAnalytics(
-            discovery_client=discovery_client,
-            health_monitor=health_monitor
-        )
-        performance_insights = PerformanceInsights(
-            discovery_client=discovery_client,
-            health_monitor=health_monitor
-        )
-        error_tracking = ErrorTracking(
-            discovery_client=discovery_client,
-            health_monitor=health_monitor
-        )
-        usage_patterns = UsagePatterns(
-            discovery_client=discovery_client,
-            health_monitor=health_monitor
-        )
+        usage_analytics = UsageAnalytics(discovery_client=discovery_client, health_monitor=health_monitor)
+        performance_insights = PerformanceInsights(discovery_client=discovery_client, health_monitor=health_monitor)
+        error_tracking = ErrorTracking(discovery_client=discovery_client, health_monitor=health_monitor)
+        usage_patterns = UsagePatterns(discovery_client=discovery_client, health_monitor=health_monitor)
 
         # Developer tools
         client_generator = ClientCodeGenerator()
@@ -95,9 +76,7 @@ async def lifespan(app: FastAPI):
 
         # Service topology
         topology_analyzer = TopologyAnalyzer(
-            discovery_client=discovery_client,
-            catalog_manager=catalog_manager,
-            health_monitor=health_monitor
+            discovery_client=discovery_client, catalog_manager=catalog_manager, health_monitor=health_monitor
         )
         topology_visualizer = TopologyVisualizer()
         graph_builder = DependencyGraphBuilder()
@@ -115,31 +94,33 @@ async def lifespan(app: FastAPI):
         bottleneck_detector = BottleneckDetector(performance_monitor)
 
         # Store service instances
-        service_instances.update({
-            "cache_manager": cache_manager,
-            "discovery_client": discovery_client,
-            "catalog_manager": catalog_manager,
-            "health_monitor": health_monitor,
-            "api_tester": api_tester,
-            "usage_analytics": usage_analytics,
-            "performance_insights": performance_insights,
-            "error_tracking": error_tracking,
-            "usage_patterns": usage_patterns,
-            "client_generator": client_generator,
-            "api_validator": api_validator,
-            "integration_tester": integration_tester,
-            "topology_analyzer": topology_analyzer,
-            "topology_visualizer": topology_visualizer,
-            "graph_builder": graph_builder,
-            "topology_metrics": topology_metrics,
-            "auth_manager": auth_manager,
-            "authorization_manager": authorization_manager,
-            "access_control": access_control,
-            "audit_logger": audit_logger,
-            "security_monitor": security_monitor,
-            "performance_monitor": performance_monitor,
-            "bottleneck_detector": bottleneck_detector
-        })
+        service_instances.update(
+            {
+                "cache_manager": cache_manager,
+                "discovery_client": discovery_client,
+                "catalog_manager": catalog_manager,
+                "health_monitor": health_monitor,
+                "api_tester": api_tester,
+                "usage_analytics": usage_analytics,
+                "performance_insights": performance_insights,
+                "error_tracking": error_tracking,
+                "usage_patterns": usage_patterns,
+                "client_generator": client_generator,
+                "api_validator": api_validator,
+                "integration_tester": integration_tester,
+                "topology_analyzer": topology_analyzer,
+                "topology_visualizer": topology_visualizer,
+                "graph_builder": graph_builder,
+                "topology_metrics": topology_metrics,
+                "auth_manager": auth_manager,
+                "authorization_manager": authorization_manager,
+                "access_control": access_control,
+                "audit_logger": audit_logger,
+                "security_monitor": security_monitor,
+                "performance_monitor": performance_monitor,
+                "bottleneck_detector": bottleneck_detector,
+            }
+        )
 
         # Start background services
         logger.info("🔄 Starting background services...")
@@ -162,12 +143,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Error during shutdown: {e}")
 
+
 # Create FastAPI application
 app = FastAPI(
-    title="Unified API Dashboard",
-    description="Enterprise API Management Platform",
-    version="1.0.0",
-    lifespan=lifespan
+    title="Unified API Dashboard", description="Enterprise API Management Platform", version="1.0.0", lifespan=lifespan
 )
 
 # Security
@@ -175,7 +154,8 @@ security = HTTPBearer(auto_error=False)
 
 # Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(CORSMiddleware,
+app.add_middleware(
+    CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8501").split(","),
     allow_credentials=True,
     allow_methods=["*"],
@@ -183,9 +163,11 @@ app.add_middleware(CORSMiddleware,
 )
 
 if os.getenv("ENVIRONMENT") == "production":
-    app.add_middleware(TrustedHostMiddleware,
-        allowed_hosts=os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else None
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else None,
     )
+
 
 # Dependency injection
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[Dict[str, Any]]:
@@ -200,6 +182,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid authentication")
 
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
@@ -208,8 +191,9 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0",
-        "services": list(service_instances.keys())
+        "services": list(service_instances.keys()),
     }
+
 
 # API Discovery endpoints
 @app.get("/api/discovery/services")
@@ -222,6 +206,7 @@ async def get_discovered_services(user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Discovery failed: {str(e)}")
 
+
 @app.post("/api/discovery/scan")
 async def trigger_discovery_scan(user: Dict = Depends(get_current_user)):
     """Trigger a new discovery scan."""
@@ -232,22 +217,26 @@ async def trigger_discovery_scan(user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
 
+
 # API Catalog endpoints
 @app.get("/api/catalog/endpoints")
-async def get_api_catalog(service: Optional[str] = None, search: Optional[str] = None,
-                         limit: int = 50, offset: int = 0, user: Dict = Depends(get_current_user)):
+async def get_api_catalog(
+    service: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    user: Dict = Depends(get_current_user),
+):
     """Get API catalog with filtering and pagination."""
     try:
         catalog_manager = service_instances["catalog_manager"]
         result = await catalog_manager.get_catalog(
-            service_filter=service,
-            search_term=search,
-            limit=limit,
-            offset=offset
+            service_filter=service, search_term=search, limit=limit, offset=offset
         )
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Catalog query failed: {str(e)}")
+
 
 # Health monitoring endpoints
 @app.get("/api/health/services")
@@ -260,6 +249,7 @@ async def get_service_health(user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
+
 # Analytics endpoints
 @app.get("/api/analytics/usage/overview")
 async def get_usage_overview(user: Dict = Depends(get_current_user)):
@@ -271,6 +261,7 @@ async def get_usage_overview(user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analytics query failed: {str(e)}")
 
+
 @app.get("/api/analytics/performance/insights")
 async def get_performance_insights(user: Dict = Depends(get_current_user)):
     """Get performance insights."""
@@ -280,6 +271,7 @@ async def get_performance_insights(user: Dict = Depends(get_current_user)):
         return {"success": True, "data": insights}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Performance analysis failed: {str(e)}")
+
 
 # Developer tools endpoints
 @app.post("/api/tools/generate-client")
@@ -295,6 +287,7 @@ async def generate_client_code(request: Dict[str, Any], user: Dict = Depends(get
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
 
+
 @app.post("/api/tools/validate-spec")
 async def validate_api_spec(request: Dict[str, Any], user: Dict = Depends(get_current_user)):
     """Validate OpenAPI specification."""
@@ -308,6 +301,7 @@ async def validate_api_spec(request: Dict[str, Any], user: Dict = Depends(get_cu
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
+
 # Service topology endpoints
 @app.get("/api/topology/analysis")
 async def get_topology_analysis(user: Dict = Depends(get_current_user)):
@@ -319,6 +313,7 @@ async def get_topology_analysis(user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Topology analysis failed: {str(e)}")
 
+
 @app.get("/api/topology/visualization")
 async def get_topology_visualization(format: str = "cytoscape", user: Dict = Depends(get_current_user)):
     """Get topology visualization data."""
@@ -328,6 +323,7 @@ async def get_topology_visualization(format: str = "cytoscape", user: Dict = Dep
         return {"success": True, "data": visualization}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Visualization failed: {str(e)}")
+
 
 # Security endpoints
 @app.post("/api/auth/login")
@@ -346,6 +342,7 @@ async def login(request: Dict[str, str]):
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
+
 @app.get("/api/security/threats")
 async def get_security_threats(limit: int = 100, user: Dict = Depends(get_current_user)):
     """Get security threats and alerts."""
@@ -356,6 +353,7 @@ async def get_security_threats(limit: int = 100, user: Dict = Depends(get_curren
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Security query failed: {str(e)}")
 
+
 # Error handling
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -363,12 +361,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={
-            "success": False,
-            "error": "Internal server error",
-            "timestamp": datetime.now().isoformat()
-        }
+        content={"success": False, "error": "Internal server error", "timestamp": datetime.now().isoformat()},
     )
+
 
 # Startup message
 @app.on_event("startup")
@@ -377,6 +372,7 @@ async def startup_event():
     logger.info("🌐 Unified API Dashboard started successfully")
     logger.info(f"📊 Available services: {len(service_instances)}")
     logger.info("🔗 API Documentation: http://localhost:8000/docs")
+
 
 if __name__ == "__main__":
     port = int(os.getenv("SERVICE_PORT", "8000"))
@@ -387,5 +383,5 @@ if __name__ == "__main__":
         host=host,
         port=port,
         reload=os.getenv("ENVIRONMENT") == "development",
-        log_level=os.getenv("LOG_LEVEL", "info").lower()
+        log_level=os.getenv("LOG_LEVEL", "info").lower(),
     )

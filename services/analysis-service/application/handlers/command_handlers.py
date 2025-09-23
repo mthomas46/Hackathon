@@ -1,29 +1,25 @@
 """Command handlers for CQRS pattern."""
 
-from typing import Optional
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from .commands import (
-    CreateDocumentCommand,
-    UpdateDocumentCommand,
-    DeleteDocumentCommand,
-    PerformAnalysisCommand,
-    CreateFindingCommand,
-    UpdateFindingCommand,
-    DeleteFindingCommand,
-    CancelAnalysisCommand,
-    RetryAnalysisCommand
-)
-from ..use_cases import (
-    CreateDocumentUseCase,
-    PerformAnalysisUseCase,
-    CreateFindingUseCase
-)
 from ...domain.entities import Document
-from ...infrastructure.repositories import DocumentRepository, AnalysisRepository, FindingRepository
-from ...domain.services import DocumentService, AnalysisService, FindingService
 from ...domain.factories import DocumentFactory, FindingFactory
+from ...domain.services import AnalysisService, DocumentService, FindingService
 from ...domain.validation import DocumentValidator, FindingValidator
+from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
+from ..use_cases import CreateDocumentUseCase, CreateFindingUseCase, PerformAnalysisUseCase
+from .commands import (
+    CancelAnalysisCommand,
+    CreateDocumentCommand,
+    CreateFindingCommand,
+    DeleteDocumentCommand,
+    DeleteFindingCommand,
+    PerformAnalysisCommand,
+    RetryAnalysisCommand,
+    UpdateDocumentCommand,
+    UpdateFindingCommand,
+)
 
 
 class CommandHandler(ABC):
@@ -38,11 +34,13 @@ class CommandHandler(ABC):
 class CreateDocumentCommandHandler(CommandHandler):
     """Handler for creating documents."""
 
-    def __init__(self,
-                 document_service: DocumentService,
-                 document_factory: DocumentFactory,
-                 document_validator: DocumentValidator,
-                 document_repository: DocumentRepository):
+    def __init__(
+        self,
+        document_service: DocumentService,
+        document_factory: DocumentFactory,
+        document_validator: DocumentValidator,
+        document_repository: DocumentRepository,
+    ):
         """Initialize handler with dependencies."""
         self.document_service = document_service
         self.document_factory = document_factory
@@ -58,7 +56,7 @@ class CreateDocumentCommandHandler(CommandHandler):
             content_format=command.format,
             author=command.author,
             tags=command.tags,
-            repository_id=command.repository_id
+            repository_id=command.repository_id,
         )
 
         # Validate document
@@ -80,10 +78,12 @@ class CreateDocumentCommandHandler(CommandHandler):
 class UpdateDocumentCommandHandler(CommandHandler):
     """Handler for updating documents."""
 
-    def __init__(self,
-                 document_service: DocumentService,
-                 document_validator: DocumentValidator,
-                 document_repository: DocumentRepository):
+    def __init__(
+        self,
+        document_service: DocumentService,
+        document_validator: DocumentValidator,
+        document_repository: DocumentRepository,
+    ):
         """Initialize handler with dependencies."""
         self.document_service = document_service
         self.document_validator = document_validator
@@ -107,13 +107,15 @@ class UpdateDocumentCommandHandler(CommandHandler):
 
         if command.metadata is not None:
             from datetime import datetime
+
             from ...domain.entities import Metadata
+
             new_metadata = Metadata(
                 created_at=document.metadata.created_at,
                 updated_at=datetime.now(),
                 author=command.author or document.metadata.author,
                 tags=command.tags or document.metadata.tags,
-                properties={**document.metadata.properties, **(command.metadata or {})}
+                properties={**document.metadata.properties, **(command.metadata or {})},
             )
             document.update_metadata(new_metadata)
 
@@ -149,10 +151,12 @@ class DeleteDocumentCommandHandler(CommandHandler):
 class PerformAnalysisCommandHandler(CommandHandler):
     """Handler for performing analysis."""
 
-    def __init__(self,
-                 analysis_service: AnalysisService,
-                 document_repository: DocumentRepository,
-                 analysis_repository: AnalysisRepository):
+    def __init__(
+        self,
+        analysis_service: AnalysisService,
+        document_repository: DocumentRepository,
+        analysis_repository: AnalysisRepository,
+    ):
         """Initialize handler with dependencies."""
         self.analysis_service = analysis_service
         self.document_repository = document_repository
@@ -167,18 +171,17 @@ class PerformAnalysisCommandHandler(CommandHandler):
 
         # Create analysis configuration
         from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
+
         config_dict = command.configuration or {}
         if command.timeout_seconds:
-            config_dict['timeout_seconds'] = command.timeout_seconds
-        config_dict['priority'] = command.priority
+            config_dict["timeout_seconds"] = command.timeout_seconds
+        config_dict["priority"] = command.priority
 
         analysis_config = AnalysisConfiguration(**config_dict)
 
         # Create analysis entity
         analysis = self.analysis_service.create_analysis(
-            document=document,
-            analysis_type=AnalysisType(command.analysis_type),
-            configuration=analysis_config
+            document=document, analysis_type=AnalysisType(command.analysis_type), configuration=analysis_config
         )
 
         # Save analysis
@@ -204,12 +207,14 @@ class PerformAnalysisCommandHandler(CommandHandler):
 class CreateFindingCommandHandler(CommandHandler):
     """Handler for creating findings."""
 
-    def __init__(self,
-                 finding_service: FindingService,
-                 finding_factory: FindingFactory,
-                 finding_validator: FindingValidator,
-                 finding_repository: FindingRepository,
-                 document_repository: DocumentRepository):
+    def __init__(
+        self,
+        finding_service: FindingService,
+        finding_factory: FindingFactory,
+        finding_validator: FindingValidator,
+        finding_repository: FindingRepository,
+        document_repository: DocumentRepository,
+    ):
         """Initialize handler with dependencies."""
         self.finding_service = finding_service
         self.finding_factory = finding_factory
@@ -234,7 +239,7 @@ class CreateFindingCommandHandler(CommandHandler):
             category=command.category,
             confidence=command.confidence,
             location=command.location,
-            suggestion=command.suggestion
+            suggestion=command.suggestion,
         )
 
         # Validate finding
@@ -251,9 +256,7 @@ class CreateFindingCommandHandler(CommandHandler):
 class UpdateFindingCommandHandler(CommandHandler):
     """Handler for updating findings."""
 
-    def __init__(self,
-                 finding_validator: FindingValidator,
-                 finding_repository: FindingRepository):
+    def __init__(self, finding_validator: FindingValidator, finding_repository: FindingRepository):
         """Initialize handler with dependencies."""
         self.finding_validator = finding_validator
         self.finding_repository = finding_repository

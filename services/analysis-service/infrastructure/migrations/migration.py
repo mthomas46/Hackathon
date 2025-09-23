@@ -2,14 +2,15 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Type
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Type
 
 
 class MigrationStatus(Enum):
     """Migration execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -19,6 +20,7 @@ class MigrationStatus(Enum):
 
 class MigrationType(Enum):
     """Types of database migrations."""
+
     SCHEMA = "schema"
     DATA = "data"
     INDEX = "index"
@@ -31,6 +33,7 @@ class MigrationType(Enum):
 @dataclass
 class MigrationResult:
     """Result of a migration execution."""
+
     migration_id: str
     status: MigrationStatus
     executed_at: datetime
@@ -48,20 +51,21 @@ class MigrationResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'migration_id': self.migration_id,
-            'status': self.status.value,
-            'executed_at': self.executed_at.isoformat(),
-            'duration_seconds': self.duration_seconds,
-            'error_message': self.error_message,
-            'rollback_available': self.rollback_available,
-            'affected_rows': self.affected_rows,
-            'metadata': self.metadata
+            "migration_id": self.migration_id,
+            "status": self.status.value,
+            "executed_at": self.executed_at.isoformat(),
+            "duration_seconds": self.duration_seconds,
+            "error_message": self.error_message,
+            "rollback_available": self.rollback_available,
+            "affected_rows": self.affected_rows,
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class MigrationDependency:
     """Migration dependency definition."""
+
     migration_id: str
     description: str
     required: bool = True
@@ -77,7 +81,7 @@ class Migration(ABC):
         description: str = "",
         version: str = "1.0.0",
         migration_type: MigrationType = MigrationType.SCHEMA,
-        dependencies: Optional[List[MigrationDependency]] = None
+        dependencies: Optional[List[MigrationDependency]] = None,
     ):
         """Initialize migration."""
         self.migration_id = migration_id
@@ -92,12 +96,12 @@ class Migration(ABC):
         self._execution_result: Optional[MigrationResult] = None
 
     @abstractmethod
-    async def up(self, context: 'MigrationExecutionContext') -> None:
+    async def up(self, context: "MigrationExecutionContext") -> None:
         """Execute the migration (upgrade)."""
         pass
 
     @abstractmethod
-    async def down(self, context: 'MigrationExecutionContext') -> None:
+    async def down(self, context: "MigrationExecutionContext") -> None:
         """Rollback the migration (downgrade)."""
         pass
 
@@ -129,43 +133,31 @@ class Migration(ABC):
     def get_metadata(self) -> Dict[str, Any]:
         """Get migration metadata."""
         return {
-            'id': self.migration_id,
-            'name': self.name,
-            'description': self.description,
-            'version': self.version,
-            'type': self.migration_type.value,
-            'dependencies': [dep.migration_id for dep in self.dependencies],
-            'created_at': self.created_at.isoformat(),
-            'reversible': self.is_reversible()
+            "id": self.migration_id,
+            "name": self.name,
+            "description": self.description,
+            "version": self.version,
+            "type": self.migration_type.value,
+            "dependencies": [dep.migration_id for dep in self.dependencies],
+            "created_at": self.created_at.isoformat(),
+            "reversible": self.is_reversible(),
         }
 
 
 class SchemaMigration(Migration):
     """Schema migration for table structure changes."""
 
-    def __init__(
-        self,
-        migration_id: str,
-        name: str,
-        up_sql: str,
-        down_sql: Optional[str] = None,
-        **kwargs
-    ):
+    def __init__(self, migration_id: str, name: str, up_sql: str, down_sql: Optional[str] = None, **kwargs):
         """Initialize schema migration."""
-        super().__init__(
-            migration_id,
-            name,
-            migration_type=MigrationType.SCHEMA,
-            **kwargs
-        )
+        super().__init__(migration_id, name, migration_type=MigrationType.SCHEMA, **kwargs)
         self.up_sql = up_sql
         self.down_sql = down_sql
 
-    async def up(self, context: 'MigrationExecutionContext') -> None:
+    async def up(self, context: "MigrationExecutionContext") -> None:
         """Execute schema migration."""
         await context.execute_sql(self.up_sql)
 
-    async def down(self, context: 'MigrationExecutionContext') -> None:
+    async def down(self, context: "MigrationExecutionContext") -> None:
         """Rollback schema migration."""
         if self.down_sql:
             await context.execute_sql(self.down_sql)
@@ -180,26 +172,16 @@ class SchemaMigration(Migration):
 class DataMigration(Migration):
     """Data migration for data transformations."""
 
-    def __init__(
-        self,
-        migration_id: str,
-        name: str,
-        **kwargs
-    ):
+    def __init__(self, migration_id: str, name: str, **kwargs):
         """Initialize data migration."""
-        super().__init__(
-            migration_id,
-            name,
-            migration_type=MigrationType.DATA,
-            **kwargs
-        )
+        super().__init__(migration_id, name, migration_type=MigrationType.DATA, **kwargs)
 
-    async def up(self, context: 'MigrationExecutionContext') -> None:
+    async def up(self, context: "MigrationExecutionContext") -> None:
         """Execute data migration."""
         # Default implementation - subclasses should override
         pass
 
-    async def down(self, context: 'MigrationExecutionContext') -> None:
+    async def down(self, context: "MigrationExecutionContext") -> None:
         """Rollback data migration."""
         # Default implementation - subclasses should override
         raise NotImplementedError(f"Data migration {self.migration_id} rollback not implemented")
@@ -212,29 +194,17 @@ class DataMigration(Migration):
 class IndexMigration(Migration):
     """Index migration for performance optimizations."""
 
-    def __init__(
-        self,
-        migration_id: str,
-        name: str,
-        create_sql: str,
-        drop_sql: str,
-        **kwargs
-    ):
+    def __init__(self, migration_id: str, name: str, create_sql: str, drop_sql: str, **kwargs):
         """Initialize index migration."""
-        super().__init__(
-            migration_id,
-            name,
-            migration_type=MigrationType.INDEX,
-            **kwargs
-        )
+        super().__init__(migration_id, name, migration_type=MigrationType.INDEX, **kwargs)
         self.create_sql = create_sql
         self.drop_sql = drop_sql
 
-    async def up(self, context: 'MigrationExecutionContext') -> None:
+    async def up(self, context: "MigrationExecutionContext") -> None:
         """Create index."""
         await context.execute_sql(self.create_sql)
 
-    async def down(self, context: 'MigrationExecutionContext') -> None:
+    async def down(self, context: "MigrationExecutionContext") -> None:
         """Drop index."""
         await context.execute_sql(self.drop_sql)
 
@@ -314,9 +284,9 @@ class MigrationExecutionContext:
     def get_execution_summary(self) -> Dict[str, Any]:
         """Get execution summary."""
         return {
-            'executed_statements_count': len(self._executed_statements),
-            'executed_statements': self._executed_statements,
-            'metadata': self._execution_metadata
+            "executed_statements_count": len(self._executed_statements),
+            "executed_statements": self._executed_statements,
+            "metadata": self._execution_metadata,
         }
 
 
@@ -324,41 +294,25 @@ class MigrationFactory:
     """Factory for creating migration instances."""
 
     @staticmethod
-    def create_migration(
-        migration_class: Type[Migration],
-        migration_id: str,
-        **kwargs
-    ) -> Migration:
+    def create_migration(migration_class: Type[Migration], migration_id: str, **kwargs) -> Migration:
         """Create migration instance."""
         return migration_class(migration_id, **kwargs)
 
     @staticmethod
     def create_schema_migration(
-        migration_id: str,
-        name: str,
-        up_sql: str,
-        down_sql: Optional[str] = None,
-        **kwargs
+        migration_id: str, name: str, up_sql: str, down_sql: Optional[str] = None, **kwargs
     ) -> SchemaMigration:
         """Create schema migration."""
         return SchemaMigration(migration_id, name, up_sql, down_sql, **kwargs)
 
     @staticmethod
-    def create_data_migration(
-        migration_id: str,
-        name: str,
-        **kwargs
-    ) -> DataMigration:
+    def create_data_migration(migration_id: str, name: str, **kwargs) -> DataMigration:
         """Create data migration."""
         return DataMigration(migration_id, name, **kwargs)
 
     @staticmethod
     def create_index_migration(
-        migration_id: str,
-        name: str,
-        create_sql: str,
-        drop_sql: str,
-        **kwargs
+        migration_id: str, name: str, create_sql: str, drop_sql: str, **kwargs
     ) -> IndexMigration:
         """Create index migration."""
         return IndexMigration(migration_id, name, create_sql, drop_sql, **kwargs)

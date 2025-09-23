@@ -1,6 +1,6 @@
 """Domain Services for Query Processing"""
 
-from .query_interpreter_service import QueryInterpreterService
 from .query_executor_service import QueryExecutorService
+from .query_interpreter_service import QueryInterpreterService
 
-__all__ = ['QueryInterpreterService', 'QueryExecutorService']
+__all__ = ["QueryInterpreterService", "QueryExecutorService"]

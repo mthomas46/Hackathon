@@ -2,11 +2,12 @@
 
 import asyncio
 import json
-import threading
-from typing import Dict, Any, List, Optional
-import httpx
-from datetime import datetime
 import logging
+import threading
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ class LogCollectorClient:
 
     def __init__(self, collector_url: str = "http://localhost:5080", batch_size: int = 10, flush_interval: float = 5.0):
         """Initialize the log collector client."""
-        self.collector_url = collector_url.rstrip('/')
+        self.collector_url = collector_url.rstrip("/")
         self.batch_size = batch_size
         self.flush_interval = flush_interval
         self._queue: List[Dict[str, Any]] = []
@@ -30,11 +31,14 @@ class LogCollectorClient:
             if self._running:
                 return
             self._running = True
-            logger.info("Log collector client started", extra={
-                'collector_url': self.collector_url,
-                'batch_size': self.batch_size,
-                'flush_interval': self.flush_interval
-            })
+            logger.info(
+                "Log collector client started",
+                extra={
+                    "collector_url": self.collector_url,
+                    "batch_size": self.batch_size,
+                    "flush_interval": self.flush_interval,
+                },
+            )
 
     def stop(self):
         """Stop the log collector client."""
@@ -58,7 +62,7 @@ class LogCollectorClient:
             "level": level,
             "message": message,
             "service": service,
-            "extra": extra or {}
+            "extra": extra or {},
         }
 
         with self._lock:
@@ -77,10 +81,7 @@ class LogCollectorClient:
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f"{self.collector_url}/logs/batch",
-                    json={"logs": logs_to_send}
-                )
+                response = await client.post(f"{self.collector_url}/logs/batch", json={"logs": logs_to_send})
                 response.raise_for_status()
                 logger.debug(f"Sent {len(logs_to_send)} logs to collector")
         except Exception as e:
@@ -102,7 +103,9 @@ def get_log_collector_client() -> LogCollectorClient:
     return _log_collector_client
 
 
-def init_log_collector_client(collector_url: str = "http://localhost:5080", batch_size: int = 10, flush_interval: float = 5.0):
+def init_log_collector_client(
+    collector_url: str = "http://localhost:5080", batch_size: int = 10, flush_interval: float = 5.0
+):
     """Initialize the global log collector client."""
     global _log_collector_client
     _log_collector_client = LogCollectorClient(collector_url, batch_size, flush_interval)

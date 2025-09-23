@@ -5,7 +5,8 @@ following environment-aware patterns consistent with the ecosystem.
 """
 
 import os
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, Field, validator
 from pydantic_settings import BaseSettings
 
@@ -99,6 +100,7 @@ class DashboardSettings(BaseSettings):
 
     class Config:
         """Pydantic configuration."""
+
         env_file = ".env"
         env_file_encoding = "utf-8"
         env_prefix = "DASHBOARD_"

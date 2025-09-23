@@ -2,9 +2,9 @@
 
 Centralized type hints and aliases for better code maintainability.
 """
-from typing import Dict, Any, List, Optional, Union, Protocol
-from datetime import datetime
 
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Protocol, Union
 
 # Basic types
 DocumentID = str
@@ -54,9 +54,11 @@ SearchResults = List[Dict[str, Any]]
 AnalyticsPeriod = str  # 'day', 'week', 'month', 'year'
 AnalyticsGroupBy = str  # 'analyzer', 'model', 'document', 'date'
 
+
 # Protocol for handlers
 class HandlerProtocol(Protocol):
     """Protocol for request handlers."""
+
     async def handle(self, request: Any) -> ApiResponse:
         """Handle a request."""
         ...
@@ -65,6 +67,7 @@ class HandlerProtocol(Protocol):
 # Protocol for repositories
 class RepositoryProtocol(Protocol):
     """Protocol for data repositories."""
+
     def get_by_id(self, id: str) -> Optional[Any]:
         """Get entity by ID."""
         ...
@@ -81,6 +84,7 @@ class RepositoryProtocol(Protocol):
 # Protocol for services
 class ServiceProtocol(Protocol):
     """Protocol for business services."""
+
     def process(self, data: Any) -> Any:
         """Process business logic."""
         ...

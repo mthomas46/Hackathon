@@ -4,13 +4,14 @@ Provides power-user operations for interpreter service including
 query interpretation, workflow execution, and intent management.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
 import json
+from typing import Any, Dict, List, Optional
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+from rich.text import Text
 
 from ...base.base_manager import BaseManager
 
@@ -33,7 +34,7 @@ class InterpreterManager(BaseManager):
             ("3", "Intent Management (View supported intents and examples)"),
             ("4", "Interactive Query Testing"),
             ("5", "Batch Query Processing"),
-            ("6", "Interpreter Performance & Stats")
+            ("6", "Interpreter Performance & Stats"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -58,13 +59,16 @@ class InterpreterManager(BaseManager):
         """Query interpretation submenu."""
         while True:
             menu = create_menu_table("Query Interpretation", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Interpret Single Query"),
-                ("2", "Interpret with Context"),
-                ("3", "Test Intent Recognition"),
-                ("4", "Analyze Query Confidence"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Interpret Single Query"),
+                    ("2", "Interpret with Context"),
+                    ("3", "Test Intent Recognition"),
+                    ("4", "Analyze Query Confidence"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -88,9 +92,7 @@ class InterpreterManager(BaseManager):
             query = Prompt.ask("[bold cyan]Enter query to interpret[/bold cyan]")
 
             with self.console.status(f"[bold green]Interpreting query...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/interpret", {
-                    "query": query
-                })
+                response = await self.clients.post_json("interpreter/interpret", {"query": query})
 
             if response.get("data"):
                 interpretation = response["data"]
@@ -182,7 +184,7 @@ class InterpreterManager(BaseManager):
                 "ingest data from github repository",
                 "check document quality and generate report",
                 "what can you help me with",
-                "tell me a joke"
+                "tell me a joke",
             ]
 
             results = []
@@ -192,11 +194,13 @@ class InterpreterManager(BaseManager):
 
                 if response.get("data"):
                     interp = response["data"]
-                    results.append({
-                        "query": query,
-                        "intent": interp.get("intent", "unknown"),
-                        "confidence": interp.get("confidence", 0.0)
-                    })
+                    results.append(
+                        {
+                            "query": query,
+                            "intent": interp.get("intent", "unknown"),
+                            "confidence": interp.get("confidence", 0.0),
+                        }
+                    )
 
             # Display results table
             table = Table(title="Intent Recognition Test Results")
@@ -205,11 +209,13 @@ class InterpreterManager(BaseManager):
             table.add_column("Confidence", style="yellow")
 
             for result in results:
-                confidence_color = "green" if result["confidence"] >= 0.8 else "yellow" if result["confidence"] >= 0.5 else "red"
+                confidence_color = (
+                    "green" if result["confidence"] >= 0.8 else "yellow" if result["confidence"] >= 0.5 else "red"
+                )
                 table.add_row(
                     result["query"][:37] + "..." if len(result["query"]) > 37 else result["query"],
                     result["intent"],
-                    f"[{confidence_color}]{result['confidence']:.2f}[/{confidence_color}]"
+                    f"[{confidence_color}]{result['confidence']:.2f}[/{confidence_color}]",
                 )
 
             self.console.print(table)
@@ -223,26 +229,10 @@ class InterpreterManager(BaseManager):
             self.console.print("[yellow]Analyzing confidence levels across query categories...[/yellow]")
 
             query_categories = {
-                "Analysis Queries": [
-                    "analyze this document",
-                    "check consistency",
-                    "find issues in code"
-                ],
-                "Ingestion Queries": [
-                    "ingest from github",
-                    "load jira tickets",
-                    "import confluence pages"
-                ],
-                "Search Queries": [
-                    "find security prompts",
-                    "search for documentation",
-                    "locate code examples"
-                ],
-                "Help Queries": [
-                    "what can you do",
-                    "help me",
-                    "show commands"
-                ]
+                "Analysis Queries": ["analyze this document", "check consistency", "find issues in code"],
+                "Ingestion Queries": ["ingest from github", "load jira tickets", "import confluence pages"],
+                "Search Queries": ["find security prompts", "search for documentation", "locate code examples"],
+                "Help Queries": ["what can you do", "help me", "show commands"],
             }
 
             category_stats = {}
@@ -260,7 +250,7 @@ class InterpreterManager(BaseManager):
                     category_stats[category] = {
                         "avg_confidence": avg_confidence,
                         "sample_size": len(confidences),
-                        "range": f"{min(confidences):.2f} - {max(confidences):.2f}"
+                        "range": f"{min(confidences):.2f} - {max(confidences):.2f}",
                     }
 
             # Display category statistics
@@ -271,12 +261,14 @@ class InterpreterManager(BaseManager):
             table.add_column("Confidence Range", style="magenta")
 
             for category, stats in category_stats.items():
-                confidence_color = "green" if stats["avg_confidence"] >= 0.8 else "yellow" if stats["avg_confidence"] >= 0.5 else "red"
+                confidence_color = (
+                    "green" if stats["avg_confidence"] >= 0.8 else "yellow" if stats["avg_confidence"] >= 0.5 else "red"
+                )
                 table.add_row(
                     category,
                     f"[{confidence_color}]{stats['avg_confidence']:.2f}[/{confidence_color}]",
                     str(stats["sample_size"]),
-                    stats["range"]
+                    stats["range"],
                 )
 
             self.console.print(table)
@@ -288,14 +280,17 @@ class InterpreterManager(BaseManager):
         """Workflow execution submenu."""
         while True:
             menu = create_menu_table("Workflow Execution", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Execute Single Workflow"),
-                ("2", "Execute with Full Context"),
-                ("3", "Monitor Workflow Progress"),
-                ("4", "View Execution History"),
-                ("5", "Test Workflow Scenarios"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Execute Single Workflow"),
+                    ("2", "Execute with Full Context"),
+                    ("3", "Monitor Workflow Progress"),
+                    ("4", "View Execution History"),
+                    ("5", "Test Workflow Scenarios"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -321,9 +316,7 @@ class InterpreterManager(BaseManager):
             query = Prompt.ask("[bold cyan]Enter query to execute as workflow[/bold cyan]")
 
             with self.console.status("[bold green]Executing workflow...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/execute", {
-                    "query": query
-                })
+                response = await self.clients.post_json("interpreter/execute", {"query": query})
 
             if response.get("data"):
                 workflow_result = response["data"]
@@ -338,12 +331,7 @@ class InterpreterManager(BaseManager):
         """Display workflow execution result."""
         status = workflow_result.get("status", "unknown")
 
-        status_color = {
-            "completed": "green",
-            "running": "yellow",
-            "failed": "red",
-            "error": "red"
-        }.get(status, "white")
+        status_color = {"completed": "green", "running": "yellow", "failed": "red", "error": "red"}.get(status, "white")
 
         content = f"""
 [bold]Workflow Execution Results[/bold]
@@ -374,15 +362,12 @@ class InterpreterManager(BaseManager):
             user_id = Prompt.ask("[bold cyan]User ID[/bold cyan]")
             session_id = Prompt.ask("[bold cyan]Session ID[/bold cyan]", default=f"cli_session_{user_id}")
 
-            context_input = Prompt.ask("[bold cyan]Execution context (JSON)[/bold cyan]", default='{"priority": "high"}')
+            context_input = Prompt.ask(
+                "[bold cyan]Execution context (JSON)[/bold cyan]", default='{"priority": "high"}'
+            )
             context = json.loads(context_input)
 
-            query_data = {
-                "query": query,
-                "user_id": user_id,
-                "session_id": session_id,
-                "context": context
-            }
+            query_data = {"query": query, "user_id": user_id, "session_id": session_id, "context": context}
 
             with self.console.status("[bold green]Executing workflow with full context...[/bold green]") as status:
                 response = await self.clients.post_json("interpreter/execute", query_data)
@@ -401,7 +386,9 @@ class InterpreterManager(BaseManager):
         try:
             # This is a simplified monitoring - in practice would poll for status
             self.console.print("[yellow]Workflow monitoring would show real-time progress here[/yellow]")
-            self.console.print("[yellow]In a full implementation, this would poll the workflow status endpoint[/yellow]")
+            self.console.print(
+                "[yellow]In a full implementation, this would poll the workflow status endpoint[/yellow]"
+            )
 
         except Exception as e:
             self.console.print(f"[red]Error monitoring workflow progress: {e}[/red]")
@@ -423,7 +410,7 @@ class InterpreterManager(BaseManager):
                 "analyze this document for consistency",
                 "ingest from github and analyze",
                 "find security prompts and test them",
-                "check document quality and generate report"
+                "check document quality and generate report",
             ]
 
             self.console.print("[yellow]Testing workflow execution scenarios...[/yellow]")
@@ -448,13 +435,16 @@ class InterpreterManager(BaseManager):
         """Intent management submenu."""
         while True:
             menu = create_menu_table("Intent Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List All Supported Intents"),
-                ("2", "View Intent Details"),
-                ("3", "Test Intent Examples"),
-                ("4", "Intent Performance Analysis"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List All Supported Intents"),
+                    ("2", "View Intent Details"),
+                    ("3", "Test Intent Examples"),
+                    ("4", "Intent Performance Analysis"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -493,9 +483,13 @@ class InterpreterManager(BaseManager):
 
                     table.add_row(
                         intent_name,
-                        intent_info.get("description", "No description")[:47] + "..." if len(intent_info.get("description", "")) > 47 else intent_info.get("description", "No description"),
+                        (
+                            intent_info.get("description", "No description")[:47] + "..."
+                            if len(intent_info.get("description", "")) > 47
+                            else intent_info.get("description", "No description")
+                        ),
                         str(examples_count),
-                        f"{confidence:.2f}"
+                        f"{confidence:.2f}",
                     )
 
                 self.console.print(table)
@@ -511,7 +505,9 @@ class InterpreterManager(BaseManager):
         try:
             intent_name = Prompt.ask("[bold cyan]Enter intent name[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching details for intent '{intent_name}'...[/bold green]") as status:
+            with self.console.status(
+                f"[bold green]Fetching details for intent '{intent_name}'...[/bold green]"
+            ) as status:
                 response = await self.clients.get_json("interpreter/intents")
 
             if response.get("data") and response["data"].get("intents"):
@@ -534,7 +530,7 @@ class InterpreterManager(BaseManager):
                     examples = intent_info.get("examples", [])
                     if examples:
                         for i, example in enumerate(examples[:5], 1):  # Show first 5 examples
-                            content += f"{i}. \"{example}\"\n"
+                            content += f'{i}. "{example}"\n'
                         if len(examples) > 5:
                             content += f"... and {len(examples) - 5} more examples\n"
                     else:
@@ -577,7 +573,9 @@ class InterpreterManager(BaseManager):
                             recognized_intent = response["data"].get("intent", "")
                             confidence = response["data"].get("confidence", 0.0)
 
-                            if recognized_intent == intent_name and confidence >= intent_info.get("confidence_threshold", 0.0):
+                            if recognized_intent == intent_name and confidence >= intent_info.get(
+                                "confidence_threshold", 0.0
+                            ):
                                 successful_tests += 1
                                 status_icon = "✅"
                                 status_color = "green"
@@ -585,9 +583,11 @@ class InterpreterManager(BaseManager):
                                 status_icon = "❌"
                                 status_color = "red"
 
-                            self.console.print(f"  {status_icon} \"{example[:50]}...\" -> {recognized_intent} ({confidence:.2f})")
+                            self.console.print(
+                                f'  {status_icon} "{example[:50]}..." -> {recognized_intent} ({confidence:.2f})'
+                            )
                         else:
-                            self.console.print(f"  ❌ \"{example[:50]}...\" -> Failed to interpret")
+                            self.console.print(f'  ❌ "{example[:50]}..." -> Failed to interpret')
 
                 # Summary
                 success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
@@ -649,12 +649,12 @@ class InterpreterManager(BaseManager):
             while True:
                 query = Prompt.ask("[bold blue]Query[/bold blue]")
 
-                if query.lower() in ['exit', 'quit', 'q']:
+                if query.lower() in ["exit", "quit", "q"]:
                     break
-                elif query.lower() == 'help':
+                elif query.lower() == "help":
                     self._show_interactive_help()
                     continue
-                elif query.lower() == 'stats':
+                elif query.lower() == "stats":
                     await self._show_interactive_stats()
                     continue
 
@@ -716,17 +716,20 @@ Session duration: 0s
             queries_input = Prompt.ask("[bold cyan]Enter queries (one per line, or path to file)[/bold cyan]")
 
             queries = []
-            if '\n' in queries_input:
+            if "\n" in queries_input:
                 # Multi-line input
-                queries = [q.strip() for q in queries_input.split('\n') if q.strip()]
+                queries = [q.strip() for q in queries_input.split("\n") if q.strip()]
             else:
                 # Check if it's a file path
                 import os
+
                 if os.path.isfile(queries_input):
-                    with open(queries_input, 'r') as f:
+                    with open(queries_input, "r") as f:
                         queries = [line.strip() for line in f if line.strip()]
                 else:
-                    self.console.print("[red]Please enter multiple queries (one per line) or provide a valid file path[/red]")
+                    self.console.print(
+                        "[red]Please enter multiple queries (one per line) or provide a valid file path[/red]"
+                    )
                     return
 
             if not queries:
@@ -742,19 +745,16 @@ Session duration: 0s
 
                 if response.get("data"):
                     interpretation = response["data"]
-                    results.append({
-                        "query": query,
-                        "intent": interpretation.get("intent", "unknown"),
-                        "confidence": interpretation.get("confidence", 0.0),
-                        "success": True
-                    })
+                    results.append(
+                        {
+                            "query": query,
+                            "intent": interpretation.get("intent", "unknown"),
+                            "confidence": interpretation.get("confidence", 0.0),
+                            "success": True,
+                        }
+                    )
                 else:
-                    results.append({
-                        "query": query,
-                        "intent": "error",
-                        "confidence": 0.0,
-                        "success": False
-                    })
+                    results.append({"query": query, "intent": "error", "confidence": 0.0, "success": False})
 
             # Display batch results
             table = Table(title=f"Batch Query Processing Results ({len(results)} queries)")
@@ -766,7 +766,9 @@ Session duration: 0s
             successful = 0
             for result in results:
                 status_icon = "✅" if result["success"] else "❌"
-                confidence_color = "green" if result["confidence"] >= 0.8 else "yellow" if result["confidence"] >= 0.5 else "red"
+                confidence_color = (
+                    "green" if result["confidence"] >= 0.8 else "yellow" if result["confidence"] >= 0.5 else "red"
+                )
 
                 if result["success"]:
                     successful += 1
@@ -775,7 +777,7 @@ Session duration: 0s
                     result["query"][:37] + "..." if len(result["query"]) > 37 else result["query"],
                     result["intent"],
                     f"[{confidence_color}]{result['confidence']:.2f}[/{confidence_color}]",
-                    status_icon
+                    status_icon,
                 )
 
             self.console.print(table)

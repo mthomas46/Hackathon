@@ -1,7 +1,7 @@
 """Document repository implementation."""
 
-from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
 from ...domain.entities import Document, DocumentId
 
@@ -57,7 +57,8 @@ class InMemoryDocumentRepository(DocumentRepository):
     async def get_by_author(self, author: str) -> List[Document]:
         """Get documents by author from memory."""
         return [
-            doc for doc in self._documents.values()
+            doc
+            for doc in self._documents.values()
             if doc.metadata.author and doc.metadata.author.lower() == author.lower()
         ]
 

@@ -4,12 +4,14 @@ Provides settings and configuration management including
 service status checking and system diagnostics.
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
 
 from services.shared.core.constants_new import ServiceNames
+
 from ...base.base_manager import BaseManager
 
 
@@ -32,7 +34,7 @@ class SettingsManager(BaseManager):
             ServiceNames.MEMORY_AGENT,
             ServiceNames.CODE_ANALYZER,
             ServiceNames.LOG_COLLECTOR,
-            ServiceNames.NOTIFICATION_SERVICE
+            ServiceNames.NOTIFICATION_SERVICE,
         ]
 
     async def get_main_menu(self) -> List[Tuple[str, str]]:
@@ -42,7 +44,7 @@ class SettingsManager(BaseManager):
             ("2", "Check Specific Service - Test individual service connectivity"),
             ("3", "System Diagnostics - Comprehensive system health check"),
             ("4", "Service Dependencies - View which services depend on others"),
-            ("5", "Configuration Overview - Display current settings")
+            ("5", "Configuration Overview - Display current settings"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -76,7 +78,9 @@ class SettingsManager(BaseManager):
             self.display.show_success(f"All {total_count} services are healthy and running!")
         else:
             unhealthy_count = total_count - healthy_count
-            self.display.show_warning(f"{healthy_count}/{total_count} services are healthy. {unhealthy_count} services are unreachable.")
+            self.display.show_warning(
+                f"{healthy_count}/{total_count} services are healthy. {unhealthy_count} services are unreachable."
+            )
 
     async def check_specific_service(self) -> None:
         """Check the status of a specific service selected by the user."""
@@ -214,7 +218,7 @@ class SettingsManager(BaseManager):
             "CodeAnalyzerManager": ["Code Analyzer"],
             "DeploymentManager": ["Orchestrator"],  # Infrastructure services
             "LogCollectorManager": ["Log Collector"],
-            "NotificationServiceManager": ["Notification Service"]
+            "NotificationServiceManager": ["Notification Service"],
         }
 
         table = Table(title="CLI Manager Dependencies", border_style="cyan")
@@ -239,7 +243,7 @@ class SettingsManager(BaseManager):
             ("Cache TTL", "300 seconds (5 minutes)"),
             ("Async Operations", "Enabled for all service calls"),
             ("Error Handling", "Graceful degradation with user feedback"),
-            ("Menu Validation", "Service dependency checks enabled")
+            ("Menu Validation", "Service dependency checks enabled"),
         ]
 
         table = Table(title="Configuration Settings", border_style="green")

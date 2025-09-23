@@ -1,6 +1,7 @@
 """Impact Models - Change impact analysis request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
 
 from .base import BaseModel
@@ -8,6 +9,7 @@ from .base import BaseModel
 
 class ChangeImpactAnalysisRequest(BaseModel):
     """Request for change impact analysis."""
+
     document_id: str = Field(..., description="Document ID to analyze")
     change_description: str = Field(..., description="Description of the change")
     impact_scope: Optional[str] = Field("related", description="Scope of impact analysis")
@@ -16,6 +18,7 @@ class ChangeImpactAnalysisRequest(BaseModel):
 
 class ChangeImpactAnalysisResponse(BaseModel):
     """Response for change impact analysis."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was analyzed")
     affected_documents: List[str] = Field(default_factory=list, description="Affected documents")
@@ -30,6 +33,7 @@ class ChangeImpactAnalysisResponse(BaseModel):
 
 class PortfolioChangeImpactRequest(BaseModel):
     """Request for portfolio change impact analysis."""
+
     document_ids: List[str] = Field(..., description="Document IDs to analyze")
     change_description: str = Field(..., description="Description of the change")
     impact_scope: Optional[str] = Field("related", description="Scope of impact analysis")
@@ -38,6 +42,7 @@ class PortfolioChangeImpactRequest(BaseModel):
 
 class PortfolioChangeImpactResponse(BaseModel):
     """Response for portfolio change impact analysis."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_ids: List[str] = Field(..., description="Documents that were analyzed")
     portfolio_impact: Dict[str, Any] = Field(default_factory=dict, description="Portfolio impact")

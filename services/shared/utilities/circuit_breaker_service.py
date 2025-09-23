@@ -3,20 +3,16 @@
 Provides a singleton service for managing circuit breakers across all services,
 with monitoring, metrics, and automatic recovery capabilities.
 """
-import asyncio
-import time
-import threading
-from typing import Dict, Any, Optional, Callable, Awaitable, TypeVar
-from dataclasses import dataclass, field
-from collections import defaultdict
-import logging
 
-from .resilience import (
-    EnhancedCircuitBreaker,
-    ResilienceManager,
-    FailureType,
-    ResourceLimiter
-)
+import asyncio
+import logging
+import threading
+import time
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar
+
+from .resilience import EnhancedCircuitBreaker, FailureType, ResilienceManager, ResourceLimiter
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -25,6 +21,7 @@ T = TypeVar("T")
 @dataclass
 class ServiceEndpoint:
     """Represents a service endpoint with circuit breaker protection."""
+
     service_name: str
     endpoint_path: str
     circuit_breaker: EnhancedCircuitBreaker
@@ -37,6 +34,7 @@ class ServiceEndpoint:
 @dataclass
 class EcosystemHealthMetrics:
     """Overall ecosystem health metrics."""
+
     total_services: int = 0
     healthy_services: int = 0
     degraded_services: int = 0
@@ -49,7 +47,7 @@ class EcosystemHealthMetrics:
 class CircuitBreakerService:
     """Centralized service for managing circuit breakers across the ecosystem."""
 
-    _instance: Optional['CircuitBreakerService'] = None
+    _instance: Optional["CircuitBreakerService"] = None
     _lock = threading.Lock()
 
     def __init__(self):
@@ -60,7 +58,7 @@ class CircuitBreakerService:
         self._shutdown_event = asyncio.Event()
 
     @classmethod
-    def get_instance(cls) -> 'CircuitBreakerService':
+    def get_instance(cls) -> "CircuitBreakerService":
         """Get singleton instance."""
         if cls._instance is None:
             with cls._lock:
@@ -74,7 +72,7 @@ class CircuitBreakerService:
         endpoint_path: str,
         failure_threshold: int = 3,
         reset_timeout: float = 30.0,
-        max_concurrent: int = 10
+        max_concurrent: int = 10,
     ) -> ServiceEndpoint:
         """Register a service endpoint with circuit breaker protection."""
         endpoint_key = f"{service_name}:{endpoint_path}"
@@ -87,23 +85,21 @@ class CircuitBreakerService:
 
         # Create enhanced circuit breaker
         circuit_breaker = EnhancedCircuitBreaker(
-            failure_threshold=failure_threshold,
-            reset_timeout=reset_timeout,
-            resource_limiter=resource_limiter
+            failure_threshold=failure_threshold, reset_timeout=reset_timeout, resource_limiter=resource_limiter
         )
 
         # Create resilience manager
         resilience_manager = ResilienceManager(
             circuit_failure_threshold=failure_threshold,
             circuit_reset_timeout=reset_timeout,
-            max_concurrent_operations=max_concurrent
+            max_concurrent_operations=max_concurrent,
         )
 
         endpoint = ServiceEndpoint(
             service_name=service_name,
             endpoint_path=endpoint_path,
             circuit_breaker=circuit_breaker,
-            resilience_manager=resilience_manager
+            resilience_manager=resilience_manager,
         )
 
         self._endpoints[endpoint_key] = endpoint
@@ -116,7 +112,7 @@ class CircuitBreakerService:
         endpoint_path: str,
         operation: Callable[[], Awaitable[T]],
         operation_name: str = "unknown",
-        timeout_seconds: Optional[float] = None
+        timeout_seconds: Optional[float] = None,
     ) -> T:
         """Execute operation with full circuit breaker and resilience protection."""
         endpoint_key = f"{service_name}:{endpoint_path}"
@@ -134,7 +130,7 @@ class CircuitBreakerService:
             return await endpoint.resilience_manager.execute_with_resilience(
                 operation=operation,
                 operation_name=f"{service_name}:{endpoint_path}:{operation_name}",
-                timeout_seconds=timeout_seconds
+                timeout_seconds=timeout_seconds,
             )
         finally:
             self._global_resource_limiter.release()
@@ -159,8 +155,8 @@ class CircuitBreakerService:
                 "successful_calls": endpoint.circuit_breaker.metrics.successful_calls,
                 "failed_calls": endpoint.circuit_breaker.metrics.failed_calls,
                 "rejected_calls": endpoint.circuit_breaker.metrics.rejected_calls,
-                "state_changes": endpoint.circuit_breaker.metrics.state_changes
-            }
+                "state_changes": endpoint.circuit_breaker.metrics.state_changes,
+            },
         }
 
     def get_ecosystem_health(self) -> Dict[str, Any]:
@@ -177,9 +173,8 @@ class CircuitBreakerService:
             "last_updated": self._health_metrics.last_updated,
             "global_resource_usage": self._global_resource_limiter.active_operations,
             "services": {
-                key: self.get_endpoint_status(ep.service_name, ep.endpoint_path)
-                for key, ep in self._endpoints.items()
-            }
+                key: self.get_endpoint_status(ep.service_name, ep.endpoint_path) for key, ep in self._endpoints.items()
+            },
         }
 
     def _update_health_metrics(self) -> None:
@@ -213,7 +208,7 @@ class CircuitBreakerService:
             failing_services=failing_services,
             total_circuits_open=circuits_open,
             total_circuits_half_open=circuits_half_open,
-            last_updated=time.time()
+            last_updated=time.time(),
         )
 
     async def start_monitoring(self) -> None:
@@ -288,7 +283,7 @@ async def execute_with_circuit_breaker(
     endpoint_path: str,
     operation: Callable[[], Awaitable[T]],
     operation_name: str = "unknown",
-    timeout_seconds: Optional[float] = None
+    timeout_seconds: Optional[float] = None,
 ) -> T:
     """Convenience function for executing operations with circuit breaker protection."""
     service = get_circuit_breaker_service()
@@ -297,5 +292,5 @@ async def execute_with_circuit_breaker(
         endpoint_path=endpoint_path,
         operation=operation,
         operation_name=operation_name,
-        timeout_seconds=timeout_seconds
+        timeout_seconds=timeout_seconds,
     )

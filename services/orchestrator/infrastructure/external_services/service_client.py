@@ -1,7 +1,8 @@
 """Orchestrator Service Client for external service communication."""
 
-from typing import Dict, Any, Optional
 import asyncio
+from typing import Any, Dict, Optional
+
 from services.shared.integrations.clients.clients import ServiceClients
 
 
@@ -17,7 +18,7 @@ class OrchestratorServiceClient:
         endpoint: str,
         method: str = "GET",
         data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """Call an external service endpoint."""
         # This is a simplified implementation - in practice, you'd resolve

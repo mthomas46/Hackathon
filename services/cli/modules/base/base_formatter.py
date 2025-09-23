@@ -1,13 +1,14 @@
 """Base formatter class for CLI display formatting."""
 
-from typing import Dict, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+from typing import Any, Dict, List, Optional, Tuple
+
 from rich.columns import Columns
+from rich.console import Console
 from rich.layout import Layout
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
 
 from ..formatters.display_utils import DisplayManager
 
@@ -43,8 +44,7 @@ class BaseFormatter(ABC):
             table.add_row(*["[dim]...[/dim]"] * len(rows[0]))
             table.add_row(*[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1))
 
-    def show_panel(self, content: str, title: Optional[str] = None,
-                   border_style: str = "blue", expand: bool = False):
+    def show_panel(self, content: str, title: Optional[str] = None, border_style: str = "blue", expand: bool = False):
         """Show content in a styled panel."""
         panel = Panel(content, title=title, border_style=border_style, expand=expand)
         self.console.print(panel)

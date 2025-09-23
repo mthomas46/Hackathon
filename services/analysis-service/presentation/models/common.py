@@ -1,29 +1,32 @@
 """Common HTTP models for pagination, filtering, and search."""
 
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, validator
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, validator
 
 
 class SortOrder(str, Enum):
     """Sort order enumeration."""
+
     ASC = "asc"
     DESC = "desc"
 
 
 class FilterOperator(str, Enum):
     """Filter operator enumeration."""
-    EQ = "eq"           # equals
-    NE = "ne"           # not equals
-    GT = "gt"           # greater than
-    GTE = "gte"         # greater than or equal
-    LT = "lt"           # less than
-    LTE = "lte"         # less than or equal
-    IN = "in"           # in list
-    NIN = "nin"         # not in list
+
+    EQ = "eq"  # equals
+    NE = "ne"  # not equals
+    GT = "gt"  # greater than
+    GTE = "gte"  # greater than or equal
+    LT = "lt"  # less than
+    LTE = "lte"  # less than or equal
+    IN = "in"  # in list
+    NIN = "nin"  # not in list
     CONTAINS = "contains"  # string contains
     STARTS_WITH = "starts_with"  # string starts with
-    ENDS_WITH = "ends_with"     # string ends with
+    ENDS_WITH = "ends_with"  # string ends with
 
 
 class PaginationParams(BaseModel):
@@ -33,11 +36,11 @@ class PaginationParams(BaseModel):
     page_size: int = Field(20, ge=1, le=100, description="Items per page (max 100)")
     offset: Optional[int] = Field(None, ge=0, description="Offset for pagination (alternative to page)")
 
-    @validator('offset', always=True)
+    @validator("offset", always=True)
     def calculate_offset(cls, v, values):
         """Calculate offset from page and page_size if not provided."""
-        if v is None and 'page' in values and 'page_size' in values:
-            return (values['page'] - 1) * values['page_size']
+        if v is None and "page" in values and "page_size" in values:
+            return (values["page"] - 1) * values["page_size"]
         return v
 
 
@@ -47,10 +50,10 @@ class SortParams(BaseModel):
     sort_by: Optional[str] = Field(None, description="Field to sort by")
     sort_order: SortOrder = Field(SortOrder.ASC, description="Sort order")
 
-    @validator('sort_by')
+    @validator("sort_by")
     def validate_sort_by(cls, v):
         """Validate sort field name."""
-        if v and not v.replace('_', '').replace('-', '').isalnum():
+        if v and not v.replace("_", "").replace("-", "").isalnum():
             raise ValueError("Invalid sort field name")
         return v
 
@@ -62,11 +65,11 @@ class FilterCriteria(BaseModel):
     operator: FilterOperator = Field(..., description="Filter operator")
     value: Any = Field(..., description="Filter value")
 
-    @validator('value')
+    @validator("value")
     def validate_value(cls, v, values):
         """Validate filter value based on operator."""
-        if 'operator' in values:
-            operator = values['operator']
+        if "operator" in values:
+            operator = values["operator"]
             if operator in [FilterOperator.IN, FilterOperator.NIN] and not isinstance(v, list):
                 raise ValueError(f"Operator {operator} requires a list value")
             elif operator in [FilterOperator.CONTAINS, FilterOperator.STARTS_WITH, FilterOperator.ENDS_WITH]:
@@ -105,18 +108,25 @@ class BulkOperationRequest(BaseModel):
     items: List[Dict[str, Any]] = Field(..., description="Items to process")
     options: Optional[Dict[str, Any]] = Field(None, description="Operation-specific options")
 
-    @validator('operation')
+    @validator("operation")
     def validate_operation(cls, v):
         """Validate operation name."""
         valid_operations = [
-            'create', 'update', 'delete', 'analyze', 'export',
-            'import', 'validate', 'process', 'archive'
+            "create",
+            "update",
+            "delete",
+            "analyze",
+            "export",
+            "import",
+            "validate",
+            "process",
+            "archive",
         ]
         if v not in valid_operations:
             raise ValueError(f"Invalid operation: {v}. Must be one of {valid_operations}")
         return v
 
-    @validator('items')
+    @validator("items")
     def validate_items(cls, v):
         """Validate items list."""
         if not v:
@@ -145,10 +155,10 @@ class ExportRequest(BaseModel):
     filters: Optional[List[FilterCriteria]] = Field(None, description="Filters to apply")
     include_headers: bool = Field(True, description="Include headers in export")
 
-    @validator('format')
+    @validator("format")
     def validate_format(cls, v):
         """Validate export format."""
-        valid_formats = ['json', 'csv', 'xml', 'xlsx', 'pdf']
+        valid_formats = ["json", "csv", "xml", "xlsx", "pdf"]
         if v not in valid_formats:
             raise ValueError(f"Invalid format: {v}. Must be one of {valid_formats}")
         return v
@@ -173,7 +183,7 @@ class ValidationResult(BaseModel):
     warnings: Optional[List[str]] = Field(None, description="Validation warnings")
     score: Optional[float] = Field(None, description="Validation score (0-1)")
 
-    @validator('score')
+    @validator("score")
     def validate_score(cls, v):
         """Validate score range."""
         if v is not None and (v < 0 or v > 1):

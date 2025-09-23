@@ -4,10 +4,10 @@ This module provides the header component for the dashboard,
 including title, status indicators, and global actions.
 """
 
-import streamlit as st
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
+import streamlit as st
 from infrastructure.config.config import get_config
 
 
@@ -44,7 +44,7 @@ def render_header():
 
 def render_service_status():
     """Render service connection status."""
-    if 'simulation_client' in st.session_state:
+    if "simulation_client" in st.session_state:
         try:
             # This would be a real health check in production
             status = "🟢 Connected"
@@ -69,13 +69,13 @@ def render_header_actions():
     with col1:
         if st.button("🔄 Refresh", key="header_refresh", use_container_width=True):
             # Clear caches and refresh data
-            if 'simulation_client' in st.session_state:
+            if "simulation_client" in st.session_state:
                 st.session_state.simulation_client.clear_cache()
 
-            if 'simulations_cache' in st.session_state:
+            if "simulations_cache" in st.session_state:
                 st.session_state.simulations_cache = {}
 
-            if 'health_cache' in st.session_state:
+            if "health_cache" in st.session_state:
                 st.session_state.health_cache = {}
 
             st.rerun()
@@ -90,7 +90,9 @@ def render_breadcrumb(current_page: str, pages: dict):
     """Render breadcrumb navigation."""
     if current_page in pages:
         page_info = pages[current_page]
-        st.markdown(f"**Navigation:** Home › {page_info['name'].replace('🏠 ', '').replace('➕ ', '').replace('📊 ', '').replace('📋 ', '').replace('⚙️ ', '')}")
+        st.markdown(
+            f"**Navigation:** Home › {page_info['name'].replace('🏠 ', '').replace('➕ ', '').replace('📊 ', '').replace('📋 ', '').replace('⚙️ ', '')}"
+        )
 
 
 def render_environment_banner():
@@ -100,8 +102,8 @@ def render_environment_banner():
     if config.environment != "production":
         env_colors = {
             "development": "#28a745",  # Green
-            "staging": "#ffc107",     # Yellow
-            "testing": "#007bff",     # Blue
+            "staging": "#ffc107",  # Yellow
+            "testing": "#007bff",  # Blue
         }
 
         env_color = env_colors.get(config.environment, "#6c757d")
@@ -120,5 +122,5 @@ def render_environment_banner():
                 🔧 {config.environment.upper()} ENVIRONMENT - For testing and development only
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )

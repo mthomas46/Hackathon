@@ -1,28 +1,27 @@
 """Command bus for CQRS pattern with event publishing."""
 
 import logging
-from typing import Dict, Type, Any, Optional, List
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Type
 from uuid import uuid4
 
+from ..events import ApplicationEvent, EventBus
 from ..handlers.command_handlers import (
     CreateDocumentCommandHandler,
-    UpdateDocumentCommandHandler,
-    PerformAnalysisCommandHandler,
     CreateFindingCommandHandler,
+    DeleteDocumentCommandHandler,
+    PerformAnalysisCommandHandler,
+    UpdateDocumentCommandHandler,
     UpdateFindingCommandHandler,
-    DeleteDocumentCommandHandler
 )
 from ..handlers.commands import (
     CreateDocumentCommand,
-    UpdateDocumentCommand,
-    PerformAnalysisCommand,
     CreateFindingCommand,
+    DeleteDocumentCommand,
+    PerformAnalysisCommand,
+    UpdateDocumentCommand,
     UpdateFindingCommand,
-    DeleteDocumentCommand
 )
-from ..events import EventBus, ApplicationEvent
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class CommandBus:
     async def send(self, command: Any) -> Any:
         """Send a command to its handler and publish resulting events."""
         command_type = type(command)
-        command_id = getattr(command, 'command_id', str(uuid4()))
+        command_id = getattr(command, "command_id", str(uuid4()))
 
         if command_type not in self._handlers:
             raise ValueError(f"No handler registered for command: {command_type.__name__}")
@@ -73,7 +72,7 @@ class CommandBus:
         events_to_publish = []
 
         # Extract events from result if available
-        if hasattr(result, 'events') and result.events:
+        if hasattr(result, "events") and result.events:
             events_to_publish.extend(result.events)
 
         # Create standard command completion event
@@ -82,16 +81,16 @@ class CommandBus:
         completion_event = AnalysisCompletedEvent(
             event_id=str(uuid4()),
             correlation_id=command_id,
-            document_id=getattr(command, 'document_id', ''),
-            analysis_type=getattr(command, 'analysis_type', 'command'),
-            result={'command_type': command.__class__.__name__, 'success': True},
+            document_id=getattr(command, "document_id", ""),
+            analysis_type=getattr(command, "analysis_type", "command"),
+            result={"command_type": command.__class__.__name__, "success": True},
             execution_time_seconds=0.0,  # Could be tracked
             findings_count=0,
             metadata={
-                'command_id': command_id,
-                'user_id': getattr(command, 'user_id', None),
-                'session_id': getattr(command, 'session_id', None)
-            }
+                "command_id": command_id,
+                "user_id": getattr(command, "user_id", None),
+                "session_id": getattr(command, "session_id", None),
+            },
         )
         events_to_publish.append(completion_event)
 
@@ -112,17 +111,17 @@ class CommandBus:
         failure_event = AnalysisFailedEvent(
             event_id=str(uuid4()),
             correlation_id=command_id,
-            document_id=getattr(command, 'document_id', ''),
-            analysis_type=getattr(command, 'analysis_type', 'command'),
+            document_id=getattr(command, "document_id", ""),
+            analysis_type=getattr(command, "analysis_type", "command"),
             error_message=str(error),
             error_code=error.__class__.__name__,
-            retry_count=getattr(command, 'retry_count', 0),
+            retry_count=getattr(command, "retry_count", 0),
             metadata={
-                'command_id': command_id,
-                'command_type': command.__class__.__name__,
-                'user_id': getattr(command, 'user_id', None),
-                'session_id': getattr(command, 'session_id', None)
-            }
+                "command_id": command_id,
+                "command_type": command.__class__.__name__,
+                "user_id": getattr(command, "user_id", None),
+                "session_id": getattr(command, "session_id", None),
+            },
         )
 
         await self.event_bus.publish(failure_event)
@@ -135,13 +134,15 @@ class CommandBus:
         """Clear events for a specific command."""
         self._command_events.pop(command_id, None)
 
-    def register_default_handlers(self,
-                                  create_document_handler: CreateDocumentCommandHandler,
-                                  update_document_handler: UpdateDocumentCommandHandler,
-                                  perform_analysis_handler: PerformAnalysisCommandHandler,
-                                  create_finding_handler: CreateFindingCommandHandler,
-                                  update_finding_handler: UpdateFindingCommandHandler,
-                                  delete_document_handler: DeleteDocumentCommandHandler) -> None:
+    def register_default_handlers(
+        self,
+        create_document_handler: CreateDocumentCommandHandler,
+        update_document_handler: UpdateDocumentCommandHandler,
+        perform_analysis_handler: PerformAnalysisCommandHandler,
+        create_finding_handler: CreateFindingCommandHandler,
+        update_finding_handler: UpdateFindingCommandHandler,
+        delete_document_handler: DeleteDocumentCommandHandler,
+    ) -> None:
         """Register all default command handlers."""
         self.register_handler(CreateDocumentCommand, create_document_handler)
         self.register_handler(UpdateDocumentCommand, update_document_handler)

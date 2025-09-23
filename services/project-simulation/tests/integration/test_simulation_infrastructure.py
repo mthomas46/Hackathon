@@ -4,21 +4,16 @@ Tests database operations, service communication, Redis pub/sub,
 and cross-service integration.
 """
 
-import pytest
 import asyncio
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+import pytest
 from simulation.application.services.simulation_application_service import SimulationApplicationService
-from simulation.domain.entities.simulation import Simulation, SimulationId, SimulationConfiguration
-from simulation.domain.entities.simulation import SimulationType
-from simulation.infrastructure.redis_integration import (
-    RedisPubSubManager,
-    SimulationRedisClient,
-    RedisConfig
-)
+from simulation.domain.entities.simulation import Simulation, SimulationConfiguration, SimulationId, SimulationType
+from simulation.infrastructure.redis_integration import RedisConfig, RedisPubSubManager, SimulationRedisClient
+from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
 
 
 class TestDatabaseIntegration:
@@ -48,19 +43,11 @@ class TestDatabaseIntegration:
         assert retrieved.project_id == simulation.project_id
 
         # Link document
-        await db_repo.link_document_to_simulation(
-            str(simulation.id.value),
-            "doc_123",
-            "generated",
-            "doc_store_ref_123"
-        )
+        await db_repo.link_document_to_simulation(str(simulation.id.value), "doc_123", "generated", "doc_store_ref_123")
 
         # Link prompt
         await db_repo.link_prompt_to_simulation(
-            str(simulation.id.value),
-            "prompt_456",
-            "generation",
-            "prompt_store_ref_456"
+            str(simulation.id.value), "prompt_456", "generation", "prompt_store_ref_456"
         )
 
         # Save run data
@@ -68,7 +55,7 @@ class TestDatabaseIntegration:
             "start_time": datetime.now().isoformat(),
             "status": "completed",
             "execution_time": 120.5,
-            "metrics": {"documents_generated": 5, "prompts_used": 3}
+            "metrics": {"documents_generated": 5, "prompts_used": 3},
         }
         await db_repo.save_simulation_run(str(simulation.id.value), "run_001", run_data)
 
@@ -109,11 +96,14 @@ class TestApplicationServiceIntegration:
     async def app_service(self):
         """Create application service with test database."""
         # Use in-memory SQLite for testing
-        from simulation.infrastructure.repositories.sqlite_repositories import get_sqlite_simulation_repository
         from unittest.mock import MagicMock
 
+        from simulation.infrastructure.repositories.sqlite_repositories import get_sqlite_simulation_repository
+
         # Mock the factory to return in-memory database
-        with patch('simulation.infrastructure.repositories.sqlite_repositories.get_sqlite_simulation_repository') as mock_get:
+        with patch(
+            "simulation.infrastructure.repositories.sqlite_repositories.get_sqlite_simulation_repository"
+        ) as mock_get:
             mock_repo = SQLiteSimulationRepository(db_path=":memory:")
             mock_get.return_value = mock_repo
 
@@ -122,7 +112,7 @@ class TestApplicationServiceIntegration:
                 project_repository=MagicMock(),
                 simulation_repository=mock_repo,
                 timeline_repository=MagicMock(),
-                team_repository=MagicMock()
+                team_repository=MagicMock(),
             )
 
             # Override the repository attribute
@@ -139,9 +129,7 @@ class TestApplicationServiceIntegration:
         doc_store_ref = "store_ref_789"
 
         # Link document
-        await app_service.link_document_to_simulation(
-            simulation_id, document_id, document_type, doc_store_ref
-        )
+        await app_service.link_document_to_simulation(simulation_id, document_id, document_type, doc_store_ref)
 
         # Retrieve documents
         documents = await app_service.get_simulation_documents(simulation_id)
@@ -159,9 +147,7 @@ class TestApplicationServiceIntegration:
         prompt_store_ref = "prompt_store_ref_012"
 
         # Link prompt
-        await app_service.link_prompt_to_simulation(
-            simulation_id, prompt_id, prompt_type, prompt_store_ref
-        )
+        await app_service.link_prompt_to_simulation(simulation_id, prompt_id, prompt_type, prompt_store_ref)
 
         # Retrieve prompts
         prompts = await app_service.get_simulation_prompts(simulation_id)
@@ -179,7 +165,7 @@ class TestApplicationServiceIntegration:
             "start_time": datetime.now().isoformat(),
             "status": "running",
             "progress": 0.75,
-            "current_phase": "document_generation"
+            "current_phase": "document_generation",
         }
 
         # Save run data
@@ -224,15 +210,10 @@ class TestRedisIntegration:
         """Test publishing simulation events via Redis."""
         simulation_id = "test_sim_123"
         event_type = "simulation_started"
-        event_data = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": "initialization"
-        }
+        event_data = {"timestamp": datetime.now().isoformat(), "phase": "initialization"}
 
         # Publish event
-        success = await redis_client.publish_simulation_event(
-            simulation_id, event_type, event_data
-        )
+        success = await redis_client.publish_simulation_event(simulation_id, event_type, event_data)
 
         assert success is True
 
@@ -259,9 +240,7 @@ class TestRedisIntegration:
         document_type = "generated"
 
         # Publish document event
-        success = await redis_client.publish_document_generated(
-            simulation_id, document_id, document_type
-        )
+        success = await redis_client.publish_document_generated(simulation_id, document_id, document_type)
 
         assert success is True
 
@@ -287,9 +266,7 @@ class TestRedisIntegration:
         prompt_type = "generation"
 
         # Publish prompt event
-        success = await redis_client.publish_prompt_used(
-            simulation_id, prompt_id, prompt_type
-        )
+        success = await redis_client.publish_prompt_used(simulation_id, prompt_id, prompt_type)
 
         assert success is True
 
@@ -339,8 +316,8 @@ class TestEndToEndIntegration:
         # through document generation, Redis events, and database storage
 
         # For now, just verify the components can be imported and instantiated
-        from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
         from simulation.infrastructure.redis_integration import RedisPubSubManager, SimulationRedisClient
+        from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
 
         # Test database repository
         repo = SQLiteSimulationRepository(db_path=":memory:")

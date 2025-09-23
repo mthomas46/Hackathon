@@ -17,9 +17,9 @@ Dependencies: None (standalone service with external API calls)
 import time
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Request
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ConfigDict 
+from pydantic import BaseModel, ConfigDict, Field
 
 from services.shared.core.constants_new import ServiceNames
 
@@ -36,6 +36,7 @@ from services.shared.monitoring.metrics import (
     record_architecture_digitizer_request,
 )
 from services.shared.utilities import attach_self_register, get_service_client, setup_common_middleware
+
 # from services.shared.utilities.logging_client import get_log_collector_client
 
 # ============================================================================
@@ -138,8 +139,10 @@ async def store_architecture_in_docstore(
 # STANDARD API RESPONSE MODELS - Consistent error handling
 # ============================================================================
 
+
 class APIResponse(BaseModel):
     """Standard API response wrapper for consistent formatting."""
+
     model_config = ConfigDict(from_attributes=True)
 
     success: bool = Field(..., description="Whether the operation was successful")
@@ -152,6 +155,7 @@ class APIResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Standard error response for consistent error formatting."""
+
     model_config = ConfigDict(from_attributes=True)
 
     success: bool = Field(default=False, description="Always false for error responses")
@@ -162,6 +166,7 @@ class ErrorResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response model for architecture digitizer service."""
+
     model_config = ConfigDict(from_attributes=True)
 
     status: str = Field(..., description="Service health status")
@@ -172,6 +177,7 @@ class HealthResponse(BaseModel):
     supported_systems_count: int = Field(..., description="Number of supported diagram systems")
     file_formats_supported: int = Field(..., description="Number of supported file formats")
     normalization_engine_active: bool = Field(..., description="Whether normalization engine is active")
+
 
 # Service configuration constants
 SERVICE_NAME = "architecture-digitizer"
@@ -346,33 +352,27 @@ app = FastAPI(
     contact={
         "name": "Architecture Digitizer Team",
         "url": "https://github.com/your-org/architecture-digitizer",
-        "email": "architecture@your-org.com"
+        "email": "architecture@your-org.com",
     },
-    license_info={
-        "name": "Proprietary",
-        "url": "https://your-org.com/license"
-    },
+    license_info={"name": "Proprietary", "url": "https://your-org.com/license"},
     openapi_tags=[
         {
             "name": "Health & Monitoring",
-            "description": "Service health checks, diagram system connectivity, and operational metrics"
+            "description": "Service health checks, diagram system connectivity, and operational metrics",
         },
         {
             "name": "Architecture Normalization",
-            "description": "Diagram normalization, component extraction, and architecture analysis"
+            "description": "Diagram normalization, component extraction, and architecture analysis",
         },
-        {
-            "name": "File Processing",
-            "description": "File upload processing, format detection, and batch operations"
-        },
+        {"name": "File Processing", "description": "File upload processing, format detection, and batch operations"},
         {
             "name": "System Capabilities",
-            "description": "Supported systems listing, capabilities discovery, and integration details"
-        }
+            "description": "Supported systems listing, capabilities discovery, and integration details",
+        },
     ],
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
 )
 
 
@@ -383,6 +383,7 @@ async def startup_event():
 
     # Set startup time for uptime calculation
     import time
+
     app._startup_time = time.time()
 
     try:
@@ -441,6 +442,7 @@ setup_common_middleware(
 # ============================================================================
 # CUSTOM HEALTH ENDPOINT - Override shared health with detailed architecture processing
 # ============================================================================
+
 
 @app.get(
     "/health",
@@ -532,10 +534,10 @@ setup_common_middleware(
                         "last_health_check": "2024-09-22T10:30:00Z",
                         "supported_systems_count": 6,
                         "file_formats_supported": 8,
-                        "normalization_engine_active": True
+                        "normalization_engine_active": True,
                     }
                 }
-            }
+            },
         },
         503: {
             "description": "Service is degraded but still operational",
@@ -550,13 +552,13 @@ setup_common_middleware(
                         "last_health_check": "2024-09-22T10:25:00Z",
                         "supported_systems_count": 5,
                         "file_formats_supported": 7,
-                        "normalization_engine_active": True
+                        "normalization_engine_active": True,
                     }
                 }
-            }
-        }
+            },
+        },
     },
-    tags=["Health & Monitoring"]
+    tags=["Health & Monitoring"],
 )
 async def health():
     """
@@ -571,7 +573,7 @@ async def health():
     import datetime
 
     # Calculate uptime (simplified - in production this would track actual startup time)
-    uptime_seconds = time.time() - getattr(app, '_startup_time', time.time())
+    uptime_seconds = time.time() - getattr(app, "_startup_time", time.time())
 
     # Check supported systems count (simplified check)
     supported_systems_count = 6  # Miro, FigJam, Lucid, Confluence, Draw.io, PlantUML
@@ -613,7 +615,7 @@ async def health():
         last_health_check=datetime.datetime.utcnow().isoformat() + "Z",
         supported_systems_count=supported_systems_count,
         file_formats_supported=file_formats_supported,
-        normalization_engine_active=normalization_engine_active
+        normalization_engine_active=normalization_engine_active,
     )
 
 

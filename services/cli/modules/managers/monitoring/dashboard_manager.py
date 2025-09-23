@@ -1,12 +1,13 @@
 """Dashboard Manager for CLI monitoring operations."""
 
-from typing import Dict, Any, List, Optional
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import yaml
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
 
 from ...base.base_manager import BaseManager
 from ...formatters.display_utils import DisplayManager
@@ -28,7 +29,7 @@ class DashboardManager(BaseManager):
             ("4", "Import Dashboard"),
             ("5", "Export Dashboard"),
             ("6", "Dashboard Performance"),
-            ("b", "Back to Advanced Monitoring")
+            ("b", "Back to Advanced Monitoring"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -71,7 +72,7 @@ class DashboardManager(BaseManager):
                         name,
                         info.get("type", "Unknown"),
                         info.get("description", "No description"),
-                        info.get("last_modified", "Unknown")
+                        info.get("last_modified", "Unknown"),
                     )
 
                 self.console.print(table)
@@ -101,8 +102,7 @@ class DashboardManager(BaseManager):
                 return
 
             dashboard_type = await self.select_from_list(
-                ["system", "application", "business", "custom"],
-                "Dashboard type"
+                ["system", "application", "business", "custom"], "Dashboard type"
             )
             if not dashboard_type:
                 dashboard_type = "custom"
@@ -117,7 +117,7 @@ class DashboardManager(BaseManager):
                 "created_at": self._get_timestamp(),
                 "panels": [],
                 "variables": {},
-                "tags": [dashboard_type]
+                "tags": [dashboard_type],
             }
 
             # Add some default panels based on type
@@ -161,8 +161,7 @@ class DashboardManager(BaseManager):
 
                 # Allow editing basic properties
                 new_description = await self.get_user_input(
-                    "New description",
-                    default=dashboard_config.get("description", "")
+                    "New description", default=dashboard_config.get("description", "")
                 )
 
                 if new_description != dashboard_config.get("description", ""):
@@ -198,10 +197,10 @@ class DashboardManager(BaseManager):
                 self.display.show_error(f"File not found: {file_path}")
                 return
 
-            with open(file_path, 'r') as f:
-                if file_path.endswith('.json'):
+            with open(file_path, "r") as f:
+                if file_path.endswith(".json"):
                     dashboard_config = json.load(f)
-                elif file_path.endswith(('.yaml', '.yml')):
+                elif file_path.endswith((".yaml", ".yml")):
                     dashboard_config = yaml.safe_load(f)
                 else:
                     self.display.show_error("Unsupported file format. Use .json or .yaml/.yml")
@@ -249,8 +248,7 @@ class DashboardManager(BaseManager):
                     format_choice = "json"
 
                 file_path = await self.get_user_input(
-                    "Export file path",
-                    default=f"{selected_dashboard}.{format_choice}"
+                    "Export file path", default=f"{selected_dashboard}.{format_choice}"
                 )
 
                 if format_choice == "json":
@@ -258,7 +256,7 @@ class DashboardManager(BaseManager):
                 else:
                     content = yaml.dump(dashboard_config, default_flow_style=False)
 
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     f.write(content)
 
                 self.display.show_success(f"Dashboard exported to {file_path}")
@@ -285,7 +283,7 @@ class DashboardManager(BaseManager):
                     "load_time": f"{0.5 + 0.1 * len(name):.2f}s",
                     "query_count": len(name) * 2,
                     "data_points": len(name) * 100,
-                    "refresh_rate": "30s"
+                    "refresh_rate": "30s",
                 }
 
             table = Table(title="Dashboard Performance Metrics")
@@ -301,7 +299,7 @@ class DashboardManager(BaseManager):
                     metrics["load_time"],
                     str(metrics["query_count"]),
                     str(metrics["data_points"]),
-                    metrics["refresh_rate"]
+                    metrics["refresh_rate"],
                 )
 
             self.console.print(table)
@@ -318,20 +316,20 @@ class DashboardManager(BaseManager):
                 "type": "system",
                 "description": "System-wide metrics and health overview",
                 "last_modified": "2024-01-15",
-                "panels": 8
+                "panels": 8,
             },
             "application-metrics": {
                 "type": "application",
                 "description": "Application performance and throughput metrics",
                 "last_modified": "2024-01-14",
-                "panels": 6
+                "panels": 6,
             },
             "business-kpis": {
                 "type": "business",
                 "description": "Business-level KPIs and service level indicators",
                 "last_modified": "2024-01-13",
-                "panels": 4
-            }
+                "panels": 4,
+            },
         }
 
     async def _display_dashboard_details(self, dashboard_info: Dict[str, Any]):
@@ -352,7 +350,7 @@ Panels: {dashboard_info.get('panels', 0)}
             {"type": "graph", "title": "CPU Usage", "targets": ["cpu_usage"]},
             {"type": "graph", "title": "Memory Usage", "targets": ["memory_usage"]},
             {"type": "graph", "title": "Disk I/O", "targets": ["disk_io"]},
-            {"type": "graph", "title": "Network Traffic", "targets": ["network_traffic"]}
+            {"type": "graph", "title": "Network Traffic", "targets": ["network_traffic"]},
         ]
 
     def _get_application_dashboard_panels(self) -> List[Dict[str, Any]]:
@@ -361,7 +359,7 @@ Panels: {dashboard_info.get('panels', 0)}
             {"type": "graph", "title": "Response Time", "targets": ["response_time"]},
             {"type": "graph", "title": "Request Rate", "targets": ["request_rate"]},
             {"type": "graph", "title": "Error Rate", "targets": ["error_rate"]},
-            {"type": "table", "title": "Top Endpoints", "targets": ["endpoint_stats"]}
+            {"type": "table", "title": "Top Endpoints", "targets": ["endpoint_stats"]},
         ]
 
     async def _save_dashboard_config(self, name: str, config: Dict[str, Any]) -> bool:
@@ -381,18 +379,10 @@ Panels: {dashboard_info.get('panels', 0)}
     async def _add_panel_to_dashboard(self, dashboard_config: Dict[str, Any]):
         """Add a new panel to dashboard configuration."""
         panel_title = await self.get_user_input("Panel title")
-        panel_type = await self.select_from_list(
-            ["graph", "table", "singlestat", "heatmap"],
-            "Panel type"
-        )
+        panel_type = await self.select_from_list(["graph", "table", "singlestat", "heatmap"], "Panel type")
 
         if panel_title and panel_type:
-            new_panel = {
-                "type": panel_type,
-                "title": panel_title,
-                "targets": [],
-                "added_at": self._get_timestamp()
-            }
+            new_panel = {"type": panel_type, "title": panel_title, "targets": [], "added_at": self._get_timestamp()}
             dashboard_config["panels"].append(new_panel)
 
     def _validate_dashboard_config(self, config: Dict[str, Any]) -> bool:
@@ -403,4 +393,5 @@ Panels: {dashboard_info.get('panels', 0)}
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
         from datetime import datetime
+
         return datetime.utcnow().isoformat()

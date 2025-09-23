@@ -5,20 +5,23 @@ across services. Menus are populated by querying the appropriate APIs and
 collecting user input for required parameters.
 """
 
-from typing import Dict, Any, List, Optional, Tuple, Callable
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from services.shared.integrations.clients.clients import ServiceClients
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+
 from services.shared.core.constants_new import ServiceNames
+from services.shared.integrations.clients.clients import ServiceClients
 
 from ..shared_utils import (
-    create_menu_table,
     add_menu_rows,
+    create_menu_table,
     print_panel,
 )
-from ..utils.display_helpers import print_kv as _print_kv, print_list as _print_list, save_data as _save_data
+from ..utils.display_helpers import print_kv as _print_kv
+from ..utils.display_helpers import print_list as _print_list
+from ..utils.display_helpers import save_data as _save_data
 
 
 class ServiceActions:
@@ -46,8 +49,7 @@ class ServiceActions:
         # Try orchestrator registry
         try:
             reg = await self._get_or_cache(
-                "orchestrator.registry",
-                lambda: self.clients.get_json(f"{self.clients.orchestrator_url()}/registry")
+                "orchestrator.registry", lambda: self.clients.get_json(f"{self.clients.orchestrator_url()}/registry")
             )
             for entry in reg.get("services", []):
                 name = entry.get("name")
@@ -198,8 +200,7 @@ class ServiceActions:
             q = Prompt.ask("Query (fts)", default="")
             url = f"{self.clients.doc_store_url()}/search"
             rx = await self._get_or_cache(
-                f"docstore.search:{q}",
-                lambda: self.clients.get_json(url, params={"q": q} if q else None)
+                f"docstore.search:{q}", lambda: self.clients.get_json(url, params={"q": q} if q else None)
             )
             _print_list(self.console, "Documents", rx.get("items", []))
 
@@ -213,6 +214,7 @@ class ServiceActions:
             content = Prompt.ask("Content")
             metadata_raw = Prompt.ask("Metadata JSON (optional)", default="{}")
             import json
+
             try:
                 metadata = json.loads(metadata_raw) if metadata_raw else {}
             except Exception:
@@ -233,9 +235,12 @@ class ServiceActions:
 
         async def db_probe():
             import time as _t
+
             temp_id = f"cli:{int(_t.time())}"
             create_url = f"{self.clients.doc_store_url()}/documents"
-            created = await self.clients.post_json(create_url, {"id": temp_id, "content": "cli-db-probe", "metadata": {"source": "cli"}})
+            created = await self.clients.post_json(
+                create_url, {"id": temp_id, "content": "cli-db-probe", "metadata": {"source": "cli"}}
+            )
             get_url = f"{self.clients.doc_store_url()}/documents/{created.get('id', temp_id)}"
             fetched = await self.clients.get_json(get_url)
             _print_kv(self.console, "DB Probe", {"created": created.get("id"), "fetched": bool(fetched)})
@@ -295,6 +300,7 @@ class ServiceActions:
             source = Prompt.ask("Source", default="github")
             data_raw = Prompt.ask("Source data JSON")
             import json
+
             try:
                 data = json.loads(data_raw)
             except Exception:
@@ -322,6 +328,7 @@ class ServiceActions:
 
         async def test_github_credentials():
             import httpx
+
             token = Prompt.ask("GitHub token (or leave blank)", default="")
             owner = Prompt.ask("Owner (user or org)")
             api = Prompt.ask("API base", default="https://api.github.com")
@@ -338,7 +345,10 @@ class ServiceActions:
             _print_kv(self.console, "GitHub Credentials", {"github_ok": ok, "owner": owner or "self"})
 
         async def browse_github():
-            import httpx, base64
+            import base64
+
+            import httpx
+
             token = Prompt.ask("GitHub token (or leave blank)", default="")
             owner = Prompt.ask("Owner (user or org)")
             api = Prompt.ask("API base", default="https://api.github.com")
@@ -351,7 +361,10 @@ class ServiceActions:
                         url = f"{api}/orgs/{owner}/repos"
                         r = await client.get(url, headers=headers, params={"per_page": 25})
                         repos = r.json() if r.status_code < 400 else []
-                    items = [{"name": it.get("name"), "full_name": it.get("full_name"), "private": it.get("private")} for it in repos]
+                    items = [
+                        {"name": it.get("name"), "full_name": it.get("full_name"), "private": it.get("private")}
+                        for it in repos
+                    ]
                     _print_list(self.console, "GitHub Repos", items)
                 except Exception as e:
                     _print_kv(self.console, "Error", {"error": str(e)})
@@ -373,12 +386,15 @@ class ServiceActions:
 
         async def test_jira_credentials():
             import httpx
+
             base = Prompt.ask("Jira base URL", default="https://example.atlassian.net")
             email = Prompt.ask("Email")
             token = Prompt.ask("API token")
             try:
                 async with httpx.AsyncClient(timeout=10) as client:
-                    r = await client.get(f"{base}/rest/api/3/project/search", auth=(email, token), params={"maxResults": 1})
+                    r = await client.get(
+                        f"{base}/rest/api/3/project/search", auth=(email, token), params={"maxResults": 1}
+                    )
                     ok = r.status_code < 400
             except Exception:
                 ok = False
@@ -386,15 +402,18 @@ class ServiceActions:
 
         async def browse_jira():
             import httpx
+
             base = Prompt.ask("Jira base URL", default="https://example.atlassian.net")
             email = Prompt.ask("Email")
             token = Prompt.ask("API token")
             while True:
                 try:
                     async with httpx.AsyncClient(timeout=15) as client:
-                        r = await client.get(f"{base}/rest/api/3/project/search", auth=(email, token), params={"maxResults": 25})
+                        r = await client.get(
+                            f"{base}/rest/api/3/project/search", auth=(email, token), params={"maxResults": 25}
+                        )
                         projects = r.json().get("values", []) if r.status_code < 400 else []
-                    items = [{"key": it.get("key"), "name": it.get("name") } for it in projects]
+                    items = [{"key": it.get("key"), "name": it.get("name")} for it in projects]
                     _print_list(self.console, "Jira Projects", items)
                 except Exception as e:
                     _print_kv(self.console, "Error", {"error": str(e)})
@@ -403,9 +422,21 @@ class ServiceActions:
                     break
                 try:
                     async with httpx.AsyncClient(timeout=15) as client:
-                        r = await client.get(f"{base}/rest/api/3/search", auth=(email, token), params={"jql": f"project={pkey}", "maxResults": 25})
+                        r = await client.get(
+                            f"{base}/rest/api/3/search",
+                            auth=(email, token),
+                            params={"jql": f"project={pkey}", "maxResults": 25},
+                        )
                         issues = r.json().get("issues", []) if r.status_code < 400 else []
-                    items = [{"key": it.get("key"), "summary": (it.get("fields", {}).get("summary") if isinstance(it.get("fields"), dict) else "")} for it in issues]
+                    items = [
+                        {
+                            "key": it.get("key"),
+                            "summary": (
+                                it.get("fields", {}).get("summary") if isinstance(it.get("fields"), dict) else ""
+                            ),
+                        }
+                        for it in issues
+                    ]
                     _print_list(self.console, f"Jira Issues ({pkey})", items)
                     ikey = Prompt.ask("Enter issue key to save JSON, or 'b' to back", default="b")
                     if ikey.lower() == "b":
@@ -420,6 +451,7 @@ class ServiceActions:
 
         async def test_confluence_credentials():
             import httpx
+
             base = Prompt.ask("Confluence base URL", default="https://example.atlassian.net/wiki")
             email = Prompt.ask("Email")
             token = Prompt.ask("API token")
@@ -433,6 +465,7 @@ class ServiceActions:
 
         async def browse_confluence():
             import httpx
+
             base = Prompt.ask("Confluence base URL", default="https://example.atlassian.net/wiki")
             email = Prompt.ask("Email")
             token = Prompt.ask("API token")
@@ -441,7 +474,7 @@ class ServiceActions:
                     async with httpx.AsyncClient(timeout=15) as client:
                         r = await client.get(f"{base}/rest/api/space", auth=(email, token), params={"limit": 25})
                         spaces = r.json().get("results", []) if r.status_code < 400 else []
-                    items = [{"key": it.get("key"), "name": it.get("name") } for it in spaces]
+                    items = [{"key": it.get("key"), "name": it.get("name")} for it in spaces]
                     _print_list(self.console, "Confluence Spaces", items)
                 except Exception as e:
                     _print_kv(self.console, "Error", {"error": str(e)})
@@ -450,15 +483,23 @@ class ServiceActions:
                     break
                 try:
                     async with httpx.AsyncClient(timeout=15) as client:
-                        r = await client.get(f"{base}/rest/api/content", auth=(email, token), params={"spaceKey": skey, "limit": 25, "expand": "body.storage"})
+                        r = await client.get(
+                            f"{base}/rest/api/content",
+                            auth=(email, token),
+                            params={"spaceKey": skey, "limit": 25, "expand": "body.storage"},
+                        )
                         pages = r.json().get("results", []) if r.status_code < 400 else []
-                    items = [{"id": it.get("id"), "title": it.get("title") } for it in pages]
+                    items = [{"id": it.get("id"), "title": it.get("title")} for it in pages]
                     _print_list(self.console, f"Confluence Pages ({skey})", items)
                     pid = Prompt.ask("Enter page id to save, or 'b' to back", default="b")
                     if pid.lower() == "b":
                         continue
                     page = next((p for p in pages if str(p.get("id")) == pid), None)
-                    body = (((page or {}).get("body") or {}).get("storage") or {}).get("value") if isinstance(page, dict) else ""
+                    body = (
+                        (((page or {}).get("body") or {}).get("storage") or {}).get("value")
+                        if isinstance(page, dict)
+                        else ""
+                    )
                     path = Prompt.ask("Save path", default=f"./confluence_{pid}.md")
                     await _save_data(self.console, {"content": body}, "md", path, content_key="content")
                 except Exception as e:
@@ -509,7 +550,9 @@ class ServiceActions:
 
         async def redis_connectivity():
             import socket
+
             from services.shared.core.config.config import get_config_value as _cfg
+
             host = str(_cfg("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")).strip()
             port = 6379
             ok = False
@@ -545,7 +588,9 @@ class ServiceActions:
         async def test_providers():
             url = f"{self.clients.summarizer_hub_url()}/summarize/ensemble"
             try:
-                _ = await self.clients.post_json(url, {"text": "ping", "providers": [{"name": "ollama"}], "use_hub_config": True})
+                _ = await self.clients.post_json(
+                    url, {"text": "ping", "providers": [{"name": "ollama"}], "use_hub_config": True}
+                )
                 ok = True
             except Exception:
                 ok = False
@@ -593,7 +638,9 @@ class ServiceActions:
             all_items: List[Dict[str, Any]] = []
             for q in arr:
                 url = f"{self.clients.doc_store_url()}/search"
-                rx = await self._get_or_cache(f"docstore.search:{q}", lambda: self.clients.get_json(url, params={"q": q}))
+                rx = await self._get_or_cache(
+                    f"docstore.search:{q}", lambda: self.clients.get_json(url, params={"q": q})
+                )
                 all_items.extend(rx.get("items", []))
             _print_list(self.console, "Aggregated Search Results", all_items)
 
@@ -601,8 +648,6 @@ class ServiceActions:
             ("Bulk analyze targets", bulk_analyze),
             ("Bulk search documents", bulk_search),
         ]
-
-    
 
     # -----------------
     # Cache management
@@ -657,8 +702,12 @@ class ServiceActions:
         self._cache[key] = value
         return value
 
-    async def _save_data(self, console: Console, data: Dict[str, Any], fmt: str, path: str, content_key: Optional[str] = None) -> None:
-        import json, os
+    async def _save_data(
+        self, console: Console, data: Dict[str, Any], fmt: str, path: str, content_key: Optional[str] = None
+    ) -> None:
+        import json
+        import os
+
         fmt = (fmt or "json").lower()
         try:
             os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
@@ -679,5 +728,3 @@ class ServiceActions:
             _print_kv(console, "Saved", {"saved": True, "path": path, "format": fmt})
         except Exception as e:
             _print_kv(console, "Saved", {"saved": False, "path": path, "error": str(e)})
-
-

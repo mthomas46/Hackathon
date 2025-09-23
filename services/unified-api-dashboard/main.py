@@ -32,5 +32,5 @@ if __name__ == "__main__":
         host=host,
         port=port,
         reload=os.getenv("ENVIRONMENT") == "development",
-        log_level=os.getenv("LOG_LEVEL", "info").lower()
+        log_level=os.getenv("LOG_LEVEL", "info").lower(),
     )

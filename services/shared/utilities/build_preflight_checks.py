@@ -3,17 +3,17 @@
 Ensures build stability by validating environment, dependencies, and configurations
 before Docker builds proceed. Prevents build failures and provides early feedback.
 """
-import os
-import sys
-import subprocess
-import json
-import shutil
-import hashlib
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass
-import logging
 
+import hashlib
+import json
+import logging
+import os
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BuildCheck:
     """Represents a single build check."""
+
     name: str
     description: str
     required: bool = True
@@ -31,6 +32,7 @@ class BuildCheck:
 @dataclass
 class BuildCheckResult:
     """Result of a build check."""
+
     check: BuildCheck
     passed: bool
     message: str
@@ -67,63 +69,63 @@ class BuildPreflightChecker:
                 name="docker_available",
                 description="Docker daemon is available and accessible",
                 check_func=self._check_docker_available,
-                fix_suggestion="Start Docker daemon or install Docker"
+                fix_suggestion="Start Docker daemon or install Docker",
             ),
             BuildCheck(
                 name="dockerfile_exists",
                 description="Dockerfile exists in service directory",
                 check_func=self._check_dockerfile_exists,
-                fix_suggestion="Create Dockerfile in service directory"
+                fix_suggestion="Create Dockerfile in service directory",
             ),
             BuildCheck(
                 name="dockerfile_valid",
                 description="Dockerfile syntax is valid",
                 check_func=self._check_dockerfile_valid,
-                fix_suggestion="Fix Dockerfile syntax errors"
+                fix_suggestion="Fix Dockerfile syntax errors",
             ),
             BuildCheck(
                 name="dependencies_resolvable",
                 description="All required dependencies are available",
                 check_func=self._check_dependencies_resolvable,
-                fix_suggestion="Check requirements.txt or package.json files"
+                fix_suggestion="Check requirements.txt or package.json files",
             ),
             BuildCheck(
                 name="build_context_size",
                 description="Build context size is reasonable",
                 check_func=self._check_build_context_size,
-                fix_suggestion="Use .dockerignore to exclude unnecessary files"
+                fix_suggestion="Use .dockerignore to exclude unnecessary files",
             ),
             BuildCheck(
                 name="security_vulnerabilities",
                 description="No critical security vulnerabilities in dependencies",
                 required=False,  # Warning only
                 check_func=self._check_security_vulnerabilities,
-                fix_suggestion="Update dependencies to fix security issues"
+                fix_suggestion="Update dependencies to fix security issues",
             ),
             BuildCheck(
                 name="shared_utilities_compatible",
                 description="Shared utilities are compatible with service",
                 check_func=self._check_shared_utilities_compatibility,
-                fix_suggestion="Update service to use compatible shared utilities"
+                fix_suggestion="Update service to use compatible shared utilities",
             ),
             BuildCheck(
                 name="environment_variables_defined",
                 description="Required environment variables are defined",
                 check_func=self._check_environment_variables,
-                fix_suggestion="Define required environment variables"
+                fix_suggestion="Define required environment variables",
             ),
             BuildCheck(
                 name="network_ports_available",
                 description="Required network ports are available",
                 check_func=self._check_network_ports,
-                fix_suggestion="Ensure ports are not in use by other services"
+                fix_suggestion="Ensure ports are not in use by other services",
             ),
             BuildCheck(
                 name="disk_space_sufficient",
                 description="Sufficient disk space for build",
                 check_func=self._check_disk_space,
-                fix_suggestion="Free up disk space or use external build cache"
-            )
+                fix_suggestion="Free up disk space or use external build cache",
+            ),
         ]
 
     async def run_all_checks(self) -> List[BuildCheckResult]:
@@ -140,11 +142,7 @@ class BuildPreflightChecker:
                 duration = time.time() - start_time
 
                 result = BuildCheckResult(
-                    check=check,
-                    passed=passed,
-                    message=message,
-                    details=details or {},
-                    duration=duration
+                    check=check, passed=passed, message=message, details=details or {}, duration=duration
                 )
 
                 self.results.append(result)
@@ -163,7 +161,7 @@ class BuildPreflightChecker:
                     passed=False,
                     message=f"Check failed with exception: {str(e)}",
                     details={"error": str(e)},
-                    duration=duration
+                    duration=duration,
                 )
                 self.results.append(result)
                 logger.error(f"[ERROR] {check.name}: {str(e)} ({duration:.2f}s)")
@@ -194,10 +192,10 @@ class BuildPreflightChecker:
                     "passed": r.passed,
                     "required": r.check.required,
                     "message": r.message,
-                    "duration": r.duration
+                    "duration": r.duration,
                 }
                 for r in self.results
-            ]
+            ],
         }
 
     async def _check_docker_available(self) -> Tuple[bool, str, Dict[str, Any]]:
@@ -206,13 +204,13 @@ class BuildPreflightChecker:
             result = await self._run_command(["docker", "version"], timeout=10)
             if result.returncode == 0:
                 # Parse version info
-                lines = result.stdout.strip().split('\n')
+                lines = result.stdout.strip().split("\n")
                 version_info = {}
                 for line in lines[:2]:  # First two lines typically have version info
-                    if 'Version:' in line:
-                        version_info['docker_version'] = line.split('Version:')[1].strip()
-                    elif 'API version:' in line:
-                        version_info['api_version'] = line.split('API version:')[1].strip()
+                    if "Version:" in line:
+                        version_info["docker_version"] = line.split("Version:")[1].strip()
+                    elif "API version:" in line:
+                        version_info["api_version"] = line.split("API version:")[1].strip()
 
                 return True, "Docker is available and accessible", version_info
 
@@ -225,26 +223,33 @@ class BuildPreflightChecker:
         dockerfile_path = self.service_path / "Dockerfile"
         if dockerfile_path.exists():
             stat = dockerfile_path.stat()
-            return True, f"Dockerfile found at {dockerfile_path}", {
-                "path": str(dockerfile_path),
-                "size": stat.st_size,
-                "modified": stat.st_mtime
-            }
+            return (
+                True,
+                f"Dockerfile found at {dockerfile_path}",
+                {"path": str(dockerfile_path), "size": stat.st_size, "modified": stat.st_mtime},
+            )
 
         # Try common Dockerfile names
         for name in ["Dockerfile", "dockerfile", "Dockerfile.dev", "Dockerfile.prod"]:
             alt_path = self.service_path / name
             if alt_path.exists():
                 stat = alt_path.stat()
-                return True, f"Dockerfile found as {name}", {
-                    "path": str(alt_path),
-                    "size": stat.st_size,
-                    "modified": stat.st_mtime
-                }
+                return (
+                    True,
+                    f"Dockerfile found as {name}",
+                    {"path": str(alt_path), "size": stat.st_size, "modified": stat.st_mtime},
+                )
 
-        return False, "No Dockerfile found in service directory", {
-            "searched_paths": [str(self.service_path / name) for name in ["Dockerfile", "dockerfile", "Dockerfile.dev", "Dockerfile.prod"]]
-        }
+        return (
+            False,
+            "No Dockerfile found in service directory",
+            {
+                "searched_paths": [
+                    str(self.service_path / name)
+                    for name in ["Dockerfile", "dockerfile", "Dockerfile.dev", "Dockerfile.prod"]
+                ]
+            },
+        )
 
     async def _check_dockerfile_valid(self) -> Tuple[bool, str, Dict[str, Any]]:
         """Check if Dockerfile syntax is valid."""
@@ -263,20 +268,28 @@ class BuildPreflightChecker:
 
         try:
             # Use docker build --dry-run or docker build with a fake tag to validate syntax
-            result = await self._run_command([
-                "docker", "build", "--dry-run",
-                "-t", f"preflight-check-{self.service_name.lower().replace('_', '-')}",
-                "-f", str(dockerfile_path),
-                str(self.service_path)
-            ], timeout=30)
+            result = await self._run_command(
+                [
+                    "docker",
+                    "build",
+                    "--dry-run",
+                    "-t",
+                    f"preflight-check-{self.service_name.lower().replace('_', '-')}",
+                    "-f",
+                    str(dockerfile_path),
+                    str(self.service_path),
+                ],
+                timeout=30,
+            )
 
             if result.returncode == 0:
                 return True, "Dockerfile syntax is valid", {}
             else:
-                return False, f"Dockerfile syntax error: {result.stderr}", {
-                    "error": result.stderr,
-                    "stdout": result.stdout
-                }
+                return (
+                    False,
+                    f"Dockerfile syntax error: {result.stderr}",
+                    {"error": result.stderr, "stdout": result.stdout},
+                )
 
         except Exception as e:
             return False, f"Failed to validate Dockerfile: {str(e)}", {"error": str(e)}
@@ -294,9 +307,11 @@ class BuildPreflightChecker:
                 try:
                     if req_file == "requirements.txt":
                         # Try to parse requirements without installing
-                        with open(req_path, 'r') as f:
+                        with open(req_path, "r") as f:
                             content = f.read()
-                        lines = [line.strip() for line in content.split('\n') if line.strip() and not line.startswith('#')]
+                        lines = [
+                            line.strip() for line in content.split("\n") if line.strip() and not line.startswith("#")
+                        ]
                         details["python_requirements"] = len(lines)
                     elif req_file == "pyproject.toml":
                         details["has_pyproject"] = True
@@ -309,7 +324,7 @@ class BuildPreflightChecker:
         package_json = self.service_path / "package.json"
         if package_json.exists():
             try:
-                with open(package_json, 'r') as f:
+                with open(package_json, "r") as f:
                     package_data = json.load(f)
                 details["node_dependencies"] = len(package_data.get("dependencies", {}))
                 details["node_dev_dependencies"] = len(package_data.get("devDependencies", {}))
@@ -341,11 +356,24 @@ class BuildPreflightChecker:
             has_dockerignore = dockerignore.exists()
 
             # Calculate build context size (excluding common exclusions)
-            exclude_patterns = [
-                "__pycache__", "*.pyc", ".git", ".DS_Store",
-                "node_modules", ".next", "dist", "build",
-                "*.log", ".env", ".venv", "venv"
-            ] if not has_dockerignore else []
+            exclude_patterns = (
+                [
+                    "__pycache__",
+                    "*.pyc",
+                    ".git",
+                    ".DS_Store",
+                    "node_modules",
+                    ".next",
+                    "dist",
+                    "build",
+                    "*.log",
+                    ".env",
+                    ".venv",
+                    "venv",
+                ]
+                if not has_dockerignore
+                else []
+            )
 
             for root, dirs, files in os.walk(self.service_path):
                 # Skip excluded directories
@@ -361,10 +389,12 @@ class BuildPreflightChecker:
 
                             # Track large files (>10MB)
                             if size > 10 * 1024 * 1024:
-                                large_files.append({
-                                    "path": str(file_path.relative_to(self.service_path)),
-                                    "size_mb": size / (1024 * 1024)
-                                })
+                                large_files.append(
+                                    {
+                                        "path": str(file_path.relative_to(self.service_path)),
+                                        "size_mb": size / (1024 * 1024),
+                                    }
+                                )
                         except OSError:
                             pass  # Skip files we can't read
 
@@ -375,7 +405,7 @@ class BuildPreflightChecker:
                 "total_size_mb": size_mb,
                 "file_count": file_count,
                 "has_dockerignore": has_dockerignore,
-                "large_files": large_files[:10]  # Top 10 largest files
+                "large_files": large_files[:10],  # Top 10 largest files
             }
 
             # Warn if build context > 1GB or has many large files
@@ -405,7 +435,7 @@ class BuildPreflightChecker:
         req_file = self.service_path / "requirements.txt"
         if req_file.exists():
             try:
-                with open(req_file, 'r') as f:
+                with open(req_file, "r") as f:
                     content = f.read()
 
                 # Simple checks for known vulnerable versions
@@ -418,9 +448,11 @@ class BuildPreflightChecker:
                 vulnerabilities.append(f"Error checking requirements.txt: {str(e)}")
 
         if vulnerabilities:
-            return False, f"Security vulnerabilities found: {'; '.join(vulnerabilities)}", {
-                "vulnerabilities": vulnerabilities
-            }
+            return (
+                False,
+                f"Security vulnerabilities found: {'; '.join(vulnerabilities)}",
+                {"vulnerabilities": vulnerabilities},
+            )
 
         return True, "No obvious security vulnerabilities detected", {}
 
@@ -434,12 +466,12 @@ class BuildPreflightChecker:
             # Look for Python files that import shared utilities
             for py_file in self.service_path.rglob("*.py"):
                 try:
-                    with open(py_file, 'r') as f:
+                    with open(py_file, "r") as f:
                         content = f.read()
                     if "from services.shared.utilities" in content:
                         shared_usage = True
                         # Extract import lines
-                        lines = content.split('\n')
+                        lines = content.split("\n")
                         for line in lines:
                             if "from services.shared.utilities" in line:
                                 import_statements.append(line.strip())
@@ -452,22 +484,22 @@ class BuildPreflightChecker:
             # Check if shared utilities directory exists
             shared_dir = self.project_root / "services" / "shared" / "utilities"
             if not shared_dir.exists():
-                return False, "Shared utilities directory not found", {
-                    "shared_dir_path": str(shared_dir),
-                    "imports_found": import_statements[:5]
-                }
+                return (
+                    False,
+                    "Shared utilities directory not found",
+                    {"shared_dir_path": str(shared_dir), "imports_found": import_statements[:5]},
+                )
 
             # Check if __init__.py exists
             init_file = shared_dir / "__init__.py"
             if not init_file.exists():
-                return False, "Shared utilities __init__.py not found", {
-                    "init_file_path": str(init_file)
-                }
+                return False, "Shared utilities __init__.py not found", {"init_file_path": str(init_file)}
 
-            return True, "Shared utilities compatibility verified", {
-                "imports_found": len(import_statements),
-                "shared_dir_exists": True
-            }
+            return (
+                True,
+                "Shared utilities compatibility verified",
+                {"imports_found": len(import_statements), "shared_dir_exists": True},
+            )
 
         except Exception as e:
             return False, f"Failed to check shared utilities compatibility: {str(e)}", {"error": str(e)}
@@ -481,11 +513,12 @@ class BuildPreflightChecker:
 
             for py_file in self.service_path.rglob("*.py"):
                 try:
-                    with open(py_file, 'r') as f:
+                    with open(py_file, "r") as f:
                         content = f.read()
 
                     # Find os.environ.get() calls
                     import re
+
                     env_get_matches = re.findall(r'os\.environ\.get\(["\']([^"\']+)["\']', content)
                     env_vars_found.update(env_get_matches)
 
@@ -499,23 +532,25 @@ class BuildPreflightChecker:
             # Check which variables are actually defined
             missing_vars = []
             for var in env_vars_found:
-                if var not in os.environ and not var.startswith(('SERVICE_', 'PYTHONPATH')):
+                if var not in os.environ and not var.startswith(("SERVICE_", "PYTHONPATH")):
                     # Some variables might have defaults or be optional
-                    if not any(default_indicator in var for default_indicator in ['_URL', '_HOST', '_PORT']):
+                    if not any(default_indicator in var for default_indicator in ["_URL", "_HOST", "_PORT"]):
                         required_env_vars.add(var)
                     else:
                         missing_vars.append(var)
 
             if required_env_vars:
-                return False, f"Required environment variables not defined: {', '.join(sorted(required_env_vars))}", {
-                    "required_vars": sorted(required_env_vars),
-                    "optional_missing": sorted(missing_vars)
-                }
+                return (
+                    False,
+                    f"Required environment variables not defined: {', '.join(sorted(required_env_vars))}",
+                    {"required_vars": sorted(required_env_vars), "optional_missing": sorted(missing_vars)},
+                )
 
-            return True, "Environment variables check passed", {
-                "vars_found": len(env_vars_found),
-                "optional_missing": sorted(missing_vars)
-            }
+            return (
+                True,
+                "Environment variables check passed",
+                {"vars_found": len(env_vars_found), "optional_missing": sorted(missing_vars)},
+            )
 
         except Exception as e:
             return False, f"Failed to check environment variables: {str(e)}", {"error": str(e)}
@@ -529,7 +564,7 @@ class BuildPreflightChecker:
             ports_to_check = set()
 
             # Check environment variables for SERVICE_PORT
-            service_port = os.environ.get('SERVICE_PORT')
+            service_port = os.environ.get("SERVICE_PORT")
             if service_port:
                 try:
                     ports_to_check.add(int(service_port))
@@ -541,15 +576,16 @@ class BuildPreflightChecker:
             if compose_file.exists():
                 try:
                     import yaml
-                    with open(compose_file, 'r') as f:
+
+                    with open(compose_file, "r") as f:
                         compose_data = yaml.safe_load(f)
 
-                    service_config = compose_data.get('services', {}).get(self.service_name, {})
-                    ports = service_config.get('ports', [])
+                    service_config = compose_data.get("services", {}).get(self.service_name, {})
+                    ports = service_config.get("ports", [])
                     for port_mapping in ports:
                         if isinstance(port_mapping, str):
                             # Format: "host_port:container_port"
-                            host_port = port_mapping.split(':')[0]
+                            host_port = port_mapping.split(":")[0]
                             try:
                                 ports_to_check.add(int(host_port))
                             except ValueError:
@@ -563,7 +599,7 @@ class BuildPreflightChecker:
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     sock.settimeout(1)
-                    result = sock.connect_ex(('127.0.0.1', port))
+                    result = sock.connect_ex(("127.0.0.1", port))
                     sock.close()
                     if result == 0:
                         unavailable_ports.append(port)
@@ -571,14 +607,17 @@ class BuildPreflightChecker:
                     pass  # Assume port is available if we can't check
 
             if unavailable_ports:
-                return False, f"Required ports are in use: {', '.join(map(str, unavailable_ports))}", {
-                    "ports_checked": sorted(ports_to_check),
-                    "unavailable_ports": sorted(unavailable_ports)
-                }
+                return (
+                    False,
+                    f"Required ports are in use: {', '.join(map(str, unavailable_ports))}",
+                    {"ports_checked": sorted(ports_to_check), "unavailable_ports": sorted(unavailable_ports)},
+                )
 
-            return True, f"Network ports available: {', '.join(map(str, sorted(ports_to_check)))}", {
-                "ports_checked": sorted(ports_to_check)
-            }
+            return (
+                True,
+                f"Network ports available: {', '.join(map(str, sorted(ports_to_check)))}",
+                {"ports_checked": sorted(ports_to_check)},
+            )
 
         except Exception as e:
             return False, f"Failed to check network ports: {str(e)}", {"error": str(e)}
@@ -596,7 +635,7 @@ class BuildPreflightChecker:
             details = {
                 "free_space_gb": free_gb,
                 "min_required_gb": min_required_gb,
-                "sufficient": free_gb >= min_required_gb
+                "sufficient": free_gb >= min_required_gb,
             }
 
             if free_gb < min_required_gb:
@@ -612,21 +651,16 @@ class BuildPreflightChecker:
         import asyncio
 
         process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            cwd=str(self.service_path)
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd=str(self.service_path)
         )
 
         try:
-            stdout, stderr = await asyncio.wait_for(
-                process.communicate(),
-                timeout=timeout
-            )
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
             return subprocess.CompletedProcess(
-                cmd, process.returncode,
-                stdout.decode('utf-8', errors='ignore'),
-                stderr.decode('utf-8', errors='ignore')
+                cmd,
+                process.returncode,
+                stdout.decode("utf-8", errors="ignore"),
+                stderr.decode("utf-8", errors="ignore"),
             )
         except asyncio.TimeoutError:
             process.kill()
@@ -660,12 +694,12 @@ def integrate_with_docker_build():
         import asyncio
 
         async def main():
-            service_name = os.environ.get('SERVICE_NAME', 'unknown-service')
+            service_name = os.environ.get("SERVICE_NAME", "unknown-service")
             checker = BuildPreflightChecker(service_name)
             results = await checker.run_all_checks()
             summary = checker.get_summary()
 
-            if summary['success']:
+            if summary["success"]:
                 print(f"✅ All preflight checks passed for {service_name}")
                 sys.exit(0)
             else:

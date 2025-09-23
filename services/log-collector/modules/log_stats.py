@@ -3,8 +3,9 @@
 Provides comprehensive analytics and aggregations for log data
 to support system monitoring and diagnostics.
 """
-from typing import Dict, List, Any
+
 from collections import defaultdict
+from typing import Any, Dict, List
 
 
 def calculate_log_statistics(logs: List[Dict[str, Any]]) -> Dict[str, Any]:

@@ -4,13 +4,14 @@ This module contains prompt-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm, Prompt
 
-from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.auth.credentials import get_secret
+from services.shared.integrations.clients.clients import ServiceClients
 
 from ..base.base_manager import BaseManager
 
@@ -29,7 +30,7 @@ class PromptManager(BaseManager):
             ("3", "Create New Prompt"),
             ("4", "Update Existing Prompt"),
             ("5", "Delete Prompt"),
-            ("6", "View Prompt Details")
+            ("6", "View Prompt Details"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -111,7 +112,7 @@ class PromptManager(BaseManager):
                 "content": content,
                 "variables": variables,
                 "tags": tags,
-                **({"author": author} if author else {})
+                **({"author": author} if author else {}),
             }
 
             url = f"{self.clients.prompt_store_url()}/prompts"
@@ -176,7 +177,7 @@ class PromptManager(BaseManager):
                 "description": description,
                 "content": content,
                 "variables": variables,
-                "tags": tags
+                "tags": tags,
             }
 
             url = f"{self.clients.prompt_store_url()}/prompts/{prompt_id}"
@@ -241,7 +242,7 @@ class PromptManager(BaseManager):
                 "description": description,
                 "content": current.get("content", ""),
                 "variables": current.get("variables", []),
-                "tags": current.get("tags", []) + ["forked"]
+                "tags": current.get("tags", []) + ["forked"],
             }
 
             url = f"{self.clients.prompt_store_url()}/prompts"

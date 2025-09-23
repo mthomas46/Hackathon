@@ -4,18 +4,18 @@ This module contains integration tests for timeline management, event ordering,
 and temporal workflow orchestration in the simulation system.
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, Mock, patch
 
-from simulation.infrastructure.content.timeline_based_generation import (
-    TimelineAwareContentGenerator, TimelineEventType, TemporalRelationship
-)
+import pytest
 from simulation.domain.entities.timeline import Timeline, TimelinePhase
-from simulation.domain.events import (
-    TimelineEventOccurred, PhaseStarted, PhaseDelayed, ProjectPhaseCompleted
+from simulation.domain.events import PhaseDelayed, PhaseStarted, ProjectPhaseCompleted, TimelineEventOccurred
+from simulation.infrastructure.content.timeline_based_generation import (
+    TemporalRelationship,
+    TimelineAwareContentGenerator,
+    TimelineEventType,
 )
 
 
@@ -25,7 +25,9 @@ class TestTimelineManagementIntegration:
     @pytest.fixture
     def timeline_generator(self):
         """Create TimelineAwareContentGenerator for testing."""
-        with patch('simulation.infrastructure.content.timeline_based_generation.get_context_aware_generator') as mock_get_generator:
+        with patch(
+            "simulation.infrastructure.content.timeline_based_generation.get_context_aware_generator"
+        ) as mock_get_generator:
             mock_generator = AsyncMock()
             mock_get_generator.return_value = mock_generator
 
@@ -38,7 +40,7 @@ class TestTimelineManagementIntegration:
         # Mock context generator
         timeline_generator.context_generator.generate_content.return_value = {
             "content": "# Sprint Planning Meeting\n\n## Attendees\n- Product Owner\n- Scrum Master\n- Development Team",
-            "metadata": {"word_count": 150, "quality_score": 0.9}
+            "metadata": {"word_count": 150, "quality_score": 0.9},
         }
 
         # Define timeline context
@@ -49,18 +51,16 @@ class TestTimelineManagementIntegration:
             "total_phase_duration": 14,
             "upcoming_events": [
                 {"type": "milestone", "title": "Requirements Complete", "days_until": 5},
-                {"type": "meeting", "title": "Sprint Planning", "days_until": 1}
+                {"type": "meeting", "title": "Sprint Planning", "days_until": 1},
             ],
-            "recent_events": [
-                {"type": "milestone", "title": "Project Kickoff", "days_ago": 2}
-            ]
+            "recent_events": [{"type": "milestone", "title": "Project Kickoff", "days_ago": 2}],
         }
 
         content_request = {
             "document_type": "meeting_notes",
             "title": "Sprint Planning Meeting",
             "timeline_context": timeline_context,
-            "project_phase": "planning"
+            "project_phase": "planning",
         }
 
         result = await timeline_generator.generate_timeline_aware_content(content_request)
@@ -77,23 +77,24 @@ class TestTimelineManagementIntegration:
     @pytest.mark.asyncio
     async def test_phase_based_content_generation(self, timeline_generator):
         """Test content generation based on project phases."""
+
         # Mock different responses for different phases
         def mock_generate(request):
             phase = request.get("timeline_context", {}).get("current_phase", "unknown")
             if phase == "planning":
                 return {
                     "content": "# Requirements Document\n\n## Overview\nProject requirements...",
-                    "metadata": {"phase": "planning", "word_count": 300}
+                    "metadata": {"phase": "planning", "word_count": 300},
                 }
             elif phase == "development":
                 return {
                     "content": "# Architecture Document\n\n## Components\nSystem components...",
-                    "metadata": {"phase": "development", "word_count": 400}
+                    "metadata": {"phase": "development", "word_count": 400},
                 }
             else:
                 return {
                     "content": "# Generic Document\n\n## Content\nGeneric content...",
-                    "metadata": {"phase": phase, "word_count": 200}
+                    "metadata": {"phase": phase, "word_count": 200},
                 }
 
         timeline_generator.context_generator.generate_content.side_effect = mock_generate
@@ -101,7 +102,7 @@ class TestTimelineManagementIntegration:
         # Test planning phase
         planning_request = {
             "document_type": "requirements_doc",
-            "timeline_context": {"current_phase": "planning", "phase_number": 1}
+            "timeline_context": {"current_phase": "planning", "phase_number": 1},
         }
 
         planning_result = await timeline_generator.generate_timeline_aware_content(planning_request)
@@ -111,7 +112,7 @@ class TestTimelineManagementIntegration:
         # Test development phase
         development_request = {
             "document_type": "architecture_doc",
-            "timeline_context": {"current_phase": "development", "phase_number": 2}
+            "timeline_context": {"current_phase": "development", "phase_number": 2},
         }
 
         development_result = await timeline_generator.generate_timeline_aware_content(development_request)
@@ -124,7 +125,7 @@ class TestTimelineManagementIntegration:
         # Mock event-driven content generation
         timeline_generator.context_generator.generate_content.return_value = {
             "content": "# Sprint Complete\n\n## Achievements\n- Completed all planned items\n- Quality metrics met",
-            "metadata": {"event_type": "sprint_complete", "word_count": 120}
+            "metadata": {"event_type": "sprint_complete", "word_count": 120},
         }
 
         event_context = {
@@ -134,13 +135,13 @@ class TestTimelineManagementIntegration:
             "current_phase": "development",
             "phase_progress": 0.25,
             "team_velocity": 85,
-            "quality_metrics": {"test_coverage": 0.92, "bug_density": 0.05}
+            "quality_metrics": {"test_coverage": 0.92, "bug_density": 0.05},
         }
 
         request = {
             "document_type": "status_report",
             "timeline_context": event_context,
-            "trigger_event": "sprint_complete"
+            "trigger_event": "sprint_complete",
         }
 
         result = await timeline_generator.generate_timeline_aware_content(request)
@@ -160,36 +161,31 @@ class TestTimelineEventOrdering:
         base_time = datetime.now()
 
         events = [
-            {
-                "event_type": "project_start",
-                "title": "Project Kickoff",
-                "timestamp": base_time,
-                "sequence": 1
-            },
+            {"event_type": "project_start", "title": "Project Kickoff", "timestamp": base_time, "sequence": 1},
             {
                 "event_type": "milestone",
                 "title": "Requirements Complete",
                 "timestamp": base_time + timedelta(days=7),
-                "sequence": 2
+                "sequence": 2,
             },
             {
                 "event_type": "phase_start",
                 "title": "Design Phase Begins",
                 "timestamp": base_time + timedelta(days=8),
-                "sequence": 3
+                "sequence": 3,
             },
             {
                 "event_type": "milestone",
                 "title": "Design Complete",
                 "timestamp": base_time + timedelta(days=21),
-                "sequence": 4
+                "sequence": 4,
             },
             {
                 "event_type": "phase_start",
                 "title": "Development Phase Begins",
                 "timestamp": base_time + timedelta(days=22),
-                "sequence": 5
-            }
+                "sequence": 5,
+            },
         ]
 
         # Sort by timestamp
@@ -215,7 +211,7 @@ class TestTimelineEventOrdering:
             "design": {"title": "System Design", "depends_on": ["requirements"]},
             "development": {"title": "Development", "depends_on": ["design"]},
             "testing": {"title": "Testing", "depends_on": ["development"]},
-            "deployment": {"title": "Deployment", "depends_on": ["testing"]}
+            "deployment": {"title": "Deployment", "depends_on": ["testing"]},
         }
 
         # Function to check if all dependencies are satisfied
@@ -260,7 +256,9 @@ class TestTimelinePhaseProgression:
     @pytest.mark.asyncio
     async def test_phase_progression_events(self):
         """Test generation of events during phase progression."""
-        with patch('simulation.infrastructure.content.timeline_based_generation.get_context_aware_generator') as mock_get_generator:
+        with patch(
+            "simulation.infrastructure.content.timeline_based_generation.get_context_aware_generator"
+        ) as mock_get_generator:
             mock_generator = AsyncMock()
             mock_get_generator.return_value = mock_generator
 
@@ -282,7 +280,7 @@ class TestTimelinePhaseProgression:
             # Test phase start
             start_request = {
                 "timeline_context": {"phase_progress": 0.1, "current_phase": "development"},
-                "document_type": "progress_report"
+                "document_type": "progress_report",
             }
             start_result = await generator.generate_timeline_aware_content(start_request)
             assert "Phase Start" in start_result["content"]
@@ -290,7 +288,7 @@ class TestTimelinePhaseProgression:
             # Test phase midpoint
             midpoint_request = {
                 "timeline_context": {"phase_progress": 0.5, "current_phase": "development"},
-                "document_type": "progress_report"
+                "document_type": "progress_report",
             }
             midpoint_result = await generator.generate_timeline_aware_content(midpoint_request)
             assert "Phase Midpoint" in midpoint_result["content"]
@@ -298,7 +296,7 @@ class TestTimelinePhaseProgression:
             # Test phase end
             end_request = {
                 "timeline_context": {"phase_progress": 0.9, "current_phase": "development"},
-                "document_type": "progress_report"
+                "document_type": "progress_report",
             }
             end_result = await generator.generate_timeline_aware_content(end_request)
             assert "Phase End" in end_result["content"]
@@ -311,7 +309,7 @@ class TestTimelinePhaseProgression:
             "design": ["development"],
             "development": ["testing"],
             "testing": ["deployment"],
-            "deployment": ["maintenance"]
+            "deployment": ["maintenance"],
         }
 
         # Test valid transitions
@@ -339,7 +337,7 @@ class TestTimelineEventPersistence:
     @pytest.mark.asyncio
     async def test_timeline_event_persistence(self):
         """Test persistence of timeline events."""
-        with patch('simulation.infrastructure.persistence.redis_event_store.RedisEventStore') as mock_store:
+        with patch("simulation.infrastructure.persistence.redis_event_store.RedisEventStore") as mock_store:
             mock_event_store = AsyncMock()
             mock_store.return_value = mock_event_store
 
@@ -355,8 +353,8 @@ class TestTimelineEventPersistence:
                 event_data={
                     "event_type": "milestone",
                     "title": "Requirements Complete",
-                    "description": "All requirements have been gathered and approved"
-                }
+                    "description": "All requirements have been gathered and approved",
+                },
             )
 
             # Simulate storing the event
@@ -374,7 +372,7 @@ class TestTimelineEventPersistence:
     @pytest.mark.asyncio
     async def test_timeline_event_retrieval(self):
         """Test retrieval of timeline events."""
-        with patch('simulation.infrastructure.persistence.redis_event_store.RedisEventStore') as mock_store:
+        with patch("simulation.infrastructure.persistence.redis_event_store.RedisEventStore") as mock_store:
             mock_event_store = AsyncMock()
             mock_store.return_value = mock_event_store
 
@@ -385,22 +383,19 @@ class TestTimelineEventPersistence:
                     "timeline_id": "timeline-101",
                     "event_type": "milestone",
                     "title": "Phase 1 Complete",
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 },
                 {
                     "event_id": "event_2",
                     "timeline_id": "timeline-101",
                     "event_type": "phase_start",
                     "title": "Phase 2 Begins",
-                    "timestamp": (datetime.now() + timedelta(hours=1)).isoformat()
-                }
+                    "timestamp": (datetime.now() + timedelta(hours=1)).isoformat(),
+                },
             ]
 
             # Retrieve events for a timeline
-            events = await mock_event_store.get_events(
-                timeline_id="timeline-101",
-                event_type="milestone"
-            )
+            events = await mock_event_store.get_events(timeline_id="timeline-101", event_type="milestone")
 
             assert len(events) == 2
             assert events[0]["event_type"] == "milestone"
@@ -422,20 +417,20 @@ class TestTemporalRelationshipManagement:
                 "from_event": "requirements_complete",
                 "to_event": "design_start",
                 "relationship": TemporalRelationship.PRECEDES,
-                "description": "Requirements must be complete before design starts"
+                "description": "Requirements must be complete before design starts",
             },
             {
                 "from_event": "design_review",
                 "to_event": "development_start",
                 "relationship": TemporalRelationship.ENABLES,
-                "description": "Design review enables development to begin"
+                "description": "Design review enables development to begin",
             },
             {
                 "from_event": "sprint_planning",
                 "to_event": "sprint_execution",
                 "relationship": TemporalRelationship.CONCURRENT,
-                "description": "Planning and execution can overlap slightly"
-            }
+                "description": "Planning and execution can overlap slightly",
+            },
         ]
 
         # Verify relationship types
@@ -465,7 +460,7 @@ class TestTemporalRelationshipManagement:
             "deployment": ["testing"],
             "go_live": ["deployment"],
             "support_setup": ["go_live"],
-            "project_close": ["support_setup"]
+            "project_close": ["support_setup"],
         }
 
         # Function to get all prerequisites for an event
@@ -512,7 +507,7 @@ class TestTimelinePerformanceMonitoring:
             {"name": "Design", "planned_duration": 15, "actual_duration": 18},
             {"name": "Development", "planned_duration": 45, "actual_duration": 42},
             {"name": "Testing", "planned_duration": 20, "actual_duration": 25},
-            {"name": "Deployment", "planned_duration": 5, "actual_duration": 7}
+            {"name": "Deployment", "planned_duration": 5, "actual_duration": 7},
         ]
 
         total_planned = sum(p["planned_duration"] for p in phases)
@@ -543,11 +538,26 @@ class TestTimelinePerformanceMonitoring:
         """Test tracking of timeline milestones."""
         # Define project milestones
         milestones = [
-            {"name": "Project Kickoff", "planned_date": "2024-01-01", "actual_date": "2024-01-01", "status": "completed"},
-            {"name": "Requirements Complete", "planned_date": "2024-01-10", "actual_date": "2024-01-12", "status": "completed"},
-            {"name": "Design Complete", "planned_date": "2024-02-01", "actual_date": "2024-02-05", "status": "completed"},
+            {
+                "name": "Project Kickoff",
+                "planned_date": "2024-01-01",
+                "actual_date": "2024-01-01",
+                "status": "completed",
+            },
+            {
+                "name": "Requirements Complete",
+                "planned_date": "2024-01-10",
+                "actual_date": "2024-01-12",
+                "status": "completed",
+            },
+            {
+                "name": "Design Complete",
+                "planned_date": "2024-02-01",
+                "actual_date": "2024-02-05",
+                "status": "completed",
+            },
             {"name": "MVP Release", "planned_date": "2024-03-15", "actual_date": None, "status": "pending"},
-            {"name": "Final Release", "planned_date": "2024-04-30", "actual_date": None, "status": "pending"}
+            {"name": "Final Release", "planned_date": "2024-04-30", "actual_date": None, "status": "pending"},
         ]
 
         # Calculate milestone performance
